@@ -1,7 +1,6 @@
 package org.hhp227.maidlog
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,16 +9,19 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
+    val viewModel = viewModel { GreetingViewModel() }
+    val uiState by viewModel.uiState.collectAsState()
 
+    MaterialTheme {
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
@@ -27,17 +29,15 @@ fun App() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = { showContent = !showContent }) {
+            Button(onClick = viewModel::toggleContent) {
                 Text("Click me!")
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-
+            AnimatedVisibility(uiState.showContent) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("Compose: $greeting")
+                    Text("Compose: ${uiState.greeting}")
                 }
             }
         }
