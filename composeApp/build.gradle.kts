@@ -16,16 +16,6 @@ kotlin {
         }
     }
     
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
-    
     jvm()
     
     sourceSets {
@@ -42,6 +32,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(projects.shared)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -54,11 +45,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.hhp227.maidlog"
+    namespace = "org.hhp227.maidlog"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.hhp227.maidlog"
+        applicationId = "org.hhp227.maidlog"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -86,11 +77,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.hhp227.maidlog.MainKt"
+        mainClass = "org.hhp227.maidlog.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.hhp227.maidlog"
+            packageName = "org.hhp227.maidlog"
             packageVersion = "1.0.0"
         }
     }
