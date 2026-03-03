@@ -3,38 +3,27 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011001AABBCCDDEEFF0001 /* ContentView.swift */; };
+		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
+		A1010003AABBCCDDEEFF0003 /* GreetingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011003AABBCCDDEEFF0003 /* GreetingViewModel.swift */; };
+		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
+		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		A1011001AABBCCDDEEFF0001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
+		A1011003AABBCCDDEEFF0003 /* GreetingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreetingViewModel.swift; sourceTree = "<group>"; };
+		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		A1011006AABBCCDDEEFF0006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FEA9D4AD37B8EF9BE110840A /* MaidLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MaidLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		41BF1EA60CCE726AF263C54D /* Exceptions for "iosApp" folder in "iosApp" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 99CF99429131F36183477D6E /* iosApp */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				41BF1EA60CCE726AF263C54D /* Exceptions for "iosApp" folder in "iosApp" target */,
-			);
-			path = iosApp;
-			sourceTree = "<group>";
-		};
-		C98E98B4AE0F51EAF578C098 /* Configuration */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Configuration;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		4C1D180E998DC1DFE4B2A6C8 /* Frameworks */ = {
@@ -64,6 +53,35 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
+			isa = PBXGroup;
+			children = (
+				A1011001AABBCCDDEEFF0001 /* ContentView.swift */,
+				A1011002AABBCCDDEEFF0002 /* iOSApp.swift */,
+				A1011003AABBCCDDEEFF0003 /* GreetingViewModel.swift */,
+				A1011004AABBCCDDEEFF0004 /* Assets.xcassets */,
+				A1011006AABBCCDDEEFF0006 /* Info.plist */,
+				A1012000AABBCCDDEEFF0000 /* Preview Content */,
+			);
+			path = iosApp;
+			sourceTree = "<group>";
+		};
+		A1012000AABBCCDDEEFF0000 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		C98E98B4AE0F51EAF578C098 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				A1011000AABBCCDDEEFF0000 /* Config.xcconfig */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -79,9 +97,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				1030E2EB8EFBD5F27A20D64D /* iosApp */,
 			);
 			name = iosApp;
 			packageProductDependencies = (
@@ -101,7 +116,7 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					99CF99429131F36183477D6E = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.3.1;
 					};
 				};
 			};
@@ -113,8 +128,6 @@
 				Base,
 			);
 			mainGroup = FBFDA0ED57CE363227DB6AC1;
-			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 7332ACCB08708982CBFABD2D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -129,6 +142,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */,
+				A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +176,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */,
+				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
+				A1010003AABBCCDDEEFF0003 /* GreetingViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,8 +187,7 @@
 /* Begin XCBuildConfiguration section */
 		7B2C3692932AE9B09B5AE936 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = C98E98B4AE0F51EAF578C098 /* Configuration */;
-			baseConfigurationReferenceRelativePath = Config.xcconfig;
+			baseConfigurationReference = A1011000AABBCCDDEEFF0000 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -234,8 +251,7 @@
 		};
 		0F03B78BD6DBA2773D16F317 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = C98E98B4AE0F51EAF578C098 /* Configuration */;
-			baseConfigurationReferenceRelativePath = Config.xcconfig;
+			baseConfigurationReference = A1011000AABBCCDDEEFF0000 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
