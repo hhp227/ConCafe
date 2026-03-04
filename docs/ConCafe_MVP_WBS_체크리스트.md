@@ -27,9 +27,9 @@
 - [ ] 로그인 성공 시 원래 시도한 기능/화면으로 복귀
 
 ## 1. 사전 의사결정(필수)
-- [ ] `conceptType` enum 확정 (`MAID|BUTLER` vs 확장형)
-- [ ] `events` 저장 위치 확정 (루트 `events` 또는 `cafes/{cafeId}/events`)
-- [ ] `favorites`/`visitHistory` 저장 방식 확정 (배열 vs 서브컬렉션)
+- [x] `conceptType` enum 확정: `MAID | BUTLER`
+- [x] `events` 저장 위치 확정: `cafes/{cafeId}/events/{eventId}`
+- [x] `favorites`/`visitHistory` 저장 방식 확정: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
 - [ ] 랭킹 점수식 확정 (팔로우/리뷰 언급/인증 방문 가중치)
 - [ ] 리뷰/프로필 이미지 업로드 용량·해상도 정책 확정
 
@@ -159,13 +159,13 @@
 - [ ] 운영 문서(스키마/룰/릴리즈 노트) 최신화
 
 ## 11. 구현 전 최종 점검 (추가 반영)
-- [ ] 환경 분리 정책 확정: dev/staging/prod Firebase 프로젝트 분리
+- [x] 환경 분리 정책 확정: `dev + prod` Firebase 프로젝트 분리
 - [ ] 시크릿 관리 정책 확정: API 키/서비스 계정 키 저장소 및 노출 방지 규칙
 - [ ] Firestore/Storage 보안 규칙 테스트 자동화 방식 확정
 - [ ] Cloud Functions 배포/롤백 절차 확정
 - [ ] 개인정보/운영 정책 확정: 계정 삭제, 데이터 보존 기간, 신고 처리 정책
-- [ ] 관측 지표 확정: Crash 리포팅, 핵심 이벤트(체크인 성공률/리뷰 전환율) 수집 항목
+- [x] 관측 지표 확정: Crash 리포팅 + 최소 이벤트(`login_success`, `checkin_success`, `checkin_fail`, `review_create`, `favorite_toggle`, `follow_toggle`)
 - [ ] 성능 기준 수치화: 초기 로딩 시간, 목록 스크롤 지표, 이미지 용량 기준
 - [ ] 딥링크/푸시 진입 시 로그인 가드 동작 규칙 검증
 - [ ] 오프라인/네트워크 불안정 시 UX 정책 확정(재시도, 캐시, 메시지)
-- [ ] 브랜치/릴리즈 정책 확정: develop-main 머지 기준, 태그/릴리즈 노트 규칙
+- [x] 브랜치/릴리즈 정책 확정: `develop -> main` 머지 후 태그/릴리즈 노트 관리
