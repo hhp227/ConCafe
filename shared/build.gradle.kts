@@ -39,7 +39,7 @@ kotlin {
 }
 
 android {
-    namespace = "org.hhp227.maidlog.shared"
+    namespace = "org.hhp227.concafe.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

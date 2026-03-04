@@ -1,4 +1,4 @@
-package org.hhp227.maidlog
+package org.hhp227.concafe
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

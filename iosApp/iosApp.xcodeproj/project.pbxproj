@@ -22,7 +22,7 @@
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A1011006AABBCCDDEEFF0006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FEA9D4AD37B8EF9BE110840A /* MaidLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MaidLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEA9D4AD37B8EF9BE110840A /* ConCafe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ConCafe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +52,7 @@
 		7332ACCB08708982CBFABD2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FEA9D4AD37B8EF9BE110840A /* MaidLog.app */,
+				FEA9D4AD37B8EF9BE110840A /* ConCafe.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,7 +102,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = FEA9D4AD37B8EF9BE110840A /* MaidLog.app */;
+			productReference = FEA9D4AD37B8EF9BE110840A /* ConCafe.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

@@ -1,9 +1,9 @@
-package org.hhp227.maidlog
+package org.hhp227.concafe
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ComposeAppCommonTest {
+class SharedCommonTest {
 
     @Test
     fun example() {

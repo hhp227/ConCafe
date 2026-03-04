@@ -1,4 +1,4 @@
-rootProject.name = "MaidLog"
+rootProject.name = "ConCafe"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
