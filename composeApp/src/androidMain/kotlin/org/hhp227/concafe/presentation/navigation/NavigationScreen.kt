@@ -57,7 +57,7 @@ fun NavigationScreen(
         composable<Route.Detail> { backStackEntry ->
             val detail: Route.Detail = backStackEntry.toRoute()
 
-            DetailScreen()
+            DetailScreen(onNavigationAction = viewModel::onAction)
         }
     }
 }

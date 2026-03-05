@@ -81,7 +81,7 @@ fun MainScreen(
         ) {
             composable("home") { HomeScreen(
                 onNavigate = {
-                    onNavigationAction(NavigationAction.NavigateToDetail(it))
+                    onNavigationAction()
                 }
             ) }
             composable("explore") { ExploreScreen() }
