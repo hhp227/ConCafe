@@ -3,7 +3,10 @@ package org.hhp227.concafe.presentation.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,7 +60,7 @@ fun NavigationScreen(
             modifier = Modifier.fillMaxHeight()
         ) {
             NavigationRailItem(
-                selected = currentMainTab != "explore",
+                selected = currentMainTab == "home",
                 onClick = {
                     viewModel.onAction(NavigationAction.NavigateToMain("home"))
                 },
@@ -81,6 +84,45 @@ fun NavigationScreen(
                     )
                 },
                 label = { Text("탐색") }
+            )
+            NavigationRailItem(
+                selected = currentMainTab == "ranking",
+                onClick = {
+                    viewModel.onAction(NavigationAction.NavigateToMain("ranking"))
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "랭킹"
+                    )
+                },
+                label = { Text("랭킹") }
+            )
+            NavigationRailItem(
+                selected = currentMainTab == "checkin",
+                onClick = {
+                    viewModel.onAction(NavigationAction.NavigateToMain("checkin"))
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "체크인"
+                    )
+                },
+                label = { Text("체크인") }
+            )
+            NavigationRailItem(
+                selected = currentMainTab == "myinfo",
+                onClick = {
+                    viewModel.onAction(NavigationAction.NavigateToMain("myinfo"))
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "내 정보"
+                    )
+                },
+                label = { Text("내 정보") }
             )
         }
         if (currentRoute is Route.Entry) {

@@ -23,6 +23,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.compose.material.icons.extended)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -40,6 +41,7 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.coroutinesSwing)
         }
     }

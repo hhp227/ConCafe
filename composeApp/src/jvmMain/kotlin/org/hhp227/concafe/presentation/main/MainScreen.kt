@@ -18,8 +18,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.hhp227.concafe.presentation.main.checkin.CheckInScreen
 import org.hhp227.concafe.presentation.main.explore.ExploreScreen
 import org.hhp227.concafe.presentation.main.home.HomeScreen
+import org.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
+import org.hhp227.concafe.presentation.main.ranking.RankingScreen
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +54,15 @@ fun MainScreen(
                 }
                 "explore" -> {
                     ExploreScreen()
+                }
+                "ranking" -> {
+                    RankingScreen()
+                }
+                "checkin" -> {
+                    CheckInScreen()
+                }
+                "myinfo" -> {
+                    MyInfoScreen()
                 }
             }
         }
