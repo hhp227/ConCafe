@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
 }
@@ -31,6 +32,7 @@ kotlin {
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            implementation(libs.kotlinx.serialization.json)
             implementation(projects.shared)
         }
         commonTest.dependencies {
@@ -71,6 +73,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.navigation.compose.android)
     debugImplementation(libs.compose.uiTooling)
 }
 

@@ -160,6 +160,20 @@
 - AC:
   - MVP 화면의 주요 쿼리가 인덱스 없이 실패하지 않는다.
 
+### B-04. 플랫폼별 네비게이션 구현 설계
+- 우선순위: P0
+- 상태: TODO
+- 산출물: 플랫폼별 네비게이션 설계서 + 라우트 맵
+- 작업:
+  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/CafeDetail/CastDetail/Login/Notifications`)
+  2. Android: Jetpack Navigation 그래프 설계 및 인증 가드 진입점 정의
+  3. iOS: NavigationStack path 라우팅 설계 및 인증 가드 진입점 정의
+  4. Desktop: 상태 기반 라우트 상태머신 설계 및 뒤로가기 정책 정의
+  5. `pendingRoute/pendingAction` 규칙을 플랫폼별로 동일 적용
+- AC:
+  - 같은 사용자 시나리오에서 플랫폼별 화면 전환 결과가 동일하다.
+  - 로그인 가드/복귀 동작이 플랫폼별로 동일하다.
+
 ## C. MVP 기능 작업 (P0-P1)
 
 ### C-01. 인증/프로필
@@ -389,6 +403,23 @@
 - `composeApp`: 화면, MVI Presenter(ViewModel), 내비게이션, UI 상태 처리
 - `iosApp`: iOS 엔트리/브리징(SwiftUI)
 
+### H-03. 플랫폼 네비게이션 전략(확정)
+- Android:
+  - `NavHost` + `NavController` 기반
+  - 하단 탭은 nested graph로 구성
+  - 상세/로그인/알림은 route push로 이동
+  - 인증 가드는 진입 직전 `navigate(Login)` + `savedStateHandle`에 pending 정보 저장
+- iOS:
+  - `NavigationStack` + `NavigationPath` 기반
+  - 탭 루트는 `TabView`, 상세는 `NavigationDestination` push
+  - 로그인은 전용 화면 route push
+  - 인증 가드는 `pendingRoute` 저장 후 로그인 성공 시 path 복원
+- Desktop:
+  - `currentRoute: MutableState<Route>` 기반 상태 전환
+  - 상세 진입 시 `routeStack`에 push, 뒤로가기 시 pop
+  - 인증 가드는 route 전환 전 intercept 후 Login route로 변경
+  - 창 닫기 이벤트와 분리된 앱 내부 back action 제공
+
 ### H-02. 패키지 설계(계획)
 - `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model`
 - `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/repository`
@@ -507,6 +538,14 @@
   - 함수/클래스: `ConCafeNavGraph`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/navigation/BottomTabItem.kt`
   - 클래스: `BottomTabItem`
+- 파일: `composeApp/src/androidMain/kotlin/org/hhp227/concafe/presentation/navigation/AndroidNavHost.kt`
+  - 함수: `AndroidNavHost`
+- 파일: `iosApp/iosApp/navigation/AppRouter.swift`
+  - 클래스: `AppRouter`
+- 파일: `iosApp/iosApp/navigation/Route.swift`
+  - enum: `Route`
+- 파일: `composeApp/src/jvmMain/kotlin/org/hhp227/concafe/presentation/navigation/DesktopRouteState.kt`
+  - 클래스: `DesktopRouteState`
 
 ### I-08. Presentation MVI (`composeApp`)
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/home/HomeViewModel.kt`
@@ -558,8 +597,9 @@
 1. `I-01`, `I-02` Domain 모델/공통 타입
 2. `I-03`, `I-04`, `I-05` Repository/UseCase/정책
 3. `I-06` Data 레이어 임시(Fake) 구현
-4. `I-07`, `I-08`, `I-09`, `I-10` Presentation 구현
-5. Cloud Functions/Rules 문서 반영 후 실제 Firebase 구현으로 전환
+4. `B-04` 플랫폼별 네비게이션 뼈대 구현(Android/iOS/Desktop)
+5. `I-07`, `I-08`, `I-09`, `I-10` Presentation 구현
+6. Cloud Functions/Rules 문서 반영 후 실제 Firebase 구현으로 전환
 
 ## K. 필수 메서드 시그니처 (초안)
 
@@ -908,4 +948,5 @@ flowchart TD
 ## O. 구현 전 최종 점검 결론
 - 현재 설계는 기능/권한/MVI 규칙 측면에서 구현 착수 가능한 수준이다.
 - 선확정 항목(A-01~A-07)은 모두 완료되었다.
+- 네비게이션 전략은 플랫폼별로 확정되었고, 공통 라우트 규격 기준으로 구현한다.
 - 보안/품질 테스트 트랙(E-01~E-05)은 MVP 구현 완료 후 후순위로 진행한다.
