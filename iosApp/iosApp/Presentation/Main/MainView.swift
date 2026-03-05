@@ -23,6 +23,15 @@ struct MainView: View {
                 ExploreView()
                     .tabItem { Label("탐색", systemImage: "magnifyingglass") }
                     .tag("explore")
+                RankingView()
+                    .tabItem { Label("랭킹", systemImage: "trophy.fill") }
+                    .tag("ranking")
+                CheckInView()
+                    .tabItem { Label("체크인", systemImage: "checkmark.seal.fill") }
+                    .tag("checkin")
+                MyInfoView()
+                    .tabItem { Label("내 정보", systemImage: "person.crop.circle") }
+                    .tag("myinfo")
             }
         }
         .navigationTitle("ConCafe")

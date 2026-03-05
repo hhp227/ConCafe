@@ -17,6 +17,9 @@
 		0A580DB02F5968B200390F67 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DAF2F5968B200390F67 /* DetailView.swift */; };
 		0A580DB22F59691300390F67 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB12F59691300390F67 /* MainView.swift */; };
 		0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB32F596D7F00390F67 /* AppNavigationView.swift */; };
+		0A580DB52F59710000390F67 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB62F59710000390F67 /* RankingView.swift */; };
+		0A580DB72F59711000390F67 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB82F59711000390F67 /* CheckInView.swift */; };
+		0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBA2F59712000390F67 /* MyInfoView.swift */; };
 		A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011001AABBCCDDEEFF0001 /* ContentView.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
@@ -34,6 +37,9 @@
 		0A580DAF2F5968B200390F67 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		0A580DB12F59691300390F67 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		0A580DB32F596D7F00390F67 /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
+		0A580DB62F59710000390F67 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
+		0A580DB82F59711000390F67 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
+		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011001AABBCCDDEEFF0001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
@@ -80,11 +86,38 @@
 		0A580D9D2F5965DB00390F67 /* Main */ = {
 			isa = PBXGroup;
 			children = (
+				0A580DBC2F59714000390F67 /* CheckIn */,
 				0A580DAB2F59682100390F67 /* Explore */,
 				0A580DA82F5967CF00390F67 /* Home */,
+				0A580DBD2F59715000390F67 /* MyInfo */,
+				0A580DBB2F59713000390F67 /* Ranking */,
 				0A580DB12F59691300390F67 /* MainView.swift */,
 			);
 			path = Main;
+			sourceTree = "<group>";
+		};
+		0A580DBB2F59713000390F67 /* Ranking */ = {
+			isa = PBXGroup;
+			children = (
+				0A580DB62F59710000390F67 /* RankingView.swift */,
+			);
+			path = Ranking;
+			sourceTree = "<group>";
+		};
+		0A580DBC2F59714000390F67 /* CheckIn */ = {
+			isa = PBXGroup;
+			children = (
+				0A580DB82F59711000390F67 /* CheckInView.swift */,
+			);
+			path = CheckIn;
+			sourceTree = "<group>";
+		};
+		0A580DBD2F59715000390F67 /* MyInfo */ = {
+			isa = PBXGroup;
+			children = (
+				0A580DBA2F59712000390F67 /* MyInfoView.swift */,
+			);
+			path = MyInfo;
 			sourceTree = "<group>";
 		};
 		0A580DA82F5967CF00390F67 /* Home */ = {
@@ -254,12 +287,15 @@
 			files = (
 				0A580DAA2F5967DD00390F67 /* HomeView.swift in Sources */,
 				0A580DB22F59691300390F67 /* MainView.swift in Sources */,
+				0A580DB52F59710000390F67 /* RankingView.swift in Sources */,
 				0A580DA72F59678D00390F67 /* NavigationViewModel.swift in Sources */,
 				A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */,
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
+				0A580DB72F59711000390F67 /* CheckInView.swift in Sources */,
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A580DB02F5968B200390F67 /* DetailView.swift in Sources */,
+				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
