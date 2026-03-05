@@ -12,4 +12,7 @@ sealed interface Route {
 
     @Serializable
     data class Detail(val param: String) : Route
+
+    @Serializable
+    data object Notification : Route
 }

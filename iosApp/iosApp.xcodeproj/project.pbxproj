@@ -20,6 +20,7 @@
 		0A580DB52F59710000390F67 /* RankingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB62F59710000390F67 /* RankingView.swift */; };
 		0A580DB72F59711000390F67 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB82F59711000390F67 /* CheckInView.swift */; };
 		0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBA2F59712000390F67 /* MyInfoView.swift */; };
+		0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBF2F59730000390F67 /* NotificationView.swift */; };
 		A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011001AABBCCDDEEFF0001 /* ContentView.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
@@ -40,6 +41,7 @@
 		0A580DB62F59710000390F67 /* RankingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingView.swift; sourceTree = "<group>"; };
 		0A580DB82F59711000390F67 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
 		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
+		0A580DBF2F59730000390F67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011001AABBCCDDEEFF0001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 				0A580DAE2F59689F00390F67 /* Detail */,
 				0A580D9D2F5965DB00390F67 /* Main */,
 				0A580D9C2F5965D200390F67 /* Navigation */,
+				0A580DC02F59732000390F67 /* Notification */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -142,6 +145,14 @@
 				0A580DAF2F5968B200390F67 /* DetailView.swift */,
 			);
 			path = Detail;
+			sourceTree = "<group>";
+		};
+		0A580DC02F59732000390F67 /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				0A580DBF2F59730000390F67 /* NotificationView.swift */,
+			);
+			path = Notification;
 			sourceTree = "<group>";
 		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
@@ -295,6 +306,7 @@
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A580DB02F5968B200390F67 /* DetailView.swift in Sources */,
+				0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */,
 				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,

@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.hhp227.concafe.presentation.detail.DetailScreen
 import org.hhp227.concafe.presentation.main.MainScreen
+import org.hhp227.concafe.presentation.notification.NotificationScreen
 
 @Composable
 fun NavigationScreen(
@@ -151,9 +152,19 @@ fun NavigationScreen(
                                 .weight(1f)
                                 .fillMaxHeight()
                         ) {
-                            DetailScreen(
-                                onNavigationAction = viewModel::onAction
-                            )
+                            when (currentRoute) {
+                                is Route.Detail -> {
+                                    DetailScreen(
+                                        onNavigationAction = viewModel::onAction
+                                    )
+                                }
+                                Route.Notification -> {
+                                    NotificationScreen(
+                                        onNavigationAction = viewModel::onAction
+                                    )
+                                }
+                                else -> Unit
+                            }
                         }
                     }
                 }

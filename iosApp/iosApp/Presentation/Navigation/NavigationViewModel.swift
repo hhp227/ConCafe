@@ -18,6 +18,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.main(initialTab: tab)))
         case .navigateToDetail(let id):
             event.send(.navigateTo(.detail(param: id)))
+        case .navigateToNotification:
+            event.send(.navigateTo(.notification))
         }
     }
 }

@@ -10,4 +10,5 @@ import Foundation
 enum NavigationAction {
     case navigateToMain(initialTab: String? = nil)
     case navigateToDetail(id: String)
+    case navigateToNotification
 }

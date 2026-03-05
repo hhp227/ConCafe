@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
 import org.hhp227.concafe.presentation.detail.DetailScreen
 import org.hhp227.concafe.presentation.main.MainScreen
+import org.hhp227.concafe.presentation.notification.NotificationScreen
 
 @Composable
 fun NavigationScreen(
@@ -58,6 +59,11 @@ fun NavigationScreen(
             val detail: Route.Detail = backStackEntry.toRoute()
 
             DetailScreen(onNavigationAction = viewModel::onAction)
+        }
+        composable<Route.Notification> {
+            NotificationScreen(
+                onNavigationAction = viewModel::onAction
+            )
         }
     }
 }

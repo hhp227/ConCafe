@@ -20,6 +20,9 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateToDetail -> {
                     _event.emit(NavigationEvent.NavigateTo(Route.Detail(action.id)))
                 }
+                is NavigationAction.NavigateToNotification -> {
+                    _event.emit(NavigationEvent.NavigateTo(Route.Notification))
+                }
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)
                 }

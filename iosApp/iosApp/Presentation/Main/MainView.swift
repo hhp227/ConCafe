@@ -36,6 +36,16 @@ struct MainView: View {
         }
         .navigationTitle("ConCafe")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    onNavigationAction(.navigateToNotification)
+                } label: {
+                    Image(systemName: "bell")
+                }
+                .accessibilityLabel("알림")
+            }
+        }
         .onAppear {
             selectedTab = initialTab ?? "home"
         }

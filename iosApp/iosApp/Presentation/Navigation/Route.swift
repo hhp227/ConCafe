@@ -11,4 +11,5 @@ enum Route: Hashable {
     case entry
     case main(initialTab: String?)
     case detail(param: String)
+    case notification
 }

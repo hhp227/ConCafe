@@ -5,10 +5,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -59,6 +61,16 @@ fun MainScreen(
                         text = "ConCafe",
                         textAlign = TextAlign.Center
                     )
+                },
+                actions = {
+                    IconButton(
+                        onClick = { onNavigationAction(NavigationAction.NavigateToNotification) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "알림"
+                        )
+                    }
                 }
             )
         },

@@ -30,6 +30,8 @@ struct AppNavigationView: View {
                 DetailView(
                     onNavigationAction: viewModel.onAction
                 )
+            case .notification:
+                NotificationView()
             case .main(let initialTab):
                 MainView(
                     initialTab: initialTab,
@@ -50,6 +52,9 @@ struct AppNavigationView: View {
                 case .detail(let param):
                     currentRoute = .detail(param: param)
                     path.append(route)
+                case .notification:
+                    currentRoute = .notification
+                    path.append(route)
                 case .entry:
                     currentRoute = .entry
                 }
@@ -69,6 +74,12 @@ struct AppNavigationView: View {
             ProgressView()
         case .detail:
             // Detail is pushed through NavigationStack path.
+            MainView(
+                initialTab: currentMainTab,
+                onNavigationAction: viewModel.onAction
+            )
+        case .notification:
+            // Notification is pushed through NavigationStack path.
             MainView(
                 initialTab: currentMainTab,
                 onNavigationAction: viewModel.onAction
