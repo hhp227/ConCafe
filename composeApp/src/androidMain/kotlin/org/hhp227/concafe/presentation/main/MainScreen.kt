@@ -78,6 +78,7 @@ fun MainScreen(
             NavigationBar {
                 items.forEach { (route, icon, label) ->
                     val selected = isSelected(route)
+
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
