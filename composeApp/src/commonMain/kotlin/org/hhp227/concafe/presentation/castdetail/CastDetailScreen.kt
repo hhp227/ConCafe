@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.detail
+package org.hhp227.concafe.presentation.castdetail
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,13 +18,13 @@ import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(
+fun CastDetailScreen(
     onNavigationAction: (NavigationAction) -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detail") },
+                title = { Text("CastDetail") },
                 navigationIcon = {
                     IconButton(onClick = { onNavigationAction(NavigationAction.NavigateBack) }) {
                         Icon(
@@ -42,7 +42,7 @@ fun DetailScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("상세")
+            Text("캐스트 상세")
         }
     }
 }

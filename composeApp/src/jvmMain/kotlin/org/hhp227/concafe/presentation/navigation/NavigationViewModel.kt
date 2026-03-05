@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import org.hhp227.concafe.presentation.navigation.NavigationEvent.*
+import org.hhp227.concafe.presentation.navigation.Route.*
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()
@@ -14,13 +16,16 @@ class NavigationViewModel : ViewModel() {
         viewModelScope.launch {
             when (action) {
                 is NavigationAction.NavigateToMain -> {
-                    _event.emit(NavigationEvent.NavigateTo(Route.Main(action.initialTab)))
+                    _event.emit(NavigateTo(Main(action.initialTab)))
                 }
-                is NavigationAction.NavigateToDetail -> {
-                    _event.emit(NavigationEvent.NavigateTo(Route.Detail(action.id)))
+                is NavigationAction.NavigateToCastDetail -> {
+                    _event.emit(NavigateTo(CastDetail(action.id)))
+                }
+                is NavigationAction.NavigateToCafeDetail -> {
+                    _event.emit(NavigateTo(CafeDetail(action.id)))
                 }
                 is NavigationAction.NavigateToNotification -> {
-                    _event.emit(NavigationEvent.NavigateTo(Route.Notification))
+                    _event.emit(NavigateTo(Route.Notification))
                 }
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)

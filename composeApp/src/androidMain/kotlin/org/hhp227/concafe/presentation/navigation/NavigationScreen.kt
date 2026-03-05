@@ -9,7 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.presentation.detail.DetailScreen
+import org.hhp227.concafe.presentation.cafedetail.CafeDetailScreen
+import org.hhp227.concafe.presentation.castdetail.CastDetailScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 
@@ -55,10 +56,15 @@ fun NavigationScreen(
                 onNavigationAction = viewModel::onAction
             )
         }
-        composable<Route.Detail> { backStackEntry ->
-            val detail: Route.Detail = backStackEntry.toRoute()
+        composable<Route.CastDetail> { backStackEntry ->
+            val castDetail: Route.CastDetail = backStackEntry.toRoute()
 
-            DetailScreen(onNavigationAction = viewModel::onAction)
+            CastDetailScreen(onNavigationAction = viewModel::onAction)
+        }
+        composable<Route.CafeDetail> { backStackEntry ->
+            val castDetail: Route.CastDetail = backStackEntry.toRoute()
+
+            CafeDetailScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Notification> {
             NotificationScreen(

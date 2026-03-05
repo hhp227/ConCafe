@@ -11,7 +11,10 @@ sealed interface Route {
     data class Main(val initialTab: String? = null) : Route
 
     @Serializable
-    data class Detail(val param: String) : Route
+    data class CastDetail(val param: String) : Route
+
+    @Serializable
+    data class CafeDetail(val param: String) : Route
 
     @Serializable
     data object Notification : Route
