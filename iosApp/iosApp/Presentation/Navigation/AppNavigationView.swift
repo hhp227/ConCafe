@@ -26,10 +26,12 @@ struct AppNavigationView: View {
                 }
         } destination: { route in
             switch route {
-            case .detail:
-                DetailView(
+            case .castDetail:
+                CastDetailView(
                     onNavigationAction: viewModel.onAction
                 )
+            case .cafeDetail:
+                CafeDetailView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView()
             case .main(let initialTab):
@@ -49,8 +51,11 @@ struct AppNavigationView: View {
                     currentMainTab = initialTab ?? "home"
                     currentRoute = .main(initialTab: currentMainTab)
                     path.removeAll()
-                case .detail(let param):
-                    currentRoute = .detail(param: param)
+                case .castDetail(let param):
+                    currentRoute = .castDetail(param: param)
+                    path.append(route)
+                case .cafeDetail(let param):
+                    currentRoute = .cafeDetail(param: param)
                     path.append(route)
                 case .notification:
                     currentRoute = .notification
@@ -72,8 +77,13 @@ struct AppNavigationView: View {
             )
         case .entry:
             ProgressView()
-        case .detail:
+        case .castDetail:
             // Detail is pushed through NavigationStack path.
+            MainView(
+                initialTab: currentMainTab,
+                onNavigationAction: viewModel.onAction
+            )
+        case .cafeDetail:
             MainView(
                 initialTab: currentMainTab,
                 onNavigationAction: viewModel.onAction

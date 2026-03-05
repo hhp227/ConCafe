@@ -13,8 +13,11 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 12) {
             Text("홈 화면")
-            Button("상세화면 이동") {
-                onNavigationAction(.navigateToDetail(id: "id"))
+            Button("캐스트 상세화면 이동") {
+                onNavigationAction(.navigateToCastDetail(id: "id"))
+            }
+            Button("카페 상세화면 이동") {
+                onNavigationAction(.navigateToCafeDetail(id: "id"))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
