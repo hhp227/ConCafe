@@ -15,6 +15,14 @@
 - `shared`는 UI 프레임워크 의존성을 갖지 않는다.
 - 플랫폼별 구현(안드로이드/iOS)은 인터페이스 뒤로 숨기고 도메인 계약을 유지한다.
 
+## 2-1. 플랫폼 네비게이션 규칙
+- Android는 `Jetpack Navigation`(`NavHost`, `NavController`)을 사용한다.
+- iOS는 `NavigationStack`(`NavigationPath`)을 사용한다.
+- Desktop은 상태 기반 라우트 상태머신(`currentRoute`, `routeStack`)을 사용한다.
+- 라우트 이름과 로그인 가드 규칙은 3플랫폼에서 동일하게 유지한다.
+- 상세 화면은 모달이 아닌 route push 방식으로 이동한다.
+- 인증이 필요한 라우트 진입 실패 시 `Login` 라우트로 이동 후 성공 시 `pendingRoute/pendingAction`을 재실행한다.
+
 ## 3. 패키지/파일 규칙
 - 패키지 구조는 기능+레이어 기준으로 유지한다.
 - 파일명은 타입명과 1:1 매칭한다.
