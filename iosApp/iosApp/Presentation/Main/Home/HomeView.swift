@@ -37,9 +37,9 @@ struct HomeView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCastDetail(let id):
-                onNavigationAction(.navigateToDetail(id: id))
+                onNavigationAction(.navigateToCastDetail(id: id))
             case .navigateToCafeDetail(let id):
-                onNavigationAction(.navigateToDetail(id: id))
+                onNavigationAction(.navigateToCafeDetail(id: id))
             }
         }
         .onAppear {
