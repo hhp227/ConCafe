@@ -27,27 +27,24 @@ import org.hhp227.concafe.presentation.notification.NotificationScreen
 fun NavigationScreen(
     viewModel: NavigationViewModel = viewModel()
 ) {
-    var currentRoute by remember { mutableStateOf<Route>(Route.Entry) }
-    val backStack = remember { mutableStateListOf(currentRoute) }
-    val currentMainTab =
-        (currentRoute as? Route.Main)?.initialTab
-            ?: backStack.asReversed().filterIsInstance<Route.Main>().firstOrNull()?.initialTab
-            ?: "home"
+    var currentMainTab by remember { mutableStateOf("home") }
+    val detailStack = remember { mutableStateListOf<Route>() }
+    val currentDetailRoute = detailStack.lastOrNull()
 
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is NavigationEvent.NavigateTo -> {
                     if (event.route is Route.Main) {
-                        backStack.clear()
+                        currentMainTab = event.route.initialTab ?: "home"
+                        detailStack.clear()
+                    } else {
+                        detailStack.add(event.route)
                     }
-                    backStack.add(event.route)
-                    currentRoute = event.route
                 }
                 is NavigationEvent.NavigateBack -> {
-                    if (backStack.size > 1) {
-                        backStack.removeLast()
-                        currentRoute = backStack.last()
+                    if (detailStack.isNotEmpty()) {
+                        detailStack.removeLast()
                     }
                 }
             }
@@ -127,50 +124,42 @@ fun NavigationScreen(
                 label = { Text("내 정보") }
             )
         }
-        if (currentRoute is Route.Entry) {
-            LaunchedEffect(Unit) {
-                val target: Route = Route.Main()
-
-                currentRoute = target
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
-            ) {
-                Row {
-                    Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                        MainScreen(
-                            initialTab = currentMainTab,
-                            onNavigationAction = viewModel::onAction
-                        )
-                    }
-                    if (currentRoute !is Route.Main) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                        ) {
-                            when (currentRoute) {
-                                is Route.CastDetail -> {
-                                    CastDetailScreen(
-                                        onNavigationAction = viewModel::onAction
-                                    )
-                                }
-                                is Route.CafeDetail -> {
-                                    CafeDetailScreen(
-                                        onNavigationAction = viewModel::onAction
-                                    )
-                                }
-                                Route.Notification -> {
-                                    NotificationScreen(
-                                        onNavigationAction = viewModel::onAction
-                                    )
-                                }
-                                else -> Unit
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            Row {
+                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    MainScreen(
+                        initialTab = currentMainTab,
+                        onNavigationAction = viewModel::onAction
+                    )
+                }
+                if (currentDetailRoute != null) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
+                        when (currentDetailRoute) {
+                            is Route.CastDetail -> {
+                                CastDetailScreen(
+                                    onNavigationAction = viewModel::onAction
+                                )
                             }
+                            is Route.CafeDetail -> {
+                                CafeDetailScreen(
+                                    onNavigationAction = viewModel::onAction
+                                )
+                            }
+                            Route.Notification -> {
+                                NotificationScreen(
+                                    onNavigationAction = viewModel::onAction
+                                )
+                            }
+                            else -> Unit
                         }
                     }
                 }
