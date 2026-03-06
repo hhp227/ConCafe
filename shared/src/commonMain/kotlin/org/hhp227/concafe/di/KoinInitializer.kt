@@ -1,6 +1,6 @@
 package org.hhp227.concafe.di
 
-import org.hhp227.concafe.domain.usecase.HomeUseCaseWrapper
+import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -21,7 +21,7 @@ fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     }
 }
 
-fun resolveHomeUseCaseWrapper(): HomeUseCaseWrapper {
+fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

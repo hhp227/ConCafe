@@ -11,7 +11,7 @@ import Shared
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    private let homeUseCaseWrapper: HomeUseCaseWrapper
+    private let getHomeFeedUseCase: GetHomeFeedUseCase
     
     @Published private(set) var uiState = HomeUiState.empty
 
@@ -23,17 +23,25 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
-                guard let feed = try await homeUseCaseWrapper.getHomeFeedOrNull(limit: 10) else {
+                let result = try await getHomeFeedUseCase.invoke(limit: 10)
+
+                if let success = result as? AppResultSuccess {
+                    guard let feed = success.data as? Shared.HomeFeed else {
+                        uiState = .empty
+                        return
+                    }
+                    uiState = HomeUiState(
+                        banners: feed.banners as? [Shared.HomeBanner] ?? [],
+                        popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
+                        nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
+                        birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
+                        notices: feed.notices as? [Shared.Notice] ?? []
+                    )
+                } else if result is AppResultFailure {
                     uiState = .empty
-                    return
+                } else {
+                    uiState = .empty
                 }
-                uiState = HomeUiState(
-                    banners: feed.banners as? [Shared.HomeBanner] ?? [],
-                    popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
-                    nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
-                    birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
-                    notices: feed.notices as? [Shared.Notice] ?? []
-                )
             } catch {
                 uiState = .empty
             }
@@ -52,9 +60,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     init(
-        homeUseCaseWrapper: HomeUseCaseWrapper = KoinInitializerKt.resolveHomeUseCaseWrapper()
+        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase()
     ) {
-        self.homeUseCaseWrapper = homeUseCaseWrapper
+        self.getHomeFeedUseCase = getHomeFeedUseCase
         
         loadHomeFeed()
     }
