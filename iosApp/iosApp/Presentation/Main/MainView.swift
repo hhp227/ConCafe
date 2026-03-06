@@ -46,9 +46,6 @@ struct MainView: View {
                 .accessibilityLabel("알림")
             }
         }
-        .onAppear {
-            selectedTab = initialTab ?? "home"
-        }
     }
 }
 
