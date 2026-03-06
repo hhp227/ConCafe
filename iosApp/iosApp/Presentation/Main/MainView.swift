@@ -35,7 +35,7 @@ struct MainView: View {
                 CheckInView()
                     .tabItem { Label("체크인", systemImage: "checkmark.seal.fill") }
                     .tag("checkin")
-                MyInfoView()
+                MyInfoView(onNavigationAction: onNavigationAction)
                     .tabItem { Label("내 정보", systemImage: "person") }
                     .tag("myinfo")
             }

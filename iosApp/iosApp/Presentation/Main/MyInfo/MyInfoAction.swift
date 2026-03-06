@@ -8,5 +8,8 @@
 import Foundation
 
 enum MyInfoAction {
-    
+    case cafeTapped(id: String)
+    case maidTapped(id: String)
+    case logoutTapped
+    case refresh
 }

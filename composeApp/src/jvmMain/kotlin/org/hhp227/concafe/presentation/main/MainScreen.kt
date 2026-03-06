@@ -78,7 +78,9 @@ fun MainScreen(
                     CheckInScreen()
                 }
                 "myinfo" -> {
-                    MyInfoScreen()
+                    MyInfoScreen(
+                        onNavigate = onNavigationAction
+                    )
                 }
             }
         }
