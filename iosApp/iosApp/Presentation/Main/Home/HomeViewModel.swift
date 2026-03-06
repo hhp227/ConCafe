@@ -25,7 +25,7 @@ final class HomeViewModel: ObservableObject {
             do {
                 let result = try await getHomeFeedUseCase.invoke(limit: 10)
 
-                if let success = result as? AppResultSuccess {
+                if let success = result as? AppResultSuccess<AnyObject> {
                     guard let feed = success.data as? Shared.HomeFeed else {
                         uiState = .empty
                         return
