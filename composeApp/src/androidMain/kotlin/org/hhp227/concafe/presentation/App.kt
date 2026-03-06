@@ -8,10 +8,6 @@ import org.hhp227.concafe.presentation.navigation.NavigationScreen
 
 @Composable
 fun App() {
-    remember {
-        doInitConCafeAppKoin()
-    }
-
     MaterialTheme {
         NavigationScreen()
     }
