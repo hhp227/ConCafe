@@ -26,12 +26,12 @@ struct AppNavigationView: View {
                 }
         } destination: { route in
             switch route {
-            case .castDetail(let id):
+            case .castDetail:
                 CastDetailView(
                     onNavigationAction: viewModel.onAction
                 )
-            case .cafeDetail(let id):
-                CafeDetailView()
+            case .cafeDetail:
+                CafeDetailView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView()
             case .main(let initialTab):
@@ -51,9 +51,11 @@ struct AppNavigationView: View {
                     currentMainTab = initialTab ?? "home"
                     currentRoute = .main(initialTab: currentMainTab)
                     path.removeAll()
-                case .castDetail:
+                case .castDetail(let param):
+                    currentRoute = .castDetail(param: param)
                     path.append(route)
-                case .cafeDetail:
+                case .cafeDetail(let param):
+                    currentRoute = .cafeDetail(param: param)
                     path.append(route)
                 case .notification:
                     path.append(route)

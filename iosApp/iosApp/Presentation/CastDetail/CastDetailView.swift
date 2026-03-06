@@ -12,7 +12,7 @@ struct CastDetailView: View {
 
     var body: some View {
         VStack {
-            Text("상세")
+            Text("캐스트 상세")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -8,13 +8,18 @@
 import SwiftUI
 
 struct CafeDetailView: View {
+    let onNavigationAction: (NavigationAction) -> Void
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Text("카페 상세")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 struct CafeDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeDetailView()
+        CafeDetailView(onNavigationAction: { _ in })
     }
 }
