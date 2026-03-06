@@ -6,7 +6,88 @@
 //
 
 import Foundation
+import Combine
+import Shared
 
-class MyInfoViewModel: ObservableObject {
-    
+@MainActor
+final class MyInfoViewModel: ObservableObject {
+    private let getMyInfoUseCase: GetMyInfoUseCase
+
+    private let authRepository: AuthRepository
+
+    @Published private(set) var uiState = MyInfoUiState.empty
+
+    let event = PassthroughSubject<MyInfoEvent, Never>()
+
+    private var loadTask: Task<Void, Never>?
+
+    private func loadMyInfo() {
+        loadTask?.cancel()
+        uiState.isLoading = true
+        uiState.errorMessage = nil
+
+        loadTask = Task {
+            do {
+                let result = try await getMyInfoUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                let feed = success.data as? Shared.MyInfoFeed {
+                    uiState = MyInfoUiState(
+                        isLoading: false,
+                        errorMessage: nil,
+                        isLoggedIn: feed.isLoggedIn,
+                        user: feed.user,
+                        summary: feed.summary,
+                        badges: feed.badges,
+                        popularCafes: feed.popularCafes,
+                        recentVisits: feed.recentVisits,
+                        favorites: feed.favorites,
+                        followedMaids: feed.followedMaids
+                    )
+                } else if let failure = result as? AppResultFailure {
+                    uiState = .empty
+                    uiState.errorMessage = "\(failure.error)"
+                } else {
+                    uiState = .empty
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState = .empty
+                uiState.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    func onAction(_ action: MyInfoAction) {
+        switch action {
+        case .cafeTapped(let id):
+            event.send(.navigateToCafeDetail(id: id))
+        case .maidTapped(let id):
+            event.send(.navigateToCastDetail(id: id))
+        case .logoutTapped:
+            Task {
+                do {
+                    try await authRepository.signOut()
+                } catch {
+                }
+                loadMyInfo()
+            }
+        case .refresh:
+            loadMyInfo()
+        }
+    }
+
+    init(
+        getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
+        authRepository: AuthRepository = KoinInitializerKt.resolveAuthRepository()
+    ) {
+        self.getMyInfoUseCase = getMyInfoUseCase
+        self.authRepository = authRepository
+
+        loadMyInfo()
+    }
+
+    deinit {
+        loadTask?.cancel()
+    }
 }

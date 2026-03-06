@@ -127,7 +127,11 @@ fun MainScreen(
             }
             composable("ranking") { RankingScreen() }
             composable("checkin") { CheckInScreen() }
-            composable("myinfo") { MyInfoScreen() }
+            composable("myinfo") {
+                MyInfoScreen(
+                    onNavigate = onNavigationAction
+                )
+            }
         }
     }
 }

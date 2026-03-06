@@ -8,5 +8,6 @@
 import Foundation
 
 enum MyInfoEvent {
-    
+    case navigateToCafeDetail(id: String)
+    case navigateToCastDetail(id: String)
 }

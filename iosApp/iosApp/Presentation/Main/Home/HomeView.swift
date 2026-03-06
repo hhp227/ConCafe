@@ -18,22 +18,12 @@ struct HomeView: View {
     
     private let bannerTimer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
-    private var cafeNameById: [String: String] {
-        Dictionary(uniqueKeysWithValues: viewModel.uiState.nearbyCafes.map { ($0.id, $0.name) })
-    }
-
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                bannerSection
-                popularCastSection
-                nearbyCafeSection
-                birthdaySection
-                noticeSection
-            }
-            .padding(.vertical, 16)
-        }
-        .background(Color(hex: "FFF9FC"))
+        HomeContentView(
+            uiState: viewModel.uiState,
+            currentBannerPage: $currentBannerPage,
+            onAction: viewModel.onAction
+        )
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCastDetail(let id):
@@ -54,11 +44,37 @@ struct HomeView: View {
             }
         }
     }
+}
 
+private struct HomeContentView: View {
+    var uiState: HomeUiState
+    
+    @Binding var currentBannerPage: Int
+    
+    let onAction: (HomeAction) -> Void
+    
+    private var cafeNameById: [String: String] {
+        Dictionary(uniqueKeysWithValues: uiState.nearbyCafes.map { ($0.id, $0.name) })
+    }
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                bannerSection
+                popularCastSection
+                nearbyCafeSection
+                birthdaySection
+                noticeSection
+            }
+            .padding(.vertical, 16)
+        }
+        .background(Color(hex: "FFF9FC"))
+    }
+    
     private var bannerSection: some View {
         VStack(spacing: 10) {
             TabView(selection: $currentBannerPage) {
-                ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
                     ZStack(alignment: .bottomLeading) {
                         LinearGradient(
                             colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
@@ -77,9 +93,9 @@ struct HomeView: View {
             }
             .frame(height: 190)
             .tabViewStyle(.page(indexDisplayMode: .never))
-            if viewModel.uiState.banners.count > 1 {
+            if uiState.banners.count > 1 {
                 HStack(spacing: 6) {
-                    ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
                         RoundedRectangle(cornerRadius: 999)
                             .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
                             .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
@@ -94,7 +110,7 @@ struct HomeView: View {
             SectionTitle(icon: "❤", title: "인기 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(viewModel.uiState.popularCasts, id: \.id) { maid in
+                    ForEach(uiState.popularCasts, id: \.id) { maid in
                         VStack(alignment: .leading, spacing: 0) {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(LinearGradient(colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")], startPoint: .top, endPoint: .bottom))
@@ -114,10 +130,10 @@ struct HomeView: View {
                             .padding(10)
                         }
                         .frame(width: 132, alignment: .leading)
-                        .background(.white)
+                        .background(Color(hex: "FFF9FC"))
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .onTapGesture {
-                            viewModel.onAction(.maidTapped(id: maid.id))
+                            onAction(.maidTapped(id: maid.id))
                         }
                     }
                 }
@@ -130,7 +146,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "📍", title: "근처 메이드카페")
             VStack(spacing: 12) {
-                ForEach(viewModel.uiState.nearbyCafes, id: \.id) { cafe in
+                ForEach(uiState.nearbyCafes, id: \.id) { cafe in
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(LinearGradient(colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")], startPoint: .top, endPoint: .bottom))
@@ -150,7 +166,7 @@ struct HomeView: View {
                         Spacer()
                     }
                     .onTapGesture {
-                        viewModel.onAction(.cafeTapped(id: cafe.id))
+                        onAction(.cafeTapped(id: cafe.id))
                     }
                 }
             }
@@ -163,7 +179,7 @@ struct HomeView: View {
             SectionTitle(icon: "🎂", title: "생일인 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    ForEach(viewModel.uiState.birthdayCasts, id: \.id) { maid in
+                    ForEach(uiState.birthdayCasts, id: \.id) { maid in
                         VStack(spacing: 8) {
                             Circle()
                                 .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
@@ -172,7 +188,7 @@ struct HomeView: View {
                                 .font(.caption)
                         }
                         .onTapGesture {
-                            viewModel.onAction(.birthdayMaidTapped(id: maid.id))
+                            onAction(.birthdayMaidTapped(id: maid.id))
                         }
                     }
                 }
@@ -185,7 +201,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "📢", title: "최근 카페 공지")
             VStack(spacing: 10) {
-                ForEach(viewModel.uiState.notices, id: \.id) { notice in
+                ForEach(uiState.notices, id: \.id) { notice in
                     HStack(alignment: .top, spacing: 8) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(notice.cafeName)
@@ -236,6 +252,6 @@ private extension Color {
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeView(onNavigationAction: { _ in })
+        HomeContentView(uiState: .empty, currentBannerPage: Binding(get: { 1 }, set: { _ in }), onAction: { _ in })
     }
 }

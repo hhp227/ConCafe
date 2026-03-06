@@ -16,17 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -39,9 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,10 +52,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.Cast
+import org.hhp227.concafe.presentation.component.CapsuleDropdown
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
+import kotlin.collections.chunked
+import kotlin.collections.map
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExploreScreen(
     viewModel: ExploreViewModel = viewModel(
@@ -72,19 +69,9 @@ fun ExploreScreen(
     ),
     onNavigate: (NavigationAction) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
-    val cafeNameById = state.cafes.associate { it.id to it.name }
-    val rows = if (state.selectedTab == ExploreUiState.TabType.CAFE) {
-        state.cafes.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.CafeItem(it) }
-        }
-    } else {
-        state.maids.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
-        }
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -99,6 +86,27 @@ fun ExploreScreen(
             focusManager.clearFocus()
         }
     }
+    ExploreContentScreen(uiState, listState, viewModel::onAction)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ExploreContentScreen(
+    uiState: ExploreUiState,
+    listState: LazyListState,
+    onAction: (ExploreAction) -> Unit
+) {
+    val cafeNameById = uiState.cafes.associate { it.id to it.name }
+    val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+        uiState.cafes.chunked(2).map { pair ->
+            pair.map { ExploreGridItem.CafeItem(it) }
+        }
+    } else {
+        uiState.maids.chunked(2).map { pair ->
+            pair.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
+        }
+    }
+
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -115,8 +123,8 @@ fun ExploreScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
-                    value = state.query,
-                    onValueChange = { viewModel.onAction(ExploreAction.QueryChanged(it)) },
+                    value = uiState.query,
+                    onValueChange = { onAction(ExploreAction.QueryChanged(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -134,14 +142,14 @@ fun ExploreScreen(
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CapsuleDropdown(
-                        selected = state.selectedRegion.label,
+                        selected = uiState.selectedRegion.label,
                         options = ExploreUiState.RegionFilter.entries.map { it.label to it },
-                        onSelected = { viewModel.onAction(ExploreAction.RegionChanged(it)) }
+                        onSelected = { onAction(ExploreAction.RegionChanged(it)) }
                     )
                     CapsuleDropdown(
-                        selected = state.selectedSort.label,
+                        selected = uiState.selectedSort.label,
                         options = ExploreUiState.SortFilter.entries.map { it.label to it },
-                        onSelected = { viewModel.onAction(ExploreAction.SortChanged(it)) }
+                        onSelected = { onAction(ExploreAction.SortChanged(it)) }
                     )
                 }
             }
@@ -153,19 +161,20 @@ fun ExploreScreen(
                     .fillMaxWidth()
                     .zIndex(1f)
             ) {
-                val selectedTabIndex = if (state.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
+                val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
+
                 TabRow(selectedTabIndex = selectedTabIndex, modifier = Modifier.fillMaxWidth()) {
                     ExploreUiState.TabType.entries.forEachIndexed { index, tab ->
                         Tab(
                             selected = index == selectedTabIndex,
-                            onClick = { viewModel.onAction(ExploreAction.TabChanged(tab)) },
+                            onClick = { onAction(ExploreAction.TabChanged(tab)) },
                             text = { Text(tab.label) }
                         )
                     }
                 }
             }
         }
-        if (state.isLoading) {
+        if (uiState.isLoading) {
             item {
                 Box(
                     modifier = Modifier
@@ -176,7 +185,7 @@ fun ExploreScreen(
                     CircularProgressIndicator()
                 }
             }
-        } else if (state.errorMessage != null) {
+        } else if (uiState.errorMessage != null) {
             item {
                 Box(
                     modifier = Modifier
@@ -203,12 +212,12 @@ fun ExploreScreen(
                             when (item) {
                                 is ExploreGridItem.CafeItem -> CafeCard(
                                     cafe = item.cafe,
-                                    onClick = { viewModel.onAction(ExploreAction.ClickCafe(item.cafe.id)) }
+                                    onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
                                 )
                                 is ExploreGridItem.MaidItem -> MaidCard(
                                     maid = item.maid,
                                     cafeName = item.cafeName,
-                                    onClick = { viewModel.onAction(ExploreAction.ClickMaid(item.maid.id)) }
+                                    onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
                                 )
                             }
                         }
@@ -217,54 +226,6 @@ fun ExploreScreen(
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun <T> CapsuleDropdown(
-    selected: String,
-    options: List<Pair<String, T>>,
-    onSelected: (T) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        Surface(
-            shape = RoundedCornerShape(999.dp),
-            color = Color(0xFFF3F3F3),
-            modifier = Modifier.clickable { expanded = true }
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = selected,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF555555)
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = Color(0xFF777777)
-                )
-            }
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { (text, value) ->
-                DropdownMenuItem(
-                    text = { Text(text) },
-                    onClick = {
-                        onSelected(value)
-                        expanded = false
-                    }
-                )
             }
         }
     }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,9 +58,8 @@ fun HomeScreen(
     ),
     onNavigate: (NavigationAction) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
-    val cafeNameById = state.nearbyCafes.associate { it.id to it.name }
-    val pagerState = rememberPagerState(pageCount = { state.banners.size })
+    val uiState by viewModel.uiState.collectAsState()
+    val pagerState = rememberPagerState(pageCount = { uiState.banners.size })
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -69,18 +69,31 @@ fun HomeScreen(
             }
         }
     }
-    LaunchedEffect(state.banners.size) {
-        if (state.banners.size <= 1) return@LaunchedEffect
+    LaunchedEffect(uiState.banners.size) {
+        if (uiState.banners.size <= 1) return@LaunchedEffect
         while (true) {
             delay(3000)
-            val nextPage = (pagerState.currentPage + 1) % state.banners.size
+            val nextPage = (pagerState.currentPage + 1) % uiState.banners.size
             pagerState.animateScrollToPage(nextPage)
         }
     }
+    HomeContentScreen(uiState, pagerState, viewModel::onAction)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeContentScreen(
+    uiState: HomeUiState,
+    pagerState: PagerState,
+    onAction: (HomeAction) -> Unit
+) {
+    val screenBackgroundColor = Color(0xFFFFFBFD)
+    val cafeNameById = uiState.nearbyCafes.associate { it.id to it.name }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(screenBackgroundColor),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(vertical = 20.dp)
     ) {
@@ -94,7 +107,7 @@ fun HomeScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     pageSpacing = 12.dp
                 ) { page ->
-                    val banner = state.banners[page]
+                    val banner = uiState.banners[page]
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -123,12 +136,12 @@ fun HomeScreen(
                         }
                     }
                 }
-                if (state.banners.size > 1) {
+                if (uiState.banners.size > 1) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        repeat(state.banners.size) { page ->
+                        repeat(uiState.banners.size) { page ->
                             Box(
                                 modifier = Modifier
                                     .padding(horizontal = 3.dp)
@@ -151,18 +164,19 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(state.popularCasts) { maid ->
-                    Card(
+                items(uiState.popularCasts) { maid ->
+                    Column(
                         modifier = Modifier
                             .width(132.dp)
-                            .clickable { viewModel.onAction(HomeAction.ClickMaid(maid.id)) },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(screenBackgroundColor)
+                            .clickable { onAction(HomeAction.ClickMaid(maid.id)) }
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(130.dp)
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(Brush.verticalGradient(listOf(Color(0xFFFFDCE8), Color(0xFFFFC4D8))))
                         )
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -191,11 +205,11 @@ fun HomeScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                state.nearbyCafes.forEach { cafe ->
+                uiState.nearbyCafes.forEach { cafe ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { viewModel.onAction(HomeAction.ClickCafe(cafe.id)) },
+                            .clickable { onAction(HomeAction.ClickCafe(cafe.id)) },
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Box(
@@ -221,10 +235,10 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(state.birthdayCasts) { maid ->
+                items(uiState.birthdayCasts) { maid ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { viewModel.onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
+                        modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
                     ) {
                         Box(
                             modifier = Modifier
@@ -244,7 +258,7 @@ fun HomeScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                state.notices.forEach { notice ->
+                uiState.notices.forEach { notice ->
                     Card(
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)

@@ -24,6 +24,7 @@ import org.hhp227.concafe.domain.repository.UserRepository
 import org.hhp227.concafe.domain.repository.VisitRepository
 import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import org.koin.dsl.module
 
 val dataSourceModule = module {
@@ -46,6 +47,7 @@ val repositoryModule = module {
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
+    factory { GetMyInfoUseCase(get(), get(), get(), get()) }
 }
 
 val concafeModules = listOf(
