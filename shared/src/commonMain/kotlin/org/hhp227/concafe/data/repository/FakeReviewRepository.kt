@@ -55,7 +55,7 @@ class FakeReviewRepository(
         if (index >= 0) {
             dataSource.reviews.removeAt(index)
         } else {
-            throw SecurityException("no permission to delete review")
+            throw Exception("no permission to delete review")
         }
     }
 }

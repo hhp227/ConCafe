@@ -11,8 +11,6 @@ class GetHomeFeedUseCase(
     suspend operator fun invoke(limit: Int): AppResult<HomeFeed> {
         return try {
             AppResult.Success(cafeRepository.getHomeFeed(limit))
-        } catch (e: SecurityException) {
-            AppResult.Failure(AppError.PermissionDenied)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
