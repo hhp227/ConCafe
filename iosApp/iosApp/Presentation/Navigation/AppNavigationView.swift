@@ -51,14 +51,11 @@ struct AppNavigationView: View {
                     currentMainTab = initialTab ?? "home"
                     currentRoute = .main(initialTab: currentMainTab)
                     path.removeAll()
-                case .castDetail(let param):
-                    currentRoute = .castDetail(param: param)
+                case .castDetail:
                     path.append(route)
-                case .cafeDetail(let param):
-                    currentRoute = .cafeDetail(param: param)
+                case .cafeDetail:
                     path.append(route)
                 case .notification:
-                    currentRoute = .notification
                     path.append(route)
                 case .entry:
                     currentRoute = .entry
