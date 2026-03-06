@@ -1,6 +1,6 @@
 package org.hhp227.concafe.di
 
-import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import org.hhp227.concafe.domain.usecase.HomeUseCaseWrapper
 import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
@@ -21,6 +21,6 @@ fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     }
 }
 
-fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
+fun resolveHomeUseCaseWrapper(): HomeUseCaseWrapper {
     return GlobalContext.get().get()
 }

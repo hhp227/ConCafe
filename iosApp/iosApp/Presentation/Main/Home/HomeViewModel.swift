@@ -11,7 +11,7 @@ import Shared
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    private let getHomeFeedUseCase: GetHomeFeedUseCase
+    private let homeUseCaseWrapper: HomeUseCaseWrapper
     
     @Published private(set) var uiState = HomeUiState.empty
 
@@ -23,7 +23,7 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
-                guard let feed = try await getHomeFeedUseCase.getHomeFeedOrNull(limit: 10) else {
+                guard let feed = try await homeUseCaseWrapper.getHomeFeedOrNull(limit: 10) else {
                     uiState = .empty
                     return
                 }
@@ -56,9 +56,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     init(
-        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase()
+        homeUseCaseWrapper: HomeUseCaseWrapper = KoinInitializerKt.resolveHomeUseCaseWrapper()
     ) {
-        self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.homeUseCaseWrapper = homeUseCaseWrapper
         loadHomeFeed()
     }
     
