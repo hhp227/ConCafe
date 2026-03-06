@@ -6,3 +6,13 @@
 //
 
 import Foundation
+
+enum ExploreAction {
+    case queryChanged(String)
+    case regionChanged(ExploreUiState.RegionFilter)
+    case sortChanged(ExploreUiState.SortFilter)
+    case tabChanged(ExploreUiState.TabType)
+    case cafeTapped(id: String)
+    case maidTapped(id: String)
+    case refresh
+}

@@ -20,7 +20,7 @@ struct MainView: View {
                 HomeView(onNavigationAction: onNavigationAction)
                     .tabItem { Label("홈", systemImage: "house.fill") }
                     .tag("home")
-                ExploreView()
+                ExploreView(onNavigationAction: onNavigationAction)
                     .tabItem { Label("탐색", systemImage: "magnifyingglass") }
                     .tag("explore")
                 if #available(iOS 16.0, *) {
