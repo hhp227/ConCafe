@@ -9,150 +9,13 @@ import Foundation
 import SwiftUI
 import Shared
 
-private struct HomeBanner: Identifiable {
-    let id: String
-    let title: String
-    let colors: [Color]
-}
-
-private struct PopularMaid: Identifiable {
-    let id: String
-    let name: String
-    let cafe: String
-    let followers: Int
-}
-
-private struct NearbyCafe: Identifiable {
-    let id: String
-    let name: String
-    let rating: String
-    let location: String
-    let distance: String
-}
-
-private struct BirthdayMaid: Identifiable {
-    let id: String
-    let name: String
-}
-
-private struct NoticeItem: Identifiable {
-    let id: String
-    let cafe: String
-    let content: String
-    let time: String
-}
-
-private struct HomeUiState {
-    let banners: [HomeBanner]
-    let popularMaids: [PopularMaid]
-    let nearbyCafes: [NearbyCafe]
-    let birthdayMaids: [BirthdayMaid]
-    let notices: [NoticeItem]
-
-    static let empty = HomeUiState(
-        banners: [],
-        popularMaids: [],
-        nearbyCafes: [],
-        birthdayMaids: [],
-        notices: []
-    )
-}
-
-private enum HomeAction {
-    case maidTapped(id: String)
-    case cafeTapped(id: String)
-    case birthdayMaidTapped(id: String)
-}
-
-private enum HomeEvent {
-    case navigateToDetail(id: String)
-}
-
-@MainActor
-private final class HomeViewModel: ObservableObject {
-    @Published private(set) var uiState = HomeUiState.empty
-
-    var onEvent: ((HomeEvent) -> Void)?
-
-    private func loadHomeFeed() {
-        let feed = MockConCafeDataSource().homeFeed
-        uiState = mapHomeFeed(feed)
-    }
-
-    private func mapHomeFeed(_ feed: Shared.HomeFeed) -> HomeUiState {
-        let banners = (feed.banners as? [Shared.HomeBanner] ?? []).map { banner in
-            HomeBanner(
-                id: banner.id,
-                title: banner.title,
-                colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)]
-            )
-        }
-
-        let popularMaids = (feed.popularCasts as? [Shared.HomePopularCast] ?? []).map { cast in
-            PopularMaid(
-                id: cast.id,
-                name: cast.name,
-                cafe: cast.cafeName,
-                followers: Int(cast.followers)
-            )
-        }
-
-        let nearbyCafes = (feed.nearbyCafes as? [Shared.HomeNearbyCafe] ?? []).map { cafe in
-            NearbyCafe(
-                id: cafe.id,
-                name: cafe.name,
-                rating: "\(cafe.rating)",
-                location: cafe.location,
-                distance: cafe.distance
-            )
-        }
-
-        let birthdayMaids = (feed.birthdayCasts as? [Shared.HomeBirthdayCast] ?? []).map { cast in
-            BirthdayMaid(
-                id: cast.id,
-                name: cast.name
-            )
-        }
-
-        let notices = (feed.notices as? [Shared.Notice] ?? []).map { notice in
-            NoticeItem(
-                id: notice.id,
-                cafe: notice.cafeName,
-                content: notice.content,
-                time: notice.relativeTime
-            )
-        }
-
-        return HomeUiState(
-            banners: banners,
-            popularMaids: popularMaids,
-            nearbyCafes: nearbyCafes,
-            birthdayMaids: birthdayMaids,
-            notices: notices
-        )
-    }
-
-    func onAction(_ action: HomeAction) {
-        switch action {
-        case .maidTapped(let id):
-            onEvent?(.navigateToDetail(id: id))
-        case .birthdayMaidTapped(let id):
-            onEvent?(.navigateToDetail(id: id))
-        case .cafeTapped(let id):
-            onEvent?(.navigateToDetail(id: id))
-        }
-    }
-
-    init() {
-        loadHomeFeed()
-    }
-}
-
 struct HomeView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = HomeViewModel()
+    
     @State private var currentBannerPage = 0
+    
     private let bannerTimer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -323,6 +186,7 @@ struct HomeView: View {
 
 private struct SectionTitle: View {
     let icon: String
+    
     let title: String
 
     var body: some View {

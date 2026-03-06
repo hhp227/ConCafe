@@ -37,7 +37,7 @@ struct MainView: View {
         .navigationTitle("ConCafe")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     onNavigationAction(.navigateToNotification)
                 } label: {
