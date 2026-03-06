@@ -27,21 +27,17 @@ final class HomeViewModel: ObservableObject {
                     uiState = .empty
                     return
                 }
-                uiState = mapHomeFeed(feed)
+                uiState = HomeUiState(
+                    banners: feed.banners as? [Shared.HomeBanner] ?? [],
+                    popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
+                    nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
+                    birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
+                    notices: feed.notices as? [Shared.Notice] ?? []
+                )
             } catch {
                 uiState = .empty
             }
         }
-    }
-    
-    private func mapHomeFeed(_ feed: Shared.HomeFeed) -> HomeUiState {
-        return HomeUiState(
-            banners: feed.banners as? [Shared.HomeBanner] ?? [],
-            popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
-            nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
-            birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
-            notices: feed.notices as? [Shared.Notice] ?? []
-        )
     }
 
     func onAction(_ action: HomeAction) {
@@ -59,6 +55,7 @@ final class HomeViewModel: ObservableObject {
         homeUseCaseWrapper: HomeUseCaseWrapper = KoinInitializerKt.resolveHomeUseCaseWrapper()
     ) {
         self.homeUseCaseWrapper = homeUseCaseWrapper
+        
         loadHomeFeed()
     }
     

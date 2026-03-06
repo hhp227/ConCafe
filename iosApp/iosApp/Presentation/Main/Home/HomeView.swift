@@ -26,7 +26,7 @@ struct HomeView: View {
         ScrollView {
             VStack(spacing: 24) {
                 bannerSection
-                popularMaidSection
+                popularCastSection
                 nearbyCafeSection
                 birthdaySection
                 noticeSection
@@ -78,7 +78,7 @@ struct HomeView: View {
         .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
 
-    private var popularMaidSection: some View {
+    private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "❤", title: "인기 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
