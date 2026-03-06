@@ -114,7 +114,7 @@ struct HomeView: View {
                             .padding(10)
                         }
                         .frame(width: 132, alignment: .leading)
-                        .background(.white)
+                        .background(Color(hex: "FFF9FC"))
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .onTapGesture {
                             viewModel.onAction(.maidTapped(id: maid.id))

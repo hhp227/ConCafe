@@ -24,6 +24,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,14 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -63,7 +68,7 @@ fun MyInfoScreen(
     ),
     onNavigate: (NavigationAction) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -73,27 +78,21 @@ fun MyInfoScreen(
             }
         }
     }
-
     when {
-        state.isLoading -> {
+        uiState.isLoading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-
-        !state.isLoggedIn -> {
+        !uiState.isLoggedIn -> {
             GuestMyInfoScreen(
-                cafes = state.popularCafes,
-                onCafeClick = { id -> viewModel.onAction(MyInfoAction.ClickCafe(id)) }
+                uiState, viewModel::onAction
             )
         }
-
         else -> {
             ProfileMyInfoScreen(
-                state = state,
-                onLogout = { viewModel.onAction(MyInfoAction.ClickLogout) },
-                onCafeClick = { id -> viewModel.onAction(MyInfoAction.ClickCafe(id)) },
-                onMaidClick = { id -> viewModel.onAction(MyInfoAction.ClickMaid(id)) }
+                uiState = uiState,
+                onAction = viewModel::onAction
             )
         }
     }
@@ -101,14 +100,14 @@ fun MyInfoScreen(
 
 @Composable
 private fun GuestMyInfoScreen(
-    cafes: List<Cafe>,
-    onCafeClick: (String) -> Unit
+    uiState: MyInfoUiState,
+    onAction: (MyInfoAction) -> Unit
 ) {
     val features = listOf(
-        Triple("📍", "체크인 기록", "방문한 카페를 기록해보세요"),
-        Triple("❤️", "즐겨찾기", "좋아하는 카페와 메이드를 저장"),
-        Triple("⭐", "배지 수집", "다양한 활동으로 배지 획득"),
-        Triple("🎁", "멤버십 혜택", "이벤트와 할인 혜택 받기")
+        GuestFeatureItem(Icons.Filled.Place, "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", Color(0xFFEF6797), Color(0xFFF57AA8)),
+        GuestFeatureItem(Icons.Filled.Favorite, "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", Color(0xFF9C6ADE), Color(0xFFB388EB)),
+        GuestFeatureItem(Icons.Filled.Star, "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", Color(0xFFF0B429), Color(0xFFF5C857)),
+        GuestFeatureItem(Icons.Filled.CardGiftcard, "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", Color(0xFF4C8BF5), Color(0xFF71A7FF))
     )
 
     LazyColumn(
@@ -140,18 +139,24 @@ private fun GuestMyInfoScreen(
                             .padding(top = 10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                     ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = Color(0xFFEF6797),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Box(modifier = Modifier.width(6.dp))
                         Text("로그인하기", color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
-
         item {
             Text("로그인 후 이용 가능한 기능", fontWeight = FontWeight.Bold)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
-                    .height(220.dp)
+                    .height(296.dp)
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -159,24 +164,65 @@ private fun GuestMyInfoScreen(
             ) {
                 items(features) { feature ->
                     Card(shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(feature.first)
-                            Text(feature.second, fontWeight = FontWeight.SemiBold)
-                            Text(feature.third, style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
+                        Column(
+                            modifier = Modifier
+                                .height(140.dp)
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Brush.linearGradient(listOf(feature.startColor, feature.endColor))),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = feature.icon,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Text(feature.title, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                feature.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF777777),
+                                maxLines = 3,
+                                overflow = TextOverflow.Clip
+                            )
                         }
                     }
                 }
             }
         }
-
         item {
-            Text("인기 카페 둘러보기", fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("인기 카페 둘러보기", fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.clickable { },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("더보기", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
+                    Icon(
+                        imageVector = Icons.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = Color(0xFFEF6797),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                cafes.forEach { cafe ->
+                uiState.popularCafes.forEach { cafe ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onCafeClick(cafe.id) },
+                            .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Row(modifier = Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -195,19 +241,51 @@ private fun GuestMyInfoScreen(
                 }
             }
         }
+        item {
+            Card(
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.linearGradient(listOf(Color(0xFFFFEAF2), Color(0xFFFDE3F0))))
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("✨", style = MaterialTheme.typography.headlineMedium)
+                    Text("지금 바로 시작하세요!", fontWeight = FontWeight.Bold)
+                    Text(
+                        "ConCafe 회원만의 특별한 혜택을 누려보세요",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7E7E7E)
+                    )
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.padding(top = 10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797))
+                    ) {
+                        Text("회원가입하기", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
     }
 }
 
+private data class GuestFeatureItem(
+    val icon: ImageVector,
+    val title: String,
+    val description: String,
+    val startColor: Color,
+    val endColor: Color
+)
+
 @Composable
 private fun ProfileMyInfoScreen(
-    state: MyInfoUiState,
-    onLogout: () -> Unit,
-    onCafeClick: (String) -> Unit,
-    onMaidClick: (String) -> Unit
+    uiState: MyInfoUiState,
+    onAction: (MyInfoAction) -> Unit
 ) {
-    val summary = state.summary
-    val user = state.user
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -227,27 +305,25 @@ private fun ProfileMyInfoScreen(
                         .padding(16.dp)
                 ) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text(user?.nickname ?: "메이드러버", color = Color.White, fontWeight = FontWeight.Bold)
-                        Text("로그아웃", color = Color.White, modifier = Modifier.clickable { onLogout() })
+                        Text(uiState.user?.nickname ?: "메이드러버", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("로그아웃", color = Color.White, modifier = Modifier.clickable { onAction(MyInfoAction.ClickLogout) })
                     }
-                    Text("레벨 ${summary?.level ?: 1}", color = Color.White.copy(alpha = 0.9f))
+                    Text("레벨 ${uiState.summary?.level ?: 1}", color = Color.White.copy(alpha = 0.9f))
                     Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 8.dp)) {
-                        Text("📍 ${summary?.totalVisits ?: 0}", color = Color.White)
-                        Text("❤️ ${summary?.favoritesCount ?: 0}", color = Color.White)
-                        Text("👥 ${summary?.followedCastsCount ?: 0}", color = Color.White)
+                        Text("📍 ${uiState.summary?.totalVisits ?: 0}", color = Color.White)
+                        Text("❤️ ${uiState.summary?.favoritesCount ?: 0}", color = Color.White)
+                        Text("👥 ${uiState.summary?.followedCastsCount ?: 0}", color = Color.White)
                     }
                 }
             }
         }
-
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatCard("방문 횟수", summary?.totalVisits ?: 0)
-                StatCard("즐겨찾기", summary?.favoritesCount ?: 0)
-                StatCard("팔로우", summary?.followedCastsCount ?: 0)
+                StatCard("방문 횟수", uiState.summary?.totalVisits ?: 0)
+                StatCard("즐겨찾기", uiState.summary?.favoritesCount ?: 0)
+                StatCard("팔로우", uiState.summary?.followedCastsCount ?: 0)
             }
         }
-
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -255,7 +331,7 @@ private fun ProfileMyInfoScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("획득 배지", fontWeight = FontWeight.Bold)
-                Text("${state.badges.count { it.unlocked }} / ${state.badges.size}", style = MaterialTheme.typography.bodySmall)
+                Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
             }
             Row(
                 modifier = Modifier
@@ -263,7 +339,7 @@ private fun ProfileMyInfoScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                state.badges.forEach { badge ->
+                uiState.badges.forEach { badge ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
                             modifier = Modifier
@@ -279,15 +355,14 @@ private fun ProfileMyInfoScreen(
                 }
             }
         }
-
         item {
             Text("최근 방문", fontWeight = FontWeight.Bold)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                items(state.recentVisits) { cafe ->
+                items(uiState.recentVisits) { cafe ->
                     Column(
                         modifier = Modifier
                             .width(120.dp)
-                            .clickable { onCafeClick(cafe.id) }
+                            .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) }
                     ) {
                         Box(
                             modifier = Modifier
@@ -301,7 +376,6 @@ private fun ProfileMyInfoScreen(
                 }
             }
         }
-
         item {
             Text("즐겨찾기", fontWeight = FontWeight.Bold)
             LazyVerticalGrid(
@@ -313,9 +387,9 @@ private fun ProfileMyInfoScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 userScrollEnabled = false
             ) {
-                items(state.favorites.take(4)) { cafe ->
+                items(uiState.favorites.take(4)) { cafe ->
                     Card(
-                        modifier = Modifier.clickable { onCafeClick(cafe.id) },
+                        modifier = Modifier.clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Column {
@@ -336,12 +410,11 @@ private fun ProfileMyInfoScreen(
                 }
             }
         }
-
         item {
             Text("팔로우한 메이드", fontWeight = FontWeight.Bold)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
-                items(state.followedMaids.take(6)) { maid ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onMaidClick(maid.id) }) {
+                items(uiState.followedMaids.take(6)) { maid ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
                         Box(
                             modifier = Modifier
                                 .size(72.dp)

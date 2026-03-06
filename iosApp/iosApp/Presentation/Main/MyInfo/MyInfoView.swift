@@ -37,10 +37,10 @@ struct MyInfoView: View {
 
     private var guestView: some View {
         let features = [
-            ("📍", "체크인 기록", "방문한 카페를 기록해보세요"),
-            ("❤️", "즐겨찾기", "좋아하는 카페와 메이드를 저장"),
-            ("⭐", "배지 수집", "다양한 활동으로 배지 획득"),
-            ("🎁", "멤버십 혜택", "이벤트와 할인 혜택 받기")
+            ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
+            ("heart.fill", "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", "9C6ADE", "B388EB"),
+            ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
+            ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
         ]
         return ScrollView {
             VStack(spacing: 16) {
@@ -55,10 +55,17 @@ struct MyInfoView: View {
                     Text("로그인하고 메이드카페의 모든 것을 즐겨보세요")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
-                    Button("로그인하기") {
+                    Button {
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .font(.system(size: 14, weight: .bold))
+                            Text("로그인하기")
+                                .fontWeight(.bold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
                     .background(.white)
                     .foregroundStyle(Color(hex: "EF6797"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -74,12 +81,30 @@ struct MyInfoView: View {
                         .font(.headline)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(Array(features.enumerated()), id: \.offset) { _, item in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.0)
+                            VStack(alignment: .leading, spacing: 6) {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: item.3), Color(hex: item.4)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 44, height: 44)
+                                    .overlay(
+                                        Image(systemName: item.0)
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                    )
                                 Text(item.1).font(.subheadline).bold()
-                                Text(item.2).font(.caption).foregroundStyle(.secondary)
+                                Text(item.2)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(3)
+                                    .multilineTextAlignment(.leading)
                             }
                             .padding(12)
+                            .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140, alignment: .topLeading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -87,8 +112,22 @@ struct MyInfoView: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("인기 카페 둘러보기")
-                        .font(.headline)
+                    HStack {
+                        Text("인기 카페 둘러보기")
+                            .font(.headline)
+                        Spacer()
+                        Button {
+                        } label: {
+                            HStack(spacing: 2) {
+                                Text("더보기")
+                                    .font(.caption)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundStyle(Color(hex: "EF6797"))
+                        }
+                        .buttonStyle(.plain)
+                    }
                     ForEach(viewModel.uiState.popularCafes, id: \.id) { cafe in
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 12)
@@ -108,6 +147,39 @@ struct MyInfoView: View {
                         }
                     }
                 }
+                VStack(spacing: 8) {
+                    Text("✨")
+                        .font(.title2)
+                    Text("지금 바로 시작하세요!")
+                        .font(.headline)
+                        .bold()
+                    Text("ConCafe 회원만의 특별한 혜택을 누려보세요")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button {
+                    } label: {
+                        Text("회원가입하기")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 10)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color(hex: "EF6797"), Color(hex: "F8A0C2")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity)
+                .background(
+                    LinearGradient(colors: [Color(hex: "FFEAF2"), Color(hex: "FDE3F0")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
             .padding(16)
         }
