@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.koin.core)
             implementation(projects.shared)
         }
         commonTest.dependencies {

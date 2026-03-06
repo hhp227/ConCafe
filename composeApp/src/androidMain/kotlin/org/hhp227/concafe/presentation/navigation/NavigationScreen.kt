@@ -57,13 +57,11 @@ fun NavigationScreen(
             )
         }
         composable<Route.CastDetail> { backStackEntry ->
-            val castDetail: Route.CastDetail = backStackEntry.toRoute()
-
+            backStackEntry.toRoute<Route.CastDetail>()
             CastDetailScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.CafeDetail> { backStackEntry ->
-            val castDetail: Route.CastDetail = backStackEntry.toRoute()
-
+            backStackEntry.toRoute<Route.CafeDetail>()
             CafeDetailScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Notification> {

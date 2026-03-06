@@ -1,0 +1,13 @@
+package org.hhp227.concafe.domain.model
+
+data class Cafe(
+    val id: String,
+    val name: String,
+    val description: String,
+    val region: Region,
+    val thumbnailImage: String?,
+    val ratingAvg: Double,
+    val reviewCount: Int,
+    val approved: Boolean,
+    val conceptType: String
+)

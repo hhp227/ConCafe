@@ -58,7 +58,6 @@ struct AppNavigationView: View {
                     currentRoute = .cafeDetail(param: param)
                     path.append(route)
                 case .notification:
-                    currentRoute = .notification
                     path.append(route)
                 case .entry:
                     currentRoute = .entry
@@ -77,19 +76,8 @@ struct AppNavigationView: View {
             )
         case .entry:
             ProgressView()
-        case .castDetail:
+        default:
             // Detail is pushed through NavigationStack path.
-            MainView(
-                initialTab: currentMainTab,
-                onNavigationAction: viewModel.onAction
-            )
-        case .cafeDetail:
-            MainView(
-                initialTab: currentMainTab,
-                onNavigationAction: viewModel.onAction
-            )
-        case .notification:
-            // Notification is pushed through NavigationStack path.
             MainView(
                 initialTab: currentMainTab,
                 onNavigationAction: viewModel.onAction
