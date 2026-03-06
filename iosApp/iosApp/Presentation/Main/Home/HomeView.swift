@@ -56,26 +56,37 @@ struct HomeView: View {
     }
 
     private var bannerSection: some View {
-        TabView(selection: $currentBannerPage) {
-            ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                ZStack(alignment: .bottomLeading) {
-                    LinearGradient(
-                        colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Text(banner.title)
-                        .font(.title3.weight(.bold))
-                        .foregroundColor(.white)
-                        .padding(16)
+        VStack(spacing: 10) {
+            TabView(selection: $currentBannerPage) {
+                ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                    ZStack(alignment: .bottomLeading) {
+                        LinearGradient(
+                            colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        Text(banner.title)
+                            .font(.title3.weight(.bold))
+                            .foregroundColor(.white)
+                            .padding(16)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .padding(.horizontal, 16)
+                    .tag(index)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .padding(.horizontal, 16)
-                .tag(index)
+            }
+            .frame(height: 190)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            if viewModel.uiState.banners.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                        RoundedRectangle(cornerRadius: 999)
+                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
+                    }
+                }
             }
         }
-        .frame(height: 190)
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
 
     private var popularCastSection: some View {
@@ -84,21 +95,25 @@ struct HomeView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.uiState.popularCasts, id: \.id) { maid in
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 0) {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(LinearGradient(colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 132, height: 124)
-                            Text(maid.name)
-                                .font(.subheadline.weight(.semibold))
-                            Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("👥 \(maid.followerCount)")
-                                .font(.caption)
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .frame(width: 132, height: 130)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(maid.name)
+                                    .font(.subheadline.weight(.semibold))
+                                    .lineLimit(1)
+                                Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                Text("👥 \(maid.followerCount)")
+                                    .font(.caption)
+                                    .foregroundStyle(Color(hex: "EF6797"))
+                            }
+                            .padding(10)
                         }
                         .frame(width: 132, alignment: .leading)
-                        .padding(10)
                         .background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .onTapGesture {

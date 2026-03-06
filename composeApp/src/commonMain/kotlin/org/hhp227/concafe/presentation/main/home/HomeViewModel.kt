@@ -48,10 +48,12 @@ class HomeViewModel(
     }
 
     fun onAction(action: HomeAction) {
-        when (action) {
-            is HomeAction.ClickMaid -> _event.tryEmit(HomeEvent.NavigateToCastDetail(action.id))
-            is HomeAction.ClickBirthdayMaid -> _event.tryEmit(HomeEvent.NavigateToCastDetail(action.id))
-            is HomeAction.ClickCafe -> _event.tryEmit(HomeEvent.NavigateToCafeDetail(action.id))
+        viewModelScope.launch {
+            when (action) {
+                is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCastDetail(action.id))
+                is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCastDetail(action.id))
+                is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafeDetail(action.id))
+            }
         }
     }
 
