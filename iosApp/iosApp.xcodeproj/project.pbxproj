@@ -50,6 +50,7 @@
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
 		0AA036222F5AA34700A3BAF5 /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA036212F5AA34700A3BAF5 /* NotificationAction.swift */; };
 		0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */; };
+		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011001AABBCCDDEEFF0001 /* ContentView.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
@@ -104,6 +105,7 @@
 		0AA036212F5AA34700A3BAF5 /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		0AA036232F5AA35B00A3BAF5 /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
 		0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreAction.swift; sourceTree = "<group>"; };
+		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011001AABBCCDDEEFF0001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 		0A580D9B2F59658900390F67 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
+				0ADC46E92F5B33A5003484E4 /* Component */,
 				0A785C9B2F5A7B17004037A8 /* CafeDetail */,
 				0A580DAE2F59689F00390F67 /* CastDetail */,
 				0A580D9D2F5965DB00390F67 /* Main */,
@@ -256,6 +259,14 @@
 				0A785CCA2F5A7F00004037A8 /* CafeDetailAction.swift */,
 			);
 			path = CafeDetail;
+			sourceTree = "<group>";
+		};
+		0ADC46E92F5B33A5003484E4 /* Component */ = {
+			isa = PBXGroup;
+			children = (
+				0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */,
+			);
+			path = Component;
 			sourceTree = "<group>";
 		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
@@ -444,6 +455,7 @@
 				0A785CC72F5A7EB9004037A8 /* CafeDetailEvent.swift in Sources */,
 				0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */,
 				0A580DA12F5966E400390F67 /* Route.swift in Sources */,
+				0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

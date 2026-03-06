@@ -13,12 +13,35 @@ struct ExploreView: View {
 
     @StateObject private var viewModel = ExploreViewModel()
 
-    @FocusState private var isSearchFocused: Bool
-
-    private var cafeNameById: [String: String] {
-        Dictionary(uniqueKeysWithValues: viewModel.uiState.cafes.map { ($0.id, $0.name) })
+    var body: some View {
+        ExploreContentView(
+            uiState: viewModel.uiState,
+            onAction: viewModel.onAction
+        )
+        .navigationTitle("탐색")
+        .navigationBarTitleDisplayMode(.inline)
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateToCastDetail(let id):
+                onNavigationAction(.navigateToCastDetail(id: id))
+            case .navigateToCafeDetail(let id):
+                onNavigationAction(.navigateToCafeDetail(id: id))
+            }
+        }
     }
+}
 
+private struct ExploreContentView: View {
+    @FocusState private var isSearchFocused: Bool
+    
+    let uiState: ExploreUiState
+    
+    let onAction: (ExploreAction) -> Void
+    
+    private var cafeNameById: [String: String] {
+        Dictionary(uniqueKeysWithValues: uiState.cafes.map { ($0.id, $0.name) })
+    }
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
@@ -32,32 +55,22 @@ struct ExploreView: View {
             }
             .padding(.vertical, 12)
         }
+        .background(Color(hex: "FFF9FC"))
         .simultaneousGesture(
             DragGesture(minimumDistance: 4).onChanged { _ in
                 isSearchFocused = false
             }
         )
-        .background(Color(hex: "FFF9FC"))
-        .navigationTitle("탐색")
-        .navigationBarTitleDisplayMode(.inline)
-        .onReceive(viewModel.event) { event in
-            switch event {
-            case .navigateToCastDetail(let id):
-                onNavigationAction(.navigateToCastDetail(id: id))
-            case .navigateToCafeDetail(let id):
-                onNavigationAction(.navigateToCafeDetail(id: id))
-            }
-        }
     }
-
+    
     private var searchSection: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
                 TextField("카페나 메이드를 검색하세요...", text: Binding(
-                    get: { viewModel.uiState.query },
-                    set: { viewModel.onAction(.queryChanged($0)) }
+                    get: { uiState.query },
+                    set: { onAction(.queryChanged($0)) }
                 ))
                 .focused($isSearchFocused)
             }
@@ -76,20 +89,20 @@ struct ExploreView: View {
                 Menu {
                     ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
                         Button(region.label) {
-                            viewModel.onAction(.regionChanged(region))
+                            onAction(.regionChanged(region))
                         }
                     }
                 } label: {
-                    CapsuleDropdownLabel(text: viewModel.uiState.selectedRegion.label)
+                    CapsuleDropdownLabel(text: uiState.selectedRegion.label)
                 }
                 Menu {
                     ForEach(ExploreUiState.SortFilter.allCases, id: \.self) { sort in
                         Button(sort.label) {
-                            viewModel.onAction(.sortChanged(sort))
+                            onAction(.sortChanged(sort))
                         }
                     }
                 } label: {
-                    CapsuleDropdownLabel(text: viewModel.uiState.selectedSort.label)
+                    CapsuleDropdownLabel(text: uiState.selectedSort.label)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -101,15 +114,15 @@ struct ExploreView: View {
         HStack(spacing: 0) {
             ForEach(ExploreUiState.TabType.allCases, id: \.self) { tab in
                 Button {
-                    viewModel.onAction(.tabChanged(tab))
+                    onAction(.tabChanged(tab))
                 } label: {
                     VStack(spacing: 8) {
                         Text(tab.rawValue)
-                            .font(.subheadline.weight(viewModel.uiState.selectedTab == tab ? .semibold : .regular))
-                            .foregroundStyle(viewModel.uiState.selectedTab == tab ? Color(hex: "EF6797") : .secondary)
+                            .font(.subheadline.weight(uiState.selectedTab == tab ? .semibold : .regular))
+                            .foregroundStyle(uiState.selectedTab == tab ? Color(hex: "EF6797") : .secondary)
                             .frame(maxWidth: .infinity)
                         Rectangle()
-                            .fill(viewModel.uiState.selectedTab == tab ? Color(hex: "EF6797") : .clear)
+                            .fill(uiState.selectedTab == tab ? Color(hex: "EF6797") : .clear)
                             .frame(height: 2)
                     }
                     .padding(.top, 10)
@@ -124,23 +137,23 @@ struct ExploreView: View {
 
     @ViewBuilder
     private var gridContent: some View {
-        if viewModel.uiState.isLoading {
+        if uiState.isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
-        } else if viewModel.uiState.errorMessage != nil {
+        } else if uiState.errorMessage != nil {
             Text("탐색 데이터를 불러오지 못했습니다.")
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                if viewModel.uiState.selectedTab == .cafe {
-                    ForEach(viewModel.uiState.cafes, id: \.id) { cafe in
+                if uiState.selectedTab == .cafe {
+                    ForEach(uiState.cafes, id: \.id) { cafe in
                         cafeCard(cafe)
                     }
                 } else {
-                    ForEach(viewModel.uiState.maids, id: \.id) { maid in
+                    ForEach(uiState.maids, id: \.id) { maid in
                         maidCard(maid)
                     }
                 }
@@ -185,7 +198,7 @@ struct ExploreView: View {
             .padding(.horizontal, 4)
         }
         .onTapGesture {
-            viewModel.onAction(.cafeTapped(id: cafe.id))
+            onAction(.cafeTapped(id: cafe.id))
         }
     }
 
@@ -237,7 +250,7 @@ struct ExploreView: View {
             .padding(.horizontal, 4)
         }
         .onTapGesture {
-            viewModel.onAction(.maidTapped(id: maid.id))
+            onAction(.maidTapped(id: maid.id))
         }
     }
 
@@ -253,26 +266,7 @@ struct ExploreView: View {
 
 struct ExploreView_Previews: PreviewProvider {
     static var previews: some View {
-        ExploreView(onNavigationAction: { _ in })
-    }
-}
-
-private struct CapsuleDropdownLabel: View {
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Text(text)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "666666"))
-            Image(systemName: "chevron.down")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(Color(hex: "F3F3F3"))
-        .clipShape(Capsule())
+        ExploreContentView(uiState: .empty, onAction: { _ in })
     }
 }
 

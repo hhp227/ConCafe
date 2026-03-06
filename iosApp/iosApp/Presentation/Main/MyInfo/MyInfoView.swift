@@ -19,9 +19,15 @@ struct MyInfoView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.uiState.isLoggedIn {
-                profileView
+                ProfileMyInfoView(
+                    uiState: viewModel.uiState,
+                    onAction: viewModel.onAction
+                )
             } else {
-                guestView
+                GuestMyInfoView(
+                    uiState: viewModel.uiState,
+                    onAction: viewModel.onAction
+                )
             }
         }
         .background(Color(hex: "FFF9FC"))
@@ -34,15 +40,23 @@ struct MyInfoView: View {
             }
         }
     }
+}
 
-    private var guestView: some View {
-        let features = [
-            ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
-            ("heart.fill", "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", "9C6ADE", "B388EB"),
-            ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
-            ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
-        ]
-        return ScrollView {
+@MainActor
+private struct GuestMyInfoView: View {
+    let uiState: MyInfoUiState
+    
+    let onAction: @MainActor (MyInfoAction) -> Void
+    
+    let features = [
+        ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
+        ("heart.fill", "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", "9C6ADE", "B388EB"),
+        ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
+        ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
+    ]
+    
+    var body: some View {
+        ScrollView {
             VStack(spacing: 16) {
                 VStack(spacing: 8) {
                     Text("💗")
@@ -128,7 +142,7 @@ struct MyInfoView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    ForEach(viewModel.uiState.popularCafes, id: \.id) { cafe in
+                    ForEach(uiState.popularCafes, id: \.id) { cafe in
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
@@ -143,7 +157,7 @@ struct MyInfoView: View {
                         .background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .onTapGesture {
-                            viewModel.onAction(.cafeTapped(id: cafe.id))
+                            onAction(.cafeTapped(id: cafe.id))
                         }
                     }
                 }
@@ -184,8 +198,15 @@ struct MyInfoView: View {
             .padding(16)
         }
     }
+}
 
-    private var profileView: some View {
+@MainActor
+private struct ProfileMyInfoView: View {
+    let uiState: MyInfoUiState
+    
+    let onAction: @MainActor (MyInfoAction) -> Void
+    
+    var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 profileCard
@@ -198,17 +219,17 @@ struct MyInfoView: View {
             .padding(16)
         }
     }
-
+    
     private var profileCard: some View {
-        let summary = viewModel.uiState.summary
+        let summary = uiState.summary
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(viewModel.uiState.user?.nickname ?? "메이드러버")
+                Text(uiState.user?.nickname ?? "메이드러버")
                     .font(.headline)
                     .bold()
                 Spacer()
                 Button("로그아웃") {
-                    viewModel.onAction(.logoutTapped)
+                    onAction(.logoutTapped)
                 }
                 .foregroundStyle(.white)
             }
@@ -230,11 +251,11 @@ struct MyInfoView: View {
     }
 
     private var statsCard: some View {
-        let summary = viewModel.uiState.summary
+        let summary = uiState.summary
         return HStack(spacing: 8) {
-            profileStat("방문 횟수", summary?.totalVisits ?? 0)
-            profileStat("즐겨찾기", summary?.favoritesCount ?? 0)
-            profileStat("팔로우", summary?.followedCastsCount ?? 0)
+            profileStat("방문 횟수", Int(summary?.totalVisits ?? 0))
+            profileStat("즐겨찾기", Int(summary?.favoritesCount ?? 0))
+            profileStat("팔로우", Int(summary?.followedCastsCount ?? 0))
         }
     }
 
@@ -258,13 +279,13 @@ struct MyInfoView: View {
             HStack {
                 Text("획득 배지").font(.headline)
                 Spacer()
-                Text("\(viewModel.uiState.badges.filter { $0.unlocked }.count) / \(viewModel.uiState.badges.count)")
+                Text("\(uiState.badges.filter { $0.unlocked }.count) / \(uiState.badges.count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(viewModel.uiState.badges, id: \.id) { badge in
+                    ForEach(uiState.badges, id: \.id) { badge in
                         VStack {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
@@ -284,14 +305,14 @@ struct MyInfoView: View {
             Text("최근 방문").font(.headline)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(viewModel.uiState.recentVisits, id: \.id) { cafe in
+                    ForEach(uiState.recentVisits, id: \.id) { cafe in
                         VStack(alignment: .leading, spacing: 6) {
                             RoundedRectangle(cornerRadius: 14)
                                 .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
                                 .frame(width: 120, height: 120)
                             Text(cafe.name).font(.caption)
                         }
-                        .onTapGesture { viewModel.onAction(.cafeTapped(id: cafe.id)) }
+                        .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }
                     }
                 }
             }
@@ -302,7 +323,7 @@ struct MyInfoView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("즐겨찾기").font(.headline)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(viewModel.uiState.favorites.prefix(4), id: \.id) { cafe in
+                ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
                     VStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 14)
                             .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
@@ -313,7 +334,7 @@ struct MyInfoView: View {
                     }
                     .background(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .onTapGesture { viewModel.onAction(.cafeTapped(id: cafe.id)) }
+                    .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }
                 }
             }
         }
@@ -324,7 +345,7 @@ struct MyInfoView: View {
             Text("팔로우한 메이드").font(.headline)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(viewModel.uiState.followedMaids.prefix(6), id: \.id) { maid in
+                    ForEach(uiState.followedMaids.prefix(6), id: \.id) { maid in
                         VStack {
                             Circle()
                                 .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
@@ -332,7 +353,7 @@ struct MyInfoView: View {
                             Text(maid.name)
                                 .font(.caption)
                         }
-                        .onTapGesture { viewModel.onAction(.maidTapped(id: maid.id)) }
+                        .onTapGesture { onAction(.maidTapped(id: maid.id)) }
                     }
                 }
             }
