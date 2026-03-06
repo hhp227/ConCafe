@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.presentation.navigation.NavigationEvent.*
-import org.hhp227.concafe.presentation.navigation.Route.*
+import org.hhp227.concafe.presentation.navigation.NavigationEvent.NavigateTo
+import org.hhp227.concafe.presentation.navigation.Route.CafeDetail
+import org.hhp227.concafe.presentation.navigation.Route.CastDetail
+import org.hhp227.concafe.presentation.navigation.Route.Main
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()

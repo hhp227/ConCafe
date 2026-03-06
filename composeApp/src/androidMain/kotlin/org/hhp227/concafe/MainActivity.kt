@@ -6,14 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import org.hhp227.concafe.di.doInitConCafeAppKoin
 import org.hhp227.concafe.presentation.App
-import org.hhp227.concafe.di.doInitKoin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        doInitKoin()
+        doInitConCafeAppKoin()
 
         setContent {
             App()

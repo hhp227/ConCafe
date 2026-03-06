@@ -18,6 +18,10 @@ struct HomeView: View {
     
     private let bannerTimer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
 
+    private var cafeNameById: [String: String] {
+        Dictionary(uniqueKeysWithValues: viewModel.uiState.nearbyCafes.map { ($0.id, $0.name) })
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -30,13 +34,15 @@ struct HomeView: View {
             .padding(.vertical, 16)
         }
         .background(Color(hex: "FFF9FC"))
-        .onAppear {
-            viewModel.onEvent = { event in
-                switch event {
-                case .navigateToDetail(let id):
-                    onNavigationAction(.navigateToDetail(id: id))
-                }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateToCastDetail(let id):
+                onNavigationAction(.navigateToDetail(id: id))
+            case .navigateToCafeDetail(let id):
+                onNavigationAction(.navigateToDetail(id: id))
             }
+        }
+        .onAppear {
             if currentBannerPage >= viewModel.uiState.banners.count {
                 currentBannerPage = 0
             }
@@ -53,7 +59,11 @@ struct HomeView: View {
         TabView(selection: $currentBannerPage) {
             ForEach(Array(viewModel.uiState.banners.enumerated()), id: \.element.id) { index, banner in
                 ZStack(alignment: .bottomLeading) {
-                    LinearGradient(colors: banner.colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(
+                        colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                     Text(banner.title)
                         .font(.title3.weight(.bold))
                         .foregroundColor(.white)
@@ -73,17 +83,17 @@ struct HomeView: View {
             SectionTitle(icon: "❤", title: "인기 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(viewModel.uiState.popularMaids) { maid in
+                    ForEach(viewModel.uiState.popularCasts, id: \.id) { maid in
                         VStack(alignment: .leading, spacing: 8) {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(LinearGradient(colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")], startPoint: .top, endPoint: .bottom))
                                 .frame(width: 132, height: 124)
                             Text(maid.name)
                                 .font(.subheadline.weight(.semibold))
-                            Text(maid.cafe)
+                            Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text("👥 \(maid.followers)")
+                            Text("👥 \(maid.followerCount)")
                                 .font(.caption)
                                 .foregroundStyle(Color(hex: "EF6797"))
                         }
@@ -105,7 +115,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "📍", title: "근처 메이드카페")
             VStack(spacing: 12) {
-                ForEach(viewModel.uiState.nearbyCafes) { cafe in
+                ForEach(viewModel.uiState.nearbyCafes, id: \.id) { cafe in
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(LinearGradient(colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")], startPoint: .top, endPoint: .bottom))
@@ -113,12 +123,12 @@ struct HomeView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(cafe.name)
                                 .font(.subheadline.weight(.semibold))
-                            Text("⭐ \(cafe.rating)")
+                            Text("⭐ \(cafe.ratingAvg)")
                                 .font(.caption)
-                            Text(cafe.location)
+                            Text(cafe.region.city)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text("📍 \(cafe.distance)")
+                            Text("📍 \(cafe.region.address)")
                                 .font(.caption)
                                 .foregroundStyle(Color(hex: "EF6797"))
                         }
@@ -138,7 +148,7 @@ struct HomeView: View {
             SectionTitle(icon: "🎂", title: "생일인 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    ForEach(viewModel.uiState.birthdayMaids) { maid in
+                    ForEach(viewModel.uiState.birthdayCasts, id: \.id) { maid in
                         VStack(spacing: 8) {
                             Circle()
                                 .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
@@ -160,17 +170,17 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "📢", title: "최근 카페 공지")
             VStack(spacing: 10) {
-                ForEach(viewModel.uiState.notices) { notice in
+                ForEach(viewModel.uiState.notices, id: \.id) { notice in
                     HStack(alignment: .top, spacing: 8) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(notice.cafe)
+                            Text(notice.cafeName)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(Color(hex: "EF6797"))
                             Text(notice.content)
                                 .font(.subheadline)
                         }
                         Spacer()
-                        Text(notice.time)
+                        Text(notice.relativeTime)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

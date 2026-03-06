@@ -6,19 +6,20 @@
 //
 
 import Foundation
+import Shared
 
 struct HomeUiState {
     let banners: [HomeBanner]
-    let popularMaids: [PopularMaid]
-    let nearbyCafes: [NearbyCafe]
-    let birthdayMaids: [BirthdayMaid]
-    let notices: [NoticeItem]
+    let popularCasts: [Cast]
+    let nearbyCafes: [Cafe]
+    let birthdayCasts: [Cast]
+    let notices: [Notice]
 
     static let empty = HomeUiState(
         banners: [],
-        popularMaids: [],
+        popularCasts: [],
         nearbyCafes: [],
-        birthdayMaids: [],
+        birthdayCasts: [],
         notices: []
     )
 }

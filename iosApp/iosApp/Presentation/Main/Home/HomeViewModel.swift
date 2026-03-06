@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Shared
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -15,63 +16,34 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var uiState = HomeUiState.empty
 
     let event = PassthroughSubject<HomeEvent, Never>()
+    
+    private var loadTask: Task<Void, Never>?
 
     private func loadHomeFeed() {
-        let result = getHomeFeedUseCase.invoke(limit: 10)
-        let feed = MockConCafeDataSource().homeFeed
-        uiState = mapHomeFeed(feed)
+        loadTask?.cancel()
+        loadTask = Task {
+            do {
+                guard let feed = try await HomeFeedBridgeKt.executeGetHomeFeedUseCase(
+                    useCase: getHomeFeedUseCase,
+                    limit: 10
+                ) else {
+                    uiState = .empty
+                    return
+                }
+                uiState = mapHomeFeed(feed)
+            } catch {
+                uiState = .empty
+            }
+        }
     }
-
+    
     private func mapHomeFeed(_ feed: Shared.HomeFeed) -> HomeUiState {
-        let banners = (feed.banners as? [Shared.HomeBanner] ?? []).map { banner in
-            HomeBanner(
-                id: banner.id,
-                title: banner.title,
-                colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)]
-            )
-        }
-
-        let popularMaids = (feed.popularCasts as? [Shared.HomePopularCast] ?? []).map { cast in
-            PopularMaid(
-                id: cast.id,
-                name: cast.name,
-                cafe: cast.cafeName,
-                followers: Int(cast.followers)
-            )
-        }
-
-        let nearbyCafes = (feed.nearbyCafes as? [Shared.HomeNearbyCafe] ?? []).map { cafe in
-            NearbyCafe(
-                id: cafe.id,
-                name: cafe.name,
-                rating: "\(cafe.rating)",
-                location: cafe.location,
-                distance: cafe.distance
-            )
-        }
-
-        let birthdayMaids = (feed.birthdayCasts as? [Shared.HomeBirthdayCast] ?? []).map { cast in
-            BirthdayMaid(
-                id: cast.id,
-                name: cast.name
-            )
-        }
-
-        let notices = (feed.notices as? [Shared.Notice] ?? []).map { notice in
-            NoticeItem(
-                id: notice.id,
-                cafe: notice.cafeName,
-                content: notice.content,
-                time: notice.relativeTime
-            )
-        }
-
         return HomeUiState(
-            banners: banners,
-            popularMaids: popularMaids,
-            nearbyCafes: nearbyCafes,
-            birthdayMaids: birthdayMaids,
-            notices: notices
+            banners: feed.banners as? [Shared.HomeBanner] ?? [],
+            popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
+            nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
+            birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
+            notices: feed.notices as? [Shared.Notice] ?? []
         )
     }
 
@@ -86,7 +58,14 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    init() {
+    init(
+        getHomeFeedUseCase: GetHomeFeedUseCase = HomeFeedBridgeKt.provideGetHomeFeedUseCase()
+    ) {
+        self.getHomeFeedUseCase = getHomeFeedUseCase
         loadHomeFeed()
+    }
+    
+    deinit {
+        loadTask?.cancel()
     }
 }

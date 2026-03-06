@@ -29,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,50 +38,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
-data class HomeBannerUi(
-    val id: String,
-    val title: String,
-    val gradient: List<Color>
-)
-
-data class PopularMaidUi(
-    val id: String,
-    val name: String,
-    val cafe: String,
-    val followers: Int
-)
-
-data class NearbyCafeUi(
-    val id: String,
-    val name: String,
-    val rating: String,
-    val location: String,
-    val distance: String
-)
-
-data class BirthdayMaidUi(
-    val id: String,
-    val name: String
-)
-
-data class NoticeUi(
-    val id: String,
-    val cafe: String,
-    val content: String,
-    val time: String
-)
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
-    val viewModel = remember {
-        HomeViewModel(GlobalContext.get().get())
-    }
+fun HomeScreen(
+    viewModel: HomeViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                GlobalContext.get().get<HomeViewModel>()
+            }
+        }
+    ),
+    onNavigate: (NavigationAction) -> Unit
+) {
     val state by viewModel.uiState.collectAsState()
+    val cafeNameById = state.nearbyCafes.associate { it.id to it.name }
+    val pagerState = rememberPagerState(pageCount = { state.banners.size })
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -92,9 +69,6 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
             }
         }
     }
-
-    val pagerState = rememberPagerState(pageCount = { state.banners.size })
-
     LaunchedEffect(state.banners.size) {
         if (state.banners.size <= 1) return@LaunchedEffect
         while (true) {
@@ -103,7 +77,6 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
             pagerState.animateScrollToPage(nextPage)
         }
     }
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -122,6 +95,7 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                     pageSpacing = 12.dp
                 ) { page ->
                     val banner = state.banners[page]
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp)
@@ -129,7 +103,14 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Brush.linearGradient(banner.gradient))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            colorFromHex(banner.startColorHex),
+                                            colorFromHex(banner.endColorHex)
+                                        )
+                                    )
+                                )
                                 .padding(18.dp),
                             contentAlignment = Alignment.BottomStart
                         ) {
@@ -163,7 +144,6 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                 }
             }
         }
-
         item {
             SectionTitle("인기 메이드", "❤")
             Spacer(Modifier.height(10.dp))
@@ -171,11 +151,11 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(state.popularMaids) { maid ->
+                items(state.popularCasts) { maid ->
                     Card(
                         modifier = Modifier
                             .width(132.dp)
-                            .clickable { viewModel.action(HomeAction.ClickMaid(maid.id)) },
+                            .clickable { viewModel.onAction(HomeAction.ClickMaid(maid.id)) },
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
@@ -188,14 +168,14 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(maid.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
-                                maid.cafe,
+                                cafeNameById[maid.cafeId] ?: maid.cafeId,
                                 color = Color(0xFF7E7E7E),
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                "👥 ${maid.followers}",
+                                "👥 ${maid.followerCount}",
                                 color = Color(0xFFEF6797),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -204,7 +184,6 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                 }
             }
         }
-
         item {
             SectionTitle("근처 메이드카페", "📍")
             Spacer(Modifier.height(10.dp))
@@ -216,7 +195,7 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { viewModel.action(HomeAction.ClickCafe(cafe.id)) },
+                            .clickable { viewModel.onAction(HomeAction.ClickCafe(cafe.id)) },
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Box(
@@ -227,15 +206,14 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(cafe.name, fontWeight = FontWeight.SemiBold)
-                            Text("⭐ ${cafe.rating}", style = MaterialTheme.typography.bodySmall)
-                            Text(cafe.location, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall)
-                            Text("📍 ${cafe.distance}", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
+                            Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+                            Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall)
+                            Text("📍 ${cafe.region.address}", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
         }
-
         item {
             SectionTitle("생일인 메이드", "🎂")
             Spacer(Modifier.height(10.dp))
@@ -243,10 +221,10 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(state.birthdayMaids) { maid ->
+                items(state.birthdayCasts) { maid ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { viewModel.action(HomeAction.ClickBirthdayMaid(maid.id)) }
+                        modifier = Modifier.clickable { viewModel.onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
                     ) {
                         Box(
                             modifier = Modifier
@@ -259,7 +237,6 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                 }
             }
         }
-
         item {
             SectionTitle("최근 카페 공지", "📢")
             Spacer(Modifier.height(10.dp))
@@ -280,16 +257,26 @@ fun HomeScreen(onNavigate: (NavigationAction) -> Unit) {
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(notice.cafe, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                Text(notice.cafeName, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
                                 Text(notice.content, style = MaterialTheme.typography.bodyMedium)
                             }
-                            Text(notice.time, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
+                            Text(notice.relativeTime, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
                         }
                     }
                 }
             }
         }
     }
+}
+
+private fun colorFromHex(hex: String): Color {
+    val normalized = hex.removePrefix("#")
+    val value = normalized.toLongOrNull(16) ?: return Color.Gray
+    return Color(
+        red = ((value shr 16) and 0xFF).toInt(),
+        green = ((value shr 8) and 0xFF).toInt(),
+        blue = (value and 0xFF).toInt()
+    )
 }
 
 @Composable

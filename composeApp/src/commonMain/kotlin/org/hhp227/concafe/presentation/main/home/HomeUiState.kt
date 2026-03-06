@@ -1,20 +1,25 @@
 package org.hhp227.concafe.presentation.main.home
 
+import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.domain.model.Cast
+import org.hhp227.concafe.domain.model.HomeBanner
+import org.hhp227.concafe.domain.model.Notice
+
 data class HomeUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val banners: List<HomeBannerUi>,
-    val popularMaids: List<PopularMaidUi>,
-    val nearbyCafes: List<NearbyCafeUi>,
-    val birthdayMaids: List<BirthdayMaidUi>,
-    val notices: List<NoticeUi>
+    val banners: List<HomeBanner>,
+    val popularCasts: List<Cast>,
+    val nearbyCafes: List<Cafe>,
+    val birthdayCasts: List<Cast>,
+    val notices: List<Notice>
 ) {
     companion object {
         fun empty() = HomeUiState(
             banners = emptyList(),
-            popularMaids = emptyList(),
+            popularCasts = emptyList(),
             nearbyCafes = emptyList(),
-            birthdayMaids = emptyList(),
+            birthdayCasts = emptyList(),
             notices = emptyList()
         )
     }
