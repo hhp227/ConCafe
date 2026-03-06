@@ -31,11 +31,11 @@ final class HomeViewModel: ObservableObject {
                         return
                     }
                     uiState = HomeUiState(
-                        banners: feed.banners as? [Shared.HomeBanner] ?? [],
-                        popularCasts: feed.popularCasts as? [Shared.Cast] ?? [],
-                        nearbyCafes: feed.nearbyCafes as? [Shared.Cafe] ?? [],
-                        birthdayCasts: feed.birthdayCasts as? [Shared.Cast] ?? [],
-                        notices: feed.notices as? [Shared.Notice] ?? []
+                        banners: feed.banners,
+                        popularCasts: feed.popularCasts,
+                        nearbyCafes: feed.nearbyCafes,
+                        birthdayCasts: feed.birthdayCasts,
+                        notices: feed.notices
                     )
                 } else if result is AppResultFailure {
                     uiState = .empty
