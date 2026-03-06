@@ -67,7 +67,9 @@ fun MainScreen(
                     )
                 }
                 "explore" -> {
-                    ExploreScreen()
+                    ExploreScreen(
+                        onNavigate = onNavigationAction
+                    )
                 }
                 "ranking" -> {
                     RankingScreen()

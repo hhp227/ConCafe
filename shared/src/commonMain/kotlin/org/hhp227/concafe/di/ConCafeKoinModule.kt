@@ -22,6 +22,7 @@ import org.hhp227.concafe.domain.repository.RankingRepository
 import org.hhp227.concafe.domain.repository.ReviewRepository
 import org.hhp227.concafe.domain.repository.UserRepository
 import org.hhp227.concafe.domain.repository.VisitRepository
+import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import org.koin.dsl.module
 
@@ -44,6 +45,7 @@ val repositoryModule = module {
 
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetExploreFeedUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

@@ -120,7 +120,11 @@ fun MainScreen(
                     onNavigate = onNavigationAction
                 )
             }
-            composable("explore") { ExploreScreen() }
+            composable("explore") {
+                ExploreScreen(
+                    onNavigate = onNavigationAction
+                )
+            }
             composable("ranking") { RankingScreen() }
             composable("checkin") { CheckInScreen() }
             composable("myinfo") { MyInfoScreen() }
