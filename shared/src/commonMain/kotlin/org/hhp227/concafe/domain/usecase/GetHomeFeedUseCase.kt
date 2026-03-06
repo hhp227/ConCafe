@@ -19,4 +19,11 @@ class GetHomeFeedUseCase(
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }
+
+    suspend fun getHomeFeedOrNull(limit: Int): HomeFeed? {
+        return when (val result = invoke(limit)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> null
+        }
+    }
 }

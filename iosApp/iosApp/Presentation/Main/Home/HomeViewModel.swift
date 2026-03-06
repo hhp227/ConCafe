@@ -23,10 +23,7 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
-                guard let feed = try await HomeFeedBridgeKt.executeGetHomeFeedUseCase(
-                    useCase: getHomeFeedUseCase,
-                    limit: 10
-                ) else {
+                guard let feed = try await getHomeFeedUseCase.getHomeFeedOrNull(limit: 10) else {
                     uiState = .empty
                     return
                 }
@@ -59,7 +56,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     init(
-        getHomeFeedUseCase: GetHomeFeedUseCase = HomeFeedBridgeKt.provideGetHomeFeedUseCase()
+        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
         loadHomeFeed()
