@@ -10,7 +10,6 @@ import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.GeoPoint
 import org.hhp227.concafe.domain.model.Goods
 import org.hhp227.concafe.domain.model.HomeBanner
-import org.hhp227.concafe.domain.model.HomeFeed
 import org.hhp227.concafe.domain.model.Menu
 import org.hhp227.concafe.domain.model.MyPageSummary
 import org.hhp227.concafe.domain.model.Notice
@@ -87,22 +86,16 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540)
     )
 
+    override val banners = listOf(
+        HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E"),
+        HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A"),
+        HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF")
+    )
+
     override val notices = listOf(
         Notice("notice-1", "cafe-1", "메이드 하우스", "3월 특별 이벤트", "3월 특별 이벤트 진행 중!", "2026-03-05T07:00:00Z", "2시간 전"),
         Notice("notice-2", "cafe-2", "핑크 캐슬", "신규 메이드 입장", "신규 메이드 입장! 많은 관심 부탁드려요", "2026-03-05T04:00:00Z", "5시간 전"),
         Notice("notice-3", "cafe-3", "리본 카페", "주말 예약 마감", "주말 예약이 마감되었습니다", "2026-03-04T09:00:00Z", "1일 전")
-    )
-
-    override val homeFeed = HomeFeed(
-        banners = listOf(
-            HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E"),
-            HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A"),
-            HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF")
-        ),
-        popularCasts = casts.sortedByDescending { it.followerCount }.take(3),
-        nearbyCafes = cafes.take(3),
-        birthdayCasts = casts.filter { it.birthday?.endsWith("-03-05") == true },
-        notices = notices
     )
 
     override val reviews = mutableListOf(

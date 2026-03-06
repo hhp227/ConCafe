@@ -6,7 +6,7 @@ import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.HomeFeed
+import org.hhp227.concafe.domain.model.HomeBanner
 import org.hhp227.concafe.domain.model.MyPageSummary
 import org.hhp227.concafe.domain.model.Notice
 import org.hhp227.concafe.domain.model.RankingItem
@@ -24,9 +24,9 @@ interface ConCafeDataSource {
 
     val casts: List<Cast>
 
-    val notices: List<Notice>
+    val banners: List<HomeBanner>
 
-    val homeFeed: HomeFeed
+    val notices: List<Notice>
 
     val reviews: MutableList<Review>
 

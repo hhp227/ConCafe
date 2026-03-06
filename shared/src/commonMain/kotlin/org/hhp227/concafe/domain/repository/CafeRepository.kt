@@ -4,11 +4,8 @@ import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.HomeFeed
 
 interface CafeRepository {
-    suspend fun getHomeFeed(limit: Int): HomeFeed
-
     suspend fun searchCafes(
         query: String?,
         country: String?,

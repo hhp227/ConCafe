@@ -7,7 +7,7 @@ import org.hhp227.concafe.domain.repository.NoticeRepository
 class FakeNoticeRepository(
     private val dataSource: ConCafeDataSource
 ) : NoticeRepository {
-    override suspend fun getCafeNotices(cafeId: String, limit: Int): List<Notice> {
-        return dataSource.notices.filter { it.cafeId == cafeId }.take(limit.coerceAtLeast(1))
+    override suspend fun getRecentNotices(limit: Int): List<Notice> {
+        return dataSource.notices.take(limit.coerceAtLeast(1))
     }
 }

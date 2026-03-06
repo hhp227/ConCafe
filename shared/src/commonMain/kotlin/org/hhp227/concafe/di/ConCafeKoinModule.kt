@@ -1,6 +1,7 @@
 package org.hhp227.concafe.di
 
 import org.hhp227.concafe.data.repository.FakeAuthRepository
+import org.hhp227.concafe.data.repository.FakeBannerRepository
 import org.hhp227.concafe.data.repository.FakeCafeRepository
 import org.hhp227.concafe.data.repository.FakeCastRepository
 import org.hhp227.concafe.data.repository.FakeNoticeRepository
@@ -12,6 +13,7 @@ import org.hhp227.concafe.data.repository.FakeVisitRepository
 import org.hhp227.concafe.data.source.ConCafeDataSource
 import org.hhp227.concafe.data.source.MockConCafeDataSource
 import org.hhp227.concafe.domain.repository.AuthRepository
+import org.hhp227.concafe.domain.repository.BannerRepository
 import org.hhp227.concafe.domain.repository.CafeRepository
 import org.hhp227.concafe.domain.repository.CastRepository
 import org.hhp227.concafe.domain.repository.NoticeRepository
@@ -30,6 +32,7 @@ val dataSourceModule = module {
 val repositoryModule = module {
     single<AuthRepository> { FakeAuthRepository(get()) }
     single<UserRepository> { FakeUserRepository(get()) }
+    single<BannerRepository> { FakeBannerRepository(get()) }
     single<CafeRepository> { FakeCafeRepository(get()) }
     single<CastRepository> { FakeCastRepository(get()) }
     single<VisitRepository> { FakeVisitRepository(get()) }
@@ -40,7 +43,7 @@ val repositoryModule = module {
 }
 
 val useCaseModule = module {
-    factory { GetHomeFeedUseCase(get()) }
+    factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
 }
 
 val concafeModules = listOf(

@@ -5,22 +5,11 @@ import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.HomeFeed
 import org.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(
     private val dataSource: ConCafeDataSource
 ) : CafeRepository {
-    override suspend fun getHomeFeed(limit: Int): HomeFeed {
-        val cappedLimit = limit.coerceAtLeast(1)
-        return dataSource.homeFeed.copy(
-            popularCasts = dataSource.homeFeed.popularCasts.take(cappedLimit),
-            nearbyCafes = dataSource.homeFeed.nearbyCafes.take(cappedLimit),
-            birthdayCasts = dataSource.homeFeed.birthdayCasts.take(cappedLimit),
-            notices = dataSource.homeFeed.notices.take(cappedLimit)
-        )
-    }
-
     override suspend fun searchCafes(
         query: String?,
         country: String?,
