@@ -1,5 +1,6 @@
 package org.hhp227.concafe.domain.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.hhp227.concafe.domain.model.User
 
 interface AuthRepository {
@@ -12,4 +13,6 @@ interface AuthRepository {
     suspend fun restoreSession(): User?
 
     suspend fun getCurrentUser(): User?
+
+    fun observeCurrentUser(): Flow<User?>
 }

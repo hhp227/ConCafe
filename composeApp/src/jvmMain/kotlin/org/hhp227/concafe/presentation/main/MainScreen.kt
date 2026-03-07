@@ -5,14 +5,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.di.resolveGetMainNavigationUseCase
+import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.model.MainNavigationTab
 import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
@@ -31,7 +34,10 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                MainViewModel(resolveGetMainNavigationUseCase())
+                MainViewModel(
+                    resolveGetMainNavigationUseCase(),
+                    resolveObserveCurrentUserUseCase()
+                )
             }
         }
     ),
@@ -39,6 +45,9 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(initialTab) {
+        viewModel.onAction(MainAction.RefreshNavigation(initialTab))
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,16 +87,18 @@ fun MainScreen(
                 }
             }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                when (uiState.selectedTab) {
-                    MainNavigationTab.HOME.route -> HomeScreen(onNavigate = onNavigationAction)
-                    MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
-                    MainNavigationTab.CHECK_IN.route -> CheckInScreen()
-                    MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen()
-                    MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen()
-                    MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()
-                    MainNavigationTab.RANKING.route -> RankingScreen()
-                    MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
-                    else -> HomeScreen(onNavigate = onNavigationAction)
+                key(uiState.currentUser?.id, uiState.selectedTab) {
+                    when (uiState.selectedTab) {
+                        MainNavigationTab.HOME.route -> HomeScreen(onNavigate = onNavigationAction)
+                        MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
+                        MainNavigationTab.CHECK_IN.route -> CheckInScreen()
+                        MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen()
+                        MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen()
+                        MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()
+                        MainNavigationTab.RANKING.route -> RankingScreen()
+                        MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
+                        else -> HomeScreen(onNavigate = onNavigationAction)
+                    }
                 }
             }
         }

@@ -61,7 +61,7 @@ fun SignInScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                SignInEvent.SignedIn -> onNavigate(NavigationAction.NavigateToMain("myinfo"))
+                SignInEvent.SignedIn -> onNavigate(NavigationAction.NavigateBack)
             }
         }
     }

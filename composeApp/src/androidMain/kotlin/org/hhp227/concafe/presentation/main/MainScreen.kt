@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -38,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.hhp227.concafe.di.resolveGetMainNavigationUseCase
+import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.model.MainNavigationTab
 import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
@@ -57,7 +57,10 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                MainViewModel(resolveGetMainNavigationUseCase())
+                MainViewModel(
+                    resolveGetMainNavigationUseCase(),
+                    resolveObserveCurrentUserUseCase()
+                )
             }
         }
     ),
@@ -67,17 +70,6 @@ fun MainScreen(
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(currentRoute, uiState.selectedTab, uiState.tabs.map { it.route }) {
-        if (currentRoute != null && uiState.tabs.none { it.route == currentRoute }) {
-            bottomNavController.navigate(uiState.selectedTab) {
-                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-    }
     Scaffold(
         topBar = {
             TopAppBar(

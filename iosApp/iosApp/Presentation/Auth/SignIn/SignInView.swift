@@ -25,7 +25,7 @@ struct SignInView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .signedIn:
-                onNavigationAction(.navigateToMain(initialTab: "myinfo"))
+                onNavigationAction(.navigateBack)
             }
         }
     }
