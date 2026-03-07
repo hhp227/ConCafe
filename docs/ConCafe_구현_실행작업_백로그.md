@@ -208,7 +208,7 @@
 - 상태: TODO
 - 산출물: 플랫폼별 네비게이션 설계서 + 라우트 맵
 - 작업:
-  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications/Settings`)
+  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/MyInfo/Cafe/Cast/SignIn/Notification/Settings`)
   2. 역할별 메인 탭 3번째 라우트 스펙 정의(`CheckIn | FanManagement | CafeManagement | AdminOperations`)
   3. 로그인 사용자 역할 변경 시 탭 재구성 규칙 정의
   4. 다중 역할 계정 우선순위(`ADMIN > CAFE_OWNER > CAST > VISITOR`) 적용 규칙 정의
@@ -589,7 +589,7 @@
   - 인증 가드는 `pendingRoute` 저장 후 로그인 성공 시 path 복원
 - Desktop:
   - `currentRoute: MutableState<Route>` 기반 상태 전환
-  - 메인 탭 구성은 세션 역할 상태를 구독해 3번째 탭을 동적으로 교체
+  - 메인 탭 구성은 `AuthRepository.observeCurrentUser()` 기반 세션 역할 상태를 구독해 3번째 탭을 동적으로 교체
   - 상세 진입 시 `routeStack`에 push, 뒤로가기 시 pop
   - 인증 가드는 route 전환 전 intercept 후 SignIn route로 변경
   - 창 닫기 이벤트와 분리된 앱 내부 back action 제공
@@ -751,7 +751,7 @@
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking/RankingScreen.kt`
   - 컴포저블: `RankingScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo/MyInfoScreen.kt`
-  - 컴포저블: `MyPageScreen`
+  - 컴포저블: `MyInfoScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/notification/NotificationScreen.kt`
   - 컴포저블: `NotificationScreen`
 
@@ -803,21 +803,22 @@ data class PagedResult<T>(
 ### K-02. Repository 시그니처 (`shared/domain/repository`)
 ```kotlin
 interface AuthRepository {
-    suspend fun signIn(email: String, password: String): AppResult<User>
-    suspend fun signUp(email: String, password: String, nickname: String): AppResult<User>
-    suspend fun signOut(): AppResult<Unit>
-    suspend fun restoreSession(): AppResult<User?>
-    suspend fun getCurrentUser(): AppResult<User?>
+    suspend fun signIn(email: String, password: String): User
+    suspend fun signUp(email: String, password: String, nickname: String): User
+    suspend fun signOut()
+    suspend fun restoreSession(): User?
+    suspend fun getCurrentUser(): User?
+    fun observeCurrentUser(): Flow<User?>
 }
 
 interface UserRepository {
-    suspend fun getUser(userId: String): AppResult<User>
-    suspend fun updateProfile(userId: String, nickname: String, profileImage: String?): AppResult<Unit>
-    suspend fun getMyPageSummary(userId: String): AppResult<MyPageSummary>
+    suspend fun getUser(userId: String): User
+    suspend fun updateProfile(userId: String, nickname: String, profileImage: String?)
+    suspend fun getMyPageSummary(userId: String): MyPageSummary
 }
 
 interface CafeRepository {
-    suspend fun getHomePopularCafes(limit: Int): AppResult<List<Cafe>>
+    suspend fun getHomePopularCafes(limit: Int): List<Cafe>
     suspend fun searchCafes(
         query: String?,
         country: String?,
@@ -825,9 +826,9 @@ interface CafeRepository {
         sort: CafeSort,
         cursor: String?,
         pageSize: Int
-    ): AppResult<PagedResult<Cafe>>
-    suspend fun getCafe(cafeId: String): AppResult<Cafe>
-    suspend fun toggleFavorite(userId: String, cafeId: String): AppResult<Boolean>
+    ): PagedResult<Cafe>
+    suspend fun getCafe(cafeId: String): Cafe
+    suspend fun toggleFavorite(userId: String, cafeId: String): Boolean
 }
 
 interface CastRepository {
@@ -838,43 +839,43 @@ interface CastRepository {
         sort: CastSort,
         cursor: String?,
         pageSize: Int
-    ): AppResult<PagedResult<Cast>>
-    suspend fun getCast(castId: String): AppResult<Cast>
-    suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): AppResult<List<CastSchedule>>
-    suspend fun followCast(userId: String, castId: String): AppResult<Unit>
-    suspend fun unfollowCast(userId: String, castId: String): AppResult<Unit>
+    ): PagedResult<Cast>
+    suspend fun getCast(castId: String): Cast
+    suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
+    suspend fun followCast(userId: String, castId: String)
+    suspend fun unfollowCast(userId: String, castId: String)
 }
 
 interface VisitRepository {
-    suspend fun verifyVisit(cafeId: String, latitude: Double, longitude: Double, visitedAt: String): AppResult<VisitVerificationResult>
-    suspend fun createVisit(userId: String, cafeId: String, visitedAt: String, memo: String?): AppResult<Visit>
-    suspend fun getVisits(userId: String, cursor: String?, pageSize: Int): AppResult<PagedResult<Visit>>
+    suspend fun verifyVisit(cafeId: String, latitude: Double, longitude: Double, visitedAt: String): VisitVerificationResult
+    suspend fun createVisit(userId: String, cafeId: String, visitedAt: String, memo: String?): Visit
+    suspend fun getVisits(userId: String, cursor: String?, pageSize: Int): PagedResult<Visit>
 }
 
 interface ReviewRepository {
-    suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): AppResult<PagedResult<Review>>
+    suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review>
     suspend fun createReview(
         userId: String,
         cafeId: String,
         rating: Float,
         content: String,
         imageUrls: List<String>
-    ): AppResult<Review>
-    suspend fun deleteReview(reviewId: String, requesterId: String): AppResult<Unit>
+    ): Review
+    suspend fun deleteReview(reviewId: String, requesterId: String)
 }
 
 interface NoticeRepository {
-    suspend fun getCafeNotices(cafeId: String, limit: Int): AppResult<List<Notice>>
+    suspend fun getCafeNotices(cafeId: String, limit: Int): List<Notice>
 }
 
 interface RankingRepository {
-    suspend fun getCastRanking(period: RankingPeriod, country: String?, city: String?): AppResult<List<RankingItem>>
-    suspend fun getCafeRanking(period: RankingPeriod, country: String?, city: String?): AppResult<List<RankingItem>>
+    suspend fun getCastRanking(period: RankingPeriod, country: String?, city: String?): List<RankingItem>
+    suspend fun getCafeRanking(period: RankingPeriod, country: String?, city: String?): List<RankingItem>
 }
 
 interface NotificationRepository {
-    suspend fun getNotifications(userId: String, cursor: String?, pageSize: Int): AppResult<PagedResult<AppNotification>>
-    suspend fun markAsRead(userId: String, notificationId: String): AppResult<Unit>
+    suspend fun getNotifications(userId: String, cursor: String?, pageSize: Int): PagedResult<AppNotification>
+    suspend fun markAsRead(userId: String, notificationId: String)
 }
 ```
 
@@ -918,6 +919,10 @@ class ToggleFavoriteCafeUseCase(private val cafeRepository: CafeRepository) {
 
 class GetMyPageSummaryUseCase(private val userRepository: UserRepository) {
     suspend operator fun invoke(userId: String): AppResult<MyPageSummary>
+}
+
+class ObserveCurrentUserUseCase(private val authRepository: AuthRepository) {
+    operator fun invoke(): Flow<User?>
 }
 ```
 
@@ -971,12 +976,12 @@ class RankingViewModel(private val rankingRepository: RankingRepository) {
     fun onAction(action: RankingAction)
 }
 
-class MyPageViewModel(
+class MyInfoViewModel(
     private val getMyPageSummaryUseCase: GetMyPageSummaryUseCase
 ) {
-    val uiState: StateFlow<MyPageUiState>
-    val event: SharedFlow<MyPageEvent>
-    fun onAction(action: MyPageAction)
+    val uiState: StateFlow<MyInfoUiState>
+    val event: SharedFlow<MyInfoEvent>
+    fun onAction(action: MyInfoAction)
 }
 ```
 
@@ -1017,7 +1022,7 @@ class RolePermissionPolicy {
 - 조건 1: `restoreSession()` 결과 유효 사용자 존재
 - 조건 2: 사용자 `banned == false`
 - 조건 3: 토큰 만료/인증 오류 없음
-- 조건 충족 시 `MyPageScreen` 진입 허용
+- 조건 충족 시 `MyInfoScreen` 진입 허용
 - 조건 미충족 시 `SignInScreen` 또는 `AccessDeniedScreen`으로 라우팅
 
 ### L-03. 상태도 (Flowchart)
@@ -1032,7 +1037,7 @@ flowchart TD
     E -- 아니오 --> L
     E -- 예 --> F{banned 사용자?}
     F -- 예 --> X[AccessDeniedScreen으로 이동]
-    F -- 아니오 --> G[MyPageScreen 진입 허용]
+    F -- 아니오 --> G[MyInfoScreen 진입 허용]
     L --> M{로그인 성공?}
     M -- 아니오 --> N[이전 화면으로 복귀 또는 홈 유지]
     M -- 예 --> O[원래 목적지로 리다이렉트]

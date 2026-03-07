@@ -18,7 +18,7 @@ cafes/{cafeId}
 ├─ ownerId
 ├─ name
 ├─ description
-├─ conceptType: MAID | BUTLER | IDOL | THEME
+├─ conceptType: MAID | BUTLER
 ├─ region
 │  ├─ country: KR | JP
 │  ├─ city: Seoul | Tokyo

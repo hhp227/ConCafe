@@ -85,6 +85,9 @@
 - 게스트 허용: 조회성 화면(홈/탐색/상세/랭킹)
 - 로그인 필수: 마이/프로필 수정/즐겨찾기/팔로우/체크인/리뷰/좋아요/알림
 - 서버 권한 검증(Firestore Rules/Functions)과 클라이언트 가드를 동시에 적용한다.
+- `AuthRepository`는 `signIn/signUp/signOut/restoreSession/getCurrentUser`와 함께 `observeCurrentUser()`를 제공해야 한다.
+- 세션 변경 감지는 화면 재생성이나 임의 강제 이동으로 해결하지 않고 `observeCurrentUser()` 기반 스트림으로 처리한다.
+- 플랫폼별 메인 ViewModel은 `ObserveCurrentUserUseCase`를 통해 세션 변화를 구독하고, 감지 시 `refreshNavigation()`을 다시 호출해 메인 탭/현재 사용자 상태를 재계산한다.
 
 ## 9. 비동기/상태 처리 규칙
 - suspend 함수는 취소 가능성을 고려한다.
