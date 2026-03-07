@@ -25,7 +25,7 @@ struct SignInView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .signedIn:
-                onNavigationAction(.navigateBack)
+                dismiss()
             }
         }
     }
@@ -96,7 +96,6 @@ private struct SignInContentView: View {
                 .frame(height: 52)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                
                 SecureField("비밀번호", text: Binding(
                     get: { uiState.password },
                     set: { onAction(.passwordChanged($0)) }
@@ -106,14 +105,12 @@ private struct SignInContentView: View {
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "D1436F"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            
             Button {
                 onAction(.signInTapped)
             } label: {
