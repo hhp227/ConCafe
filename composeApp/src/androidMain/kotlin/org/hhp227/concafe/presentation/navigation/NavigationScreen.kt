@@ -67,7 +67,7 @@ fun NavigationScreen(
         }
         composable<Route.SignIn> { backStackEntry ->
             backStackEntry.toRoute<Route.SignIn>()
-            SignInScreen()
+            SignInScreen(onNavigate = viewModel::onAction)
         }
         composable<Route.Notification> {
             NotificationScreen(

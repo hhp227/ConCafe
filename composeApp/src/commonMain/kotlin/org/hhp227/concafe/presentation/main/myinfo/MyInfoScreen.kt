@@ -71,13 +71,16 @@ fun MyInfoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.onAction(MyInfoAction.Refresh)
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
                 is MyInfoEvent.NavigateToCafe -> onNavigate(NavigateToCafe(event.id))
                 is MyInfoEvent.NavigateToCast -> onNavigate(NavigateToCast(event.id))
                 MyInfoEvent.NavigateToSignIn -> onNavigate(NavigateToSignIn)
-                MyInfoEvent.SignedOut -> onNavigate(NavigateToMain())
             }
         }
     }

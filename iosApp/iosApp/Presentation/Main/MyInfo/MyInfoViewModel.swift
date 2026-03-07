@@ -65,7 +65,6 @@ final class MyInfoViewModel: ObservableObject {
 
                 if result is AppResultSuccess<AnyObject> {
                     loadMyInfo()
-                    event.send(.signedOut)
                 } else if let failure = result as? AppResultFailure {
                     uiState.errorMessage = "\(failure.error)"
                 }

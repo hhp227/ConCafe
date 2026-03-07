@@ -8,5 +8,14 @@
 import Foundation
 
 enum SignInAction {
-    
+    case emailChanged(String)
+    case passwordChanged(String)
+    case signInTapped
+    case socialSignInTapped(provider: SignInProvider)
+}
+
+enum SignInProvider: String {
+    case kakao
+    case google
+    case apple
 }

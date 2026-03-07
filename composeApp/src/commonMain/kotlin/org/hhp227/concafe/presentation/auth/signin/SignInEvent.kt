@@ -1,4 +1,5 @@
 package org.hhp227.concafe.presentation.auth.signin
 
-class SignInEvent {
+sealed interface SignInEvent {
+    data object SignedIn : SignInEvent
 }

@@ -69,7 +69,6 @@ class MyInfoViewModel(
                     when (signOutUseCase.invoke()) {
                         is AppResult.Success -> {
                             loadMyInfo()
-                            _event.emit(MyInfoEvent.SignedOut)
                         }
                         is AppResult.Failure -> {
                             _uiState.update { it.copy(errorMessage = "로그아웃에 실패했습니다.") }

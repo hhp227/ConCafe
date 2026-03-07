@@ -29,7 +29,7 @@ struct AppNavigationView: View {
             case .cafe:
                 CafeView(onNavigationAction: viewModel.onAction)
             case .signIn:
-                SignInView()
+                SignInView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView()
             case .main(let initialTab):
