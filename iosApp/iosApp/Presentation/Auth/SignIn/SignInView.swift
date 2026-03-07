@@ -41,7 +41,6 @@ private struct SignInContentView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                header
                 logoSection
                 formCard
                 divider
@@ -59,23 +58,7 @@ private struct SignInContentView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .navigationBarBackButtonHidden(true)
-    }
-    
-    private var header: some View {
-        HStack(spacing: 12) {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 40, height: 40)
-                    .background(.white.opacity(0.92))
-                    .clipShape(Circle())
-            }
-            Text("로그인")
-                .font(.title2.weight(.bold))
-            Spacer()
-        }
+        .navigationTitle("로그인")
     }
     
     private var logoSection: some View {
