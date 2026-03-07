@@ -8,5 +8,10 @@
 import Foundation
 
 enum RankingAction {
-    
+    case changeTab(RankingUiState.TabType)
+    case changePeriod(RankingUiState.PeriodFilter)
+    case changeRegion(RankingUiState.RegionFilter)
+    case selectAd(Int)
+    case tapMaid(String)
+    case tapCafe(String)
 }

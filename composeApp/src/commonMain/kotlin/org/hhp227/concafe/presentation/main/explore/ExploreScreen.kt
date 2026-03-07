@@ -30,8 +30,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +51,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.presentation.component.CapsuleDropdown
+import org.hhp227.concafe.presentation.component.ConCafeTabBar
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import kotlin.collections.chunked
@@ -162,16 +161,16 @@ fun ExploreContentScreen(
                     .zIndex(1f)
             ) {
                 val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
+                val labels = ExploreUiState.TabType.entries.map { it.label }
 
-                TabRow(selectedTabIndex = selectedTabIndex, modifier = Modifier.fillMaxWidth()) {
-                    ExploreUiState.TabType.entries.forEachIndexed { index, tab ->
-                        Tab(
-                            selected = index == selectedTabIndex,
-                            onClick = { onAction(ExploreAction.TabChanged(tab)) },
-                            text = { Text(tab.label) }
-                        )
+                ConCafeTabBar(
+                    labels = labels,
+                    selectedIndex = selectedTabIndex,
+                    modifier = Modifier.fillMaxWidth(),
+                    onTabSelected = { index ->
+                        onAction(ExploreAction.TabChanged(ExploreUiState.TabType.entries[index]))
                     }
-                }
+                )
             }
         }
         if (uiState.isLoading) {

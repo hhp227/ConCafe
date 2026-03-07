@@ -26,6 +26,7 @@ import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
+import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
@@ -53,6 +54,7 @@ val useCaseModule = module {
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetMainNavigationUseCase(get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get()) }
+    factory { GetRankingFeedUseCase(get(), get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignOutUseCase(get()) }
