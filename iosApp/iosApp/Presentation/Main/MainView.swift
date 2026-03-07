@@ -13,7 +13,7 @@ struct MainView: View {
     @StateObject private var viewModel = MainViewModel()
 
     let onNavigationAction: (NavigationAction) -> Void
-
+    
     @State private var selectedTab = "home"
 
     var body: some View {
@@ -47,7 +47,10 @@ struct MainView: View {
             }
         }
         .task {
-            viewModel.onAction(.enter(preferredRoute: initialTab))
+            if let initialTab, selectedTab != initialTab {
+                selectedTab = initialTab
+            }
+            viewModel.onAction(.enter(preferredRoute: selectedTab))
         }
         .onChange(of: viewModel.uiState.selectedTab) { newValue in
             if selectedTab != newValue {

@@ -39,6 +39,7 @@ struct AppNavigationView: View {
                     initialTab: initialTab,
                     onNavigationAction: viewModel.onAction
                 )
+                .id("main-\(initialTab ?? "home")")
             case .entry:
                 EmptyView()
             }
@@ -71,9 +72,10 @@ struct AppNavigationView: View {
         switch currentRoute {
         case .main(let initialTab):
             MainView(
-                initialTab: initialTab,
+                initialTab: initialTab ?? currentMainTab,
                 onNavigationAction: viewModel.onAction
             )
+            .id("main-\((initialTab ?? currentMainTab))")
         case .entry:
             ProgressView()
         default:
@@ -82,6 +84,7 @@ struct AppNavigationView: View {
                 initialTab: currentMainTab,
                 onNavigationAction: viewModel.onAction
             )
+            .id("main-\(currentMainTab)")
         }
     }
 }
