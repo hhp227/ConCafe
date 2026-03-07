@@ -67,9 +67,6 @@ fun MainScreen(
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(initialTab) {
-        viewModel.onAction(MainAction.Enter(initialTab))
-    }
     LaunchedEffect(currentRoute, uiState.selectedTab, uiState.tabs.map { it.route }) {
         if (currentRoute != null && uiState.tabs.none { it.route == currentRoute }) {
             bottomNavController.navigate(uiState.selectedTab) {

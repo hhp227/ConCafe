@@ -2,7 +2,6 @@ package org.hhp227.concafe.presentation.main.explore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -77,12 +76,12 @@ class ExploreViewModel(
             }
             is ExploreAction.ClickCafe -> {
                 viewModelScope.launch {
-                    _event.emit(ExploreEvent.NavigateToCafeDetail(action.id))
+                    _event.emit(ExploreEvent.NavigateToCafe(action.id))
                 }
             }
             is ExploreAction.ClickMaid -> {
                 viewModelScope.launch {
-                    _event.emit(ExploreEvent.NavigateToCastDetail(action.id))
+                    _event.emit(ExploreEvent.NavigateToCast(action.id))
                 }
             }
             is ExploreAction.Refresh -> loadExploreFeed()

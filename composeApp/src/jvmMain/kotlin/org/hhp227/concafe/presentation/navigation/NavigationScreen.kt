@@ -8,8 +8,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.presentation.cafe.CafeDetailScreen
-import org.hhp227.concafe.presentation.cast.CastDetailScreen
+import org.hhp227.concafe.presentation.auth.signin.SignInScreen
+import org.hhp227.concafe.presentation.cafe.CafeScreen
+import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 
@@ -65,15 +66,18 @@ fun NavigationScreen(
                             .fillMaxHeight()
                     ) {
                         when (currentDetailRoute) {
-                            is Route.CastDetail -> {
-                                CastDetailScreen(
+                            is Route.Cast -> {
+                                CastScreen(
                                     onNavigationAction = viewModel::onAction
                                 )
                             }
-                            is Route.CafeDetail -> {
-                                CafeDetailScreen(
+                            is Route.Cafe -> {
+                                CafeScreen(
                                     onNavigationAction = viewModel::onAction
                                 )
+                            }
+                            Route.SignIn -> {
+                                SignInScreen()
                             }
                             Route.Notification -> {
                                 NotificationScreen(

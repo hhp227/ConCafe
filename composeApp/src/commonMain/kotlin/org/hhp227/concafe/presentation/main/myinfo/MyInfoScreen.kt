@@ -55,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.presentation.navigation.NavigationAction
+import org.hhp227.concafe.presentation.navigation.NavigationAction.*
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -73,9 +74,10 @@ fun MyInfoScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                is MyInfoEvent.NavigateToCafeDetail -> onNavigate(NavigationAction.NavigateToCafeDetail(event.id))
-                is MyInfoEvent.NavigateToCastDetail -> onNavigate(NavigationAction.NavigateToCastDetail(event.id))
-                MyInfoEvent.LoggedOut -> onNavigate(NavigationAction.NavigateToMain())
+                is MyInfoEvent.NavigateToCafe -> onNavigate(NavigateToCafe(event.id))
+                is MyInfoEvent.NavigateToCast -> onNavigate(NavigateToCast(event.id))
+                MyInfoEvent.NavigateToSignIn -> onNavigate(NavigateToSignIn)
+                MyInfoEvent.SignedOut -> onNavigate(NavigateToMain())
             }
         }
     }
@@ -134,7 +136,7 @@ private fun GuestMyInfoScreen(
                     Text("ConCafe에 오신 것을\n환영합니다!", color = Color.White, fontWeight = FontWeight.Bold)
                     Text("로그인하고 메이드카페의 모든 것을 즐겨보세요", color = Color.White.copy(alpha = 0.9f))
                     Button(
-                        onClick = {},
+                        onClick = { onAction(MyInfoAction.ClickSignIn) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 10.dp),
@@ -147,7 +149,11 @@ private fun GuestMyInfoScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Box(modifier = Modifier.width(6.dp))
-                        Text("로그인하기", color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
+                        Text(
+                            "로그인하기",
+                            color = Color(0xFFEF6797),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

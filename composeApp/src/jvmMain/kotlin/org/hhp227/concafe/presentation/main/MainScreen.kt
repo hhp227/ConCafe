@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,8 +18,8 @@ import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import org.hhp227.concafe.presentation.main.checkin.CheckInScreen
 import org.hhp227.concafe.presentation.main.explore.ExploreScreen
-import org.hhp227.concafe.presentation.main.home.HomeScreen
 import org.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
+import org.hhp227.concafe.presentation.main.home.HomeScreen
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import org.hhp227.concafe.presentation.main.ranking.RankingScreen
 import org.hhp227.concafe.presentation.navigation.NavigationAction
@@ -40,9 +39,6 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(initialTab) {
-        viewModel.onAction(MainAction.Enter(initialTab))
-    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -121,5 +117,5 @@ private fun MainNavigationTab.label(): String = when (this) {
     MainNavigationTab.CAFE_MANAGEMENT -> "카페관리"
     MainNavigationTab.ADMIN_OPERATIONS -> "운영관리"
     MainNavigationTab.RANKING -> "랭킹"
-    MainNavigationTab.MY_INFO -> "마이"
+    MainNavigationTab.MY_INFO -> "내 정보"
 }

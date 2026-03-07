@@ -43,6 +43,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import org.hhp227.concafe.presentation.component.colorFromHex
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -64,8 +65,8 @@ fun HomeScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                is HomeEvent.NavigateToCafeDetail -> onNavigate(NavigationAction.NavigateToCafeDetail(event.id))
-                is HomeEvent.NavigateToCastDetail -> onNavigate(NavigationAction.NavigateToCastDetail(event.id))
+                is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
+                is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
             }
         }
     }
@@ -281,16 +282,6 @@ fun HomeContentScreen(
             }
         }
     }
-}
-
-private fun colorFromHex(hex: String): Color {
-    val normalized = hex.removePrefix("#")
-    val value = normalized.toLongOrNull(16) ?: return Color.Gray
-    return Color(
-        red = ((value shr 16) and 0xFF).toInt(),
-        green = ((value shr 8) and 0xFF).toInt(),
-        blue = (value and 0xFF).toInt()
-    )
 }
 
 @Composable

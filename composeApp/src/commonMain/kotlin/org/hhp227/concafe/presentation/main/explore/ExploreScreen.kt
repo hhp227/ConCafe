@@ -76,8 +76,8 @@ fun ExploreScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                is ExploreEvent.NavigateToCafeDetail -> onNavigate(NavigationAction.NavigateToCafeDetail(event.id))
-                is ExploreEvent.NavigateToCastDetail -> onNavigate(NavigationAction.NavigateToCastDetail(event.id))
+                is ExploreEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
+                is ExploreEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
             }
         }
     }

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cast
+package org.hhp227.concafe.presentation.cafe
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,13 +18,13 @@ import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CastDetailScreen(
+fun CafeScreen(
     onNavigationAction: (NavigationAction) -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CastDetail") },
+                title = { Text("CafeDetail") },
                 navigationIcon = {
                     IconButton(onClick = { onNavigationAction(NavigationAction.NavigateBack) }) {
                         Icon(
@@ -42,7 +42,7 @@ fun CastDetailScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("캐스트 상세")
+            Text("카페 상세")
         }
     }
 }

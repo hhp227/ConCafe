@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct MainView: View {
-    let initialTab: String?
-
     @StateObject private var viewModel = MainViewModel()
 
     let onNavigationAction: (NavigationAction) -> Void
@@ -92,6 +90,6 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(initialTab: nil, onNavigationAction: { _ in })
+        MainView(onNavigationAction: { _ in })
     }
 }

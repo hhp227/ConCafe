@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
+import org.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
 
 class MyInfoViewModel(
@@ -55,17 +56,20 @@ class MyInfoViewModel(
     fun onAction(action: MyInfoAction) {
         when (action) {
             is MyInfoAction.ClickCafe -> viewModelScope.launch {
-                _event.emit(MyInfoEvent.NavigateToCafeDetail(action.id))
+                _event.emit(NavigateToCafe(action.id))
             }
             is MyInfoAction.ClickMaid -> viewModelScope.launch {
-                _event.emit(MyInfoEvent.NavigateToCastDetail(action.id))
+                _event.emit(NavigateToCast(action.id))
+            }
+            MyInfoAction.ClickSignIn -> viewModelScope.launch {
+                _event.emit(NavigateToSignIn)
             }
             MyInfoAction.ClickSignOut -> {
                 viewModelScope.launch {
                     when (signOutUseCase.invoke()) {
                         is AppResult.Success -> {
                             loadMyInfo()
-                            _event.emit(MyInfoEvent.LoggedOut)
+                            _event.emit(MyInfoEvent.SignedOut)
                         }
                         is AppResult.Failure -> {
                             _uiState.update { it.copy(errorMessage = "로그아웃에 실패했습니다.") }
