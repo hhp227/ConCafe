@@ -113,7 +113,9 @@ private struct RankingContentView: View {
 
 struct RankingHeaderSection: View {
     let uiState: RankingUiState
+    
     let onPeriodSelected: (RankingUiState.PeriodFilter) -> Void
+    
     let onRegionSelected: (RankingUiState.RegionFilter) -> Void
 
     var body: some View {
@@ -153,8 +155,11 @@ struct RankingHeaderSection: View {
 
 struct RankingPromoBanner: View {
     let ad: RankingUiState.PromoAd
+    
     let selectedIndex: Int
+    
     let size: Int
+    
     let onSelect: (Int) -> Void
 
     var body: some View {
@@ -218,7 +223,9 @@ struct RankingPromoBanner: View {
 
 struct RankingEntryCard: View {
     let item: RankingUiState.RankingEntry
+    
     let isMaid: Bool
+    
     let onTap: () -> Void
 
     var body: some View {

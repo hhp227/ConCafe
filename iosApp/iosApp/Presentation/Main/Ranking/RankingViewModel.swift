@@ -74,6 +74,7 @@ final class RankingViewModel: ObservableObject {
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
+        
         loadRankingFeed()
     }
 }
