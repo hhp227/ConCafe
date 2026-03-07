@@ -103,6 +103,106 @@
 - 빈 상태/에러 상태 컴포넌트를 항상 제공한다.
 - 접근성(콘텐츠 설명, 클릭 영역, 색 대비)을 기본 준수한다.
 
+## 11-1. UI 화면 작성 규칙
+- 화면 파일은 컨테이너 뷰와 콘텐츠 뷰를 분리한다.
+- 컨테이너 뷰는 `HomeView`/`HomeScreen`처럼 ViewModel을 소유하고 상태 변경 감지만 담당한다.
+- 컨테이너 뷰에서 처리하는 범위는 `LaunchedEffect`, `onReceive`, `onAppear`, `onChange`, 타이머, 네비게이션 이벤트 수집 같은 effect로 제한한다.
+- 콘텐츠 뷰는 `private` 보조 뷰로 분리한다. Swift는 `private struct HomeContentView`, Compose는 `HomeContentScreen` 같은 형태를 기본으로 한다.
+- 콘텐츠 뷰는 ViewModel을 직접 참조하지 않는다.
+- 콘텐츠 뷰 입력은 `uiState`와 `onAction` 콜백만 기본으로 받는다.
+- 배너 페이지, 선택 인덱스 같은 순수 UI 상태가 필요하면 콘텐츠 뷰에 필요한 최소 상태만 추가로 전달한다.
+- 미리보기/프리뷰는 콘텐츠 뷰 기준으로 작성한다. Compose Preview와 SwiftUI Preview에서 ViewModel 없이 렌더링 가능해야 한다.
+- 화면 렌더링 로직, 섹션 배치, 스타일링은 콘텐츠 뷰에 두고, 이벤트 수집/라우팅 연결은 컨테이너 뷰에 둔다.
+- 새 화면을 만들 때는 `Screen/View + ContentScreen/ContentView` 2단 구성을 우선 적용한다.
+
+### 11-1-1. 기준 예시
+- Compose 예시
+```kotlin
+@Composable
+fun HomeScreen(
+    viewModel: HomeViewModel = viewModel(),
+    onNavigate: (NavigationAction) -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(viewModel) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
+                is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+            }
+        }
+    }
+
+    HomeContentScreen(
+        uiState = uiState,
+        onAction = viewModel::onAction
+    )
+}
+
+@Composable
+private fun HomeContentScreen(
+    uiState: HomeUiState,
+    onAction: (HomeAction) -> Unit
+) {
+    LazyColumn {
+        items(uiState.items) { item ->
+            Text(
+                text = item.title,
+                modifier = Modifier.clickable {
+                    onAction(HomeAction.ClickItem(item.id))
+                }
+            )
+        }
+    }
+}
+```
+
+- SwiftUI 예시
+```swift
+struct HomeView: View {
+    let onNavigationAction: (NavigationAction) -> Void
+
+    @StateObject private var viewModel = HomeViewModel()
+
+    var body: some View {
+        HomeContentView(
+            uiState: viewModel.uiState,
+            onAction: viewModel.onAction
+        )
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateToCafe(let id):
+                onNavigationAction(.navigateToCafe(id: id))
+            case .navigateToCast(let id):
+                onNavigationAction(.navigateToCast(id: id))
+            }
+        }
+    }
+}
+
+private struct HomeContentView: View {
+    let uiState: HomeUiState
+
+    let onAction: (HomeAction) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack {
+                ForEach(uiState.items, id: \.id) { item in
+                    Text(item.title)
+                        .onTapGesture {
+                            onAction(.itemTapped(id: item.id))
+                        }
+                }
+            }
+        }
+    }
+}
+```
+
+- 핵심 패턴: 상위 화면은 상태/effect 처리, 하위 콘텐츠 뷰는 `UiState + Action` 기반 렌더링 전용
+
 ## 12. 테스트 규칙
 - UseCase 단위 테스트를 우선 작성한다.
 - 권한 시나리오(`VISITOR`/`CAFE_OWNER`/`ADMIN`/`CAST`) 테스트를 필수로 포함한다.
