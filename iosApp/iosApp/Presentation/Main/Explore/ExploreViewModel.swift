@@ -77,9 +77,9 @@ class ExploreViewModel: ObservableObject {
         case .tabChanged(let tab):
             uiState.selectedTab = tab
         case .cafeTapped(let id):
-            event.send(.navigateToCafeDetail(id: id))
+            event.send(.navigateToCafe(id: id))
         case .maidTapped(let id):
-            event.send(.navigateToCastDetail(id: id))
+            event.send(.navigateToCast(id: id))
         case .refresh:
             loadExploreFeed()
         }

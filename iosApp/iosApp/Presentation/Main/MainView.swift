@@ -26,7 +26,7 @@ struct MainView: View {
                     .tabItem { Label("탐색", systemImage: "magnifyingglass") }
                     .tag("explore")
                 roleBasedThirdTabView
-                    .tag(viewModel.uiState.thirdTabRoute)
+                    .tag(viewModel.uiState.thirdTab.route)
                 rankingTabView
                     .tag("ranking")
                 MyInfoView(onNavigationAction: onNavigationAction)
@@ -47,16 +47,17 @@ struct MainView: View {
             }
         }
         .task {
-            viewModel.onAction(.enter(preferredRoute: initialTab ?? selectedTab))
+            viewModel.onAction(.enter(preferredRoute: initialTab))
         }
-        .onChange(of: initialTab) { newValue in
-            viewModel.onAction(.refreshNavigation(preferredRoute: newValue ?? selectedTab))
+        .onChange(of: viewModel.uiState.selectedTab) { newValue in
+            if selectedTab != newValue {
+                selectedTab = newValue
+            }
         }
         .onChange(of: selectedTab) { newValue in
-            viewModel.onAction(.refreshNavigation(preferredRoute: newValue))
-        }
-        .onReceive(viewModel.$uiState) { state in
-            selectedTab = state.selectedTab
+            if viewModel.uiState.selectedTab != newValue {
+                viewModel.onAction(.refreshNavigation(preferredRoute: newValue))
+            }
         }
         .onReceive(viewModel.event) { _ in
         }
@@ -64,15 +65,15 @@ struct MainView: View {
 
     @ViewBuilder
     private var roleBasedThirdTabView: some View {
-        switch viewModel.uiState.thirdTabRoute {
-        case "fanManagement":
-            FanManagementView()
+        switch viewModel.uiState.thirdTab {
+        case .fanManagement:
+            FanManagementView(title: "팬관리", description: "캐스트가 팔로워, 출근 일정, 팬 대상 공지를 관리하는 메인 탭입니다.")
                 .tabItem { Label("팬관리", systemImage: "person.2.fill") }
-        case "cafeManagement":
-            CafeManagementView()
+        case .cafeManagement:
+            CafeManagementView(title: "카페관리", description: "카페 운영자가 공지, 이벤트, 메뉴, 캐스트 운영을 관리하는 메인 탭입니다.")
                 .tabItem { Label("카페관리", systemImage: "storefront.fill") }
-        case "adminOperations":
-            AdminOperationsView()
+        case .adminOperations:
+            AdminOperationsView(title: "운영관리", description: "관리자가 승인, Claim, 신고, 밴 처리를 수행하는 메인 탭입니다.")
                 .tabItem { Label("운영관리", systemImage: "shield.lefthalf.filled") }
         default:
             CheckInView()
@@ -89,60 +90,6 @@ struct MainView: View {
             RankingView()
                 .tabItem { Label("랭킹", systemImage: "star.fill") }
         }
-    }
-}
-
-private struct FanManagementView: View {
-    var body: some View {
-        RoleManagementPlaceholderView(
-            title: "팬관리",
-            description: "캐스트가 팔로워, 출근 일정, 팬 대상 공지를 관리하는 메인 탭입니다."
-        )
-    }
-}
-
-private struct CafeManagementView: View {
-    var body: some View {
-        RoleManagementPlaceholderView(
-            title: "카페관리",
-            description: "카페 운영자가 공지, 이벤트, 메뉴, 캐스트 운영을 관리하는 메인 탭입니다."
-        )
-    }
-}
-
-private struct AdminOperationsView: View {
-    var body: some View {
-        RoleManagementPlaceholderView(
-            title: "운영관리",
-            description: "관리자가 승인, Claim, 신고, 밴 처리를 수행하는 메인 탭입니다."
-        )
-    }
-}
-
-private struct RoleManagementPlaceholderView: View {
-    let title: String
-
-    let description: String
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Text(title)
-                .font(.title2)
-                .bold()
-            Text(description)
-                .font(.body)
-                .foregroundStyle(Color(hex: "6B6170"))
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(24)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "FFF7FB"), Color(hex: "FFEDF5")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
     }
 }
 

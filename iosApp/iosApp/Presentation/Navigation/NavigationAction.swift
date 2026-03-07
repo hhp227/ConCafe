@@ -9,7 +9,8 @@ import Foundation
 
 enum NavigationAction {
     case navigateToMain(initialTab: String? = nil)
-    case navigateToCastDetail(id: String)
-    case navigateToCafeDetail(id: String)
+    case navigateToCast(id: String)
+    case navigateToCafe(id: String)
+    case navigateToSignIn
     case navigateToNotification
 }

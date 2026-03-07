@@ -51,11 +51,11 @@ final class HomeViewModel: ObservableObject {
     func onAction(_ action: HomeAction) {
         switch action {
         case .maidTapped(let id):
-            event.send(.navigateToCastDetail(id: id))
+            event.send(.navigateToCast(id: id))
         case .birthdayMaidTapped(let id):
-            event.send(.navigateToCastDetail(id: id))
+            event.send(.navigateToCast(id: id))
         case .cafeTapped(let id):
-            event.send(.navigateToCafeDetail(id: id))
+            event.send(.navigateToCafe(id: id))
         }
     }
 

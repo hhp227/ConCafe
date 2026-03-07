@@ -1,5 +1,5 @@
 //
-//  CastDetailView.swift
+//  CastView.swift
 //  ConCafe
 //
 //  Created by 홍희표 on 2026/03/05.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CastDetailView: View {
+struct CastView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     var body: some View {
@@ -19,8 +19,8 @@ struct CastDetailView: View {
 }
 
 
-struct CastDetailView_Previews: PreviewProvider {
+struct CastView_Previews: PreviewProvider {
     static var previews: some View {
-        CastDetailView(onNavigationAction: { _ in })
+        CastView(onNavigationAction: { _ in })
     }
 }

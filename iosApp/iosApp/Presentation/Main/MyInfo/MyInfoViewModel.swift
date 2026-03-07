@@ -63,7 +63,7 @@ final class MyInfoViewModel: ObservableObject {
             do {
                 let result = try await signOutUseCase.invoke()
 
-                if result is AppResultSuccess<KotlinUnit> || result is AppResultSuccess<AnyObject> {
+                if result is AppResultSuccess<AnyObject> {
                     loadMyInfo()
                     event.send(.loggedOut)
                 } else if let failure = result as? AppResultFailure {
@@ -78,9 +78,11 @@ final class MyInfoViewModel: ObservableObject {
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
-            event.send(.navigateToCafeDetail(id: id))
+            event.send(.navigateToCafe(id: id))
         case .maidTapped(let id):
-            event.send(.navigateToCastDetail(id: id))
+            event.send(.navigateToCast(id: id))
+        case .loginTapped:
+            event.send(.navigateToSignIn)
         case .logoutTapped:
             signOut()
         case .refresh:

@@ -10,7 +10,8 @@ import Foundation
 enum Route: Hashable {
     case entry
     case main(initialTab: String?)
-    case castDetail(param: String)
-    case cafeDetail(param: String)
+    case cast(param: String)
+    case cafe(param: String)
+    case signIn
     case notification
 }

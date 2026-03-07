@@ -1,6 +1,6 @@
 //
 //  CapsuleDropdownLabel.swift
-//  iosApp
+//  ConCafe
 //
 //  Created by 홍희표 on 2026/03/07.
 //
@@ -23,16 +23,6 @@ struct CapsuleDropdownLabel: View {
         .padding(.vertical, 8)
         .background(Color(hex: "F3F3F3"))
         .clipShape(Capsule())
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let value = Int(hex, radix: 16) ?? 0
-        let red = Double((value >> 16) & 0xFF) / 255.0
-        let green = Double((value >> 8) & 0xFF) / 255.0
-        let blue = Double(value & 0xFF) / 255.0
-        self.init(.sRGB, red: red, green: green, blue: blue, opacity: 1)
     }
 }
 

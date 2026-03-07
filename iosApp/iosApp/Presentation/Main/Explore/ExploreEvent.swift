@@ -8,6 +8,6 @@
 import Foundation
 
 enum ExploreEvent {
-    case navigateToCastDetail(id: String)
-    case navigateToCafeDetail(id: String)
+    case navigateToCast(id: String)
+    case navigateToCafe(id: String)
 }

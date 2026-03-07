@@ -1,29 +1,13 @@
+//
+//  MainViewModel.swift
+//  ConCafe
+//
+//  Created by 홍희표 on 2026/03/07.
+//
+
 import Foundation
 import Combine
 import Shared
-
-struct MainUiState {
-    var currentUser: User?
-
-    var selectedTab: String
-
-    var thirdTabRoute: String
-
-    static let empty = MainUiState(
-        currentUser: nil,
-        selectedTab: "home",
-        thirdTabRoute: "checkin"
-    )
-}
-
-enum MainAction {
-    case enter(preferredRoute: String? = nil)
-    case refreshNavigation(preferredRoute: String? = nil)
-}
-
-enum MainEvent {
-    case showError(message: String)
-}
 
 @MainActor
 final class MainViewModel: ObservableObject {
@@ -43,7 +27,7 @@ final class MainViewModel: ObservableObject {
                     uiState = MainUiState(
                         currentUser: state.currentUser,
                         selectedTab: state.selectedTab,
-                        thirdTabRoute: state.thirdTab.route
+                        thirdTab: state.thirdTab
                     )
                 } else if let failure = result as? AppResultFailure {
                     event.send(.showError(message: "\(failure.error)"))

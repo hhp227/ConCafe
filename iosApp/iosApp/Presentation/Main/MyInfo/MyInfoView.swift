@@ -33,10 +33,12 @@ struct MyInfoView: View {
         .background(Color(hex: "FFF9FC"))
         .onReceive(viewModel.event) { event in
             switch event {
-            case .navigateToCafeDetail(let id):
-                onNavigationAction(.navigateToCafeDetail(id: id))
-            case .navigateToCastDetail(let id):
-                onNavigationAction(.navigateToCastDetail(id: id))
+            case .navigateToCafe(let id):
+                onNavigationAction(.navigateToCafe(id: id))
+            case .navigateToCast(let id):
+                onNavigationAction(.navigateToCast(id: id))
+            case .navigateToSignIn:
+                onNavigationAction(.navigateToSignIn)
             case .loggedOut:
                 onNavigationAction(.navigateToMain())
             }
@@ -72,6 +74,7 @@ private struct GuestMyInfoView: View {
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
                     Button {
+                        onAction(.loginTapped)
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -360,16 +363,6 @@ private struct ProfileMyInfoView: View {
                 }
             }
         }
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let value = Int(hex, radix: 16) ?? 0
-        let red = Double((value >> 16) & 0xFF) / 255.0
-        let green = Double((value >> 8) & 0xFF) / 255.0
-        let blue = Double(value & 0xFF) / 255.0
-        self.init(.sRGB, red: red, green: green, blue: blue, opacity: 1)
     }
 }
 

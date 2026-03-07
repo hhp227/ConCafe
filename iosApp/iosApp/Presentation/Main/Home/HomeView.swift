@@ -26,10 +26,10 @@ struct HomeView: View {
         )
         .onReceive(viewModel.event) { event in
             switch event {
-            case .navigateToCastDetail(let id):
-                onNavigationAction(.navigateToCastDetail(id: id))
-            case .navigateToCafeDetail(let id):
-                onNavigationAction(.navigateToCafeDetail(id: id))
+            case .navigateToCast(let id):
+                onNavigationAction(.navigateToCast(id: id))
+            case .navigateToCafe(let id):
+                onNavigationAction(.navigateToCafe(id: id))
             }
         }
         .onAppear {
@@ -237,16 +237,6 @@ private struct SectionTitle: View {
                 .font(.headline)
         }
         .padding(.horizontal, 16)
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let value = Int(hex, radix: 16) ?? 0
-        let red = Double((value >> 16) & 0xFF) / 255.0
-        let green = Double((value >> 8) & 0xFF) / 255.0
-        let blue = Double(value & 0xFF) / 255.0
-        self.init(.sRGB, red: red, green: green, blue: blue, opacity: 1)
     }
 }
 
