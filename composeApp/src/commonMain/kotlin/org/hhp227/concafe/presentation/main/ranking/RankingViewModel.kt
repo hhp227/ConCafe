@@ -24,9 +24,9 @@ class RankingViewModel(
 
     private fun loadRankingFeed() {
         val currentState = _uiState.value
-        val country = currentState.selectedRegion.country()
-        val city = currentState.selectedRegion.city()
-        val period = currentState.selectedPeriod.toDomain()
+        val country = currentState.selectedRegion.country
+        val city = currentState.selectedRegion.city
+        val period = currentState.selectedPeriod
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
@@ -82,30 +82,5 @@ class RankingViewModel(
 
     init {
         loadRankingFeed()
-    }
-}
-
-private fun RankingUiState.PeriodFilter.toDomain(): RankingPeriod {
-    return when (this) {
-        RankingUiState.PeriodFilter.WEEKLY -> RankingPeriod.WEEKLY
-        RankingUiState.PeriodFilter.MONTHLY -> RankingPeriod.MONTHLY
-    }
-}
-
-private fun RankingUiState.RegionFilter.country(): String? {
-    return when (this) {
-        RankingUiState.RegionFilter.ALL -> null
-        RankingUiState.RegionFilter.SEOUL -> "KR"
-        RankingUiState.RegionFilter.TOKYO -> "JP"
-        RankingUiState.RegionFilter.OSAKA -> "JP"
-    }
-}
-
-private fun RankingUiState.RegionFilter.city(): String? {
-    return when (this) {
-        RankingUiState.RegionFilter.ALL -> null
-        RankingUiState.RegionFilter.SEOUL -> "Seoul"
-        RankingUiState.RegionFilter.TOKYO -> "Tokyo"
-        RankingUiState.RegionFilter.OSAKA -> "Osaka"
     }
 }

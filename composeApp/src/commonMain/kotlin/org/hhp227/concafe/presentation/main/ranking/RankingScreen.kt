@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.hhp227.concafe.domain.model.RankingFeedEntry
+import org.hhp227.concafe.domain.model.RankingPeriod
 import org.hhp227.concafe.domain.model.RankingPromoAd
 import org.hhp227.concafe.presentation.component.CapsuleDropdown
 import org.hhp227.concafe.presentation.component.ConCafeTabBar
@@ -116,7 +117,7 @@ private fun RankingContent(
 @Composable
 fun RankingHeaderSection(
     uiState: RankingUiState,
-    onPeriodSelected: (RankingUiState.PeriodFilter) -> Unit,
+    onPeriodSelected: (RankingPeriod) -> Unit,
     onRegionSelected: (RankingUiState.RegionFilter) -> Unit
 ) {
     Column(
@@ -141,7 +142,7 @@ fun RankingHeaderSection(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CapsuleDropdown(
                 selected = uiState.selectedPeriod.label,
-                options = RankingUiState.PeriodFilter.entries.map { it.label to it },
+                options = listOf(RankingPeriod.WEEKLY, RankingPeriod.MONTHLY).map { it.label to it },
                 onSelected = onPeriodSelected
             )
             CapsuleDropdown(
@@ -152,6 +153,12 @@ fun RankingHeaderSection(
         }
     }
 }
+
+private val RankingPeriod.label: String
+    get() = when (this) {
+        RankingPeriod.WEEKLY -> "주간"
+        RankingPeriod.MONTHLY -> "월간"
+    }
 
 @Composable
 fun RankingTabBar(

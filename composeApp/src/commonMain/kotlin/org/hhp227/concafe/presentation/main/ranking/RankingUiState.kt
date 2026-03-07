@@ -1,13 +1,14 @@
 package org.hhp227.concafe.presentation.main.ranking
 
 import org.hhp227.concafe.domain.model.RankingFeedEntry
+import org.hhp227.concafe.domain.model.RankingPeriod
 import org.hhp227.concafe.domain.model.RankingPromoAd
 
 data class RankingUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val selectedTab: TabType = TabType.MAIDS,
-    val selectedPeriod: PeriodFilter = PeriodFilter.WEEKLY,
+    val selectedPeriod: RankingPeriod = RankingPeriod.WEEKLY,
     val selectedRegion: RegionFilter = RegionFilter.ALL,
     val selectedAdIndex: Int = 0,
     val ads: List<RankingPromoAd> = emptyList(),
@@ -19,16 +20,11 @@ data class RankingUiState(
         CAFES("카페 랭킹")
     }
 
-    enum class PeriodFilter(val label: String) {
-        WEEKLY("주간"),
-        MONTHLY("월간")
-    }
-
-    enum class RegionFilter(val label: String) {
-        ALL("전체"),
-        SEOUL("서울"),
-        TOKYO("도쿄"),
-        OSAKA("오사카")
+    enum class RegionFilter(val label: String, val country: String?, val city: String?) {
+        ALL("전체", null, null),
+        SEOUL("서울", "KR", "Seoul"),
+        TOKYO("도쿄", "JP", "Tokyo"),
+        OSAKA("오사카", "JP", "Osaka")
     }
 
     val currentAd: RankingPromoAd

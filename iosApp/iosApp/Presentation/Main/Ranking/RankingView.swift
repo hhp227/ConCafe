@@ -115,7 +115,7 @@ private struct RankingContentView: View {
 struct RankingHeaderSection: View {
     let uiState: RankingUiState
     
-    let onPeriodSelected: (RankingUiState.PeriodFilter) -> Void
+    let onPeriodSelected: (RankingPeriod) -> Void
     
     let onRegionSelected: (RankingUiState.RegionFilter) -> Void
 
@@ -129,13 +129,13 @@ struct RankingHeaderSection: View {
             }
             HStack(spacing: 8) {
                 Menu {
-                    ForEach(RankingUiState.PeriodFilter.allCases, id: \.self) { period in
-                        Button(period.rawValue) {
+                    ForEach([RankingPeriod.weekly, RankingPeriod.monthly], id: \.self) { period in
+                        Button(period.label) {
                             onPeriodSelected(period)
                         }
                     }
                 } label: {
-                    CapsuleDropdownLabel(text: uiState.selectedPeriod.rawValue)
+                    CapsuleDropdownLabel(text: uiState.selectedPeriod.label)
                 }
                 Menu {
                     ForEach(RankingUiState.RegionFilter.allCases, id: \.self) { region in
@@ -150,6 +150,19 @@ struct RankingHeaderSection: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
+    }
+}
+
+private extension RankingPeriod {
+    var label: String {
+        switch self {
+        case .weekly:
+            return "주간"
+        case .monthly:
+            return "월간"
+        default:
+            return ""
+        }
     }
 }
 

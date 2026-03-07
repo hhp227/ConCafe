@@ -14,22 +14,41 @@ struct RankingUiState {
         case cafes = "카페 랭킹"
     }
 
-    enum PeriodFilter: String, CaseIterable {
-        case weekly = "주간"
-        case monthly = "월간"
-    }
-
     enum RegionFilter: String, CaseIterable {
         case all = "전체"
         case seoul = "서울"
         case tokyo = "도쿄"
         case osaka = "오사카"
+
+        var country: String? {
+            switch self {
+            case .all:
+                return nil
+            case .seoul:
+                return "KR"
+            case .tokyo, .osaka:
+                return "JP"
+            }
+        }
+
+        var city: String? {
+            switch self {
+            case .all:
+                return nil
+            case .seoul:
+                return "Seoul"
+            case .tokyo:
+                return "Tokyo"
+            case .osaka:
+                return "Osaka"
+            }
+        }
     }
 
     var isLoading: Bool = false
     var errorMessage: String? = nil
     var selectedTab: TabType = .maids
-    var selectedPeriod: PeriodFilter = .weekly
+    var selectedPeriod: RankingPeriod = .weekly
     var selectedRegion: RegionFilter = .all
     var selectedAdIndex: Int = 0
     var ads: [Shared.RankingPromoAd] = []

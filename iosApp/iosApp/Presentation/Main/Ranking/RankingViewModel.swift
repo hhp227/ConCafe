@@ -20,7 +20,7 @@ final class RankingViewModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
 
     private func loadRankingFeed() {
-        let period = uiState.selectedPeriod.toDomain()
+        let period = uiState.selectedPeriod
         let country = uiState.selectedRegion.country
         let city = uiState.selectedRegion.city
 
@@ -76,42 +76,5 @@ final class RankingViewModel: ObservableObject {
         self.getRankingFeedUseCase = getRankingFeedUseCase
         
         loadRankingFeed()
-    }
-}
-
-private extension RankingUiState.PeriodFilter {
-    func toDomain() -> RankingPeriod {
-        switch self {
-        case .weekly:
-            return .weekly
-        case .monthly:
-            return .monthly
-        }
-    }
-}
-
-private extension RankingUiState.RegionFilter {
-    var country: String? {
-        switch self {
-        case .all:
-            return nil
-        case .seoul:
-            return "KR"
-        case .tokyo, .osaka:
-            return "JP"
-        }
-    }
-
-    var city: String? {
-        switch self {
-        case .all:
-            return nil
-        case .seoul:
-            return "Seoul"
-        case .tokyo:
-            return "Tokyo"
-        case .osaka:
-            return "Osaka"
-        }
     }
 }
