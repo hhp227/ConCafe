@@ -14,6 +14,23 @@ users/{userId}
    ├─ reviewCount
    └─ stampCount
 
+homeBanners/{bannerId}
+├─ ownerType: ADMIN | CAFE_OWNER
+├─ ownerId
+├─ relatedCafeId
+├─ title
+├─ subtitle
+├─ imageUrl
+├─ linkType: CAFE | EVENT | NOTICE | EXTERNAL
+├─ linkTarget
+├─ priority
+├─ maxVisibleGroup: 3 | 4 | 5
+├─ startAt
+├─ endAt
+├─ status: DRAFT | SCHEDULED | ACTIVE | ENDED | PAUSED
+├─ createdAt
+└─ updatedAt
+
 cafes/{cafeId}
 ├─ ownerId
 ├─ name
