@@ -46,12 +46,6 @@ struct MainView: View {
                 .accessibilityLabel("알림")
             }
         }
-        .task {
-            if let initialTab, selectedTab != initialTab {
-                selectedTab = initialTab
-            }
-            viewModel.onAction(.enter(preferredRoute: selectedTab))
-        }
         .onChange(of: viewModel.uiState.selectedTab) { newValue in
             if selectedTab != newValue {
                 selectedTab = newValue
