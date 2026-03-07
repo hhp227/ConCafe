@@ -246,7 +246,7 @@ struct RankingEntryCard: View {
         HStack(spacing: 14) {
             Text(item.rank <= 3 ? "🏆" : "\(item.rank)")
             .font(.title2.weight(.bold))
-            .foregroundStyle(rankColor(item.rank))
+            .foregroundStyle(rankColor(Int(item.rank)))
             .frame(width: 32)
             ZStack {
                 LinearGradient(

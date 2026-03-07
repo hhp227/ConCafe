@@ -14,11 +14,11 @@ struct ConCafeTabItem: Identifiable, Equatable {
 
 struct ConCafeTabBar: View {
     let items: [ConCafeTabItem]
-
+    
     let selectedIndex: Int
-
+    
     let backgroundColor: Color
-
+    
     let onSelect: (Int) -> Void
 
     var body: some View {
@@ -26,36 +26,37 @@ struct ConCafeTabBar: View {
             let itemCount = max(items.count, 1)
             let itemWidth = geometry.size.width / CGFloat(itemCount)
 
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                        Button {
-                            onSelect(index)
-                        } label: {
-                            Text(item.title)
-                                .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
-                                .foregroundStyle(selectedIndex == index ? Color(hex: "EF6797") : Color(hex: "777777"))
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 10)
-                                .padding(.bottom, 8)
-                        }
-                        .buttonStyle(.plain)
+            HStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    Button {
+                        onSelect(index)
+                    } label: {
+                        Text(item.title)
+                            .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
+                            .foregroundStyle(
+                                selectedIndex == index
+                                ? Color(hex: "EF6797")
+                                : Color(hex: "777777")
+                            )
+                            .frame(
+                                maxWidth: .infinity,
+                                maxHeight: .infinity,
+                                alignment: .center
+                            )
                     }
+                    .buttonStyle(.plain)
                 }
+            }
+            .overlay(alignment: .bottomLeading) {
                 Rectangle()
-                    .fill(Color.clear)
-                    .frame(height: 2)
-                    .overlay(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color(hex: "EF6797"))
-                            .frame(width: itemWidth, height: 2)
-                            .offset(x: CGFloat(selectedIndex) * itemWidth)
-                            .animation(.easeInOut(duration: 0.2), value: selectedIndex)
-                    }
+                    .fill(Color(hex: "EF6797"))
+                    .frame(width: itemWidth, height: 2)
+                    .offset(x: CGFloat(selectedIndex) * itemWidth)
+                    .animation(.easeInOut(duration: 0.2), value: selectedIndex)
             }
             .background(backgroundColor)
         }
-        .frame(height: 52)
+        .frame(height: 48)
         .background(backgroundColor)
     }
 }
