@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.repository.AuthRepository
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
+import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
 
 class MyInfoViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val authRepository: AuthRepository
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
@@ -57,18 +57,22 @@ class MyInfoViewModel(
             is MyInfoAction.ClickCafe -> viewModelScope.launch {
                 _event.emit(MyInfoEvent.NavigateToCafeDetail(action.id))
             }
-
             is MyInfoAction.ClickMaid -> viewModelScope.launch {
                 _event.emit(MyInfoEvent.NavigateToCastDetail(action.id))
             }
-
             MyInfoAction.ClickLogout -> {
                 viewModelScope.launch {
-                    authRepository.signOut()
-                    loadMyInfo()
+                    when (signOutUseCase.invoke()) {
+                        is AppResult.Success -> {
+                            loadMyInfo()
+                            _event.emit(MyInfoEvent.LoggedOut)
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update { it.copy(errorMessage = "로그아웃에 실패했습니다.") }
+                        }
+                    }
                 }
             }
-
             MyInfoAction.Refresh -> loadMyInfo()
         }
     }

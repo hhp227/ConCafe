@@ -13,7 +13,7 @@ import Shared
 final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
 
-    private let authRepository: AuthRepository
+    private let signOutUseCase: SignOutUseCase
 
     @Published private(set) var uiState = MyInfoUiState.empty
 
@@ -58,6 +58,23 @@ final class MyInfoViewModel: ObservableObject {
         }
     }
 
+    private func signOut() {
+        Task {
+            do {
+                let result = try await signOutUseCase.invoke()
+
+                if result is AppResultSuccess<KotlinUnit> || result is AppResultSuccess<AnyObject> {
+                    loadMyInfo()
+                    event.send(.loggedOut)
+                } else if let failure = result as? AppResultFailure {
+                    uiState.errorMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
@@ -65,13 +82,7 @@ final class MyInfoViewModel: ObservableObject {
         case .maidTapped(let id):
             event.send(.navigateToCastDetail(id: id))
         case .logoutTapped:
-            Task {
-                do {
-                    try await authRepository.signOut()
-                } catch {
-                }
-                loadMyInfo()
-            }
+            signOut()
         case .refresh:
             loadMyInfo()
         }
@@ -79,10 +90,10 @@ final class MyInfoViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
-        authRepository: AuthRepository = KoinInitializerKt.resolveAuthRepository()
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
-        self.authRepository = authRepository
+        self.signOutUseCase = signOutUseCase
 
         loadMyInfo()
     }

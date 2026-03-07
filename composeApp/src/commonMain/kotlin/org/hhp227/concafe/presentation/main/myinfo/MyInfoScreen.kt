@@ -75,6 +75,7 @@ fun MyInfoScreen(
             when (event) {
                 is MyInfoEvent.NavigateToCafeDetail -> onNavigate(NavigationAction.NavigateToCafeDetail(event.id))
                 is MyInfoEvent.NavigateToCastDetail -> onNavigate(NavigationAction.NavigateToCastDetail(event.id))
+                MyInfoEvent.LoggedOut -> onNavigate(NavigationAction.NavigateToMain())
             }
         }
     }

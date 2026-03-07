@@ -24,7 +24,7 @@ class FakeAuthRepository(
                 email = email,
                 nickname = "신규유저",
                 profileImage = null,
-                role = UserRole.USER,
+                role = UserRole.VISITOR,
                 banned = false,
                 createdAt = "2026-03-05T00:00:00Z"
             )
@@ -50,7 +50,7 @@ class FakeAuthRepository(
             email = email,
             nickname = nickname,
             profileImage = null,
-            role = UserRole.USER,
+            role = UserRole.VISITOR,
             banned = false,
             createdAt = "2026-03-05T00:00:00Z"
         )

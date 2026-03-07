@@ -2,17 +2,7 @@ package org.hhp227.concafe.presentation.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,75 +45,6 @@ fun NavigationScreen(
             .background(MaterialTheme.colorScheme.primaryContainer)
             .fillMaxSize()
     ) {
-        NavigationRail(
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            NavigationRailItem(
-                selected = currentMainTab == "home",
-                onClick = {
-                    viewModel.onAction(NavigationAction.NavigateToMain("home"))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "홈"
-                    )
-                },
-                label = { Text("홈") }
-            )
-            NavigationRailItem(
-                selected = currentMainTab == "explore",
-                onClick = {
-                    viewModel.onAction(NavigationAction.NavigateToMain("explore"))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "탐색"
-                    )
-                },
-                label = { Text("탐색") }
-            )
-            NavigationRailItem(
-                selected = currentMainTab == "ranking",
-                onClick = {
-                    viewModel.onAction(NavigationAction.NavigateToMain("ranking"))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = "랭킹"
-                    )
-                },
-                label = { Text("랭킹") }
-            )
-            NavigationRailItem(
-                selected = currentMainTab == "checkin",
-                onClick = {
-                    viewModel.onAction(NavigationAction.NavigateToMain("checkin"))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "체크인"
-                    )
-                },
-                label = { Text("체크인") }
-            )
-            NavigationRailItem(
-                selected = currentMainTab == "myinfo",
-                onClick = {
-                    viewModel.onAction(NavigationAction.NavigateToMain("myinfo"))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "내 정보"
-                    )
-                },
-                label = { Text("내 정보") }
-            )
-        }
         Box(
             modifier = Modifier
                 .weight(1f)

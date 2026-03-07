@@ -37,6 +37,8 @@ struct MyInfoView: View {
                 onNavigationAction(.navigateToCafeDetail(id: id))
             case .navigateToCastDetail(let id):
                 onNavigationAction(.navigateToCastDetail(id: id))
+            case .loggedOut:
+                onNavigationAction(.navigateToMain())
             }
         }
     }

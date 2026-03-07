@@ -1,0 +1,53 @@
+package org.hhp227.concafe.presentation.main
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
+
+class MainViewModel(
+    private val getMainNavigationUseCase: GetMainNavigationUseCase
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(MainUiState.empty())
+    val uiState = _uiState.asStateFlow()
+
+    private val _event = MutableSharedFlow<MainEvent>()
+    val event = _event.asSharedFlow()
+
+    private fun refreshNavigation(preferredRoute: String? = null) {
+        viewModelScope.launch {
+            when (val result = getMainNavigationUseCase.invoke(preferredRoute)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            currentUser = result.data.currentUser,
+                            tabs = result.data.tabs,
+                            selectedTab = result.data.selectedTab,
+                            thirdTab = result.data.thirdTab
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _event.emit(MainEvent.ShowError(result.error.toString()))
+                }
+            }
+        }
+    }
+
+    fun onAction(action: MainAction) {
+        when (action) {
+            is MainAction.Enter -> refreshNavigation(action.preferredRoute)
+            is MainAction.RefreshNavigation -> refreshNavigation(action.preferredRoute)
+        }
+    }
+
+    init {
+        onAction(MainAction.Enter())
+    }
+}

@@ -27,7 +27,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MockConCafeDataSource : ConCafeDataSource {
-    override var currentUserId: String? = "user-1"
+    override var currentUserId: String? = null
 
     override val users = mutableListOf(
         User(
@@ -35,9 +35,36 @@ class MockConCafeDataSource : ConCafeDataSource {
             email = "user1@concafe.app",
             nickname = "리본냥",
             profileImage = null,
-            role = UserRole.USER,
+            role = UserRole.VISITOR,
             banned = false,
             createdAt = "2026-03-01T09:00:00Z"
+        ),
+        User(
+            id = "user-2",
+            email = "cast@concafe.app",
+            nickname = "사쿠라",
+            profileImage = null,
+            role = UserRole.CAST,
+            banned = false,
+            createdAt = "2026-03-01T09:10:00Z"
+        ),
+        User(
+            id = "user-3",
+            email = "owner@concafe.app",
+            nickname = "메이드하우스점장",
+            profileImage = null,
+            role = UserRole.CAFE_OWNER,
+            banned = false,
+            createdAt = "2026-03-01T09:20:00Z"
+        ),
+        User(
+            id = "user-4",
+            email = "admin@concafe.app",
+            nickname = "콘카페관리자",
+            profileImage = null,
+            role = UserRole.ADMIN,
+            banned = false,
+            createdAt = "2026-03-01T09:30:00Z"
         )
     )
 

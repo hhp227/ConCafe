@@ -1,30 +1,26 @@
 package org.hhp227.concafe.presentation.main
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetMainNavigationUseCase
+import org.hhp227.concafe.domain.model.MainNavigationTab
+import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import org.hhp227.concafe.presentation.main.checkin.CheckInScreen
 import org.hhp227.concafe.presentation.main.explore.ExploreScreen
 import org.hhp227.concafe.presentation.main.home.HomeScreen
+import org.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import org.hhp227.concafe.presentation.main.ranking.RankingScreen
 import org.hhp227.concafe.presentation.navigation.NavigationAction
@@ -33,14 +29,19 @@ import org.hhp227.concafe.presentation.navigation.NavigationAction
 @Composable
 fun MainScreen(
     initialTab: String? = null,
+    viewModel: MainViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                MainViewModel(resolveGetMainNavigationUseCase())
+            }
+        }
+    ),
     onNavigationAction: (NavigationAction) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(initialTab ?: "home") }
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(initialTab) {
-        if (initialTab != null) {
-            selectedTab = initialTab
-        }
+        viewModel.onAction(MainAction.Enter(initialTab))
     }
     Scaffold(
         topBar = {
@@ -59,30 +60,66 @@ fun MainScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            when (selectedTab) {
-                "home" -> {
-                    HomeScreen(
-                        onNavigate = onNavigationAction
+        Row(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            NavigationRail(
+                modifier = Modifier.fillMaxHeight()
+            ) {
+                desktopMainTabs(uiState).forEach { (tab, icon) ->
+                    NavigationRailItem(
+                        selected = uiState.selectedTab == tab.route,
+                        onClick = {
+                            onNavigationAction(NavigationAction.NavigateToMain(tab.route))
+                            viewModel.onAction(MainAction.RefreshNavigation(tab.route))
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = tab.label()
+                            )
+                        },
+                        label = { Text(tab.label()) }
                     )
                 }
-                "explore" -> {
-                    ExploreScreen(
-                        onNavigate = onNavigationAction
-                    )
-                }
-                "ranking" -> {
-                    RankingScreen()
-                }
-                "checkin" -> {
-                    CheckInScreen()
-                }
-                "myinfo" -> {
-                    MyInfoScreen(
-                        onNavigate = onNavigationAction
-                    )
+            }
+            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+                when (uiState.selectedTab) {
+                    MainNavigationTab.HOME.route -> HomeScreen(onNavigate = onNavigationAction)
+                    MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
+                    MainNavigationTab.CHECK_IN.route -> CheckInScreen()
+                    MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen()
+                    MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen()
+                    MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()
+                    MainNavigationTab.RANKING.route -> RankingScreen()
+                    MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
+                    else -> HomeScreen(onNavigate = onNavigationAction)
                 }
             }
         }
     }
+}
+
+fun desktopMainTabs(uiState: MainUiState): List<Pair<MainNavigationTab, ImageVector>> {
+    return uiState.tabs.map { tab ->
+        tab to when (tab) {
+            MainNavigationTab.HOME -> Icons.Default.Home
+            MainNavigationTab.EXPLORE -> Icons.Default.Search
+            MainNavigationTab.CHECK_IN -> Icons.Default.CheckCircle
+            MainNavigationTab.FAN_MANAGEMENT -> Icons.Default.Groups
+            MainNavigationTab.CAFE_MANAGEMENT -> Icons.Default.ManageAccounts
+            MainNavigationTab.ADMIN_OPERATIONS -> Icons.Default.AdminPanelSettings
+            MainNavigationTab.RANKING -> Icons.Default.EmojiEvents
+            MainNavigationTab.MY_INFO -> Icons.Default.Person
+        }
+    }
+}
+
+private fun MainNavigationTab.label(): String = when (this) {
+    MainNavigationTab.HOME -> "홈"
+    MainNavigationTab.EXPLORE -> "탐색"
+    MainNavigationTab.CHECK_IN -> "체크인"
+    MainNavigationTab.FAN_MANAGEMENT -> "팬관리"
+    MainNavigationTab.CAFE_MANAGEMENT -> "카페관리"
+    MainNavigationTab.ADMIN_OPERATIONS -> "운영관리"
+    MainNavigationTab.RANKING -> "랭킹"
+    MainNavigationTab.MY_INFO -> "마이"
 }
