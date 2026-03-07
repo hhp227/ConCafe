@@ -42,7 +42,7 @@
   4. 승인 전/후 쓰기 가능 범위 차이 정의
 - AC:
   - `PENDING/APPROVED/REJECTED` 상태 전이가 문서화된다.
-  - OWNER/CAST 권한 상승 조건이 명확하다.
+  - `CAFE_OWNER`/`CAST` 권한 상승 조건이 명확하다.
   - 승인 전 데이터 오남용 경로가 없다.
 
 ### A-02. Firebase 보안 정책 초안 확정
@@ -50,7 +50,7 @@
 - 상태: DONE
 - 산출물: 역할별 권한 매트릭스
 - 작업:
-  1. USER/OWNER/ADMIN/CAST CRUD 범위 확정
+  1. `VISITOR`/`CAFE_OWNER`/`ADMIN`/`CAST` CRUD 범위 확정
   2. 리뷰 작성 선행조건(verified visit) 정책 확정
   3. 카페 승인 상태(`approved`) 노출 정책 확정
 - AC:
@@ -69,14 +69,17 @@
   2. 비로그인(게스트) 허용 범위와 로그인 필요 범위 확정
   3. 마이 페이지 비로그인 진입 시 로그인 라우팅 규칙 확정
   4. 로그인 세션 유지/복원 정책 확정
+  5. 메인 네비게이션 3번째 탭 역할별 치환 규칙 확정
 - AC:
   - 홈/탐색/상세는 게스트 접근 가능하다.
   - 마이 페이지는 로그인 없이는 접근 불가하다.
   - 로그인 후 앱 재실행 시 세션이 유지된다.
+  - 게스트/`VISITOR`=`체크인`, `CAST`=`팬관리`, `CAFE_OWNER`=`카페관리`, `ADMIN`=`운영관리` 규칙이 문서화된다.
 - 결정사항:
   1. 앱 첫 진입은 홈(게스트 허용)
   2. 마이 페이지는 로그인 필수
   3. 로그인 세션 유지(앱 재실행 자동 로그인)
+  4. 메인 탭 3번째 위치는 역할별 교체 탭을 사용
 
 ### A-04. 로그인 필요 기능 매트릭스 확정
 - 우선순위: P0
@@ -92,6 +95,7 @@
 - 결정사항:
   1. 로그인 성공 시 `pendingRoute`/`pendingAction` 자동 재실행
   2. 취소 시 현재 화면 유지, 보호 액션 미실행
+  3. 다중 역할 계정은 `ADMIN > CAFE_OWNER > CAST > VISITOR` 우선순위로 메인 탭 1개만 노출
 
 ### A-05. 운영 환경/시크릿 정책 확정
 - 우선순위: P0
@@ -205,13 +209,17 @@
 - 산출물: 플랫폼별 네비게이션 설계서 + 라우트 맵
 - 작업:
   1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/CafeDetail/CastDetail/Login/Notifications`)
-  2. Android: Jetpack Navigation 그래프 설계 및 인증 가드 진입점 정의
-  3. iOS: NavigationStack path 라우팅 설계 및 인증 가드 진입점 정의
-  4. Desktop: 상태 기반 라우트 상태머신 설계 및 뒤로가기 정책 정의
-  5. `pendingRoute/pendingAction` 규칙을 플랫폼별로 동일 적용
+  2. 역할별 메인 탭 3번째 라우트 스펙 정의(`CheckIn | FanManagement | CafeManagement | AdminOperations`)
+  3. 로그인 사용자 역할 변경 시 탭 재구성 규칙 정의
+  4. 다중 역할 계정 우선순위(`ADMIN > CAFE_OWNER > CAST > VISITOR`) 적용 규칙 정의
+  5. Android: Jetpack Navigation 그래프 설계 및 인증 가드 진입점 정의
+  6. iOS: NavigationStack path 라우팅 설계 및 인증 가드 진입점 정의
+  7. Desktop: 상태 기반 라우트 상태머신 설계 및 뒤로가기 정책 정의
+  8. `pendingRoute/pendingAction` 규칙을 플랫폼별로 동일 적용
 - AC:
   - 같은 사용자 시나리오에서 플랫폼별 화면 전환 결과가 동일하다.
   - 로그인 가드/복귀 동작이 플랫폼별로 동일하다.
+  - 역할별 메인 탭 치환이 세 플랫폼에서 동일하게 동작한다.
 
 ## C. MVP 기능 작업 (P0-P1)
 
@@ -299,6 +307,57 @@
   - 비로그인 체크인 시도 시 로그인 화면으로 라우팅된다.
   - 반경 밖 체크인은 실패 처리된다.
   - 성공 체크인은 즉시 방문 기록에 표시된다.
+  - 체크인 탭은 게스트/`VISITOR`에서만 메인 탭 3번째 위치에 노출된다.
+
+### C-06-1. 역할별 3번째 메인 탭 분기
+- 우선순위: P0
+- 상태: TODO
+- 산출물: 역할별 메인 탭 노출/라우팅
+- 작업:
+  1. 현재 사용자 역할 조회 후 3번째 메인 탭 아이템 계산
+  2. 게스트/`VISITOR`는 `체크인`, `CAST`는 `팬관리`, `CAFE_OWNER`는 `카페관리`, `ADMIN`은 `운영관리`로 매핑
+  3. 로그인/로그아웃/세션 복원 시 탭 구성을 즉시 갱신
+  4. 다중 역할 계정은 우선순위 규칙에 따라 단일 탭만 노출
+- AC:
+  - 동일 계정 상태에서 Android/iOS/Desktop 탭 구성이 일치한다.
+  - 로그인 직후와 앱 재실행 직후 모두 올바른 탭이 보인다.
+  - 로그아웃 시 3번째 탭은 항상 `체크인`으로 복귀한다.
+
+### C-06-2. 팬관리 탭 엔트리
+- 우선순위: P1
+- 상태: TODO
+- 산출물: `CAST` 전용 팬관리 진입 화면
+- 작업:
+  1. 내 프로필 요약/팔로워 수/출근 일정 바로가기 배치
+  2. 팬 대상 공지/알림 관리 진입점 연결
+  3. 비캐스트 접근 차단 또는 미노출 처리
+- AC:
+  - `CAST` 로그인 시 3번째 탭에서 팬관리 화면으로 진입된다.
+  - 비캐스트는 해당 화면을 직접 열 수 없다.
+
+### C-06-3. 카페관리 탭 엔트리
+- 우선순위: P1
+- 상태: TODO
+- 산출물: `CAFE_OWNER` 전용 카페관리 진입 화면
+- 작업:
+  1. 내 카페 요약/공지/이벤트/메뉴 관리 진입점 배치
+  2. 캐스트/출근표 관리 진입점 연결
+  3. 비운영자 접근 차단 또는 미노출 처리
+- AC:
+  - `CAFE_OWNER` 로그인 시 3번째 탭에서 카페관리 화면으로 진입된다.
+  - 본인 카페 기준 관리 진입점만 노출된다.
+
+### C-06-4. 운영관리 탭 엔트리
+- 우선순위: P1
+- 상태: TODO
+- 산출물: `ADMIN` 전용 운영관리 진입 화면
+- 작업:
+  1. 카페 승인/Claim 승인/신고·밴 관리 진입점 배치
+  2. 전체 운영 현황 요약 카드 배치
+  3. 비관리자 접근 차단 또는 미노출 처리
+- AC:
+  - `ADMIN` 로그인 시 3번째 탭에서 운영관리 화면으로 진입된다.
+  - 관리자 전용 기능은 비관리자에게 노출되지 않는다.
 
 ### C-07. 리뷰
 - 우선순위: P0
@@ -436,7 +495,7 @@
 ### E-02. 권한 시나리오 테스트
 - 우선순위: P2
 - 상태: TODO
-- 산출물: USER/OWNER/ADMIN/CAST 규칙 검증 리포트
+- 산출물: `VISITOR`/`CAFE_OWNER`/`ADMIN`/`CAST` 규칙 검증 리포트
 - 작업:
   1. 허용 요청/차단 요청 케이스 작성
   2. 룰 회귀 테스트
@@ -458,7 +517,7 @@
 - 상태: TODO
 - 산출물: Firestore/Storage Rules 테스트 스위트
 - 작업:
-  1. USER/OWNER/ADMIN/CAST 허용/차단 케이스 자동화
+  1. `VISITOR`/`CAFE_OWNER`/`ADMIN`/`CAST` 허용/차단 케이스 자동화
   2. 리뷰 작성(verified visit 필요) 제약 테스트
 - AC:
   - 배포 전 권한 회귀가 자동으로 검출된다.
@@ -501,15 +560,18 @@
 - Android:
   - `NavHost` + `NavController` 기반
   - 하단 탭은 nested graph로 구성
+  - 3번째 탭 destination은 역할에 따라 `CheckIn`/`FanManagement`/`CafeManagement`/`AdminOperations`로 교체
   - 상세/로그인/알림은 route push로 이동
   - 인증 가드는 진입 직전 `navigate(Login)` + `savedStateHandle`에 pending 정보 저장
 - iOS:
   - `NavigationStack` + `NavigationPath` 기반
   - 탭 루트는 `TabView`, 상세는 `NavigationDestination` push
+  - 3번째 탭 item은 세션 역할에 따라 동적으로 교체
   - 로그인은 전용 화면 route push
   - 인증 가드는 `pendingRoute` 저장 후 로그인 성공 시 path 복원
 - Desktop:
   - `currentRoute: MutableState<Route>` 기반 상태 전환
+  - 메인 탭 구성은 세션 역할 상태를 구독해 3번째 탭을 동적으로 교체
   - 상세 진입 시 `routeStack`에 push, 뒤로가기 시 pop
   - 인증 가드는 route 전환 전 intercept 후 Login route로 변경
   - 창 닫기 이벤트와 분리된 앱 내부 back action 제공

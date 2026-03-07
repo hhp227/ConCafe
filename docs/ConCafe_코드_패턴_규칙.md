@@ -22,6 +22,18 @@
 - 라우트 이름과 로그인 가드 규칙은 3플랫폼에서 동일하게 유지한다.
 - 상세 화면은 모달이 아닌 route push 방식으로 이동한다.
 - 인증이 필요한 라우트 진입 실패 시 `Login` 라우트로 이동 후 성공 시 `pendingRoute/pendingAction`을 재실행한다.
+- 메인 네비게이션 3번째 탭은 역할별로 교체한다.
+
+### 2-1-1. 공통 메인 라우트 규격
+- 루트 라우트: `Entry`, `Main`, `CastDetail`, `CafeDetail`, `Notification`
+- 메인 탭 라우트: `home`, `explore`, `ranking`, `myinfo`
+- 역할별 3번째 탭 라우트:
+  - 게스트/`VISITOR`: `checkin`
+  - `CAST`: `fanManagement`
+  - `CAFE_OWNER`: `cafeManagement`
+  - `ADMIN`: `adminOperations`
+- 메인 탭 순서는 항상 `홈 -> 탐색 -> 역할별 3번째 탭 -> 랭킹 -> 내 정보` 순서를 유지한다.
+- 다중 역할 계정 우선순위는 `ADMIN > CAFE_OWNER > CAST > VISITOR`를 사용한다.
 
 ## 3. 패키지/파일 규칙
 - 패키지 구조는 기능+레이어 기준으로 유지한다.
@@ -90,7 +102,7 @@
 
 ## 12. 테스트 규칙
 - UseCase 단위 테스트를 우선 작성한다.
-- 권한 시나리오(USER/OWNER/ADMIN) 테스트를 필수로 포함한다.
+- 권한 시나리오(`VISITOR`/`CAFE_OWNER`/`ADMIN`/`CAST`) 테스트를 필수로 포함한다.
 - 로그인 가드 시나리오(게스트 -> 로그인 유도 -> 원복귀) 테스트를 포함한다.
 - 핵심 플로우(홈->탐색->상세->체크인->리뷰)는 스모크 테스트 대상이다.
 
