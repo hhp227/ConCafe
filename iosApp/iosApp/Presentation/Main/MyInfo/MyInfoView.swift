@@ -31,9 +31,6 @@ struct MyInfoView: View {
             }
         }
         .background(Color(hex: "FFF9FC"))
-        .onAppear {
-            viewModel.onAction(.refresh)
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):

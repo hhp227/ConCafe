@@ -6,23 +6,34 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
 
 class MyInfoViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val signOutUseCase: SignOutUseCase
+    private val signOutUseCase: SignOutUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<MyInfoEvent>()
     val event = _event.asSharedFlow()
+
+    private fun observeSession() {
+        viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest {
+                loadMyInfo()
+            }
+        }
+    }
 
     private fun loadMyInfo() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -67,9 +78,7 @@ class MyInfoViewModel(
             MyInfoAction.ClickSignOut -> {
                 viewModelScope.launch {
                     when (signOutUseCase.invoke()) {
-                        is AppResult.Success -> {
-                            loadMyInfo()
-                        }
+                        is AppResult.Success -> Unit
                         is AppResult.Failure -> {
                             _uiState.update { it.copy(errorMessage = "로그아웃에 실패했습니다.") }
                         }
@@ -81,6 +90,6 @@ class MyInfoViewModel(
     }
 
     init {
-        loadMyInfo()
+        observeSession()
     }
 }
