@@ -8,8 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.presentation.cafedetail.CafeDetailScreen
-import org.hhp227.concafe.presentation.castdetail.CastDetailScreen
+import org.hhp227.concafe.presentation.cafe.CafeDetailScreen
+import org.hhp227.concafe.presentation.cast.CastDetailScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 

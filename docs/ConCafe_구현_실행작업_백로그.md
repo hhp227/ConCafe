@@ -125,7 +125,7 @@
   - 민감정보 로그 노출이 없다.
 - 결정사항:
   1. Crash 리포팅 활성화
-  2. 최소 이벤트 고정: `login_success`, `checkin_success`, `checkin_fail`, `review_create`, `favorite_toggle`, `follow_toggle`
+  2. 최소 이벤트 고정: `sign_in_success`, `checkin_success`, `checkin_fail`, `review_create`, `favorite_toggle`, `follow_toggle`
   3. 개인정보(이메일/전화번호/정확좌표) 로그 저장 금지
 
 ### A-07. 배포/롤백/브랜치 전략 확정
@@ -208,7 +208,7 @@
 - 상태: TODO
 - 산출물: 플랫폼별 네비게이션 설계서 + 라우트 맵
 - 작업:
-  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/CafeDetail/CastDetail/Login/Notifications`)
+  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications`)
   2. 역할별 메인 탭 3번째 라우트 스펙 정의(`CheckIn | FanManagement | CafeManagement | AdminOperations`)
   3. 로그인 사용자 역할 변경 시 탭 재구성 규칙 정의
   4. 다중 역할 계정 우선순위(`ADMIN > CAFE_OWNER > CAST > VISITOR`) 적용 규칙 정의
@@ -562,7 +562,7 @@
   - 하단 탭은 nested graph로 구성
   - 3번째 탭 destination은 역할에 따라 `CheckIn`/`FanManagement`/`CafeManagement`/`AdminOperations`로 교체
   - 상세/로그인/알림은 route push로 이동
-  - 인증 가드는 진입 직전 `navigate(Login)` + `savedStateHandle`에 pending 정보 저장
+  - 인증 가드는 진입 직전 `navigate(SignIn)` + `savedStateHandle`에 pending 정보 저장
 - iOS:
   - `NavigationStack` + `NavigationPath` 기반
   - 탭 루트는 `TabView`, 상세는 `NavigationDestination` push
@@ -573,7 +573,7 @@
   - `currentRoute: MutableState<Route>` 기반 상태 전환
   - 메인 탭 구성은 세션 역할 상태를 구독해 3번째 탭을 동적으로 교체
   - 상세 진입 시 `routeStack`에 push, 뒤로가기 시 pop
-  - 인증 가드는 route 전환 전 intercept 후 Login route로 변경
+  - 인증 가드는 route 전환 전 intercept 후 SignIn route로 변경
   - 창 닫기 이벤트와 분리된 앱 내부 back action 제공
 
 ### H-02. 패키지 설계(계획)
@@ -654,10 +654,10 @@
   - 클래스: `SearchCafesUseCase`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/SearchCastsUseCase.kt`
   - 클래스: `SearchCastsUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCafeDetailUseCase.kt`
-  - 클래스: `GetCafeDetailUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCastDetailUseCase.kt`
-  - 클래스: `GetCastDetailUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCafeUseCase.kt`
+  - 클래스: `GetCafeUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCastUseCase.kt`
+  - 클래스: `GetCastUseCase`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/CreateVisitUseCase.kt`
   - 클래스: `CreateVisitUseCase`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/CreateReviewUseCase.kt`
@@ -710,10 +710,10 @@
   - 클래스: `ExploreViewModel`, `ExploreUiState`, `ExploreEvent`, `ExploreAction`, `ExploreFilterState`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/checkin/CheckInViewModel.kt`
   - 클래스: `CheckInViewModel`, `CheckInUiState`, `CheckInEvent`, `CheckInAction`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeDetailViewModel.kt`
-  - 클래스: `CafeDetailViewModel`, `CafeDetailUiState`, `CafeDetailEvent`, `CafeDetailAction`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastDetailViewModel.kt`
-  - 클래스: `CastDetailViewModel`, `CastDetailUiState`, `CastDetailEvent`, `CastDetailAction`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeViewModel.kt`
+  - 클래스: `CafeViewModel`, `CafeUiState`, `CafeEvent`, `CafeAction`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastViewModel.kt`
+  - 클래스: `CastViewModel`, `CastUiState`, `CastEvent`, `CastAction`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking/RankingViewModel.kt`
   - 클래스: `RankingViewModel`, `RankingUiState`, `RankingEvent`, `RankingAction`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo/MyInfoViewModel.kt`
@@ -726,10 +726,10 @@
   - 컴포저블: `ExploreScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/checkin/CheckInScreen.kt`
   - 컴포저블: `CheckInScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeDetailScreen.kt`
-  - 컴포저블: `CafeDetailScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastDetailScreen.kt`
-  - 컴포저블: `CastDetailScreen`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeScreen.kt`
+  - 컴포저블: `CafeScreen`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastScreen.kt`
+  - 컴포저블: `CastScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking/RankingScreen.kt`
   - 컴포저블: `RankingScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo/MyInfoScreen.kt`
@@ -808,7 +808,7 @@ interface CafeRepository {
         cursor: String?,
         pageSize: Int
     ): AppResult<PagedResult<Cafe>>
-    suspend fun getCafeDetail(cafeId: String): AppResult<CafeDetail>
+    suspend fun getCafe(cafeId: String): AppResult<Cafe>
     suspend fun toggleFavorite(userId: String, cafeId: String): AppResult<Boolean>
 }
 
@@ -821,7 +821,7 @@ interface CastRepository {
         cursor: String?,
         pageSize: Int
     ): AppResult<PagedResult<Cast>>
-    suspend fun getCastDetail(castId: String): AppResult<CastDetail>
+    suspend fun getCast(castId: String): AppResult<Cast>
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): AppResult<List<CastSchedule>>
     suspend fun followCast(userId: String, castId: String): AppResult<Unit>
     suspend fun unfollowCast(userId: String, castId: String): AppResult<Unit>
@@ -878,12 +878,12 @@ class SearchCastsUseCase(private val castRepository: CastRepository) {
     suspend operator fun invoke(param: SearchCastParam): AppResult<PagedResult<Cast>>
 }
 
-class GetCafeDetailUseCase(private val cafeRepository: CafeRepository) {
-    suspend operator fun invoke(cafeId: String): AppResult<CafeDetail>
+class GetCafeUseCase(private val cafeRepository: CafeRepository) {
+    suspend operator fun invoke(cafeId: String): AppResult<Cafe>
 }
 
-class GetCastDetailUseCase(private val castRepository: CastRepository) {
-    suspend operator fun invoke(castId: String): AppResult<CastDetail>
+class GetCastUseCase(private val castRepository: CastRepository) {
+    suspend operator fun invoke(castId: String): AppResult<Cast>
 }
 
 class CreateVisitUseCase(private val visitRepository: VisitRepository) {
@@ -930,21 +930,21 @@ class CheckInViewModel(
     fun onAction(action: CheckInAction)
 }
 
-class CafeDetailViewModel(
-    private val getCafeDetailUseCase: GetCafeDetailUseCase,
+class CafeViewModel(
+    private val getCafeUseCase: GetCafeUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 ) {
-    val uiState: StateFlow<CafeDetailUiState>
-    val event: SharedFlow<CafeDetailEvent>
-    fun onAction(action: CafeDetailAction)
+    val uiState: StateFlow<CafeUiState>
+    val event: SharedFlow<CafeEvent>
+    fun onAction(action: CafeAction)
 }
 
-class CastDetailViewModel(
-    private val getCastDetailUseCase: GetCastDetailUseCase
+class CastViewModel(
+    private val getCastUseCase: GetCastUseCase
 ) {
-    val uiState: StateFlow<CastDetailUiState>
-    val event: SharedFlow<CastDetailEvent>
-    fun onAction(action: CastDetailAction)
+    val uiState: StateFlow<CastUiState>
+    val event: SharedFlow<CastEvent>
+    fun onAction(action: CastAction)
 }
 
 class RankingViewModel(private val rankingRepository: RankingRepository) {
@@ -1000,7 +1000,7 @@ class RolePermissionPolicy {
 - 조건 2: 사용자 `banned == false`
 - 조건 3: 토큰 만료/인증 오류 없음
 - 조건 충족 시 `MyPageScreen` 진입 허용
-- 조건 미충족 시 `LoginScreen` 또는 `AccessDeniedScreen`으로 라우팅
+- 조건 미충족 시 `SignInScreen` 또는 `AccessDeniedScreen`으로 라우팅
 
 ### L-03. 상태도 (Flowchart)
 ```mermaid
@@ -1009,7 +1009,7 @@ flowchart TD
     B -- 아니오 --> C[복원 로딩 상태 표시]
     C --> D{restoreSession 성공?}
     B -- 예 --> D
-    D -- 아니오 --> L[LoginScreen으로 이동]
+    D -- 아니오 --> L[SignInScreen으로 이동]
     D -- 예 --> E{currentUser 존재?}
     E -- 아니오 --> L
     E -- 예 --> F{banned 사용자?}
@@ -1022,8 +1022,8 @@ flowchart TD
 ```
 
 ### L-04. 예외/엣지 케이스 처리
-- 세션 복원 중 네트워크 실패: `LoginScreen`으로 보내지 않고 재시도 UI 제공 후 사용자 선택으로 이동
-- 토큰 만료 감지: 즉시 `LoginScreen`으로 라우팅하고 재인증 유도
+- 세션 복원 중 네트워크 실패: `SignInScreen`으로 보내지 않고 재시도 UI 제공 후 사용자 선택으로 이동
+- 토큰 만료 감지: 즉시 `SignInScreen`으로 라우팅하고 재인증 유도
 - 딥링크 진입 시: 목적지를 `pendingRoute`로 저장 후 로그인 성공 시 복귀
 - 로그아웃 직후: `pendingRoute` 초기화 후 홈으로 이동
 
@@ -1051,7 +1051,7 @@ flowchart TD
 - 알림 조회/읽음 처리
 
 ### M-03. 공통 가드 처리 규칙
-- 비로그인 상태에서 로그인 필수 기능 호출 시 `LoginScreen` 라우팅
+- 비로그인 상태에서 로그인 필수 기능 호출 시 `SignInScreen` 라우팅
 - 로그인 성공 시 `pendingRoute` 또는 `pendingAction` 즉시 재실행
 - 로그인 취소 시 현재 화면 유지, 보호 액션은 미실행 상태 유지
 

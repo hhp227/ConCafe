@@ -21,11 +21,11 @@
 - Desktop은 상태 기반 라우트 상태머신(`currentRoute`, `routeStack`)을 사용한다.
 - 라우트 이름과 로그인 가드 규칙은 3플랫폼에서 동일하게 유지한다.
 - 상세 화면은 모달이 아닌 route push 방식으로 이동한다.
-- 인증이 필요한 라우트 진입 실패 시 `Login` 라우트로 이동 후 성공 시 `pendingRoute/pendingAction`을 재실행한다.
+- 인증이 필요한 라우트 진입 실패 시 `SignIn` 라우트로 이동 후 성공 시 `pendingRoute/pendingAction`을 재실행한다.
 - 메인 네비게이션 3번째 탭은 역할별로 교체한다.
 
 ### 2-1-1. 공통 메인 라우트 규격
-- 루트 라우트: `Entry`, `Main`, `CastDetail`, `CafeDetail`, `Notification`
+- 루트 라우트: `Entry`, `Main`, `Cast`, `Cafe`, `SignIn`, `Notification`
 - 메인 탭 라우트: `home`, `explore`, `ranking`, `myinfo`
 - 역할별 3번째 탭 라우트:
   - 게스트/`VISITOR`: `checkin`
@@ -42,7 +42,7 @@
 - 확장 함수/매퍼는 `*Mapper.kt`, `*Extensions.kt`로 분리한다.
 
 ## 4. 네이밍 규칙
-- `UseCase`: 동사+대상 (`CreateReviewUseCase`, `GetCafeDetailUseCase`)
+- `UseCase`: 동사+대상 (`CreateReviewUseCase`, `GetCafeUseCase`)
 - `Repository`: 도메인명+Repository (`CafeRepository`)
 - `UiState`: 화면명+UiState (`HomeUiState`)
 - `ViewModel`: 화면명+ViewModel (`ExploreViewModel`)

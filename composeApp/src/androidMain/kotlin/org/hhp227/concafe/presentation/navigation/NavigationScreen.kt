@@ -9,8 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.presentation.cafedetail.CafeDetailScreen
-import org.hhp227.concafe.presentation.castdetail.CastDetailScreen
+import org.hhp227.concafe.presentation.cafe.CafeDetailScreen
+import org.hhp227.concafe.presentation.cast.CastDetailScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 

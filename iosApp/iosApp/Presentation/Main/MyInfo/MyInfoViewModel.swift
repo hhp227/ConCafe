@@ -65,7 +65,7 @@ final class MyInfoViewModel: ObservableObject {
 
                 if result is AppResultSuccess<AnyObject> {
                     loadMyInfo()
-                    event.send(.loggedOut)
+                    event.send(.signedOut)
                 } else if let failure = result as? AppResultFailure {
                     uiState.errorMessage = "\(failure.error)"
                 }
@@ -81,9 +81,9 @@ final class MyInfoViewModel: ObservableObject {
             event.send(.navigateToCafe(id: id))
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
-        case .loginTapped:
+        case .signInTapped:
             event.send(.navigateToSignIn)
-        case .logoutTapped:
+        case .signOutTapped:
             signOut()
         case .refresh:
             loadMyInfo()

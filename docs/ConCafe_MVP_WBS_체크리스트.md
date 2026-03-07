@@ -49,7 +49,7 @@
 - [x] Android 네비게이션: Jetpack Navigation 적용
 - [x] iOS 네비게이션: SwiftUI `NavigationStack` 적용
 - [x] Desktop 네비게이션: 상태 기반 UI 확장(라우트 상태 전환)
-- [ ] 공통 라우트 규격 정의: `Home/Explore/CheckIn/Ranking/My/CafeDetail/CastDetail/Login/Notifications`
+- [ ] 공통 라우트 규격 정의: `Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications`
 - [ ] 메인 탭 규격 정의: 3번째 탭은 역할별 `CheckIn | FanManagement | CafeManagement | AdminOperations`
 - [ ] 로그인 가드 동작 통일: 플랫폼별 구현체는 달라도 라우트 규칙은 동일
 - [ ] 뒤로가기 규칙 통일: 상세 -> 이전, 로그인 -> 이전, 탭은 홈 복귀 우선
@@ -213,7 +213,7 @@
 - [ ] Firestore/Storage 보안 규칙 테스트 자동화 방식 확정
 - [ ] Cloud Functions 배포/롤백 절차 확정
 - [ ] 개인정보/운영 정책 확정: 계정 삭제, 데이터 보존 기간, 신고 처리 정책
-- [x] 관측 지표 확정: Crash 리포팅 + 최소 이벤트(`login_success`, `checkin_success`, `checkin_fail`, `review_create`, `favorite_toggle`, `follow_toggle`)
+- [x] 관측 지표 확정: Crash 리포팅 + 최소 이벤트(`sign_in_success`, `checkin_success`, `checkin_fail`, `review_create`, `favorite_toggle`, `follow_toggle`)
 - [ ] 성능 기준 수치화: 초기 로딩 시간, 목록 스크롤 지표, 이미지 용량 기준
 - [ ] 딥링크/푸시 진입 시 로그인 가드 동작 규칙 검증
 - [ ] 오프라인/네트워크 불안정 시 UX 정책 확정(재시도, 캐시, 메시지)

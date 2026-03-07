@@ -60,7 +60,7 @@ class MyInfoViewModel(
             is MyInfoAction.ClickMaid -> viewModelScope.launch {
                 _event.emit(MyInfoEvent.NavigateToCastDetail(action.id))
             }
-            MyInfoAction.ClickLogout -> {
+            MyInfoAction.ClickSignOut -> {
                 viewModelScope.launch {
                     when (signOutUseCase.invoke()) {
                         is AppResult.Success -> {

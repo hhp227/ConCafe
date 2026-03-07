@@ -10,7 +10,7 @@ import Foundation
 enum MyInfoAction {
     case cafeTapped(id: String)
     case maidTapped(id: String)
-    case loginTapped
-    case logoutTapped
+    case signInTapped
+    case signOutTapped
     case refresh
 }

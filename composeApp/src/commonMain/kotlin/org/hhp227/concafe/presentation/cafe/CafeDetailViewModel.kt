@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafedetail
+package org.hhp227.concafe.presentation.cafe
 
 import androidx.lifecycle.ViewModel
 

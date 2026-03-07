@@ -39,7 +39,7 @@ struct MyInfoView: View {
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
-            case .loggedOut:
+            case .signedOut:
                 onNavigationAction(.navigateToMain())
             }
         }
@@ -74,7 +74,7 @@ private struct GuestMyInfoView: View {
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
                     Button {
-                        onAction(.loginTapped)
+                        onAction(.signInTapped)
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -234,7 +234,7 @@ private struct ProfileMyInfoView: View {
                     .bold()
                 Spacer()
                 Button("로그아웃") {
-                    onAction(.logoutTapped)
+                    onAction(.signOutTapped)
                 }
                 .foregroundStyle(.white)
             }
