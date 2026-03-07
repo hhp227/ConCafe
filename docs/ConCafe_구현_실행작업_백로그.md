@@ -208,7 +208,7 @@
 - 상태: TODO
 - 산출물: 플랫폼별 네비게이션 설계서 + 라우트 맵
 - 작업:
-  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications`)
+  1. 공통 라우트 스펙 정의(`Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications/Settings`)
   2. 역할별 메인 탭 3번째 라우트 스펙 정의(`CheckIn | FanManagement | CafeManagement | AdminOperations`)
   3. 로그인 사용자 역할 변경 시 탭 재구성 규칙 정의
   4. 다중 역할 계정 우선순위(`ADMIN > CAFE_OWNER > CAST > VISITOR`) 적용 규칙 정의
@@ -239,6 +239,24 @@
   - 비로그인 상태에서 마이 페이지 접근 시 로그인 화면으로 안내된다.
   - 로그인 후 앱 재실행해도 로그인 상태가 유지된다.
   - 프로필 수정 후 즉시 반영된다.
+
+### C-01-1. 설정 스크린
+- 우선순위: P1
+- 상태: TODO
+- 산출물: 마이 페이지에서 진입 가능한 `Settings` 스크린 1개
+- 작업:
+  1. `MyInfo -> Settings` 진입 라우트 추가
+  2. 플랫폼별 `SettingsScreen`/`SettingsView` 기본 UI 구현
+  3. 앱 버전, 계정 관리, 알림 설정 자리 표시 항목 배치
+  4. `SignOut` 액션 진입점 연결
+  5. 뒤로가기 시 `MyInfo`로 복귀 규칙 확인
+- 메모:
+  - 현재 범위에서는 설정 데이터 저장/동기화 기능을 만들지 않는다.
+  - 이번 단계는 화면 추가와 네비게이션 연결만 수행한다.
+- AC:
+  - 마이 페이지에서 설정 화면으로 이동할 수 있다.
+  - 설정 화면에서 뒤로 가면 마이 페이지로 복귀한다.
+  - 설정 화면에 `SignOut` 진입점이 노출된다.
 
 ### C-02. 홈 탭
 - 우선순위: P1

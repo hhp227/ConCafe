@@ -49,7 +49,7 @@
 - [x] Android 네비게이션: Jetpack Navigation 적용
 - [x] iOS 네비게이션: SwiftUI `NavigationStack` 적용
 - [x] Desktop 네비게이션: 상태 기반 UI 확장(라우트 상태 전환)
-- [ ] 공통 라우트 규격 정의: `Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications`
+- [ ] 공통 라우트 규격 정의: `Home/Explore/CheckIn/Ranking/My/Cafe/Cast/SignIn/Notifications/Settings`
 - [ ] 메인 탭 규격 정의: 3번째 탭은 역할별 `CheckIn | FanManagement | CafeManagement | AdminOperations`
 - [ ] 로그인 가드 동작 통일: 플랫폼별 구현체는 달라도 라우트 규칙은 동일
 - [ ] 뒤로가기 규칙 통일: 상세 -> 이전, 로그인 -> 이전, 탭은 홈 복귀 우선
@@ -156,6 +156,9 @@
 - [ ] 방문 기록
 - [ ] 즐겨찾기 카페
 - [ ] 팔로우 메이드/배지 섹션 자리 확보
+- [ ] 설정 진입 버튼 추가
+- [ ] `Settings` 스크린 추가(현재 단계는 UI/라우팅만)
+- [ ] 설정 화면에서 `SignOut` 진입점 제공
 - [ ] 비로그인 마이페이지 진입 차단 + 로그인 성공 후 복귀
 - [ ] 스탬프/배지 데이터 연결을 위한 placeholder 상태 정의
 

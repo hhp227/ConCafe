@@ -25,8 +25,9 @@
 - 메인 네비게이션 3번째 탭은 역할별로 교체한다.
 
 ### 2-1-1. 공통 메인 라우트 규격
-- 루트 라우트: `Entry`, `Main`, `Cast`, `Cafe`, `SignIn`, `Notification`
+- 루트 라우트: `Entry`, `Main`, `Cast`, `Cafe`, `SignIn`, `Notification`, `Settings`
 - 메인 탭 라우트: `home`, `explore`, `ranking`, `myinfo`
+- 마이 하위 라우트: `settings`
 - 역할별 3번째 탭 라우트:
   - 게스트/`VISITOR`: `checkin`
   - `CAST`: `fanManagement`
@@ -34,6 +35,8 @@
   - `ADMIN`: `adminOperations`
 - 메인 탭 순서는 항상 `홈 -> 탐색 -> 역할별 3번째 탭 -> 랭킹 -> 내 정보` 순서를 유지한다.
 - 다중 역할 계정 우선순위는 `ADMIN > CAFE_OWNER > CAST > VISITOR`를 사용한다.
+- `Settings`는 `MyInfo`에서 진입하는 상세 push 라우트로 취급한다.
+- 현재 범위에서 `Settings`는 별도 도메인/데이터 연동 없이 `SettingsScreen`/`SettingsView` UI 추가만 우선 구현한다.
 
 ## 3. 패키지/파일 규칙
 - 패키지 구조는 기능+레이어 기준으로 유지한다.
