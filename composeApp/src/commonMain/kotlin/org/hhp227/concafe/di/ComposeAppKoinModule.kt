@@ -8,7 +8,7 @@ import org.koin.dsl.module
 private val composeAppPresentationModule = module {
     factory { HomeViewModel(get()) }
     factory { ExploreViewModel(get()) }
-    factory { MyInfoViewModel(get(), get()) }
+    factory { MyInfoViewModel(get(), get(), get()) }
 }
 
 private val composeAppModules = listOf(

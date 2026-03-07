@@ -39,8 +39,6 @@ struct MyInfoView: View {
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
-            case .signedOut:
-                onNavigationAction(.navigateToMain())
             }
         }
     }

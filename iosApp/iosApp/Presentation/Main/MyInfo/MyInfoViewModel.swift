@@ -14,12 +14,26 @@ final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
 
     private let signOutUseCase: SignOutUseCase
+    
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = MyInfoUiState.empty
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
 
     private var loadTask: Task<Void, Never>?
+    
+    private var sessionWatchHandle: WatchHandle?
+
+    private func observeSession() {
+        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+            guard let self else { return }
+
+            Task { @MainActor in
+                self.loadMyInfo()
+            }
+        }
+    }
 
     private func loadMyInfo() {
         loadTask?.cancel()
@@ -64,8 +78,6 @@ final class MyInfoViewModel: ObservableObject {
                 let result = try await signOutUseCase.invoke()
 
                 if result is AppResultSuccess<AnyObject> {
-                    loadMyInfo()
-                    event.send(.signedOut)
                 } else if let failure = result as? AppResultFailure {
                     uiState.errorMessage = "\(failure.error)"
                 }
@@ -92,15 +104,18 @@ final class MyInfoViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
-        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase()
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.signOutUseCase = signOutUseCase
-
-        loadMyInfo()
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        
+        observeSession()
     }
 
     deinit {
         loadTask?.cancel()
+        sessionWatchHandle?.cancel()
     }
 }

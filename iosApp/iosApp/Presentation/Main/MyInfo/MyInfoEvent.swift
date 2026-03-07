@@ -11,5 +11,4 @@ enum MyInfoEvent {
     case navigateToCafe(id: String)
     case navigateToCast(id: String)
     case navigateToSignIn
-    case signedOut
 }

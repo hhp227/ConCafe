@@ -2,23 +2,29 @@ package org.hhp227.concafe.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class MainViewModel(
-    private val getMainNavigationUseCase: GetMainNavigationUseCase
+    private val getMainNavigationUseCase: GetMainNavigationUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MainUiState.empty())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<MainEvent>()
     val event = _event.asSharedFlow()
+
+    private var observeSessionJob: Job? = null
 
     private fun refreshNavigation(preferredRoute: String? = null) {
         viewModelScope.launch {
@@ -40,6 +46,14 @@ class MainViewModel(
         }
     }
 
+    private fun observeSession() {
+        observeSessionJob = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest {
+                refreshNavigation(_uiState.value.selectedTab)
+            }
+        }
+    }
+
     fun onAction(action: MainAction) {
         when (action) {
             is MainAction.Enter -> refreshNavigation(action.preferredRoute)
@@ -48,6 +62,7 @@ class MainViewModel(
     }
 
     init {
+        observeSession()
         onAction(MainAction.Enter())
     }
 }

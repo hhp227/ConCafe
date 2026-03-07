@@ -29,14 +29,11 @@ struct AppNavigationView: View {
             case .cafe:
                 CafeView(onNavigationAction: viewModel.onAction)
             case .signIn:
-                SignInView()
+                SignInView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView()
-            case .main(let initialTab):
-                MainView(
-                    initialTab: initialTab,
-                    onNavigationAction: viewModel.onAction
-                )
+            case .main:
+                MainView(onNavigationAction: viewModel.onAction)
             case .entry:
                 EmptyView()
             }
@@ -66,19 +63,13 @@ struct AppNavigationView: View {
     @ViewBuilder
     private var rootContent: some View {
         switch currentRoute {
-        case .main(let initialTab):
-            MainView(
-                initialTab: initialTab,
-                onNavigationAction: viewModel.onAction
-            )
+        case .main:
+            MainView(onNavigationAction: viewModel.onAction)
         case .entry:
             ProgressView()
         default:
             // Detail is pushed through NavigationStack path.
-            MainView(
-                initialTab: nil,
-                onNavigationAction: viewModel.onAction
-            )
+            MainView(onNavigationAction: viewModel.onAction)
         }
     }
 }

@@ -77,7 +77,7 @@ fun NavigationScreen(
                                 )
                             }
                             Route.SignIn -> {
-                                SignInScreen()
+                                SignInScreen(onNavigate = viewModel::onAction)
                             }
                             Route.Notification -> {
                                 NotificationScreen(
