@@ -53,10 +53,10 @@
 ## 7. 프레젠테이션 규칙 (`composeApp`)
 - 화면은 상태 렌더링만 담당하고 비즈니스 판단을 하지 않는다.
 - MVI 패턴을 사용한다.
-- 화면 상태 관리는 아래 3개 프로퍼티를 고정으로 사용한다.
+- 화면 상태 관리는 아래 2개 프로퍼티와 1개 메소드를 고정으로 사용한다.
   - `uiState`: `StateFlow<ScreenUiState>`
   - `event`: `SharedFlow<ScreenEvent>`
-  - `action`: `(ScreenAction) -> Unit`
+  - `action`: `onAction(ScreenAction)`
 - UI는 `action(...)`만 호출하고 상태 변화는 `uiState` 구독으로만 반영한다.
 - 단발성 효과(토스트/네비게이션/로그인유도)는 `event`로만 전달한다.
 - `event`는 `MutableSharedFlow(replay = 0)`를 기본값으로 사용한다.
@@ -84,7 +84,7 @@
 
 ## 11. UI 컴포넌트 규칙
 - 공통 UI 컴포넌트(`ConCafeCard`, `ConCafeTopBar` 등)를 우선 재사용한다.
-- 화면별 중복 컴포넌트는 공통 컴포넌트로 승격한다.
+- 화면별 중복 컴포넌트는 공통 컴포넌트로 승격한다 (`component` 패키지).
 - 빈 상태/에러 상태 컴포넌트를 항상 제공한다.
 - 접근성(콘텐츠 설명, 클릭 영역, 색 대비)을 기본 준수한다.
 

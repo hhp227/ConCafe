@@ -28,13 +28,29 @@
   1. `conceptType`: `MAID | BUTLER`
   2. `events` 저장 위치: `cafes/{cafeId}/events/{eventId}`
   3. `favorites`/`visitHistory`: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
+  4. 참고 문서 간 `events/{eventId}` 표기는 과거안으로 간주하고 서브컬렉션 기준으로 문서 통일
+  5. 집계 필드는 `users.stats`, `cafes.stats`에 두고 클라이언트 직접 수정 금지
+
+### A-08. 운영 승인/Claim 흐름 확정
+- 우선순위: P0
+- 상태: TODO
+- 산출물: `cafeOwnerClaims`/`castClaims` 상태 전이표 + 승인 주체 규칙서
+- 작업:
+  1. 기존 카페 운영자 Claim 흐름 정의
+  2. 기존 캐스트 Claim 흐름 정의
+  3. 신규 카페 등록 후 Admin 승인 흐름 정의
+  4. 승인 전/후 쓰기 가능 범위 차이 정의
+- AC:
+  - `PENDING/APPROVED/REJECTED` 상태 전이가 문서화된다.
+  - OWNER/CAST 권한 상승 조건이 명확하다.
+  - 승인 전 데이터 오남용 경로가 없다.
 
 ### A-02. Firebase 보안 정책 초안 확정
 - 우선순위: P0
 - 상태: DONE
 - 산출물: 역할별 권한 매트릭스
 - 작업:
-  1. USER/OWNER/ADMIN CRUD 범위 확정
+  1. USER/OWNER/ADMIN/CAST CRUD 범위 확정
   2. 리뷰 작성 선행조건(verified visit) 정책 확정
   3. 카페 승인 상태(`approved`) 노출 정책 확정
 - AC:
@@ -131,11 +147,14 @@
 - 산출물: 도메인 모델 목록/의존성 다이어그램
 - 작업:
   1. User/Cafe/Cast/Visit/Review/Event 모델 정의
-  2. 도메인 에러/결과 타입 통일
-  3. UseCase 단위 인터페이스 분리
+  2. Notice/Menu/Goods/CastSchedule/AppNotification/Stamp 모델 정의
+  3. Favorite/Follow/Claim/Stats 조회 전용 모델 정의
+  4. 도메인 에러/결과 타입 통일
+  5. UseCase 단위 인터페이스 분리
 - AC:
   - UI 모듈이 도메인 타입만 참조한다.
   - 기능별 UseCase 책임이 겹치지 않는다.
+  - Firestore 컬렉션 다이어그램의 핵심 문서가 도메인 모델에서 누락되지 않는다.
 
 ### B-02. Repository 계약 정의
 - 우선순위: P0
@@ -143,11 +162,14 @@
 - 산출물: Repository 인터페이스 명세서
 - 작업:
   1. Auth/User/Cafe/Cast/Visit/Review/Notice 저장소 인터페이스 정의
-  2. 페이지네이션/정렬/필터 파라미터 규격화
-  3. 실패 케이스 표준화(네트워크/권한/검증 실패)
+  2. Event/Menu/Goods/Notification/Ranking 저장소 인터페이스 정의
+  3. Favorite/Follow/Claim/Stamp 처리 책임 위치 확정
+  4. 페이지네이션/정렬/필터 파라미터 규격화
+  5. 실패 케이스 표준화(네트워크/권한/검증 실패)
 - AC:
   - 화면 요구사항을 모두 커버하는 메서드가 존재한다.
   - 중복 메서드가 없다.
+  - 홈/상세/마이/랭킹/알림에서 필요한 조회가 모두 계약에 포함된다.
 
 ### B-03. Firestore 인덱스/쿼리 계획
 - 우선순위: P0
@@ -155,10 +177,27 @@
 - 산출물: 인덱스 목록 + 쿼리 대응표
 - 작업:
   1. 탐색/랭킹/출근표/리뷰 조회 쿼리 확정
-  2. 복합 인덱스 정의
-  3. 예상 쿼리 비용 점검
+  2. 홈 섹션(인기/근처/생일/최신 공지) 조회 쿼리 확정
+  3. 즐겨찾기/팔로우/방문기록/알림 조회 쿼리 확정
+  4. 복합 인덱스 정의
+  5. 예상 쿼리 비용 점검
 - AC:
   - MVP 화면의 주요 쿼리가 인덱스 없이 실패하지 않는다.
+  - `approved`, `stats.*`, `createdAt`, `birthday`, `date` 기준 정렬/필터가 재현 가능하다.
+
+### B-05. 컬렉션 책임/집계 필드 정합성 문서화
+- 우선순위: P0
+- 상태: TODO
+- 산출물: 컬렉션 책임표 1부
+- 작업:
+  1. 루트 컬렉션과 서브컬렉션 책임 구분(`visits`, `castSchedules`, `cafes/*`, `users/*`)
+  2. `users.stats`, `cafes.stats` 집계 필드 읽기/쓰기 주체 정의
+  3. `favoriteCount`, `reviewCount`, `visitCount`, `followerCount`, `popularityScore` 갱신 경로 정의
+  4. 문서 간 상충 필드 표기 정리
+- AC:
+  - 동일 데이터의 소스 오브 트루스가 1곳으로 정리된다.
+  - 클라이언트 직접 갱신 금지 필드가 명시된다.
+  - 기획서/다이어그램/백로그 간 표기 충돌이 제거된다.
 
 ### B-04. 플랫폼별 네비게이션 구현 설계
 - 우선순위: P0
@@ -182,14 +221,14 @@
 - 산출물: 게스트+로그인 전환 기반 프로필 플로우
 - 작업:
   1. 앱 시작 시 홈 진입(비로그인 허용)
-  2. 마이 페이지 진입 시 비로그인이면 로그인 화면 라우팅
+  2. 마이 페이지 진입 시 비로그인이면 로그인 화면으로 안내
   3. 로그인/로그아웃 처리 및 로그인 사용자 초기 유저 생성
   4. 프로필 조회/수정
   5. 차단 유저 접근 제한 처리
   6. 앱 재실행 시 세션 복원(자동 로그인)
 - AC:
   - 로그인 없이 앱 첫 화면이 홈으로 열린다.
-  - 비로그인 상태에서 마이 페이지 접근 시 로그인 화면으로 전환된다.
+  - 비로그인 상태에서 마이 페이지 접근 시 로그인 화면으로 안내된다.
   - 로그인 후 앱 재실행해도 로그인 상태가 유지된다.
   - 프로필 수정 후 즉시 반영된다.
 
@@ -201,9 +240,11 @@
   1. 섹션별 데이터 소스 연결
   2. 로딩/에러/빈 상태 처리
   3. 카드 클릭 내비게이션 연결
+  4. 데이터 부족 시 섹션 숨김/대체 카드 정책 반영
 - AC:
   - 4개 섹션이 모두 렌더링된다.
   - 섹션별 에러가 화면 전체를 망가뜨리지 않는다.
+  - 생일/공지 데이터가 없을 때도 홈 레이아웃이 깨지지 않는다.
 
 ### C-03. 탐색 탭
 - 우선순위: P0
@@ -225,10 +266,13 @@
   1. 상단 이미지/기본 정보/즐겨찾기
   2. 탭별 데이터 로드 분리
   3. 리뷰 진입 및 작성 연결
+  4. 메뉴/공지 데이터 연결
+  5. 이벤트/굿즈는 MVP 노출 여부를 결정하고 placeholder 또는 숨김 처리
 - AC:
   - 탭 전환 시 데이터가 정확히 표시된다.
   - 즐겨찾기 토글은 로그인 사용자만 즉시 반영된다.
   - 비로그인 즐겨찾기 시도 시 로그인 화면으로 라우팅된다.
+  - 미구현 탭/데이터는 빈 상태 또는 숨김 정책 중 하나로 일관 처리된다.
 
 ### C-05. 메이드 상세
 - 우선순위: P1
@@ -278,10 +322,35 @@
   1. 프로필/레벨/총 방문수
   2. 방문 기록 목록
   3. 즐겨찾기 카페 목록
+  4. 추후 스탬프/배지/팔로우 섹션 확장을 고려한 상태 구조 설계
 - AC:
   - 비로그인 접근 시 로그인 화면으로 라우팅된다.
   - 로그인 성공 후 원래 요청한 마이 페이지로 복귀한다.
   - 사용자 기준 개인 데이터만 노출된다.
+
+### C-10. 랭킹 읽기 전용 MVP
+- 우선순위: P1
+- 상태: TODO
+- 산출물: 메이드/카페 랭킹 조회 화면
+- 작업:
+  1. 주간/월간 랭킹 조회 규격 정의
+  2. 지역 필터(KR/JP/도시) 연결
+  3. 점수식 미확정 시 임시 정렬 기준(`followerCount`, `popularityScore`) 적용
+- AC:
+  - 사용자는 랭킹 탭에서 카페/메이드 순위를 조회할 수 있다.
+  - 점수식 확정 전에도 정렬 기준이 문서화되어 있다.
+
+### C-11. 팔로우/즐겨찾기 보조 데이터 반영
+- 우선순위: P1
+- 상태: TODO
+- 산출물: 팔로우/즐겨찾기 상태 동기화
+- 작업:
+  1. `users/{userId}/favorites`와 `cafeFavorites/{cafeId}/users` 양방향 전략 결정
+  2. `castFollowers/{castId}/users` 읽기/쓰기 경로 확정
+  3. 상세/마이/랭킹에서 동일 상태가 보이도록 캐시/집계 동기화
+- AC:
+  - 즐겨찾기/팔로우 상태가 화면별로 불일치하지 않는다.
+  - 카운트와 사용자 상태 조회 경로가 분리되어도 동작이 일관된다.
 
 ### C-09. 알림
 - 우선순위: P1
@@ -324,8 +393,33 @@
 - 작업:
   1. 리뷰 작성/삭제 시 평점, 카운트 갱신
   2. 팔로우/언팔로우 시 followerCount 갱신
+  3. 즐겨찾기/방문/스탬프 집계 필드 갱신 규칙 정의
 - AC:
   - 집계 값이 원본 데이터와 불일치하지 않는다.
+
+### D-04. 승인/Claim 검증 함수
+- 우선순위: P0
+- 상태: TODO
+- 산출물: Claim 승인 검증 로직 명세 및 적용
+- 작업:
+  1. `cafeOwnerClaims`, `castClaims` 생성 시 중복 요청 차단
+  2. 승인 시 역할/연결 필드(`ownerId`, `linkedUserId`) 반영 규칙 정의
+  3. 반려/취소 후 재신청 가능 정책 정의
+- AC:
+  - 동일 사용자 중복 claim이 비정상적으로 누적되지 않는다.
+  - 승인 후 권한 반영이 원자적으로 처리된다.
+
+### D-05. 스탬프 적립/중복 방지 함수
+- 우선순위: P1
+- 상태: TODO
+- 산출물: 스탬프 지급 규칙 명세 및 적용
+- 작업:
+  1. `visitId` 기준 1회 적립 보장
+  2. 적립 시 `users.stats.stampCount` 반영
+  3. 추후 배지/레벨 시스템 확장을 위한 이벤트 포맷 정의
+- AC:
+  - 동일 방문으로 스탬프가 중복 적립되지 않는다.
+  - 방문 성공과 스탬프 적립 결과를 추적할 수 있다.
 
 ## E. 테스트/릴리즈 작업 (P2, MVP 구현 후)
 
@@ -342,7 +436,7 @@
 ### E-02. 권한 시나리오 테스트
 - 우선순위: P2
 - 상태: TODO
-- 산출물: USER/OWNER/ADMIN 규칙 검증 리포트
+- 산출물: USER/OWNER/ADMIN/CAST 규칙 검증 리포트
 - 작업:
   1. 허용 요청/차단 요청 케이스 작성
   2. 룰 회귀 테스트
@@ -364,7 +458,7 @@
 - 상태: TODO
 - 산출물: Firestore/Storage Rules 테스트 스위트
 - 작업:
-  1. USER/OWNER/ADMIN 허용/차단 케이스 자동화
+  1. USER/OWNER/ADMIN/CAST 허용/차단 케이스 자동화
   2. 리뷰 작성(verified visit 필요) 제약 테스트
 - AC:
   - 배포 전 권한 회귀가 자동으로 검출된다.
@@ -429,11 +523,11 @@
 - `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository`
 - `shared/src/commonMain/kotlin/org/hhp227/concafe/data/mapper`
 - `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/navigation`
-- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/home`
-- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/explore`
-- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/checkin`
-- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/ranking`
-- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/mypage`
+- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/home`
+- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/explore`
+- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/checkin`
+- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking`
+- `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo`
 - `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe`
 - `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast`
 - `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/notification`
@@ -548,35 +642,35 @@
   - 클래스: `DesktopRouteState`
 
 ### I-08. Presentation MVI (`composeApp`)
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/home/HomeViewModel.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/home/HomeViewModel.kt`
   - 클래스: `HomeViewModel`, `HomeUiState`, `HomeEvent`, `HomeAction`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/explore/ExploreViewModel.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/explore/ExploreViewModel.kt`
   - 클래스: `ExploreViewModel`, `ExploreUiState`, `ExploreEvent`, `ExploreAction`, `ExploreFilterState`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/checkin/CheckInViewModel.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/checkin/CheckInViewModel.kt`
   - 클래스: `CheckInViewModel`, `CheckInUiState`, `CheckInEvent`, `CheckInAction`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeDetailViewModel.kt`
   - 클래스: `CafeDetailViewModel`, `CafeDetailUiState`, `CafeDetailEvent`, `CafeDetailAction`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastDetailViewModel.kt`
   - 클래스: `CastDetailViewModel`, `CastDetailUiState`, `CastDetailEvent`, `CastDetailAction`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/ranking/RankingViewModel.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking/RankingViewModel.kt`
   - 클래스: `RankingViewModel`, `RankingUiState`, `RankingEvent`, `RankingAction`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/mypage/MyPageViewModel.kt`
-  - 클래스: `MyPageViewModel`, `MyPageUiState`, `MyPageEvent`, `MyPageAction`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo/MyInfoViewModel.kt`
+  - 클래스: `MyInfoViewModel`, `MyInfoUiState`, `MyInfoEvent`, `MyInfoAction`
 
 ### I-09. Presentation Screens (`composeApp`)
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/home/HomeScreen.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/home/HomeScreen.kt`
   - 컴포저블: `HomeScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/explore/ExploreScreen.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/explore/ExploreScreen.kt`
   - 컴포저블: `ExploreScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/checkin/CheckInScreen.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/checkin/CheckInScreen.kt`
   - 컴포저블: `CheckInScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cafe/CafeDetailScreen.kt`
   - 컴포저블: `CafeDetailScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/cast/CastDetailScreen.kt`
   - 컴포저블: `CastDetailScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/ranking/RankingScreen.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/ranking/RankingScreen.kt`
   - 컴포저블: `RankingScreen`
-- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/mypage/MyPageScreen.kt`
+- 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/main/myinfo/MyInfoScreen.kt`
   - 컴포저블: `MyPageScreen`
 - 파일: `composeApp/src/commonMain/kotlin/org/hhp227/concafe/presentation/screen/notification/NotificationScreen.kt`
   - 컴포저블: `NotificationScreen`
@@ -754,7 +848,7 @@ class HomeViewModel(
 ) {
     val uiState: StateFlow<HomeUiState>
     val event: SharedFlow<HomeEvent>
-    val action: (HomeAction) -> Unit
+    fun onAction(action: HomeAction)
 }
 
 class ExploreViewModel(
@@ -763,7 +857,7 @@ class ExploreViewModel(
 ) {
     val uiState: StateFlow<ExploreUiState>
     val event: SharedFlow<ExploreEvent>
-    val action: (ExploreAction) -> Unit
+    fun onAction(action: ExploreAction)
 }
 
 class CheckInViewModel(
@@ -771,7 +865,7 @@ class CheckInViewModel(
 ) {
     val uiState: StateFlow<CheckInUiState>
     val event: SharedFlow<CheckInEvent>
-    val action: (CheckInAction) -> Unit
+    fun onAction(action: CheckInAction)
 }
 
 class CafeDetailViewModel(
@@ -780,7 +874,7 @@ class CafeDetailViewModel(
 ) {
     val uiState: StateFlow<CafeDetailUiState>
     val event: SharedFlow<CafeDetailEvent>
-    val action: (CafeDetailAction) -> Unit
+    fun onAction(action: CafeDetailAction)
 }
 
 class CastDetailViewModel(
@@ -788,13 +882,13 @@ class CastDetailViewModel(
 ) {
     val uiState: StateFlow<CastDetailUiState>
     val event: SharedFlow<CastDetailEvent>
-    val action: (CastDetailAction) -> Unit
+    fun onAction(action: CastDetailAction)
 }
 
 class RankingViewModel(private val rankingRepository: RankingRepository) {
     val uiState: StateFlow<RankingUiState>
     val event: SharedFlow<RankingEvent>
-    val action: (RankingAction) -> Unit
+    fun onAction(action: RankingAction)
 }
 
 class MyPageViewModel(
@@ -802,7 +896,7 @@ class MyPageViewModel(
 ) {
     val uiState: StateFlow<MyPageUiState>
     val event: SharedFlow<MyPageEvent>
-    val action: (MyPageAction) -> Unit
+    fun onAction(action: MyPageAction)
 }
 ```
 
@@ -950,3 +1044,4 @@ flowchart TD
 - 선확정 항목(A-01~A-07)은 모두 완료되었다.
 - 네비게이션 전략은 플랫폼별로 확정되었고, 공통 라우트 규격 기준으로 구현한다.
 - 보안/품질 테스트 트랙(E-01~E-05)은 MVP 구현 완료 후 후순위로 진행한다.
+- 남은 선결정 이슈는 `claim 흐름`, `랭킹 점수식`, `집계 필드 갱신 책임`, `이벤트/굿즈 MVP 노출 범위`다.
