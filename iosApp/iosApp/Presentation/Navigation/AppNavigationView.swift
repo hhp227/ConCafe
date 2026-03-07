@@ -14,8 +14,6 @@ struct AppNavigationView: View {
     
     @State var currentRoute: Route = .entry
     
-    @State var currentMainTab: String = "home"
-    
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
@@ -39,7 +37,6 @@ struct AppNavigationView: View {
                     initialTab: initialTab,
                     onNavigationAction: viewModel.onAction
                 )
-                .id("main-\(initialTab ?? "home")")
             case .entry:
                 EmptyView()
             }
@@ -49,8 +46,7 @@ struct AppNavigationView: View {
             case .navigateTo(let route):
                 switch route {
                 case .main(let initialTab):
-                    currentMainTab = initialTab ?? "home"
-                    currentRoute = .main(initialTab: currentMainTab)
+                    currentRoute = .main(initialTab: initialTab)
                     path.removeAll()
                 case .cast:
                     path.append(route)
@@ -72,19 +68,17 @@ struct AppNavigationView: View {
         switch currentRoute {
         case .main(let initialTab):
             MainView(
-                initialTab: initialTab ?? currentMainTab,
+                initialTab: initialTab,
                 onNavigationAction: viewModel.onAction
             )
-            .id("main-\((initialTab ?? currentMainTab))")
         case .entry:
             ProgressView()
         default:
             // Detail is pushed through NavigationStack path.
             MainView(
-                initialTab: currentMainTab,
+                initialTab: nil,
                 onNavigationAction: viewModel.onAction
             )
-            .id("main-\(currentMainTab)")
         }
     }
 }
