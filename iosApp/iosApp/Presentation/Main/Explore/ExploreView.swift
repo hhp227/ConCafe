@@ -111,27 +111,14 @@ private struct ExploreContentView: View {
     }
 
     private var tabHeader: some View {
-        HStack(spacing: 0) {
-            ForEach(ExploreUiState.TabType.allCases, id: \.self) { tab in
-                Button {
-                    onAction(.tabChanged(tab))
-                } label: {
-                    VStack(spacing: 8) {
-                        Text(tab.rawValue)
-                            .font(.subheadline.weight(uiState.selectedTab == tab ? .semibold : .regular))
-                            .foregroundStyle(uiState.selectedTab == tab ? Color(hex: "EF6797") : .secondary)
-                            .frame(maxWidth: .infinity)
-                        Rectangle()
-                            .fill(uiState.selectedTab == tab ? Color(hex: "EF6797") : .clear)
-                            .frame(height: 2)
-                    }
-                    .padding(.top, 10)
-                }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity)
+        ConCafeTabBar(
+            items: ExploreUiState.TabType.allCases.map { ConCafeTabItem(id: $0.rawValue, title: $0.rawValue) },
+            selectedIndex: ExploreUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
+            backgroundColor: Color(hex: "FFF9FC"),
+            onSelect: { index in
+                onAction(.tabChanged(ExploreUiState.TabType.allCases[index]))
             }
-        }
-        .background(Color(hex: "FFF9FC"))
+        )
         .zIndex(1)
     }
 

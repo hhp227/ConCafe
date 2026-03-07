@@ -6,7 +6,13 @@
 //
 
 import Foundation
+import Shared
 
 enum RankingAction {
-    
+    case changeTab(RankingUiState.TabType)
+    case changePeriod(RankingPeriod)
+    case changeRegion(RankingUiState.RegionFilter)
+    case selectAd(Int)
+    case tapMaid(String)
+    case tapCafe(String)
 }

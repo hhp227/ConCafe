@@ -79,10 +79,10 @@ struct MainView: View {
     @ViewBuilder
     private var rankingTabView: some View {
         if #available(iOS 16.0, *) {
-            RankingView()
+            RankingView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("랭킹", systemImage: "trophy.fill") }
         } else {
-            RankingView()
+            RankingView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("랭킹", systemImage: "star.fill") }
         }
     }

@@ -151,7 +151,7 @@ fun MainScreen(
                 AdminOperationsScreen()
             }
             composable(MainNavigationTab.RANKING.route) {
-                RankingScreen()
+                RankingScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.MY_INFO.route) {
                 MyInfoScreen(onNavigate = onNavigationAction)
