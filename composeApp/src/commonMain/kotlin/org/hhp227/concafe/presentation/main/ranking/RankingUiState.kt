@@ -1,5 +1,8 @@
 package org.hhp227.concafe.presentation.main.ranking
 
+import org.hhp227.concafe.domain.model.RankingFeedEntry
+import org.hhp227.concafe.domain.model.RankingPromoAd
+
 data class RankingUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -7,9 +10,9 @@ data class RankingUiState(
     val selectedPeriod: PeriodFilter = PeriodFilter.WEEKLY,
     val selectedRegion: RegionFilter = RegionFilter.ALL,
     val selectedAdIndex: Int = 0,
-    val ads: List<PromoAd> = emptyList(),
-    val maidRankings: List<RankingEntry> = emptyList(),
-    val cafeRankings: List<RankingEntry> = emptyList()
+    val ads: List<RankingPromoAd> = emptyList(),
+    val maidRankings: List<RankingFeedEntry> = emptyList(),
+    val cafeRankings: List<RankingFeedEntry> = emptyList()
 ) {
     enum class TabType(val label: String) {
         MAIDS("메이드 랭킹"),
@@ -28,35 +31,12 @@ data class RankingUiState(
         OSAKA("오사카")
     }
 
-    data class PromoAd(
-        val id: String,
-        val badge: String,
-        val title: String,
-        val subtitle: String,
-        val description: String,
-        val startColorHex: String,
-        val endColorHex: String,
-        val symbol: String
-    )
-
-    data class RankingEntry(
-        val id: String,
-        val rank: Int,
-        val name: String,
-        val subtitle: String,
-        val score: Int,
-        val change: String,
-        val startColorHex: String,
-        val endColorHex: String,
-        val symbol: String
-    )
-
-    val currentAd: PromoAd
+    val currentAd: RankingPromoAd
         get() = ads.getOrElse(selectedAdIndex.coerceIn(0, (ads.size - 1).coerceAtLeast(0))) {
-            PromoAd("", "", "", "", "", "F6A8C5", "FFC8A2", "🎀")
+            RankingPromoAd("", "", "", "", "", "F6A8C5", "FFC8A2", "🎀")
         }
 
-    val rankingEntries: List<RankingEntry>
+    val rankingEntries: List<RankingFeedEntry>
         get() = if (selectedTab == TabType.MAIDS) maidRankings else cafeRankings
 
     companion object {

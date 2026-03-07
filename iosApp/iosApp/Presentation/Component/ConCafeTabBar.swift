@@ -56,5 +56,6 @@ struct ConCafeTabBar: View {
             .background(backgroundColor)
         }
         .frame(height: 52)
+        .background(backgroundColor)
     }
 }

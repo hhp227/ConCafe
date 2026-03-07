@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 struct RankingUiState {
     enum TabType: String, CaseIterable {
@@ -25,46 +26,23 @@ struct RankingUiState {
         case osaka = "오사카"
     }
 
-    struct PromoAd: Identifiable {
-        let id: String
-        let badge: String
-        let title: String
-        let subtitle: String
-        let description: String
-        let startColorHex: String
-        let endColorHex: String
-        let symbol: String
-    }
-
-    struct RankingEntry: Identifiable {
-        let id: String
-        let rank: Int
-        let name: String
-        let subtitle: String
-        let score: Int
-        let change: String
-        let startColorHex: String
-        let endColorHex: String
-        let symbol: String
-    }
-
     var isLoading: Bool = false
     var errorMessage: String? = nil
     var selectedTab: TabType = .maids
     var selectedPeriod: PeriodFilter = .weekly
     var selectedRegion: RegionFilter = .all
     var selectedAdIndex: Int = 0
-    var ads: [PromoAd] = []
-    var maidRankings: [RankingEntry] = []
-    var cafeRankings: [RankingEntry] = []
+    var ads: [Shared.RankingPromoAd] = []
+    var maidRankings: [Shared.RankingFeedEntry] = []
+    var cafeRankings: [Shared.RankingFeedEntry] = []
 
-    var currentAd: PromoAd {
+    var currentAd: Shared.RankingPromoAd {
         ads.isEmpty
-            ? PromoAd(id: "", badge: "", title: "", subtitle: "", description: "", startColorHex: "F6A8C5", endColorHex: "FFC8A2", symbol: "🎀")
+            ? Shared.RankingPromoAd(id: "", badge: "", title: "", subtitle: "", detailText: "", startColorHex: "F6A8C5", endColorHex: "FFC8A2", symbol: "🎀")
             : ads[min(max(selectedAdIndex, 0), ads.count - 1)]
     }
 
-    var rankingEntries: [RankingEntry] {
+    var rankingEntries: [Shared.RankingFeedEntry] {
         selectedTab == .maids ? maidRankings : cafeRankings
     }
 

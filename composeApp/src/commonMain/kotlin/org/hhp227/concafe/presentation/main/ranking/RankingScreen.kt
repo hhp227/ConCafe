@@ -31,6 +31,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import org.hhp227.concafe.domain.model.RankingFeedEntry
+import org.hhp227.concafe.domain.model.RankingPromoAd
 import org.hhp227.concafe.presentation.component.CapsuleDropdown
 import org.hhp227.concafe.presentation.component.ConCafeTabBar
 import org.hhp227.concafe.presentation.component.colorFromHex
@@ -168,7 +170,7 @@ fun RankingTabBar(
 
 @Composable
 fun RankingPromoBanner(
-    ad: RankingUiState.PromoAd,
+    ad: RankingPromoAd,
     selectedIndex: Int,
     size: Int,
     onSelect: (Int) -> Unit
@@ -224,7 +226,7 @@ fun RankingPromoBanner(
                         }
                         Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(ad.description, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                        Text(ad.detailText, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
                     }
                     Button(
                         onClick = {},
@@ -259,7 +261,7 @@ fun RankingPromoBanner(
 
 @Composable
 fun RankingEntryCard(
-    item: RankingUiState.RankingEntry,
+    item: RankingFeedEntry,
     isMaid: Boolean,
     onClick: () -> Unit
 ) {
@@ -355,7 +357,7 @@ private fun rankColor(rank: Int): Color {
     }
 }
 
-private fun RankingUiState.PromoAd.icon(): ImageVector {
+private fun RankingPromoAd.icon(): ImageVector {
     return when (symbol) {
         "✨" -> Icons.Default.AutoAwesome
         "🎁" -> Icons.Default.Redeem

@@ -21,7 +21,7 @@ fun ConCafeTabBar(
     TabRow(
         selectedTabIndex = selectedIndex,
         modifier = modifier,
-        containerColor = Color.White,
+        containerColor = Color(0xFFFFFBFD),
         contentColor = Color(0xFFEF6797),
         indicator = { tabPositions ->
             TabRowDefaults.Indicator(

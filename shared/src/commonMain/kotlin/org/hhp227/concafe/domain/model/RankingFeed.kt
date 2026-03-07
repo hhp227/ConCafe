@@ -11,7 +11,7 @@ data class RankingPromoAd(
     val badge: String,
     val title: String,
     val subtitle: String,
-    val description: String,
+    val detailText: String,
     val startColorHex: String,
     val endColorHex: String,
     val symbol: String

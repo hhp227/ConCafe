@@ -36,9 +36,9 @@ final class RankingViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.selectedAdIndex = 0
-                    uiState.ads = feed.ads.map { RankingUiState.PromoAd($0) }
-                    uiState.maidRankings = feed.castRankings.map { RankingUiState.RankingEntry($0) }
-                    uiState.cafeRankings = feed.cafeRankings.map { RankingUiState.RankingEntry($0) }
+                    uiState.ads = feed.ads
+                    uiState.maidRankings = feed.castRankings
+                    uiState.cafeRankings = feed.cafeRankings
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = "랭킹 데이터를 불러오지 못했습니다."
@@ -113,36 +113,5 @@ private extension RankingUiState.RegionFilter {
         case .osaka:
             return "Osaka"
         }
-    }
-}
-
-private extension RankingUiState.PromoAd {
-    init(_ item: Shared.RankingPromoAd) {
-        self.init(
-            id: item.id,
-            badge: item.badge,
-            title: item.title,
-            subtitle: item.subtitle,
-            description: item.description,
-            startColorHex: item.startColorHex,
-            endColorHex: item.endColorHex,
-            symbol: item.symbol
-        )
-    }
-}
-
-private extension RankingUiState.RankingEntry {
-    init(_ item: Shared.RankingFeedEntry) {
-        self.init(
-            id: item.id,
-            rank: Int(item.rank),
-            name: item.name,
-            subtitle: item.subtitle,
-            score: Int(item.score),
-            change: item.change,
-            startColorHex: item.startColorHex,
-            endColorHex: item.endColorHex,
-            symbol: item.symbol
-        )
     }
 }

@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.di.resolveGetRankingFeedUseCase
 import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.RankingFeedEntry
 import org.hhp227.concafe.domain.model.RankingPeriod
-import org.hhp227.concafe.domain.model.RankingPromoAd
 import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 
 class RankingViewModel(
@@ -40,9 +38,9 @@ class RankingViewModel(
                             isLoading = false,
                             errorMessage = null,
                             selectedAdIndex = 0,
-                            ads = result.data.ads.map { ad -> ad.toUiModel() },
-                            maidRankings = result.data.castRankings.map { entry -> entry.toUiModel() },
-                            cafeRankings = result.data.cafeRankings.map { entry -> entry.toUiModel() }
+                            ads = result.data.ads,
+                            maidRankings = result.data.castRankings,
+                            cafeRankings = result.data.cafeRankings
                         )
                     }
                 }
@@ -110,12 +108,4 @@ private fun RankingUiState.RegionFilter.city(): String? {
         RankingUiState.RegionFilter.TOKYO -> "Tokyo"
         RankingUiState.RegionFilter.OSAKA -> "Osaka"
     }
-}
-
-private fun RankingPromoAd.toUiModel(): RankingUiState.PromoAd {
-    return RankingUiState.PromoAd(id, badge, title, subtitle, description, startColorHex, endColorHex, symbol)
-}
-
-private fun RankingFeedEntry.toUiModel(): RankingUiState.RankingEntry {
-    return RankingUiState.RankingEntry(id, rank, name, subtitle, score, change, startColorHex, endColorHex, symbol)
 }

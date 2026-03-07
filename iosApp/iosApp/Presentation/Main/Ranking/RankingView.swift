@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import Shared
 
 struct RankingView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -89,14 +90,14 @@ private struct RankingContentView: View {
 
     private var rankingList: some View {
         VStack(spacing: 12) {
-            ForEach(uiState.rankingEntries) { item in
+            ForEach(uiState.rankingEntries, id: \.id) { item in
                 rankingCard(item)
             }
         }
         .padding(.horizontal, 16)
     }
 
-    private func rankingCard(_ item: RankingUiState.RankingEntry) -> some View {
+    private func rankingCard(_ item: Shared.RankingFeedEntry) -> some View {
         RankingEntryCard(
             item: item,
             isMaid: uiState.selectedTab == .maids,
@@ -154,7 +155,7 @@ struct RankingHeaderSection: View {
 
 
 struct RankingPromoBanner: View {
-    let ad: RankingUiState.PromoAd
+    let ad: Shared.RankingPromoAd
     
     let selectedIndex: Int
     
@@ -189,7 +190,7 @@ struct RankingPromoBanner: View {
                         Text(ad.subtitle)
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.white)
-                        Text(ad.description)
+                        Text(ad.detailText)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.92))
                     }
@@ -222,7 +223,7 @@ struct RankingPromoBanner: View {
 }
 
 struct RankingEntryCard: View {
-    let item: RankingUiState.RankingEntry
+    let item: Shared.RankingFeedEntry
     
     let isMaid: Bool
     
@@ -304,7 +305,7 @@ struct RankingChangeIndicator: View {
     }
 }
 
-private extension RankingUiState.PromoAd {
+private extension Shared.RankingPromoAd {
     var systemImageName: String {
         switch symbol {
         case "✨":
