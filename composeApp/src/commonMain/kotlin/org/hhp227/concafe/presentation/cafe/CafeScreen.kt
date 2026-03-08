@@ -38,11 +38,14 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -106,7 +109,7 @@ fun CafeScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CafeContentScreen(
     uiState: CafeUiState,
@@ -116,15 +119,46 @@ fun CafeContentScreen(
     val detail = uiState.detail
     val isTopBarVisible = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 140
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorFromHex("FFF9FC"))
-    ) {
+    Scaffold(
+        containerColor = colorFromHex("FFF9FC"),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = if (isTopBarVisible) detail?.cafe?.name.orEmpty() else "",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { onAction(CafeAction.ClickBack) }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "뒤로가기"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
+                        Icon(
+                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "즐겨찾기",
+                            tint = if (uiState.isFavorite) colorFromHex("EF6797") else Color(0xFF444444)
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorFromHex("FFF9FC")),
+            contentPadding = PaddingValues(
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding() + 32.dp
+            )
         ) {
             if (detail != null) {
                 item {
@@ -142,42 +176,10 @@ fun CafeContentScreen(
                             .fillMaxWidth()
                             .zIndex(1f)
                     ) {
-                        Column {
-                            if (isTopBarVisible) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.White)
-                                        .padding(horizontal = 12.dp, vertical = 14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(onClick = { onAction(CafeAction.ClickBack) }) {
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowBack,
-                                            contentDescription = "뒤로가기"
-                                        )
-                                    }
-                                    Text(
-                                        text = detail.cafe.name,
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
-                                        Icon(
-                                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                            contentDescription = "즐겨찾기",
-                                            tint = if (uiState.isFavorite) colorFromHex("EF6797") else Color(0xFF444444)
-                                        )
-                                    }
-                                }
-                            }
-                            CafeTabHeader(
-                                selectedTab = uiState.selectedTab,
-                                onAction = onAction
-                            )
-                        }
+                        CafeTabHeader(
+                            selectedTab = uiState.selectedTab,
+                            onAction = onAction
+                        )
                     }
                 }
                 item {
@@ -224,30 +226,6 @@ fun CafeContentScreen(
                                 .padding(horizontal = 16.dp, vertical = 10.dp)
                         )
                     }
-                }
-            }
-        }
-
-        if (detail != null) {
-            if (!isTopBarVisible) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
-                        .align(Alignment.TopCenter),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    FloatingCircleButton(
-                        onClick = { onAction(CafeAction.ClickBack) },
-                        icon = Icons.Default.ArrowBack,
-                        contentDescription = "뒤로가기"
-                    )
-                    FloatingCircleButton(
-                        onClick = { onAction(CafeAction.ClickFavorite) },
-                        icon = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "즐겨찾기",
-                        tint = if (uiState.isFavorite) colorFromHex("EF6797") else Color(0xFF444444)
-                    )
                 }
             }
         }
