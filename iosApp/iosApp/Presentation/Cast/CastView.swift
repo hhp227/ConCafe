@@ -22,7 +22,6 @@ struct CastView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .toolbar(.hidden, for: .navigationBar)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -50,6 +49,7 @@ private struct CastContentView: View {
     let onAction: (CastAction) -> Void
 
     @State private var scrollOffset: CGFloat = 0
+
     @State private var summarySectionMinY: CGFloat = .greatestFiniteMagnitude
 
     var body: some View {
