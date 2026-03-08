@@ -31,18 +31,22 @@ struct ConCafeTabBar: View {
                     Button {
                         onSelect(index)
                     } label: {
-                        Text(item.title)
-                            .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
-                            .foregroundStyle(
-                                selectedIndex == index
-                                ? Color(hex: "EF6797")
-                                : Color(hex: "777777")
-                            )
-                            .frame(
-                                maxWidth: .infinity,
-                                maxHeight: .infinity,
-                                alignment: .center
-                            )
+                        ZStack {
+                            backgroundColor.opacity(0.001)
+                            Text(item.title)
+                                .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
+                                .foregroundStyle(
+                                    selectedIndex == index
+                                    ? Color(hex: "EF6797")
+                                    : Color(hex: "777777")
+                                )
+                        }
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .center
+                        )
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }

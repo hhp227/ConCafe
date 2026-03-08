@@ -285,12 +285,26 @@ fun RankingEntryCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = if (item.rank <= 3) "🏆" else item.rank.toString(),
-                color = rankColor(item.rank),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Box(
+                modifier = Modifier.width(36.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.rank <= 3) {
+                    Icon(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = null,
+                        tint = rankColor(item.rank),
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = item.rank.toString(),
+                        color = rankColor(item.rank),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
             Box(
                 modifier = Modifier
                     .size(width = 64.dp, height = 64.dp)

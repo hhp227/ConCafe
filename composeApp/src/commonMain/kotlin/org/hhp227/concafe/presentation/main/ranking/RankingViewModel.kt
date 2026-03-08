@@ -2,15 +2,10 @@ package org.hhp227.concafe.presentation.main.ranking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.di.resolveGetRankingFeedUseCase
 import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.RankingPeriod
 import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 
 class RankingViewModel(

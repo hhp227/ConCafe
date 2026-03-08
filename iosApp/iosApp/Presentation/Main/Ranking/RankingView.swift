@@ -244,10 +244,7 @@ struct RankingEntryCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Text(item.rank <= 3 ? "🏆" : "\(item.rank)")
-            .font(.title2.weight(.bold))
-            .foregroundStyle(rankColor(Int(item.rank)))
-            .frame(width: 32)
+            rankIndicator
             ZStack {
                 LinearGradient(
                     colors: [Color(hex: item.startColorHex), Color(hex: item.endColorHex)],
@@ -283,6 +280,23 @@ struct RankingEntryCard: View {
         .onTapGesture {
             onTap()
         }
+    }
+
+    @ViewBuilder
+    private var rankIndicator: some View {
+        Group {
+            if item.rank <= 3 {
+                Image(systemName: "trophy.fill")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(rankColor(Int(item.rank)))
+            } else {
+                Text("\(item.rank)")
+                    .font(.title2.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(rankColor(Int(item.rank)))
+            }
+        }
+        .frame(width: 36, alignment: .center)
     }
 
     private func rankColor(_ rank: Int) -> Color {
