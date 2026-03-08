@@ -619,13 +619,16 @@
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/User.kt`
   - 클래스: `User`, `UserRole`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/Cafe.kt`
-  - 클래스: `Cafe`, `CafeRegion`, `ConceptType`
+  - 클래스: `Cafe`
+  - 필드 메모: 소개 문구는 `description`이 아닌 `desc` 사용
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/Cast.kt`
-  - 클래스: `Cast`, `ConceptRole`
+  - 클래스: `Cast`
+  - 필드 메모: 소개 문구는 `description`이 아닌 `desc` 사용
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/CastSchedule.kt`
   - 클래스: `CastSchedule`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/Menu.kt`
-  - 클래스: `Menu`, `MenuCategory`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/CafeMenu.kt`
+  - 클래스: `CafeMenu`
+  - 필드 메모: 메뉴 설명은 `description`이 아닌 `desc` 사용
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/Goods.kt`
   - 클래스: `Goods`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/model/Review.kt`
