@@ -58,6 +58,10 @@ class FakeCastRepository(
         }
     }
 
+    override suspend fun isFollowing(userId: String, castId: String): Boolean {
+        return dataSource.followedCastIdsByUser[userId]?.contains(castId) == true
+    }
+
     override suspend fun followCast(userId: String, castId: String) {
         val set = dataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.add(castId)

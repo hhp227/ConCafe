@@ -20,6 +20,8 @@ interface CastRepository {
 
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
 
+    suspend fun isFollowing(userId: String, castId: String): Boolean
+
     suspend fun followCast(userId: String, castId: String)
 
     suspend fun unfollowCast(userId: String, castId: String)

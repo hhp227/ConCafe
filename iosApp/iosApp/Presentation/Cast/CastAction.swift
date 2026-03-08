@@ -8,5 +8,8 @@
 import Foundation
 
 enum CastAction {
-    
+    case backTapped
+    case followTapped
+    case cafeTapped
+    case refresh
 }

@@ -68,6 +68,7 @@ fun NavigationScreen(
                         when (currentDetailRoute) {
                             is Route.Cast -> {
                                 CastScreen(
+                                    castId = currentDetailRoute.param,
                                     onNavigationAction = viewModel::onAction
                                 )
                             }
