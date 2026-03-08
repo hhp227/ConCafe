@@ -2,7 +2,7 @@
 //  ScrollableConCafeTabBar.swift
 //  ConCafe
 //
-//  Created by Codex on 2026/03/08.
+//  Created by 홍희표 on 2026/03/08.
 //
 
 import SwiftUI

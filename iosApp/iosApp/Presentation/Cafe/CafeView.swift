@@ -18,7 +18,6 @@ struct CafeView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationBarBackButtonHidden(true)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -56,18 +55,21 @@ private struct CafeContentView: View {
             .coordinateSpace(name: "cafeScroll")
             .background(Color(hex: "FFF9FC"))
             .ignoresSafeArea(edges: .top)
-            
-            if let detail = uiState.detail {
-                if isCollapsedTopBar {
-                    collapsedTopBar(detail: detail)
-                } else {
-                    floatingTopButtons
-                }
-            }
         }
         .background(Color(hex: "FFF9FC"))
         .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
             scrollOffset = value
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    onAction(.favoriteTapped)
+                } label: {
+                    Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
+                        .font(.headline)
+                        .frame(width: 36, height: 36)
+                }
+            }
         }
     }
     
@@ -113,10 +115,6 @@ private struct CafeContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
         }
-    }
-    
-    private var isCollapsedTopBar: Bool {
-        scrollOffset < -160
     }
     
     private func heroSection(detail: CafeDetail) -> some View {
@@ -205,301 +203,16 @@ private struct CafeContentView: View {
     private func tabContent(detail: CafeDetail) -> some View {
         switch uiState.selectedTab {
         case .info:
-            VStack(spacing: 14) {
-                infoCard(detail: detail)
-                descriptionCard(detail: detail)
-            }
+            CafeInfoView(cafeDetail: detail)
         case .maids:
-            maidGrid(uiState.casts)
+            CafeCastView(maids: uiState.casts, onAction: onAction)
         case .menu:
-            menuList(detail.menus)
+            CafeMenuView(menus: detail.menus)
         case .reviews:
-            reviewList(detail: detail, reviews: uiState.reviews)
+            CafeReviewView(detail: detail, reviews: uiState.reviews)
         case .notices:
-            noticeList(detail.notices)
+            CafeNoticeView(notices: detail.notices)
         }
-    }
-    
-    private func infoCard(detail: CafeDetail) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            infoRow(icon: "mappin.and.ellipse", title: "주소", value: detail.cafe.region.address)
-            infoRow(icon: "clock.fill", title: "영업시간", value: detail.businessHours)
-            infoRow(icon: "phone.fill", title: "전화번호", value: detail.phoneNumber)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    }
-    
-    private func infoRow(icon: String, title: String, value: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(Color(hex: "EF6797"))
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(value)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-    
-    private func descriptionCard(detail: CafeDetail) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("소개")
-                .font(.subheadline.weight(.semibold))
-            Text(detail.cafe.description)
-                .font(.subheadline)
-                .foregroundStyle(Color(hex: "666666"))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    }
-    
-    @ViewBuilder
-    private func maidGrid(_ maids: [CafeDetailCast]) -> some View {
-        if maids.isEmpty {
-            emptyCard("등록된 메이드가 없습니다.")
-        } else {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(maids, id: \.cast.id) { maid in
-                    VStack(alignment: .leading, spacing: 0) {
-                        LinearGradient(
-                            colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 160)
-                        .overlay(alignment: .topTrailing) {
-                            HStack(spacing: 6) {
-                                if maid.isWorking {
-                                    Text("출근중")
-                                        .font(.caption2.weight(.semibold))
-                                        .foregroundStyle(.white)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.green)
-                                        .clipShape(Capsule())
-                                }
-                                Text(maid.cast.conceptRole.uppercased())
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(Color.white.opacity(0.9))
-                            }
-                            .padding(12)
-                        }
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(maid.cast.name)
-                                .font(.subheadline.weight(.semibold))
-                            Text(maid.cast.description)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-                        .padding(12)
-                    }
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .onTapGesture {
-                        onAction(.maidTapped(id: maid.cast.id))
-                    }
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func menuList(_ menus: [CafeMenu]) -> some View {
-        if menus.isEmpty {
-            emptyCard("등록된 메뉴가 없습니다.")
-        } else {
-            VStack(spacing: 12) {
-                ForEach(menus, id: \.id) { menu in
-                    HStack(spacing: 12) {
-                        LinearGradient(
-                            colors: menu.image == nil ? [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")] : [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(width: 84, height: 84)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(menu.name)
-                                .font(.subheadline.weight(.semibold))
-                            Text("\(menu.price)원")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(hex: "EF6797"))
-                            Text(menu.description)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(12)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func reviewList(detail: CafeDetail, reviews: [CafeDetailReview]) -> some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Color.yellow)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(format: "%.1f", detail.cafe.ratingAvg))
-                        .font(.title2.bold())
-                    Text("\(detail.cafe.reviewCount)개 리뷰")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .padding(16)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            
-            if reviews.isEmpty {
-                emptyCard("아직 등록된 리뷰가 없습니다.")
-            } else {
-                ForEach(reviews, id: \.id) { review in
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            HStack(spacing: 8) {
-                                Text(review.userNickname)
-                                    .font(.subheadline.weight(.semibold))
-                                if review.verified {
-                                    Text("방문인증")
-                                        .font(.caption2.weight(.semibold))
-                                        .foregroundStyle(.white)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color(hex: "EF6797"))
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            Spacer()
-                            Text(review.createdDate)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        HStack(spacing: 2) {
-                            ForEach(0..<5, id: \.self) { index in
-                                Image(systemName: "star.fill")
-                                    .font(.caption)
-                                    .foregroundStyle(index < Int(review.rating) ? Color.yellow : Color(hex: "E1E1E1"))
-                            }
-                        }
-                        Text(review.content)
-                            .font(.subheadline)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func noticeList(_ notices: [Notice]) -> some View {
-        if notices.isEmpty {
-            emptyCard("등록된 공지가 없습니다.")
-        } else {
-            VStack(spacing: 12) {
-                ForEach(notices, id: \.id) { notice in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .top) {
-                            Text(notice.title)
-                                .font(.subheadline.weight(.semibold))
-                            Spacer()
-                            Text(String(notice.createdAt.prefix(10)))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(notice.content)
-                            .font(.subheadline)
-                            .foregroundStyle(Color(hex: "666666"))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                }
-            }
-        }
-    }
-    
-    private func emptyCard(_ text: String) -> some View {
-        Text(text)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 28)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    }
-    
-    private func collapsedTopBar(detail: CafeDetail) -> some View {
-        HStack(spacing: 12) {
-            Button(action: { onAction(.backTapped) }) {
-                Image(systemName: "arrow.left")
-                    .font(.headline)
-                    .foregroundStyle(Color(hex: "333333"))
-                    .frame(width: 36, height: 36)
-            }
-            Text(detail.cafe.name)
-                .font(.headline.weight(.bold))
-                .lineLimit(1)
-            Spacer()
-            Button {
-                onAction(.favoriteTapped)
-            } label: {
-                Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
-                    .font(.headline)
-                    .foregroundStyle(uiState.isFavorite ? Color(hex: "EF6797") : Color(hex: "333333"))
-                    .frame(width: 36, height: 36)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
-        .background(Color.white)
-    }
-    
-    private var floatingTopButtons: some View {
-        HStack {
-            Button(action: { onAction(.backTapped) }) {
-                Image(systemName: "arrow.left")
-                    .font(.headline)
-                    .foregroundStyle(Color(hex: "333333"))
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.92))
-                    .clipShape(Circle())
-            }
-            Spacer()
-            Button {
-                onAction(.favoriteTapped)
-            } label: {
-                Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
-                    .font(.headline)
-                    .foregroundStyle(uiState.isFavorite ? Color(hex: "EF6797") : Color(hex: "333333"))
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.92))
-                    .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 12)
     }
 }
 

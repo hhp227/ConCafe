@@ -249,47 +249,6 @@ private struct ExploreContentView: View {
     }
 }
 
-private struct ExploreKeyboardDismissModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 16.0, *) {
-            content.scrollDismissesKeyboard(.immediately)
-        } else {
-            content
-        }
-    }
-}
-
-private struct ScrollViewKeyboardDismissConfigurator: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
-
-        DispatchQueue.main.async {
-            updateKeyboardDismissMode(from: view)
-        }
-
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            updateKeyboardDismissMode(from: uiView)
-        }
-    }
-
-    private func updateKeyboardDismissMode(from view: UIView) {
-        var currentView = view.superview
-
-        while let currentView {
-            if let scrollView = currentView as? UIScrollView {
-                scrollView.keyboardDismissMode = .onDrag
-                break
-            } else {
-                currentView = currentView.superview
-            }
-        }
-    }
-}
-
 struct ExploreView_Previews: PreviewProvider {
     static var previews: some View {
         ExploreContentView(uiState: .empty, onAction: { _ in })
