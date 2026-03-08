@@ -1,11 +1,24 @@
 package org.hhp227.concafe.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -15,15 +28,16 @@ import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 
-private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 640
+private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 
 @Composable
 fun NavigationScreen(
     viewModel: NavigationViewModel = viewModel()
 ) {
     var currentMainTab by remember { mutableStateOf("home") }
-    val detailStack = remember { mutableStateListOf<Route>() }
-    val currentDetailRoute = detailStack.lastOrNull()
+    val detailStack = remember { mutableStateListOf<Pair<Int, Route>>() }
+    var nextDetailEntryId by remember { mutableIntStateOf(0) }
+    val currentDetailEntry = detailStack.lastOrNull()
 
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
@@ -33,7 +47,9 @@ fun NavigationScreen(
                         currentMainTab = event.route.initialTab ?: "home"
                         detailStack.clear()
                     } else {
-                        detailStack.upsertDetailRoute(event.route)
+                        detailStack.add(
+                            nextDetailEntryId++ to event.route
+                        )
                     }
                 }
                 NavigationEvent.NavigateBack -> {
@@ -54,47 +70,70 @@ fun NavigationScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = if (isTwoPaneMode && currentDetailEntry != null) {
+                    Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.5f)
+                        .align(Alignment.CenterStart)
+                } else {
+                    Modifier.fillMaxSize()
+                }
             ) {
+                MainScreen(
+                    initialTab = currentMainTab,
+                    onNavigationAction = viewModel::onAction
+                )
+            }
+            if (currentDetailEntry != null) {
                 Box(
                     modifier = if (isTwoPaneMode) {
                         Modifier
-                            .weight(1f)
                             .fillMaxHeight()
+                            .fillMaxWidth(0.5f)
+                            .align(Alignment.CenterEnd)
+                            .background(MaterialTheme.colorScheme.background)
                     } else {
-                        Modifier.fillMaxSize()
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
                     }
                 ) {
-                    MainScreen(
-                        initialTab = currentMainTab,
-                        onNavigationAction = viewModel::onAction
-                    )
-                }
-                if (isTwoPaneMode && currentDetailRoute != null) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                    ) {
+                    DetailStackPane(
+                        detailStack = detailStack,
+                        currentDetailEntry = currentDetailEntry
+                    ) { route ->
                         DetailRoutePane(
-                            route = currentDetailRoute,
+                            route = route,
                             onNavigationAction = viewModel::onAction
                         )
                     }
                 }
             }
-            if (!isTwoPaneMode && currentDetailRoute != null) {
+        }
+    }
+}
+
+@Composable
+private fun DetailStackPane(
+    detailStack: List<Pair<Int, Route>>,
+    currentDetailEntry: Pair<Int, Route>,
+    content: @Composable (Route) -> Unit
+) {
+    val (currentDetailEntryId, _) = currentDetailEntry
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        detailStack.forEachIndexed { index, (detailEntryId, route) ->
+            key(detailEntryId) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .zIndex(1f)
+                        .zIndex(index.toFloat())
+                        .alpha(if (detailEntryId == currentDetailEntryId) 1f else 0f)
                 ) {
-                    DetailRoutePane(
-                        route = currentDetailRoute,
-                        onNavigationAction = viewModel::onAction
-                    )
+                    content(route)
                 }
             }
         }
@@ -129,25 +168,6 @@ private fun DetailRoutePane(
         }
         else -> {
             Unit
-        }
-    }
-}
-
-private fun SnapshotStateList<Route>.upsertDetailRoute(route: Route) {
-    val lastRoute = lastOrNull()
-
-    when {
-        lastRoute == null -> {
-            add(route)
-        }
-        lastRoute is Route.Cafe && route is Route.Cafe -> {
-            this[lastIndex] = route
-        }
-        lastRoute is Route.Cast && route is Route.Cast -> {
-            this[lastIndex] = route
-        }
-        else -> {
-            add(route)
         }
     }
 }
