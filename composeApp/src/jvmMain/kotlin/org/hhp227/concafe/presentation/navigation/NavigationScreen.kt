@@ -1,9 +1,20 @@
 package org.hhp227.concafe.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,10 +41,10 @@ fun NavigationScreen(
                         currentMainTab = event.route.initialTab ?: "home"
                         detailStack.clear()
                     } else {
-                        detailStack.add(event.route)
+                        detailStack.upsertDetailRoute(event.route)
                     }
                 }
-                is NavigationEvent.NavigateBack -> {
+                NavigationEvent.NavigateBack -> {
                     if (detailStack.isNotEmpty()) {
                         detailStack.removeLast()
                     }
@@ -41,6 +52,7 @@ fun NavigationScreen(
             }
         }
     }
+
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primaryContainer)
@@ -91,6 +103,25 @@ fun NavigationScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+private fun SnapshotStateList<Route>.upsertDetailRoute(route: Route) {
+    val lastRoute = lastOrNull()
+
+    when {
+        lastRoute == null -> {
+            add(route)
+        }
+        lastRoute is Route.Cafe && route is Route.Cafe -> {
+            this[lastIndex] = route
+        }
+        lastRoute is Route.Cast && route is Route.Cast -> {
+            this[lastIndex] = route
+        }
+        else -> {
+            add(route)
         }
     }
 }
