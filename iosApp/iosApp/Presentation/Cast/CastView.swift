@@ -89,6 +89,7 @@ private struct CastContentView: View {
                 }
                 .padding(.bottom, 28)
             }
+            .ignoresSafeArea(edges: .top)
             .coordinateSpace(name: "castScroll")
             .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
                 summarySectionMinY = value
@@ -185,8 +186,8 @@ private struct CastHeroSection: View {
 
     var body: some View {
         let upwardScroll = min(scrollOffset, 0)
+        let downwardScroll = max(scrollOffset, 0)
         let parallaxOffset = -upwardScroll * 0.35
-        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
 
         TabView {
             ForEach(Array(detail.images.enumerated()), id: \.offset) { index, image in
@@ -230,12 +231,11 @@ private struct CastHeroSection: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                         .padding(20)
                 }
-                .scaleEffect(stretchScale, anchor: .center)
-                .offset(y: parallaxOffset)
+                .offset(y: parallaxOffset - downwardScroll)
                 .clipped()
             }
         }
-        .frame(height: castHeroHeight + topSafeArea)
+        .frame(height: castHeroHeight + topSafeArea + downwardScroll)
         .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
 
