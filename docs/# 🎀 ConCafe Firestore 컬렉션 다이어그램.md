@@ -62,6 +62,7 @@ cafes/{cafeId}/casts/{castId}
 ├─ conceptRole: maid | butler | idol
 ├─ linkedUserId
 ├─ followerCount
+├─ rating
 ├─ popularityScore
 └─ createdAt
 
