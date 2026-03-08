@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Shared
+import UIKit
 
 struct ExploreView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -55,8 +56,9 @@ private struct ExploreContentView: View {
             }
             .padding(.vertical, 12)
         }
+        .background(ScrollViewKeyboardDismissConfigurator())
         .background(Color(hex: "FFF9FC"))
-        .scrollDismissesKeyboard(.immediately)
+        .modifier(ExploreKeyboardDismissModifier())
     }
     
     private var searchSection: some View {
@@ -244,6 +246,47 @@ private struct ExploreContentView: View {
             endPoint: .bottom
         )
         .overlay(Image(systemName: "person.fill").foregroundStyle(Color.white.opacity(0.85)))
+    }
+}
+
+private struct ExploreKeyboardDismissModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.scrollDismissesKeyboard(.immediately)
+        } else {
+            content
+        }
+    }
+}
+
+private struct ScrollViewKeyboardDismissConfigurator: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+
+        DispatchQueue.main.async {
+            updateKeyboardDismissMode(from: view)
+        }
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            updateKeyboardDismissMode(from: uiView)
+        }
+    }
+
+    private func updateKeyboardDismissMode(from view: UIView) {
+        var currentView = view.superview
+
+        while let currentView {
+            if let scrollView = currentView as? UIScrollView {
+                scrollView.keyboardDismissMode = .onDrag
+                break
+            } else {
+                currentView = currentView.superview
+            }
+        }
     }
 }
 
