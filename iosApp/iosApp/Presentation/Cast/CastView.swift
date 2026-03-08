@@ -22,7 +22,7 @@ struct CastView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .toolbar(.hidden, for: .navigationBar)
+        .castNavigationBarHidden()
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -96,7 +96,7 @@ private struct CastContentView: View {
                     }
                     .padding(.bottom, 28)
                 }
-                .scrollIndicators(.hidden)
+                .castScrollIndicatorsHidden()
                 .coordinateSpace(name: "castScroll")
                 .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
                     summarySectionMinY = value
@@ -525,6 +525,28 @@ private struct CastScrollOffsetPreferenceKey: PreferenceKey {
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func castNavigationBarHidden() -> some View {
+        if #available(iOS 16.0, *) {
+            self.toolbar(.hidden, for: .navigationBar)
+        } else {
+            self
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    func castScrollIndicatorsHidden() -> some View {
+        if #available(iOS 16.0, *) {
+            self.scrollIndicators(.hidden)
+        } else {
+            self
+        }
     }
 }
 
