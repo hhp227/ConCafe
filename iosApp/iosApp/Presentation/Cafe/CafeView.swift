@@ -46,8 +46,6 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
     
-    @State private var tabHeaderMinY: CGFloat = .infinity
-    
     var body: some View {
         ZStack(alignment: .top) {
             ScrollView {
@@ -56,19 +54,10 @@ private struct CafeContentView: View {
             }
             .coordinateSpace(name: "cafeScroll")
             .background(Color(hex: "FFF9FC"))
-            .ignoresSafeArea(edges: .top)
         }
         .background(Color(hex: "FFF9FC"))
         .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
             scrollOffset = value
-        }
-        .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
-            tabHeaderMinY = value
-        }
-        .overlay(alignment: .top) {
-            if uiState.detail != nil && tabHeaderMinY <= 0 {
-                tabHeader
-            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -97,13 +86,16 @@ private struct CafeContentView: View {
     @ViewBuilder
     private var content: some View {
         if let detail = uiState.detail {
-            LazyVStack(spacing: 0) {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail)
                 summarySection(detail: detail)
-                measuredTabHeader
-                tabContent(detail: detail)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 20)
+                Section {
+                    tabContent(detail: detail)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 20)
+                } header: {
+                    tabHeader
+                }
             }
         } else if uiState.isLoading {
             ProgressView()
@@ -209,19 +201,6 @@ private struct CafeContentView: View {
         .zIndex(1)
     }
     
-    private var measuredTabHeader: some View {
-        tabHeader
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .preference(
-                            key: CafeTabHeaderOffsetPreferenceKey.self,
-                            value: proxy.frame(in: .named("cafeScroll")).minY
-                        )
-                }
-            }
-    }
-    
     @ViewBuilder
     private func tabContent(detail: CafeDetail) -> some View {
         switch uiState.selectedTab {
@@ -241,14 +220,6 @@ private struct CafeContentView: View {
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
-    
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
-private struct CafeTabHeaderOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .infinity
     
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()

@@ -115,8 +115,6 @@ fun CafeContentScreen(
     val listState = rememberLazyListState()
     val detail = uiState.detail
     val isTopBarVisible = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 140
-    val isTabSticky = listState.firstVisibleItemIndex > 2 ||
-        (listState.firstVisibleItemIndex == 2 && listState.firstVisibleItemScrollOffset > 0)
 
     Box(
         modifier = Modifier
@@ -137,11 +135,50 @@ fun CafeContentScreen(
                 item {
                     CafeSummarySection(detail = detail)
                 }
-                item {
-                    CafeTabHeader(
-                        selectedTab = uiState.selectedTab,
-                        onAction = onAction
-                    )
+                stickyHeader {
+                    Surface(
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f)
+                    ) {
+                        Column {
+                            if (isTopBarVisible) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.White)
+                                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(onClick = { onAction(CafeAction.ClickBack) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowBack,
+                                            contentDescription = "뒤로가기"
+                                        )
+                                    }
+                                    Text(
+                                        text = detail.cafe.name,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
+                                        Icon(
+                                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                            contentDescription = "즐겨찾기",
+                                            tint = if (uiState.isFavorite) colorFromHex("EF6797") else Color(0xFF444444)
+                                        )
+                                    }
+                                }
+                            }
+                            CafeTabHeader(
+                                selectedTab = uiState.selectedTab,
+                                onAction = onAction
+                            )
+                        }
+                    }
                 }
                 item {
                     CafeTabContent(
@@ -191,54 +228,8 @@ fun CafeContentScreen(
             }
         }
 
-        if (detail != null && isTabSticky) {
-            Surface(
-                color = Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .padding(top = if (isTopBarVisible) 64.dp else 0.dp)
-                    .zIndex(1f)
-            ) {
-                CafeTabHeader(
-                    selectedTab = uiState.selectedTab,
-                    onAction = onAction
-                )
-            }
-        }
-
         if (detail != null) {
-            if (isTopBarVisible) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White)
-                        .padding(horizontal = 12.dp, vertical = 14.dp)
-                        .align(Alignment.TopCenter),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { onAction(CafeAction.ClickBack) }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "뒤로가기"
-                        )
-                    }
-                    Text(
-                        text = detail.cafe.name,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.Bold
-                    )
-                    IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
-                        Icon(
-                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "즐겨찾기",
-                            tint = if (uiState.isFavorite) colorFromHex("EF6797") else Color(0xFF444444)
-                        )
-                    }
-                }
-            } else {
+            if (!isTopBarVisible) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
