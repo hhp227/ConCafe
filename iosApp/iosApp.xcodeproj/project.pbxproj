@@ -82,6 +82,7 @@
 		0A8ABA782F5C1D8B00265D4F /* SettingsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA772F5C1D8B00265D4F /* SettingsAction.swift */; };
 		0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA792F5C1DA000265D4F /* SettingsEvent.swift */; };
 		0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */; };
+		0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */; };
 		0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */; };
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
@@ -173,6 +174,7 @@
 		0A8ABA772F5C1D8B00265D4F /* SettingsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAction.swift; sourceTree = "<group>"; };
 		0A8ABA792F5C1DA000265D4F /* SettingsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsEvent.swift; sourceTree = "<group>"; };
 		0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConCafeTabBar.swift; sourceTree = "<group>"; };
+		0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableConCafeTabBar.swift; sourceTree = "<group>"; };
 		0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingViewModel.swift; sourceTree = "<group>"; };
 		0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUiState.swift; sourceTree = "<group>"; };
@@ -430,6 +432,7 @@
 			isa = PBXGroup;
 			children = (
 				0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */,
+				0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */,
 				0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */,
 				0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */,
 				0A0C66942F5C05FF00B0CDE4 /* Color.swift */,
@@ -656,6 +659,7 @@
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
+				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
 				0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */,
 				0A785CC72F5A7EB9004037A8 /* CafeEvent.swift in Sources */,
 				0A0C669C2F5C0E1D00B0CDE4 /* SignUpView.swift in Sources */,

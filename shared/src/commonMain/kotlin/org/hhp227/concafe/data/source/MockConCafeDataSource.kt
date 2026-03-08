@@ -244,29 +244,54 @@ class MockConCafeDataSource : ConCafeDataSource {
         val cafeNotices = notices.filter { it.cafeId == cafeId }
         return CafeDetail(
             cafe = cafe,
-            images = listOf("", ""),
+            images = listOf(
+                "https://images.unsplash.com/photo-1714889988208-1ea67650789f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+                "https://images.unsplash.com/photo-1699275509309-0764566eef5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"
+            ),
             casts = cafeCasts,
             menus = listOf(
-                Menu("menu-1", "딸기 파르페", 12000, "대표 디저트", null, "food"),
-                Menu("menu-2", "핑크 라떼", 8000, "시그니처 음료", null, "drink")
+                Menu(
+                    "menu-1",
+                    "딸기 파르페",
+                    12000,
+                    "대표 디저트",
+                    "https://images.unsplash.com/photo-1766043650707-49e74514218a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+                    "food"
+                ),
+                Menu(
+                    "menu-2",
+                    "핑크 라떼",
+                    8000,
+                    "시그니처 음료",
+                    "https://images.unsplash.com/photo-1766043650707-49e74514218a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+                    "drink"
+                )
             ),
             goods = listOf(
                 Goods("goods-1", "랜덤 포토카드", 5000, null, 50)
             ),
-            notices = cafeNotices
+            notices = cafeNotices,
+            businessHours = "매일 11:00 - 22:00",
+            phoneNumber = "02-1234-5678"
         )
     }
 
     override fun castDetail(castId: String): CastDetail? {
         val cast = casts.firstOrNull { it.id == castId } ?: return null
         val cafe = cafes.firstOrNull { it.id == cast.cafeId } ?: return null
+        val todaySchedule = if (cast.id == "maid-1" || cast.id == "maid-2" || cast.id == "maid-5") {
+            CastSchedule("schedule-1", cast.id, cast.cafeId, "2026-03-08", "18:00", "22:00")
+        } else {
+            CastSchedule("schedule-1", cast.id, cast.cafeId, "2026-03-09", "18:00", "22:00")
+        }
+
         return CastDetail(
             cast = cast,
             cafe = cafe,
             images = listOf("", ""),
             schedule = listOf(
-                CastSchedule("schedule-1", cast.id, cast.cafeId, "2026-03-06", "18:00", "22:00"),
-                CastSchedule("schedule-2", cast.id, cast.cafeId, "2026-03-07", "16:00", "21:00")
+                todaySchedule,
+                CastSchedule("schedule-2", cast.id, cast.cafeId, "2026-03-10", "16:00", "21:00")
             )
         )
     }

@@ -46,6 +46,11 @@ class FakeCafeRepository(
             ?: throw NoSuchElementException("cafe detail not found")
     }
 
+    override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
+        val set = dataSource.favoriteCafeIdsByUser[userId]
+        return set?.contains(cafeId) ?: false
+    }
+
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
         val set = dataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
         return if (set.contains(cafeId)) {

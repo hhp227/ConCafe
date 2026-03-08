@@ -9,23 +9,21 @@ import SwiftUI
 
 struct SignInView: View {
     let onNavigationAction: (NavigationAction) -> Void
-    
-    @Environment(\.dismiss) private var dismiss
-    
+
     @StateObject private var viewModel = SignInViewModel()
     
     var body: some View {
         SignInContentView(
             uiState: viewModel.uiState,
             onBack: {
-                dismiss()
+                onNavigationAction(.navigateBack)
             },
             onAction: viewModel.onAction
         )
         .onReceive(viewModel.event) { event in
             switch event {
             case .signedIn:
-                dismiss()
+                onNavigationAction(.navigateBack)
             }
         }
     }

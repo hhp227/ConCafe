@@ -6,5 +6,7 @@ data class CafeDetail(
     val casts: List<Cast>,
     val menus: List<Menu>,
     val goods: List<Goods>,
-    val notices: List<Notice>
+    val notices: List<Notice>,
+    val businessHours: String,
+    val phoneNumber: String
 )

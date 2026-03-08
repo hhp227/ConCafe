@@ -286,14 +286,14 @@
 
 ### C-04. 카페 상세
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 산출물: 카페 상세(정보/메이드/메뉴/리뷰/공지)
 - 작업:
-  1. 상단 이미지/기본 정보/즐겨찾기
-  2. 탭별 데이터 로드 분리
-  3. 리뷰 진입 및 작성 연결
-  4. 메뉴/공지 데이터 연결
-  5. 이벤트/굿즈는 MVP 노출 여부를 결정하고 placeholder 또는 숨김 처리
+  1. 상단 이미지/기본 정보/즐겨찾기 구현
+  2. `GetCafeDetailUseCase` 기반 상세 데이터 조합
+  3. 메뉴/리뷰/공지 데이터 연결
+  4. 비로그인 즐겨찾기 시 로그인 라우팅 연결
+  5. 굿즈/이벤트는 현재 MVP 화면 노출 대상에서 제외
 - AC:
   - 탭 전환 시 데이터가 정확히 표시된다.
   - 즐겨찾기 토글은 로그인 사용자만 즉시 반영된다.
@@ -668,22 +668,24 @@
 ### I-04. UseCases (`shared`)
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetHomeFeedUseCase.kt`
   - 클래스: `GetHomeFeedUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/SearchCafesUseCase.kt`
-  - 클래스: `SearchCafesUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/SearchCastsUseCase.kt`
-  - 클래스: `SearchCastsUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCafeUseCase.kt`
-  - 클래스: `GetCafeUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCastUseCase.kt`
-  - 클래스: `GetCastUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/CreateVisitUseCase.kt`
-  - 클래스: `CreateVisitUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/CreateReviewUseCase.kt`
-  - 클래스: `CreateReviewUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetExploreFeedUseCase.kt`
+  - 클래스: `GetExploreFeedUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetCafeDetailUseCase.kt`
+  - 클래스: `GetCafeDetailUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetMainNavigationUseCase.kt`
+  - 클래스: `GetMainNavigationUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetMyInfoUseCase.kt`
+  - 클래스: `GetMyInfoUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetRankingFeedUseCase.kt`
+  - 클래스: `GetRankingFeedUseCase`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/ToggleFavoriteCafeUseCase.kt`
   - 클래스: `ToggleFavoriteCafeUseCase`
-- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/GetMyPageSummaryUseCase.kt`
-  - 클래스: `GetMyPageSummaryUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/ObserveCurrentUserUseCase.kt`
+  - 클래스: `ObserveCurrentUserUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/SignInUseCase.kt`
+  - 클래스: `SignInUseCase`
+- 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/usecase/SignOutUseCase.kt`
+  - 클래스: `SignOutUseCase`
 
 ### I-05. Validation Rules (`shared`)
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/domain/validation/VisitVerificationPolicy.kt`
@@ -818,7 +820,6 @@ interface UserRepository {
 }
 
 interface CafeRepository {
-    suspend fun getHomePopularCafes(limit: Int): List<Cafe>
     suspend fun searchCafes(
         query: String?,
         country: String?,
@@ -827,7 +828,8 @@ interface CafeRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cafe>
-    suspend fun getCafe(cafeId: String): Cafe
+    suspend fun getCafeDetail(cafeId: String): CafeDetail
+    suspend fun isFavorite(userId: String, cafeId: String): Boolean
     suspend fun toggleFavorite(userId: String, cafeId: String): Boolean
 }
 
@@ -840,7 +842,7 @@ interface CastRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast>
-    suspend fun getCast(castId: String): Cast
+    suspend fun getCastDetail(castId: String): CastDetail
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
     suspend fun followCast(userId: String, castId: String)
     suspend fun unfollowCast(userId: String, castId: String)
@@ -884,41 +886,60 @@ interface NotificationRepository {
 class GetHomeFeedUseCase(
     private val cafeRepository: CafeRepository,
     private val castRepository: CastRepository,
+    private val bannerRepository: BannerRepository,
     private val noticeRepository: NoticeRepository
 ) {
-    suspend operator fun invoke(userId: String?): AppResult<HomeFeed>
+    suspend operator fun invoke(nearbyCafeCursor: String?): AppResult<HomeFeed>
 }
 
-class SearchCafesUseCase(private val cafeRepository: CafeRepository) {
-    suspend operator fun invoke(param: SearchCafeParam): AppResult<PagedResult<Cafe>>
+class GetExploreFeedUseCase(
+    private val cafeRepository: CafeRepository,
+    private val castRepository: CastRepository
+) {
+    suspend operator fun invoke(
+        query: String?,
+        regionKey: String,
+        sortKey: String,
+        pageSize: Int
+    ): AppResult<ExploreFeed>
 }
 
-class SearchCastsUseCase(private val castRepository: CastRepository) {
-    suspend operator fun invoke(param: SearchCastParam): AppResult<PagedResult<Cast>>
+class GetCafeDetailUseCase(
+    private val authRepository: AuthRepository,
+    private val cafeRepository: CafeRepository,
+    private val reviewRepository: ReviewRepository,
+    private val userRepository: UserRepository,
+    private val visitRepository: VisitRepository
+) {
+    suspend operator fun invoke(cafeId: String): AppResult<CafeDetailFeed>
 }
 
-class GetCafeUseCase(private val cafeRepository: CafeRepository) {
-    suspend operator fun invoke(cafeId: String): AppResult<Cafe>
+class GetRankingFeedUseCase(
+    private val rankingRepository: RankingRepository,
+    private val bannerRepository: BannerRepository,
+    private val noticeRepository: NoticeRepository
+) {
+    suspend operator fun invoke(period: String, country: String?, city: String?): AppResult<RankingFeed>
 }
 
-class GetCastUseCase(private val castRepository: CastRepository) {
-    suspend operator fun invoke(castId: String): AppResult<Cast>
+class GetMyInfoUseCase(
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    private val cafeRepository: CafeRepository,
+    private val castRepository: CastRepository
+) {
+    suspend operator fun invoke(): AppResult<MyInfoFeed>
 }
 
-class CreateVisitUseCase(private val visitRepository: VisitRepository) {
-    suspend operator fun invoke(param: CreateVisitParam): AppResult<Visit>
+class GetMainNavigationUseCase(private val authRepository: AuthRepository) {
+    suspend operator fun invoke(): AppResult<MainNavigationFeed>
 }
 
-class CreateReviewUseCase(private val reviewRepository: ReviewRepository) {
-    suspend operator fun invoke(param: CreateReviewParam): AppResult<Review>
-}
-
-class ToggleFavoriteCafeUseCase(private val cafeRepository: CafeRepository) {
-    suspend operator fun invoke(userId: String, cafeId: String): AppResult<Boolean>
-}
-
-class GetMyPageSummaryUseCase(private val userRepository: UserRepository) {
-    suspend operator fun invoke(userId: String): AppResult<MyPageSummary>
+class ToggleFavoriteCafeUseCase(
+    private val authRepository: AuthRepository,
+    private val cafeRepository: CafeRepository
+) {
+    suspend operator fun invoke(cafeId: String): AppResult<Boolean>
 }
 
 class ObserveCurrentUserUseCase(private val authRepository: AuthRepository) {

@@ -7,13 +7,8 @@
 
 import SwiftUI
 
-struct ConCafeTabItem: Identifiable, Equatable {
-    let id: String
-    let title: String
-}
-
 struct ConCafeTabBar: View {
-    let items: [ConCafeTabItem]
+    let labels: [String]
     
     let selectedIndex: Int
     
@@ -23,17 +18,17 @@ struct ConCafeTabBar: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let itemCount = max(items.count, 1)
+            let itemCount = max(labels.count, 1)
             let itemWidth = geometry.size.width / CGFloat(itemCount)
 
             HStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(labels.enumerated()), id: \.offset) { index, label in
                     Button {
                         onSelect(index)
                     } label: {
                         ZStack {
                             backgroundColor.opacity(0.001)
-                            Text(item.title)
+                            Text(label)
                                 .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
                                 .foregroundStyle(
                                     selectedIndex == index

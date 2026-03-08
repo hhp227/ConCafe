@@ -108,7 +108,7 @@ private struct ExploreContentView: View {
 
     private var tabHeader: some View {
         ConCafeTabBar(
-            items: ExploreUiState.TabType.allCases.map { ConCafeTabItem(id: $0.rawValue, title: $0.rawValue) },
+            labels: ExploreUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: ExploreUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
             backgroundColor: Color(hex: "FFF9FC"),
             onSelect: { index in

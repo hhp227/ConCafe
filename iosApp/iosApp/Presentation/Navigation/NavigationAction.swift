@@ -13,4 +13,5 @@ enum NavigationAction {
     case navigateToCafe(id: String)
     case navigateToSignIn
     case navigateToNotification
+    case navigateBack
 }
