@@ -64,7 +64,7 @@ import org.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeDetailCast
 import org.hhp227.concafe.domain.model.CafeDetailReview
-import org.hhp227.concafe.domain.model.Menu
+import org.hhp227.concafe.domain.model.CafeMenu
 import org.hhp227.concafe.domain.model.Notice
 import org.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import org.hhp227.concafe.presentation.component.colorFromHex
@@ -568,7 +568,7 @@ private fun MaidGrid(
 }
 
 @Composable
-private fun MenuList(menus: List<Menu>) {
+private fun MenuList(menus: List<CafeMenu>) {
     if (menus.isEmpty()) {
         EmptyContent(text = "등록된 메뉴가 없습니다.")
     } else {

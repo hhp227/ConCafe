@@ -10,7 +10,7 @@ import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.GeoPoint
 import org.hhp227.concafe.domain.model.Goods
 import org.hhp227.concafe.domain.model.HomeBanner
-import org.hhp227.concafe.domain.model.Menu
+import org.hhp227.concafe.domain.model.CafeMenu
 import org.hhp227.concafe.domain.model.MyPageSummary
 import org.hhp227.concafe.domain.model.Notice
 import org.hhp227.concafe.domain.model.RankingItem
@@ -250,7 +250,7 @@ class MockConCafeDataSource : ConCafeDataSource {
             ),
             casts = cafeCasts,
             menus = listOf(
-                Menu(
+                CafeMenu(
                     "menu-1",
                     "딸기 파르페",
                     12000,
@@ -258,7 +258,7 @@ class MockConCafeDataSource : ConCafeDataSource {
                     "https://images.unsplash.com/photo-1766043650707-49e74514218a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
                     "food"
                 ),
-                Menu(
+                CafeMenu(
                     "menu-2",
                     "핑크 라떼",
                     8000,

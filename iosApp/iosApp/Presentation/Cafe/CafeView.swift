@@ -313,7 +313,7 @@ private struct CafeContentView: View {
     }
     
     @ViewBuilder
-    private func menuList(_ menus: [Menu]) -> some View {
+    private func menuList(_ menus: [CafeMenu]) -> some View {
         if menus.isEmpty {
             emptyCard("등록된 메뉴가 없습니다.")
         } else {

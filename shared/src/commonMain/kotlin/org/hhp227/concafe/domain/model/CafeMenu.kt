@@ -1,6 +1,6 @@
 package org.hhp227.concafe.domain.model
 
-data class Menu(
+data class CafeMenu(
     val id: String,
     val name: String,
     val price: Int,
