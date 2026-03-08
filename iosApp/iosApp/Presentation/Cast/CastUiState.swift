@@ -6,7 +6,22 @@
 //
 
 import Foundation
+import Shared
 
 struct CastUiState {
-    
+    var isLoading: Bool
+    var errorMessage: String?
+    var detail: CastDetail?
+    var recentReviews: [CastRecentReview]
+    var isFollowing: Bool
+    var isLoggedIn: Bool
+
+    static let empty = CastUiState(
+        isLoading: false,
+        errorMessage: nil,
+        detail: nil,
+        recentReviews: [],
+        isFollowing: false,
+        isLoggedIn: false
+    )
 }

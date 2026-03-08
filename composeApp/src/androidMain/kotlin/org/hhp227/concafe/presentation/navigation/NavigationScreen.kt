@@ -58,8 +58,11 @@ fun NavigationScreen(
             )
         }
         composable<Route.Cast> { backStackEntry ->
-            backStackEntry.toRoute<Route.Cast>()
-            CastScreen(onNavigationAction = viewModel::onAction)
+            val castRoute = backStackEntry.toRoute<Route.Cast>()
+            CastScreen(
+                castId = castRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
         }
         composable<Route.Cafe> { backStackEntry ->
             val cafeRoute = backStackEntry.toRoute<Route.Cafe>()

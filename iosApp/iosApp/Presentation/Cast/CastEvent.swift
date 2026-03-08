@@ -8,5 +8,7 @@
 import Foundation
 
 enum CastEvent {
-    
+    case navigateBack
+    case navigateToCafe(id: String)
+    case navigateToSignIn
 }

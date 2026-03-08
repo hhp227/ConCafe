@@ -2,6 +2,7 @@ package org.hhp227.concafe.di
 
 import org.hhp227.concafe.domain.repository.AuthRepository
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import org.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
@@ -10,6 +11,7 @@ import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
+import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -52,6 +54,13 @@ fun resolveGetCafeDetailUseCase(): GetCafeDetailUseCase {
     return koin.get()
 }
 
+fun resolveGetCastDetailUseCase(): GetCastDetailUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetMyInfoUseCase(): GetMyInfoUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -88,6 +97,13 @@ fun resolveSignInUseCase(): SignInUseCase {
 }
 
 fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveToggleFollowCastUseCase(): ToggleFollowCastUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

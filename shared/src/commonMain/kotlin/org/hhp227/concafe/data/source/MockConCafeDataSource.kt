@@ -193,12 +193,12 @@ class MockConCafeDataSource : ConCafeDataSource {
     )
 
     override val casts = listOf(
-        Cast("maid-1", "cafe-1", "사쿠라", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234),
-        Cast("maid-2", "cafe-2", "미유", null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987),
-        Cast("maid-3", "cafe-3", "유이", null, "리본 카페 인기 메이드", "2000-05-14", "maid", 856),
-        Cast("maid-4", "cafe-2", "나나", null, "생일 이벤트 진행 중", "2001-03-05", "maid", 700),
-        Cast("maid-5", "cafe-1", "레이", null, "생일 위크", "2003-03-05", "maid", 620),
-        Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540)
+        Cast("maid-1", "cafe-1", "사쿠라", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
+        Cast("maid-2", "cafe-2", "미유", null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987, 4.8),
+        Cast("maid-3", "cafe-3", "유이", null, "리본 카페 인기 메이드", "2000-05-14", "maid", 856, 4.7),
+        Cast("maid-4", "cafe-2", "나나", null, "생일 이벤트 진행 중", "2001-03-05", "maid", 700, 4.8),
+        Cast("maid-5", "cafe-1", "레이", null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
+        Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5)
     )
 
     override val banners = listOf(

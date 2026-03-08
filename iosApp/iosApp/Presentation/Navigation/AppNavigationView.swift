@@ -24,8 +24,8 @@ struct AppNavigationView: View {
                 }
         } destination: { route in
             switch route {
-            case .cast:
-                CastView(onNavigationAction: viewModel.onAction)
+            case .cast(let param):
+                CastView(castId: param, onNavigationAction: viewModel.onAction)
             case .cafe(let param):
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .signIn:
