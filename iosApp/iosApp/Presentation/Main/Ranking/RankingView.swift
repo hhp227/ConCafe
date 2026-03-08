@@ -203,7 +203,7 @@ struct RankingPromoBanner: View {
                         Text(ad.subtitle)
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.white)
-                        Text(ad.detailText)
+                        Text(ad.desc)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.92))
                     }

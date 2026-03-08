@@ -197,6 +197,9 @@ private struct CafeContentView: View {
                 onAction(.changeTab(CafeUiState.TabType.allCases[index]))
             }
         )
+        .frame(maxWidth: .infinity)
+        .background(Color.white)
+        .zIndex(1)
     }
     
     @ViewBuilder

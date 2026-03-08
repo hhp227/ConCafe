@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -137,7 +138,9 @@ fun CafeContentScreen(
                 stickyHeader {
                     Surface(
                         color = Color.White,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f)
                     ) {
                         ScrollableConCafeTabBar(
                             labels = CafeUiState.TabType.entries.map { it.label },
@@ -475,7 +478,7 @@ private fun DescriptionCard(detail: CafeDetail) {
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = detail.cafe.description,
+                text = detail.cafe.desc,
                 color = Color(0xFF666666)
             )
         }
@@ -548,7 +551,7 @@ private fun MaidGrid(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = castItem.cast.description,
+                                        text = castItem.cast.desc,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                         color = Color(0xFF777777),
@@ -611,7 +614,7 @@ private fun MenuList(menus: List<CafeMenu>) {
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = menu.description,
+                                text = menu.desc,
                                 color = Color(0xFF777777),
                                 style = MaterialTheme.typography.bodySmall
                             )

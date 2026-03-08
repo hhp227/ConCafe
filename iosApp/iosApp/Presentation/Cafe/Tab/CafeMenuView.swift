@@ -31,7 +31,7 @@ struct CafeMenuView: View {
                             Text("\(menu.price)원")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color(hex: "EF6797"))
-                            Text(menu.description)
+                            Text(menu.desc)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

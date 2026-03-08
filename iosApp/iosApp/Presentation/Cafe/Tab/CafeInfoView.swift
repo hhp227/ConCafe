@@ -49,7 +49,7 @@ struct CafeInfoView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("소개")
                 .font(.subheadline.weight(.semibold))
-            Text(detail.cafe.description)
+            Text(detail.cafe.desc)
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "666666"))
         }

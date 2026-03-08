@@ -57,7 +57,7 @@ struct RankingUiState {
 
     var currentAd: Shared.RankingPromoAd {
         ads.isEmpty
-            ? Shared.RankingPromoAd(id: "", badge: "", title: "", subtitle: "", detailText: "", startColorHex: "F6A8C5", endColorHex: "FFC8A2", symbol: "🎀")
+            ? Shared.RankingPromoAd(id: "", badge: "", title: "", subtitle: "", desc: "", startColorHex: "F6A8C5", endColorHex: "FFC8A2", symbol: "🎀")
             : ads[min(max(selectedAdIndex, 0), ads.count - 1)]
     }
 

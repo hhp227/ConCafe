@@ -233,7 +233,7 @@ fun RankingPromoBanner(
                         }
                         Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(ad.detailText, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                        Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
                     }
                     Button(
                         onClick = {},

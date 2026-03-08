@@ -46,7 +46,7 @@ struct CafeCastView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(maid.cast.name)
                                 .font(.subheadline.weight(.semibold))
-                            Text(maid.cast.description)
+                            Text(maid.cast.desc)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)

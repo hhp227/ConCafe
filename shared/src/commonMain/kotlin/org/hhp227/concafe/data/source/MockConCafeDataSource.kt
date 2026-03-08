@@ -72,7 +72,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-1",
             name = "메이드 하우스",
-            description = "강남 인기 메이드카페",
+            desc = "강남 인기 메이드카페",
             region = Region("KR", "Seoul", "강남구 테헤란로", GeoPoint(37.499, 127.031)),
             thumbnailImage = null,
             ratingAvg = 4.8,
@@ -83,7 +83,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-2",
             name = "핑크 캐슬",
-            description = "신촌 감성 카페",
+            desc = "신촌 감성 카페",
             region = Region("KR", "Seoul", "서대문구 신촌로", GeoPoint(37.555, 126.936)),
             thumbnailImage = null,
             ratingAvg = 4.9,
@@ -94,7 +94,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-3",
             name = "리본 카페",
-            description = "홍대 서브컬쳐 카페",
+            desc = "홍대 서브컬쳐 카페",
             region = Region("KR", "Seoul", "마포구 와우산로", GeoPoint(37.556, 126.923)),
             thumbnailImage = null,
             ratingAvg = 4.7,
@@ -105,7 +105,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-4",
             name = "슈가 드롭",
-            description = "합정의 달콤한 분위기 메이드카페",
+            desc = "합정의 달콤한 분위기 메이드카페",
             region = Region("KR", "Seoul", "마포구 양화로", GeoPoint(37.550, 126.914)),
             thumbnailImage = null,
             ratingAvg = 4.6,
@@ -116,7 +116,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-5",
             name = "루나 살롱",
-            description = "건대 감성의 클래식 메이드카페",
+            desc = "건대 감성의 클래식 메이드카페",
             region = Region("KR", "Seoul", "광진구 아차산로", GeoPoint(37.540, 127.069)),
             thumbnailImage = null,
             ratingAvg = 4.5,
@@ -127,7 +127,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-6",
             name = "체리 블룸",
-            description = "잠실의 봄 테마 메이드카페",
+            desc = "잠실의 봄 테마 메이드카페",
             region = Region("KR", "Seoul", "송파구 올림픽로", GeoPoint(37.513, 127.102)),
             thumbnailImage = null,
             ratingAvg = 4.8,
@@ -138,7 +138,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-7",
             name = "클로버 가든",
-            description = "성수의 조용한 가든풍 메이드카페",
+            desc = "성수의 조용한 가든풍 메이드카페",
             region = Region("KR", "Seoul", "성동구 연무장길", GeoPoint(37.545, 127.043)),
             thumbnailImage = null,
             ratingAvg = 4.4,
@@ -149,7 +149,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-8",
             name = "에뜨왈 라운지",
-            description = "명동 중심가의 프리미엄 메이드카페",
+            desc = "명동 중심가의 프리미엄 메이드카페",
             region = Region("KR", "Seoul", "중구 명동길", GeoPoint(37.563, 126.985)),
             thumbnailImage = null,
             ratingAvg = 4.9,
@@ -160,7 +160,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-9",
             name = "민트 퍼레이드",
-            description = "노원의 캐주얼 메이드카페",
+            desc = "노원의 캐주얼 메이드카페",
             region = Region("KR", "Seoul", "노원구 상계로", GeoPoint(37.654, 127.060)),
             thumbnailImage = null,
             ratingAvg = 4.3,
@@ -171,7 +171,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-10",
             name = "오로라 티룸",
-            description = "이대 앞 티룸 스타일 메이드카페",
+            desc = "이대 앞 티룸 스타일 메이드카페",
             region = Region("KR", "Seoul", "서대문구 이화여대길", GeoPoint(37.561, 126.946)),
             thumbnailImage = null,
             ratingAvg = 4.7,
@@ -182,7 +182,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cafe(
             id = "cafe-11",
             name = "벨벳 스테이지",
-            description = "혜화 공연 콘셉트 메이드카페",
+            desc = "혜화 공연 콘셉트 메이드카페",
             region = Region("KR", "Seoul", "종로구 대학로", GeoPoint(37.582, 127.002)),
             thumbnailImage = null,
             ratingAvg = 4.6,
