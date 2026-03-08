@@ -26,8 +26,8 @@ struct AppNavigationView: View {
             switch route {
             case .cast:
                 CastView(onNavigationAction: viewModel.onAction)
-            case .cafe:
-                CafeView(onNavigationAction: viewModel.onAction)
+            case .cafe(let param):
+                CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .notification:
@@ -55,6 +55,10 @@ struct AppNavigationView: View {
                     path.append(route)
                 case .entry:
                     currentRoute = .entry
+                }
+            case .navigateBack:
+                if !path.isEmpty {
+                    path.removeLast()
                 }
             }
         }

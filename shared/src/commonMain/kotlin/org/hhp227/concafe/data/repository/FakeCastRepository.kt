@@ -4,6 +4,7 @@ import org.hhp227.concafe.data.source.ConCafeDataSource
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
+import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.CastSort
 import org.hhp227.concafe.domain.repository.CastRepository
 
@@ -45,6 +46,16 @@ class FakeCastRepository(
     override suspend fun getCastDetail(castId: String): CastDetail {
         return dataSource.castDetail(castId)
             ?: throw NoSuchElementException("cast detail not found")
+    }
+
+    override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
+        val castDetail = dataSource.castDetail(castId)
+
+        return if (castDetail != null) {
+            castDetail.schedule.filter { it.date >= fromDate && it.date <= toDate }
+        } else {
+            throw NoSuchElementException("cast detail not found")
+        }
     }
 
     override suspend fun followCast(userId: String, castId: String) {

@@ -8,5 +8,9 @@
 import Foundation
 
 enum CafeAction {
-    
+    case backTapped
+    case changeTab(CafeUiState.TabType)
+    case maidTapped(id: String)
+    case favoriteTapped
+    case refresh
 }

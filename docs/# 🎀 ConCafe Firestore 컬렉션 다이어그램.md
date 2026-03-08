@@ -34,7 +34,7 @@ homeBanners/{bannerId}
 cafes/{cafeId}
 ├─ ownerId
 ├─ name
-├─ description
+├─ desc
 ├─ conceptType: MAID | BUTLER
 ├─ region
 │  ├─ country: KR | JP
@@ -56,7 +56,7 @@ cafes/{cafeId}/casts/{castId}
 ├─ name
 ├─ profileImage
 ├─ images[]
-├─ description
+├─ desc
 ├─ birthday
 ├─ joinDate
 ├─ conceptRole: maid | butler | idol
@@ -68,7 +68,7 @@ cafes/{cafeId}/casts/{castId}
 cafes/{cafeId}/menus/{menuId}
 ├─ name
 ├─ price
-├─ description
+├─ desc
 ├─ image
 ├─ category: food | drink | dessert
 └─ createdAt
@@ -122,7 +122,7 @@ events/{eventId}
 ├─ relatedCastId
 ├─ startDate
 ├─ endDate
-└─ description
+└─ desc
 
 stamps/{stampId}
 ├─ userId

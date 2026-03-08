@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Shared
+import UIKit
 
 struct ExploreView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -55,8 +56,9 @@ private struct ExploreContentView: View {
             }
             .padding(.vertical, 12)
         }
+        .background(ScrollViewKeyboardDismissConfigurator())
         .background(Color(hex: "FFF9FC"))
-        .scrollDismissesKeyboard(.immediately)
+        .modifier(ExploreKeyboardDismissModifier())
     }
     
     private var searchSection: some View {
@@ -108,7 +110,7 @@ private struct ExploreContentView: View {
 
     private var tabHeader: some View {
         ConCafeTabBar(
-            items: ExploreUiState.TabType.allCases.map { ConCafeTabItem(id: $0.rawValue, title: $0.rawValue) },
+            labels: ExploreUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: ExploreUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
             backgroundColor: Color(hex: "FFF9FC"),
             onSelect: { index in

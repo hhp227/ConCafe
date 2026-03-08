@@ -17,5 +17,7 @@ interface CafeRepository {
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
 
+    suspend fun isFavorite(userId: String, cafeId: String): Boolean
+
     suspend fun toggleFavorite(userId: String, cafeId: String): Boolean
 }

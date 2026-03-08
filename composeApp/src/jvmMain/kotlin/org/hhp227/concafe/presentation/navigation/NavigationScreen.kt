@@ -73,6 +73,7 @@ fun NavigationScreen(
                             }
                             is Route.Cafe -> {
                                 CafeScreen(
+                                    cafeId = currentDetailRoute.param,
                                     onNavigationAction = viewModel::onAction
                                 )
                             }

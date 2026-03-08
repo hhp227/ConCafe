@@ -5,7 +5,7 @@ data class Cast(
     val cafeId: String,
     val name: String,
     val profileImage: String?,
-    val description: String,
+    val desc: String,
     val birthday: String?,
     val conceptRole: String,
     val followerCount: Int

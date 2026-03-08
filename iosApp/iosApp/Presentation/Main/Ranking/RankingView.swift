@@ -70,7 +70,7 @@ private struct RankingContentView: View {
 
     private var tabSection: some View {
         ConCafeTabBar(
-            items: RankingUiState.TabType.allCases.map { ConCafeTabItem(id: $0.rawValue, title: $0.rawValue) },
+            labels: RankingUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: RankingUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
             backgroundColor: Color(hex: "FFFBFD"),
             onSelect: { index in
@@ -203,7 +203,7 @@ struct RankingPromoBanner: View {
                         Text(ad.subtitle)
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.white)
-                        Text(ad.detailText)
+                        Text(ad.desc)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.92))
                     }
