@@ -10,7 +10,7 @@ import Shared
 
 struct CafeView: View {
     let onNavigationAction: (NavigationAction) -> Void
-    
+
     @StateObject private var viewModel: CafeViewModel
 
     var body: some View {
@@ -32,8 +32,8 @@ struct CafeView: View {
     }
 
     init(
-        cafeId: String,
-        onNavigationAction: @escaping (NavigationAction) -> Void
+    cafeId: String,
+    onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
@@ -42,80 +42,70 @@ struct CafeView: View {
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
-    
+
     let onAction: (CafeAction) -> Void
 
     @State private var scrollOffset: CGFloat = 0
-    
-    @State private var tabHeaderMinY: CGFloat = .infinity
-    
+
     var body: some View {
         GeometryReader { proxy in
-            ZStack(alignment: .top) {
-                ScrollView {
-                    offsetReader
-                    content
-                }
-                .coordinateSpace(name: "cafeScroll")
-                .background(Color(hex: "FFF9FC"))
-                .ignoresSafeArea(edges: .top)
+            ScrollView {
+                offsetReader
+                content(topSafeArea: proxy.safeAreaInsets.top)
             }
+            .coordinateSpace(name: "cafeScroll")
             .background(Color(hex: "FFF9FC"))
             .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                 scrollOffset = value
             }
-            .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
-                tabHeaderMinY = value
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                if uiState.detail != nil && tabHeaderMinY <= proxy.safeAreaInsets.top + 44 {
-                    tabHeader
-                }
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    onAction(.favoriteTapped)
-                } label: {
-                    Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        onAction(.favoriteTapped)
+                    } label: {
+                        Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
                         .font(.headline)
                         .frame(width: 36, height: 36)
+                    }
                 }
             }
         }
     }
-    
+
     private var offsetReader: some View {
         GeometryReader { proxy in
             Color.clear
-                .preference(
-                    key: CafeScrollOffsetPreferenceKey.self,
-                    value: proxy.frame(in: .named("cafeScroll")).minY
-                )
+            .preference(
+                key: CafeScrollOffsetPreferenceKey.self,
+                value: proxy.frame(in: .named("cafeScroll")).minY
+            )
         }
         .frame(height: 0)
     }
-    
+
     @ViewBuilder
-    private var content: some View {
+    private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
-            LazyVStack(spacing: 0) {
-                heroSection(detail: detail)
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                heroSection(detail: detail, topSafeArea: topSafeArea)
+                .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
-                measuredTabHeader
-                tabContent(detail: detail)
+                Section {
+                    tabContent(detail: detail)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 20)
+                } header: {
+                    tabHeader
+                }
             }
         } else if uiState.isLoading {
             ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.top, 160)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 160)
         } else {
             VStack(spacing: 12) {
                 Text(uiState.errorMessage ?? "카페 상세 데이터를 불러오지 못했습니다.")
-                    .foregroundStyle(.red)
+                .foregroundStyle(.red)
                 Button("새로고침") {
                     onAction(.refresh)
                 }
@@ -126,13 +116,12 @@ private struct CafeContentView: View {
             .padding(.top, 160)
         }
     }
-    
-    private func heroSection(detail: CafeDetail) -> some View {
+
+    private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {
         let upwardScroll = min(scrollOffset, 0)
         let parallaxOffset = upwardScroll < 0 ? (-upwardScroll * 0.35) : 0
         let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
-        
-        TabView {
+        return TabView {
             ForEach(Array(detail.images.enumerated()), id: \.offset) { _, image in
                 ZStack {
                     if let url = URL(string: image), !image.isEmpty {
@@ -142,8 +131,8 @@ private struct CafeContentView: View {
                                 heroPlaceholder
                             case .success(let loadedImage):
                                 loadedImage
-                                    .resizable()
-                                    .scaledToFill()
+                                .resizable()
+                                .scaledToFill()
                             case .failure:
                                 heroPlaceholder
                             @unknown default:
@@ -154,16 +143,16 @@ private struct CafeContentView: View {
                         heroPlaceholder
                     }
                 }
-                .frame(height: 280)
+                .frame(height: 280 + topSafeArea)
                 .offset(y: parallaxOffset)
                 .scaleEffect(stretchScale, anchor: .center)
                 .clipped()
             }
         }
-        .frame(height: 280)
+        .frame(height: 280 + topSafeArea)
         .tabViewStyle(.page(indexDisplayMode: .always))
     }
-    
+
     private var heroPlaceholder: some View {
         LinearGradient(
             colors: [Color(hex: "FFD2E4"), Color(hex: "F7A6C5")],
@@ -172,29 +161,29 @@ private struct CafeContentView: View {
         )
         .overlay(
             Image(systemName: "cup.and.saucer.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(Color.white.opacity(0.9))
+            .font(.system(size: 54))
+            .foregroundStyle(Color.white.opacity(0.9))
         )
     }
-    
+
     private func summarySection(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(detail.cafe.name)
-                .font(.title2.bold())
+            .font(.title2.bold())
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
-                        .foregroundStyle(Color.yellow)
+                    .foregroundStyle(Color.yellow)
                     Text(String(format: "%.1f", detail.cafe.ratingAvg))
-                        .fontWeight(.semibold)
+                    .fontWeight(.semibold)
                     Text("(\(detail.cafe.reviewCount))")
-                        .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 4) {
                     Image(systemName: "mappin.and.ellipse")
-                        .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondary)
                     Text(detail.cafe.region.city)
-                        .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondary)
                 }
             }
         }
@@ -203,7 +192,7 @@ private struct CafeContentView: View {
         .padding(.vertical, 18)
         .background(Color.white)
     }
-    
+
     private var tabHeader: some View {
         ScrollableConCafeTabBar(
             labels: CafeUiState.TabType.allCases.map { $0.rawValue },
@@ -217,20 +206,7 @@ private struct CafeContentView: View {
         .background(Color.white)
         .zIndex(1)
     }
-    
-    private var measuredTabHeader: some View {
-        tabHeader
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .preference(
-                            key: CafeTabHeaderOffsetPreferenceKey.self,
-                            value: proxy.frame(in: .global).minY
-                        )
-                }
-            }
-    }
-    
+
     @ViewBuilder
     private func tabContent(detail: CafeDetail) -> some View {
         switch uiState.selectedTab {
@@ -250,15 +226,7 @@ private struct CafeContentView: View {
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
-    
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
 
-private struct CafeTabHeaderOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .infinity
-    
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
