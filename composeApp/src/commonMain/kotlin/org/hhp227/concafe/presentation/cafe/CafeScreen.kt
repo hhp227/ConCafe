@@ -115,6 +115,8 @@ fun CafeContentScreen(
     val listState = rememberLazyListState()
     val detail = uiState.detail
     val isTopBarVisible = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 140
+    val isTabSticky = listState.firstVisibleItemIndex > 2 ||
+        (listState.firstVisibleItemIndex == 2 && listState.firstVisibleItemScrollOffset > 0)
 
     Box(
         modifier = Modifier
@@ -135,23 +137,11 @@ fun CafeContentScreen(
                 item {
                     CafeSummarySection(detail = detail)
                 }
-                stickyHeader {
-                    Surface(
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .zIndex(1f)
-                    ) {
-                        ScrollableConCafeTabBar(
-                            labels = CafeUiState.TabType.entries.map { it.label },
-                            selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = Color.White,
-                            onTabSelected = { index ->
-                                onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
-                            }
-                        )
-                    }
+                item {
+                    CafeTabHeader(
+                        selectedTab = uiState.selectedTab,
+                        onAction = onAction
+                    )
                 }
                 item {
                     CafeTabContent(
@@ -198,6 +188,22 @@ fun CafeContentScreen(
                         )
                     }
                 }
+            }
+        }
+
+        if (detail != null && isTabSticky) {
+            Surface(
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .padding(top = if (isTopBarVisible) 64.dp else 0.dp)
+                    .zIndex(1f)
+            ) {
+                CafeTabHeader(
+                    selectedTab = uiState.selectedTab,
+                    onAction = onAction
+                )
             }
         }
 
@@ -255,6 +261,22 @@ fun CafeContentScreen(
             }
         }
     }
+}
+
+@Composable
+private fun CafeTabHeader(
+    selectedTab: CafeUiState.TabType,
+    onAction: (CafeAction) -> Unit
+) {
+    ScrollableConCafeTabBar(
+        labels = CafeUiState.TabType.entries.map { it.label },
+        selectedIndex = CafeUiState.TabType.entries.indexOf(selectedTab),
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.White,
+        onTabSelected = { index ->
+            onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
+        }
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
