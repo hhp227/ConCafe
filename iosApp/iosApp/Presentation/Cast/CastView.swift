@@ -535,7 +535,7 @@ private extension View {
             self.toolbar(.hidden, for: .navigationBar)
         } else {
             self
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
         }
     }
