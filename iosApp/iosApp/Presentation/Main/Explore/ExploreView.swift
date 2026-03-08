@@ -56,11 +56,7 @@ private struct ExploreContentView: View {
             .padding(.vertical, 12)
         }
         .background(Color(hex: "FFF9FC"))
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 4).onChanged { _ in
-                isSearchFocused = false
-            }
-        )
+        .scrollDismissesKeyboard(.immediately)
     }
     
     private var searchSection: some View {
