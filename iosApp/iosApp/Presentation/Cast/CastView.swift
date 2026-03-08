@@ -57,12 +57,6 @@ private struct CastContentView: View {
             ZStack(alignment: .top) {
                 content(topSafeArea: proxy.safeAreaInsets.top)
                     .background(Color(hex: "FFF9FC"))
-                CastNavigationBar(
-                    title: uiState.detail?.cast.name ?? "",
-                    isVisible: navBarVisible,
-                    topSafeArea: proxy.safeAreaInsets.top,
-                    onBack: { onAction(.backTapped) }
-                )
             }
             .ignoresSafeArea(edges: .top)
         }
@@ -131,47 +125,6 @@ private struct CastContentView: View {
                     key: CastSummaryOffsetPreferenceKey.self,
                     value: proxy.frame(in: .named("castScroll")).minY
                 )
-        }
-    }
-}
-
-private struct CastNavigationBar: View {
-    let title: String
-
-    let isVisible: Bool
-
-    let topSafeArea: CGFloat
-
-    let onBack: () -> Void
-
-    var body: some View {
-        let backgroundOpacity = isVisible ? 1.0 : 0.0
-        let foregroundColor = isVisible ? Color.black : Color.white
-
-        VStack(spacing: 0) {
-            Color.clear.frame(height: topSafeArea)
-            HStack(spacing: 12) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundStyle(foregroundColor)
-                        .frame(width: 36, height: 36)
-                        .background(
-                            Circle()
-                                .fill(isVisible ? Color.clear : Color.white.opacity(0.16))
-                        )
-                }
-                Text(isVisible ? title : "")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(Color.black)
-                    .lineLimit(1)
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
-            .background(Color.white.opacity(backgroundOpacity))
-            Divider()
-                .opacity(isVisible ? 1 : 0)
         }
     }
 }
