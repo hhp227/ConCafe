@@ -265,6 +265,86 @@ class MockConCafeDataSource : ConCafeDataSource {
                     "시그니처 음료",
                     "https://images.unsplash.com/photo-1766043650707-49e74514218a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
                     "drink"
+                ),
+                CafeMenu(
+                    "menu-3",
+                    "오므라이스",
+                    13500,
+                    "메이드 카페 클래식 인기 메뉴",
+                    null,
+                    "food"
+                ),
+                CafeMenu(
+                    "menu-4",
+                    "체리 에이드",
+                    7500,
+                    "상큼한 탄산 시그니처 드링크",
+                    null,
+                    "drink"
+                ),
+                CafeMenu(
+                    "menu-5",
+                    "리본 케이크",
+                    9800,
+                    "핑크 크림으로 마무리한 디저트",
+                    null,
+                    "dessert"
+                ),
+                CafeMenu(
+                    "menu-6",
+                    "카레 라이스",
+                    12800,
+                    "부드러운 일본식 카레",
+                    null,
+                    "food"
+                ),
+                CafeMenu(
+                    "menu-7",
+                    "바닐라 밀크티",
+                    8200,
+                    "달콤한 향이 강한 인기 메뉴",
+                    null,
+                    "drink"
+                ),
+                CafeMenu(
+                    "menu-8",
+                    "초코 브라우니",
+                    6800,
+                    "따뜻하게 제공되는 진한 초콜릿 디저트",
+                    null,
+                    "dessert"
+                ),
+                CafeMenu(
+                    "menu-9",
+                    "나폴리탄",
+                    14200,
+                    "레트로 감성의 토마토 파스타",
+                    null,
+                    "food"
+                ),
+                CafeMenu(
+                    "menu-10",
+                    "화이트 모카",
+                    7900,
+                    "부드러운 크림과 에스프레소 조합",
+                    null,
+                    "drink"
+                ),
+                CafeMenu(
+                    "menu-11",
+                    "허니 토스트",
+                    11500,
+                    "둘이 나눠 먹기 좋은 시그니처 토스트",
+                    null,
+                    "dessert"
+                ),
+                CafeMenu(
+                    "menu-12",
+                    "복숭아 아이스티",
+                    7000,
+                    "깔끔하고 가벼운 베이직 음료",
+                    null,
+                    "drink"
                 )
             ),
             goods = listOf(
