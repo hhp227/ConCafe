@@ -1,22 +1,12 @@
 package org.hhp227.concafe.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.hhp227.concafe.presentation.auth.signin.SignInScreen
@@ -24,6 +14,8 @@ import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
+
+private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 640
 
 @Composable
 fun NavigationScreen(
@@ -52,57 +44,91 @@ fun NavigationScreen(
             }
         }
     }
-
-    Row(
+    BoxWithConstraints(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primaryContainer)
             .fillMaxSize()
     ) {
+        val isTwoPaneMode = maxWidth.value >= DESKTOP_TWO_PANE_MIN_WIDTH_DP
+
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize()
         ) {
-            Row {
-                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(
+                    modifier = if (isTwoPaneMode) {
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    } else {
+                        Modifier.fillMaxSize()
+                    }
+                ) {
                     MainScreen(
                         initialTab = currentMainTab,
                         onNavigationAction = viewModel::onAction
                     )
                 }
-                if (currentDetailRoute != null) {
+                if (isTwoPaneMode && currentDetailRoute != null) {
                     Column(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
                     ) {
-                        when (currentDetailRoute) {
-                            is Route.Cast -> {
-                                CastScreen(
-                                    castId = currentDetailRoute.param,
-                                    onNavigationAction = viewModel::onAction
-                                )
-                            }
-                            is Route.Cafe -> {
-                                CafeScreen(
-                                    cafeId = currentDetailRoute.param,
-                                    onNavigationAction = viewModel::onAction
-                                )
-                            }
-                            Route.SignIn -> {
-                                SignInScreen(onNavigate = viewModel::onAction)
-                            }
-                            Route.Notification -> {
-                                NotificationScreen(
-                                    onNavigationAction = viewModel::onAction
-                                )
-                            }
-                            else -> Unit
-                        }
+                        DetailRoutePane(
+                            route = currentDetailRoute,
+                            onNavigationAction = viewModel::onAction
+                        )
                     }
                 }
             }
+            if (!isTwoPaneMode && currentDetailRoute != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .zIndex(1f)
+                ) {
+                    DetailRoutePane(
+                        route = currentDetailRoute,
+                        onNavigationAction = viewModel::onAction
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRoutePane(
+    route: Route,
+    onNavigationAction: (NavigationAction) -> Unit
+) {
+    when (route) {
+        is Route.Cast -> {
+            CastScreen(
+                castId = route.param,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.Cafe -> {
+            CafeScreen(
+                cafeId = route.param,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.SignIn -> {
+            SignInScreen(onNavigate = onNavigationAction)
+        }
+        Route.Notification -> {
+            NotificationScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        else -> {
+            Unit
         }
     }
 }
