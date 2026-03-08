@@ -18,6 +18,7 @@ struct CafeView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
+        .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -49,25 +50,27 @@ private struct CafeContentView: View {
     @State private var tabHeaderMinY: CGFloat = .infinity
     
     var body: some View {
-        ZStack(alignment: .top) {
-            ScrollView {
-                offsetReader
-                content
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                ScrollView {
+                    offsetReader
+                    content
+                }
+                .coordinateSpace(name: "cafeScroll")
+                .background(Color(hex: "FFF9FC"))
+                .ignoresSafeArea(edges: .top)
             }
-            .coordinateSpace(name: "cafeScroll")
             .background(Color(hex: "FFF9FC"))
-            .ignoresSafeArea(edges: .top)
-        }
-        .background(Color(hex: "FFF9FC"))
-        .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
-            scrollOffset = value
-        }
-        .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
-            tabHeaderMinY = value
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if uiState.detail != nil && tabHeaderMinY <= 0 {
-                tabHeader
+            .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
+                scrollOffset = value
+            }
+            .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
+                tabHeaderMinY = value
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if uiState.detail != nil && tabHeaderMinY <= proxy.safeAreaInsets.top + 44 {
+                    tabHeader
+                }
             }
         }
         .toolbar {
@@ -125,6 +128,10 @@ private struct CafeContentView: View {
     }
     
     private func heroSection(detail: CafeDetail) -> some View {
+        let upwardScroll = min(scrollOffset, 0)
+        let parallaxOffset = upwardScroll < 0 ? (-upwardScroll * 0.35) : 0
+        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        
         TabView {
             ForEach(Array(detail.images.enumerated()), id: \.offset) { _, image in
                 ZStack {
@@ -148,6 +155,8 @@ private struct CafeContentView: View {
                     }
                 }
                 .frame(height: 280)
+                .offset(y: parallaxOffset)
+                .scaleEffect(stretchScale, anchor: .center)
                 .clipped()
             }
         }
@@ -216,7 +225,7 @@ private struct CafeContentView: View {
                     Color.clear
                         .preference(
                             key: CafeTabHeaderOffsetPreferenceKey.self,
-                            value: proxy.frame(in: .named("cafeScroll")).minY
+                            value: proxy.frame(in: .global).minY
                         )
                 }
             }

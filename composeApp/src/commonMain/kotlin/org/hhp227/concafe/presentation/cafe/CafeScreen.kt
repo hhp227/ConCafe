@@ -53,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -118,6 +119,13 @@ fun CafeContentScreen(
     val listState = rememberLazyListState()
     val detail = uiState.detail
     val isTopBarVisible = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 140
+    val tabHeaderItemInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 2 }
+    val isTabPinned = detail != null && (tabHeaderItemInfo == null || tabHeaderItemInfo.offset <= 0)
+    val heroParallaxOffset = if (listState.firstVisibleItemIndex == 0) {
+        listState.firstVisibleItemScrollOffset.toFloat() * 0.35f
+    } else {
+        98f
+    }
 
     Scaffold(
         containerColor = colorFromHex("FFF9FC"),
@@ -149,83 +157,94 @@ fun CafeContentScreen(
                 }
             )
         }
-    ) { innerPadding ->
-        LazyColumn(
-            state = listState,
+        ) { innerPadding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFF9FC")),
-            contentPadding = PaddingValues(
-                top = innerPadding.calculateTopPadding(),
-                bottom = innerPadding.calculateBottomPadding() + 32.dp
-            )
+                .padding(innerPadding)
+                .background(colorFromHex("FFF9FC"))
         ) {
-            if (detail != null) {
-                item {
-                    CafeHeroSection(
-                        detail = detail
-                    )
-                }
-                item {
-                    CafeSummarySection(detail = detail)
-                }
-                stickyHeader {
-                    Surface(
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .zIndex(1f)
-                    ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 32.dp)
+            ) {
+                if (detail != null) {
+                    item {
+                        CafeHeroSection(
+                            detail = detail,
+                            parallaxOffset = heroParallaxOffset
+                        )
+                    }
+                    item {
+                        CafeSummarySection(detail = detail)
+                    }
+                    item {
                         CafeTabHeader(
                             selectedTab = uiState.selectedTab,
                             onAction = onAction
                         )
                     }
+                    item {
+                        CafeTabContent(
+                            uiState = uiState,
+                            onAction = onAction
+                        )
+                    }
+                } else if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 80.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = uiState.errorMessage ?: "카페 상세 데이터를 불러오지 못했습니다.",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "다시 시도해 주세요.",
+                                color = Color(0xFF777777)
+                            )
+                            Text(
+                                text = "새로고침",
+                                color = Color.White,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(colorFromHex("EF6797"))
+                                    .clickable { onAction(CafeAction.Refresh) }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                            )
+                        }
+                    }
                 }
-                item {
-                    CafeTabContent(
-                        uiState = uiState,
+            }
+
+            if (isTabPinned) {
+                Surface(
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .zIndex(1f)
+                ) {
+                    CafeTabHeader(
+                        selectedTab = uiState.selectedTab,
                         onAction = onAction
                     )
-                }
-            } else if (uiState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            } else {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 80.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = uiState.errorMessage ?: "카페 상세 데이터를 불러오지 못했습니다.",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = "다시 시도해 주세요.",
-                            color = Color(0xFF777777)
-                        )
-                        Text(
-                            text = "새로고침",
-                            color = Color.White,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colorFromHex("EF6797"))
-                                .clickable { onAction(CafeAction.Refresh) }
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                        )
-                    }
                 }
             }
         }
@@ -251,7 +270,8 @@ private fun CafeTabHeader(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CafeHeroSection(
-    detail: CafeDetail
+    detail: CafeDetail,
+    parallaxOffset: Float
 ) {
     val pagerState = rememberPagerState(pageCount = { detail.images.size })
 
@@ -262,7 +282,11 @@ private fun CafeHeroSection(
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    translationY = parallaxOffset
+                }
         ) { page ->
             val imageUrl = detail.images[page]
 
