@@ -17,16 +17,18 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
+
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val _event = MutableSharedFlow<HomeEvent>()
+    private val _event = MutableSharedFlow<HomeEvent>(replay = 0)
+
     val event = _event.asSharedFlow()
 
     private fun loadHomeFeed() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-        
+
         viewModelScope.launch {
-            val result = getHomeFeedUseCase.invoke(limit = 10)
+            val result = getHomeFeedUseCase.invoke(nearbyCafeCursor = null)
 
             if (result is AppResult.Success) {
                 _uiState.value = HomeUiState(
@@ -35,6 +37,8 @@ class HomeViewModel(
                     banners = result.data.banners,
                     popularCasts = result.data.popularCasts,
                     nearbyCafes = result.data.nearbyCafes,
+                    nearbyCafeCursor = result.data.nearbyCafesNextCursor,
+                    canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
                     birthdayCasts = result.data.birthdayCasts,
                     notices = result.data.notices
                 )
@@ -43,6 +47,30 @@ class HomeViewModel(
                     isLoading = false,
                     errorMessage = result.error.toString()
                 )
+            } else {
+                _uiState.value = empty().copy(
+                    isLoading = false,
+                    errorMessage = "unknown"
+                )
+            }
+        }
+    }
+
+    private suspend fun loadMoreNearbyCafes() {
+        val cursor = _uiState.value.nearbyCafeCursor
+        val canLoadMoreNearbyCafes = _uiState.value.canLoadMoreNearbyCafes
+
+        if (cursor != null && canLoadMoreNearbyCafes) {
+            val result = getHomeFeedUseCase.invoke(nearbyCafeCursor = cursor)
+
+            if (result is AppResult.Success) {
+                _uiState.update {
+                    it.copy(
+                        nearbyCafes = it.nearbyCafes + result.data.nearbyCafes,
+                        nearbyCafeCursor = result.data.nearbyCafesNextCursor,
+                        canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes
+                    )
+                }
             }
         }
     }
@@ -53,6 +81,7 @@ class HomeViewModel(
                 is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafe(action.id))
+                HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
             }
         }
     }

@@ -11,6 +11,8 @@ data class HomeUiState(
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
     val nearbyCafes: List<Cafe>,
+    val nearbyCafeCursor: String? = null,
+    val canLoadMoreNearbyCafes: Boolean,
     val birthdayCasts: List<Cast>,
     val notices: List<Notice>
 ) {
@@ -19,6 +21,8 @@ data class HomeUiState(
             banners = emptyList(),
             popularCasts = emptyList(),
             nearbyCafes = emptyList(),
+            nearbyCafeCursor = null,
+            canLoadMoreNearbyCafes = false,
             birthdayCasts = emptyList(),
             notices = emptyList()
         )

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -38,11 +42,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.presentation.component.colorFromHex
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -200,30 +206,35 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("근처 메이드카페", "📍")
-            Spacer(Modifier.height(10.dp))
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                uiState.nearbyCafes.forEach { cafe ->
-                    Row(
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val contentWidth = maxWidth
+                val itemWidth = nearbyCafeItemWidth(contentWidth)
+
+                Column {
+                    SectionTitle(
+                        text = "근처 메이드카페",
+                        leading = "📍",
+                        actionLabel = if (uiState.canLoadMoreNearbyCafes) "더보기" else null,
+                        onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    LazyHorizontalGrid(
+                        rows = GridCells.Fixed(3),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onAction(HomeAction.ClickCafe(cafe.id)) },
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .height(300.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(92.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(Brush.verticalGradient(listOf(Color(0xFFFFE1C7), Color(0xFFFFCEAE))))
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(cafe.name, fontWeight = FontWeight.SemiBold)
-                            Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
-                            Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall)
-                            Text("📍 ${cafe.region.address}", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
+                        items(uiState.nearbyCafes) { cafe ->
+                            NearByCafeItem(
+                                cafe = cafe,
+                                modifier = Modifier
+                                    .width(itemWidth)
+                                    .height(92.dp)
+                                    .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
+                            )
                         }
                     }
                 }
@@ -284,10 +295,33 @@ fun HomeContentScreen(
     }
 }
 
+private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
+    val horizontalPadding = 16.dp
+    val itemSpacing = 12.dp
+    val nextItemPeekWidth = 16.dp
+
+    return if (contentWidth >= 840.dp) {
+        (contentWidth - horizontalPadding - (itemSpacing * 2) - nextItemPeekWidth) / 2
+    } else {
+        contentWidth - horizontalPadding - itemSpacing - nextItemPeekWidth
+    }
+}
+
 @Composable
-private fun SectionTitle(text: String, leading: String) {
+private fun SectionTitle(
+    text: String,
+    leading: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    val actionSlotWidth = 44.dp
+    val actionSlotHeight = 24.dp
+
     Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(actionSlotHeight),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -297,5 +331,47 @@ private fun SectionTitle(text: String, leading: String) {
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .width(actionSlotWidth)
+                .height(actionSlotHeight),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            if (actionLabel != null && onAction != null) {
+                Text(
+                    text = actionLabel,
+                    color = Color(0xFFEF6797),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable(onClick = onAction)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NearByCafeItem(
+    cafe: Cafe,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(92.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Brush.verticalGradient(listOf(Color(0xFFFFE1C7), Color(0xFFFFCEAE))))
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+            Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("📍 ${cafe.region.address}", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }

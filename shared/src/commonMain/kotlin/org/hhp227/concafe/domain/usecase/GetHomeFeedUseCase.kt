@@ -16,46 +16,45 @@ class GetHomeFeedUseCase(
     private val castRepository: CastRepository,
     private val noticeRepository: NoticeRepository
 ) {
-    suspend operator fun invoke(limit: Int): AppResult<HomeFeed> {
+    suspend operator fun invoke(
+        nearbyCafeCursor: String? = null
+    ): AppResult<HomeFeed> {
         return try {
-            val cappedLimit = limit.coerceAtLeast(1)
-
-            val nearbyCafes = cafeRepository.searchCafes(
+            val nearbyCafePage = cafeRepository.searchCafes(
                 query = null,
                 country = null,
                 city = null,
                 sort = CafeSort.RATING,
-                cursor = null,
-                pageSize = cappedLimit
-            ).items
-
+                cursor = nearbyCafeCursor,
+                pageSize = NEARBY_CAFE_PAGE_SIZE
+            )
             val popularCasts = castRepository.searchCasts(
                 query = null,
                 country = null,
                 city = null,
                 sort = CastSort.POPULAR,
                 cursor = null,
-                pageSize = cappedLimit
+                pageSize = HOME_FEED_LIMIT
             ).items
-
             val birthdayCasts = castRepository.searchCasts(
                 query = null,
                 country = null,
                 city = null,
                 sort = CastSort.LATEST,
                 cursor = null,
-                pageSize = cappedLimit * 3
+                pageSize = HOME_FEED_LIMIT * 3
             ).items
                 .filter { !it.birthday.isNullOrBlank() }
-                .take(cappedLimit)
-
-            val notices = noticeRepository.getRecentNotices(cappedLimit)
+                .take(HOME_FEED_LIMIT)
+            val notices = noticeRepository.getRecentNotices(HOME_FEED_LIMIT)
 
             AppResult.Success(
                 HomeFeed(
-                    banners = bannerRepository.getHomeBanners(cappedLimit),
+                    banners = bannerRepository.getHomeBanners(HOME_FEED_LIMIT),
                     popularCasts = popularCasts,
-                    nearbyCafes = nearbyCafes,
+                    nearbyCafes = nearbyCafePage.items,
+                    nearbyCafesNextCursor = nearbyCafePage.nextCursor,
+                    hasMoreNearbyCafes = nearbyCafePage.hasNext,
                     birthdayCasts = birthdayCasts,
                     notices = notices
                 )
@@ -67,5 +66,10 @@ class GetHomeFeedUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+
+    companion object {
+        private const val HOME_FEED_LIMIT = 6
+        private const val NEARBY_CAFE_PAGE_SIZE = 6
     }
 }

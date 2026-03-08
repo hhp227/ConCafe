@@ -11,4 +11,5 @@ enum HomeAction {
     case maidTapped(id: String)
     case cafeTapped(id: String)
     case birthdayMaidTapped(id: String)
+    case loadMoreNearbyCafes
 }

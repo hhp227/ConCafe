@@ -12,6 +12,8 @@ struct HomeUiState {
     let banners: [HomeBanner]
     let popularCasts: [Cast]
     let nearbyCafes: [Cafe]
+    let nearbyCafeCursor: String?
+    let canLoadMoreNearbyCafes: Bool
     let birthdayCasts: [Cast]
     let notices: [Notice]
 
@@ -19,6 +21,8 @@ struct HomeUiState {
         banners: [],
         popularCasts: [],
         nearbyCafes: [],
+        nearbyCafeCursor: nil,
+        canLoadMoreNearbyCafes: false,
         birthdayCasts: [],
         notices: []
     )

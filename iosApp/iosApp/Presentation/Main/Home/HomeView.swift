@@ -143,35 +143,50 @@ private struct HomeContentView: View {
     }
 
     private var nearbyCafeSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "📍", title: "근처 메이드카페")
-            VStack(spacing: 12) {
-                ForEach(uiState.nearbyCafes, id: \.id) { cafe in
-                    HStack(spacing: 12) {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(LinearGradient(colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")], startPoint: .top, endPoint: .bottom))
-                            .frame(width: 92, height: 92)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(cafe.name)
-                                .font(.subheadline.weight(.semibold))
-                            Text("⭐ \(cafe.ratingAvg)")
-                                .font(.caption)
-                            Text(cafe.region.city)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("📍 \(cafe.region.address)")
-                                .font(.caption)
-                                .foregroundStyle(Color(hex: "EF6797"))
+        GeometryReader { geometry in
+            let contentWidth = geometry.size.width
+            let itemWidth = nearbyCafeItemWidth(for: contentWidth)
+
+            VStack(alignment: .leading, spacing: 10) {
+                SectionTitle(
+                    icon: "📍",
+                    title: "근처 메이드카페",
+                    actionTitle: uiState.canLoadMoreNearbyCafes ? "더보기" : nil,
+                    onAction: { onAction(.loadMoreNearbyCafes) }
+                )
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHGrid(
+                        rows: Array(repeating: GridItem(.fixed(92), spacing: 12), count: 3),
+                        alignment: .center,
+                        spacing: 12
+                    ) {
+                        ForEach(uiState.nearbyCafes, id: \.id) { cafe in
+                            NearByCafeItem(cafe: cafe)
+                            .frame(width: itemWidth, height: 92, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                onAction(.cafeTapped(id: cafe.id))
+                            }
                         }
-                        Spacer()
                     }
-                    .onTapGesture {
-                        onAction(.cafeTapped(id: cafe.id))
-                    }
+                    .padding(.horizontal, 16)
                 }
+                .frame(height: 300)
             }
-            .padding(.horizontal, 16)
         }
+        .frame(height: 334)
+    }
+
+    private func nearbyCafeItemWidth(for contentWidth: CGFloat) -> CGFloat {
+        let availableWidth = max(contentWidth, 320)
+        let horizontalPadding: CGFloat = 16
+        let itemSpacing: CGFloat = 12
+        let nextItemPeekWidth: CGFloat = 16
+
+        if availableWidth >= 840 {
+            return (availableWidth - horizontalPadding - (itemSpacing * 2) - nextItemPeekWidth) / 2
+        }
+        return availableWidth - horizontalPadding - itemSpacing - nextItemPeekWidth
     }
 
     private var birthdaySection: some View {
@@ -230,13 +245,61 @@ private struct SectionTitle: View {
     
     let title: String
 
+    var actionTitle: String? = nil
+
+    var onAction: (() -> Void)? = nil
+
+    private let actionSlotWidth: CGFloat = 44
+
+    private let actionSlotHeight: CGFloat = 24
+
     var body: some View {
         HStack(spacing: 6) {
             Text(icon)
             Text(title)
                 .font(.headline)
+            Spacer()
+            Group {
+                if let actionTitle, let onAction {
+                    Button(actionTitle, action: onAction)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                } else {
+                    Color.clear
+                }
+            }
+            .frame(width: actionSlotWidth, height: actionSlotHeight, alignment: .trailing)
         }
+        .frame(minHeight: actionSlotHeight)
         .padding(.horizontal, 16)
+    }
+}
+
+private struct NearByCafeItem: View {
+    let cafe: Cafe
+
+    var body: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 16)
+            .fill(LinearGradient(colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")], startPoint: .top, endPoint: .bottom))
+            .frame(width: 92, height: 92)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cafe.name)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                Text("⭐ \(cafe.ratingAvg)")
+                .font(.caption)
+                Text(cafe.region.city)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                Text("📍 \(cafe.region.address)")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "EF6797"))
+                .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
     }
 }
 
