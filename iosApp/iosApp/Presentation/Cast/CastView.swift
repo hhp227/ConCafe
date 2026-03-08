@@ -75,24 +75,32 @@ private struct CastContentView: View {
     @ViewBuilder
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
-            ScrollView {
-                offsetReader
-                LazyVStack(spacing: 18) {
-                    CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
-                    CastSummarySection(detail: detail, isFollowing: uiState.isFollowing, onAction: onAction)
-                        .background(summaryOffsetReader)
-                    CastTodaySection(detail: detail)
-                    CastScheduleSection(detail: detail)
-                    CastIntroductionSection(detail: detail)
-                    CastRecentActivitySection(detail: detail)
-                    CastRecentReviewSection(reviews: uiState.recentReviews)
+            ZStack(alignment: .top) {
+                CastHeroSection(
+                    detail: detail,
+                    scrollOffset: scrollOffset,
+                    topSafeArea: topSafeArea
+                )
+                ScrollView {
+                    offsetReader
+                    LazyVStack(spacing: 18) {
+                        Color.clear
+                            .frame(height: castHeroHeight + topSafeArea)
+                        CastSummarySection(detail: detail, isFollowing: uiState.isFollowing, onAction: onAction)
+                            .background(summaryOffsetReader)
+                        CastTodaySection(detail: detail)
+                        CastScheduleSection(detail: detail)
+                        CastIntroductionSection(detail: detail)
+                        CastRecentActivitySection(detail: detail)
+                        CastRecentReviewSection(reviews: uiState.recentReviews)
+                    }
+                    .padding(.bottom, 28)
                 }
-                .padding(.bottom, 28)
-            }
-            .ignoresSafeArea(edges: .top)
-            .coordinateSpace(name: "castScroll")
-            .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
-                summarySectionMinY = value
+                .scrollIndicators(.hidden)
+                .coordinateSpace(name: "castScroll")
+                .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
+                    summarySectionMinY = value
+                }
             }
         } else if uiState.isLoading {
             ProgressView()
