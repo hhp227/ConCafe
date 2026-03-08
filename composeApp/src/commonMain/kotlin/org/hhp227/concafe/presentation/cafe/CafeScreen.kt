@@ -2,65 +2,31 @@ package org.hhp227.concafe.presentation.cafe
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.LocalCafe
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -68,10 +34,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import org.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeDetailCast
-import org.hhp227.concafe.domain.model.CafeDetailReview
-import org.hhp227.concafe.domain.model.CafeMenu
-import org.hhp227.concafe.domain.model.Notice
+import org.hhp227.concafe.presentation.cafe.tab.*
 import org.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import org.hhp227.concafe.presentation.component.colorFromHex
 import org.hhp227.concafe.presentation.navigation.NavigationAction
@@ -104,7 +67,6 @@ fun CafeScreen(
             }
         }
     }
-
     CafeContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction
@@ -119,12 +81,12 @@ fun CafeContentScreen(
 ) {
     val listState = rememberLazyListState()
     val isTopBarVisible = uiState.detail != null && (
-        listState.firstVisibleItemIndex > 1 ||
-            (listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 1 }?.offset
-                ?.let { summaryOffset ->
-                    summaryOffset <= with(LocalDensity.current) { 16.dp.roundToPx() }
-                } == true)
-    )
+            listState.firstVisibleItemIndex > 1 ||
+                    (listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 1 }?.offset
+                        ?.let { summaryOffset ->
+                            summaryOffset <= with(LocalDensity.current) { 16.dp.roundToPx() }
+                        } == true)
+            )
 
     Scaffold(
         containerColor = colorFromHex("FFF9FC"),
@@ -169,32 +131,37 @@ fun CafeContentScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            state = listState,
+        val topBarInset = innerPadding.calculateTopPadding()
+        val topBarInsetPx = with(LocalDensity.current) { topBarInset.roundToPx() }
+        val tabHeaderItemInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 2 }
+        val isTabPinned = uiState.detail != null && (
+                tabHeaderItemInfo == null || tabHeaderItemInfo.offset <= topBarInsetPx
+                )
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFF9FC")),
-            contentPadding = PaddingValues(
-                top = 0.dp,
-                bottom = innerPadding.calculateBottomPadding() + 32.dp
-            )
         ) {
-            if (uiState.detail != null) {
-                item {
-                    CafeHeroSection(
-                        detail = uiState.detail
-                    )
-                }
-                item {
-                    CafeSummarySection(detail = uiState.detail)
-                }
-                stickyHeader {
-                    Surface(
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .zIndex(1f)
-                    ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colorFromHex("FFF9FC")),
+                contentPadding = PaddingValues(
+                    top = 0.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 32.dp
+                )
+            ) {
+                if (uiState.detail != null) {
+                    item {
+                        CafeHeroSection(
+                            detail = uiState.detail
+                        )
+                    }
+                    item {
+                        CafeSummarySection(detail = uiState.detail)
+                    }
+                    item {
                         ScrollableConCafeTabBar(
                             labels = CafeUiState.TabType.entries.map { it.label },
                             selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
@@ -205,52 +172,78 @@ fun CafeContentScreen(
                             }
                         )
                     }
-                }
-                item {
-                    CafeTabContent(
-                        uiState = uiState,
-                        onAction = onAction
-                    )
-                }
-            } else if (uiState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            } else {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 80.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = uiState.errorMessage ?: "카페 상세 데이터를 불러오지 못했습니다.",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = "다시 시도해 주세요.",
-                            color = Color(0xFF777777)
-                        )
-                        Text(
-                            text = "새로고침",
-                            color = Color.White,
+                    item {
+                        Column(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colorFromHex("EF6797"))
-                                .clickable { onAction(CafeAction.Refresh) }
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                        )
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            CafeTabContent(
+                                uiState = uiState,
+                                onAction = onAction
+                            )
+                        }
+                    }
+                } else if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 80.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = uiState.errorMessage ?: "카페 상세 데이터를 불러오지 못했습니다.",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "다시 시도해 주세요.",
+                                color = Color(0xFF777777)
+                            )
+                            Text(
+                                text = "새로고침",
+                                color = Color.White,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(colorFromHex("EF6797"))
+                                    .clickable { onAction(CafeAction.Refresh) }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                            )
+                        }
                     }
                 }
+            }
+            Surface(
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = topBarInset)
+                    .zIndex(1f)
+                    .align(Alignment.TopCenter)
+                    .alpha(if (isTabPinned) 1f else 0f)
+            ) {
+                ScrollableConCafeTabBar(
+                    labels = CafeUiState.TabType.entries.map { it.label },
+                    selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = Color.White,
+                    onTabSelected = { index ->
+                        onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
+                    }
+                )
             }
         }
     }
@@ -375,426 +368,12 @@ private fun CafeTabContent(
 ) {
     val detail = uiState.detail ?: return
 
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        when (uiState.selectedTab) {
-            CafeUiState.TabType.INFO -> {
-                InfoCard(detail = detail)
-                DescriptionCard(detail = detail)
-            }
-            CafeUiState.TabType.MAIDS -> {
-                MaidGrid(
-                    casts = uiState.casts,
-                    onAction = onAction
-                )
-            }
-            CafeUiState.TabType.MENU -> {
-                MenuList(detail.menus)
-            }
-            CafeUiState.TabType.REVIEWS -> {
-                ReviewList(
-                    rating = detail.cafe.ratingAvg,
-                    reviewCount = detail.cafe.reviewCount,
-                    reviews = uiState.reviews
-                )
-            }
-            CafeUiState.TabType.NOTICES -> {
-                NoticeList(detail.notices)
-            }
-        }
-    }
-}
-
-@Composable
-private fun InfoCard(detail: CafeDetail) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            InfoRow(
-                icon = Icons.Default.LocationOn,
-                title = "주소",
-                value = detail.cafe.region.address
-            )
-            InfoRow(
-                icon = Icons.Default.AccessTime,
-                title = "영업시간",
-                value = detail.businessHours
-            )
-            InfoRow(
-                icon = Icons.Default.Phone,
-                title = "전화번호",
-                value = detail.phoneNumber
-            )
-        }
-    }
-}
-
-@Composable
-private fun InfoRow(
-    icon: ImageVector,
-    title: String,
-    value: String
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = colorFromHex("EF6797"),
-            modifier = Modifier.padding(top = 2.dp)
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = value,
-                color = Color(0xFF777777)
-            )
-        }
-    }
-}
-
-@Composable
-private fun DescriptionCard(detail: CafeDetail) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = "소개",
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = detail.cafe.desc,
-                color = Color(0xFF666666)
-            )
-        }
-    }
-}
-
-@Composable
-private fun MaidGrid(
-    casts: List<CafeDetailCast>,
-    onAction: (CafeAction) -> Unit
-) {
-    if (casts.isEmpty()) {
-        EmptyContent(text = "등록된 메이드가 없습니다.")
-    } else {
-        val rows = casts.chunked(2)
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            rows.forEach { rowItems ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    rowItems.forEach { castItem ->
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onAction(CafeAction.ClickMaid(castItem.cast.id)) },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                        .background(
-                                            Brush.verticalGradient(
-                                                colors = listOf(colorFromHex("FFDFEA"), colorFromHex("FFBED5"))
-                                            )
-                                        )
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(12.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        if (castItem.isWorking) {
-                                            Text(
-                                                text = "출근중",
-                                                color = Color.White,
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(999.dp))
-                                                    .background(Color(0xFF35B56A))
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                                style = MaterialTheme.typography.labelSmall
-                                            )
-                                        }
-                                        Text(
-                                            text = castItem.cast.conceptRole.uppercase(),
-                                            color = Color.White.copy(alpha = 0.88f),
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = castItem.cast.name,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = castItem.cast.desc,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                        color = Color(0xFF777777),
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MenuList(menus: List<CafeMenu>) {
-    if (menus.isEmpty()) {
-        EmptyContent(text = "등록된 메뉴가 없습니다.")
-    } else {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            menus.forEach { menu ->
-                Card(
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(84.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = if (!menu.image.isNullOrBlank()) {
-                                            listOf(colorFromHex("FFD8E8"), colorFromHex("F5AFCC"))
-                                        } else {
-                                            listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
-                                        }
-                                    )
-                                )
-                        )
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = menu.name,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "${menu.price}원",
-                                color = colorFromHex("EF6797"),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = menu.desc,
-                                color = Color(0xFF777777),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReviewList(
-    rating: Double,
-    reviewCount: Int,
-    reviews: List<CafeDetailReview>
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFFFC107),
-                    modifier = Modifier.size(28.dp)
-                )
-                Column {
-                    Text(
-                        text = formatRating(rating),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "${reviewCount}개 리뷰",
-                        color = Color(0xFF777777)
-                    )
-                }
-            }
-        }
-        if (reviews.isEmpty()) {
-            EmptyContent(text = "아직 등록된 리뷰가 없습니다.")
-        } else {
-            reviews.forEach { review ->
-                Card(
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = review.userNickname,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                if (review.verified) {
-                                    Row(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(999.dp))
-                                            .background(colorFromHex("EF6797"))
-                                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Text(
-                                            text = "방문인증",
-                                            color = Color.White,
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                text = review.createdDate,
-                                color = Color(0xFF999999),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        StarRating(review.rating)
-                        Text(text = review.content)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NoticeList(notices: List<Notice>) {
-    if (notices.isEmpty()) {
-        EmptyContent(text = "등록된 공지가 없습니다.")
-    } else {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            notices.forEach { notice ->
-                Card(
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = notice.title,
-                                modifier = Modifier.weight(1f),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = notice.createdAt.take(10),
-                                color = Color(0xFF999999),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Text(
-                            text = notice.content,
-                            color = Color(0xFF666666)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StarRating(rating: Float) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        repeat(5) { index ->
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = null,
-                tint = if (index < rating.toInt()) Color(0xFFFFC107) else Color(0xFFE1E1E1),
-                modifier = Modifier.size(16.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyContent(text: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
-            .padding(vertical = 28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = Color(0xFF777777)
-        )
+    when (uiState.selectedTab) {
+        CafeUiState.TabType.INFO -> CafeInfoScreen(detail)
+        CafeUiState.TabType.MAIDS -> CafeCastScreen(uiState.casts, onAction)
+        CafeUiState.TabType.MENU -> CafeMenuScreen(detail.menus)
+        CafeUiState.TabType.REVIEWS -> CafeReviewScreen(detail, uiState.reviews)
+        CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
     }
 }
 
