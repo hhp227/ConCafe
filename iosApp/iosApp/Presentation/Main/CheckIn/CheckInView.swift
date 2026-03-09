@@ -732,18 +732,6 @@ private struct CheckInNewVisitSheet: View {
                     }
                 }
                 VStack(spacing: 6) {
-                    Text("방문 날짜")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "7C7480"))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    CheckInSheetField(
-                        value: formatVisitDate(visitDate),
-                        showsChevron: false,
-                        isEnabled: false,
-                        action: {}
-                    )
-                }
-                VStack(spacing: 6) {
                     Text("방문 시간")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "7C7480"))

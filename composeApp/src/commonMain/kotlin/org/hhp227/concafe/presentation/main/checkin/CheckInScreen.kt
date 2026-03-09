@@ -18,19 +18,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.launch
 import org.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
 import org.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
 import org.hhp227.concafe.di.resolveCreateVisitUseCase
@@ -59,7 +59,6 @@ fun CheckInScreen(
     onNavigate: (NavigationAction) -> Unit
     ) {
     val uiState by viewModel.uiState.collectAsState()
-    val newVisitSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -91,11 +90,8 @@ fun CheckInScreen(
             }
         }
         if (uiState.isNewVisitSheetVisible) {
-            ModalBottomSheet(
-                sheetState = newVisitSheetState,
-                onDismissRequest = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) },
-                containerColor = Color.White,
-                windowInsets = WindowInsets(0, 0, 0, 0)
+            CheckInNewVisitDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
             ) {
                 NewVisitCheckInBottomSheet(
                     cafes = uiState.mapCafes,
@@ -110,6 +106,54 @@ fun CheckInScreen(
                     },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CheckInNewVisitDialog(
+    onDismissRequest: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.32f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onDismissRequest
+                    )
+            )
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .imePadding()
+                    .navigationBarsPadding()
+                    .widthIn(max = 520.dp),
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                color = Color.White,
+                tonalElevation = 0.dp,
+                shadowElevation = 12.dp
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
+                ) {
+                    content()
+                }
             }
         }
     }
@@ -573,7 +617,7 @@ private fun LoginRequiredBottomSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun NewVisitCheckInBottomSheet(
     cafes: List<CheckInCafeSummary>,
@@ -581,8 +625,6 @@ private fun NewVisitCheckInBottomSheet(
     onDismiss: () -> Unit
 ) {
     val cafeOptions = cafes.map { it.name to it.id }
-    val focusManager = LocalFocusManager.current
-    val memoFocusRequester = remember { FocusRequester() }
     var selectedCafeId by remember {
         mutableStateOf(cafeOptions.firstOrNull()?.second.orEmpty())
     }
@@ -613,12 +655,11 @@ private fun NewVisitCheckInBottomSheet(
             selectedCafeId = fallbackCafeId
         }
     }
-    LaunchedEffect(Unit) {
-        focusManager.clearFocus(force = true)
-    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = 560.dp)
+            .verticalScroll(rememberScrollState())
             .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -714,18 +755,6 @@ private fun NewVisitCheckInBottomSheet(
             }
         }
         Text(
-            text = "방문 날짜",
-            style = MaterialTheme.typography.labelMedium
-        )
-        OutlinedTextField(
-            value = formatVisitDate(visitDateMillis),
-            onValueChange = {},
-            readOnly = true,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        )
-        Text(
             text = "방문 시간",
             style = MaterialTheme.typography.labelMedium
         )
@@ -779,8 +808,7 @@ private fun NewVisitCheckInBottomSheet(
             onValueChange = { memo = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
-                .focusRequester(memoFocusRequester),
+                .height(120.dp),
             shape = RoundedCornerShape(16.dp),
             minLines = 4
         )
