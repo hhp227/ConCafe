@@ -707,6 +707,7 @@
 ### I-06. Data Layer Skeleton (`shared`)
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeAuthRepository.kt`
   - 클래스: `FakeAuthRepository`
+  - 현재 구현: `signUp(email, password, nickname, role)` 호출 시 `MockConCafeDataSource.users`에 인메모리 `User`를 추가하고 `currentUserId`를 갱신한다.
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeCafeRepository.kt`
   - 클래스: `FakeCafeRepository`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeCastRepository.kt`
@@ -815,7 +816,7 @@ data class PagedResult<T>(
 ```kotlin
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
-    suspend fun signUp(email: String, password: String, nickname: String): User
+    suspend fun signUp(email: String, password: String, nickname: String, role: UserRole): User
     suspend fun signOut()
     suspend fun restoreSession(): User?
     suspend fun getCurrentUser(): User?
