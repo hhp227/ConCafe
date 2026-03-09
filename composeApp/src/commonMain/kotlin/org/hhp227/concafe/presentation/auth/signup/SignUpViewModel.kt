@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.model.UserRole
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
 
@@ -154,6 +155,7 @@ class SignUpViewModel(
         }
 
         val nickname = resolveNickname(uiState.value)
+        val role = resolveRole(uiState.value)
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
 
         viewModelScope.launch {
@@ -161,7 +163,8 @@ class SignUpViewModel(
                 signUpUseCase.invoke(
                     email = uiState.value.email.trim(),
                     password = uiState.value.password,
-                    nickname = nickname
+                    nickname = nickname,
+                    role = role
                 )
             ) {
                 is AppResult.Success -> {
@@ -250,6 +253,15 @@ class SignUpViewModel(
             SignUpUiState.UserType.CAST -> state.nickname.trim()
             SignUpUiState.UserType.VISITOR,
             null -> state.nickname.trim()
+        }
+    }
+
+    private fun resolveRole(state: SignUpUiState): UserRole {
+        return when (state.selectedUserType) {
+            SignUpUiState.UserType.CAFE_OWNER -> UserRole.CAFE_OWNER
+            SignUpUiState.UserType.CAST -> UserRole.CAST
+            SignUpUiState.UserType.VISITOR,
+            null -> UserRole.VISITOR
         }
     }
 

@@ -98,10 +98,12 @@ class SignUpViewModel: ObservableObject {
         requestTask?.cancel()
         requestTask = Task {
             do {
+                let role = resolveRole(uiState)
                 let result = try await signUpUseCase.invoke(
                     email: uiState.email.trimmingCharacters(in: .whitespacesAndNewlines),
                     password: uiState.password,
-                    nickname: resolveNickname(uiState)
+                    nickname: resolveNickname(uiState),
+                    role: role
                 )
 
                 if result is AppResultSuccess<AnyObject> {
@@ -217,6 +219,17 @@ class SignUpViewModel: ObservableObject {
             return state.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
         case .visitor, .none:
             return state.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    private func resolveRole(_ state: SignUpUiState) -> UserRole {
+        switch state.selectedUserType {
+        case .cafeOwner:
+            return .cafeOwner
+        case .cast:
+            return .cast
+        case .visitor, .none:
+            return .visitor
         }
     }
 

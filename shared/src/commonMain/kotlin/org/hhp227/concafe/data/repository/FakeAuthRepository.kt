@@ -41,7 +41,12 @@ class FakeAuthRepository(
         }
     }
 
-    override suspend fun signUp(email: String, password: String, nickname: String): User {
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        nickname: String,
+        role: UserRole
+    ): User {
         if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
             throw IllegalArgumentException("email/password/nickname is required")
         }
@@ -57,7 +62,7 @@ class FakeAuthRepository(
             email = email,
             nickname = nickname,
             profileImage = null,
-            role = UserRole.VISITOR,
+            role = role,
             banned = false,
             createdAt = "2026-03-05T00:00:00Z"
         )
