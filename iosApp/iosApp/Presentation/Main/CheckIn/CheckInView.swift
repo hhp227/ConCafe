@@ -586,14 +586,16 @@ private struct CheckInSectionTitle: View {
 
     var body: some View {
         HStack {
-            Text(title)
-                .font(.headline.weight(.bold))
-            Spacer()
-            if let trailing {
-                Text(trailing)
-                    .font(.caption)
-                    .foregroundStyle(Color(hex: "7B7480"))
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.headline.weight(.bold))
+                if let trailing {
+                    Text(trailing)
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "7B7480"))
+                }
             }
+            Spacer()
         }
         .padding(.horizontal, 16)
     }

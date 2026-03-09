@@ -897,7 +897,7 @@ private fun CheckInGuestSectionTitle(
 @Composable
 private fun CheckInSectionTitle(
     title: String,
-    trailing: String
+    trailing: String?
 ) {
     Row(
         modifier = Modifier
@@ -905,15 +905,25 @@ private fun CheckInSectionTitle(
             .padding(horizontal = 16.dp)
             .height(24.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(trailing)
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.DarkGray
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.DarkGray
+            )
+            if (trailing != null) {
+                Text(
+                    text = trailing,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF7B7480)
+                )
+            }
+        }
         Spacer(modifier = Modifier.weight(1f))
     }
 }
