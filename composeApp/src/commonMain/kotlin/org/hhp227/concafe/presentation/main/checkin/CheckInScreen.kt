@@ -8,16 +8,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +33,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
 import org.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
+import org.hhp227.concafe.di.resolveCreateVisitUseCase
 import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.model.CheckInCafeSummary
 import org.hhp227.concafe.domain.model.CheckInCastSummary
@@ -42,14 +50,16 @@ fun CheckInScreen(
                 CheckInViewModel(
                     getCheckInGuestFeedUseCase = resolveGetCheckInGuestFeedUseCase(),
                     getCheckInUserFeedUseCase = resolveGetCheckInUserFeedUseCase(),
+                    createVisitUseCase = resolveCreateVisitUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
                 )
             }
         }
     ),
     onNavigate: (NavigationAction) -> Unit
-) {
+    ) {
     val uiState by viewModel.uiState.collectAsState()
+    val newVisitSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -77,6 +87,28 @@ fun CheckInScreen(
                 LoginRequiredBottomSheet(
                     onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) },
                     onSignUp = { viewModel.onAction(CheckInAction.ClickSignUp) }
+                )
+            }
+        }
+        if (uiState.isNewVisitSheetVisible) {
+            ModalBottomSheet(
+                sheetState = newVisitSheetState,
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) },
+                containerColor = Color.White,
+                windowInsets = WindowInsets(0, 0, 0, 0)
+            ) {
+                NewVisitCheckInBottomSheet(
+                    cafes = uiState.mapCafes,
+                    onSubmit = { cafeId, visitedAt, memo ->
+                        viewModel.onAction(
+                            CheckInAction.SubmitNewVisit(
+                                cafeId = cafeId,
+                                visitedAt = visitedAt,
+                                memo = memo
+                            )
+                        )
+                    },
+                    onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
                 )
             }
         }
@@ -539,6 +571,287 @@ private fun LoginRequiredBottomSheet(
             Text("회원가입", fontWeight = FontWeight.SemiBold)
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewVisitCheckInBottomSheet(
+    cafes: List<CheckInCafeSummary>,
+    onSubmit: (String, String, String?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val cafeOptions = cafes.map { it.name to it.id }
+    val focusManager = LocalFocusManager.current
+    val memoFocusRequester = remember { FocusRequester() }
+    var selectedCafeId by remember {
+        mutableStateOf(cafeOptions.firstOrNull()?.second.orEmpty())
+    }
+    var isCafeDropdownExpanded by remember { mutableStateOf(false) }
+    var cafeDropdownWidth by remember { mutableStateOf(0) }
+    val selectedCafeName = cafes
+        .firstOrNull { it.id == selectedCafeId }
+        ?.name
+        ?: cafeOptions.firstOrNull()?.first.orEmpty()
+    val dropdownInteractionSource = remember { MutableInteractionSource() }
+    val density = LocalDensity.current
+    val now = remember { System.currentTimeMillis() }
+    var visitDateMillis by remember { mutableLongStateOf(now) }
+    var visitHour by remember {
+        mutableIntStateOf(extractHourFromMillis(now))
+    }
+    var visitMinute by remember {
+        mutableIntStateOf(extractMinuteFromMillis(now))
+    }
+    var isTimePickerVisible by remember { mutableStateOf(false) }
+    var memo by remember { mutableStateOf("") }
+
+    LaunchedEffect(cafes) {
+        val fallbackCafeId = cafes.firstOrNull()?.id.orEmpty()
+        if (selectedCafeId.isBlank()) {
+            selectedCafeId = fallbackCafeId
+        } else if (cafes.none { it.id == selectedCafeId }) {
+            selectedCafeId = fallbackCafeId
+        }
+    }
+    LaunchedEffect(Unit) {
+        focusManager.clearFocus(force = true)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "방문 추가",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "닫기",
+                    tint = Color(0xFF7C7480)
+                )
+            }
+        }
+        Text(
+            text = "방문을 기록할 카페를 선택해주세요.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7C7480)
+        )
+        if (cafeOptions.isEmpty()) {
+            Text("현재 선택 가능한 카페가 없습니다.")
+            TextField(
+                value = "",
+                onValueChange = {},
+                readOnly = true,
+                enabled = false,
+                label = { Text("카페 선택") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            )
+        } else {
+            Text(
+                text = "카페 선택",
+                style = MaterialTheme.typography.labelMedium
+            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = selectedCafeName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("카페 선택") },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "카페 선택",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { cafeDropdownWidth = it.width }
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null
+                        ) { isCafeDropdownExpanded = true },
+                    shape = RoundedCornerShape(16.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable(
+                            interactionSource = dropdownInteractionSource,
+                            indication = null
+                        ) { isCafeDropdownExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = isCafeDropdownExpanded,
+                    onDismissRequest = { isCafeDropdownExpanded = false },
+                    modifier = Modifier.then(
+                        if (cafeDropdownWidth > 0) {
+                            Modifier.width(with(density) { cafeDropdownWidth.toDp() })
+                        } else {
+                            Modifier
+                        }
+                    )
+                ) {
+                    cafes.forEach { cafe ->
+                        DropdownMenuItem(
+                            text = { Text(cafe.name) },
+                            onClick = {
+                                selectedCafeId = cafe.id
+                                isCafeDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        Text(
+            text = "방문 날짜",
+            style = MaterialTheme.typography.labelMedium
+        )
+        OutlinedTextField(
+            value = formatVisitDate(visitDateMillis),
+            onValueChange = {},
+            readOnly = true,
+            enabled = false,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        )
+        Text(
+            text = "방문 시간",
+            style = MaterialTheme.typography.labelMedium
+        )
+        OutlinedTextField(
+            value = formatVisitTime(visitHour, visitMinute),
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null
+                ) { isTimePickerVisible = true },
+            shape = RoundedCornerShape(16.dp)
+        )
+        if (isTimePickerVisible) {
+            val timePickerState = rememberTimePickerState(
+                initialHour = visitHour,
+                initialMinute = visitMinute,
+                is24Hour = true
+            )
+
+            AlertDialog(
+                onDismissRequest = { isTimePickerVisible = false },
+                title = { Text("방문 시간 선택") },
+                text = { TimePicker(timePickerState) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            visitHour = timePickerState.hour
+                            visitMinute = timePickerState.minute
+                            isTimePickerVisible = false
+                        }
+                    ) {
+                        Text("확인")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { isTimePickerVisible = false }) {
+                        Text("취소")
+                    }
+                }
+            )
+        }
+        Text(
+            text = "메모 (선택)",
+            style = MaterialTheme.typography.labelMedium
+        )
+        OutlinedTextField(
+            value = memo,
+            onValueChange = { memo = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .focusRequester(memoFocusRequester),
+            shape = RoundedCornerShape(16.dp),
+            minLines = 4
+        )
+        Button(
+            enabled = selectedCafeId.isNotBlank(),
+            onClick = {
+                val normalizedCafeId = selectedCafeId.trim()
+                val normalizedMemo = memo.trim().ifEmpty { null }
+                val normalizedVisitedAt = "${formatVisitDate(visitDateMillis)}T${formatVisitTime(visitHour, visitMinute)}:00Z"
+
+                onSubmit(normalizedCafeId, normalizedVisitedAt, normalizedMemo)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797))
+        ) {
+            Text("체크인 완료", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private fun extractHourFromMillis(millis: Long): Int {
+    val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
+    return (normalized / MILLIS_PER_HOUR).toInt()
+}
+
+private fun extractMinuteFromMillis(millis: Long): Int {
+    val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
+    return ((normalized % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE).toInt()
+}
+
+private fun formatVisitDate(dateMillis: Long): String {
+    val (year, month, day) = dateFromEpochMillis(dateMillis)
+    return "${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+}
+
+private fun formatVisitTime(hour: Int, minute: Int): String {
+    return "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+}
+
+private data class DateParts(
+    val year: Int,
+    val month: Int,
+    val day: Int
+)
+
+private const val MILLIS_PER_SECOND = 1000L
+private const val MILLIS_PER_MINUTE = 60L * MILLIS_PER_SECOND
+private const val MILLIS_PER_HOUR = 60L * MILLIS_PER_MINUTE
+private const val MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR
+
+private fun dateFromEpochMillis(millis: Long): DateParts {
+    val epochDays = millis / MILLIS_PER_DAY
+    val z = epochDays + 719468L
+    val era = z / 146097L
+    val doe = z - era * 146097L
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    val y = yoe + era * 400
+    val doy = doe - (365L * yoe + yoe / 4 - yoe / 100)
+    val mp = (5L * doy + 2L) / 153
+    val day = (doy - (153L * mp + 2L) / 5 + 1L).toInt()
+    val month = (mp + if (mp < 10L) 3L else -9L).toInt()
+    val year = (y + if (month <= 2) 1L else 0L).toInt()
+
+    return DateParts(
+        year = year,
+        month = month,
+        day = day
+    )
 }
 
 @Composable

@@ -15,7 +15,8 @@ data class CheckInUiState(
     val popularCasts: List<CheckInCastSummary> = emptyList(),
     val todayVisits: List<CheckInVisitEntry> = emptyList(),
     val recentVisits: List<CheckInVisitEntry> = emptyList(),
-    val isLoginPromptVisible: Boolean = false
+    val isLoginPromptVisible: Boolean = false,
+    val isNewVisitSheetVisible: Boolean = false
 ) {
     companion object {
         fun empty() = CheckInUiState()

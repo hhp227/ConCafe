@@ -12,4 +12,12 @@ sealed interface CheckInAction {
     data object ClickSignUp : CheckInAction
 
     data object DismissLoginPrompt : CheckInAction
+
+    data object DismissNewVisitSheet : CheckInAction
+
+    data class SubmitNewVisit(
+        val cafeId: String,
+        val visitedAt: String,
+        val memo: String?
+    ) : CheckInAction
 }

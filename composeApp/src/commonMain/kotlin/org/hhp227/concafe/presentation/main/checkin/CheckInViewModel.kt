@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -18,6 +19,7 @@ import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
+    private val createVisitUseCase: CreateVisitUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
@@ -65,7 +67,8 @@ class CheckInViewModel(
                 _uiState.update {
                     it.copy(
                         currentUser = user,
-                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false,
+                        isNewVisitSheetVisible = if (user == null) it.isNewVisitSheetVisible else false
                     )
                 }
 
@@ -116,7 +119,14 @@ class CheckInViewModel(
                     val currentUser = _uiState.value.currentUser
 
                     if (currentUser == null) {
-                        _uiState.update { it.copy(isLoginPromptVisible = true) }
+                        _uiState.update {
+                            it.copy(
+                                isLoginPromptVisible = true,
+                                isNewVisitSheetVisible = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
                     }
                 }
                 CheckInAction.ClickSignIn -> {
@@ -129,6 +139,46 @@ class CheckInViewModel(
                 }
                 CheckInAction.DismissLoginPrompt -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                CheckInAction.DismissNewVisitSheet -> {
+                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
+                }
+                is CheckInAction.SubmitNewVisit -> {
+                    submitNewVisit(
+                        cafeId = action.cafeId,
+                        visitedAt = action.visitedAt,
+                        memo = action.memo
+                    )
+                }
+            }
+        }
+    }
+
+    private fun submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
+        if (cafeId.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
+            return
+        }
+
+        if (visitedAt.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "방문 시간을 입력해 주세요.") }
+            return
+        }
+
+        _uiState.update { it.copy(errorMessage = null) }
+
+        viewModelScope.launch {
+            when (val result = createVisitUseCase.invoke(
+                cafeId = cafeId,
+                visitedAt = visitedAt,
+                memo = memo
+            )) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
+                    loadUserFeed()
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(errorMessage = result.error.toString()) }
                 }
             }
         }
