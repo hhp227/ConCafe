@@ -740,7 +740,7 @@ private fun CheckInButton(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 64.dp)
-            .padding(top = 32.dp)
+            .padding(vertical = 12.dp)
             .height(70.dp),
         interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(

@@ -133,7 +133,7 @@ private struct CheckInUserContentView: View {
                     onAction(.checkInTapped)
                 }
                 .padding(.horizontal, 64)
-                .padding(.top, 32)
+                .padding(.vertical, 12)
                 CheckInSectionTitle(title: "오늘의 방문", trailing: "3월 9일")
                 CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
