@@ -308,43 +308,51 @@ private struct CheckInCastCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "FFD1E2"), Color(hex: "FFEAF2")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-                .frame(height: 132)
-                .overlay(
-                    VStack(spacing: 8) {
-                        Circle()
-                            .fill(Color.white.opacity(0.9))
-                            .frame(width: 54, height: 54)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .foregroundStyle(Color(hex: "D25E8E"))
-                            )
-                        Text(cast.name)
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "4E4750"))
-                    }
-                )
-            VStack(alignment: .leading, spacing: 4) {
-                Text(cast.name)
-                    .font(.subheadline.weight(.semibold))
-                Text(cast.cafeName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .frame(width: 56, height: 56)
+                    .overlay(
+                        Text(String(cast.name.prefix(1)))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(Color(hex: "B74C72"))
+                    )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(cast.name)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(1)
+                    Text(cast.cafeName)
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "7A7380"))
+                        .lineLimit(1)
+                }
+            }
+
+            HStack {
                 Text("오늘 방문 \(cast.todayVisit)")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(hex: "FFEEF5"))
+                    .clipShape(Capsule())
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 4)
         }
-        .frame(width: 170)
+        .padding(16)
+        .frame(width: 200, alignment: .leading)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }
