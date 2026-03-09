@@ -119,14 +119,13 @@ private fun CheckInNewVisitDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
+            usePlatformDefaultWidth = false
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.32f))
+                .background(Color.Black.copy(alpha = 0.10f))
         ) {
             Box(
                 modifier = Modifier
