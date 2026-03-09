@@ -77,11 +77,17 @@ fun HomeScreen(
         }
     }
     LaunchedEffect(uiState.banners.size) {
-        if (uiState.banners.size <= 1) return@LaunchedEffect
-        while (true) {
-            delay(3000)
-            val nextPage = (pagerState.currentPage + 1) % uiState.banners.size
-            pagerState.animateScrollToPage(nextPage)
+        if (!uiState.banners.isEmpty()) {
+            val normalizedPage = pagerState.currentPage.coerceIn(0, uiState.banners.lastIndex)
+
+            pagerState.scrollToPage(normalizedPage)
+            if (uiState.banners.size != 1) {
+                while (true) {
+                    delay(3000)
+                    val nextPage = (pagerState.settledPage + 1) % uiState.banners.size
+                    pagerState.animateScrollToPage(nextPage)
+                }
+            }
         }
     }
     HomeContentScreen(uiState, pagerState, viewModel::onAction)
@@ -106,40 +112,42 @@ fun HomeContentScreen(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    pageSpacing = 12.dp
-                ) { page ->
-                    val banner = uiState.banners[page]
+                if (uiState.banners.isNotEmpty()) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        pageSpacing = 12.dp
+                    ) { page ->
+                        val banner = uiState.banners[page]
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            colorFromHex(banner.startColorHex),
-                                            colorFromHex(banner.endColorHex)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                colorFromHex(banner.startColorHex),
+                                                colorFromHex(banner.endColorHex)
+                                            )
                                         )
                                     )
+                                    .padding(18.dp),
+                                contentAlignment = Alignment.BottomStart
+                            ) {
+                                Text(
+                                    text = banner.title,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge
                                 )
-                                .padding(18.dp),
-                            contentAlignment = Alignment.BottomStart
-                        ) {
-                            Text(
-                                text = banner.title,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleLarge
-                            )
+                            }
                         }
                     }
                 }
