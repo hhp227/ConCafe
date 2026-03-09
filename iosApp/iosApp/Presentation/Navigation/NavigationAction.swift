@@ -12,6 +12,7 @@ enum NavigationAction {
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
     case navigateToSignIn
+    case navigateToSignUp
     case navigateToNotification
     case navigateToSettings
     case navigateBack

@@ -15,6 +15,7 @@ import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
+import org.hhp227.concafe.domain.usecase.SignUpUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
@@ -123,6 +124,13 @@ fun resolveSignOutUseCase(): SignOutUseCase {
 }
 
 fun resolveSignInUseCase(): SignInUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignUpUseCase(): SignUpUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

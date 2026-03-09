@@ -13,6 +13,7 @@ enum Route: Hashable {
     case cast(param: String)
     case cafe(param: String)
     case signIn
+    case signUp
     case notification
     case settings
 }

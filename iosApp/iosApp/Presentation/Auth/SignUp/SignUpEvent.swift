@@ -8,5 +8,6 @@
 import Foundation
 
 enum SignUpEvent {
-    
+    case signedUp
+    case navigateBack
 }

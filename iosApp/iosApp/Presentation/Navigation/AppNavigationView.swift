@@ -30,6 +30,8 @@ struct AppNavigationView: View {
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
+            case .signUp:
+                SignUpView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView(onNavigationAction: viewModel.onAction)
             case .settings:
@@ -52,6 +54,8 @@ struct AppNavigationView: View {
                 case .cafe:
                     path.append(route)
                 case .signIn:
+                    path.append(route)
+                case .signUp:
                     path.append(route)
                 case .notification:
                     path.append(route)
