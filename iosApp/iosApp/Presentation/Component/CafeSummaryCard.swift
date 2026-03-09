@@ -41,7 +41,7 @@ struct CafeSummaryCard: View {
                     if let trailingLabel {
                         Text(trailingLabel)
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundColor(Color(hex: "EF6797"))
                             .fontWeight(.semibold)
                             .lineLimit(1)
                     }
