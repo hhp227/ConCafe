@@ -73,6 +73,7 @@ private struct CheckInGuestContentView: View {
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
+                .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
                 CheckInSectionTitle(title: "🔥 인기 메이드 카페", trailing: nil)
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -110,7 +111,6 @@ private struct CheckInGuestContentView: View {
                         .padding(.horizontal, 16)
                 }
             }
-            .padding(.vertical, 16)
         }
     }
 }
@@ -129,6 +129,7 @@ private struct CheckInUserContentView: View {
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
+                .padding(.top, 16)
                 CheckInPrimaryButton(title: "새 방문 체크인") {
                     onAction(.checkInTapped)
                 }
@@ -141,7 +142,6 @@ private struct CheckInUserContentView: View {
                 CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
                 CheckInTimelineList(visits: uiState.recentVisits)
             }
-            .padding(.vertical, 12)
         }
     }
 }

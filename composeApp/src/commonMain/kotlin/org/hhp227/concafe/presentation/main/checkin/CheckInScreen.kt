@@ -151,7 +151,6 @@ private fun CheckInGuestScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFFFBFD))
-            .padding(horizontal = 16.dp, vertical = 16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -160,28 +159,40 @@ private fun CheckInGuestScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CafeMapSection(
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
             )
-            LoginPromotionSection(
-                onSignIn = { onAction(CheckInAction.ClickSignIn) },
-                onSignUp = { onAction(CheckInAction.ClickSignUp) }
-            )
-            CheckInGuestSectionTitle("🔥 인기 메이드 카페")
-            PopularCafeSection(
-                cafes = uiState.popularCafes,
-                onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
-            )
-            CheckInGuestSectionTitle("☕ 오늘 인기 캐스트")
-            PopularCastSection(
-                casts = uiState.popularCasts,
-                onCastClick = { onAction(CheckInAction.ClickCast(it)) }
-            )
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                LoginPromotionSection(
+                    onSignIn = { onAction(CheckInAction.ClickSignIn) },
+                    onSignUp = { onAction(CheckInAction.ClickSignUp) }
+                )
+            }
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                CheckInGuestSectionTitle("🔥 인기 메이드 카페")
+            }
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                PopularCafeSection(
+                    cafes = uiState.popularCafes,
+                    onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
+                )
+            }
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                CheckInGuestSectionTitle("☕ 오늘 인기 캐스트")
+            }
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                PopularCastSection(
+                    casts = uiState.popularCasts,
+                    onCastClick = { onAction(CheckInAction.ClickCast(it)) }
+                )
+            }
             if (uiState.errorMessage != null) {
                 Text(
                     text = "체크인 탭 데이터를 일부 불러오지 못했습니다.",
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -199,12 +210,11 @@ private fun CheckInUserScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFFFBFD))
-            .padding(vertical = 12.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CafeMapSection(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
             currentLocationLabel = uiState.currentLocationLabel,
             mapCafes = uiState.mapCafes,
             onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
