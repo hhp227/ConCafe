@@ -114,6 +114,9 @@
 - 콘텐츠 뷰는 ViewModel을 직접 참조하지 않는다.
 - 콘텐츠 뷰 입력은 `uiState`와 `onAction` 콜백만 기본으로 받는다.
 - 배너 페이지, 선택 인덱스 같은 순수 UI 상태가 필요하면 콘텐츠 뷰에 필요한 최소 상태만 추가로 전달한다.
+- `BottomSheet`, `ModalBottomSheet`, `Sheet`, `Dialog`, 풀스크린 오버레이 같은 화면 외부 계층 UI는 콘텐츠 뷰에 두지 않는다.
+- 오버레이/모달 UI의 표시 여부와 생명주기는 반드시 상위 `Screen/View`가 소유한다.
+- 콘텐츠 뷰(`ContentScreen`/`ContentView`)는 단일 화면 본문 렌더링만 담당한다.
 - 미리보기/프리뷰는 콘텐츠 뷰 기준으로 작성한다. Compose Preview와 SwiftUI Preview에서 ViewModel 없이 렌더링 가능해야 한다.
 - 화면 렌더링 로직, 섹션 배치, 스타일링은 콘텐츠 뷰에 두고, 이벤트 수집/라우팅 연결은 컨테이너 뷰에 둔다.
 - 새 화면을 만들 때는 `Screen/View + ContentScreen/ContentView` 2단 구성을 우선 적용한다.
@@ -136,7 +139,6 @@ fun HomeScreen(
             }
         }
     }
-
     HomeContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction
