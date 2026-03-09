@@ -412,7 +412,7 @@ private struct CheckInVisitCard: View {
             .padding(16)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 200)
+        .frame(height: 180)
     }
 }
 
@@ -440,7 +440,7 @@ private struct CheckInMoreVisitCard: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 200)
+        .frame(height: 180)
     }
 }
 

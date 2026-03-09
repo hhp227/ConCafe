@@ -634,7 +634,7 @@ private fun VisitCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        modifier = modifier.height(200.dp)
+        modifier = modifier.height(180.dp)
     ) {
         Box {
             Box(
@@ -665,7 +665,7 @@ private fun MoreVisitCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        modifier = modifier.height(200.dp),
+        modifier = modifier.height(180.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(
