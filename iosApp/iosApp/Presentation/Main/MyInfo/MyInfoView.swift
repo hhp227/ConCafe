@@ -230,11 +230,6 @@ private struct ProfileMyInfoView: View {
                 Text(uiState.user?.nickname ?? "메이드러버")
                     .font(.headline)
                     .bold()
-                Spacer()
-                Button("로그아웃") {
-                    onAction(.signOutTapped)
-                }
-                .foregroundStyle(.white)
             }
             Text("레벨 \(summary?.level ?? 1)")
                 .foregroundStyle(.white.opacity(0.9))

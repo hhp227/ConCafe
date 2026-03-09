@@ -312,7 +312,6 @@ private fun ProfileMyInfoScreen(
                 ) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(uiState.user?.nickname ?: "메이드러버", color = Color.White, fontWeight = FontWeight.Bold)
-                        Text("로그아웃", color = Color.White, modifier = Modifier.clickable { onAction(MyInfoAction.ClickSignOut) })
                     }
                     Text("레벨 ${uiState.summary?.level ?: 1}", color = Color.White.copy(alpha = 0.9f))
                     Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 8.dp)) {

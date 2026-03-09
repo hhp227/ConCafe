@@ -12,13 +12,11 @@ import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
 
 class MyInfoViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val signOutUseCase: SignOutUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
@@ -74,16 +72,6 @@ class MyInfoViewModel(
             }
             MyInfoAction.ClickSignIn -> viewModelScope.launch {
                 _event.emit(NavigateToSignIn)
-            }
-            MyInfoAction.ClickSignOut -> {
-                viewModelScope.launch {
-                    when (signOutUseCase.invoke()) {
-                        is AppResult.Success -> Unit
-                        is AppResult.Failure -> {
-                            _uiState.update { it.copy(errorMessage = "로그아웃에 실패했습니다.") }
-                        }
-                    }
-                }
             }
             MyInfoAction.Refresh -> loadMyInfo()
         }

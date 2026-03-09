@@ -11,6 +11,5 @@ enum MyInfoAction {
     case cafeTapped(id: String)
     case maidTapped(id: String)
     case signInTapped
-    case signOutTapped
     case refresh
 }

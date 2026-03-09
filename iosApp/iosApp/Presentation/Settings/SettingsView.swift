@@ -10,6 +10,8 @@ import SwiftUI
 struct SettingsView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
+    @StateObject private var viewModel = SettingsViewModel()
+
     var body: some View {
         List {
             Section {
@@ -31,10 +33,28 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "rectangle.portrait.and.arrow.right",
                     title: "로그아웃",
-                    description: "현재 단계에서는 진입점만 제공합니다."
+                    description: "현재 계정에서 로그아웃합니다.",
+                    foregroundColor: Color.red
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.onAction(.signOutTapped)
+                }
             } header: {
                 Text("내정보 탭에서 진입한 설정")
+            }
+            if let errorMessage = viewModel.uiState.errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(Color.red)
+                }
+            }
+        }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateBack:
+                onNavigationAction(.navigateBack)
             }
         }
         .navigationTitle("설정")
@@ -44,11 +64,12 @@ struct SettingsView: View {
     private func settingsRow(
         icon: String,
         title: String,
-        description: String
+        description: String,
+        foregroundColor: Color = Color(hex: "EF6797")
     ) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(foregroundColor)
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

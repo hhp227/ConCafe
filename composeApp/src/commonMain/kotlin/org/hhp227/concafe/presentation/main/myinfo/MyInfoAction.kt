@@ -4,6 +4,5 @@ sealed interface MyInfoAction {
     data class ClickCafe(val id: String) : MyInfoAction
     data class ClickMaid(val id: String) : MyInfoAction
     data object ClickSignIn : MyInfoAction
-    data object ClickSignOut : MyInfoAction
     data object Refresh : MyInfoAction
 }

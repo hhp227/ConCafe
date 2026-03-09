@@ -8,5 +8,8 @@
 import Foundation
 
 struct SettingsUiState {
-    
+    var isLoading: Bool = false
+    var errorMessage: String?
+
+    static let empty = SettingsUiState()
 }

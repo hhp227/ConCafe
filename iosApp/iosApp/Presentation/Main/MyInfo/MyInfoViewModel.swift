@@ -12,8 +12,6 @@ import Shared
 @MainActor
 final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
-
-    private let signOutUseCase: SignOutUseCase
     
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -72,21 +70,6 @@ final class MyInfoViewModel: ObservableObject {
         }
     }
 
-    private func signOut() {
-        Task {
-            do {
-                let result = try await signOutUseCase.invoke()
-
-                if result is AppResultSuccess<AnyObject> {
-                } else if let failure = result as? AppResultFailure {
-                    uiState.errorMessage = "\(failure.error)"
-                }
-            } catch {
-                uiState.errorMessage = error.localizedDescription
-            }
-        }
-    }
-
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
@@ -95,8 +78,6 @@ final class MyInfoViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .signInTapped:
             event.send(.navigateToSignIn)
-        case .signOutTapped:
-            signOut()
         case .refresh:
             loadMyInfo()
         }
@@ -104,11 +85,9 @@ final class MyInfoViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
-        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
-        self.signOutUseCase = signOutUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         
         observeSession()

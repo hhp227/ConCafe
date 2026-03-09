@@ -4,13 +4,15 @@ import org.hhp227.concafe.presentation.main.home.HomeViewModel
 import org.hhp227.concafe.presentation.main.myinfo.MyInfoViewModel
 import org.hhp227.concafe.presentation.main.explore.ExploreViewModel
 import org.hhp227.concafe.presentation.notification.NotificationViewModel
+import org.hhp227.concafe.presentation.settings.SettingsViewModel
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
     factory { HomeViewModel(get()) }
     factory { ExploreViewModel(get()) }
-    factory { MyInfoViewModel(get(), get(), get()) }
+    factory { MyInfoViewModel(get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
+    factory { SettingsViewModel(get()) }
 }
 
 private val composeAppModules = listOf(
