@@ -24,6 +24,8 @@ import org.hhp227.concafe.domain.repository.UserRepository
 import org.hhp227.concafe.domain.repository.VisitRepository
 import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import org.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
@@ -57,6 +59,8 @@ val repositoryModule = module {
 
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetCheckInGuestFeedUseCase(get(), get()) }
+    factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }

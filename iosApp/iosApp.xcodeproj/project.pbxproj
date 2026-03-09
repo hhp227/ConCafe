@@ -93,6 +93,7 @@
 		0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */; };
 		0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */; };
 		0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */; };
+		0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */; };
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
 		0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */; };
@@ -193,6 +194,7 @@
 		0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConCafeTabBar.swift; sourceTree = "<group>"; };
 		0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingViewModel.swift; sourceTree = "<group>"; };
 		0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableConCafeTabBar.swift; sourceTree = "<group>"; };
+		0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CafeSummaryCard.swift; sourceTree = "<group>"; };
 		0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUiState.swift; sourceTree = "<group>"; };
 		0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreAction.swift; sourceTree = "<group>"; };
@@ -460,6 +462,7 @@
 		0ADC46E92F5B33A5003484E4 /* Component */ = {
 			isa = PBXGroup;
 			children = (
+				0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */,
 				0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */,
 				0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */,
 				0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */,
@@ -669,6 +672,7 @@
 				0A27F1F52F5D6EEC003D4763 /* CafeGoodsView.swift in Sources */,
 				0A785CA52F5A7BBC004037A8 /* ExploreEvent.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
+				0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */,
 				0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */,
 				0A27F1EF2F5D6E62003D4763 /* CafeMenuView.swift in Sources */,
 				0A580DB02F5968B200390F67 /* CastView.swift in Sources */,
