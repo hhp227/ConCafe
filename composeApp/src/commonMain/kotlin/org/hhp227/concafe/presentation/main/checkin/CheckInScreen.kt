@@ -210,12 +210,12 @@ private fun CheckInUserScreen(
             onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
             onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
         )
+        CheckInButton(
+            onClick = { onAction(CheckInAction.ClickCheckIn) }
+        )
         CheckInSectionTitle("오늘의 방문", "3월 9일")
         TodayVisitsRow(
             visits = uiState.todayVisits
-        )
-        CheckInButton(
-            onClick = { onAction(CheckInAction.ClickCheckIn) }
         )
         Spacer(modifier = Modifier.height(24.dp))
         CheckInSectionTitle("최근 타임라인", "🕘")

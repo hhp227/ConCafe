@@ -129,13 +129,13 @@ private struct CheckInUserContentView: View {
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
-                CheckInSectionTitle(title: "오늘의 방문", trailing: "3월 9일")
-                CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 CheckInPrimaryButton(title: "새 방문 체크인") {
                     onAction(.checkInTapped)
                 }
                 .padding(.horizontal, 64)
                 .padding(.top, 32)
+                CheckInSectionTitle(title: "오늘의 방문", trailing: "3월 9일")
+                CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
