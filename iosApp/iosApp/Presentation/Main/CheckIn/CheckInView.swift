@@ -134,8 +134,8 @@ private struct CheckInUserContentView: View {
                 CheckInPrimaryButton(title: "새 방문 체크인") {
                     onAction(.checkInTapped)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 2)
+                .padding(.horizontal, 64)
+                .padding(.top, 32)
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
