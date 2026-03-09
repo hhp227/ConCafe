@@ -83,7 +83,7 @@ fun MainScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (currentRoute == MainNavigationTab.MY_INFO.route) {
+                            if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
                                 onNavigationAction(NavigationAction.NavigateToSettings)
                             } else {
                                 onNavigationAction(NavigationAction.NavigateToNotification)
@@ -91,8 +91,8 @@ fun MainScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = if (currentRoute == MainNavigationTab.MY_INFO.route) Icons.Default.Settings else Icons.Default.Notifications,
-                            contentDescription = if (currentRoute == MainNavigationTab.MY_INFO.route) "설정" else "알림"
+                            imageVector = if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) Icons.Default.Settings else Icons.Default.Notifications,
+                            contentDescription = if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) "설정" else "알림"
                         )
                     }
                 }
