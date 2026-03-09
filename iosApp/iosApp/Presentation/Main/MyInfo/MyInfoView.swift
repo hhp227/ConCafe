@@ -225,22 +225,37 @@ private struct ProfileMyInfoView: View {
     
     private var profileCard: some View {
         let summary = uiState.summary
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(uiState.user?.nickname ?? "메이드러버")
-                    .font(.headline)
-                    .bold()
+        let nickname = uiState.user?.nickname ?? "메이드러버"
+
+        return VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 14) {
+                Circle()
+                    .fill(Color.white.opacity(0.22))
+                    .frame(width: 72, height: 72)
+                    .overlay(
+                        Text(String(nickname.prefix(1)))
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(nickname)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                    Text("레벨 \(summary?.level ?? 1) · 열정적인 팬")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.9))
+                }
+                Spacer(minLength: 0)
             }
-            Text("레벨 \(summary?.level ?? 1)")
-                .foregroundStyle(.white.opacity(0.9))
-            HStack(spacing: 14) {
-                Text("📍 \(summary?.totalVisits ?? 0)")
-                Text("❤️ \(summary?.favoritesCount ?? 0)")
-                Text("👥 \(summary?.followedCastsCount ?? 0)")
+            HStack(spacing: 18) {
+                Spacer(minLength: 0)
+                ProfileMetricView(systemName: "mappin.and.ellipse", value: Int(summary?.totalVisits ?? 0))
+                ProfileMetricView(systemName: "heart.fill", value: Int(summary?.favoritesCount ?? 0))
+                ProfileMetricView(systemName: "person.2.fill", value: Int(summary?.followedCastsCount ?? 0))
+                Spacer(minLength: 0)
             }
-            .foregroundStyle(.white)
         }
-        .padding(16)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(colors: [Color(hex: "EF6797"), Color(hex: "F8A0C2")], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -356,6 +371,22 @@ private struct ProfileMyInfoView: View {
                 }
             }
         }
+    }
+}
+
+private struct ProfileMetricView: View {
+    let systemName: String
+
+    let value: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .semibold))
+            Text("\(value)")
+                .font(.subheadline.weight(.semibold))
+        }
+        .foregroundStyle(.white)
     }
 }
 

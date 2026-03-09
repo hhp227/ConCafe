@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -49,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -288,6 +290,30 @@ private data class GuestFeatureItem(
 )
 
 @Composable
+private fun ProfileMetric(
+    icon: ImageVector,
+    value: Int
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = value.toString(),
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
 private fun ProfileMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
@@ -304,20 +330,58 @@ private fun ProfileMyInfoScreen(
                 shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
+                val nickname = uiState.user?.nickname ?: "메이드러버"
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Brush.linearGradient(listOf(Color(0xFFEF6797), Color(0xFFF8A0C2))))
-                        .padding(16.dp)
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text(uiState.user?.nickname ?: "메이드러버", color = Color.White, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.22f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = nickname.take(1),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = nickname,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "레벨 ${uiState.summary?.level ?: 1} · 열정적인 팬",
+                                color = Color.White.copy(alpha = 0.9f),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
-                    Text("레벨 ${uiState.summary?.level ?: 1}", color = Color.White.copy(alpha = 0.9f))
-                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 8.dp)) {
-                        Text("📍 ${uiState.summary?.totalVisits ?: 0}", color = Color.White)
-                        Text("❤️ ${uiState.summary?.favoritesCount ?: 0}", color = Color.White)
-                        Text("👥 ${uiState.summary?.followedCastsCount ?: 0}", color = Color.White)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ProfileMetric(Icons.Filled.Place, uiState.summary?.totalVisits ?: 0)
+                        ProfileMetric(Icons.Filled.Favorite, uiState.summary?.favoritesCount ?: 0)
+                        ProfileMetric(Icons.Filled.Groups, uiState.summary?.followedCastsCount ?: 0)
                     }
                 }
             }
@@ -440,9 +504,24 @@ private fun RowScope.StatCard(title: String, value: Int) {
         modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value.toString(), color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
-            Text(title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value.toString(),
+                color = Color(0xFFEF6797),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF777777),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
