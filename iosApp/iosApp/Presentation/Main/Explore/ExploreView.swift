@@ -147,53 +147,16 @@ private struct ExploreContentView: View {
     }
 
     private func cafeCard(_ cafe: Cafe) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                if let urlString = cafe.thumbnailImage,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            placeholderCafeImage
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        case .failure:
-                            placeholderCafeImage
-                        @unknown default:
-                            placeholderCafeImage
-                        }
-                    }
-                } else {
-                    placeholderCafeImage
-                }
+        CafeSummaryCard(
+            name: cafe.name,
+            rating: String(format: "%.1f", cafe.ratingAvg),
+            location: cafe.region.city,
+            thumbnailImage: cafe.thumbnailImage,
+            trailingLabel: nil,
+            onTap: {
+                onAction(.cafeTapped(id: cafe.id))
             }
-            .frame(height: 120)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            VStack(alignment: .leading, spacing: 4) {
-                Text(cafe.name)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))")
-                    .font(.caption)
-                Text("📍 \(cafe.region.city)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 4)
-        }
-        .onTapGesture {
-            onAction(.cafeTapped(id: cafe.id))
-        }
-    }
-
-    private var placeholderCafeImage: some View {
-        LinearGradient(
-            colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
-            startPoint: .top,
-            endPoint: .bottom
         )
-        .overlay(Image(systemName: "building.2.fill").foregroundStyle(Color.white.opacity(0.85)))
     }
 
     private func maidCard(_ maid: Cast) -> some View {

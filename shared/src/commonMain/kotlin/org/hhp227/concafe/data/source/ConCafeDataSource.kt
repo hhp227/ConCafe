@@ -38,6 +38,10 @@ interface ConCafeDataSource {
 
     val followedCastIdsByUser: MutableMap<String, MutableSet<String>>
 
+    val cafeCheckInCountById: Map<String, Int>
+
+    val castTodayVisitCountById: Map<String, Int>
+
     fun defaultMyPageSummary(userId: String): MyPageSummary
 
     fun cafeDetail(cafeId: String): CafeDetail?

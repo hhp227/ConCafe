@@ -75,7 +75,7 @@ struct MainView: View {
             AdminOperationsView(title: "운영관리", description: "관리자가 승인, Claim, 신고, 밴 처리를 수행하는 메인 탭입니다.")
                 .tabItem { Label("운영관리", systemImage: "shield.lefthalf.filled") }
         default:
-            CheckInView()
+            CheckInView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("체크인", systemImage: "checkmark.seal.fill") }
         }
     }

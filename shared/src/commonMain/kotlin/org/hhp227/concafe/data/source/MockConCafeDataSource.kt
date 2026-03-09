@@ -219,7 +219,11 @@ class MockConCafeDataSource : ConCafeDataSource {
     )
 
     override val visits = mutableListOf(
-        Visit("visit-1", "user-1", "cafe-1", "2026-03-01T12:00:00Z", "첫 방문", true)
+        Visit("visit-1", "user-1", "cafe-1", "2026-03-09T08:30:00Z", "오픈 시간에 맞춰 방문", true),
+        Visit("visit-2", "user-1", "cafe-2", "2026-03-09T13:15:00Z", "신규 메이드 이벤트 확인", true),
+        Visit("visit-3", "user-1", "cafe-3", "2026-03-09T18:40:00Z", "저녁 타임 분위기 좋음", true),
+        Visit("visit-4", "user-1", "cafe-6", "2026-03-08T20:10:00Z", "체리 시즌 메뉴 주문", true),
+        Visit("visit-5", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true)
     )
 
     override val notifications = mutableListOf(
@@ -236,6 +240,29 @@ class MockConCafeDataSource : ConCafeDataSource {
     override val favoriteCafeIdsByUser = mutableMapOf("user-1" to mutableSetOf("cafe-1"))
 
     override val followedCastIdsByUser = mutableMapOf("user-1" to mutableSetOf("maid-1"))
+
+    override val cafeCheckInCountById = mapOf(
+        "cafe-1" to 482,
+        "cafe-2" to 451,
+        "cafe-8" to 429,
+        "cafe-6" to 410,
+        "cafe-3" to 384,
+        "cafe-10" to 331,
+        "cafe-4" to 298,
+        "cafe-5" to 276,
+        "cafe-11" to 243,
+        "cafe-7" to 219,
+        "cafe-9" to 187
+    )
+
+    override val castTodayVisitCountById = mapOf(
+        "maid-1" to 94,
+        "maid-2" to 88,
+        "maid-3" to 74,
+        "maid-4" to 63,
+        "maid-5" to 58,
+        "maid-6" to 49
+    )
 
     override fun defaultMyPageSummary(userId: String): MyPageSummary {
         val favoritesCount = favoriteCafeIdsByUser[userId]?.size ?: 0

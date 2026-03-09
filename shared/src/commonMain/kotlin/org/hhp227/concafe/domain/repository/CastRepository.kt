@@ -5,6 +5,7 @@ import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.CastSort
+import org.hhp227.concafe.domain.model.CheckInCastSummary
 
 interface CastRepository {
     suspend fun searchCasts(
@@ -25,4 +26,6 @@ interface CastRepository {
     suspend fun followCast(userId: String, castId: String)
 
     suspend fun unfollowCast(userId: String, castId: String)
+
+    suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary>
 }

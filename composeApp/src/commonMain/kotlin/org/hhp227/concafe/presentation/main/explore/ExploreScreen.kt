@@ -50,6 +50,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.Cast
+import org.hhp227.concafe.presentation.component.CafeSummaryCard
 import org.hhp227.concafe.presentation.component.CapsuleDropdown
 import org.hhp227.concafe.presentation.component.ConCafeTabBar
 import org.hhp227.concafe.presentation.navigation.NavigationAction
@@ -232,36 +233,12 @@ fun ExploreContentScreen(
 
 @Composable
 private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
-    Column(modifier = Modifier.clickable(onClick = onClick)) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
-                        )
-                    )
-            )
-        }
-        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("⭐", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📍", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(cafe.region.city, style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
-            }
-        }
-    }
+    CafeSummaryCard(
+        name = cafe.name,
+        rating = "${cafe.ratingAvg}",
+        location = cafe.region.city,
+        onClick = onClick
+    )
 }
 
 @Composable

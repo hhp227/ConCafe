@@ -937,6 +937,14 @@ class GetMyInfoUseCase(
     suspend operator fun invoke(): AppResult<MyInfoFeed>
 }
 
+class GetCheckInUserFeedUseCase(
+    private val authRepository: AuthRepository,
+    private val visitRepository: VisitRepository,
+    private val cafeRepository: CafeRepository
+) {
+    suspend operator fun invoke(): AppResult<CheckInUserFeed>
+}
+
 class GetMainNavigationUseCase(private val authRepository: AuthRepository) {
     suspend operator fun invoke(): AppResult<MainNavigationFeed>
 }

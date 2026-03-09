@@ -146,7 +146,7 @@ fun MainScreen(
                 ExploreScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.CHECK_IN.route) {
-                CheckInScreen()
+                CheckInScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.FAN_MANAGEMENT.route) {
                 FanManagementScreen()

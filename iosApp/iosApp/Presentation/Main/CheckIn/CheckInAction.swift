@@ -8,5 +8,10 @@
 import Foundation
 
 enum CheckInAction {
-    
+    case cafeTapped(id: String)
+    case castTapped(id: String)
+    case checkInTapped
+    case signInTapped
+    case signUpTapped
+    case dismissLoginPrompt
 }

@@ -97,7 +97,7 @@ fun MainScreen(
                     when (uiState.selectedTab) {
                         MainNavigationTab.HOME.route -> HomeScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
-                        MainNavigationTab.CHECK_IN.route -> CheckInScreen()
+                        MainNavigationTab.CHECK_IN.route -> CheckInScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen()
                         MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen()
                         MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()

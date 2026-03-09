@@ -8,5 +8,7 @@
 import Foundation
 
 enum CheckInEvent {
-    
+    case navigateToCafe(id: String)
+    case navigateToCast(id: String)
+    case navigateToSignIn
 }

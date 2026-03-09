@@ -6,6 +6,7 @@ import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.CastSort
+import org.hhp227.concafe.domain.model.CheckInCastSummary
 import org.hhp227.concafe.domain.repository.CastRepository
 
 class FakeCastRepository(
@@ -70,5 +71,23 @@ class FakeCastRepository(
     override suspend fun unfollowCast(userId: String, castId: String) {
         val set = dataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.remove(castId)
+    }
+
+    override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
+        return dataSource.casts
+            .sortedByDescending { dataSource.castTodayVisitCountById[it.id] ?: 0 }
+            .take(limit)
+            .map { cast ->
+                val cafeName = dataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
+
+                CheckInCastSummary(
+                    id = cast.id,
+                    cafeId = cast.cafeId,
+                    cafeName = cafeName,
+                    name = cast.name,
+                    profileImage = cast.profileImage,
+                    todayVisit = dataSource.castTodayVisitCountById[cast.id] ?: 0
+                )
+            }
     }
 }
