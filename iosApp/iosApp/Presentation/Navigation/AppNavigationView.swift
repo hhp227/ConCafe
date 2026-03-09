@@ -31,7 +31,7 @@ struct AppNavigationView: View {
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .notification:
-                NotificationView()
+                NotificationView(onNavigationAction: viewModel.onAction)
             case .main:
                 MainView(onNavigationAction: viewModel.onAction)
             case .entry:

@@ -223,8 +223,14 @@ class MockConCafeDataSource : ConCafeDataSource {
     )
 
     override val notifications = mutableListOf(
-        AppNotification("noti-1", "user-1", "사쿠라 출근 알림", "오늘 18:00 출근 예정", "CAST_SHIFT", "maid-1", false, "2026-03-05T08:00:00Z"),
-        AppNotification("noti-2", "user-1", "생일 이벤트", "나나 생일 이벤트 진행 중", "BIRTHDAY", "maid-4", true, "2026-03-04T08:00:00Z")
+        AppNotification("noti-1", "user-1", "사쿠라님이 출근했어요", "메이드 하우스에서 만나보세요!", "CAST_SHIFT", "maid-1", false, "2026-03-09T09:50:00Z", "10분 전"),
+        AppNotification("noti-2", "user-1", "유이님이 출근했어요", "리본 카페에서 만나보세요!", "CAST_SHIFT", "maid-3", false, "2026-03-09T09:00:00Z", "1시간 전"),
+        AppNotification("noti-3", "user-1", "미유님의 생일이에요", "축하 메시지를 남겨보세요!", "BIRTHDAY", "maid-2", false, "2026-03-09T08:00:00Z", "2시간 전"),
+        AppNotification("noti-4", "user-1", "나나 생일 위크가 시작됐어요", "이번 주 생일 한정 이벤트를 확인해보세요.", "BIRTHDAY", "maid-4", true, "2026-03-08T12:00:00Z", "1일 전"),
+        AppNotification("noti-5", "user-1", "메이드 하우스 공지", "3월 특별 이벤트가 시작되었어요!", "CAFE_NOTICE", "cafe-1", false, "2026-03-09T06:00:00Z", "4시간 전"),
+        AppNotification("noti-6", "user-1", "핑크 캐슬 공지", "신규 메이드 입장 안내를 확인하세요.", "CAFE_NOTICE", "cafe-2", true, "2026-03-08T09:00:00Z", "1일 전"),
+        AppNotification("noti-7", "user-1", "새로운 팔로워", "메이드팬123님이 회원님을 팔로우했어요.", "FOLLOW_UPDATE", null, false, "2026-03-09T05:00:00Z", "5시간 전"),
+        AppNotification("noti-8", "user-1", "팬클럽 가입 알림", "리본러버님이 회원님을 새로 팔로우했어요.", "FOLLOW_UPDATE", null, true, "2026-03-07T08:00:00Z", "2일 전")
     )
 
     override val favoriteCafeIdsByUser = mutableMapOf("user-1" to mutableSetOf("cafe-1"))

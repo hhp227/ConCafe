@@ -8,5 +8,8 @@
 import Foundation
 
 enum NotificationAction {
-    
+    case backTapped
+    case notificationTapped(id: String, type: String, targetId: String?)
+    case signInTapped
+    case refresh
 }
