@@ -587,7 +587,7 @@ private fun LoginRequiredBottomSheet(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("로그인하고 체크인", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("로그인", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
