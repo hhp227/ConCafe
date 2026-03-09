@@ -248,11 +248,9 @@ private struct ProfileMyInfoView: View {
                 Spacer(minLength: 0)
             }
             HStack(spacing: 18) {
-                Spacer(minLength: 0)
                 ProfileMetricView(systemName: "mappin.and.ellipse", value: Int(summary?.totalVisits ?? 0))
                 ProfileMetricView(systemName: "heart.fill", value: Int(summary?.favoritesCount ?? 0))
                 ProfileMetricView(systemName: "person.2.fill", value: Int(summary?.followedCastsCount ?? 0))
-                Spacer(minLength: 0)
             }
         }
         .padding(20)
