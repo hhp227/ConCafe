@@ -14,4 +14,5 @@ enum Route: Hashable {
     case cafe(param: String)
     case signIn
     case notification
+    case settings
 }

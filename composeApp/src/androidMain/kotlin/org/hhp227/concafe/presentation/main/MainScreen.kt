@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -81,11 +82,17 @@ fun MainScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { onNavigationAction(NavigationAction.NavigateToNotification) }
+                        onClick = {
+                            if (currentRoute == MainNavigationTab.MY_INFO.route) {
+                                onNavigationAction(NavigationAction.NavigateToSettings)
+                            } else {
+                                onNavigationAction(NavigationAction.NavigateToNotification)
+                            }
+                        }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "알림"
+                            imageVector = if (currentRoute == MainNavigationTab.MY_INFO.route) Icons.Default.Settings else Icons.Default.Notifications,
+                            contentDescription = if (currentRoute == MainNavigationTab.MY_INFO.route) "설정" else "알림"
                         )
                     }
                 }

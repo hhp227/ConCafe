@@ -54,11 +54,17 @@ fun MainScreen(
                 title = { Text("ConCafe") },
                 actions = {
                     IconButton(
-                        onClick = { onNavigationAction(NavigationAction.NavigateToNotification) }
+                        onClick = {
+                            if (uiState.selectedTab == MainNavigationTab.MY_INFO.route) {
+                                onNavigationAction(NavigationAction.NavigateToSettings)
+                            } else {
+                                onNavigationAction(NavigationAction.NavigateToNotification)
+                            }
+                        }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "알림"
+                            imageVector = if (uiState.selectedTab == MainNavigationTab.MY_INFO.route) Icons.Default.Settings else Icons.Default.Notifications,
+                            contentDescription = if (uiState.selectedTab == MainNavigationTab.MY_INFO.route) "설정" else "알림"
                         )
                     }
                 }

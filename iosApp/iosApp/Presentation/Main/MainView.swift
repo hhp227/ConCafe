@@ -37,11 +37,15 @@ struct MainView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    onNavigationAction(.navigateToNotification)
+                    if selectedTab == "myinfo" {
+                        onNavigationAction(.navigateToSettings)
+                    } else {
+                        onNavigationAction(.navigateToNotification)
+                    }
                 } label: {
-                    Image(systemName: "bell")
+                    Image(systemName: selectedTab == "myinfo" ? "gearshape" : "bell")
                 }
-                .accessibilityLabel("알림")
+                .accessibilityLabel(selectedTab == "myinfo" ? "설정" : "알림")
             }
         }
         .onChange(of: viewModel.uiState.selectedTab) { newValue in

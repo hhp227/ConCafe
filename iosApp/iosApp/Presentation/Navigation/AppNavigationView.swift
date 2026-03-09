@@ -32,6 +32,8 @@ struct AppNavigationView: View {
                 SignInView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView(onNavigationAction: viewModel.onAction)
+            case .settings:
+                SettingsView(onNavigationAction: viewModel.onAction)
             case .main:
                 MainView(onNavigationAction: viewModel.onAction)
             case .entry:
@@ -52,6 +54,8 @@ struct AppNavigationView: View {
                 case .signIn:
                     path.append(route)
                 case .notification:
+                    path.append(route)
+                case .settings:
                     path.append(route)
                 case .entry:
                     currentRoute = .entry

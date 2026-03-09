@@ -14,6 +14,7 @@ import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
+import org.hhp227.concafe.presentation.settings.SettingsScreen
 
 @Composable
 fun NavigationScreen(
@@ -78,6 +79,11 @@ fun NavigationScreen(
         }
         composable<Route.Notification> {
             NotificationScreen(
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.Settings> {
+            SettingsScreen(
                 onNavigationAction = viewModel::onAction
             )
         }
