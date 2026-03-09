@@ -82,13 +82,13 @@ struct MainView: View {
 
     @ViewBuilder
     private var rankingTabView: some View {
-        if #available(iOS 16.0, *) {
-            RankingView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("랭킹", systemImage: "trophy.fill") }
-        } else {
-            RankingView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("랭킹", systemImage: "star.fill") }
-        }
+        RankingView(onNavigationAction: onNavigationAction)
+            .tabItem {
+                Label(
+                    "랭킹",
+                    systemImage: compatSystemImageName(iOS16: "trophy.fill", fallback: "star.fill")
+                )
+            }
     }
 }
 

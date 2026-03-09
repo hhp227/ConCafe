@@ -19,6 +19,7 @@ struct CheckInUiState {
     var todayVisits: [CheckInVisitEntry]
     var recentVisits: [CheckInVisitEntry]
     var isLoginPromptVisible: Bool
+    var isNewVisitSheetVisible: Bool
 
     static let empty = CheckInUiState(
         isLoading: false,
@@ -30,6 +31,7 @@ struct CheckInUiState {
         popularCasts: [],
         todayVisits: [],
         recentVisits: [],
-        isLoginPromptVisible: false
+        isLoginPromptVisible: false,
+        isNewVisitSheetVisible: false
     )
 }

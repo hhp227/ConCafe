@@ -15,6 +15,8 @@ final class CheckInViewModel: ObservableObject {
 
     private let getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase
 
+    private let createVisitUseCase: CreateVisitUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = CheckInUiState.empty
@@ -90,6 +92,7 @@ final class CheckInViewModel: ObservableObject {
             Task { @MainActor in
                 self.uiState.currentUser = user
                 self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
+                self.uiState.isNewVisitSheetVisible = false
 
                 if user == nil {
                     self.uiState.todayVisits = []
@@ -110,22 +113,70 @@ final class CheckInViewModel: ObservableObject {
         case .checkInTapped:
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true
+                uiState.isNewVisitSheetVisible = false
+            } else {
+                uiState.isNewVisitSheetVisible = true
             }
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
             uiState.isLoginPromptVisible = false
+        case .dismissNewVisitSheet:
+            uiState.isNewVisitSheetVisible = false
+        case .submitNewVisit(let cafeId, let visitedAt, let memo):
+            submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
+        }
+    }
+
+    private func submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
+        if cafeId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            uiState.errorMessage = "카페를 선택해 주세요."
+            return
+        }
+        if visitedAt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            uiState.errorMessage = "방문 시간을 입력해 주세요."
+            return
+        }
+
+        uiState.errorMessage = nil
+
+        tasks[.submitVisit]?.cancel()
+        tasks[.submitVisit] = Task {
+            do {
+                let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                let result = try await createVisitUseCase.invoke(
+                    cafeId: cafeId,
+                    visitedAt: visitedAt,
+                    memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
+                )
+
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isNewVisitSheetVisible = false
+                    uiState.errorMessage = nil
+                    loadUserFeed()
+                } else if let failure = result as? AppResultFailure {
+                    uiState.errorMessage = "\(failure.error)"
+                } else {
+                    uiState.errorMessage = "체크인 저장에 실패했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.errorMessage = error.localizedDescription
+            }
         }
     }
 
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
+        createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
+        self.createVisitUseCase = createVisitUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
@@ -141,5 +192,6 @@ final class CheckInViewModel: ObservableObject {
     private enum TaskKey {
         case guestFeed
         case userFeed
+        case submitVisit
     }
 }
