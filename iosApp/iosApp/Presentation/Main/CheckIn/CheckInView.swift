@@ -368,43 +368,79 @@ private struct CheckInTodayVisitsRow: View {
                 description: "지금 체크인하고 첫 방문 기록을 남겨보세요."
             )
         } else {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(visits, id: \.id) { visit in
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(visit.cafeName)
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "4E4750"))
-                                .lineLimit(1)
-                            Text(visit.visitedLabel)
-                                .font(.caption)
-                                .foregroundStyle(Color(hex: "7B7480"))
-                            Text(visit.memo ?? "방문 메모 없음")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                            Spacer(minLength: 0)
-                            HStack(spacing: 6) {
-                                Image(systemName: visit.verified ? "checkmark.seal.fill" : "clock")
-                                Text(visit.verified ? "인증 완료" : "확인 중")
-                            }
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(visit.verified ? Color(hex: "D04E81") : Color(hex: "7B7480"))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color(hex: "FFF3F8"))
-                            .clipShape(Capsule())
-                        }
-                        .padding(16)
-                        .frame(width: 190, height: 150, alignment: .topLeading)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
-                    }
+            HStack(spacing: 12) {
+                switch visits.count {
+                case 1:
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    Spacer(minLength: 0)
+                default:
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    CheckInMoreVisitCard(remainingCount: visits.count - 1)
                 }
-                .padding(.horizontal, 16)
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+}
+
+private struct CheckInVisitCard: View {
+    let name: String
+
+    let time: String
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                Text(time)
+                    .font(.caption)
+                    .foregroundStyle(Color.white.opacity(0.8))
+                    .lineLimit(1)
+            }
+            .padding(16)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
+    }
+}
+
+private struct CheckInMoreVisitCard: View {
+    let remainingCount: Int
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "FFF1F6"), Color(hex: "FFE1EC")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            VStack(spacing: 6) {
+                Text("+\(remainingCount)")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                Text("더 방문했어요")
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7C7480"))
             }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
     }
 }
 

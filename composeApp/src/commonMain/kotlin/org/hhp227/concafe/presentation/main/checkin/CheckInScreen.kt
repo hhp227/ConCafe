@@ -630,37 +630,14 @@ private fun TodayVisitsRow(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
-                2 -> {
-                    todayVisits.forEach { visit ->
-                        VisitCard(
-                            name = visit.name,
-                            time = visit.time,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                3 -> {
-                    todayVisits.forEach { visit ->
-                        VisitCard(
-                            name = visit.name,
-                            time = visit.time,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
                 else -> {
                     VisitCard(
                         name = todayVisits[0].name,
                         time = todayVisits[0].time,
                         modifier = Modifier.weight(1f)
                     )
-                    VisitCard(
-                        name = todayVisits[1].name,
-                        time = todayVisits[1].time,
-                        modifier = Modifier.weight(1f)
-                    )
                     MoreVisitCard(
-                        remainingCount = todayVisits.size - 2,
+                        remainingCount = todayVisits.size - 1,
                         modifier = Modifier.weight(1f)
                     )
                 }
