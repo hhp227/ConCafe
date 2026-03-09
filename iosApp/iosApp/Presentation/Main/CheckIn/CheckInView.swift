@@ -281,28 +281,14 @@ private struct CheckInLoginPromotionSection: View {
                 }
                 .font(.caption)
             }
-            HStack(spacing: 10) {
-                Button("로그인") {
-                    onAction(.signInTapped)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Color.white)
-                .foregroundStyle(Color(hex: "EF6797"))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                Button("회원가입") {
-                    onAction(.signUpTapped)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Color.white.opacity(0.18))
-                .foregroundStyle(.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.white.opacity(0.4), lineWidth: 1)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            Button("로그인") {
+                onAction(.signInTapped)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .foregroundStyle(Color(hex: "EF6797"))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
         }
         .padding(18)
@@ -619,24 +605,14 @@ private struct CheckInLoginPromptSheet: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 12)
             }
-            HStack(spacing: 10) {
-                Button("로그인") {
-                    onAction(.signInTapped)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color(hex: "EF6797"))
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                Button("회원가입") {
-                    onAction(.signUpTapped)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color(hex: "FFF1F6"))
-                .foregroundStyle(Color(hex: "D44F82"))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            Button("로그인") {
+                onAction(.signInTapped)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color(hex: "EF6797"))
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
             Spacer()
         }

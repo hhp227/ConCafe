@@ -544,35 +544,18 @@ private fun LoginPromotionSection(
                 Text("• 카페 팬 레벨 상승", color = Color.White)
                 Text("• 체크인 배지 획득", color = Color.White)
             }
-            Row(
+            Button(
+                onClick = onSignIn,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color(0xFFEF6797)
+                ),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Button(
-                    onClick = onSignIn,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFFEF6797)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("로그인", fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = onSignUp,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("회원가입", fontWeight = FontWeight.Bold)
-                }
+                Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("로그인", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -606,13 +589,6 @@ private fun LoginRequiredBottomSheet(
             shape = RoundedCornerShape(16.dp)
         ) {
             Text("로그인하고 체크인", color = Color.White, fontWeight = FontWeight.Bold)
-        }
-        OutlinedButton(
-            onClick = onSignUp,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("회원가입", fontWeight = FontWeight.SemiBold)
         }
     }
 }
