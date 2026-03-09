@@ -56,18 +56,11 @@ struct CheckInView: View {
                 }
             )
         ) {
-            if #available(iOS 16.0, *) {
-                CheckInNewVisitSheet(
-                    cafes: viewModel.uiState.mapCafes,
-                    onAction: viewModel.onAction
-                )
-                .presentationDetents([.large])
-            } else {
-                CheckInNewVisitSheet(
-                    cafes: viewModel.uiState.mapCafes,
-                    onAction: viewModel.onAction
-                )
-            }
+            CheckInNewVisitSheet(
+                cafes: viewModel.uiState.mapCafes,
+                onAction: viewModel.onAction
+            )
+            .compatLargeSheetDetent()
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -795,7 +788,7 @@ private struct CheckInNewVisitSheet: View {
             isMemoFocused = false
         }
         .sheet(isPresented: $isTimePickerPresented) {
-            NavigationStack {
+            CompatNavigationContainer(title: "방문 시간 선택") {
                 VStack {
                     DatePicker(
                         "방문 시간",
@@ -807,17 +800,15 @@ private struct CheckInNewVisitSheet: View {
                     .padding()
                     Spacer()
                 }
-                .navigationTitle("방문 시간 선택")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("확인") {
-                            isTimePickerPresented = false
-                        }
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("확인") {
+                        isTimePickerPresented = false
                     }
                 }
             }
-            .presentationDetents([.fraction(0.35)])
+            .compatFractionSheetDetent(0.35)
         }
     }
 
