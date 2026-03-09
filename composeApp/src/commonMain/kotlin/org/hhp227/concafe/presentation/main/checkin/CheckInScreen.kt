@@ -910,12 +910,6 @@ private fun CheckInSectionTitle(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.DarkGray
-            )
             if (trailing != null) {
                 Text(
                     text = trailing,
@@ -923,6 +917,12 @@ private fun CheckInSectionTitle(
                     color = Color(0xFF7B7480)
                 )
             }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.DarkGray
+            )
         }
         Spacer(modifier = Modifier.weight(1f))
     }
