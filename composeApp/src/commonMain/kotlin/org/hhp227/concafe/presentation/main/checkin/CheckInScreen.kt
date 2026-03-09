@@ -122,7 +122,7 @@ private fun CheckInNewVisitDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.10f))
@@ -139,10 +139,9 @@ private fun CheckInNewVisitDialog(
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
+                    .width(520.dp)
                     .imePadding()
-                    .navigationBarsPadding()
-                    .widthIn(max = 520.dp),
+                    .navigationBarsPadding(),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 color = Color.White,
                 tonalElevation = 0.dp,
