@@ -8,9 +8,11 @@
 import Foundation
 
 enum CafeManagementAction {
-    case selectCafe(String)
-    case shortcutTapped(CafeManagementUiState.Shortcut)
-    case searchCafeTapped
-    case createCafeTapped
-    case dismissInfoMessageTapped
+    case clickCafe(String)
+    case clickCafeDetail(String)
+    case changeCafeSearchQuery(String)
+    case clickClaimCafe(String)
+    case toggleCafeListExpanded
+    case clickCreateCafe
+    case dismissInfoMessage
 }

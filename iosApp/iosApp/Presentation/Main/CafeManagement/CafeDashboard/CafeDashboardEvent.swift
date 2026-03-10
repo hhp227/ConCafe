@@ -8,5 +8,5 @@
 import Foundation
 
 enum CafeDashboardEvent {
-    
+    case navigateBack
 }

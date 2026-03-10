@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct CafeManagementView: View {
+    let onNavigationAction: (NavigationAction) -> Void
+
     @StateObject private var viewModel = CafeManagementViewModel()
 
     var body: some View {
@@ -15,7 +17,13 @@ struct CafeManagementView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .onReceive(viewModel.event) { _ in
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateToCafeDashboard(let cafeId):
+                onNavigationAction(.navigateToCafeDashboard(id: cafeId))
+            case .navigateToCafe(let cafeId):
+                onNavigationAction(.navigateToCafe(id: cafeId))
+            }
         }
     }
 }
@@ -37,33 +45,33 @@ private struct CafeManagementContentView: View {
                 if uiState.hasOwnedCafes {
                     sectionHeader(
                         title: "내 카페",
-                        subtitle: "운영 중인 카페를 선택해 대시보드를 전환하세요"
+                        subtitle: "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
                     )
-                    ownedCafeList
 
-                    if let selectedCafe = uiState.selectedCafe {
-                        sectionHeader(
-                            title: "운영 대시보드",
-                            subtitle: selectedCafe.name
-                        )
-                        dashboardGrid(cafe: selectedCafe)
-                        shortcutGrid
-                        cafeOperationsCard(cafe: selectedCafe)
-                    }
-                } else {
-                    emptyStateCard
-                }
-
-                if !uiState.pendingClaims.isEmpty && uiState.hasOwnedCafes {
-                    sectionHeader(
-                        title: "운영자 신청 상태",
-                        subtitle: "기존 카페 연결 요청 현황"
-                    )
                     VStack(spacing: 12) {
-                        ForEach(uiState.pendingClaims) { claim in
-                            pendingClaimCard(claim: claim)
+                        ForEach(uiState.visibleOwnedCafes) { cafe in
+                            ownedCafeCard(cafe: cafe)
                         }
                     }
+
+                    if uiState.hasHiddenOwnedCafes {
+                        expandOwnedCafeButton
+                    }
+
+                    if !uiState.pendingClaims.isEmpty {
+                        sectionHeader(
+                            title: "운영자 신청 상태",
+                            subtitle: "기존 카페 연결 요청 현황"
+                        )
+                        VStack(spacing: 12) {
+                            ForEach(uiState.pendingClaims) { claim in
+                                pendingClaimCard(claim: claim)
+                            }
+                        }
+                    }
+                } else {
+                    searchCafeSection
+                    emptyStateCard
                 }
             }
             .padding(.horizontal, 20)
@@ -73,8 +81,8 @@ private struct CafeManagementContentView: View {
         .background(
             LinearGradient(
                 colors: [Color(hex: "FFF7FB"), Color(hex: "FFEEF6"), Color(hex: "FFFBFD")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                startPoint: .top,
+                endPoint: .bottom
             )
         )
     }
@@ -86,12 +94,12 @@ private struct CafeManagementContentView: View {
                 .foregroundStyle(.white)
 
             Text(
-                uiState.selectedCafe != nil
-                    ? "\(uiState.selectedCafe!.name) 운영 현황을 확인하고 주요 관리 화면으로 이동할 수 있습니다."
+                uiState.featuredCafe != nil
+                    ? "운영 중인 카페를 확인하고 각 카페의 관리 화면으로 이동할 수 있습니다."
                     : "운영 카페 연결 상태를 확인하고 기존 카페 검색 또는 새 카페 등록을 시작하세요."
             )
             .font(.subheadline)
-            .foregroundStyle(.white.opacity(0.92))
+            .foregroundStyle(.white.opacity(0.9))
 
             Text("운영 카페 \(uiState.ownedCafes.count)개")
                 .font(.caption.weight(.semibold))
@@ -113,107 +121,15 @@ private struct CafeManagementContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 
-    private var ownedCafeList: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(uiState.ownedCafes) { cafe in
-                    ownedCafeCard(cafe: cafe)
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
-
-    private var shortcutGrid: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionHeader(
-                title: "빠른 이동",
-                subtitle: "문서 기준 핵심 운영 진입점"
-            )
-
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12)
-                ],
-                spacing: 12
-            ) {
-                ForEach(CafeManagementUiState.Shortcut.allCases) { shortcut in
-                    shortcutCard(shortcut: shortcut)
-                }
-            }
-        }
-    }
-
-    private var emptyStateCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "FCE6EF"))
-                    .frame(width: 54, height: 54)
-                Image(systemName: "building.2.crop.circle")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
-            }
-
-            Text("아직 연결된 운영 카페가 없습니다")
-                .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
-
-            Text("기존 카페를 검색해 운영 권한을 신청하거나 새 카페를 등록하세요.")
-                .font(.subheadline)
-                .foregroundStyle(Color(hex: "786E7A"))
-
-            HStack(spacing: 10) {
-                Button("기존 카페 검색") {
-                    onAction(.searchCafeTapped)
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .frame(height: 44)
-                .background(Color(hex: "EF6797"))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                Button("새 카페 등록") {
-                    onAction(.createCafeTapped)
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "6A5666"))
-                .padding(.horizontal, 16)
-                .frame(height: 44)
-                .background(Color(hex: "F6EDF4"))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-
-            if !uiState.pendingClaims.isEmpty {
-                Text("운영자 신청 상태")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
-
-                ForEach(uiState.pendingClaims) { claim in
-                    pendingClaimCard(claim: claim)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
-        )
-    }
-
     private func infoBanner(message: String) -> some View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
+
             Button {
-                onAction(.dismissInfoMessageTapped)
+                onAction(.dismissInfoMessage)
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
@@ -243,164 +159,221 @@ private struct CafeManagementContentView: View {
     }
 
     private func ownedCafeCard(cafe: CafeManagementUiState.OwnedCafe) -> some View {
-        let isSelected = cafe.id == uiState.selectedCafe?.id
+        ZStack(alignment: .trailing) {
+            Button {
+                onAction(.clickCafe(cafe.id))
+            } label: {
+                ZStack(alignment: .bottomLeading) {
+                    LinearGradient(
+                        colors: cafe.isApproved
+                            ? [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")]
+                            : [Color(hex: "3A3240"), Color(hex: "6F6272"), Color(hex: "B8A8B2")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
 
-        return Button {
-            onAction(.selectCafe(cafe.id))
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(isSelected ? Color(hex: "EF6797") : Color(hex: "F6E6EE"))
-                            .frame(width: 42, height: 42)
-                        Image(systemName: "storefront.fill")
-                            .foregroundStyle(isSelected ? .white : Color(hex: "9B6E86"))
+                    LinearGradient(
+                        colors: [.clear, Color.black.opacity(0.14), Color.black.opacity(0.52)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(cafe.name)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Text(cafe.city)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.88))
+                            .lineLimit(1)
                     }
-                    Spacer()
-                    approvalBadge(isApproved: cafe.isApproved)
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                Text(cafe.name)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
-                    .multilineTextAlignment(.leading)
-
-                Text(cafe.city)
-                    .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
-
-                HStack(spacing: 12) {
-                    metaChip(label: "체크인 \(cafe.todayCheckIns)")
-                    metaChip(label: "평점 \(cafe.rating > 0 ? String(format: "%.1f", cafe.rating) : "-")")
-                }
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1.8, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
-            .frame(width: 230, alignment: .leading)
-            .padding(16)
-            .background(isSelected ? Color(hex: "FFF0F6") : .white)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .buttonStyle(.plain)
+
+            Button {
+                onAction(.clickCafeDetail(cafe.id))
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 10)
+        }
+    }
+
+    private var expandOwnedCafeButton: some View {
+        Button {
+            onAction(.toggleCafeListExpanded)
+        } label: {
+            HStack {
+                Text(
+                    uiState.isShowingAllCafes
+                        ? "카페 목록 접기"
+                        : "나머지 카페 \((uiState.ownedCafes.count - uiState.visibleOwnedCafes.count))개 더 보기"
+                )
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5E4F5D"))
+
+                Spacer()
+
+                Image(systemName: uiState.isShowingAllCafes ? "chevron.up" : "chevron.down")
+                    .foregroundStyle(Color(hex: "7C6B79"))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Color(hex: "F7F2F6"))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(isSelected ? Color(hex: "EF6797") : Color(hex: "E8DFE7"), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color(hex: "E5DCE5"), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
     }
 
-    private func approvalBadge(isApproved: Bool) -> some View {
-        Text(isApproved ? "승인 완료" : "승인 대기")
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(isApproved ? Color(hex: "2F8B57") : Color(hex: "9A6A11"))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(isApproved ? Color(hex: "E8F8EE") : Color(hex: "FFF1D8"))
-            .clipShape(Capsule())
-    }
-
-    private func metaChip(label: String) -> some View {
-        Text(label)
-            .font(.caption2.weight(.semibold))
-            .foregroundStyle(Color(hex: "6A606B"))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Color(hex: "F7F2F6"))
-            .clipShape(Capsule())
-    }
-
-    private func dashboardGrid(cafe: CafeManagementUiState.OwnedCafe) -> some View {
-        LazyVGrid(
-            columns: [
-                GridItem(.flexible(), spacing: 12),
-                GridItem(.flexible(), spacing: 12)
-            ],
-            spacing: 12
-        ) {
-            dashboardMetricCard(title: "오늘 방문자", value: "\(cafe.todayVisitors)", accent: Color(hex: "4F8EF7"))
-            dashboardMetricCard(title: "오늘 체크인", value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
-            dashboardMetricCard(title: "오늘 리뷰", value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
-            dashboardMetricCard(
-                title: "평점",
-                value: cafe.rating > 0 ? String(format: "%.1f", cafe.rating) : "-",
-                accent: Color(hex: "F59E0B")
+    private var searchCafeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(
+                title: "기존 카페 검색",
+                subtitle: "기등록되어있는 카페를 검색해서 등록할수 있습니다."
             )
-        }
-    }
 
-    private func dashboardMetricCard(title: String, value: String, accent: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Circle()
-                .fill(accent)
-                .frame(width: 10, height: 10)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(Color(hex: "7A707A"))
-            Text(value)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
-        }
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-        .padding(16)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
-        )
-    }
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Color(hex: "8E8794"))
 
-    private func shortcutCard(shortcut: CafeManagementUiState.Shortcut) -> some View {
-        Button {
-            onAction(.shortcutTapped(shortcut))
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(hex: "FCE6EF"))
-                        .frame(width: 42, height: 42)
-                    Image(systemName: shortcut.iconName)
-                        .foregroundStyle(Color(hex: "EF6797"))
+                TextField(
+                    "카페 이름 또는 지역 검색",
+                    text: Binding(
+                        get: { uiState.cafeSearchQuery },
+                        set: { onAction(.changeCafeSearchQuery($0)) }
+                    )
+                )
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+            )
+
+            if !uiState.cafeSearchQuery.isEmpty {
+                VStack(spacing: 0) {
+                    if uiState.filteredSearchableCafes.isEmpty {
+                        Text("검색 결과가 없습니다")
+                            .font(.subheadline)
+                            .foregroundStyle(Color(hex: "8E8794"))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 20)
+                    } else {
+                        ForEach(Array(uiState.filteredSearchableCafes.enumerated()), id: \.element.id) { index, cafe in
+                            searchCafeItem(cafe: cafe)
+
+                            if index < uiState.filteredSearchableCafes.count - 1 {
+                                Divider()
+                                    .overlay(Color(hex: "F1EAF1"))
+                            }
+                        }
+                    }
                 }
-                Text(shortcut.title)
+                .frame(maxWidth: .infinity)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                )
+            }
+        }
+    }
+
+    private func searchCafeItem(cafe: CafeManagementUiState.SearchableCafe) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cafe.name)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color(hex: "2B2330"))
-                Text(shortcut.subtitle)
+                Text(cafe.location)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
-                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(Color(hex: "8E8794"))
             }
-            .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-            .padding(16)
-            .background(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
-            )
+
+            Spacer()
+
+            Button("등록") {
+                onAction(.clickClaimCafe(cafe.id))
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .frame(height: 38)
+            .background(Color(hex: "EF6797"))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 
-    private func cafeOperationsCard(cafe: CafeManagementUiState.OwnedCafe) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionHeader(
-                title: "선택 카페 요약",
-                subtitle: "현재 카페 컨텍스트에서 관리 가능한 핵심 수치"
-            )
-            HStack(spacing: 10) {
-                metaChip(label: "캐스트 \(cafe.castCount)")
-                metaChip(label: "공지 \(cafe.noticeCount)")
-                metaChip(label: "외부 링크 \(cafe.externalLinkCount)")
+    private var emptyStateCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "FCE6EF"))
+                    .frame(width: 54, height: 54)
+
+                Image(systemName: "building.2.crop.circle")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Color(hex: "EF6797"))
             }
-            Text("이 화면은 다중 카페 운영 구조를 전제로 하며, 다른 카페를 선택하면 대시보드와 관리 진입점이 같은 구조로 전환됩니다.")
-                .font(.caption)
+
+            Text("아직 연결된 운영 카페가 없습니다")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+
+            Text("검색으로 기존 카페를 찾거나 새 카페를 등록해 운영 권한을 연결하세요.")
+                .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
+
+            Button("새 카페 등록") {
+                onAction(.clickCreateCafe)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color(hex: "6A5666"))
+            .padding(.horizontal, 16)
+            .frame(height: 44)
+            .background(Color(hex: "F6EDF4"))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            if !uiState.pendingClaims.isEmpty {
+                Text("운영자 신청 상태")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color(hex: "2B2330"))
+
+                ForEach(uiState.pendingClaims) { claim in
+                    pendingClaimCard(claim: claim)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(20)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
         )
     }
@@ -412,11 +385,19 @@ private struct CafeManagementContentView: View {
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "2B2330"))
                 Spacer()
-                approvalBadge(isApproved: false)
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: "FFE8B8"))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color(hex: "9A6A11"))
+                }
             }
+
             Text("\(claim.status) · \(claim.requestedAt)")
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8B774C"))
+
             Text(claim.message)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6E6248"))
@@ -434,6 +415,6 @@ private struct CafeManagementContentView: View {
 
 struct CafeManagementView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeManagementView()
+        CafeManagementView(onNavigationAction: { _ in })
     }
 }

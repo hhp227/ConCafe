@@ -58,7 +58,7 @@ data class CafeManagementUiState(
         private const val DEFAULT_VISIBLE_CAFE_COUNT = 2
 
         fun preview() = CafeManagementUiState(
-            ownedCafes = /*listOf(
+            ownedCafes = listOf(
                 OwnedCafe(
                     id = "cafe-1",
                     name = "Maid Dream Tokyo",
@@ -98,7 +98,7 @@ data class CafeManagementUiState(
                     noticeCount = 0,
                     externalLinkCount = 1
                 )
-            )*/emptyList(),
+            ),
             searchableCafes = listOf(
                 SearchableCafe("cafe-1", "Maid Dream Tokyo", "Tokyo Akihabara"),
                 SearchableCafe("cafe-2", "Seoul Maid Cafe", "서울 마포구 연남동"),
