@@ -6,3 +6,26 @@
 //
 
 import Foundation
+import Shared
+
+struct CafeInfoEditUiState {
+    var detail: CafeDetail?
+    var isLoading = true
+    var isSaving = false
+    var cafeName = ""
+    var cafeDescription = ""
+    var representativeImageTitle = "대표 이미지"
+    var representativeImageUrl: String?
+    var galleryImages: [String] = []
+    var address = ""
+    var contactNumber = ""
+    var weekdayOpen = ""
+    var weekdayClose = ""
+    var weekendOpen = ""
+    var weekendClose = ""
+    var infoMessage: String?
+
+    var galleryLimitText: String {
+        "\(galleryImages.count) / 10"
+    }
+}

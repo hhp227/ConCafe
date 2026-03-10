@@ -9,4 +9,5 @@ import Foundation
 
 enum CafeDashboardEvent {
     case navigateBack
+    case navigateToCafeInfoEdit(cafeId: String)
 }

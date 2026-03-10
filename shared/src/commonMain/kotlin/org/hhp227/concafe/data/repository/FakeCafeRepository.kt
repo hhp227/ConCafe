@@ -4,6 +4,7 @@ import org.hhp227.concafe.data.source.ConCafeDataSource
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
+import org.hhp227.concafe.domain.model.CafeInfoUpdate
 import org.hhp227.concafe.domain.model.CafeSort
 import org.hhp227.concafe.domain.model.CheckInCafeSummary
 import org.hhp227.concafe.domain.repository.CafeRepository
@@ -45,6 +46,10 @@ class FakeCafeRepository(
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
         return dataSource.cafeDetail(cafeId)
             ?: throw NoSuchElementException("cafe detail not found")
+    }
+
+    override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
+        return dataSource.updateCafeInfo(update)
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {

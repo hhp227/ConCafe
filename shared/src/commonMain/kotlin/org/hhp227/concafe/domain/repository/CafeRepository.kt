@@ -3,6 +3,7 @@ package org.hhp227.concafe.domain.repository
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
+import org.hhp227.concafe.domain.model.CafeInfoUpdate
 import org.hhp227.concafe.domain.model.CafeSort
 import org.hhp227.concafe.domain.model.CheckInCafeSummary
 
@@ -17,6 +18,8 @@ interface CafeRepository {
     ): PagedResult<Cafe>
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
+
+    suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     suspend fun isFavorite(userId: String, cafeId: String): Boolean
 

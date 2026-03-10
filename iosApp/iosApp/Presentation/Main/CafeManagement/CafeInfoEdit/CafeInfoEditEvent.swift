@@ -8,5 +8,6 @@
 import Foundation
 
 enum CafeInfoEditEvent {
-    
+    case navigateBack
+    case showSaveSuccessAlert
 }

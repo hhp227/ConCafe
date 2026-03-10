@@ -35,6 +35,8 @@ struct CafeDashboardView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToCafeInfoEdit(let cafeId):
+                onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
             }
         }
     }
