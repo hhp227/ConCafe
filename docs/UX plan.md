@@ -215,6 +215,11 @@
 - 메뉴/굿즈 관리
 - 캐스트/출근표 관리
 
+### 데이터 로딩 원칙
+- 카페관리 화면 데이터는 화면별 하드코딩 상태가 아니라 `GetCafeManagementUseCase`를 통해 가져온다.
+- `GetCafeManagementUseCase`는 `CafeManagementRepository`를 통해 운영 카페 목록, 검색 가능한 카페 목록, 운영자 신청 상태를 함께 조합한다.
+- `CafeManagementRepository`는 `ConCafeDataSource`를 원천 데이터로 사용하고, Repository 내부에 화면용 리스트를 별도 하드코딩하지 않는다.
+
 ### 다중 카페 운영 UX 원칙
 - 카페 운영자가 여러 카페를 운영할 수 있으므로 탭 진입 시 먼저 `내 카페 목록`을 노출한다.
 - 운영 카페가 1개인 경우에는 목록을 스킵하고 바로 해당 카페의 대시보드로 진입할 수 있다.
