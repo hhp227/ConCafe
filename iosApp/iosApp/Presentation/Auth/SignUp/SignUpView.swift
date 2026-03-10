@@ -44,29 +44,26 @@ private struct SignUpContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(spacing: 20) {
-                    if uiState.step == .selectType {
-                        SignInLogoSection()
-                        introSection
-                        ForEach(SignUpUiState.UserType.allCases, id: \.title) { type in
-                            userTypeCard(type: type)
-                        }
+        ScrollView {
+            VStack(spacing: 20) {
+                if uiState.step == .selectType {
+                    SignInLogoSection()
+                    introSection
+                    ForEach(SignUpUiState.UserType.allCases, id: \.title) { type in
+                        userTypeCard(type: type)
+                    }
+                    footer
+                } else {
+                    if let selectedUserType = uiState.selectedUserType {
+                        formHeader(selectedUserType)
+                        formSection(selectedUserType)
                         footer
-                    } else {
-                        if let selectedUserType = uiState.selectedUserType {
-                            formHeader(selectedUserType)
-                            formSection(selectedUserType)
-                            footer
-                        }
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 32)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 32)
         }
         .background(
             LinearGradient(
@@ -75,28 +72,7 @@ private struct SignUpContentView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .navigationBarBackButtonHidden(true)
-    }
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            Button(action: {
-                onAction(.backTapped)
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.primary)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.9))
-                    .clipShape(Circle())
-            }
-            Text("회원가입")
-                .font(.title3.weight(.bold))
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .navigationTitle("회원가입")
     }
 
     private var introSection: some View {
@@ -307,7 +283,6 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .disabled(uiState.isPhoneVerified || uiState.phone.isEmpty)
             }
-
             if !uiState.isPhoneVerified && !uiState.phone.isEmpty {
                 HStack(alignment: .bottom, spacing: 10) {
                     textField(
