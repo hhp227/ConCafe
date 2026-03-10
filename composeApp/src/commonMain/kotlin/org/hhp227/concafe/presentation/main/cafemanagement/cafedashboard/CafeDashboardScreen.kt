@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetCafeDashboardUseCase
+import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -34,7 +37,11 @@ fun CafeDashboardScreen(
         key = "cafe-dashboard-$cafeId",
         factory = viewModelFactory {
             initializer {
-                CafeDashboardViewModel(cafeId = cafeId)
+                CafeDashboardViewModel(
+                    cafeId = cafeId,
+                    getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
+                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                )
             }
         }
     )
@@ -60,12 +67,14 @@ private fun CafeDashboardContentScreen(
     uiState: CafeDashboardUiState,
     onAction: (CafeDashboardAction) -> Unit
 ) {
+    val cafe = uiState.cafe
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.cafe.name)
+                    Text(cafe?.name ?: "카페 관리")
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeDashboardAction.ClickBack) }) {
@@ -91,8 +100,10 @@ private fun CafeDashboardContentScreen(
                 contentPadding = PaddingValues(20.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                item {
-                    DashboardHeroCard(cafe = uiState.cafe)
+                cafe?.let {
+                    item {
+                        DashboardHeroCard(cafe = it)
+                    }
                 }
                 uiState.infoMessage?.let { message ->
                     item {
@@ -102,34 +113,47 @@ private fun CafeDashboardContentScreen(
                         )
                     }
                 }
-                item {
-                    DashboardMetricGrid(cafe = uiState.cafe)
-                }
-                item {
-                    ShortcutGrid(
-                        onShortcutClick = { shortcut ->
-                            onAction(CafeDashboardAction.ClickShortcut(shortcut))
+                if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
-                }
-                item {
-                    CastManagementSection(
-                        casts = uiState.cafe.castPreviews,
-                        onCastManagementClick = {
-                            onAction(CafeDashboardAction.ClickShortcut(CafeDashboardUiState.Shortcut.CAST_MANAGEMENT))
-                        },
-                        onScheduleClick = {
-                            onAction(CafeDashboardAction.ClickShortcut(CafeDashboardUiState.Shortcut.CAST_SCHEDULE))
-                        }
-                    )
-                }
-                item {
-                    HomeBannerSection(
-                        banner = uiState.cafe.homeBannerPreview,
-                        onBannerClick = {
-                            onAction(CafeDashboardAction.ClickShortcut(CafeDashboardUiState.Shortcut.HOME_BANNER))
-                        }
-                    )
+                    }
+                } else if (cafe != null) {
+                    item {
+                        DashboardMetricGrid(cafe = cafe)
+                    }
+                    item {
+                        ShortcutGrid(
+                            onShortcutClick = { shortcut ->
+                                onAction(CafeDashboardAction.ClickShortcut(shortcut))
+                            }
+                        )
+                    }
+                    item {
+                        CastManagementSection(
+                            casts = cafe.castPreviews,
+                            onCastManagementClick = {
+                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
+                            },
+                            onScheduleClick = {
+                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                            }
+                        )
+                    }
+                    item {
+                        HomeBannerSection(
+                            banner = cafe.homeBannerPreview,
+                            onBannerClick = {
+                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -139,7 +163,7 @@ private fun CafeDashboardContentScreen(
 
 @Composable
 private fun DashboardHeroCard(
-    cafe: CafeDashboardUiState.CafeSummary
+    cafe: CafeDashboardData
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
@@ -227,7 +251,7 @@ private fun InfoBanner(
 
 @Composable
 private fun DashboardMetricGrid(
-    cafe: CafeDashboardUiState.CafeSummary
+    cafe: CafeDashboardData
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
@@ -296,13 +320,13 @@ private fun DashboardMetricCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ShortcutGrid(
-    onShortcutClick: (CafeDashboardUiState.Shortcut) -> Unit
+    onShortcutClick: (CafeDashboardShortcut) -> Unit
 ) {
     val primaryShortcuts = listOf(
-        CafeDashboardUiState.Shortcut.EVENT_MANAGEMENT,
-        CafeDashboardUiState.Shortcut.CAFE_SETTINGS,
-        CafeDashboardUiState.Shortcut.MENU_GOODS,
-        CafeDashboardUiState.Shortcut.EXTERNAL_LINKS
+        CafeDashboardShortcut.EVENT_MANAGEMENT,
+        CafeDashboardShortcut.CAFE_SETTINGS,
+        CafeDashboardShortcut.MENU_GOODS,
+        CafeDashboardShortcut.EXTERNAL_LINKS
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -329,17 +353,17 @@ private fun ShortcutGrid(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShortcutCard(
-    shortcut: CafeDashboardUiState.Shortcut,
+    shortcut: CafeDashboardShortcut,
     onClick: () -> Unit
 ) {
     val icon = when (shortcut) {
-        CafeDashboardUiState.Shortcut.CAST_MANAGEMENT -> Icons.Default.Groups
-        CafeDashboardUiState.Shortcut.CAST_SCHEDULE -> Icons.Default.CalendarMonth
-        CafeDashboardUiState.Shortcut.EVENT_MANAGEMENT -> Icons.Default.AutoAwesome
-        CafeDashboardUiState.Shortcut.CAFE_SETTINGS -> Icons.Default.Settings
-        CafeDashboardUiState.Shortcut.MENU_GOODS -> Icons.Default.RestaurantMenu
-        CafeDashboardUiState.Shortcut.HOME_BANNER -> Icons.Default.Campaign
-        CafeDashboardUiState.Shortcut.EXTERNAL_LINKS -> Icons.Default.Link
+        CafeDashboardShortcut.CAST_MANAGEMENT -> Icons.Default.Groups
+        CafeDashboardShortcut.CAST_SCHEDULE -> Icons.Default.CalendarMonth
+        CafeDashboardShortcut.EVENT_MANAGEMENT -> Icons.Default.AutoAwesome
+        CafeDashboardShortcut.CAFE_SETTINGS -> Icons.Default.Settings
+        CafeDashboardShortcut.MENU_GOODS -> Icons.Default.RestaurantMenu
+        CafeDashboardShortcut.HOME_BANNER -> Icons.Default.Campaign
+        CafeDashboardShortcut.EXTERNAL_LINKS -> Icons.Default.Link
     }
 
     Card(
@@ -376,7 +400,7 @@ private fun ShortcutCard(
 
 @Composable
 private fun CastManagementSection(
-    casts: List<CafeDashboardUiState.CastPreview>,
+    casts: List<CafeDashboardData.CastPreview>,
     onCastManagementClick: () -> Unit,
     onScheduleClick: () -> Unit
 ) {
@@ -442,7 +466,7 @@ private fun CastManagementSection(
 
 @Composable
 private fun CastPreviewItem(
-    cast: CafeDashboardUiState.CastPreview
+    cast: CafeDashboardData.CastPreview
 ) {
     Column(
         modifier = Modifier.width(80.dp),
@@ -515,7 +539,7 @@ private fun AddCastItem(
 
 @Composable
 private fun HomeBannerSection(
-    banner: CafeDashboardUiState.HomeBannerPreview,
+    banner: CafeDashboardData.HomeBannerPreview,
     onBannerClick: () -> Unit
 ) {
     Card(

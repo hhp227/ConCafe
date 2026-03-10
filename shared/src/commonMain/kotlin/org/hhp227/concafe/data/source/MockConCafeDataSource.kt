@@ -3,6 +3,7 @@ package org.hhp227.concafe.data.source
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.Cast
@@ -286,6 +287,42 @@ class MockConCafeDataSource : ConCafeDataSource {
         "cafe-11" to 243,
         "cafe-7" to 219,
         "cafe-9" to 187
+    )
+
+    override val cafeTodayCheckInCountById = mapOf(
+        "cafe-1" to 12,
+        "cafe-2" to 7,
+        "cafe-3" to 0
+    )
+
+    override val cafeTodayReviewCountById = mapOf(
+        "cafe-1" to 3,
+        "cafe-2" to 1,
+        "cafe-3" to 0
+    )
+
+    override val onShiftCastIdsByCafeId = mapOf(
+        "cafe-1" to setOf("maid-1", "maid-5"),
+        "cafe-2" to setOf("maid-2", "maid-4"),
+        "cafe-3" to emptySet()
+    )
+
+    override val cafeHomeBannerPreviewByCafeId = mapOf(
+        "cafe-1" to CafeDashboardData.HomeBannerPreview(
+            title = "여름 한정 신메뉴 출시!",
+            period = "2026.06.01 - 2026.08.31",
+            statusLabel = "노출 중"
+        ),
+        "cafe-2" to CafeDashboardData.HomeBannerPreview(
+            title = "주말 콜라보 디저트 오픈",
+            period = "2026.03.14 - 2026.03.31",
+            statusLabel = "예약 중"
+        ),
+        "cafe-3" to CafeDashboardData.HomeBannerPreview(
+            title = "신규 오픈 안내 배너",
+            period = "2026.03.20 - 2026.04.20",
+            statusLabel = "검수 중"
+        )
     )
 
     override val castTodayVisitCountById = mapOf(

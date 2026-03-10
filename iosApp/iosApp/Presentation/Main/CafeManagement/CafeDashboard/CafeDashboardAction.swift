@@ -9,6 +9,6 @@ import Foundation
 
 enum CafeDashboardAction {
     case clickBack
-    case clickShortcut(CafeDashboardUiState.Shortcut)
+    case clickShortcut(CafeDashboardShortcut)
     case dismissInfoMessage
 }

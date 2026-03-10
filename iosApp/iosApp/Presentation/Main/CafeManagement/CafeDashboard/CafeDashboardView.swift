@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import Shared
 
 struct CafeDashboardView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -19,7 +20,7 @@ struct CafeDashboardView: View {
             onAction: viewModel.onAction
         )
         .navigationBarBackButtonHidden()
-        .navigationTitle(viewModel.uiState.cafe.name)
+        .navigationTitle(viewModel.uiState.cafe?.name ?? "카페 관리")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -55,14 +56,22 @@ private struct CafeDashboardContentView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                heroCard
+                if uiState.cafe != nil {
+                    heroCard
+                }
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
-                metricGrid
-                shortcutGrid
-                castManagementSection
-                homeBannerSection
+                if uiState.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 48)
+                } else if uiState.cafe != nil {
+                    metricGrid
+                    shortcutGrid
+                    castManagementSection
+                    homeBannerSection
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 20)
@@ -77,6 +86,8 @@ private struct CafeDashboardContentView: View {
     }
 
     private var heroCard: some View {
+        let cafe = uiState.cafe!
+
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 ZStack {
@@ -87,10 +98,10 @@ private struct CafeDashboardContentView: View {
                         .foregroundStyle(.white)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(uiState.cafe.name)
+                    Text(cafe.name)
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
-                    Text(uiState.cafe.city)
+                    Text(cafe.city)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.85))
                 }
@@ -136,12 +147,14 @@ private struct CafeDashboardContentView: View {
     }
 
     private var metricGrid: some View {
+        let cafe = uiState.cafe!
+
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader(title: "운영 대시보드", subtitle: "오늘 기준 핵심 수치")
             HStack(spacing: 12) {
-                dashboardMetricCard(title: "오늘 체크인", value: "\(uiState.cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
-                dashboardMetricCard(title: "오늘 리뷰", value: "\(uiState.cafe.todayReviews)", accent: Color(hex: "47A88B"))
-                dashboardMetricCard(title: "평점", value: formatRating(uiState.cafe.rating), accent: Color(hex: "F59E0B"))
+                dashboardMetricCard(title: "오늘 체크인", value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
+                dashboardMetricCard(title: "오늘 리뷰", value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
+                dashboardMetricCard(title: "평점", value: formatRating(cafe.rating), accent: Color(hex: "F59E0B"))
             }
         }
     }
@@ -176,7 +189,7 @@ private struct CafeDashboardContentView: View {
                 spacing: 12
             ) {
                 ForEach([
-                    CafeDashboardUiState.Shortcut.eventManagement,
+                    CafeDashboardShortcut.eventManagement,
                     .cafeSettings,
                     .menuGoods,
                     .externalLinks
@@ -187,7 +200,7 @@ private struct CafeDashboardContentView: View {
         }
     }
 
-    private func shortcutCard(shortcut: CafeDashboardUiState.Shortcut) -> some View {
+    private func shortcutCard(shortcut: CafeDashboardShortcut) -> some View {
         let iconName: String = {
             switch shortcut {
             case .castManagement: return "person.3.fill"
@@ -228,6 +241,8 @@ private struct CafeDashboardContentView: View {
     }
 
     private var castManagementSection: some View {
+        let cafe = uiState.cafe!
+
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("소속 캐스트 관리")
@@ -253,7 +268,7 @@ private struct CafeDashboardContentView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    ForEach(uiState.cafe.castPreviews) { cast in
+                    ForEach(cafe.castPreviews, id: \.id) { cast in
                         castPreviewItem(cast: cast)
                     }
                     Button {
@@ -287,7 +302,7 @@ private struct CafeDashboardContentView: View {
         )
     }
 
-    private func castPreviewItem(cast: CafeDashboardUiState.CastPreview) -> some View {
+    private func castPreviewItem(cast: CafeDashboardDataCastPreview) -> some View {
         VStack(spacing: 8) {
             ZStack(alignment: .bottomTrailing) {
                 LinearGradient(
@@ -309,6 +324,8 @@ private struct CafeDashboardContentView: View {
     }
 
     private var homeBannerSection: some View {
+        let cafe = uiState.cafe!
+
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("홈 배너 관리")
@@ -335,13 +352,13 @@ private struct CafeDashboardContentView: View {
                     .frame(width: 96, height: 64)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(uiState.cafe.homeBannerPreview.title)
+                        Text(cafe.homeBannerPreview.title)
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: "2B2330"))
-                        Text(uiState.cafe.homeBannerPreview.period)
+                        Text(cafe.homeBannerPreview.period)
                             .font(.caption)
                             .foregroundStyle(Color(hex: "7E7480"))
-                        Text(uiState.cafe.homeBannerPreview.statusLabel)
+                        Text(cafe.homeBannerPreview.statusLabel)
                             .font(.caption2.weight(.bold))
                             .foregroundStyle(Color(hex: "2F8B57"))
                             .padding(.horizontal, 8)
@@ -401,11 +418,5 @@ private struct CafeDashboardContentView: View {
             return "-"
         }
         return String(format: "%.1f", floor(rating * 10) / 10.0)
-    }
-}
-
-struct CafeDashboardView_Previews: PreviewProvider {
-    static var previews: some View {
-        CafeDashboardView(cafeId: "cafe-1", onNavigationAction: { _ in })
     }
 }
