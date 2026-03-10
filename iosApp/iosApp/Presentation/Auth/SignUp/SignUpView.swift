@@ -184,9 +184,10 @@ private struct SignUpContentView: View {
                 )
                 phoneVerificationSection
                 cafeSelectionSection(
-                    title: "운영 카페 선택",
-                    placeholder: "카페를 검색하세요"
+                    title: "운영 카페 연결 (선택)",
+                    placeholder: "가입 전에 연결할 카페를 1개 선택할 수 있습니다"
                 )
+                ownerCafeGuideCard
             } else {
                 textField(
                     title: type == .cast ? "활동명 (닉네임)" : "닉네임",
@@ -283,7 +284,7 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .disabled(uiState.isPhoneVerified || uiState.phone.isEmpty)
             }
-            if !uiState.isPhoneVerified && !uiState.phone.isEmpty {
+            if uiState.hasRequestedVerification && !uiState.isPhoneVerified {
                 HStack(alignment: .bottom, spacing: 10) {
                     textField(
                         title: "인증번호",
@@ -320,6 +321,26 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
+    }
+
+    private var ownerCafeGuideCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("운영 카페 연결 안내")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5F3AA2"))
+            Text("회원가입 단계에서는 카페 1개만 미리 선택할 수 있습니다. 선택하지 않아도 가입 가능하며, 가입 후 카페관리 탭에서 기존 카페 검색이나 새 카페 등록으로 추가 연결할 수 있습니다.")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "6B5A82"))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color(hex: "F6F0FF"))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(hex: "E6D9FA"), lineWidth: 1)
+        )
     }
 
     private func cafeSelectionSection(title: String, placeholder: String) -> some View {
@@ -521,7 +542,7 @@ private struct SignUpContentView: View {
         case .cast:
             return "소속 카페를 등록하세요"
         case .cafeOwner:
-            return "사업자 인증이 필요합니다"
+            return "휴대폰 인증 후 운영 카페를 선택하거나 나중에 연결할 수 있습니다"
         }
     }
 }
