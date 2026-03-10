@@ -341,7 +341,7 @@ private struct CafeInfoEditContentView: View {
             ("FFD9CF", "FFF0EA")
         ]
         let colors = gradients[index % gradients.count]
-        ZStack(alignment: .bottomLeading) {
+        return ZStack(alignment: .bottomLeading) {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(
                     LinearGradient(
