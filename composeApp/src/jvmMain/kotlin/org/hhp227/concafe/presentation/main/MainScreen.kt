@@ -80,7 +80,7 @@ fun MainScreen(
                         selected = uiState.selectedTab == tab.route,
                         onClick = {
                             onNavigationAction(NavigationAction.NavigateToMain(tab.route))
-                            viewModel.onAction(MainAction.RefreshNavigation(tab.route))
+                            viewModel.onAction(MainAction.SelectTab(tab.route))
                         },
                         icon = {
                             Icon(

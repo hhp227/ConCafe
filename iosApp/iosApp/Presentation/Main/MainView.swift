@@ -55,7 +55,7 @@ struct MainView: View {
         }
         .onChange(of: selectedTab) { newValue in
             if viewModel.uiState.selectedTab != newValue {
-                viewModel.onAction(.refreshNavigation(preferredRoute: newValue))
+                viewModel.onAction(.selectTab(route: newValue))
             }
         }
         .onReceive(viewModel.event) { _ in

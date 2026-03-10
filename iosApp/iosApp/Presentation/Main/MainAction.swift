@@ -10,4 +10,5 @@ import Foundation
 enum MainAction {
     case enter(preferredRoute: String? = nil)
     case refreshNavigation(preferredRoute: String? = nil)
+    case selectTab(route: String)
 }
