@@ -38,7 +38,6 @@ private struct SignUpContentView: View {
         if uiState.cafeSearchQuery.isEmpty {
             return uiState.cafes
         }
-
         return uiState.cafes.filter {
             $0.name.localizedCaseInsensitiveContains(uiState.cafeSearchQuery)
         }
@@ -118,7 +117,7 @@ private struct SignUpContentView: View {
             Button("로그인") {
                 onAction(.signInInsteadTapped)
             }
-            .fontWeight(.semibold)
+            .font(.system(size: 16, weight: .semibold))
         }
         .font(.footnote)
         .frame(maxWidth: .infinity)
@@ -198,7 +197,6 @@ private struct SignUpContentView: View {
                 ),
                 keyboardType: .emailAddress
             )
-
             if type == .cafeOwner {
                 textField(
                     title: "이름",
@@ -233,7 +231,6 @@ private struct SignUpContentView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-
             secureField(
                 title: "비밀번호",
                 placeholder: "8자 이상 입력하세요",
@@ -250,21 +247,18 @@ private struct SignUpContentView: View {
                     set: { onAction(.confirmPasswordChanged($0)) }
                 )
             )
-
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "D1436F"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-
             if let infoMessage = uiState.infoMessage {
                 Text(infoMessage)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "2E8B57"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-
             Button {
                 onAction(.submitTapped)
             } label: {
@@ -277,14 +271,12 @@ private struct SignUpContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(uiState.isLoading)
-
             if type == .cast {
                 Text("가입 후 소속 카페의 승인이 완료되면 활동을 시작할 수 있습니다")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-
             if type == .visitor {
                 SignInDivider()
                 socialButtons
@@ -338,7 +330,6 @@ private struct SignUpContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
-
             if uiState.isPhoneVerified {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
@@ -360,7 +351,6 @@ private struct SignUpContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-
             Button {
                 onAction(.toggleCafeSearchTapped)
             } label: {
@@ -380,7 +370,6 @@ private struct SignUpContentView: View {
                         .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
                 )
             }
-
             if uiState.isCafeSearchVisible {
                 VStack(spacing: 0) {
                     textField(
@@ -392,7 +381,6 @@ private struct SignUpContentView: View {
                         )
                     )
                     .padding(12)
-
                     if filteredCafes.isEmpty {
                         Text("검색 결과가 없습니다")
                             .font(.subheadline)
