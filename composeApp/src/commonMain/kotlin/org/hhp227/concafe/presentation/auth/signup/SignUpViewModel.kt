@@ -9,17 +9,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.UserRole
+import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
 
 class SignUpViewModel(
+    private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
     private val signUpUseCase: SignUpUseCase,
     private val signInUseCase: SignInUseCase
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(
-        SignUpUiState.empty().copy(cafes = defaultCafes)
-    )
+    private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<SignUpEvent>(replay = 0)
@@ -102,7 +103,7 @@ class SignUpViewModel(
         }
     }
 
-    private fun selectCafe(cafe: SignUpUiState.CafeOption) {
+    private fun selectCafe(cafe: Cafe) {
         _uiState.update {
             it.copy(
                 selectedCafe = cafe,
@@ -121,6 +122,24 @@ class SignUpViewModel(
                 errorMessage = null,
                 infoMessage = null
             )
+        }
+    }
+
+    private fun loadCafeOptions() {
+        viewModelScope.launch {
+            when (val result = getSignUpCafeListUseCase.invoke()) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(cafes = result.data) }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            cafes = emptyList(),
+                            errorMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -304,15 +323,12 @@ class SignUpViewModel(
         }
     }
 
+    init {
+        loadCafeOptions()
+    }
+
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
         private const val VERIFICATION_CODE = "1234"
-
-        private val defaultCafes = listOf(
-            SignUpUiState.CafeOption("cafe-1", "메이드 하우스", "강남", true),
-            SignUpUiState.CafeOption("cafe-2", "핑크 캐슬", "신촌", true),
-            SignUpUiState.CafeOption("cafe-3", "리본 카페", "홍대", true),
-            SignUpUiState.CafeOption("cafe-4", "스위트 메이드", "명동", true)
-        )
     }
 }

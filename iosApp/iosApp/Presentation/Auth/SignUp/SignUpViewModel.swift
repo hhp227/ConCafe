@@ -11,6 +11,8 @@ import Shared
 
 @MainActor
 class SignUpViewModel: ObservableObject {
+    private let getSignUpCafeListUseCase: GetSignUpCafeListUseCase
+
     private let signUpUseCase: SignUpUseCase
 
     private let signInUseCase: SignInUseCase
@@ -66,6 +68,27 @@ class SignUpViewModel: ObservableObject {
     private func clearCafeSelection() {
         uiState.selectedCafe = nil
         clearMessages()
+    }
+
+    private func loadCafeOptions() {
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let result = try await getSignUpCafeListUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let cafes = success.data as? [Cafe] {
+                    uiState.cafes = cafes
+                } else if let failure = result as? AppResultFailure {
+                    uiState.cafes = []
+                    uiState.errorMessage = "\(failure.error)"
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.cafes = []
+                uiState.errorMessage = error.localizedDescription
+            }
+        }
     }
 
     private func sendVerification() {
@@ -292,12 +315,14 @@ class SignUpViewModel: ObservableObject {
     }
 
     init(
+        getSignUpCafeListUseCase: GetSignUpCafeListUseCase = KoinInitializerKt.resolveGetSignUpCafeListUseCase(),
         signUpUseCase: SignUpUseCase = KoinInitializerKt.resolveSignUpUseCase(),
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase()
     ) {
+        self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
         self.signInUseCase = signInUseCase
-        uiState.cafes = Self.defaultCafes
+        loadCafeOptions()
     }
 
     deinit {
@@ -307,11 +332,4 @@ class SignUpViewModel: ObservableObject {
     private static let minimumPasswordLength = 8
 
     private static let verificationCode = "1234"
-
-    private static let defaultCafes = [
-        SignUpUiState.CafeOption(id: "cafe-1", name: "메이드 하우스", location: "강남", isVerified: true),
-        SignUpUiState.CafeOption(id: "cafe-2", name: "핑크 캐슬", location: "신촌", isVerified: true),
-        SignUpUiState.CafeOption(id: "cafe-3", name: "리본 카페", location: "홍대", isVerified: true),
-        SignUpUiState.CafeOption(id: "cafe-4", name: "스위트 메이드", location: "명동", isVerified: true)
-    ]
 }

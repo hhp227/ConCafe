@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 struct SignUpUiState {
     enum Step {
@@ -61,13 +62,6 @@ struct SignUpUiState {
         }
     }
 
-    struct CafeOption: Equatable {
-        let id: String
-        let name: String
-        let location: String
-        let isVerified: Bool
-    }
-
     var step: Step = .selectType
 
     var selectedUserType: UserType?
@@ -90,13 +84,13 @@ struct SignUpUiState {
 
     var isPhoneVerified: Bool = false
 
-    var selectedCafe: CafeOption?
+    var selectedCafe: Cafe?
 
     var cafeSearchQuery: String = ""
 
     var isCafeSearchVisible: Bool = false
 
-    var cafes: [CafeOption] = []
+    var cafes: [Cafe] = []
 
     var isLoading: Bool = false
 

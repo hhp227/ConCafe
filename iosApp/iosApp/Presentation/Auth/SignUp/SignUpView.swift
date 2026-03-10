@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Shared
 
 struct SignUpView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -34,12 +35,13 @@ private struct SignUpContentView: View {
 
     let onAction: (SignUpAction) -> Void
 
-    private var filteredCafes: [SignUpUiState.CafeOption] {
+    private var filteredCafes: [Cafe] {
         if uiState.cafeSearchQuery.isEmpty {
             return uiState.cafes
         }
         return uiState.cafes.filter {
-            $0.name.localizedCaseInsensitiveContains(uiState.cafeSearchQuery)
+            $0.name.localizedCaseInsensitiveContains(uiState.cafeSearchQuery) ||
+            $0.region.city.localizedCaseInsensitiveContains(uiState.cafeSearchQuery)
         }
     }
 
@@ -401,12 +403,12 @@ private struct SignUpContentView: View {
                                             Text(cafe.name)
                                                 .font(.subheadline.weight(.semibold))
                                                 .foregroundStyle(.primary)
-                                            Text(cafe.location)
+                                            Text(cafe.region.city)
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                         }
                                         Spacer()
-                                        if cafe.isVerified {
+                                        if cafe.approved {
                                             Text("인증")
                                                 .font(.caption2.weight(.bold))
                                                 .foregroundStyle(.white)

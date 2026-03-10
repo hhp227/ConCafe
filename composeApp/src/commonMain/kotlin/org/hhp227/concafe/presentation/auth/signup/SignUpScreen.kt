@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetSignUpCafeListUseCase
 import org.hhp227.concafe.di.resolveSignInUseCase
 import org.hhp227.concafe.di.resolveSignUpUseCase
+import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.presentation.component.SignInDivider
 import org.hhp227.concafe.presentation.component.SignInLogoSection
 import org.hhp227.concafe.presentation.component.SignInSocialButton
@@ -40,6 +42,7 @@ fun SignUpScreen(
         factory = viewModelFactory {
             initializer {
                 SignUpViewModel(
+                    getSignUpCafeListUseCase = resolveGetSignUpCafeListUseCase(),
                     signUpUseCase = resolveSignUpUseCase(),
                     signInUseCase = resolveSignInUseCase()
                 )
@@ -305,7 +308,9 @@ private fun SignUpFormSection(
 ) {
     val selectedType = requireNotNull(uiState.selectedUserType)
     val filteredCafes = uiState.cafes.filter {
-        uiState.cafeSearchQuery.isBlank() || it.name.contains(uiState.cafeSearchQuery, ignoreCase = true)
+        uiState.cafeSearchQuery.isBlank() ||
+            it.name.contains(uiState.cafeSearchQuery, ignoreCase = true) ||
+            it.region.city.contains(uiState.cafeSearchQuery, ignoreCase = true)
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -514,7 +519,7 @@ private fun PhoneVerificationSection(
 private fun CafeSelectionSection(
     label: String,
     placeholder: String,
-    filteredCafes: List<SignUpUiState.CafeOption>,
+    filteredCafes: List<Cafe>,
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
@@ -585,7 +590,7 @@ private fun CafeSelectionSection(
 
 @Composable
 private fun CafeSearchItem(
-    cafe: SignUpUiState.CafeOption,
+    cafe: Cafe,
     onClick: () -> Unit
 ) {
     Row(
@@ -599,12 +604,12 @@ private fun CafeSearchItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold)
             Text(
-                text = cafe.location,
+                text = cafe.region.city,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF8E8794)
             )
         }
-        if (cafe.isVerified) {
+        if (cafe.approved) {
             Surface(
                 shape = RoundedCornerShape(999.dp),
                 color = Color(0xFFEF6797)

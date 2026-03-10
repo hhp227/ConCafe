@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 enum SignUpAction {
     case backTapped
@@ -22,7 +23,7 @@ enum SignUpAction {
     case sendVerificationTapped
     case verifyCodeTapped
     case toggleCafeSearchTapped
-    case cafeTapped(SignUpUiState.CafeOption)
+    case cafeTapped(Cafe)
     case clearCafeTapped
     case submitTapped
     case socialSignUpTapped(provider: SignUpProvider)

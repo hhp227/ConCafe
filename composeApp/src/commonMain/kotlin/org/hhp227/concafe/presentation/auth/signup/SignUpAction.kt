@@ -1,5 +1,7 @@
 package org.hhp227.concafe.presentation.auth.signup
 
+import org.hhp227.concafe.domain.model.Cafe
+
 sealed interface SignUpAction {
     data object ClickBack : SignUpAction
     data class ClickUserType(val type: SignUpUiState.UserType) : SignUpAction
@@ -15,7 +17,7 @@ sealed interface SignUpAction {
     data object ClickSendVerification : SignUpAction
     data object ClickVerifyCode : SignUpAction
     data object ClickToggleCafeSearch : SignUpAction
-    data class ClickCafe(val cafe: SignUpUiState.CafeOption) : SignUpAction
+    data class ClickCafe(val cafe: Cafe) : SignUpAction
     data object ClickClearCafe : SignUpAction
     data object ClickSubmit : SignUpAction
     data class ClickSocialSignUp(val provider: SignUpProvider) : SignUpAction
