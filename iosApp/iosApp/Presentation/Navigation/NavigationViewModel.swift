@@ -20,6 +20,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.cast(param: id)))
         case .navigateToCafe(let id):
             event.send(.navigateTo(.cafe(param: id)))
+        case .navigateToCafeDashboard(let id):
+            event.send(.navigateTo(.cafeDashboard(param: id)))
         case .navigateToSignIn:
             event.send(.navigateTo(.signIn))
         case .navigateToSignUp:

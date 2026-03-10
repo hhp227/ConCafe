@@ -64,6 +64,8 @@
 - DTO -> Domain 변환은 Mapper에서만 수행한다.
 - Repository 구현은 I/O 담당, 비즈니스 규칙 판단은 최소화한다.
 - 실패는 항상 `AppError`로 매핑해 반환한다.
+- 화면 전용 집계 모델이 필요하면 `Repository -> UseCase -> ViewModel` 순서로 전달한다.
+- 예시: `CafeManagementRepository`는 운영 카페 목록, 검색 대상 카페, 운영자 신청 상태를 데이터 소스에서 읽어 `GetCafeManagementUseCase`에 제공한다.
 
 ## 7. 프레젠테이션 규칙 (`composeApp`)
 - 화면은 상태 렌더링만 담당하고 비즈니스 판단을 하지 않는다.

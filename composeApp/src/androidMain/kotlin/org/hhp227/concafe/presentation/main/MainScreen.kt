@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -71,6 +72,22 @@ fun MainScreen(
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(uiState.selectedTab, currentRoute) {
+        if (
+            uiState.selectedTab.isNotBlank() &&
+            uiState.tabs.any { it.route == uiState.selectedTab } &&
+            MainNavigationTab.fromRoute(currentRoute) != null &&
+            currentRoute != uiState.selectedTab
+        ) {
+            bottomNavController.navigate(uiState.selectedTab) {
+                popUpTo(bottomNavController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,13 +123,7 @@ fun MainScreen(
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
-                            bottomNavController.navigate(tab.route) {
-                                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                            viewModel.onAction(MainAction.SelectTab(tab.route))
                         },
                         icon = {
                             Icon(
@@ -152,7 +163,7 @@ fun MainScreen(
                 FanManagementScreen()
             }
             composable(MainNavigationTab.CAFE_MANAGEMENT.route) {
-                CafeManagementScreen()
+                CafeManagementScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.ADMIN_OPERATIONS.route) {
                 AdminOperationsScreen()

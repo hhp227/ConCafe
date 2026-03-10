@@ -153,8 +153,12 @@
 - [x] `ADMIN` 로그인 시 `운영관리` 탭 노출
 - [x] 역할 변경/로그아웃 시 메인 탭 구성이 즉시 갱신
 - [ ] 다중 역할 계정은 우선순위 규칙에 따라 1개 탭만 노출
-- [ ] `CAFE_OWNER`이지만 연결된 운영 카페가 없으면 `카페관리 Empty State` 노출
-- [ ] Empty State에서 `기존 카페 검색`과 `새 카페 등록` CTA 제공
+- [x] `CAFE_OWNER`이지만 연결된 운영 카페가 없으면 `카페관리 Empty State` 노출
+- [x] Empty State에서 `기존 카페 검색`과 `새 카페 등록` CTA 제공
+- [x] 다중 카페 운영 전제를 반영한 `내 카페 목록` / `운영 대시보드` UI 제공
+- [x] `GetCafeManagementUseCase` 기반 카페관리 데이터 로딩 연결
+- [x] `CafeManagementRepository` 추가 및 운영 카페/검색 카페/신청 상태 조합
+- [x] `CafeManagementRepository`가 `ConCafeDataSource`를 원천 데이터로 사용하도록 정리
 - [ ] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
 - [ ] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
 - [ ] 카페 설정 내 외부 링크 관리 섹션 제공

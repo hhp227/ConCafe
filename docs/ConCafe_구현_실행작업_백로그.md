@@ -362,7 +362,7 @@
 
 ### C-06-3. 카페관리 탭 엔트리
 - 우선순위: P1
-- 상태: TODO
+- 상태: DOING
 - 산출물: `CAFE_OWNER` 전용 카페관리 진입 화면
 - 작업:
   1. 운영 카페 0개일 때 Empty State 배치(`기존 카페 검색` / `새 카페 등록`)
@@ -375,6 +375,13 @@
   - `CAFE_OWNER` 로그인 시 3번째 탭에서 카페관리 화면으로 진입된다.
   - 연결된 운영 카페가 없으면 Empty State가 노출된다.
   - 본인이 운영 권한을 가진 카페 기준 관리 진입점만 노출된다.
+- 진행 메모:
+  1. Android/iOS 카페관리 메인 화면 UI 구현 완료
+  2. 다중 카페 목록 선택과 운영 대시보드 전환 UI 구현 완료
+  3. Empty State와 `기존 카페 검색` / `새 카페 등록` CTA 배치 완료
+  4. 카페관리 데이터 로딩은 `GetCafeManagementUseCase` + `CafeManagementRepository` 경로로 연결 완료
+  5. `CafeManagementRepository`는 `ConCafeDataSource` 원천 데이터만 읽어 조합하도록 정리 완료
+  6. 기존 카페 검색 결과/운영자 Claim 실제 서버 연결은 후속 단계에서 구현
 
 ### C-06-4. 운영관리 탭 엔트리
 - 우선순위: P1

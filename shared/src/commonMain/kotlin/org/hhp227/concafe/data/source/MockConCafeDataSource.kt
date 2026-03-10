@@ -3,6 +3,8 @@ package org.hhp227.concafe.data.source
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.domain.model.CafeDashboardData
+import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
@@ -65,6 +67,15 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.ADMIN,
             banned = false,
             createdAt = "2026-03-01T09:30:00Z"
+        ),
+        User(
+            id = "user-5",
+            email = "owner.nocafe@concafe.app",
+            nickname = "카페연결대기점장",
+            profileImage = null,
+            role = UserRole.CAFE_OWNER,
+            banned = false,
+            createdAt = "2026-03-10T09:40:00Z"
         )
     )
 
@@ -241,6 +252,29 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val followedCastIdsByUser = mutableMapOf("user-1" to mutableSetOf("maid-1"))
 
+    override val ownedCafeIdsByUser = mapOf(
+        "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
+    )
+
+    override val pendingCafeClaimsByUser = mapOf(
+        "user-3" to listOf(
+            CafeManagementData.PendingClaimSummary(
+                cafeName = "Ribbon Cafe Hongdae",
+                requestedAt = "2026.03.10",
+                status = "승인 대기 중",
+                message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
+            )
+        ),
+        "user-5" to listOf(
+            CafeManagementData.PendingClaimSummary(
+                cafeName = "Pink Castle Sinchon",
+                requestedAt = "2026.03.09",
+                status = "승인 대기 중",
+                message = "기존 카페 운영자 신청이 검토 중입니다"
+            )
+        )
+    )
+
     override val cafeCheckInCountById = mapOf(
         "cafe-1" to 482,
         "cafe-2" to 451,
@@ -253,6 +287,42 @@ class MockConCafeDataSource : ConCafeDataSource {
         "cafe-11" to 243,
         "cafe-7" to 219,
         "cafe-9" to 187
+    )
+
+    override val cafeTodayCheckInCountById = mapOf(
+        "cafe-1" to 12,
+        "cafe-2" to 7,
+        "cafe-3" to 0
+    )
+
+    override val cafeTodayReviewCountById = mapOf(
+        "cafe-1" to 3,
+        "cafe-2" to 1,
+        "cafe-3" to 0
+    )
+
+    override val onShiftCastIdsByCafeId = mapOf(
+        "cafe-1" to setOf("maid-1", "maid-5"),
+        "cafe-2" to setOf("maid-2", "maid-4"),
+        "cafe-3" to emptySet()
+    )
+
+    override val cafeHomeBannerPreviewByCafeId = mapOf(
+        "cafe-1" to CafeDashboardData.HomeBannerPreview(
+            title = "여름 한정 신메뉴 출시!",
+            period = "2026.06.01 - 2026.08.31",
+            statusLabel = "노출 중"
+        ),
+        "cafe-2" to CafeDashboardData.HomeBannerPreview(
+            title = "주말 콜라보 디저트 오픈",
+            period = "2026.03.14 - 2026.03.31",
+            statusLabel = "예약 중"
+        ),
+        "cafe-3" to CafeDashboardData.HomeBannerPreview(
+            title = "신규 오픈 안내 배너",
+            period = "2026.03.20 - 2026.04.20",
+            statusLabel = "검수 중"
+        )
     )
 
     override val castTodayVisitCountById = mapOf(

@@ -28,6 +28,8 @@ struct AppNavigationView: View {
                 CastView(castId: param, onNavigationAction: viewModel.onAction)
             case .cafe(let param):
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
+            case .cafeDashboard(let param):
+                CafeDashboardView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:
@@ -52,6 +54,8 @@ struct AppNavigationView: View {
                 case .cast:
                     path.append(route)
                 case .cafe:
+                    path.append(route)
+                case .cafeDashboard:
                     path.append(route)
                 case .signIn:
                     path.append(route)

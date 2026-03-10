@@ -3,6 +3,8 @@ package org.hhp227.concafe.data.source
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.domain.model.CafeDashboardData
+import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
@@ -38,7 +40,19 @@ interface ConCafeDataSource {
 
     val followedCastIdsByUser: MutableMap<String, MutableSet<String>>
 
+    val ownedCafeIdsByUser: Map<String, List<String>>
+
+    val pendingCafeClaimsByUser: Map<String, List<CafeManagementData.PendingClaimSummary>>
+
     val cafeCheckInCountById: Map<String, Int>
+
+    val cafeTodayCheckInCountById: Map<String, Int>
+
+    val cafeTodayReviewCountById: Map<String, Int>
+
+    val onShiftCastIdsByCafeId: Map<String, Set<String>>
+
+    val cafeHomeBannerPreviewByCafeId: Map<String, CafeDashboardData.HomeBannerPreview>
 
     val castTodayVisitCountById: Map<String, Int>
 

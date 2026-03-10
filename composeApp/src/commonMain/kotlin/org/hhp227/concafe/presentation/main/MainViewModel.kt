@@ -46,6 +46,16 @@ class MainViewModel(
         }
     }
 
+    private fun selectTab(route: String) {
+        _uiState.update { state ->
+            if (state.tabs.any { it.route == route }) {
+                state.copy(selectedTab = route)
+            } else {
+                state
+            }
+        }
+    }
+
     private fun observeSession() {
         observeSessionJob = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
@@ -58,6 +68,7 @@ class MainViewModel(
         when (action) {
             is MainAction.Enter -> refreshNavigation(action.preferredRoute)
             is MainAction.RefreshNavigation -> refreshNavigation(action.preferredRoute)
+            is MainAction.SelectTab -> selectTab(action.route)
         }
     }
 

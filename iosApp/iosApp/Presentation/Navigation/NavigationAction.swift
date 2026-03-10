@@ -11,6 +11,7 @@ enum NavigationAction {
     case navigateToMain(initialTab: String? = nil)
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
+    case navigateToCafeDashboard(id: String)
     case navigateToSignIn
     case navigateToSignUp
     case navigateToNotification

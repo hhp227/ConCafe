@@ -12,6 +12,7 @@ enum Route: Hashable {
     case main(initialTab: String?)
     case cast(param: String)
     case cafe(param: String)
+    case cafeDashboard(param: String)
     case signIn
     case signUp
     case notification

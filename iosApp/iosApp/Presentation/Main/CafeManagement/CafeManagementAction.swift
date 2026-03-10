@@ -8,5 +8,11 @@
 import Foundation
 
 enum CafeManagementAction {
-    
+    case clickCafe(String)
+    case clickCafeDetail(String)
+    case changeCafeSearchQuery(String)
+    case clickClaimCafe(String)
+    case toggleCafeListExpanded
+    case clickCreateCafe
+    case dismissInfoMessage
 }

@@ -30,6 +30,7 @@ final class MainViewModel: ObservableObject {
                    let state = success.data as? MainNavigationState {
                     uiState = MainUiState(
                         currentUser: state.currentUser,
+                        tabs: state.tabs,
                         selectedTab: state.selectedTab,
                         thirdTab: state.thirdTab
                     )
@@ -40,6 +41,11 @@ final class MainViewModel: ObservableObject {
                 event.send(.showError(message: error.localizedDescription))
             }
         }
+    }
+
+    private func selectTab(_ route: String) {
+        guard uiState.tabs.contains(where: { $0.route == route }) else { return }
+        uiState.selectedTab = route
     }
     
     private func observeSession() {
@@ -58,6 +64,8 @@ final class MainViewModel: ObservableObject {
             refreshNavigation(preferredRoute: preferredRoute)
         case .refreshNavigation(let preferredRoute):
             refreshNavigation(preferredRoute: preferredRoute)
+        case .selectTab(let route):
+            selectTab(route)
         }
     }
 

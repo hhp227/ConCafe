@@ -55,7 +55,7 @@ struct MainView: View {
         }
         .onChange(of: selectedTab) { newValue in
             if viewModel.uiState.selectedTab != newValue {
-                viewModel.onAction(.refreshNavigation(preferredRoute: newValue))
+                viewModel.onAction(.selectTab(route: newValue))
             }
         }
         .onReceive(viewModel.event) { _ in
@@ -69,7 +69,7 @@ struct MainView: View {
             FanManagementView(title: "팬관리", description: "캐스트가 팔로워, 출근 일정, 팬 대상 공지를 관리하는 메인 탭입니다.")
                 .tabItem { Label("팬관리", systemImage: "person.2.fill") }
         case .cafeManagement:
-            CafeManagementView(title: "카페관리", description: "카페 운영자가 공지, 이벤트, 메뉴, 캐스트 운영을 관리하는 메인 탭입니다.")
+            CafeManagementView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("카페관리", systemImage: "storefront.fill") }
         case .adminOperations:
             AdminOperationsView(title: "운영관리", description: "관리자가 승인, Claim, 신고, 밴 처리를 수행하는 메인 탭입니다.")

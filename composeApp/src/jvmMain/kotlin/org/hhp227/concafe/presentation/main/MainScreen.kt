@@ -46,7 +46,9 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(initialTab) {
-        viewModel.onAction(MainAction.RefreshNavigation(initialTab))
+        if (initialTab != null) {
+            viewModel.onAction(MainAction.SelectTab(initialTab))
+        }
     }
     Scaffold(
         topBar = {
@@ -80,7 +82,7 @@ fun MainScreen(
                         selected = uiState.selectedTab == tab.route,
                         onClick = {
                             onNavigationAction(NavigationAction.NavigateToMain(tab.route))
-                            viewModel.onAction(MainAction.RefreshNavigation(tab.route))
+                            viewModel.onAction(MainAction.SelectTab(tab.route))
                         },
                         icon = {
                             Icon(
@@ -99,7 +101,7 @@ fun MainScreen(
                         MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.CHECK_IN.route -> CheckInScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen()
-                        MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen()
+                        MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()
                         MainNavigationTab.RANKING.route -> RankingScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
