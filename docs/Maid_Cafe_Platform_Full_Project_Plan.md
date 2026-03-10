@@ -345,6 +345,18 @@ Admin 승인 후 공개.
 
 ------------------------------------------------------------------------
 
+## cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+- createdAt
+- updatedAt
+
+------------------------------------------------------------------------
+
 ## castSchedules/{scheduleId}
 
 - castId
@@ -405,6 +417,18 @@ Admin 승인 후 공개.
 ## castFollowers/{castId}/users/{userId}
 
 - followedAt
+
+------------------------------------------------------------------------
+
+## cafes/{cafeId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+- createdAt
+- updatedAt
 
 ------------------------------------------------------------------------
 
@@ -810,6 +834,7 @@ My Cafes
 - 캐스트 프로필 수정
 - 캐스트 사진 업로드
 - 캐스트 스케줄 등록
+- 캐스트 외부 SNS 링크 관리
 
 ### Firestore
 
@@ -906,6 +931,7 @@ Today's Cast
 - 카페 이미지
 - 메뉴
 - 굿즈
+- 외부 링크
 
 ### Firestore
 
@@ -917,13 +943,52 @@ Today's Cast
 - images
 - thumbnailImage
 
+## cafes/{cafeId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+
 ### UX 구성
 
 - 기본 정보 수정 폼
 - 이미지 업로드 영역
 - 메뉴 관리 바로가기
 - 굿즈 관리 바로가기
+- 외부 링크 관리 섹션
+- 지원 플랫폼 예시: Instagram / X / TikTok / YouTube / Website
 - 저장 후 카페 상세 화면과 운영 화면에 즉시 반영되는 구조를 목표로 한다
+
+------------------------------------------------------------------------
+
+## Cast External Links
+
+캐스트는 본인 외부 SNS 계정을 등록할 수 있고, 등록된 링크는 캐스트 상세 화면에 노출한다.
+
+### 지원 플랫폼 예시
+
+- Instagram
+- X
+- TikTok
+- YouTube
+
+### 운영 원칙
+
+- 캐스트 또는 권한을 가진 운영자는 해당 캐스트의 외부 링크를 등록/수정할 수 있다.
+- 노출 여부가 `isVisible = true`인 링크만 상세 화면에 노출한다.
+- 외부 링크는 팔로우 유도 및 공식 채널 안내 목적의 보조 정보로 취급한다.
+
+### Firestore
+
+## cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
 
 - 블러 영역 선택
 - 이미지 저장

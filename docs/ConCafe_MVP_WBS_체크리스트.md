@@ -136,6 +136,7 @@
 - [x] 팔로우 버튼(비로그인 시 로그인 라우팅)
 - [x] 출근 캘린더 영역(읽기 전용 최소 구현)
 - [x] 상세 진입은 플랫폼 네비게이션 스택 push 방식으로 처리 (모달 금지)
+- [ ] 캐스트 공식 SNS 링크 노출(Instagram/X/TikTok 등)
 
 ### 5-6. 체크인
 - [x] 체크인 탭 상단 지도는 로그인 여부와 관계없이 공통 노출
@@ -156,6 +157,9 @@
 - [ ] Empty State에서 `기존 카페 검색`과 `새 카페 등록` CTA 제공
 - [ ] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
 - [ ] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
+- [ ] 카페 설정 내 외부 링크 관리 섹션 제공
+- [ ] 카페 외부 링크 CRUD(`cafes/{cafeId}/externalLinks`)
+- [ ] 캐스트 외부 링크 CRUD(`cafes/{cafeId}/casts/{castId}/externalLinks`)
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능

@@ -417,11 +417,21 @@
 - 소속 카페
 - 팔로우 버튼
 - 팔로워 수
+- 공식 SNS 링크 (Instagram / X / TikTok 등)
 - 출근 캘린더 (주간 보기)
 - 소개글
 - 최근 활동 카드
 - 최근 활동: 방문 인증 수 / 팔로워 수 / 개인 평점
 - 최근 방문 후기 3개
+
+### 공식 SNS 노출 규칙
+- 캐스트 상세 화면에는 캐스트가 등록한 외부 SNS 링크를 아이콘 또는 링크 버튼 형태로 노출한다.
+- 노출 대상 플랫폼 예시:
+  - Instagram
+  - X
+  - TikTok
+- 외부 링크가 없는 경우 해당 섹션은 숨기거나 빈 상태를 노출하지 않는다.
+- 링크 탭 시 외부 브라우저 또는 플랫폼 앱으로 이동한다.
 
 ---
 
@@ -631,6 +641,7 @@ cafes/{cafeId}
 - 캐스트 프로필 수정
 - 캐스트 사진 업로드
 - 캐스트 스케줄 등록
+- 캐스트 외부 SNS 링크 관리
 
 ### Firestore
 
@@ -642,12 +653,21 @@ cafes/{cafeId}/casts/{castId}
 - birthday
 - joinDate
 
+cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+
 ### 화면 구성
 
 - 캐스트 목록 카드
 - `캐스트 추가` 버튼
 - 캐스트 편집 진입
 - 최근 스케줄 요약
+- 캐스트 편집 화면에서 외부 SNS 링크 추가 / 수정 / 삭제
 
 ---
 
@@ -724,6 +744,7 @@ cafes/{cafeId}/events/{eventId}
 - 카페 이미지
 - 메뉴
 - 굿즈
+- 외부 링크
 
 ### Firestore
 
@@ -735,9 +756,19 @@ cafes/{cafeId}
 - images
 - thumbnailImage
 
+cafes/{cafeId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+
 ### 화면 구성
 
 - 기본 정보 수정 폼
 - 이미지 관리
 - 메뉴 관리 진입
 - 굿즈 관리 진입
+- 외부 링크 관리 섹션
+- 플랫폼별 링크 추가 / 수정 / 삭제

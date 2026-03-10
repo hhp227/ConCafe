@@ -53,6 +53,15 @@ cafes/{cafeId}
 ├─ createdAt
 └─ updatedAt
 
+cafes/{cafeId}/externalLinks/{linkId}
+├─ platform: INSTAGRAM | X | TIKTOK | YOUTUBE | WEBSITE
+├─ title
+├─ url
+├─ isVisible
+├─ sortOrder
+├─ createdAt
+└─ updatedAt
+
 cafes/{cafeId}/casts/{castId}
 ├─ name
 ├─ profileImage
@@ -66,6 +75,15 @@ cafes/{cafeId}/casts/{castId}
 ├─ rating
 ├─ popularityScore
 └─ createdAt
+
+cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+├─ platform: INSTAGRAM | X | TIKTOK | YOUTUBE | WEBSITE
+├─ title
+├─ url
+├─ isVisible
+├─ sortOrder
+├─ createdAt
+└─ updatedAt
 
 cafes/{cafeId}/menus/{menuId}
 ├─ name
