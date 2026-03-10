@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
 import org.hhp227.concafe.presentation.auth.signin.SignInScreen
+import org.hhp227.concafe.presentation.auth.signup.SignUpScreen
 import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
@@ -76,6 +77,10 @@ fun NavigationScreen(
         composable<Route.SignIn> { backStackEntry ->
             backStackEntry.toRoute<Route.SignIn>()
             SignInScreen(onNavigate = viewModel::onAction)
+        }
+        composable<Route.SignUp> { backStackEntry ->
+            backStackEntry.toRoute<Route.SignUp>()
+            SignUpScreen(onNavigate = viewModel::onAction)
         }
         composable<Route.Notification> {
             NotificationScreen(

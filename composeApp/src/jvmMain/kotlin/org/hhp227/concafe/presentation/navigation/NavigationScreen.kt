@@ -23,6 +23,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.hhp227.concafe.presentation.auth.signin.SignInScreen
+import org.hhp227.concafe.presentation.auth.signup.SignUpScreen
 import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
@@ -161,6 +162,9 @@ private fun DetailRoutePane(
         }
         Route.SignIn -> {
             SignInScreen(onNavigate = onNavigationAction)
+        }
+        Route.SignUp -> {
+            SignUpScreen(onNavigate = onNavigationAction)
         }
         Route.Notification -> {
             NotificationScreen(

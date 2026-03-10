@@ -36,6 +36,7 @@ import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
+import org.hhp227.concafe.domain.usecase.SignUpUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
@@ -73,6 +74,7 @@ val useCaseModule = module {
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
+    factory { SignUpUseCase(get()) }
     factory { SignOutUseCase(get()) }
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }

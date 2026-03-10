@@ -2,6 +2,7 @@
 
 users/{userId}
 ├─ role: ADMIN | CAFE_OWNER | CAST | VISITOR
+├─ ownedCafeIds: []
 ├─ nickname
 ├─ profileImage
 ├─ phoneNumber
@@ -32,10 +33,10 @@ homeBanners/{bannerId}
 └─ updatedAt
 
 cafes/{cafeId}
-├─ ownerId
+├─ ownerIds: []
 ├─ name
 ├─ desc
-├─ conceptType: MAID | BUTLER
+├─ conceptType: MAID | BUTLER | IDOL
 ├─ region
 │  ├─ country: KR | JP
 │  ├─ city: Seoul | Tokyo
@@ -52,6 +53,15 @@ cafes/{cafeId}
 ├─ createdAt
 └─ updatedAt
 
+cafes/{cafeId}/externalLinks/{linkId}
+├─ platform: INSTAGRAM | X | TIKTOK | YOUTUBE | WEBSITE
+├─ title
+├─ url
+├─ isVisible
+├─ sortOrder
+├─ createdAt
+└─ updatedAt
+
 cafes/{cafeId}/casts/{castId}
 ├─ name
 ├─ profileImage
@@ -65,6 +75,15 @@ cafes/{cafeId}/casts/{castId}
 ├─ rating
 ├─ popularityScore
 └─ createdAt
+
+cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+├─ platform: INSTAGRAM | X | TIKTOK | YOUTUBE | WEBSITE
+├─ title
+├─ url
+├─ isVisible
+├─ sortOrder
+├─ createdAt
+└─ updatedAt
 
 cafes/{cafeId}/menus/{menuId}
 ├─ name
@@ -117,9 +136,8 @@ castFollowers/{castId}/users/{userId}
 cafeFavorites/{cafeId}/users/{userId}
 └─ createdAt
 
-events/{eventId}
+cafes/{cafeId}/events/{eventId}
 ├─ eventType: BIRTHDAY | ANNIVERSARY | COLLAB | SPECIAL_GUEST
-├─ relatedCafeId
 ├─ relatedCastId
 ├─ startDate
 ├─ endDate
@@ -144,8 +162,9 @@ castClaims/{claimId}
 cafeOwnerClaims/{claimId}
 ├─ userId
 ├─ cafeId
-├─ status
-│  PENDING
-│  APPROVED
-│  REJECTED
+├─ status: PENDING | APPROVED | REJECTED
+├─ message
+├─ evidenceImageUrls: []
+├─ reviewedBy
+├─ reviewedAt
 └─ createdAt

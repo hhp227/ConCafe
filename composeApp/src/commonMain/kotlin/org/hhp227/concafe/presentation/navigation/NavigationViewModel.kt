@@ -29,6 +29,9 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))
                 }
+                NavigationAction.NavigateToSignUp -> {
+                    _event.emit(NavigateTo(Route.SignUp))
+                }
                 is NavigationAction.NavigateToNotification -> {
                     _event.emit(NavigateTo(Route.Notification))
                 }

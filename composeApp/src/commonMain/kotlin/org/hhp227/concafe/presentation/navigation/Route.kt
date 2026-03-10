@@ -20,6 +20,9 @@ sealed interface Route {
     data object SignIn : Route
 
     @Serializable
+    data object SignUp : Route
+
+    @Serializable
     data object Notification : Route
 
     @Serializable

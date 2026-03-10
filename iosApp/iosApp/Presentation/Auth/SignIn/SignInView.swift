@@ -18,6 +18,9 @@ struct SignInView: View {
             onBack: {
                 onNavigationAction(.navigateBack)
             },
+            onSignUp: {
+                onNavigationAction(.navigateToSignUp)
+            },
             onAction: viewModel.onAction
         )
         .onReceive(viewModel.event) { event in
@@ -33,6 +36,8 @@ private struct SignInContentView: View {
     let uiState: SignInUiState
     
     let onBack: () -> Void
+
+    let onSignUp: () -> Void
     
     let onAction: (SignInAction) -> Void
     
@@ -141,7 +146,10 @@ private struct SignInContentView: View {
         HStack(spacing: 8) {
             Text("비밀번호 찾기")
             Text("|")
-            Text("회원가입")
+            Button(action: onSignUp) {
+                Text("회원가입")
+            }
+            .buttonStyle(.plain)
         }
         .font(.footnote)
         .foregroundStyle(.secondary)

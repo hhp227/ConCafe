@@ -25,7 +25,7 @@
   - 클라이언트/백엔드가 동일한 필드 정의를 사용한다.
   - 모호한 필드가 0건이다.
 - 결정사항:
-  1. `conceptType`: `MAID | BUTLER`
+  1. `conceptType`: `MAID | BUTLER | IDOL`
   2. `events` 저장 위치: `cafes/{cafeId}/events/{eventId}`
   3. `favorites`/`visitHistory`: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
   4. 참고 문서 간 `events/{eventId}` 표기는 과거안으로 간주하고 서브컬렉션 기준으로 문서 통일
@@ -310,10 +310,12 @@
   3. 팔로우 버튼/상태 연결(비로그인 시 로그인 라우팅)
   4. 최근 활동 카드(방문 인증/팔로워/개인 평점) 표시
   5. 최근 방문 후기 3개 표시
+  6. 공식 SNS 링크(Instagram/X/TikTok 등) 노출
 - AC:
   - 메이드 상세에서 카페 상세로 이동 가능하다.
   - 필수 정보 누락 시 대체 UI가 표시된다.
   - 비로그인 팔로우 시도 시 로그인 화면으로 라우팅된다.
+  - 숨김 처리되지 않은 외부 링크만 노출된다.
 
 ### C-06. 체크인 + 방문 인증
 - 우선순위: P0
@@ -363,12 +365,16 @@
 - 상태: TODO
 - 산출물: `CAFE_OWNER` 전용 카페관리 진입 화면
 - 작업:
-  1. 내 카페 요약/공지/이벤트/메뉴 관리 진입점 배치
-  2. 캐스트/출근표 관리 진입점 연결
-  3. 비운영자 접근 차단 또는 미노출 처리
+  1. 운영 카페 0개일 때 Empty State 배치(`기존 카페 검색` / `새 카페 등록`)
+  2. 운영 카페 1개 이상일 때 내 카페 목록 또는 선택 카페 대시보드 진입점 배치
+  3. 기존 카페 검색 결과와 `이 카페 운영자 신청` 액션 연결
+  4. 공지/이벤트/메뉴 관리 진입점 배치
+  5. 캐스트/출근표 관리 진입점 연결
+  6. 비운영자 접근 차단 또는 미노출 처리
 - AC:
   - `CAFE_OWNER` 로그인 시 3번째 탭에서 카페관리 화면으로 진입된다.
-  - 본인 카페 기준 관리 진입점만 노출된다.
+  - 연결된 운영 카페가 없으면 Empty State가 노출된다.
+  - 본인이 운영 권한을 가진 카페 기준 관리 진입점만 노출된다.
 
 ### C-06-4. 운영관리 탭 엔트리
 - 우선순위: P1
@@ -486,7 +492,7 @@
 - 산출물: Claim 승인 검증 로직 명세 및 적용
 - 작업:
   1. `cafeOwnerClaims`, `castClaims` 생성 시 중복 요청 차단
-  2. 승인 시 역할/연결 필드(`ownerId`, `linkedUserId`) 반영 규칙 정의
+  2. 승인 시 역할/연결 필드(`ownedCafeIds`, `ownerIds`, `linkedUserId`) 반영 규칙 정의
   3. 반려/취소 후 재신청 가능 정책 정의
 - AC:
   - 동일 사용자 중복 claim이 비정상적으로 누적되지 않는다.
@@ -707,6 +713,7 @@
 ### I-06. Data Layer Skeleton (`shared`)
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeAuthRepository.kt`
   - 클래스: `FakeAuthRepository`
+  - 현재 구현: `signUp(email, password, nickname, role)` 호출 시 `MockConCafeDataSource.users`에 인메모리 `User`를 추가하고 `currentUserId`를 갱신한다.
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeCafeRepository.kt`
   - 클래스: `FakeCafeRepository`
 - 파일: `shared/src/commonMain/kotlin/org/hhp227/concafe/data/repository/FakeCastRepository.kt`
@@ -815,7 +822,7 @@ data class PagedResult<T>(
 ```kotlin
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
-    suspend fun signUp(email: String, password: String, nickname: String): User
+    suspend fun signUp(email: String, password: String, nickname: String, role: UserRole): User
     suspend fun signOut()
     suspend fun restoreSession(): User?
     suspend fun getCurrentUser(): User?
@@ -1042,7 +1049,7 @@ class ReviewPolicy {
 }
 
 class RolePermissionPolicy {
-    fun canEditCafe(role: UserRole, ownerId: String, requesterId: String): Boolean
+    fun canEditCafe(role: UserRole, ownerIds: List<String>, requesterId: String): Boolean
     fun canModerate(role: UserRole): Boolean
 }
 ```

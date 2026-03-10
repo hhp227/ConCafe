@@ -79,6 +79,14 @@ ConCafe는 4가지 Role 기반 구조를 가진다.
 
 Admin 승인 후 운영 권한 부여.
 
+운영 권한이 승인되면
+
+- `users/{userId}.ownedCafeIds`에 해당 `cafeId` 추가
+- `cafes/{cafeId}.ownerIds`에 해당 `userId` 추가
+
+가입 직후 연결된 카페가 없는 운영자는 `카페관리` 탭에서 빈 상태 화면을 먼저 보게 되며,
+여기서 `기존 카페 검색` 또는 `신규 카페 등록` 플로우로 진입한다.
+
 #### 2️⃣ 신규 카페 등록
 
 운영자가 직접 카페 등록 가능
@@ -169,6 +177,7 @@ Admin 승인 후 공개.
 ## User
 
 - role (ADMIN / CAFE_OWNER / CAST / VISITOR)
+- ownedCafeIds[]
 - profile
 - phoneNumber
 - phoneVerified
@@ -181,7 +190,7 @@ Admin 승인 후 공개.
 
 ## Cafe
 
-- ownerId
+- ownerIds[]
 - name
 - description
 - region
@@ -250,12 +259,29 @@ Admin 승인 후 공개.
 ## users/{userId}
 
 - role
+- ownedCafeIds[]
 - nickname
 - profileImage
 - phoneNumber
 - phoneVerified
 - banned
 - blurCredits
+- createdAt
+
+------------------------------------------------------------------------
+
+## cafeOwnerClaims/{claimId}
+
+- userId
+- cafeId
+- status
+    - PENDING
+    - APPROVED
+    - REJECTED
+- message
+- evidenceImageUrls[]
+- reviewedBy
+- reviewedAt
 - createdAt
 
 ------------------------------------------------------------------------
@@ -287,7 +313,7 @@ Admin 승인 후 공개.
 
 ## cafes/{cafeId}
 
-- ownerId
+- ownerIds[]
 - name
 - description
 - region
@@ -300,7 +326,7 @@ Admin 승인 후 공개.
 - approved
 - ratingAvg
 - reviewCount
-- conceptType
+- conceptType (MAID / BUTLER / IDOL)
 - createdAt
 
 ------------------------------------------------------------------------
@@ -313,9 +339,21 @@ Admin 승인 후 공개.
 - description
 - birthday
 - joinDate
-- conceptRole
+- conceptRole (maid / butler / idol)
 - followerCount
 - linkedUserId
+
+------------------------------------------------------------------------
+
+## cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+- createdAt
+- updatedAt
 
 ------------------------------------------------------------------------
 
@@ -382,6 +420,18 @@ Admin 승인 후 공개.
 
 ------------------------------------------------------------------------
 
+## cafes/{cafeId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+- createdAt
+- updatedAt
+
+------------------------------------------------------------------------
+
 # 6. 핵심 기능 상세
 
 ## ⭐ 캐스트 팔로우 시스템
@@ -426,7 +476,7 @@ Admin 승인 후 공개.
 - 현재 시간이 노출 기간 안에 있는 배너만 `ACTIVE` 상태로 노출된다.
 - 활성 배너 수가 허용 개수에 도달하면 신규 배너는 즉시 노출할 수 없고 `SCHEDULED` 상태의 예약 등록만 가능하다.
 - 예약 배너는 종료 예정 배너 이후 순번대로 활성화된다.
-- 관리자는 전체 배너를 관리할 수 있고, 카페 운영자는 본인 카페와 연결된 배너만 관리할 수 있다.
+- 관리자는 전체 배너를 관리할 수 있고, 카페 운영자는 본인이 운영 권한을 가진 카페와 연결된 배너만 관리할 수 있다.
 - 배너 클릭 시 카페 상세, 이벤트 상세, 공지, 외부 프로모션 링크 등으로 연결할 수 있다.
 
 ------------------------------------------------------------------------
@@ -443,7 +493,7 @@ Admin 승인 후 공개.
   - 예약 배너 일정 변경
   - 종료 배너 재등록
 - 제한 규칙:
-  - 본인 카페와 연결된 배너만 조회/수정 가능
+  - 본인이 운영 권한을 가진 카페와 연결된 배너만 조회/수정 가능
   - 활성 슬롯이 모두 찬 경우 새 배너는 자동으로 `SCHEDULED` 상태로 저장
   - 이미 종료된 배너는 직접 `ACTIVE`로 변경할 수 없고 재등록 플로우를 거쳐야 함
 
@@ -518,6 +568,428 @@ Admin 승인 후 공개.
 
 ### 이용 방식
 
+------------------------------------------------------------------------
+
+# 8. 🏪 Multi-Cafe Owner 구조 설계
+
+ConCafe에서는 하나의 카페 운영자가 여러 카페를 운영할 수 있다.
+
+예시
+
+Owner A
+- Maid Dream Tokyo
+- Seoul Maid Cafe
+- Akihabara Butler Cafe
+
+따라서 Owner와 Cafe의 관계는 다음과 같다.
+
+Owner (1) → Cafe (N)
+
+### 설계 원칙
+
+- 하나의 운영자 계정은 복수의 카페 운영 권한을 가질 수 있다.
+- 하나의 카페는 복수의 운영자 계정을 가질 수 있다.
+- 단일 대표 운영자만 가정하지 않고 공동 운영 및 지점 관리 시나리오를 지원한다.
+- 카페 단위 권한 검사는 `ownerIds` 또는 `ownedCafeIds` 기준으로 수행한다.
+
+### Firestore 구조
+
+## users/{userId}
+
+- role: VISITOR | CAST | CAFE_OWNER | ADMIN
+- ownedCafeIds: [cafeId]
+
+## cafes/{cafeId}
+
+- name
+- description
+- ownerIds: [userId]
+- createdAt
+- approved
+
+`ownerIds`는 여러 운영자를 지원하기 위해 배열 구조로 설계한다.
+
+예시
+
+## cafes/{cafeId}
+
+- ownerIds:
+  - ownerA
+  - ownerB
+
+이 구조는 공동 운영이나 지점 관리 상황에서도 유연하게 동작한다.
+
+### 권한 해석 규칙
+
+- `CAFE_OWNER` 권한 사용자가 앱에 로그인하면 `ownedCafeIds`에 포함된 카페 목록을 조회할 수 있다.
+- 특정 카페 관리 화면 진입 가능 여부는 해당 `cafeId`가 `ownedCafeIds`에 포함되는지로 판단한다.
+- 카페 문서의 `ownerIds`와 사용자 문서의 `ownedCafeIds`는 동일한 관계를 양방향으로 표현한다.
+- 운영자 초대 또는 공동 운영자 추가 기능이 생기더라도 기본 관계 모델은 유지한다.
+- 운영자 Claim은 `cafeOwnerClaims/{claimId}`를 통해 생성되며, 승인 전까지는 실제 운영 권한으로 간주하지 않는다.
+
+------------------------------------------------------------------------
+
+# 9. 📱 카페 운영자 전용 탭 UX 설계
+
+ConCafe 하단 네비게이션 3번째 탭은 사용자 역할에 따라 다르게 표시된다.
+
+일반 사용자
+
+- 탭 이름: Check-in
+
+카페 운영자
+
+- 탭 이름: Cafe Manage
+
+### 탭 전환 원칙
+
+- 운영자 계정은 3번째 메인 탭에서 `Cafe Manage`를 사용한다.
+- 운영자가 여러 카페를 운영하는 경우에도 탭은 하나만 노출하고, 탭 내부에서 관리 대상을 선택한다.
+- 운영자 권한이 없는 사용자는 `Cafe Manage` 화면에 접근할 수 없다.
+
+## Cafe Manage UX 구조
+
+카페 운영자가 여러 카페를 운영할 수 있으므로 먼저 `내 카페 목록`을 보여준다.
+
+### My Cafes 화면
+
+My Cafes
+
+- Maid Dream Tokyo
+- Seoul Maid Cafe
+- Akihabara Butler Cafe
+
+카페를 선택하면 해당 카페의 관리 화면으로 이동한다.
+
+### My Cafes 화면 구성
+
+- 상단 제목: `내 카페`
+- 운영 중인 카페 수 표시
+- 카페 카드 항목:
+  - 카페 이름
+  - 대표 이미지
+  - 지역
+  - 승인 상태
+  - 오늘 체크인 수 요약
+- 카드 탭 시 선택한 카페의 `Cafe Dashboard`로 이동
+
+### Firestore 조회 기준
+
+## users/{userId}
+
+- ownedCafeIds: [cafeId]
+
+## cafes/{cafeId}
+
+- name
+- thumbnailImage
+- region
+- approved
+
+------------------------------------------------------------------------
+
+## Cafe Manage Empty State
+
+카페 운영자로 로그인했지만 아직 연결된 운영 카페가 없으면 빈 상태 화면을 노출한다.
+
+### Empty State 목적
+
+- 카페 운영자가 `카페관리` 탭에서 막히지 않도록 다음 행동을 명확히 제시한다.
+- 관리자가 미리 등록한 카페를 검색해 운영 권한을 신청할 수 있게 한다.
+- 등록된 카페가 없을 경우 신규 카페 등록으로 자연스럽게 연결한다.
+
+### 화면 구성
+
+- 일러스트 또는 빈 상태 카드
+- 제목: `아직 연결된 운영 카페가 없습니다`
+- 설명: `기존 카페를 검색해 운영 권한을 신청하거나 새 카페를 등록하세요`
+- CTA 1: `기존 카페 검색`
+- CTA 2: `새 카페 등록`
+- 하단 보조 문구: `운영자 신청은 관리자 승인 후 반영됩니다`
+
+### Empty State 진입 조건
+
+- 로그인 사용자의 역할이 `CAFE_OWNER`
+- `users/{userId}.ownedCafeIds`가 비어 있음
+- 진행 중인 운영자 Claim이 있어도 승인 전에는 Empty State를 유지하되 신청 상태 카드를 함께 노출할 수 있음
+
+------------------------------------------------------------------------
+
+## Existing Cafe Claim UX
+
+관리자가 이미 등록해둔 카페가 있으면 운영자는 검색 후 해당 카페에 운영 권한을 신청할 수 있다.
+
+### 검색 화면 구성
+
+- 검색바: 카페명 / 지역 / 주소 검색
+- 필터: 국가 / 도시 / 승인 상태
+- 결과 카드:
+  - 카페 이름
+  - 대표 이미지
+  - 지역
+  - 승인 상태
+  - `이 카페 운영자 신청` 버튼
+
+### Claim 신청 플로우
+
+1. 카페 검색
+2. 카페 선택
+3. 운영자 신청 폼 입력
+4. 증빙 자료 업로드 선택
+5. 신청 제출
+6. 관리자 승인 대기
+
+### 신청 폼 항목
+
+- userId
+- cafeId
+- 메시지
+- 증빙 이미지
+
+### 신청 상태 화면
+
+- 상태값: `PENDING`, `APPROVED`, `REJECTED`
+- `PENDING`이면 `승인 대기 중` 배지와 예상 처리 안내 노출
+- `APPROVED`이면 자동으로 내 카페 목록으로 이동 가능
+- `REJECTED`이면 사유 노출 및 재신청 액션 제공 가능
+
+### Firestore 연동 대상
+
+## cafeOwnerClaims/{claimId}
+
+- userId
+- cafeId
+- status
+- message
+- evidenceImageUrls[]
+- reviewedBy
+- reviewedAt
+- createdAt
+
+------------------------------------------------------------------------
+
+## Cafe Dashboard
+
+카페 운영자가 앱을 열면 먼저 운영 현황을 확인할 수 있다.
+
+예시
+
+- 오늘 방문자
+- 오늘 체크인
+- 오늘 리뷰
+- 평점
+
+예시 UI
+
+- 오늘 방문 18
+- 체크인 12
+- 리뷰 3
+- 평점 4.7
+
+### Dashboard 구성
+
+- 선택된 카페명과 대표 이미지
+- 오늘 운영 요약 카드
+- 빠른 이동 메뉴:
+  - Cast Management
+  - Cast Schedule
+  - Event Management
+  - Cafe Settings
+  - 홈 배너 관리
+- 최근 공지 또는 최근 리뷰 요약
+
+### Dashboard 데이터 조합 기준
+
+- 오늘 방문자: 방문 기록 수 기반 집계
+- 오늘 체크인: 당일 인증 체크인 수
+- 오늘 리뷰: 당일 생성 리뷰 수
+- 평점: 카페 누적 평균 평점
+
+### Firestore 조회 대상
+
+## visits/{visitId}
+
+- cafeId
+- visitedAt
+- verified
+
+## cafes/{cafeId}/reviews/{reviewId}
+
+- rating
+- createdAt
+
+## cafes/{cafeId}
+
+- ratingAvg
+
+------------------------------------------------------------------------
+
+## Cast Management
+
+카페에 소속된 캐스트 관리 기능
+
+가능 기능
+
+- 캐스트 추가
+- 캐스트 프로필 수정
+- 캐스트 사진 업로드
+- 캐스트 스케줄 등록
+- 캐스트 외부 SNS 링크 관리
+
+### Firestore
+
+## cafes/{cafeId}/casts/{castId}
+
+- name
+- profileImage
+- description
+- birthday
+- joinDate
+
+### UX 구성
+
+- 캐스트 목록
+- 검색 또는 정렬
+- `캐스트 추가` 버튼
+- 캐스트 카드 탭 시 상세 편집 화면 이동
+- 캐스트별 최근 스케줄 및 팔로워 수 요약 노출 가능
+
+------------------------------------------------------------------------
+
+## Cast Schedule
+
+캐스트 출근 스케줄 관리
+
+Today's Cast
+
+- Sakura 14:00 - 20:00
+- Miku 12:00 - 18:00
+
+### Firestore
+
+## castSchedules/{scheduleId}
+
+- cafeId
+- castId
+- date
+- startTime
+- endTime
+
+### UX 구성
+
+- 날짜 선택
+- 해당 날짜 출근 캐스트 리스트
+- 스케줄 추가 버튼
+- 시간 수정 및 삭제 액션
+- 캐스트별 주간 보기 확장 가능
+
+------------------------------------------------------------------------
+
+## Event Management
+
+카페 이벤트 관리
+
+예시
+
+- Sakura Birthday Event
+- Golden Week Event
+
+가능 기능
+
+- 이벤트 생성
+- 이벤트 수정
+- 이벤트 삭제
+
+### Firestore
+
+## cafes/{cafeId}/events/{eventId}
+
+- eventType
+- relatedCastId
+- startDate
+- endDate
+- description
+
+### UX 구성
+
+- 진행중 / 예정 / 종료 이벤트 구분
+- 이벤트 카드 목록
+- `이벤트 생성` 버튼
+- 캐스트 연계 이벤트와 카페 단독 이벤트를 모두 등록 가능
+
+------------------------------------------------------------------------
+
+## Cafe Settings
+
+카페 기본 정보 관리
+
+수정 가능 항목
+
+- 카페 이름
+- 카페 설명
+- 주소
+- 카페 이미지
+- 메뉴
+- 굿즈
+- 외부 링크
+
+### Firestore
+
+## cafes/{cafeId}
+
+- name
+- description
+- region
+- images
+- thumbnailImage
+
+## cafes/{cafeId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+
+### UX 구성
+
+- 기본 정보 수정 폼
+- 이미지 업로드 영역
+- 메뉴 관리 바로가기
+- 굿즈 관리 바로가기
+- 외부 링크 관리 섹션
+- 지원 플랫폼 예시: Instagram / X / TikTok / YouTube / Website
+- 저장 후 카페 상세 화면과 운영 화면에 즉시 반영되는 구조를 목표로 한다
+
+------------------------------------------------------------------------
+
+## Cast External Links
+
+캐스트는 본인 외부 SNS 계정을 등록할 수 있고, 등록된 링크는 캐스트 상세 화면에 노출한다.
+
+### 지원 플랫폼 예시
+
+- Instagram
+- X
+- TikTok
+- YouTube
+
+### 운영 원칙
+
+- 캐스트 또는 권한을 가진 운영자는 해당 캐스트의 외부 링크를 등록/수정할 수 있다.
+- 노출 여부가 `isVisible = true`인 링크만 상세 화면에 노출한다.
+- 외부 링크는 팔로우 유도 및 공식 채널 안내 목적의 보조 정보로 취급한다.
+
+### Firestore
+
+## cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
+
+- platform
+- title
+- url
+- isVisible
+- sortOrder
+
 - 블러 영역 선택
 - 이미지 저장
 
@@ -533,9 +1005,9 @@ Admin 승인 후 공개.
 
 ------------------------------------------------------------------------
 
-# 8. 보안 및 권한 설계 핵심
+# 10. 보안 및 권한 설계 핵심
 
-- OWNER는 본인 카페만 관리 가능
+- CAFE_OWNER는 본인이 운영 권한을 가진 카페만 관리 가능
 - CAST는 본인 프로필만 수정 가능
 - ADMIN은 전체 수정 가능
 - VISITOR는 조회 및 리뷰만 가능
@@ -545,7 +1017,7 @@ Admin 승인 후 공개.
 
 ------------------------------------------------------------------------
 
-# 9. MVP 개발 로드맵
+# 11. MVP 개발 로드맵
 
 ## 🟢 1단계
 
@@ -566,14 +1038,14 @@ Admin 승인 후 공개.
 ## 🔴 3단계
 
 - 관리자 콘솔
-- Owner 관리 대시보드
+- 카페 운영자 관리 대시보드
 - 캐스트 계정 연결
 - 통계 기능
 - 이미지 블러 기능
 
 ------------------------------------------------------------------------
 
-# 10. 수익 모델
+# 12. 수익 모델
 
 1. 프리미엄 노출 광고
 2. 상단 고정 업체
@@ -583,7 +1055,7 @@ Admin 승인 후 공개.
 
 ------------------------------------------------------------------------
 
-# 11. 기술 스택
+# 13. 기술 스택
 
 ## 모바일
 
@@ -607,7 +1079,7 @@ Role 기반 보안 규칙
 
 ------------------------------------------------------------------------
 
-# 12. 프로젝트 비전
+# 14. 프로젝트 비전
 
 ConCafe는 단순한 카페 정보 앱이 아니라
 
