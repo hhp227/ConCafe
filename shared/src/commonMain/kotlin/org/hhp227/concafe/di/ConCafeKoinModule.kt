@@ -2,6 +2,7 @@ package org.hhp227.concafe.di
 
 import org.hhp227.concafe.data.repository.FakeAuthRepository
 import org.hhp227.concafe.data.repository.FakeBannerRepository
+import org.hhp227.concafe.data.repository.FakeCafeManagementRepository
 import org.hhp227.concafe.data.repository.FakeCafeRepository
 import org.hhp227.concafe.data.repository.FakeCastRepository
 import org.hhp227.concafe.data.repository.FakeNoticeRepository
@@ -14,6 +15,7 @@ import org.hhp227.concafe.data.source.ConCafeDataSource
 import org.hhp227.concafe.data.source.MockConCafeDataSource
 import org.hhp227.concafe.domain.repository.AuthRepository
 import org.hhp227.concafe.domain.repository.BannerRepository
+import org.hhp227.concafe.domain.repository.CafeManagementRepository
 import org.hhp227.concafe.domain.repository.CafeRepository
 import org.hhp227.concafe.domain.repository.CastRepository
 import org.hhp227.concafe.domain.repository.NoticeRepository
@@ -26,6 +28,7 @@ import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import org.hhp227.concafe.domain.usecase.CreateVisitUseCase
+import org.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
@@ -50,6 +53,7 @@ val repositoryModule = module {
     single<AuthRepository> { FakeAuthRepository(get()) }
     single<UserRepository> { FakeUserRepository(get()) }
     single<BannerRepository> { FakeBannerRepository(get()) }
+    single<CafeManagementRepository> { FakeCafeManagementRepository(get()) }
     single<CafeRepository> { FakeCafeRepository(get()) }
     single<CastRepository> { FakeCastRepository(get()) }
     single<VisitRepository> { FakeVisitRepository(get()) }
@@ -61,6 +65,7 @@ val repositoryModule = module {
 
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetCafeManagementUseCase(get(), get()) }
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { CreateVisitUseCase(get(), get()) }

@@ -1,0 +1,48 @@
+package org.hhp227.concafe.data.repository
+
+import org.hhp227.concafe.data.source.ConCafeDataSource
+import org.hhp227.concafe.domain.model.CafeManagementData
+import org.hhp227.concafe.domain.repository.CafeManagementRepository
+
+class FakeCafeManagementRepository(
+    private val dataSource: ConCafeDataSource
+) : CafeManagementRepository {
+    override suspend fun getCafeManagementData(userId: String): CafeManagementData {
+        val ownedCafes = dataSource.cafes
+            .filter { dataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
+            .map { cafe ->
+                val cafeCasts = dataSource.casts.filter { it.cafeId == cafe.id }
+                val cafeNotices = dataSource.notices.filter { it.cafeId == cafe.id }
+
+                CafeManagementData.OwnedCafeSummary(
+                    id = cafe.id,
+                    name = cafe.name,
+                    city = cafe.region.city,
+                    isApproved = cafe.approved,
+                    todayVisitors = dataSource.cafeCheckInCountById[cafe.id] ?: 0,
+                    todayCheckIns = (dataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
+                    todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
+                    rating = cafe.ratingAvg,
+                    castCount = cafeCasts.size,
+                    noticeCount = cafeNotices.size,
+                    externalLinkCount = 3
+                )
+            }
+
+        val searchableCafes = dataSource.cafes.map { cafe ->
+            CafeManagementData.SearchableCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                location = "${cafe.region.city} ${cafe.region.address}"
+            )
+        }
+
+        val pendingClaims = dataSource.pendingCafeClaimsByUser[userId].orEmpty()
+
+        return CafeManagementData(
+            ownedCafes = ownedCafes,
+            searchableCafes = searchableCafes,
+            pendingClaims = pendingClaims
+        )
+    }
+}

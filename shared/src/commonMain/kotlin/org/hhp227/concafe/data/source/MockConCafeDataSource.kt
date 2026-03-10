@@ -3,6 +3,7 @@ package org.hhp227.concafe.data.source
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
@@ -249,6 +250,29 @@ class MockConCafeDataSource : ConCafeDataSource {
     override val favoriteCafeIdsByUser = mutableMapOf("user-1" to mutableSetOf("cafe-1"))
 
     override val followedCastIdsByUser = mutableMapOf("user-1" to mutableSetOf("maid-1"))
+
+    override val ownedCafeIdsByUser = mapOf(
+        "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
+    )
+
+    override val pendingCafeClaimsByUser = mapOf(
+        "user-3" to listOf(
+            CafeManagementData.PendingClaimSummary(
+                cafeName = "Ribbon Cafe Hongdae",
+                requestedAt = "2026.03.10",
+                status = "승인 대기 중",
+                message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
+            )
+        ),
+        "user-5" to listOf(
+            CafeManagementData.PendingClaimSummary(
+                cafeName = "Pink Castle Sinchon",
+                requestedAt = "2026.03.09",
+                status = "승인 대기 중",
+                message = "기존 카페 운영자 신청이 검토 중입니다"
+            )
+        )
+    )
 
     override val cafeCheckInCountById = mapOf(
         "cafe-1" to 482,

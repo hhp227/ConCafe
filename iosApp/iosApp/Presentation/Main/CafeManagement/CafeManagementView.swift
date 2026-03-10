@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Shared
 
 struct CafeManagementView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -49,7 +50,7 @@ private struct CafeManagementContentView: View {
                     )
 
                     VStack(spacing: 12) {
-                        ForEach(uiState.visibleOwnedCafes) { cafe in
+                        ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
                             ownedCafeCard(cafe: cafe)
                         }
                     }
@@ -64,7 +65,7 @@ private struct CafeManagementContentView: View {
                             subtitle: "기존 카페 연결 요청 현황"
                         )
                         VStack(spacing: 12) {
-                            ForEach(uiState.pendingClaims) { claim in
+                            ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
                                 pendingClaimCard(claim: claim)
                             }
                         }
@@ -158,7 +159,7 @@ private struct CafeManagementContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func ownedCafeCard(cafe: CafeManagementUiState.OwnedCafe) -> some View {
+    private func ownedCafeCard(cafe: CafeManagementDataOwnedCafeSummary) -> some View {
         ZStack(alignment: .trailing) {
             Button {
                 onAction(.clickCafe(cafe.id))
@@ -301,7 +302,7 @@ private struct CafeManagementContentView: View {
         }
     }
 
-    private func searchCafeItem(cafe: CafeManagementUiState.SearchableCafe) -> some View {
+    private func searchCafeItem(cafe: CafeManagementDataSearchableCafeSummary) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cafe.name)
@@ -363,7 +364,7 @@ private struct CafeManagementContentView: View {
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "2B2330"))
 
-                ForEach(uiState.pendingClaims) { claim in
+                ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
                     pendingClaimCard(claim: claim)
                 }
             }
@@ -378,7 +379,7 @@ private struct CafeManagementContentView: View {
         )
     }
 
-    private func pendingClaimCard(claim: CafeManagementUiState.PendingClaim) -> some View {
+    private func pendingClaimCard(claim: CafeManagementDataPendingClaimSummary) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(claim.cafeName)

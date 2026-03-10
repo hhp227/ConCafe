@@ -51,12 +51,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetCafeManagementUseCase
+import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun CafeManagementScreen(
     onNavigate: (NavigationAction) -> Unit,
-    viewModel: CafeManagementViewModel = viewModel()
+    viewModel: CafeManagementViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                CafeManagementViewModel(
+                    getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
+                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                )
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -175,7 +189,7 @@ private fun CafeManagementContentScreen(
 @Composable
 private fun CafeManagementHeroCard(
     cafeCount: Int,
-    featuredCafe: CafeManagementUiState.OwnedCafe?
+    featuredCafe: CafeManagementData.OwnedCafeSummary?
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
@@ -277,7 +291,7 @@ private fun SectionHeader(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CompactOwnedCafeCard(
-    cafe: CafeManagementUiState.OwnedCafe,
+    cafe: CafeManagementData.OwnedCafeSummary,
     onClick: () -> Unit,
     onArrowClick: () -> Unit
 ) {
@@ -390,7 +404,7 @@ private fun ExpandOwnedCafeButton(
 @Composable
 private fun SearchCafeSection(
     searchQuery: String,
-    searchResults: List<CafeManagementUiState.SearchableCafe>,
+    searchResults: List<CafeManagementData.SearchableCafeSummary>,
     onSearchQueryChange: (String) -> Unit,
     onClaimCafe: (String) -> Unit
 ) {
@@ -469,7 +483,7 @@ private fun SearchCafeSection(
 
 @Composable
 private fun EmptyStateCard(
-    pendingClaims: List<CafeManagementUiState.PendingClaim>,
+    pendingClaims: List<CafeManagementData.PendingClaimSummary>,
     onCreateCafe: () -> Unit
 ) {
     Card(
@@ -531,7 +545,7 @@ private fun EmptyStateCard(
 
 @Composable
 private fun SearchCafeItem(
-    cafe: CafeManagementUiState.SearchableCafe,
+    cafe: CafeManagementData.SearchableCafeSummary,
     onClaimClick: () -> Unit
 ) {
     Row(
@@ -568,7 +582,7 @@ private fun SearchCafeItem(
 
 @Composable
 private fun PendingClaimCard(
-    claim: CafeManagementUiState.PendingClaim
+    claim: CafeManagementData.PendingClaimSummary
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),

@@ -46,7 +46,9 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(initialTab) {
-        viewModel.onAction(MainAction.RefreshNavigation(initialTab))
+        if (initialTab != null) {
+            viewModel.onAction(MainAction.SelectTab(initialTab))
+        }
     }
     Scaffold(
         topBar = {

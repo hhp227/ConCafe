@@ -2,19 +2,55 @@ package org.hhp227.concafe.presentation.main.cafemanagement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
-class CafeManagementViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(CafeManagementUiState.preview())
+class CafeManagementViewModel(
+    private val getCafeManagementUseCase: GetCafeManagementUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(CafeManagementUiState())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CafeManagementEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private var observeSessionJob: Job? = null
+
+    private fun loadCafeManagement() {
+        viewModelScope.launch {
+            when (val result = getCafeManagementUseCase.invoke()) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            ownedCafes = result.data.ownedCafes,
+                            searchableCafes = result.data.searchableCafes,
+                            pendingClaims = result.data.pendingClaims
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            ownedCafes = emptyList(),
+                            searchableCafes = emptyList(),
+                            pendingClaims = emptyList(),
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     private fun clickCafe(cafeId: String) {
         viewModelScope.launch {
@@ -71,6 +107,14 @@ class CafeManagementViewModel : ViewModel() {
         }
     }
 
+    private fun observeSession() {
+        observeSessionJob = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest {
+                loadCafeManagement()
+            }
+        }
+    }
+
     fun onAction(action: CafeManagementAction) {
         when (action) {
             is CafeManagementAction.ClickCafe -> clickCafe(action.cafeId)
@@ -81,5 +125,10 @@ class CafeManagementViewModel : ViewModel() {
             CafeManagementAction.ClickCreateCafe -> clickCreateCafe()
             CafeManagementAction.DismissInfoMessage -> dismissInfoMessage()
         }
+    }
+
+    init {
+        observeSession()
+        loadCafeManagement()
     }
 }

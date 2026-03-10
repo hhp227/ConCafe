@@ -7,12 +7,44 @@
 
 import Foundation
 import Combine
+import Shared
 
 @MainActor
 final class CafeManagementViewModel: ObservableObject {
-    @Published private(set) var uiState = CafeManagementUiState.preview
+    private let getCafeManagementUseCase: GetCafeManagementUseCase
+
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
+    @Published private(set) var uiState = CafeManagementUiState()
 
     let event = PassthroughSubject<CafeManagementEvent, Never>()
+
+    private var sessionWatchHandle: WatchHandle?
+
+    private func loadCafeManagement() {
+        Task {
+            do {
+                let result = try await getCafeManagementUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let data = success.data as? CafeManagementData {
+                    uiState.ownedCafes = data.ownedCafes
+                    uiState.searchableCafes = data.searchableCafes
+                    uiState.pendingClaims = data.pendingClaims
+                } else if let failure = result as? AppResultFailure {
+                    uiState.ownedCafes = []
+                    uiState.searchableCafes = []
+                    uiState.pendingClaims = []
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.ownedCafes = []
+                uiState.searchableCafes = []
+                uiState.pendingClaims = []
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
 
     private func clickCafe(_ cafeId: String) {
         event.send(.navigateToCafeDashboard(cafeId: cafeId))
@@ -44,6 +76,16 @@ final class CafeManagementViewModel: ObservableObject {
         uiState.infoMessage = nil
     }
 
+    private func observeSession() {
+        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+            guard let self else { return }
+
+            Task { @MainActor in
+                self.loadCafeManagement()
+            }
+        }
+    }
+
     func onAction(_ action: CafeManagementAction) {
         switch action {
         case .clickCafe(let cafeId):
@@ -61,5 +103,20 @@ final class CafeManagementViewModel: ObservableObject {
         case .dismissInfoMessage:
             dismissInfoMessage()
         }
+    }
+
+    init(
+        getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+    ) {
+        self.getCafeManagementUseCase = getCafeManagementUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
+
+        observeSession()
+        loadCafeManagement()
+    }
+
+    deinit {
+        sessionWatchHandle?.cancel()
     }
 }
