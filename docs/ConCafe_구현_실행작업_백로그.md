@@ -25,7 +25,7 @@
   - 클라이언트/백엔드가 동일한 필드 정의를 사용한다.
   - 모호한 필드가 0건이다.
 - 결정사항:
-  1. `conceptType`: `MAID | BUTLER`
+  1. `conceptType`: `MAID | BUTLER | IDOL`
   2. `events` 저장 위치: `cafes/{cafeId}/events/{eventId}`
   3. `favorites`/`visitHistory`: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
   4. 참고 문서 간 `events/{eventId}` 표기는 과거안으로 간주하고 서브컬렉션 기준으로 문서 통일
@@ -363,12 +363,16 @@
 - 상태: TODO
 - 산출물: `CAFE_OWNER` 전용 카페관리 진입 화면
 - 작업:
-  1. 내 카페 요약/공지/이벤트/메뉴 관리 진입점 배치
-  2. 캐스트/출근표 관리 진입점 연결
-  3. 비운영자 접근 차단 또는 미노출 처리
+  1. 운영 카페 0개일 때 Empty State 배치(`기존 카페 검색` / `새 카페 등록`)
+  2. 운영 카페 1개 이상일 때 내 카페 목록 또는 선택 카페 대시보드 진입점 배치
+  3. 기존 카페 검색 결과와 `이 카페 운영자 신청` 액션 연결
+  4. 공지/이벤트/메뉴 관리 진입점 배치
+  5. 캐스트/출근표 관리 진입점 연결
+  6. 비운영자 접근 차단 또는 미노출 처리
 - AC:
   - `CAFE_OWNER` 로그인 시 3번째 탭에서 카페관리 화면으로 진입된다.
-  - 본인 카페 기준 관리 진입점만 노출된다.
+  - 연결된 운영 카페가 없으면 Empty State가 노출된다.
+  - 본인이 운영 권한을 가진 카페 기준 관리 진입점만 노출된다.
 
 ### C-06-4. 운영관리 탭 엔트리
 - 우선순위: P1
@@ -486,7 +490,7 @@
 - 산출물: Claim 승인 검증 로직 명세 및 적용
 - 작업:
   1. `cafeOwnerClaims`, `castClaims` 생성 시 중복 요청 차단
-  2. 승인 시 역할/연결 필드(`ownerId`, `linkedUserId`) 반영 규칙 정의
+  2. 승인 시 역할/연결 필드(`ownedCafeIds`, `ownerIds`, `linkedUserId`) 반영 규칙 정의
   3. 반려/취소 후 재신청 가능 정책 정의
 - AC:
   - 동일 사용자 중복 claim이 비정상적으로 누적되지 않는다.
@@ -1043,7 +1047,7 @@ class ReviewPolicy {
 }
 
 class RolePermissionPolicy {
-    fun canEditCafe(role: UserRole, ownerId: String, requesterId: String): Boolean
+    fun canEditCafe(role: UserRole, ownerIds: List<String>, requesterId: String): Boolean
     fun canModerate(role: UserRole): Boolean
 }
 ```

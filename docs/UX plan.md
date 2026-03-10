@@ -46,7 +46,7 @@
 
 ### 홈 배너 등록 권한
 - 관리자(`ADMIN`)는 전체 홈 배너를 등록/수정/중지할 수 있다.
-- 카페 운영자(`CAFE_OWNER`)는 본인 카페 관련 배너를 등록할 수 있다.
+- 카페 운영자(`CAFE_OWNER`)는 본인이 운영 권한을 가진 카페 관련 배너를 등록할 수 있다.
 - 일반 유저와 캐스트는 홈 배너를 등록할 수 없다.
 
 ### 홈 배너 카드 요소
@@ -208,22 +208,76 @@
 - 카페 운영자가 카페 운영 데이터를 관리하는 전용 탭
 
 ### 메인 화면
-- 내 카페 요약
+- 내 카페 목록
+- 선택한 카페의 운영 대시보드
 - 공지/이벤트 관리
 - 홈 배너 관리
 - 메뉴/굿즈 관리
 - 캐스트/출근표 관리
+
+### 다중 카페 운영 UX 원칙
+- 카페 운영자가 여러 카페를 운영할 수 있으므로 탭 진입 시 먼저 `내 카페 목록`을 노출한다.
+- 운영 카페가 1개인 경우에는 목록을 스킵하고 바로 해당 카페의 대시보드로 진입할 수 있다.
+- 운영 카페가 2개 이상인 경우에는 카페 선택 후 해당 카페 컨텍스트로 관리 화면을 연다.
+- 카페 전환은 상단 드롭다운 또는 `카페 변경` 액션으로 지원한다.
+- 연결된 운영 카페가 0개인 경우에는 `카페관리 Empty State`를 노출한다.
+
+### 카페관리 Empty State
+- 제목: `아직 연결된 운영 카페가 없습니다`
+- 설명: `기존 카페를 검색해 운영 권한을 신청하거나 새 카페를 등록하세요`
+- 버튼:
+  - 기존 카페 검색
+  - 새 카페 등록
+- 보조 문구:
+  - `운영자 신청은 관리자 승인 후 반영됩니다`
+
+### 기존 카페 검색 화면
+- 검색바: 카페명 / 지역 / 주소
+- 필터: 국가 / 도시
+- 검색 결과 카드:
+  - 대표 이미지
+  - 카페 이름
+  - 지역
+  - 승인 상태
+  - `이 카페 운영자 신청` CTA
+
+### 운영자 신청 BottomSheet 또는 상세 화면
+- 선택한 카페명 확인
+- 운영자 신청 메시지 입력
+- 운영 증빙 이미지 업로드
+- 제출 버튼
+
+### 신청 상태 카드
+- `승인 대기 중` 상태 배지
+- 신청한 카페 이름
+- 신청일
+- 처리 안내 문구
+- 승인 완료 시 `내 카페 목록으로 이동` 또는 자동 진입
+- 반려 시 재신청 CTA 노출 가능
+
+### 내 카페 목록 화면
+- 카페 카드 리스트
+- 카드 항목: 대표 이미지 / 카페 이름 / 지역 / 승인 상태 / 오늘 체크인 수 요약
+- 카드 탭 시 선택한 카페의 관리 대시보드로 이동
+
+### 카페 대시보드 화면
+- 오늘 방문자
+- 오늘 체크인
+- 오늘 리뷰
+- 평점
+- 빠른 이동: 캐스트 관리 / 출근표 / 이벤트 / 카페 설정 / 홈 배너 관리
 
 ### 홈 배너 관리 화면
 - 배너 목록 탭: `진행중`, `예약`, `종료`
 - + 배너 등록 버튼
 - 각 배너 카드에 썸네일, 제목, 노출 기간, 상태, 연결 대상 표시
 - 슬롯 초과 상태에서는 등록 버튼 클릭 시 `즉시 게시 불가 / 예약 등록만 가능` 안내 노출
+- 현재 선택한 카페 기준으로 연결 가능한 대상만 노출한다.
 
 ### 카페 운영자 배너 등록 플로우
 1. 배너 이미지 업로드
 2. 제목 / 서브 문구 입력
-3. 연결 대상 선택 (내 카페 상세 / 이벤트 / 공지 / 외부 링크)
+3. 연결 대상 선택 (선택한 카페 상세 / 이벤트 / 공지 / 외부 링크)
 4. 노출 시작일 / 종료일 선택
 5. 저장
 6. 활성 슬롯 여유가 있으면 `ACTIVE`, 없으면 `SCHEDULED`로 등록
@@ -393,3 +447,297 @@
 ---
 
 🎀 ConCafe Phase 1 UI 설계 문서
+
+---
+
+# 🏪 Multi-Cafe Owner 구조 설계
+
+ConCafe에서는 하나의 카페 운영자가 여러 카페를 운영할 수 있다.
+
+예시
+
+Owner A
+- Maid Dream Tokyo
+- Seoul Maid Cafe
+- Akihabara Butler Cafe
+
+따라서 Owner와 Cafe의 관계는 다음과 같다.
+
+Owner (1) → Cafe (N)
+
+### Firestore 구조
+
+users/{userId}
+
+- role: VISITOR | CAST | CAFE_OWNER | ADMIN
+- ownedCafeIds: [cafeId]
+
+cafeOwnerClaims/{claimId}
+
+- userId
+- cafeId
+- status
+- message
+- evidenceImageUrls[]
+- reviewedAt
+
+cafes/{cafeId}
+
+- name
+- description
+- ownerIds: [userId]
+- createdAt
+- approved
+
+ownerIds는 여러 운영자를 지원하기 위해 배열 구조로 설계한다.
+
+예시
+
+cafes/{cafeId}
+
+- ownerIds:
+  - ownerA
+  - ownerB
+
+이 구조는 공동 운영이나 지점 관리 상황에서도 유연하게 동작한다.
+
+### UX 적용 원칙
+
+- 카페 운영자는 앱 진입 후 자신이 관리하는 카페 목록을 먼저 확인한다.
+- 운영 카페가 여러 개여도 하단 탭은 하나의 `카페관리` 탭만 사용한다.
+- 세부 관리 기능은 선택된 카페 컨텍스트 안에서 동작한다.
+- 연결된 운영 카페가 없을 경우에는 기존 카페 검색 또는 신규 카페 등록을 유도하는 빈 상태 화면을 사용한다.
+
+---
+
+# 📱 카페 운영자 전용 탭 UX 설계
+
+ConCafe 하단 네비게이션 3번째 탭은 사용자 역할에 따라 다르게 표시된다.
+
+일반 사용자
+
+- 탭 이름: Check-in
+
+카페 운영자
+
+- 탭 이름: Cafe Manage
+
+### 역할별 탭 해석
+
+- 일반 사용자에게는 기존 `체크인` 탭을 유지한다.
+- 카페 운영자에게는 3번째 탭을 `Cafe Manage`로 치환한다.
+- 다중 카페 운영 여부는 탭 수가 아니라 탭 내부의 정보 구조로 해결한다.
+
+---
+
+## Cafe Manage UX 구조
+
+카페 운영자가 여러 카페를 운영할 수 있으므로 먼저 `내 카페 목록`을 보여준다.
+
+### My Cafes 화면
+
+My Cafes
+
+- Maid Dream Tokyo
+- Seoul Maid Cafe
+- Akihabara Butler Cafe
+
+카페를 선택하면 해당 카페의 관리 화면으로 이동한다.
+
+### My Cafes 화면 구성
+
+- 상단 타이틀: `내 카페`
+- 운영 중인 카페 수 표시
+- 카페 카드 요소:
+  - 대표 이미지
+  - 카페 이름
+  - 지역
+  - 승인 상태
+  - 오늘 체크인 요약
+- 정렬 기준:
+  - 최근 관리한 카페 우선 또는 이름순
+
+### Firestore 연동 대상
+
+users/{userId}
+
+- ownedCafeIds: [cafeId]
+
+cafes/{cafeId}
+
+- name
+- thumbnailImage
+- region
+- approved
+
+---
+
+## Cafe Dashboard
+
+카페 운영자가 앱을 열면 먼저 운영 현황을 확인할 수 있다.
+
+예시
+
+- 오늘 방문자
+- 오늘 체크인
+- 오늘 리뷰
+- 평점
+
+예시 UI
+
+- 오늘 방문 18
+- 체크인 12
+- 리뷰 3
+- 평점 4.7
+
+### 화면 구성
+
+- 선택된 카페의 대표 정보
+- KPI 요약 카드 4종
+- 바로가기 액션:
+  - Cast Management
+  - Cast Schedule
+  - Event Management
+  - Cafe Settings
+  - 홈 배너 관리
+- 최근 공지 또는 최근 리뷰 미리보기
+
+### Firestore 조회 기준
+
+visits/{visitId}
+
+- cafeId
+- visitedAt
+- verified
+
+cafes/{cafeId}/reviews/{reviewId}
+
+- rating
+- createdAt
+
+cafes/{cafeId}
+
+- ratingAvg
+
+---
+
+## Cast Management
+
+카페에 소속된 캐스트 관리 기능
+
+가능 기능
+
+- 캐스트 추가
+- 캐스트 프로필 수정
+- 캐스트 사진 업로드
+- 캐스트 스케줄 등록
+
+### Firestore
+
+cafes/{cafeId}/casts/{castId}
+
+- name
+- profileImage
+- description
+- birthday
+- joinDate
+
+### 화면 구성
+
+- 캐스트 목록 카드
+- `캐스트 추가` 버튼
+- 캐스트 편집 진입
+- 최근 스케줄 요약
+
+---
+
+## Cast Schedule
+
+캐스트 출근 스케줄 관리
+
+Today's Cast
+
+- Sakura 14:00 - 20:00
+- Miku 12:00 - 18:00
+
+### Firestore
+
+castSchedules/{scheduleId}
+
+- cafeId
+- castId
+- date
+- startTime
+- endTime
+
+### 화면 구성
+
+- 날짜 선택 바
+- 당일 출근 캐스트 목록
+- 스케줄 추가 버튼
+- 수정 / 삭제 액션
+
+---
+
+## Event Management
+
+카페 이벤트 관리
+
+예시
+
+- Sakura Birthday Event
+- Golden Week Event
+
+가능 기능
+
+- 이벤트 생성
+- 이벤트 수정
+- 이벤트 삭제
+
+### Firestore
+
+cafes/{cafeId}/events/{eventId}
+
+- eventType
+- relatedCastId
+- startDate
+- endDate
+- description
+
+### 화면 구성
+
+- 진행중 / 예정 / 종료 탭
+- 이벤트 카드 리스트
+- `이벤트 생성` 버튼
+
+---
+
+## Cafe Settings
+
+카페 기본 정보 관리
+
+수정 가능 항목
+
+- 카페 이름
+- 카페 설명
+- 주소
+- 카페 이미지
+- 메뉴
+- 굿즈
+
+### Firestore
+
+cafes/{cafeId}
+
+- name
+- description
+- region
+- images
+- thumbnailImage
+
+### 화면 구성
+
+- 기본 정보 수정 폼
+- 이미지 관리
+- 메뉴 관리 진입
+- 굿즈 관리 진입

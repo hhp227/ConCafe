@@ -34,7 +34,7 @@
 - [ ] 로그인 성공 시 원래 시도한 기능/화면으로 복귀
 
 ## 1. 사전 의사결정(필수)
-- [x] `conceptType` enum 확정: `MAID | BUTLER`
+- [x] `conceptType` enum 확정: `MAID | BUTLER | IDOL`
 - [x] `events` 저장 위치 확정: `cafes/{cafeId}/events/{eventId}`
 - [x] `favorites`/`visitHistory` 저장 방식 확정: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
 - [ ] 참고 문서 정합성 반영: `events` 컬렉션 위치/집계 필드(`stats.*`) 표기 통일
@@ -152,6 +152,10 @@
 - [x] `ADMIN` 로그인 시 `운영관리` 탭 노출
 - [x] 역할 변경/로그아웃 시 메인 탭 구성이 즉시 갱신
 - [ ] 다중 역할 계정은 우선순위 규칙에 따라 1개 탭만 노출
+- [ ] `CAFE_OWNER`이지만 연결된 운영 카페가 없으면 `카페관리 Empty State` 노출
+- [ ] Empty State에서 `기존 카페 검색`과 `새 카페 등록` CTA 제공
+- [ ] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
+- [ ] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능
@@ -183,6 +187,7 @@
 - [ ] Admin 콘솔(승인/신고/밴)
 - [ ] Owner 대시보드(카페/메이드/공지/출근표/통계)
 - [ ] Owner Claim / Cast Claim 승인 UI 및 이력 관리
+- [ ] 다중 카페 운영자 연결 관리(`ownedCafeIds` / `ownerIds`) 반영
 - [ ] 메뉴/굿즈/이벤트 운영 CRUD
 - [ ] 광고/상단 고정/수수료 기능
 - [ ] 글로벌 확장(한국→일본) 다국가 운영 정책
