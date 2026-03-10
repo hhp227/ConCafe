@@ -87,8 +87,7 @@ private struct CafeDashboardContentView: View {
 
     private var heroCard: some View {
         let cafe = uiState.cafe!
-
-        VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 ZStack {
                     Circle()
@@ -148,8 +147,7 @@ private struct CafeDashboardContentView: View {
 
     private var metricGrid: some View {
         let cafe = uiState.cafe!
-
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
             sectionHeader(title: "운영 대시보드", subtitle: "오늘 기준 핵심 수치")
             HStack(spacing: 12) {
                 dashboardMetricCard(title: "오늘 체크인", value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
@@ -244,8 +242,7 @@ private struct CafeDashboardContentView: View {
 
     private var castManagementSection: some View {
         let cafe = uiState.cafe!
-
-        VStack(alignment: .leading, spacing: 16) {
+        return VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("소속 캐스트 관리")
                     .font(.headline.weight(.bold))
@@ -304,7 +301,7 @@ private struct CafeDashboardContentView: View {
         )
     }
 
-    private func castPreviewItem(cast: CafeDashboardDataCastPreview) -> some View {
+    private func castPreviewItem(cast: CafeDashboardData.CastPreview) -> some View {
         VStack(spacing: 8) {
             ZStack(alignment: .bottomTrailing) {
                 LinearGradient(
@@ -327,8 +324,7 @@ private struct CafeDashboardContentView: View {
 
     private var homeBannerSection: some View {
         let cafe = uiState.cafe!
-
-        VStack(alignment: .leading, spacing: 14) {
+        return VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("홈 배너 관리")
                     .font(.headline.weight(.bold))

@@ -37,6 +37,7 @@
 		0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */; };
 		0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CB12F60365400CC07CF /* CafeDashboardAction.swift */; };
 		0A341CB42F60367400CC07CF /* CafeDashboardEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CB32F60367400CC07CF /* CafeDashboardEvent.swift */; };
+		0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CB52F605E9400CC07CF /* CafeDashboardShortcut.swift */; };
 		0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34842F5E886300AA813D /* NotificationAction.swift */; };
 		0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34862F5E887600AA813D /* NotificationEvent.swift */; };
 		0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE922F5EB83400613093 /* CheckInUiState.swift */; };
@@ -143,6 +144,7 @@
 		0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardViewModel.swift; sourceTree = "<group>"; };
 		0A341CB12F60365400CC07CF /* CafeDashboardAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardAction.swift; sourceTree = "<group>"; };
 		0A341CB32F60367400CC07CF /* CafeDashboardEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardEvent.swift; sourceTree = "<group>"; };
+		0A341CB52F605E9400CC07CF /* CafeDashboardShortcut.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CafeDashboardShortcut.swift; sourceTree = "<group>"; };
 		0A3E34842F5E886300AA813D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		0A3E34862F5E887600AA813D /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
 		0A50FE922F5EB83400613093 /* CheckInUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInUiState.swift; sourceTree = "<group>"; };
@@ -318,6 +320,7 @@
 		0A341CAA2F6035AB00CC07CF /* CafeDashboard */ = {
 			isa = PBXGroup;
 			children = (
+				0A341CB52F605E9400CC07CF /* CafeDashboardShortcut.swift */,
 				0A341CAB2F6035CB00CC07CF /* CafeDashboardView.swift */,
 				0A341CAD2F6035E500CC07CF /* CafeDashboardUiState.swift */,
 				0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */,
@@ -642,6 +645,7 @@
 				0A0C66882F5C03BD00B0CDE4 /* MainEvent.swift in Sources */,
 				0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */,
 				0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */,
+				0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
 				0A0C66842F5C034600B0CDE4 /* MainViewModel.swift in Sources */,

@@ -38,27 +38,22 @@ private struct CafeManagementContentView: View {
         ScrollView {
             VStack(spacing: 18) {
                 heroCard
-
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
-
                 if uiState.hasOwnedCafes {
                     sectionHeader(
                         title: "내 카페",
                         subtitle: "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
                     )
-
                     VStack(spacing: 12) {
                         ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
                             ownedCafeCard(cafe: cafe)
                         }
                     }
-
                     if uiState.hasHiddenOwnedCafes {
                         expandOwnedCafeButton
                     }
-
                     if !uiState.pendingClaims.isEmpty {
                         sectionHeader(
                             title: "운영자 신청 상태",
@@ -93,7 +88,6 @@ private struct CafeManagementContentView: View {
             Text("Cafe Manage")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(.white)
-
             Text(
                 uiState.featuredCafe != nil
                     ? "운영 중인 카페를 확인하고 각 카페의 관리 화면으로 이동할 수 있습니다."
@@ -101,7 +95,6 @@ private struct CafeManagementContentView: View {
             )
             .font(.subheadline)
             .foregroundStyle(.white.opacity(0.9))
-
             Text("운영 카페 \(uiState.ownedCafes.count)개")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white)
@@ -128,7 +121,6 @@ private struct CafeManagementContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
@@ -159,7 +151,7 @@ private struct CafeManagementContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func ownedCafeCard(cafe: CafeManagementDataOwnedCafeSummary) -> some View {
+    private func ownedCafeCard(cafe: CafeManagementData.OwnedCafeSummary) -> some View {
         ZStack(alignment: .trailing) {
             Button {
                 onAction(.clickCafe(cafe.id))
@@ -172,13 +164,11 @@ private struct CafeManagementContentView: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
-
                     LinearGradient(
                         colors: [.clear, Color.black.opacity(0.14), Color.black.opacity(0.52)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-
                     VStack(alignment: .leading, spacing: 6) {
                         Text(cafe.name)
                             .font(.title3.weight(.bold))
@@ -197,7 +187,6 @@ private struct CafeManagementContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
             .buttonStyle(.plain)
-
             Button {
                 onAction(.clickCafeDetail(cafe.id))
             } label: {
@@ -223,9 +212,7 @@ private struct CafeManagementContentView: View {
                 )
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "5E4F5D"))
-
                 Spacer()
-
                 Image(systemName: uiState.isShowingAllCafes ? "chevron.up" : "chevron.down")
                     .foregroundStyle(Color(hex: "7C6B79"))
             }
@@ -247,11 +234,9 @@ private struct CafeManagementContentView: View {
                 title: "기존 카페 검색",
                 subtitle: "기등록되어있는 카페를 검색해서 등록할수 있습니다."
             )
-
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color(hex: "8E8794"))
-
                 TextField(
                     "카페 이름 또는 지역 검색",
                     text: Binding(
@@ -270,7 +255,6 @@ private struct CafeManagementContentView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
             )
-
             if !uiState.cafeSearchQuery.isEmpty {
                 VStack(spacing: 0) {
                     if uiState.filteredSearchableCafes.isEmpty {
@@ -302,7 +286,7 @@ private struct CafeManagementContentView: View {
         }
     }
 
-    private func searchCafeItem(cafe: CafeManagementDataSearchableCafeSummary) -> some View {
+    private func searchCafeItem(cafe: CafeManagementData.SearchableCafeSummary) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cafe.name)
@@ -312,9 +296,7 @@ private struct CafeManagementContentView: View {
                     .font(.caption)
                     .foregroundStyle(Color(hex: "8E8794"))
             }
-
             Spacer()
-
             Button("등록") {
                 onAction(.clickClaimCafe(cafe.id))
             }
@@ -335,20 +317,16 @@ private struct CafeManagementContentView: View {
                 Circle()
                     .fill(Color(hex: "FCE6EF"))
                     .frame(width: 54, height: 54)
-
                 Image(systemName: "building.2.crop.circle")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
-
             Text("아직 연결된 운영 카페가 없습니다")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-
             Text("검색으로 기존 카페를 찾거나 새 카페를 등록해 운영 권한을 연결하세요.")
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
-
             Button("새 카페 등록") {
                 onAction(.clickCreateCafe)
             }
@@ -379,7 +357,7 @@ private struct CafeManagementContentView: View {
         )
     }
 
-    private func pendingClaimCard(claim: CafeManagementDataPendingClaimSummary) -> some View {
+    private func pendingClaimCard(claim: CafeManagementData.PendingClaimSummary) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(claim.cafeName)
@@ -394,11 +372,9 @@ private struct CafeManagementContentView: View {
                         .foregroundStyle(Color(hex: "9A6A11"))
                 }
             }
-
             Text("\(claim.status) · \(claim.requestedAt)")
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8B774C"))
-
             Text(claim.message)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6E6248"))

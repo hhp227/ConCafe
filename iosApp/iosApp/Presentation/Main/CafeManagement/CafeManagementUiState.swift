@@ -9,11 +9,11 @@ import Foundation
 import Shared
 
 struct CafeManagementUiState {
-    var ownedCafes: [CafeManagementDataOwnedCafeSummary] = []
+    var ownedCafes: [CafeManagementData.OwnedCafeSummary] = []
 
-    var searchableCafes: [CafeManagementDataSearchableCafeSummary] = []
+    var searchableCafes: [CafeManagementData.SearchableCafeSummary] = []
 
-    var pendingClaims: [CafeManagementDataPendingClaimSummary] = []
+    var pendingClaims: [CafeManagementData.PendingClaimSummary] = []
 
     var isShowingAllCafes = false
 
@@ -21,7 +21,7 @@ struct CafeManagementUiState {
 
     var infoMessage: String?
 
-    var featuredCafe: CafeManagementDataOwnedCafeSummary? {
+    var featuredCafe: CafeManagementData.OwnedCafeSummary? {
         ownedCafes.first
     }
 
@@ -29,7 +29,7 @@ struct CafeManagementUiState {
         !ownedCafes.isEmpty
     }
 
-    var visibleOwnedCafes: [CafeManagementDataOwnedCafeSummary] {
+    var visibleOwnedCafes: [CafeManagementData.OwnedCafeSummary] {
         isShowingAllCafes ? ownedCafes : Array(ownedCafes.prefix(Self.defaultVisibleCafeCount))
     }
 
@@ -37,7 +37,7 @@ struct CafeManagementUiState {
         ownedCafes.count > Self.defaultVisibleCafeCount
     }
 
-    var filteredSearchableCafes: [CafeManagementDataSearchableCafeSummary] {
+    var filteredSearchableCafes: [CafeManagementData.SearchableCafeSummary] {
         searchableCafes.filter { cafe in
             cafeSearchQuery.isEmpty ||
             cafe.name.localizedCaseInsensitiveContains(cafeSearchQuery) ||
