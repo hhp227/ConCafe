@@ -159,8 +159,8 @@ private struct CafeManagementContentView: View {
                 ZStack(alignment: .bottomLeading) {
                     LinearGradient(
                         colors: cafe.isApproved
-                            ? [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")]
-                            : [Color(hex: "3A3240"), Color(hex: "6F6272"), Color(hex: "B8A8B2")],
+                        ? [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")]
+                        : [Color(hex: "3A3240"), Color(hex: "6F6272"), Color(hex: "B8A8B2")],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -171,13 +171,13 @@ private struct CafeManagementContentView: View {
                     )
                     VStack(alignment: .leading, spacing: 6) {
                         Text(cafe.name)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
                         Text(cafe.city)
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.88))
-                            .lineLimit(1)
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.88))
+                        .lineLimit(1)
                     }
                     .padding(18)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -187,16 +187,23 @@ private struct CafeManagementContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
             .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             Button {
                 onAction(.clickCafeDetail(cafe.id))
             } label: {
-                Image(systemName: "chevron.right")
+                ZStack {
+                    Circle()
+                    .fill(Color.black.opacity(0.18))
+                    Image(systemName: "chevron.right")
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
+                }
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
             }
             .buttonStyle(.plain)
             .padding(.trailing, 10)
+            .zIndex(1)
         }
     }
 
