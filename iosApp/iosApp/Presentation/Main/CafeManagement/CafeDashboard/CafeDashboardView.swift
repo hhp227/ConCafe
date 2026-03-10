@@ -197,7 +197,9 @@ private struct CafeDashboardContentView: View {
                     shortcutCard(shortcut: shortcut)
                 }
             }
+            .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func shortcutCard(shortcut: CafeDashboardShortcut) -> some View {

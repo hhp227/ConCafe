@@ -322,28 +322,43 @@ private fun DashboardMetricCard(
 private fun ShortcutGrid(
     onShortcutClick: (CafeDashboardShortcut) -> Unit
 ) {
-    val primaryShortcuts = listOf(
-        CafeDashboardShortcut.EVENT_MANAGEMENT,
-        CafeDashboardShortcut.CAFE_SETTINGS,
-        CafeDashboardShortcut.MENU_GOODS,
-        CafeDashboardShortcut.EXTERNAL_LINKS
-    )
-
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionHeader(
             title = "관리 메뉴",
             subtitle = "선택한 카페 컨텍스트로 이동"
         )
-        FlowRow(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            maxItemsInEachRow = 2
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            primaryShortcuts.forEach { shortcut ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 ShortcutCard(
-                    shortcut = shortcut,
-                    onClick = { onShortcutClick(shortcut) }
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.EVENT_MANAGEMENT,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.EVENT_MANAGEMENT) }
+                )
+                ShortcutCard(
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.CAFE_SETTINGS,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.CAFE_SETTINGS) }
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ShortcutCard(
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.MENU_GOODS,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.MENU_GOODS) }
+                )
+                ShortcutCard(
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.EXTERNAL_LINKS,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.EXTERNAL_LINKS) }
                 )
             }
         }
@@ -353,6 +368,7 @@ private fun ShortcutGrid(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShortcutCard(
+    modifier: Modifier = Modifier,
     shortcut: CafeDashboardShortcut,
     onClick: () -> Unit
 ) {
@@ -367,7 +383,7 @@ private fun ShortcutCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(0.48f),
+        modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFE8DFE7)),
