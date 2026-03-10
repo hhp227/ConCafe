@@ -32,6 +32,11 @@
 		0A27F1F12F5D6E84003D4763 /* CafeReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */; };
 		0A27F1F32F5D6EA5003D4763 /* CafeNoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */; };
 		0A27F1F52F5D6EEC003D4763 /* CafeGoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */; };
+		0A341CAC2F6035CB00CC07CF /* CafeDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CAB2F6035CB00CC07CF /* CafeDashboardView.swift */; };
+		0A341CAE2F6035E500CC07CF /* CafeDashboardUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CAD2F6035E500CC07CF /* CafeDashboardUiState.swift */; };
+		0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */; };
+		0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CB12F60365400CC07CF /* CafeDashboardAction.swift */; };
+		0A341CB42F60367400CC07CF /* CafeDashboardEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A341CB32F60367400CC07CF /* CafeDashboardEvent.swift */; };
 		0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34842F5E886300AA813D /* NotificationAction.swift */; };
 		0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34862F5E887600AA813D /* NotificationEvent.swift */; };
 		0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE922F5EB83400613093 /* CheckInUiState.swift */; };
@@ -133,6 +138,11 @@
 		0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeReviewView.swift; sourceTree = "<group>"; };
 		0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeNoticeView.swift; sourceTree = "<group>"; };
 		0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeGoodsView.swift; sourceTree = "<group>"; };
+		0A341CAB2F6035CB00CC07CF /* CafeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardView.swift; sourceTree = "<group>"; };
+		0A341CAD2F6035E500CC07CF /* CafeDashboardUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardUiState.swift; sourceTree = "<group>"; };
+		0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardViewModel.swift; sourceTree = "<group>"; };
+		0A341CB12F60365400CC07CF /* CafeDashboardAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardAction.swift; sourceTree = "<group>"; };
+		0A341CB32F60367400CC07CF /* CafeDashboardEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeDashboardEvent.swift; sourceTree = "<group>"; };
 		0A3E34842F5E886300AA813D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		0A3E34862F5E887600AA813D /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
 		0A50FE922F5EB83400613093 /* CheckInUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInUiState.swift; sourceTree = "<group>"; };
@@ -237,6 +247,7 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A341CAA2F6035AB00CC07CF /* CafeDashboard */,
 				0A0C668F2F5C050E00B0CDE4 /* CafeManagementView.swift */,
 				0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */,
 				0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */,
@@ -302,6 +313,18 @@
 				0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */,
 			);
 			path = Tab;
+			sourceTree = "<group>";
+		};
+		0A341CAA2F6035AB00CC07CF /* CafeDashboard */ = {
+			isa = PBXGroup;
+			children = (
+				0A341CAB2F6035CB00CC07CF /* CafeDashboardView.swift */,
+				0A341CAD2F6035E500CC07CF /* CafeDashboardUiState.swift */,
+				0A341CAF2F6035FA00CC07CF /* CafeDashboardViewModel.swift */,
+				0A341CB12F60365400CC07CF /* CafeDashboardAction.swift */,
+				0A341CB32F60367400CC07CF /* CafeDashboardEvent.swift */,
+			);
+			path = CafeDashboard;
 			sourceTree = "<group>";
 		};
 		0A580D9B2F59658900390F67 /* Presentation */ = {
@@ -617,6 +640,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A0C66882F5C03BD00B0CDE4 /* MainEvent.swift in Sources */,
+				0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */,
 				0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
@@ -625,11 +649,13 @@
 				0A785CBD2F5A7DDE004037A8 /* RankingEvent.swift in Sources */,
 				0A785CB32F5A7D0B004037A8 /* MyInfoEvent.swift in Sources */,
 				0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */,
+				0A341CAE2F6035E500CC07CF /* CafeDashboardUiState.swift in Sources */,
 				0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */,
 				0A785CB52F5A7D24004037A8 /* MyInfoUiState.swift in Sources */,
 				0A580DAA2F5967DD00390F67 /* HomeView.swift in Sources */,
 				0A580DB22F59691300390F67 /* MainView.swift in Sources */,
 				0A8ABA652F5C1C4D00265D4F /* CafeManagementAction.swift in Sources */,
+				0A341CAC2F6035CB00CC07CF /* CafeDashboardView.swift in Sources */,
 				0A580DB52F59710000390F67 /* RankingView.swift in Sources */,
 				0A27F1EB2F5D6DF9003D4763 /* CafeInfoView.swift in Sources */,
 				0A785CC12F5A7E28004037A8 /* CafeViewModel.swift in Sources */,
@@ -657,6 +683,7 @@
 				0A0C668A2F5C03D500B0CDE4 /* MainAction.swift in Sources */,
 				0A0C668D2F5C045400B0CDE4 /* FanManagementView.swift in Sources */,
 				0A27F1F12F5D6E84003D4763 /* CafeReviewView.swift in Sources */,
+				0A341CB42F60367400CC07CF /* CafeDashboardEvent.swift in Sources */,
 				0A0C66AA2F5C0EE100B0CDE4 /* SignUpAction.swift in Sources */,
 				0A27F1ED2F5D6E3C003D4763 /* CafeCastView.swift in Sources */,
 				0A785CBB2F5A7DC3004037A8 /* RankingAction.swift in Sources */,
@@ -705,6 +732,7 @@
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
+				0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */,
 				0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */,
 				0A785CC72F5A7EB9004037A8 /* CafeEvent.swift in Sources */,
 				0A0C669C2F5C0E1D00B0CDE4 /* SignUpView.swift in Sources */,
