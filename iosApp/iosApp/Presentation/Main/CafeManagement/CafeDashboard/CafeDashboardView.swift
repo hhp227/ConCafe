@@ -13,14 +13,6 @@ struct CafeDashboardView: View {
 
     @StateObject private var viewModel: CafeDashboardViewModel
 
-    init(
-        cafeId: String,
-        onNavigationAction: @escaping (NavigationAction) -> Void
-    ) {
-        self.onNavigationAction = onNavigationAction
-        _viewModel = StateObject(wrappedValue: CafeDashboardViewModel(cafeId: cafeId))
-    }
-
     var body: some View {
         CafeDashboardContentView(
             uiState: viewModel.uiState,
@@ -45,6 +37,14 @@ struct CafeDashboardView: View {
             }
         }
     }
+    
+    init(
+        cafeId: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void
+    ) {
+        self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: CafeDashboardViewModel(cafeId: cafeId))
+    }
 }
 
 private struct CafeDashboardContentView: View {
@@ -56,11 +56,9 @@ private struct CafeDashboardContentView: View {
         ScrollView {
             VStack(spacing: 18) {
                 heroCard
-
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
-
                 metricGrid
                 shortcutGrid
                 castManagementSection
@@ -88,7 +86,6 @@ private struct CafeDashboardContentView: View {
                     Image(systemName: "storefront")
                         .foregroundStyle(.white)
                 }
-
                 VStack(alignment: .leading, spacing: 4) {
                     Text(uiState.cafe.name)
                         .font(.title3.weight(.bold))
@@ -98,7 +95,6 @@ private struct CafeDashboardContentView: View {
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
-
             Text("선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다.")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.9))
@@ -121,7 +117,6 @@ private struct CafeDashboardContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
@@ -143,7 +138,6 @@ private struct CafeDashboardContentView: View {
     private var metricGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader(title: "운영 대시보드", subtitle: "오늘 기준 핵심 수치")
-
             HStack(spacing: 12) {
                 dashboardMetricCard(title: "오늘 체크인", value: "\(uiState.cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
                 dashboardMetricCard(title: "오늘 리뷰", value: "\(uiState.cafe.todayReviews)", accent: Color(hex: "47A88B"))
@@ -157,11 +151,9 @@ private struct CafeDashboardContentView: View {
             Circle()
                 .fill(accent)
                 .frame(width: 10, height: 10)
-
             Text(title)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "7A707A"))
-
             Text(value)
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
@@ -179,7 +171,6 @@ private struct CafeDashboardContentView: View {
     private var shortcutGrid: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader(title: "관리 메뉴", subtitle: "선택한 카페 컨텍스트로 이동")
-
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                 spacing: 12
@@ -208,7 +199,6 @@ private struct CafeDashboardContentView: View {
             case .externalLinks: return "link"
             }
         }()
-
         return Button {
             onAction(.clickShortcut(shortcut))
         } label: {
@@ -220,7 +210,6 @@ private struct CafeDashboardContentView: View {
                     Image(systemName: iconName)
                         .foregroundStyle(Color(hex: "EF6797"))
                 }
-
                 Text(shortcut.title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color(hex: "2B2330"))
@@ -244,9 +233,7 @@ private struct CafeDashboardContentView: View {
                 Text("소속 캐스트 관리")
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "8C7A83"))
-
                 Spacer()
-
                 Button {
                     onAction(.clickShortcut(.castSchedule))
                 } label: {
@@ -264,13 +251,11 @@ private struct CafeDashboardContentView: View {
                 }
                 .buttonStyle(.plain)
             }
-
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.cafe.castPreviews) { cast in
                         castPreviewItem(cast: cast)
                     }
-
                     Button {
                         onAction(.clickShortcut(.castManagement))
                     } label: {
@@ -282,7 +267,6 @@ private struct CafeDashboardContentView: View {
                                 Image(systemName: "plus")
                                     .foregroundStyle(Color(hex: "B8AEB7"))
                             }
-
                             Text("추가")
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(Color(hex: "8F848F"))
@@ -313,12 +297,10 @@ private struct CafeDashboardContentView: View {
                 )
                 .frame(width: 72, height: 72)
                 .clipShape(Circle())
-
                 Circle()
                     .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
                     .frame(width: 16, height: 16)
             }
-
             Text(cast.name)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
@@ -339,7 +321,6 @@ private struct CafeDashboardContentView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color(hex: "EF6797"))
             }
-
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
                     ZStack {
@@ -353,7 +334,6 @@ private struct CafeDashboardContentView: View {
                     }
                     .frame(width: 96, height: 64)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
                     VStack(alignment: .leading, spacing: 6) {
                         Text(uiState.cafe.homeBannerPreview.title)
                             .font(.subheadline.weight(.bold))
@@ -371,7 +351,6 @@ private struct CafeDashboardContentView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
                 Button {
                     onAction(.clickShortcut(.homeBanner))
                 } label: {
@@ -427,8 +406,6 @@ private struct CafeDashboardContentView: View {
 
 struct CafeDashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            CafeDashboardView(cafeId: "cafe-1", onNavigationAction: { _ in })
-        }
+        CafeDashboardView(cafeId: "cafe-1", onNavigationAction: { _ in })
     }
 }
