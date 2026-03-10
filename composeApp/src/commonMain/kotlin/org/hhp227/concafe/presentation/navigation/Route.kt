@@ -17,6 +17,9 @@ sealed interface Route {
     data class Cafe(val param: String) : Route
 
     @Serializable
+    data class CafeDashboard(val param: String) : Route
+
+    @Serializable
     data object SignIn : Route
 
     @Serializable

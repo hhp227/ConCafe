@@ -65,6 +65,15 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.ADMIN,
             banned = false,
             createdAt = "2026-03-01T09:30:00Z"
+        ),
+        User(
+            id = "user-5",
+            email = "owner.nocafe@concafe.app",
+            nickname = "카페연결대기점장",
+            profileImage = null,
+            role = UserRole.CAFE_OWNER,
+            banned = false,
+            createdAt = "2026-03-10T09:40:00Z"
         )
     )
 

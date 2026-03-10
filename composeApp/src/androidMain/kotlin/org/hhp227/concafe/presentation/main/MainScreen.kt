@@ -37,11 +37,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import org.hhp227.concafe.di.resolveGetMainNavigationUseCase
 import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.model.MainNavigationTab
 import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import org.hhp227.concafe.presentation.main.checkin.CheckInScreen
 import org.hhp227.concafe.presentation.main.explore.ExploreScreen
 import org.hhp227.concafe.presentation.main.home.HomeScreen
@@ -152,7 +154,7 @@ fun MainScreen(
                 FanManagementScreen()
             }
             composable(MainNavigationTab.CAFE_MANAGEMENT.route) {
-                CafeManagementScreen()
+                CafeManagementScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.ADMIN_OPERATIONS.route) {
                 AdminOperationsScreen()
