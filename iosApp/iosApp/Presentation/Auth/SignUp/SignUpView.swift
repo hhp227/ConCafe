@@ -370,6 +370,13 @@ private struct SignUpContentView: View {
                         .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
                 )
             }
+            if uiState.selectedCafe != nil {
+                Button("선택한 카페 지우기") {
+                    onAction(.clearCafeTapped)
+                }
+                .font(.footnote.weight(.semibold))
+                .buttonStyle(.plain)
+            }
             if uiState.isCafeSearchVisible {
                 VStack(spacing: 0) {
                     textField(

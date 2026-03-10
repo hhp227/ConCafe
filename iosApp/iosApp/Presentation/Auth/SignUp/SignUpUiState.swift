@@ -86,6 +86,8 @@ struct SignUpUiState {
 
     var verificationCode: String = ""
 
+    var hasRequestedVerification: Bool = false
+
     var isPhoneVerified: Bool = false
 
     var selectedCafe: CafeOption?

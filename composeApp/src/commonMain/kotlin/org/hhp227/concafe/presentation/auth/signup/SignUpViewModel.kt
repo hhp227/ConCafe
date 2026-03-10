@@ -37,6 +37,7 @@ class SignUpViewModel(
                 selectedCafe = null,
                 phone = "",
                 verificationCode = "",
+                hasRequestedVerification = false,
                 isPhoneVerified = false
             )
         }
@@ -62,6 +63,7 @@ class SignUpViewModel(
                 selectedCafe = null,
                 phone = "",
                 verificationCode = "",
+                hasRequestedVerification = false,
                 isPhoneVerified = false
             )
         }
@@ -73,6 +75,7 @@ class SignUpViewModel(
                 phone = value,
                 isPhoneVerified = false,
                 verificationCode = "",
+                hasRequestedVerification = false,
                 errorMessage = null,
                 infoMessage = null
             )
@@ -111,6 +114,16 @@ class SignUpViewModel(
         }
     }
 
+    private fun clearCafeSelection() {
+        _uiState.update {
+            it.copy(
+                selectedCafe = null,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+    }
+
     private fun sendVerification() {
         val phone = uiState.value.phone.trim()
 
@@ -121,6 +134,7 @@ class SignUpViewModel(
 
         _uiState.update {
             it.copy(
+                hasRequestedVerification = true,
                 errorMessage = null,
                 infoMessage = "인증번호가 $phone 로 전송되었습니다. 테스트 코드는 1234입니다."
             )
@@ -132,6 +146,7 @@ class SignUpViewModel(
             _uiState.update {
                 it.copy(
                     isPhoneVerified = true,
+                    hasRequestedVerification = true,
                     errorMessage = null,
                     infoMessage = "휴대폰 인증이 완료되었습니다."
                 )
@@ -242,7 +257,7 @@ class SignUpViewModel(
         if (state.password.length < MIN_PASSWORD_LENGTH) return "비밀번호는 8자 이상 입력해주세요."
         if (state.password != state.confirmPassword) return "비밀번호가 일치하지 않습니다."
         if (userType == SignUpUiState.UserType.CAFE_OWNER && !state.isPhoneVerified) return "휴대폰 인증을 완료해주세요."
-        if (userType != SignUpUiState.UserType.VISITOR && state.selectedCafe == null) return "카페를 선택해주세요."
+        if (userType == SignUpUiState.UserType.CAST && state.selectedCafe == null) return "카페를 선택해주세요."
 
         return null
     }
@@ -282,6 +297,7 @@ class SignUpViewModel(
             SignUpAction.ClickVerifyCode -> verifyCode()
             SignUpAction.ClickToggleCafeSearch -> toggleCafeSearch()
             is SignUpAction.ClickCafe -> selectCafe(action.cafe)
+            SignUpAction.ClickClearCafe -> clearCafeSelection()
             SignUpAction.ClickSubmit -> submit()
             is SignUpAction.ClickSocialSignUp -> socialSignUp(action.provider)
             SignUpAction.ClickSignInInstead -> viewModelScope.launch { _event.emit(SignUpEvent.NavigateBack) }

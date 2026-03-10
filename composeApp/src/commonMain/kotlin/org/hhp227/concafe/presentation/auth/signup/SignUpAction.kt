@@ -16,6 +16,7 @@ sealed interface SignUpAction {
     data object ClickVerifyCode : SignUpAction
     data object ClickToggleCafeSearch : SignUpAction
     data class ClickCafe(val cafe: SignUpUiState.CafeOption) : SignUpAction
+    data object ClickClearCafe : SignUpAction
     data object ClickSubmit : SignUpAction
     data class ClickSocialSignUp(val provider: SignUpProvider) : SignUpAction
     data object ClickSignInInstead : SignUpAction

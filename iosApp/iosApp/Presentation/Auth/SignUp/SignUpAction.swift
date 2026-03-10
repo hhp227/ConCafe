@@ -23,6 +23,7 @@ enum SignUpAction {
     case verifyCodeTapped
     case toggleCafeSearchTapped
     case cafeTapped(SignUpUiState.CafeOption)
+    case clearCafeTapped
     case submitTapped
     case socialSignUpTapped(provider: SignUpProvider)
     case signInInsteadTapped

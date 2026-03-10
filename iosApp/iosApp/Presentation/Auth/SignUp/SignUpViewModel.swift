@@ -26,6 +26,7 @@ class SignUpViewModel: ObservableObject {
         uiState.selectedUserType = type
         uiState.phone = ""
         uiState.verificationCode = ""
+        uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
@@ -46,6 +47,7 @@ class SignUpViewModel: ObservableObject {
         uiState.selectedUserType = nil
         uiState.phone = ""
         uiState.verificationCode = ""
+        uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
@@ -56,7 +58,13 @@ class SignUpViewModel: ObservableObject {
     private func changePhone(_ value: String) {
         uiState.phone = value
         uiState.verificationCode = ""
+        uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        clearMessages()
+    }
+
+    private func clearCafeSelection() {
+        uiState.selectedCafe = nil
         clearMessages()
     }
 
@@ -70,11 +78,13 @@ class SignUpViewModel: ObservableObject {
         }
 
         uiState.errorMessage = nil
+        uiState.hasRequestedVerification = true
         uiState.infoMessage = "인증번호가 \(trimmedPhone) 로 전송되었습니다. 테스트 코드는 1234입니다."
     }
 
     private func verifyCode() {
         if uiState.verificationCode.trimmingCharacters(in: .whitespacesAndNewlines) == Self.verificationCode {
+            uiState.hasRequestedVerification = true
             uiState.isPhoneVerified = true
             uiState.errorMessage = nil
             uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
@@ -204,7 +214,7 @@ class SignUpViewModel: ObservableObject {
         if userType == .cafeOwner && !state.isPhoneVerified {
             return "휴대폰 인증을 완료해주세요."
         }
-        if userType != .visitor && state.selectedCafe == nil {
+        if userType == .cast && state.selectedCafe == nil {
             return "카페를 선택해주세요."
         }
 
@@ -270,6 +280,8 @@ class SignUpViewModel: ObservableObject {
             uiState.isCafeSearchVisible = false
             uiState.cafeSearchQuery = ""
             clearMessages()
+        case .clearCafeTapped:
+            clearCafeSelection()
         case .submitTapped:
             submit()
         case .socialSignUpTapped(let provider):

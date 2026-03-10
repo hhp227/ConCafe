@@ -275,7 +275,7 @@ private fun SignUpFormHeader(type: SignUpUiState.UserType) {
     val description = when (type) {
         SignUpUiState.UserType.VISITOR -> "간편하게 시작하세요!"
         SignUpUiState.UserType.CAST -> "소속 카페를 등록하세요"
-        SignUpUiState.UserType.CAFE_OWNER -> "사업자 인증이 필요합니다"
+        SignUpUiState.UserType.CAFE_OWNER -> "휴대폰 인증 후 운영 카페를 선택하거나 나중에 연결할 수 있습니다"
     }
 
     Surface(
@@ -325,12 +325,13 @@ private fun SignUpFormSection(
             )
             PhoneVerificationSection(uiState = uiState, onAction = onAction)
             CafeSelectionSection(
-                label = "운영 카페 선택",
-                placeholder = "카페를 검색하세요",
+                label = "운영 카페 연결 (선택)",
+                placeholder = "가입 전에 연결할 카페를 1개 선택할 수 있습니다",
                 filteredCafes = filteredCafes,
                 uiState = uiState,
                 onAction = onAction
             )
+            OwnerCafeGuideCard()
         } else {
             SignUpTextField(
                 value = uiState.nickname,
@@ -397,6 +398,34 @@ private fun SignUpFormSection(
 }
 
 @Composable
+private fun OwnerCafeGuideCard() {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFF6F0FF),
+        border = BorderStroke(1.dp, Color(0xFFE6D9FA))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "운영 카페 연결 안내",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5F3AA2)
+            )
+            Text(
+                text = "회원가입 단계에서는 카페 1개만 미리 선택할 수 있습니다. 선택하지 않아도 가입 가능하며, 가입 후 카페관리 탭에서 기존 카페 검색이나 새 카페 등록으로 추가 연결할 수 있습니다.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF6B5A82)
+            )
+        }
+    }
+}
+
+@Composable
 private fun SignUpTextField(
     value: String,
     label: String,
@@ -444,7 +473,7 @@ private fun PhoneVerificationSection(
                 Text(if (uiState.isPhoneVerified) "인증완료" else "인증요청")
             }
         }
-        if (!uiState.isPhoneVerified && uiState.phone.isNotBlank()) {
+        if (uiState.hasRequestedVerification && !uiState.isPhoneVerified) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.weight(1f)) {
                     SignUpTextField(
@@ -511,6 +540,14 @@ private fun CafeSelectionSection(
                     color = if (uiState.selectedCafe == null) Color(0xFF8E8794) else Color(0xFF222222)
                 )
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF8E8794))
+            }
+        }
+        if (uiState.selectedCafe != null) {
+            TextButton(
+                onClick = { onAction(SignUpAction.ClickClearCafe) },
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("선택한 카페 지우기")
             }
         }
         if (uiState.isCafeSearchVisible) {

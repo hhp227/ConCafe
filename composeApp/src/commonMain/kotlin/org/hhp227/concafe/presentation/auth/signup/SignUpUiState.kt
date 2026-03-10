@@ -10,6 +10,7 @@ data class SignUpUiState(
     val name: String = "",
     val phone: String = "",
     val verificationCode: String = "",
+    val hasRequestedVerification: Boolean = false,
     val isPhoneVerified: Boolean = false,
     val selectedCafe: CafeOption? = null,
     val cafeSearchQuery: String = "",
