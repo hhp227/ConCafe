@@ -164,6 +164,11 @@
 - [ ] 카페 설정 내 외부 링크 관리 섹션 제공
 - [ ] 카페 외부 링크 CRUD(`cafes/{cafeId}/externalLinks`)
 - [ ] 캐스트 외부 링크 CRUD(`cafes/{cafeId}/casts/{castId}/externalLinks`)
+- [x] 카페 대시보드에서 `카페 정보 관리` 화면으로 진입 가능
+- [x] 카페 정보 수정 화면 초기값은 `GetCafeDetailUseCase`로 로드
+- [x] 카페 정보 수정 저장은 `UpdateCafeInfoUseCase`를 통해 처리
+- [x] 저장 성공 시 `MockConCafeDataSource` 기준 카페 정보가 즉시 갱신됨
+- [x] 저장 성공 피드백은 Compose 스낵바 / iOS alert로 노출
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능

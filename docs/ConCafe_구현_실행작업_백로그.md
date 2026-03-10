@@ -383,6 +383,23 @@
   5. `CafeManagementRepository`는 `ConCafeDataSource` 원천 데이터만 읽어 조합하도록 정리 완료
   6. 기존 카페 검색 결과/운영자 Claim 실제 서버 연결은 후속 단계에서 구현
 
+### C-06-3-1. 카페 정보 수정 화면
+- 우선순위: P1
+- 상태: DONE
+- 산출물: `CAFE_OWNER` 전용 카페 정보 수정 화면 + 저장 반영 흐름
+- 작업:
+  1. 카페 대시보드에서 `카페 정보 관리` 진입 라우트 연결
+  2. `CafeInfoEdit` 화면 UI 구현(Android/iOS)
+  3. 초기값을 `GetCafeDetailUseCase`로 로드
+  4. 저장 시 `UpdateCafeInfoUseCase` -> `CafeRepository.updateCafeInfo()` 경로 연결
+  5. `ConCafeDataSource` 원천 데이터 갱신 후 카페 상세/운영 화면에 즉시 반영
+  6. 저장 성공 피드백을 Compose 스낵바 / iOS alert로 분리
+- AC:
+  - 카페 운영자는 대시보드에서 카페 정보 수정 화면으로 진입할 수 있다.
+  - 초기값은 실제 카페 상세 데이터와 동일하다.
+  - 저장 후 같은 카페의 상세/운영 화면에서 수정값이 즉시 보인다.
+  - 화면 내부 하드코딩 초기값은 사용하지 않는다.
+
 ### C-06-4. 운영관리 탭 엔트리
 - 우선순위: P1
 - 상태: TODO

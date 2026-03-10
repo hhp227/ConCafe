@@ -965,6 +965,14 @@ Today's Cast
 - 지원 플랫폼 예시: Instagram / X / TikTok / YouTube / Website
 - 저장 후 카페 상세 화면과 운영 화면에 즉시 반영되는 구조를 목표로 한다
 
+### 구현 계층 규칙
+
+- 카페 정보 수정 화면의 초기값은 별도 화면 하드코딩이 아니라 `GetCafeDetailUseCase`를 통해 불러온다
+- 저장 시에는 `UpdateCafeInfoUseCase`를 통해 `CafeRepository`를 호출한다
+- Repository는 `ConCafeDataSource`를 원천 데이터로 사용하고, 저장 성공 시 `cafes/{cafeId}`와 카페 상세 조회 결과에 즉시 반영되는 구조를 사용한다
+- 수정 대상 기본 범위는 `name`, `desc`, `region.address`, `phoneNumber`, `businessHours`이다
+- 저장 성공 피드백은 플랫폼 UX에 맞춰 Compose는 스낵바, iOS는 alert로 노출할 수 있다
+
 ------------------------------------------------------------------------
 
 ## Cast External Links
