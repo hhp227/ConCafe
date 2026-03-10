@@ -53,7 +53,11 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func clickShortcut(_ shortcut: CafeDashboardShortcut) {
-        uiState.infoMessage = "\(shortcut.title) 연결은 다음 단계에서 이어집니다."
+        if shortcut == .cafeSettings {
+            event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
+        } else {
+            uiState.infoMessage = "\(shortcut.title) 연결은 다음 단계에서 이어집니다."
+        }
     }
 
     private func dismissInfoMessage() {

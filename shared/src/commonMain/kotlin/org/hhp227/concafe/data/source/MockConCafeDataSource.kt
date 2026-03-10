@@ -6,6 +6,7 @@ import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
+import org.hhp227.concafe.domain.model.CafeInfoUpdate
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
@@ -79,7 +80,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     )
 
-    override val cafes = listOf(
+    override val cafes = mutableListOf(
         Cafe(
             id = "cafe-1",
             name = "메이드 하우스",
@@ -202,7 +203,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             conceptType = "MAID"
         )
     )
-
     override val casts = listOf(
         Cast("maid-1", "cafe-1", "사쿠라", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
         Cast("maid-2", "cafe-2", "미유", null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987, 4.8),
@@ -223,6 +223,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         Notice("notice-2", "cafe-2", "핑크 캐슬", "신규 메이드 입장", "신규 메이드 입장! 많은 관심 부탁드려요", "2026-03-05T04:00:00Z", "5시간 전"),
         Notice("notice-3", "cafe-3", "리본 카페", "주말 예약 마감", "주말 예약이 마감되었습니다", "2026-03-04T09:00:00Z", "1일 전")
     )
+
+    override val cafeDetailsById = cafes.associate { cafe ->
+        cafe.id to buildCafeDetail(cafe)
+    }.toMutableMap()
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", 4.5f, "분위기가 좋아요", emptyList(), 3, "2026-03-03T10:00:00Z"),
@@ -342,9 +346,34 @@ class MockConCafeDataSource : ConCafeDataSource {
     }
 
     override fun cafeDetail(cafeId: String): CafeDetail? {
-        val cafe = cafes.firstOrNull { it.id == cafeId } ?: return null
-        val cafeCasts = casts.filter { it.cafeId == cafeId }
-        val cafeNotices = notices.filter { it.cafeId == cafeId }
+        return cafeDetailsById[cafeId]
+    }
+
+    override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
+        val cafeIndex = cafes.indexOfFirst { it.id == update.cafeId }
+        if (cafeIndex == -1) {
+            throw NoSuchElementException("cafe not found")
+        }
+        val currentCafe = cafes[cafeIndex]
+        val currentDetail = cafeDetailsById[update.cafeId] ?: buildCafeDetail(currentCafe)
+        val updatedCafe = currentCafe.copy(
+            name = update.name,
+            desc = update.description,
+            region = currentCafe.region.copy(address = update.address)
+        )
+        val updatedDetail = currentDetail.copy(
+            cafe = updatedCafe,
+            businessHours = formatBusinessHours(update),
+            phoneNumber = update.contactNumber
+        )
+        cafes[cafeIndex] = updatedCafe
+        cafeDetailsById[update.cafeId] = updatedDetail
+        return updatedDetail
+    }
+
+    private fun buildCafeDetail(cafe: Cafe): CafeDetail {
+        val cafeCasts = casts.filter { it.cafeId == cafe.id }
+        val cafeNotices = notices.filter { it.cafeId == cafe.id }
         return CafeDetail(
             cafe = cafe,
             images = listOf(
@@ -457,6 +486,23 @@ class MockConCafeDataSource : ConCafeDataSource {
             businessHours = "매일 11:00 - 22:00",
             phoneNumber = "02-1234-5678"
         )
+    }
+
+    private fun formatBusinessHours(update: CafeInfoUpdate): String {
+        val weekday = listOf(update.weekdayOpen, update.weekdayClose).all { it.isNotBlank() }
+        val weekend = listOf(update.weekendOpen, update.weekendClose).all { it.isNotBlank() }
+
+        return when {
+            weekday && weekend && update.weekdayOpen == update.weekendOpen && update.weekdayClose == update.weekendClose ->
+                "매일 ${update.weekdayOpen} - ${update.weekdayClose}"
+            weekday && weekend ->
+                "평일 ${update.weekdayOpen} - ${update.weekdayClose} / 주말 ${update.weekendOpen} - ${update.weekendClose}"
+            weekday ->
+                "평일 ${update.weekdayOpen} - ${update.weekdayClose}"
+            weekend ->
+                "주말 ${update.weekendOpen} - ${update.weekendClose}"
+            else -> ""
+        }
     }
 
     override fun castDetail(castId: String): CastDetail? {

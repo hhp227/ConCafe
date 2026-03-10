@@ -22,6 +22,7 @@ import org.hhp227.concafe.domain.usecase.SignUpUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
+import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -169,6 +170,13 @@ fun resolveMarkNotificationReadUseCase(): MarkNotificationReadUseCase {
 }
 
 fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

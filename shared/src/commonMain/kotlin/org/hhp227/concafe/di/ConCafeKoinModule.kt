@@ -47,6 +47,7 @@ import org.hhp227.concafe.domain.usecase.SignUpUseCase
 import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
+import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import org.koin.dsl.module
 
 val dataSourceModule = module {
@@ -90,6 +91,7 @@ val useCaseModule = module {
     factory { SignOutUseCase(get()) }
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
+    factory { UpdateCafeInfoUseCase(get()) }
 }
 
 val concafeModules = listOf(

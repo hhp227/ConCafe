@@ -60,8 +60,14 @@ class CafeDashboardViewModel(
     }
 
     private fun clickShortcut(shortcut: CafeDashboardShortcut) {
-        _uiState.update {
-            it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")
+        if (shortcut == CafeDashboardShortcut.CAFE_SETTINGS) {
+            viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
+            }
+        } else {
+            _uiState.update {
+                it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")
+            }
         }
     }
 

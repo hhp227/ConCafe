@@ -6,6 +6,7 @@ import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
+import org.hhp227.concafe.domain.model.CafeInfoUpdate
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.HomeBanner
@@ -22,7 +23,7 @@ interface ConCafeDataSource {
 
     val users: MutableList<User>
 
-    val cafes: List<Cafe>
+    val cafes: MutableList<Cafe>
 
     val casts: List<Cast>
 
@@ -56,9 +57,13 @@ interface ConCafeDataSource {
 
     val castTodayVisitCountById: Map<String, Int>
 
+    val cafeDetailsById: MutableMap<String, CafeDetail>
+
     fun defaultMyPageSummary(userId: String): MyPageSummary
 
     fun cafeDetail(cafeId: String): CafeDetail?
+
+    fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     fun castDetail(castId: String): CastDetail?
 

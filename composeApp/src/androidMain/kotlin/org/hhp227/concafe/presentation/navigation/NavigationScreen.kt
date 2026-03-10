@@ -15,6 +15,7 @@ import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 import org.hhp227.concafe.presentation.settings.SettingsScreen
 
@@ -80,6 +81,13 @@ fun NavigationScreen(
 
             CafeDashboardScreen(
                 cafeId = cafeDashboardRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.CafeInfoEdit> { backStackEntry ->
+            val cafeInfoEditRoute = backStackEntry.toRoute<Route.CafeInfoEdit>()
+            CafeInfoEditScreen(
+                cafeId = cafeInfoEditRoute.param,
                 onNavigationAction = viewModel::onAction
             )
         }
