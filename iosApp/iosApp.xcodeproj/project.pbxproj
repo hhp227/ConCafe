@@ -56,6 +56,11 @@
 		0A580DB72F59711000390F67 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB82F59711000390F67 /* CheckInView.swift */; };
 		0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBA2F59712000390F67 /* MyInfoView.swift */; };
 		0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBF2F59730000390F67 /* NotificationView.swift */; };
+		0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6ABF2F60702C00E395C2 /* CafeInfoEditView.swift */; };
+		0A6B6AC22F60704300E395C2 /* CafeInfoEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC12F60704300E395C2 /* CafeInfoEditUiState.swift */; };
+		0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */; };
+		0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */; };
+		0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */; };
 		0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C932F5A76B8004037A8 /* HomeAction.swift */; };
 		0A785C962F5A76D7004037A8 /* HomeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C952F5A76D7004037A8 /* HomeEvent.swift */; };
 		0A785C982F5A76FD004037A8 /* HomeUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C972F5A76FD004037A8 /* HomeUiState.swift */; };
@@ -163,6 +168,11 @@
 		0A580DB82F59711000390F67 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
 		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
 		0A580DBF2F59730000390F67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
+		0A6B6ABF2F60702C00E395C2 /* CafeInfoEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditView.swift; sourceTree = "<group>"; };
+		0A6B6AC12F60704300E395C2 /* CafeInfoEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditUiState.swift; sourceTree = "<group>"; };
+		0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditViewModel.swift; sourceTree = "<group>"; };
+		0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditAction.swift; sourceTree = "<group>"; };
+		0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditEvent.swift; sourceTree = "<group>"; };
 		0A785C932F5A76B8004037A8 /* HomeAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeAction.swift; sourceTree = "<group>"; };
 		0A785C952F5A76D7004037A8 /* HomeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEvent.swift; sourceTree = "<group>"; };
 		0A785C972F5A76FD004037A8 /* HomeUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeUiState.swift; sourceTree = "<group>"; };
@@ -249,6 +259,7 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A6B6ABE2F60701300E395C2 /* CafeInfoEdit */,
 				0A341CAA2F6035AB00CC07CF /* CafeDashboard */,
 				0A0C668F2F5C050E00B0CDE4 /* CafeManagementView.swift */,
 				0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */,
@@ -462,6 +473,18 @@
 			path = Notification;
 			sourceTree = "<group>";
 		};
+		0A6B6ABE2F60701300E395C2 /* CafeInfoEdit */ = {
+			isa = PBXGroup;
+			children = (
+				0A6B6ABF2F60702C00E395C2 /* CafeInfoEditView.swift */,
+				0A6B6AC12F60704300E395C2 /* CafeInfoEditUiState.swift */,
+				0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */,
+				0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */,
+				0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */,
+			);
+			path = CafeInfoEdit;
+			sourceTree = "<group>";
+		};
 		0A785C9B2F5A7B17004037A8 /* Cafe */ = {
 			isa = PBXGroup;
 			children = (
@@ -648,6 +671,8 @@
 				0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
+				0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */,
+				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
 				0A0C66842F5C034600B0CDE4 /* MainViewModel.swift in Sources */,
 				0A8ABA762F5C1D6E00265D4F /* SettingsUiState.swift in Sources */,
 				0A785CBD2F5A7DDE004037A8 /* RankingEvent.swift in Sources */,
@@ -717,7 +742,9 @@
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
 				0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */,
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
+				0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */,
 				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
+				0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
 				0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
@@ -741,6 +768,7 @@
 				0A785CC72F5A7EB9004037A8 /* CafeEvent.swift in Sources */,
 				0A0C669C2F5C0E1D00B0CDE4 /* SignUpView.swift in Sources */,
 				0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */,
+				0A6B6AC22F60704300E395C2 /* CafeInfoEditUiState.swift in Sources */,
 				0A580DA12F5966E400390F67 /* Route.swift in Sources */,
 				0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */,
 				0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */,
