@@ -9,9 +9,9 @@ import SwiftUI
 
 struct MenuGoodsEditView: View {
     let cafeId: String
-    
+
     let itemId: String?
-    
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: MenuGoodsEditViewModel
@@ -22,9 +22,11 @@ struct MenuGoodsEditView: View {
                 Text(viewModel.uiState.screenTitle)
                     .font(.title2.weight(.bold))
                     .frame(maxWidth: .infinity, alignment: .leading)
+
                 Text(viewModel.uiState.isEditMode ? "항목 정보를 수정합니다." : "새 항목을 등록합니다.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
                 if let infoMessage = viewModel.uiState.infoMessage {
                     Text(infoMessage)
                         .font(.footnote)
@@ -52,6 +54,7 @@ struct MenuGoodsEditView: View {
                     )
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
+
                     TextEditor(
                         text: Binding(
                             get: { viewModel.uiState.description },

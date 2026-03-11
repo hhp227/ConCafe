@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.AddCircle
@@ -38,6 +37,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -191,25 +192,19 @@ private fun MenuGoodsEditContentScreen(
                     }
                 } else {
                     item {
-                        FormField(
-                            label = "항목 이름"
-                        ) {
-                            RoundedTextField(
-                                value = uiState.itemName,
-                                onValueChange = { onAction(MenuGoodsEditAction.ChangeName(it)) },
-                                placeholder = "예: 딸기 메이드 파르페"
-                            )
-                        }
+                        RoundedTextField(
+                            label = "항목 이름",
+                            value = uiState.itemName,
+                            onValueChange = { onAction(MenuGoodsEditAction.ChangeName(it)) },
+                            placeholder = "예: 딸기 메이드 파르페"
+                        )
                     }
                     item {
-                        FormField(
-                            label = "가격"
-                        ) {
-                            PriceField(
-                                value = uiState.price,
-                                onValueChange = { onAction(MenuGoodsEditAction.ChangePrice(it)) }
-                            )
-                        }
+                        PriceField(
+                            label = "가격",
+                            value = uiState.price,
+                            onValueChange = { onAction(MenuGoodsEditAction.ChangePrice(it)) }
+                        )
                     }
                     item {
                         FormField(
@@ -222,14 +217,11 @@ private fun MenuGoodsEditContentScreen(
                         }
                     }
                     item {
-                        FormField(
-                            label = "설명"
-                        ) {
-                            DescriptionField(
-                                value = uiState.description,
-                                onValueChange = { onAction(MenuGoodsEditAction.ChangeDescription(it)) }
-                            )
-                        }
+                        DescriptionField(
+                            label = "설명",
+                            value = uiState.description,
+                            onValueChange = { onAction(MenuGoodsEditAction.ChangeDescription(it)) }
+                        )
                     }
                     item {
                         StockCard(
@@ -313,77 +305,38 @@ private fun FormField(
 
 @Composable
 private fun RoundedTextField(
+    label: String,
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String
 ) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFF8F5F6),
-        border = BorderStroke(1.dp, Color(0x55FFD1DC))
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF2B2330)),
-            singleLine = true,
-            decorationBox = { innerTextField ->
-                if (value.isBlank()) {
-                    Text(
-                        text = placeholder,
-                        color = Color(0xFFAA98A4)
-                    )
-                }
-                innerTextField()
-            }
-        )
-    }
+    CafeInfoStyledTextField(
+        label = label,
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = placeholder
+    )
 }
 
 @Composable
 private fun PriceField(
+    label: String,
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFF8F5F6),
-        border = BorderStroke(1.dp, Color(0x55FFD1DC))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    CafeInfoStyledTextField(
+        label = label,
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = "0",
+        leadingContent = {
             Text(
                 text = "¥",
                 color = Color(0xFF6B5A65),
                 fontWeight = FontWeight.SemiBold
             )
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF2B2330)),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    if (value.isBlank()) {
-                        Text(
-                            text = "0",
-                            color = Color(0xFFAA98A4)
-                        )
-                    }
-                    innerTextField()
-                }
-            )
         }
-    }
+    )
 }
 
 @Composable
@@ -462,31 +415,57 @@ private fun CategoryButton(
 
 @Composable
 private fun DescriptionField(
+    label: String,
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFF8F5F6),
-        border = BorderStroke(1.dp, Color(0x55FFD1DC))
-    ) {
-        BasicTextField(
+    CafeInfoStyledTextField(
+        label = label,
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = "재료 또는 특징을 설명해주세요...",
+        minLines = 5,
+        singleLine = false
+    )
+}
+
+@Composable
+private fun CafeInfoStyledTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    minLines: Int = 1,
+    singleLine: Boolean = true,
+    leadingContent: @Composable (() -> Unit)? = null
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF665A63)
+        )
+        OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(132.dp)
-                .padding(16.dp),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF2B2330)),
-            decorationBox = { innerTextField ->
-                if (value.isBlank()) {
-                    Text(
-                        text = "재료 또는 특징을 설명해주세요...",
-                        color = Color(0xFFAA98A4)
-                    )
-                }
-                innerTextField()
-            }
+            modifier = Modifier.fillMaxWidth(),
+            minLines = minLines,
+            singleLine = singleLine,
+            shape = RoundedCornerShape(16.dp),
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = Color(0xFFAA98A4)
+                )
+            },
+            leadingIcon = leadingContent,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFF8F5F6),
+                unfocusedContainerColor = Color(0xFFF8F5F6),
+                focusedBorderColor = Color(0xFFFFD1DC),
+                unfocusedBorderColor = Color(0x4DFFD1DC)
+            )
         )
     }
 }
