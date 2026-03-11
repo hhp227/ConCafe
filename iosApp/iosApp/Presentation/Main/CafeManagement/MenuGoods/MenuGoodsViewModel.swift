@@ -40,13 +40,15 @@ final class MenuGoodsViewModel: ObservableObject {
                 self.mapGoodsToManageItem(goods, index: index)
             }
 
-            self.uiState.cafeName = detail.cafe.name
-            self.uiState.isLoading = false
-            self.uiState.menuCategories = self.buildMenuCategories(items: menuItems)
-            self.uiState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
-            self.uiState.menuItems = menuItems
-            self.uiState.goodsItems = goodsItems
-            self.uiState.infoMessage = nil
+            var nextState = self.uiState
+            nextState.cafeName = detail.cafe.name
+            nextState.isLoading = false
+            nextState.menuCategories = self.buildMenuCategories(items: menuItems)
+            nextState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
+            nextState.menuItems = menuItems
+            nextState.goodsItems = goodsItems
+            nextState.infoMessage = nil
+            self.uiState = nextState
         }
     }
 
