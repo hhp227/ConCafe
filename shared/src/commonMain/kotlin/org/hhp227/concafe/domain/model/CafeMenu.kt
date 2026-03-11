@@ -6,5 +6,6 @@ data class CafeMenu(
     val price: Int,
     val desc: String,
     val image: String?,
-    val category: String
+    val category: String,
+    val isAvailable: Boolean = true
 )

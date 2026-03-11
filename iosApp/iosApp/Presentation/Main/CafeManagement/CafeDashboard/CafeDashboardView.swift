@@ -19,24 +19,16 @@ struct CafeDashboardView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationBarBackButtonHidden()
         .navigationTitle(viewModel.uiState.cafe?.name ?? "카페 관리")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.onAction(.clickBack)
-                } label: {
-                    Image(systemName: "chevron.left")
-                }
-            }
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
+            case .navigateToMenuGoods(let cafeId):
+                onNavigationAction(.navigateToMenuGoods(id: cafeId))
             }
         }
     }

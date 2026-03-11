@@ -1,9 +1,11 @@
 package org.hhp227.concafe.domain.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeInfoUpdate
+import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.CafeSort
 import org.hhp227.concafe.domain.model.CheckInCafeSummary
 
@@ -19,7 +21,13 @@ interface CafeRepository {
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
 
+    fun observeCafeDetail(cafeId: String): Flow<CafeDetail>
+
     suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
+
+    suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
+
+    suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail
 
     suspend fun isFavorite(userId: String, cafeId: String): Boolean
 

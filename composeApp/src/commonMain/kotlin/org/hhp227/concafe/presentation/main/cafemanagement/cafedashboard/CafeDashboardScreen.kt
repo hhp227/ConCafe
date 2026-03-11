@@ -55,6 +55,9 @@ fun CafeDashboardScreen(
                 is CafeDashboardEvent.NavigateToCafeInfoEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCafeInfoEdit(event.cafeId))
                 }
+                is CafeDashboardEvent.NavigateToMenuGoods -> {
+                    onNavigationAction(NavigationAction.NavigateToMenuGoods(event.cafeId))
+                }
             }
         }
     }

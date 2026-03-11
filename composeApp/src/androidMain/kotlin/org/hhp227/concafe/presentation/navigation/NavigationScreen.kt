@@ -16,6 +16,8 @@ import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 import org.hhp227.concafe.presentation.settings.SettingsScreen
 
@@ -63,6 +65,7 @@ fun NavigationScreen(
         }
         composable<Route.Cast> { backStackEntry ->
             val castRoute = backStackEntry.toRoute<Route.Cast>()
+
             CastScreen(
                 castId = castRoute.param,
                 onNavigationAction = viewModel::onAction
@@ -86,8 +89,26 @@ fun NavigationScreen(
         }
         composable<Route.CafeInfoEdit> { backStackEntry ->
             val cafeInfoEditRoute = backStackEntry.toRoute<Route.CafeInfoEdit>()
+
             CafeInfoEditScreen(
                 cafeId = cafeInfoEditRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.MenuGoods> { backStackEntry ->
+            val menuGoodsRoute = backStackEntry.toRoute<Route.MenuGoods>()
+
+            MenuGoodsScreen(
+                cafeId = menuGoodsRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.MenuGoodsEdit> { backStackEntry ->
+            val menuGoodsEditRoute = backStackEntry.toRoute<Route.MenuGoodsEdit>()
+
+            MenuGoodsEditScreen(
+                cafeId = menuGoodsEditRoute.cafeId,
+                itemId = menuGoodsEditRoute.itemId,
                 onNavigationAction = viewModel::onAction
             )
         }
