@@ -101,11 +101,10 @@ class MenuGoodsViewModel(
         _uiState.update { it.copy(pendingDeleteItem = targetItem) }
     }
 
-    private fun confirmDeleteItem() {
-        val targetItem = _uiState.value.pendingDeleteItem ?: return
+    private fun confirmDeleteItem(itemId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(infoMessage = null, pendingDeleteItem = null) }
-            when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = targetItem.id)) {
+            when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = itemId)) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(infoMessage = "항목이 삭제되었습니다.") }
                 }
@@ -248,7 +247,7 @@ class MenuGoodsViewModel(
             is MenuGoodsAction.ToggleItemAvailability -> toggleItemAvailability(action.itemId)
             is MenuGoodsAction.ClickEditItem -> clickEditItem(action.itemId)
             is MenuGoodsAction.ClickDeleteItem -> clickDeleteItem(action.itemId)
-            MenuGoodsAction.ConfirmDeleteItem -> confirmDeleteItem()
+            is MenuGoodsAction.ConfirmDeleteItem -> confirmDeleteItem(action.itemId)
             MenuGoodsAction.CancelDeleteItem -> cancelDeleteItem()
             MenuGoodsAction.ClickAddNewItem -> clickAddNewItem()
             MenuGoodsAction.DismissInfoMessage -> dismissInfoMessage()

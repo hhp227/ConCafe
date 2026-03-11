@@ -16,7 +16,7 @@ enum MenuGoodsAction {
     case toggleItemAvailability(String)
     case clickEditItem(String)
     case clickDeleteItem(String)
-    case confirmDeleteItem
+    case confirmDeleteItem(String)
     case cancelDeleteItem
     case clickAddNewItem
     case dismissInfoMessage

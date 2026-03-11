@@ -49,15 +49,15 @@ struct MenuGoodsView: View {
                 }
             ),
             presenting: viewModel.uiState.pendingDeleteItem
-        ) { _ in
+        ) { item in
             Button("취소", role: .cancel) {
                 viewModel.onAction(.cancelDeleteItem)
             }
             Button("삭제", role: .destructive) {
-                viewModel.onAction(.confirmDeleteItem)
+                viewModel.onAction(.confirmDeleteItem(item.id))
             }
-        } message: { item in
-            Text("'\(item.name)' 항목을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.")
+        } message: { _ in
+            Text("항목을 삭제 하시겠습니까?")
         }
     }
 

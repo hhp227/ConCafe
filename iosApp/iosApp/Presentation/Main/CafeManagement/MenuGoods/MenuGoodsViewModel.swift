@@ -112,8 +112,7 @@ final class MenuGoodsViewModel: ObservableObject {
         uiState.pendingDeleteItem = targetItem
     }
 
-    private func confirmDeleteItem() {
-        guard let targetItem = uiState.pendingDeleteItem else { return }
+    private func confirmDeleteItem(_ itemId: String) {
         uiState.infoMessage = nil
         uiState.pendingDeleteItem = nil
         deleteTask?.cancel()
@@ -121,7 +120,7 @@ final class MenuGoodsViewModel: ObservableObject {
             guard let self else { return }
 
             do {
-                let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: targetItem.id)
+                let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.infoMessage = "항목이 삭제되었습니다."
                 } else {
@@ -257,8 +256,8 @@ final class MenuGoodsViewModel: ObservableObject {
             event.send(.navigateToEdit(cafeId: cafeId, itemId: itemId))
         case .clickDeleteItem(let itemId):
             deleteItem(itemId)
-        case .confirmDeleteItem:
-            confirmDeleteItem()
+        case .confirmDeleteItem(let itemId):
+            confirmDeleteItem(itemId)
         case .cancelDeleteItem:
             cancelDeleteItem()
         case .clickAddNewItem:

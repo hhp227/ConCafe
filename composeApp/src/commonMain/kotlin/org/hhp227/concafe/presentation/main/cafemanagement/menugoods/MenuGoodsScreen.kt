@@ -75,9 +75,9 @@ fun MenuGoodsScreen(
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) },
             title = { Text("항목 삭제") },
-            text = { Text("'${item.name}' 항목을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.") },
+            text = { Text("항목을 삭제 하시겠습니까?") },
             confirmButton = {
-                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem) }) {
+                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(item.id)) }) {
                     Text("삭제", color = Color(0xFFD96B7A))
                 }
             },
