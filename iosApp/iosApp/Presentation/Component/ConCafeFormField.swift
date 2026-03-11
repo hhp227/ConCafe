@@ -89,9 +89,8 @@ struct ConCafeFormEditor: View {
             Text(label)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: "665A63"))
-            TextEditor(text: $text)
+            ConCafeMultilineTextView(text: $text)
                 .frame(minHeight: 120)
-                .background(TextEditorClearBackgroundView())
                 .padding(12)
                 .background(Color(hex: "F8F5F6"))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -103,14 +102,42 @@ struct ConCafeFormEditor: View {
     }
 }
 
-private struct TextEditorClearBackgroundView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        DispatchQueue.main.async {
-            UITextView.appearance().backgroundColor = .clear
-        }
-        return view
+private struct ConCafeMultilineTextView: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {}
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.delegate = context.coordinator
+        textView.backgroundColor = .clear
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.font = UIFont.preferredFont(forTextStyle: .body)
+        textView.textColor = UIColor.label
+        textView.autocapitalizationType = .none
+        textView.autocorrectionType = .no
+        textView.isScrollEnabled = true
+        return textView
+    }
+
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        @Binding private var text: String
+
+        init(text: Binding<String>) {
+            self._text = text
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            text = textView.text
+        }
+    }
 }
