@@ -8,5 +8,13 @@
 import Foundation
 
 enum MenuGoodsEditAction {
-    
+    case clickBack
+    case clickPhotoUpload
+    case changeName(String)
+    case changePrice(String)
+    case selectCategory(MenuGoodsEditUiState.ItemCategory)
+    case changeDescription(String)
+    case toggleStock(Bool)
+    case clickSave
+    case dismissInfoMessage
 }

@@ -1,5 +1,6 @@
 package org.hhp227.concafe.data.source
 
+import kotlinx.coroutines.flow.Flow
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
@@ -7,6 +8,7 @@ import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeInfoUpdate
+import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.HomeBanner
@@ -63,7 +65,11 @@ interface ConCafeDataSource {
 
     fun cafeDetail(cafeId: String): CafeDetail?
 
+    fun observeCafeDetail(cafeId: String): Flow<CafeDetail?>
+
     fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
+
+    fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
 
     fun castDetail(castId: String): CastDetail?
 

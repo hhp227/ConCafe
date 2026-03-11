@@ -41,6 +41,7 @@ import org.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -48,6 +49,7 @@ import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import org.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
 
 val dataSourceModule = module {
@@ -85,6 +87,7 @@ val useCaseModule = module {
     factory { GetRankingFeedUseCase(get(), get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
+    factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignUpUseCase(get()) }
@@ -92,6 +95,7 @@ val useCaseModule = module {
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
     factory { UpdateCafeInfoUseCase(get()) }
+    factory { UpsertCafeMenuGoodsUseCase(get()) }
 }
 
 val concafeModules = listOf(

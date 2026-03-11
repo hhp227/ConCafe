@@ -13,62 +13,36 @@ import Shared
 final class MenuGoodsViewModel: ObservableObject {
     private let cafeId: String
 
-    private let getCafeDetailUseCase: GetCafeDetailUseCase
-
-    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
 
     @Published private(set) var uiState = MenuGoodsUiState()
 
     let event = PassthroughSubject<MenuGoodsEvent, Never>()
 
-    private var sessionWatchHandle: WatchHandle?
-
-    private var loadTask: Task<Void, Never>?
+    private var cafeDetailWatchHandle: WatchHandle?
 
     private func loadMenuGoods() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.infoMessage = nil
 
-        loadTask = Task {
-            do {
-                let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
-
-                if let success = result as? AppResultSuccess<AnyObject>,
-                   let feed = success.data as? CafeDetailFeed {
-                    let detail = feed.detail
-                    let menuItems = detail.menus.enumerated().map { index, menu in
-                        mapMenuToManageItem(menu, index: index)
-                    }
-                    let goodsItems = detail.goods.enumerated().map { index, goods in
-                        mapGoodsToManageItem(goods, index: index)
-                    }
-
-                    uiState.cafeName = detail.cafe.name
-                    uiState.isLoading = false
-                    uiState.menuCategories = buildMenuCategories(items: menuItems)
-                    uiState.goodsCategories = buildGoodsCategories(items: goodsItems)
-                    uiState.menuItems = menuItems
-                    uiState.goodsItems = goodsItems
-                } else {
-                    uiState.isLoading = false
-                    uiState.infoMessage = "메뉴와 굿즈 정보를 불러오지 못했습니다."
-                }
-            } catch {
-                if Task.isCancelled { return }
-                uiState.isLoading = false
-                uiState.infoMessage = "메뉴와 굿즈 정보를 불러오지 못했습니다."
-            }
-        }
-    }
-
-    private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+        cafeDetailWatchHandle?.cancel()
+        cafeDetailWatchHandle = observeCafeDetailUseCase.watch(cafeId: cafeId) { [weak self] detail in
             guard let self else { return }
 
-            Task { @MainActor in
-                self.loadMenuGoods()
+            let menuItems = detail.menus.enumerated().map { index, menu in
+                self.mapMenuToManageItem(menu, index: index)
             }
+            let goodsItems = detail.goods.enumerated().map { index, goods in
+                self.mapGoodsToManageItem(goods, index: index)
+            }
+
+            self.uiState.cafeName = detail.cafe.name
+            self.uiState.isLoading = false
+            self.uiState.menuCategories = self.buildMenuCategories(items: menuItems)
+            self.uiState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
+            self.uiState.menuItems = menuItems
+            self.uiState.goodsItems = goodsItems
+            self.uiState.infoMessage = nil
         }
     }
 
@@ -139,7 +113,6 @@ final class MenuGoodsViewModel: ObservableObject {
             ("drink", .init(id: "drink", label: "Drinks", iconKey: "drink")),
             ("dessert", .init(id: "dessert", label: "Dessert", iconKey: "dessert"))
         ]
-
         return [.init(id: nil, label: "All", iconKey: "all")] + preferredOrder.compactMap { id, chip in
             items.contains(where: { $0.categoryId == id }) ? chip : nil
         }
@@ -175,7 +148,7 @@ final class MenuGoodsViewModel: ObservableObject {
         default:
             categoryLabel = menu.category.capitalized
         }
-        let isAvailable = !Self.soldOutMenuIds.contains(menu.id) && index % 5 != 4
+        let isAvailable = menu.isAvailable
         return MenuGoodsUiState.ManageItem(
             id: menu.id,
             name: menu.name,
@@ -211,7 +184,7 @@ final class MenuGoodsViewModel: ObservableObject {
             categoryLabel = "Goods"
         }
 
-        let isAvailable = goods.stock > 0 && index % 4 != 3
+        let isAvailable = goods.stock > 0
         return MenuGoodsUiState.ManageItem(
             id: goods.id,
             name: goods.name,
@@ -249,12 +222,12 @@ final class MenuGoodsViewModel: ObservableObject {
             selectCategory(categoryId)
         case .toggleItemAvailability(let itemId):
             toggleItemAvailability(itemId)
-        case .clickEditItem(_):
-            showInfo("편집 기능은 다음 단계에서 연결됩니다.")
+        case .clickEditItem(let itemId):
+            event.send(.navigateToEdit(cafeId: cafeId, itemId: itemId))
         case .clickDeleteItem(_):
             showInfo("삭제 확인 플로우는 다음 단계에서 연결됩니다.")
         case .clickAddNewItem:
-            showInfo("신규 항목 등록 화면은 다음 단계에서 연결됩니다.")
+            event.send(.navigateToEdit(cafeId: cafeId, itemId: nil))
         case .dismissInfoMessage:
             uiState.infoMessage = nil
         }
@@ -262,21 +235,15 @@ final class MenuGoodsViewModel: ObservableObject {
 
     init(
         cafeId: String,
-        getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase()
     ) {
         self.cafeId = cafeId
-        self.getCafeDetailUseCase = getCafeDetailUseCase
-        self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.observeCafeDetailUseCase = observeCafeDetailUseCase
 
-        observeSession()
         loadMenuGoods()
     }
 
     deinit {
-        sessionWatchHandle?.cancel()
-        loadTask?.cancel()
+        cafeDetailWatchHandle?.cancel()
     }
-
-    private static let soldOutMenuIds: Set<String> = ["menu-1", "menu-4", "menu-8"]
 }

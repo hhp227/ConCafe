@@ -1,10 +1,13 @@
 package org.hhp227.concafe.data.repository
 
 import org.hhp227.concafe.data.source.ConCafeDataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.Cafe
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeInfoUpdate
+import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.CafeSort
 import org.hhp227.concafe.domain.model.CheckInCafeSummary
 import org.hhp227.concafe.domain.repository.CafeRepository
@@ -48,8 +51,16 @@ class FakeCafeRepository(
             ?: throw NoSuchElementException("cafe detail not found")
     }
 
+    override fun observeCafeDetail(cafeId: String): Flow<CafeDetail> {
+        return dataSource.observeCafeDetail(cafeId).filterNotNull()
+    }
+
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         return dataSource.updateCafeInfo(update)
+    }
+
+    override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
+        return dataSource.upsertCafeMenuGoods(update)
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {

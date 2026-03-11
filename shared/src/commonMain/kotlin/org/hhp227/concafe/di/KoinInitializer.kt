@@ -16,6 +16,7 @@ import org.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -23,6 +24,7 @@ import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import org.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -169,6 +171,13 @@ fun resolveMarkNotificationReadUseCase(): MarkNotificationReadUseCase {
     return koin.get()
 }
 
+fun resolveObserveCafeDetailUseCase(): ObserveCafeDetailUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -177,6 +186,13 @@ fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
 }
 
 fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpsertCafeMenuGoodsUseCase(): UpsertCafeMenuGoodsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

@@ -2,7 +2,6 @@ package org.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -10,16 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.model.CafeMenu
 import org.hhp227.concafe.domain.model.Goods
-import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 
 class MenuGoodsViewModel(
     private val cafeId: String,
-    private val getCafeDetailUseCase: GetCafeDetailUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MenuGoodsUiState())
     val uiState = _uiState.asStateFlow()
@@ -27,53 +23,27 @@ class MenuGoodsViewModel(
     private val _event = MutableSharedFlow<MenuGoodsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    private var observeSessionJob: Job? = null
-
     private fun loadMenuGoods() {
-        _uiState.update {
-            it.copy(
-                isLoading = true,
-                infoMessage = null
-            )
-        }
         viewModelScope.launch {
-            when (val result = getCafeDetailUseCase.invoke(cafeId)) {
-                is AppResult.Success -> {
-                    val detail = result.data.detail
-                    val menuItems = detail.menus.mapIndexed { index, menu ->
-                        menu.toManageItem(index)
-                    }
-                    val goodsItems = detail.goods.mapIndexed { index, goods ->
-                        goods.toManageItem(index)
-                    }
-                    _uiState.update {
-                        it.copy(
-                            cafeName = detail.cafe.name,
-                            isLoading = false,
-                            menuCategories = buildMenuCategories(menuItems),
-                            goodsCategories = buildGoodsCategories(goodsItems),
-                            menuItems = menuItems,
-                            goodsItems = goodsItems
-                        )
-                    }
+            _uiState.update { it.copy(isLoading = true, infoMessage = null) }
+            observeCafeDetailUseCase(cafeId).collectLatest { detail ->
+                val menuItems = detail.menus.mapIndexed { index, menu ->
+                    menu.toManageItem(index)
                 }
-                is AppResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            infoMessage = "메뉴와 굿즈 정보를 불러오지 못했습니다."
-                        )
-                    }
+                val goodsItems = detail.goods.mapIndexed { index, goods ->
+                    goods.toManageItem(index)
                 }
-            }
-        }
-    }
-
-    private fun observeSession() {
-        observeSessionJob?.cancel()
-        observeSessionJob = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
-                loadMenuGoods()
+                _uiState.update {
+                    it.copy(
+                        cafeName = detail.cafe.name,
+                        isLoading = false,
+                        menuCategories = buildMenuCategories(menuItems),
+                        goodsCategories = buildGoodsCategories(goodsItems),
+                        menuItems = menuItems,
+                        goodsItems = goodsItems,
+                        infoMessage = null
+                    )
+                }
             }
         }
     }
@@ -125,6 +95,18 @@ class MenuGoodsViewModel(
 
     private fun dismissInfoMessage() {
         _uiState.update { it.copy(infoMessage = null) }
+    }
+
+    private fun clickAddNewItem() {
+        viewModelScope.launch {
+            _event.emit(MenuGoodsEvent.NavigateToEdit(cafeId = cafeId))
+        }
+    }
+
+    private fun clickEditItem(itemId: String) {
+        viewModelScope.launch {
+            _event.emit(MenuGoodsEvent.NavigateToEdit(cafeId = cafeId, itemId = itemId))
+        }
     }
 
     private fun showInfo(message: String) {
@@ -185,7 +167,6 @@ class MenuGoodsViewModel(
             "dessert" -> "Dessert"
             else -> category.replaceFirstChar { it.uppercase() }
         }
-        val isAvailable = id !in SOLD_OUT_MENU_IDS && index % 5 != 4
         return MenuGoodsUiState.ManageItem(
             id = id,
             name = name,
@@ -211,7 +192,7 @@ class MenuGoodsViewModel(
             "apparel" -> "Apparel"
             else -> "Goods"
         }
-        val isAvailable = stock > 0 && index % 4 != 3
+        val isAvailable = stock > 0
         return MenuGoodsUiState.ManageItem(
             id = id,
             name = name,
@@ -242,19 +223,14 @@ class MenuGoodsViewModel(
             is MenuGoodsAction.SelectCollection -> selectCollection(action.collection)
             is MenuGoodsAction.SelectCategory -> selectCategory(action.categoryId)
             is MenuGoodsAction.ToggleItemAvailability -> toggleItemAvailability(action.itemId)
-            is MenuGoodsAction.ClickEditItem -> showInfo("편집 기능은 다음 단계에서 연결됩니다.")
+            is MenuGoodsAction.ClickEditItem -> clickEditItem(action.itemId)
             is MenuGoodsAction.ClickDeleteItem -> showInfo("삭제 확인 플로우는 다음 단계에서 연결됩니다.")
-            MenuGoodsAction.ClickAddNewItem -> showInfo("신규 항목 등록 화면은 다음 단계에서 연결됩니다.")
+            MenuGoodsAction.ClickAddNewItem -> clickAddNewItem()
             MenuGoodsAction.DismissInfoMessage -> dismissInfoMessage()
         }
     }
 
     init {
-        observeSession()
         loadMenuGoods()
-    }
-
-    private companion object {
-        val SOLD_OUT_MENU_IDS = setOf("menu-1", "menu-4", "menu-8")
     }
 }

@@ -29,8 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import org.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -43,8 +42,7 @@ fun MenuGoodsScreen(
             initializer {
                 MenuGoodsViewModel(
                     cafeId = cafeId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase()
                 )
             }
         }
@@ -56,6 +54,14 @@ fun MenuGoodsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 MenuGoodsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is MenuGoodsEvent.NavigateToEdit -> {
+                    onNavigationAction(
+                        NavigationAction.NavigateToMenuGoodsEdit(
+                            cafeId = event.cafeId,
+                            itemId = event.itemId
+                        )
+                    )
+                }
             }
         }
     }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuGoodsView: View {
     let cafeId: String
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: MenuGoodsViewModel
@@ -41,6 +42,8 @@ struct MenuGoodsView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToEdit(let cafeId, let itemId):
+                onNavigationAction(.navigateToMenuGoodsEdit(cafeId: cafeId, itemId: itemId))
             }
         }
     }
@@ -57,6 +60,7 @@ struct MenuGoodsView: View {
 
 private struct MenuGoodsContentView: View {
     let uiState: MenuGoodsUiState
+
     let onAction: (MenuGoodsAction) -> Void
 
     var body: some View {
@@ -95,7 +99,6 @@ private struct MenuGoodsContentView: View {
                     endPoint: .bottom
                 )
             )
-
             Button {
                 onAction(.clickAddNewItem)
             } label: {
@@ -285,7 +288,6 @@ private struct MenuGoodsContentView: View {
     private func manageItemCard(item: MenuGoodsUiState.ManageItem) -> some View {
         HStack(alignment: .top, spacing: 14) {
             itemThumbnail(item: item)
-
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -307,7 +309,6 @@ private struct MenuGoodsContentView: View {
                                 .frame(width: 36, height: 36)
                         }
                         .buttonStyle(.plain)
-
                         Button {
                             onAction(.clickDeleteItem(item.id))
                         } label: {
@@ -318,7 +319,6 @@ private struct MenuGoodsContentView: View {
                         .buttonStyle(.plain)
                     }
                 }
-
                 Text(item.badgeLabel)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "B64A79"))
@@ -326,21 +326,17 @@ private struct MenuGoodsContentView: View {
                     .padding(.vertical, 5)
                     .background(Color(hex: "FCE7EF"))
                     .clipShape(Capsule())
-
                 Text(item.description)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7B6B75"))
                     .lineLimit(2)
-
                 if let inventoryLabel = item.inventoryLabel {
                     Text(inventoryLabel)
                         .font(.caption.weight(.medium))
                         .foregroundStyle(Color(hex: "8B7A84"))
                 }
-
                 Divider()
                     .overlay(Color(hex: "F4E7EE"))
-
                 HStack {
                     Text(item.availabilityLabel)
                         .font(.subheadline.weight(.semibold))
@@ -367,6 +363,7 @@ private struct MenuGoodsContentView: View {
     private func itemThumbnail(item: MenuGoodsUiState.ManageItem) -> some View {
         let isMenu = uiState.selectedCollection == .menu
         let colors: [Color]
+
         if isMenu {
             colors = item.isAvailable
                 ? [Color(hex: "FFE0EA"), Color(hex: "FAB6D0")]
@@ -376,7 +373,6 @@ private struct MenuGoodsContentView: View {
                 ? [Color(hex: "FFEBCB"), Color(hex: "FFD7A1")]
                 : [Color(hex: "E7E1DA"), Color(hex: "CBC0B2")]
         }
-
         return ZStack {
             LinearGradient(
                 colors: colors,
@@ -413,7 +409,7 @@ private struct MenuGoodsContentView: View {
 
 struct MenuGoodsView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NavigationView {
             MenuGoodsView(cafeId: "cafe-1", onNavigationAction: { _ in })
         }
     }

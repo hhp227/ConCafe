@@ -1,5 +1,9 @@
 package org.hhp227.concafe.data.source
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import org.hhp227.concafe.domain.common.PagedResult
 import org.hhp227.concafe.domain.model.AppNotification
 import org.hhp227.concafe.domain.model.Cafe
@@ -7,6 +11,7 @@ import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeDetail
 import org.hhp227.concafe.domain.model.CafeInfoUpdate
+import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
@@ -227,6 +232,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     override val cafeDetailsById = cafes.associate { cafe ->
         cafe.id to buildCafeDetail(cafe)
     }.toMutableMap()
+    private val cafeDetailsState = MutableStateFlow(cafeDetailsById.toMap())
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", 4.5f, "분위기가 좋아요", emptyList(), 3, "2026-03-03T10:00:00Z"),
@@ -349,6 +355,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         return cafeDetailsById[cafeId]
     }
 
+    override fun observeCafeDetail(cafeId: String): Flow<CafeDetail?> {
+        return cafeDetailsState.asStateFlow().map { detailsById -> detailsById[cafeId] }
+    }
+
     override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         val cafeIndex = cafes.indexOfFirst { it.id == update.cafeId }
         if (cafeIndex == -1) {
@@ -368,6 +378,71 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
         cafes[cafeIndex] = updatedCafe
         cafeDetailsById[update.cafeId] = updatedDetail
+        cafeDetailsState.value = cafeDetailsById.toMap()
+        return updatedDetail
+    }
+
+    override fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
+        require(update.name.isNotBlank()) { "name is required" }
+        require(update.price >= 0) { "price must be zero or positive" }
+
+        val cafe = cafes.firstOrNull { it.id == update.cafeId }
+            ?: throw NoSuchElementException("cafe not found")
+        val currentDetail = cafeDetailsById[update.cafeId] ?: buildCafeDetail(cafe)
+        val normalizedCategory = update.category.lowercase()
+        val isGoodsCategory = normalizedCategory == "goods"
+        val existingMenu = currentDetail.menus.firstOrNull { it.id == update.itemId }
+        val existingGoods = currentDetail.goods.firstOrNull { it.id == update.itemId }
+
+        val filteredMenus = currentDetail.menus.filterNot { it.id == update.itemId }.toMutableList()
+        val filteredGoods = currentDetail.goods.filterNot { it.id == update.itemId }.toMutableList()
+
+        val updatedMenus = if (isGoodsCategory) {
+            filteredMenus
+        } else {
+            filteredMenus.apply {
+                add(
+                    CafeMenu(
+                        id = existingMenu?.id
+                            ?: nextId(prefix = "menu", ids = currentDetail.menus.map { it.id }),
+                        name = update.name,
+                        price = update.price,
+                        desc = update.description,
+                        image = update.imageUrl ?: existingMenu?.image ?: existingGoods?.image,
+                        category = normalizedCategory,
+                        isAvailable = update.isInStock
+                    )
+                )
+            }
+        }
+
+        val updatedGoods = if (isGoodsCategory) {
+            filteredGoods.apply {
+                val nextStock = when {
+                    update.isInStock && (existingGoods?.stock ?: 0) > 0 -> existingGoods?.stock ?: 50
+                    update.isInStock -> 50
+                    else -> 0
+                }
+                add(
+                    Goods(
+                        id = existingGoods?.id ?: nextId(prefix = "goods", ids = currentDetail.goods.map { it.id }),
+                        name = update.name,
+                        price = update.price,
+                        image = update.imageUrl ?: existingGoods?.image,
+                        stock = nextStock
+                    )
+                )
+            }
+        } else {
+            filteredGoods
+        }
+
+        val updatedDetail = currentDetail.copy(
+            menus = updatedMenus,
+            goods = updatedGoods
+        )
+        cafeDetailsById[update.cafeId] = updatedDetail
+        cafeDetailsState.value = cafeDetailsById.toMap()
         return updatedDetail
     }
 
@@ -388,7 +463,8 @@ class MockConCafeDataSource : ConCafeDataSource {
                     12000,
                     "대표 디저트",
                     "https://images.unsplash.com/photo-1766043650707-49e74514218a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-                    "food"
+                    "food",
+                    false
                 ),
                 CafeMenu(
                     "menu-2",
@@ -412,7 +488,8 @@ class MockConCafeDataSource : ConCafeDataSource {
                     7500,
                     "상큼한 탄산 시그니처 드링크",
                     null,
-                    "drink"
+                    "drink",
+                    false
                 ),
                 CafeMenu(
                     "menu-5",
@@ -444,7 +521,8 @@ class MockConCafeDataSource : ConCafeDataSource {
                     6800,
                     "따뜻하게 제공되는 진한 초콜릿 디저트",
                     null,
-                    "dessert"
+                    "dessert",
+                    false
                 ),
                 CafeMenu(
                     "menu-9",
@@ -503,6 +581,13 @@ class MockConCafeDataSource : ConCafeDataSource {
                 "주말 ${update.weekendOpen} - ${update.weekendClose}"
             else -> ""
         }
+    }
+
+    private fun nextId(prefix: String, ids: List<String>): String {
+        val nextNumber = ids.mapNotNull { id ->
+            id.removePrefix("$prefix-").toIntOrNull()
+        }.maxOrNull()?.plus(1) ?: 1
+        return "$prefix-$nextNumber"
     }
 
     override fun castDetail(castId: String): CastDetail? {

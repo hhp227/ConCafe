@@ -9,4 +9,5 @@ import Foundation
 
 enum MenuGoodsEvent {
     case navigateBack
+    case navigateToEdit(cafeId: String, itemId: String?)
 }
