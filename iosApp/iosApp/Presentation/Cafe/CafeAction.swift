@@ -12,5 +12,6 @@ enum CafeAction {
     case changeTab(CafeUiState.TabType)
     case maidTapped(id: String)
     case favoriteTapped
+    case loadMoreCasts
     case refresh
 }

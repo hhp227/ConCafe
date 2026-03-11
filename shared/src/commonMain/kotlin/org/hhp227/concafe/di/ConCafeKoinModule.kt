@@ -28,6 +28,8 @@ import org.hhp227.concafe.domain.repository.UserRepository
 import org.hhp227.concafe.domain.repository.VisitRepository
 import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
+import org.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
+import org.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import org.hhp227.concafe.domain.usecase.CreateVisitUseCase
@@ -43,6 +45,7 @@ import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -50,6 +53,7 @@ import org.hhp227.concafe.domain.usecase.SignOutUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import org.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import org.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
 
@@ -75,6 +79,8 @@ val repositoryModule = module {
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
+    factory { GetCafeCastPageUseCase(get(), get()) }
+    factory { GetCafeCastListPageUseCase(get()) }
     factory { GetCafeManagementUseCase(get(), get()) }
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
@@ -90,6 +96,7 @@ val useCaseModule = module {
     factory { GetSignUpCafeListUseCase(get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCafeDetailUseCase(get()) }
+    factory { ObserveCafeCastVersionUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignUpUseCase(get()) }
@@ -97,6 +104,7 @@ val useCaseModule = module {
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
     factory { UpdateCafeInfoUseCase(get()) }
+    factory { UpsertCastUseCase(get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get()) }
 }
 

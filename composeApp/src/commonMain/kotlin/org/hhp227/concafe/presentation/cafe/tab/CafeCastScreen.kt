@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,8 @@ import org.hhp227.concafe.presentation.component.colorFromHex
 @Composable
 fun CafeCastScreen(
     casts: List<CafeDetailCast>,
+    canLoadMore: Boolean,
+    isLoadingMore: Boolean,
     onAction: (CafeAction) -> Unit
 ) {
     if (casts.isEmpty()) {
@@ -100,6 +103,21 @@ fun CafeCastScreen(
                     }
                     if (rowItems.size == 1) {
                         Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            if (canLoadMore) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoadingMore) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
                     }
                 }
             }

@@ -1,11 +1,15 @@
 package org.hhp227.concafe.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.hhp227.concafe.data.source.ConCafeDataSource
 import org.hhp227.concafe.domain.common.PagedResult
+import org.hhp227.concafe.domain.model.CafeCastPreview
+import org.hhp227.concafe.domain.model.CafeDetailCast
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.CastSort
+import org.hhp227.concafe.domain.model.CastUpsert
 import org.hhp227.concafe.domain.model.CheckInCastSummary
 import org.hhp227.concafe.domain.repository.CastRepository
 
@@ -47,6 +51,49 @@ class FakeCastRepository(
     override suspend fun getCastDetail(castId: String): CastDetail {
         return dataSource.castDetail(castId)
             ?: throw NoSuchElementException("cast detail not found")
+    }
+
+    override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
+        val sorted = dataSource.casts
+            .filter { it.cafeId == cafeId }
+            .sortedWith(
+                compareByDescending<Cast> { dataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                    .thenBy { it.name }
+            )
+            .map { cast ->
+                CafeCastPreview(
+                    id = cast.id,
+                    name = cast.name,
+                    isOnShift = dataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                )
+            }
+
+        return dataSource.toPaged(sorted, cursor, pageSize)
+    }
+
+    override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
+        val sorted = dataSource.casts
+            .filter { it.cafeId == cafeId }
+            .sortedWith(
+                compareByDescending<Cast> { dataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                    .thenBy { it.name }
+            )
+            .map { cast ->
+                CafeDetailCast(
+                    cast = cast,
+                    isWorking = dataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                )
+            }
+
+        return dataSource.toPaged(sorted, cursor, pageSize)
+    }
+
+    override fun observeCafeCastVersion(cafeId: String): Flow<Int> {
+        return dataSource.observeCafeCastVersion(cafeId)
+    }
+
+    override suspend fun upsertCast(update: CastUpsert): CastDetail {
+        return dataSource.upsertCast(update)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {

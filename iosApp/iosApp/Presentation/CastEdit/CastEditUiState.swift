@@ -8,5 +8,34 @@
 import Foundation
 
 struct CastEditUiState {
-    
+    var isLoading = false
+    var isSaving = false
+    var screenTitle = "캐스트 프로필 수정"
+    var saveButtonLabel = "프로필 저장"
+    var castName = ""
+    var conceptRole = ""
+    var birthday = ""
+    var introduction = ""
+    var selectedWorkingDays: Set<WorkingDay> = []
+    var galleryItems: [GalleryItem] = []
+    var infoMessage: String? = nil
+
+    enum WorkingDay: String, CaseIterable, Identifiable, Hashable {
+        case monday = "Mon"
+        case tuesday = "Tue"
+        case wednesday = "Wed"
+        case thursday = "Thu"
+        case friday = "Fri"
+        case saturday = "Sat"
+        case sunday = "Sun"
+
+        var id: String { rawValue }
+        var shortLabel: String { rawValue }
+    }
+
+    struct GalleryItem: Identifiable, Hashable {
+        let id: String
+        let label: String
+        let overlayCount: Int?
+    }
 }

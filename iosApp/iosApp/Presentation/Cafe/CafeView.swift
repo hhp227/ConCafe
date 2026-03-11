@@ -213,7 +213,12 @@ private struct CafeContentView: View {
         case .info:
             CafeInfoView(cafeDetail: detail)
         case .maids:
-            CafeCastView(maids: uiState.casts, onAction: onAction)
+            CafeCastView(
+                maids: uiState.casts,
+                canLoadMore: uiState.canLoadMoreCasts,
+                isLoadingMore: uiState.isLoadingMoreCasts,
+                onAction: onAction
+            )
         case .menu:
             CafeMenuView(menus: detail.menus)
         case .reviews:

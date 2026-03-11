@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
+    private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
     private val getCafeDashboardUseCase: GetCafeDashboardUseCase,
+    private val observeCafeCastVersionUseCase: ObserveCafeCastVersionUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
@@ -25,7 +29,7 @@ class CafeDashboardViewModel(
     private val _event = MutableSharedFlow<CafeDashboardEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    private var observeSessionJob: Job? = null
+    private val jobs = mutableMapOf<TaskKey, Job>()
 
     private fun loadCafeDashboard() {
         viewModelScope.launch {
@@ -39,11 +43,15 @@ class CafeDashboardViewModel(
                             isLoading = false
                         )
                     }
+                    refreshCastPreviews(resetMessage = false)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             cafe = null,
+                            castPreviews = emptyList(),
+                            nextCastCursor = null,
+                            hasMoreCasts = false,
                             isLoading = false,
                             infoMessage = result.error.toString()
                         )
@@ -51,6 +59,60 @@ class CafeDashboardViewModel(
                 }
             }
         }
+    }
+
+    private fun loadCastPage(cursor: String?, pageSize: Int, append: Boolean) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoadingMoreCasts = append,
+                    infoMessage = if (append) it.infoMessage else null
+                )
+            }
+
+            when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor, pageSize)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            castPreviews = if (append) state.castPreviews + result.data.items else result.data.items,
+                            nextCastCursor = result.data.nextCursor,
+                            hasMoreCasts = result.data.hasNext,
+                            isLoadingMoreCasts = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoadingMoreCasts = false,
+                            infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun refreshCastPreviews(resetMessage: Boolean = true) {
+        if (resetMessage) {
+            _uiState.update { it.copy(infoMessage = null) }
+        }
+        loadCastPage(
+            cursor = null,
+            pageSize = getCafeCastPageUseCase.defaultPageSize(),
+            append = false
+        )
+    }
+
+    private fun clickLoadMoreCasts() {
+        val currentState = _uiState.value
+
+        if (currentState.isLoadingMoreCasts || !currentState.hasMoreCasts) return
+        loadCastPage(
+            cursor = currentState.nextCastCursor,
+            pageSize = getCafeCastPageUseCase.defaultPageSize(),
+            append = true
+        )
     }
 
     private fun clickBack() {
@@ -71,6 +133,11 @@ class CafeDashboardViewModel(
                     _event.emit(CafeDashboardEvent.NavigateToMenuGoods(cafeId))
                 }
             }
+            CafeDashboardShortcut.CAST_MANAGEMENT -> {
+                viewModelScope.launch {
+                    _event.emit(CafeDashboardEvent.NavigateToCastEdit(cafeId = cafeId))
+                }
+            }
             else -> {
                 _uiState.update {
                     it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")
@@ -86,9 +153,19 @@ class CafeDashboardViewModel(
     }
 
     private fun observeSession() {
-        observeSessionJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
                 loadCafeDashboard()
+            }
+        }
+    }
+
+    private fun observeCastVersion() {
+        jobs[TaskKey.OBSERVE_CAST_VERSION]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_VERSION] = viewModelScope.launch {
+            observeCafeCastVersionUseCase.invoke(cafeId).collectLatest {
+                refreshCastPreviews()
             }
         }
     }
@@ -97,12 +174,25 @@ class CafeDashboardViewModel(
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
+            CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
             CafeDashboardAction.DismissInfoMessage -> dismissInfoMessage()
         }
     }
 
     init {
         observeSession()
+        observeCastVersion()
         loadCafeDashboard()
+    }
+
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
+    private enum class TaskKey {
+        OBSERVE_SESSION,
+        OBSERVE_CAST_VERSION
     }
 }

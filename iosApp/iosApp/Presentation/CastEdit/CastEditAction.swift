@@ -8,5 +8,14 @@
 import Foundation
 
 enum CastEditAction {
-    
+    case clickBack
+    case clickProfilePhoto
+    case changeCastName(String)
+    case changeConceptRole(String)
+    case changeBirthday(String)
+    case changeIntroduction(String)
+    case toggleWorkingDay(CastEditUiState.WorkingDay)
+    case clickAddGalleryPhoto
+    case clickSave
+    case dismissInfoMessage
 }

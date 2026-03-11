@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -31,6 +32,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import org.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import org.hhp227.concafe.domain.model.CafeDetail
@@ -38,6 +40,7 @@ import org.hhp227.concafe.presentation.cafe.tab.*
 import org.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import org.hhp227.concafe.presentation.component.colorFromHex
 import org.hhp227.concafe.presentation.navigation.NavigationAction
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun CafeScreen(
@@ -50,6 +53,7 @@ fun CafeScreen(
                 CafeViewModel(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
+                    getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
                     toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
                 )
             }
@@ -88,6 +92,21 @@ fun CafeContentScreen(
                         } == true)
             )
 
+    LaunchedEffect(
+        listState,
+        uiState.selectedTab,
+        uiState.canLoadMoreCasts,
+        uiState.isLoadingMoreCasts
+    ) {
+        if (uiState.selectedTab != CafeUiState.TabType.MAIDS) return@LaunchedEffect
+        snapshotFlow { listState.canScrollForward }
+            .distinctUntilChanged()
+            .collect { canScrollForward ->
+                if (!canScrollForward && uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
+                    onAction(CafeAction.LoadMoreCasts)
+                }
+            }
+    }
     Scaffold(
         containerColor = colorFromHex("FFF9FC"),
         topBar = {
@@ -370,7 +389,12 @@ private fun CafeTabContent(
 
     when (uiState.selectedTab) {
         CafeUiState.TabType.INFO -> CafeInfoScreen(detail)
-        CafeUiState.TabType.MAIDS -> CafeCastScreen(uiState.casts, onAction)
+        CafeUiState.TabType.MAIDS -> CafeCastScreen(
+            casts = uiState.casts,
+            canLoadMore = uiState.canLoadMoreCasts,
+            isLoadingMore = uiState.isLoadingMoreCasts,
+            onAction = onAction
+        )
         CafeUiState.TabType.MENU -> CafeMenuScreen(detail.menus)
         CafeUiState.TabType.REVIEWS -> CafeReviewScreen(detail, uiState.reviews)
         CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
