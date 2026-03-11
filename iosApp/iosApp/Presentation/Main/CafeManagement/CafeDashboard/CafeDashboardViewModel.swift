@@ -64,7 +64,7 @@ final class CafeDashboardViewModel: ObservableObject {
             uiState.isLoadingMoreCasts = append
 
             do {
-                let result = try await getCafeCastPageUseCase.invoke(
+                let result = try await self.getCafeCastPageUseCase.invoke(
                     cafeId: cafeId,
                     cursor: cursor,
                     pageSize: Int32(pageSize)
@@ -72,7 +72,7 @@ final class CafeDashboardViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeCastPreview> {
-                    uiState.castPreviews = append ? (uiState.castPreviews + page.items) : page.items
+                    uiState.castPreviews = append ? (uiState.castPreviews + page.items as! [CafeCastPreview]) : page.items as! [CafeCastPreview]
                     uiState.nextCastCursor = page.nextCursor
                     uiState.hasMoreCasts = page.hasNext
                     uiState.isLoadingMoreCasts = false

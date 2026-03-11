@@ -194,8 +194,7 @@ private struct CastEditContentView: View {
 
     private var gallerySection: some View {
         let visibleItems = Array(uiState.galleryItems.prefix(3))
-
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("갤러리 사진")
                     .font(.subheadline.weight(.medium))
@@ -302,7 +301,7 @@ private struct FlexibleChipLayout<Item: Identifiable & Hashable, Content: View>:
 
     let spacing: CGFloat
 
-    let content: (Item) -> Content
+    @ViewBuilder let content: (Item) -> Content
 
     var body: some View {
         LazyVGrid(
@@ -310,7 +309,7 @@ private struct FlexibleChipLayout<Item: Identifiable & Hashable, Content: View>:
             alignment: .leading,
             spacing: spacing
         ) {
-            ForEach(items) { item in
+            ForEach(items, id: \.self) { item in
                 content(item)
             }
         }
