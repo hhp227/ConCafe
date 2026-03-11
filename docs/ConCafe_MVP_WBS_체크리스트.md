@@ -169,6 +169,9 @@
 - [x] 카페 정보 수정 저장은 `UpdateCafeInfoUseCase`를 통해 처리
 - [x] 저장 성공 시 `MockConCafeDataSource` 기준 카페 정보가 즉시 갱신됨
 - [x] 저장 성공 피드백은 Compose 스낵바 / iOS alert로 노출
+- [x] 카페 대시보드에서 `메뉴&굿즈` 화면으로 진입 가능
+- [x] `메뉴&굿즈 관리` 화면 UI를 Compose/iOS에 공통 상태 구조로 구현
+- [x] `GetCafeDetailUseCase` 기반으로 메뉴/굿즈 목록, 카테고리 필터, 검색, 판매 상태 토글 UI 연결
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능
@@ -201,6 +204,7 @@
 - [ ] Owner 대시보드(카페/메이드/공지/출근표/통계)
 - [ ] Owner Claim / Cast Claim 승인 UI 및 이력 관리
 - [ ] 다중 카페 운영자 연결 관리(`ownedCafeIds` / `ownerIds`) 반영
+- [x] Owner `메뉴&굿즈 관리` 읽기 전용 운영 화면(Android/iOS)
 - [ ] 메뉴/굿즈/이벤트 운영 CRUD
 - [ ] 광고/상단 고정/수수료 기능
 - [ ] 글로벌 확장(한국→일본) 다국가 운영 정책
