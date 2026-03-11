@@ -43,6 +43,11 @@
 		0A3470772F611C1D005F9A8C /* ExternalLinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470762F611C1D005F9A8C /* ExternalLinkViewModel.swift */; };
 		0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470782F611C45005F9A8C /* ExternalLinkAction.swift */; };
 		0A34707B2F611C64005F9A8C /* ExternalLinkEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A34707A2F611C64005F9A8C /* ExternalLinkEvent.swift */; };
+		0A34707E2F611D19005F9A8C /* MenuGoodsEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A34707D2F611D19005F9A8C /* MenuGoodsEditView.swift */; };
+		0A3470802F611D2F005F9A8C /* MenuGoodsEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A34707F2F611D2E005F9A8C /* MenuGoodsEditUiState.swift */; };
+		0A3470822F611D46005F9A8C /* MenuGoodsEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470812F611D46005F9A8C /* MenuGoodsEditAction.swift */; };
+		0A3470842F611D63005F9A8C /* MenuGoodsEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470832F611D63005F9A8C /* MenuGoodsEditEvent.swift */; };
+		0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */; };
 		0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34842F5E886300AA813D /* NotificationAction.swift */; };
 		0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34862F5E887600AA813D /* NotificationEvent.swift */; };
 		0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE922F5EB83400613093 /* CheckInUiState.swift */; };
@@ -170,6 +175,11 @@
 		0A3470762F611C1D005F9A8C /* ExternalLinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkViewModel.swift; sourceTree = "<group>"; };
 		0A3470782F611C45005F9A8C /* ExternalLinkAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkAction.swift; sourceTree = "<group>"; };
 		0A34707A2F611C64005F9A8C /* ExternalLinkEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkEvent.swift; sourceTree = "<group>"; };
+		0A34707D2F611D19005F9A8C /* MenuGoodsEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditView.swift; sourceTree = "<group>"; };
+		0A34707F2F611D2E005F9A8C /* MenuGoodsEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditUiState.swift; sourceTree = "<group>"; };
+		0A3470812F611D46005F9A8C /* MenuGoodsEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditAction.swift; sourceTree = "<group>"; };
+		0A3470832F611D63005F9A8C /* MenuGoodsEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditEvent.swift; sourceTree = "<group>"; };
+		0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditViewModel.swift; sourceTree = "<group>"; };
 		0A3E34842F5E886300AA813D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		0A3E34862F5E887600AA813D /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
 		0A50FE922F5EB83400613093 /* CheckInUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInUiState.swift; sourceTree = "<group>"; };
@@ -289,6 +299,7 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A34707C2F611CF9005F9A8C /* MenuGoodsEdit */,
 				0A3470712F611ABE005F9A8C /* ExternalLink */,
 				0A6B334F2F610C2F0074940F /* NoticeEvent */,
 				0A6B33442F610B0B0074940F /* MenuGoods */,
@@ -384,6 +395,18 @@
 				0A34707A2F611C64005F9A8C /* ExternalLinkEvent.swift */,
 			);
 			path = ExternalLink;
+			sourceTree = "<group>";
+		};
+		0A34707C2F611CF9005F9A8C /* MenuGoodsEdit */ = {
+			isa = PBXGroup;
+			children = (
+				0A34707D2F611D19005F9A8C /* MenuGoodsEditView.swift */,
+				0A34707F2F611D2E005F9A8C /* MenuGoodsEditUiState.swift */,
+				0A3470812F611D46005F9A8C /* MenuGoodsEditAction.swift */,
+				0A3470832F611D63005F9A8C /* MenuGoodsEditEvent.swift */,
+				0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */,
+			);
+			path = MenuGoodsEdit;
 			sourceTree = "<group>";
 		};
 		0A580D9B2F59658900390F67 /* Presentation */ = {
@@ -751,6 +774,7 @@
 				0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */,
 				0A341CAE2F6035E500CC07CF /* CafeDashboardUiState.swift in Sources */,
 				0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */,
+				0A34707E2F611D19005F9A8C /* MenuGoodsEditView.swift in Sources */,
 				0A785CB52F5A7D24004037A8 /* MyInfoUiState.swift in Sources */,
 				0A580DAA2F5967DD00390F67 /* HomeView.swift in Sources */,
 				0A6B33482F610B4F0074940F /* MenuGoodsUiState.swift in Sources */,
@@ -764,6 +788,7 @@
 				0A0C66992F5C0DE000B0CDE4 /* SignInView.swift in Sources */,
 				0A785C9A2F5A7723004037A8 /* HomeViewModel.swift in Sources */,
 				0A785CAB2F5A7C2F004037A8 /* CheckInEvent.swift in Sources */,
+				0A3470802F611D2F005F9A8C /* MenuGoodsEditUiState.swift in Sources */,
 				0A580DA72F59678D00390F67 /* NavigationViewModel.swift in Sources */,
 				0A785CCD2F5A7F23004037A8 /* CastAction.swift in Sources */,
 				0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */,
@@ -798,6 +823,7 @@
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,
+				0A3470842F611D63005F9A8C /* MenuGoodsEditEvent.swift in Sources */,
 				0A8ABA782F5C1D8B00265D4F /* SettingsAction.swift in Sources */,
 				0A785C962F5A76D7004037A8 /* HomeEvent.swift in Sources */,
 				0A8ABA672F5C1C6700265D4F /* CafeManagementEvent.swift in Sources */,
@@ -817,10 +843,12 @@
 				0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */,
 				0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */,
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
+				0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */,
 				0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */,
 				0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */,
 				0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */,
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
+				0A3470822F611D46005F9A8C /* MenuGoodsEditAction.swift in Sources */,
 				0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */,
 				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
 				0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */,
