@@ -220,6 +220,13 @@
 - `GetCafeManagementUseCase`는 `CafeManagementRepository`를 통해 운영 카페 목록, 검색 가능한 카페 목록, 운영자 신청 상태를 함께 조합한다.
 - `CafeManagementRepository`는 `ConCafeDataSource`를 원천 데이터로 사용하고, Repository 내부에 화면용 리스트를 별도 하드코딩하지 않는다.
 
+### 메뉴/굿즈 관리 상태 원칙
+- 메뉴 판매 상태는 `cafes/{cafeId}/menus/{menuId}.isAvailable` 필드를 소스 오브 트루스로 사용한다.
+- 굿즈 판매 상태는 `cafes/{cafeId}/goods/{goodsId}.stock` 값으로 판단하며 `stock > 0`이면 판매 중, `0`이면 품절로 본다.
+- `메뉴&굿즈 관리` 목록 화면과 편집 화면은 동일한 공용 모델 기준으로 상태를 표시해야 한다.
+- 메뉴 추가/수정 저장 시 이름, 가격, 설명, 카테고리와 함께 `isAvailable` 값도 저장한다.
+- 굿즈 추가/수정 저장 시 이름, 가격, 이미지, 재고 상태를 함께 저장하며 재고 상태는 `stock`으로 환산한다.
+
 ### 다중 카페 운영 UX 원칙
 - 카페 운영자가 여러 카페를 운영할 수 있으므로 탭 진입 시 먼저 `내 카페 목록`을 노출한다.
 - 운영 카페가 1개인 경우에는 목록을 스킵하고 바로 해당 카페의 대시보드로 진입할 수 있다.

@@ -91,14 +91,17 @@ cafes/{cafeId}/menus/{menuId}
 ├─ desc
 ├─ image
 ├─ category: food | drink | dessert
-└─ createdAt
+├─ isAvailable
+├─ createdAt
+└─ updatedAt
 
 cafes/{cafeId}/goods/{goodsId}
 ├─ name
 ├─ price
 ├─ image
 ├─ stock
-└─ createdAt
+├─ createdAt
+└─ updatedAt
 
 cafes/{cafeId}/reviews/{reviewId}
 ├─ userId
