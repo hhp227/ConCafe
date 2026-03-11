@@ -88,14 +88,14 @@ private struct CafeInfoEditContentView: View {
 
     private var basicInformationSection: some View {
         editSectionCard(title: "기본 정보") {
-            cafeInfoTextField(
+            ConCafeFormField(
                 label: "카페명",
                 text: Binding(
                     get: { uiState.cafeName },
                     set: { onAction(.changeCafeName($0)) }
                 )
             )
-            cafeInfoTextEditor(
+            ConCafeFormEditor(
                 label: "카페 소개",
                 text: Binding(
                     get: { uiState.cafeDescription },
@@ -166,13 +166,13 @@ private struct CafeInfoEditContentView: View {
 
     private var locationContactSection: some View {
         editSectionCard(title: "위치 및 연락처") {
-            cafeInfoTextField(
+            ConCafeFormField(
                 label: "지역 / 주소",
                 text: Binding(
                     get: { uiState.address },
                     set: { onAction(.changeAddress($0)) }
                 ),
-                trailingIcon: {
+                trailingContent: {
                     Image(systemName: "location.fill")
                         .foregroundStyle(Color(hex: "EF6797"))
                 }
@@ -207,7 +207,7 @@ private struct CafeInfoEditContentView: View {
                 .buttonStyle(.plain)
                 .padding(10)
             }
-            cafeInfoTextField(
+            ConCafeFormField(
                 label: "연락처",
                 text: Binding(
                     get: { uiState.contactNumber },
@@ -369,60 +369,6 @@ private struct CafeInfoEditContentView: View {
         .buttonStyle(.plain)
     }
 
-    private func cafeInfoTextField<Trailing: View>(
-        label: String,
-        text: Binding<String>,
-        @ViewBuilder trailingIcon: () -> Trailing
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(label)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
-            HStack(spacing: 8) {
-                TextField("", text: text)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                trailingIcon()
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
-            .background(Color(hex: "F8F5F6"))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
-            )
-        }
-    }
-
-    private func cafeInfoTextField(
-        label: String,
-        text: Binding<String>
-    ) -> some View {
-        cafeInfoTextField(label: label, text: text) { EmptyView() }
-    }
-
-    private func cafeInfoTextEditor(
-        label: String,
-        text: Binding<String>
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(label)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
-            TextEditor(text: text)
-                .frame(minHeight: 120)
-                .background(TextEditorClearBackgroundView())
-                .padding(12)
-                .background(Color(hex: "F8F5F6"))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
-                )
-        }
-    }
-
     private func hoursRow(
         label: String,
         open: Binding<String>,
@@ -478,18 +424,6 @@ private struct CafeInfoEditContentView: View {
                 .stroke(Color(hex: "F1D88D"), lineWidth: 1)
         )
     }
-}
-
-private struct TextEditorClearBackgroundView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        DispatchQueue.main.async {
-            UITextView.appearance().backgroundColor = .clear
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 struct CafeInfoEditView_Previews: PreviewProvider {

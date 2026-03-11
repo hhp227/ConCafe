@@ -65,6 +65,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import org.hhp227.concafe.di.resolveUpdateCafeInfoUseCase
+import org.hhp227.concafe.presentation.component.ConCafeFormField
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -402,23 +403,14 @@ private fun CafeInfoTextField(
     minLines: Int = 1,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            minLines = minLines,
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF8F5F6),
-                unfocusedContainerColor = Color(0xFFF8F5F6),
-                focusedBorderColor = Color(0xFFFFD1DC),
-                unfocusedBorderColor = Color(0x4DFFD1DC)
-            ),
-            trailingIcon = trailingIcon
-        )
-    }
+    ConCafeFormField(
+        label = label,
+        value = value,
+        onValueChange = onValueChange,
+        minLines = minLines,
+        singleLine = minLines == 1,
+        trailingContent = trailingIcon
+    )
 }
 
 @Composable

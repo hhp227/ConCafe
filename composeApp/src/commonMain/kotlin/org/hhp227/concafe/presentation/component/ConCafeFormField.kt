@@ -19,10 +19,11 @@ fun ConCafeFormField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
+    placeholder: String = "",
     minLines: Int = 1,
     singleLine: Boolean = true,
-    leadingContent: @Composable (() -> Unit)? = null
+    leadingContent: @Composable (() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -39,12 +40,15 @@ fun ConCafeFormField(
             singleLine = singleLine,
             shape = RoundedCornerShape(16.dp),
             placeholder = {
-                Text(
-                    text = placeholder,
-                    color = Color(0xFFAA98A4)
-                )
+                if (placeholder.isNotEmpty()) {
+                    Text(
+                        text = placeholder,
+                        color = Color(0xFFAA98A4)
+                    )
+                }
             },
             leadingIcon = leadingContent,
+            trailingIcon = trailingContent,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color(0xFFF8F5F6),
                 unfocusedContainerColor = Color(0xFFF8F5F6),

@@ -37,34 +37,34 @@ struct MenuGoodsEditView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Group {
-                    TextField(
-                        "항목명",
+                    ConCafeFormField(
+                        label: "항목명",
                         text: Binding(
                             get: { viewModel.uiState.itemName },
                             set: { viewModel.onAction(.changeName($0)) }
                         )
                     )
-                    .textFieldStyle(.roundedBorder)
-                    TextField(
-                        "가격",
+                    ConCafeFormField(
+                        label: "가격",
                         text: Binding(
                             get: { viewModel.uiState.price },
                             set: { viewModel.onAction(.changePrice($0)) }
-                        )
+                        ),
+                        leadingContent: {
+                            Text("¥")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color(hex: "6B5A65"))
+                        }
                     )
                     .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
 
-                    TextEditor(
+                    ConCafeFormEditor(
+                        label: "설명",
                         text: Binding(
                             get: { viewModel.uiState.description },
                             set: { viewModel.onAction(.changeDescription($0)) }
                         )
                     )
-                    .frame(minHeight: 120)
-                    .padding(8)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     Toggle(
                         "재고 있음",
                         isOn: Binding(

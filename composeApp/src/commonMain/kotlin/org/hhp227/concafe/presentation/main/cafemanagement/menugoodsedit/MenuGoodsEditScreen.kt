@@ -63,6 +63,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import org.hhp227.concafe.di.resolveUpsertCafeMenuGoodsUseCase
+import org.hhp227.concafe.presentation.component.ConCafeFormField
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -310,7 +311,7 @@ private fun RoundedTextField(
     onValueChange: (String) -> Unit,
     placeholder: String
 ) {
-    CafeInfoStyledTextField(
+    ConCafeFormField(
         label = label,
         value = value,
         onValueChange = onValueChange,
@@ -324,7 +325,7 @@ private fun PriceField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    CafeInfoStyledTextField(
+    ConCafeFormField(
         label = label,
         value = value,
         onValueChange = onValueChange,
@@ -419,7 +420,7 @@ private fun DescriptionField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    CafeInfoStyledTextField(
+    ConCafeFormField(
         label = label,
         value = value,
         onValueChange = onValueChange,
@@ -427,47 +428,6 @@ private fun DescriptionField(
         minLines = 5,
         singleLine = false
     )
-}
-
-@Composable
-private fun CafeInfoStyledTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    minLines: Int = 1,
-    singleLine: Boolean = true,
-    leadingContent: @Composable (() -> Unit)? = null
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF665A63)
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            minLines = minLines,
-            singleLine = singleLine,
-            shape = RoundedCornerShape(16.dp),
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    color = Color(0xFFAA98A4)
-                )
-            },
-            leadingIcon = leadingContent,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF8F5F6),
-                unfocusedContainerColor = Color(0xFFF8F5F6),
-                focusedBorderColor = Color(0xFFFFD1DC),
-                unfocusedBorderColor = Color(0x4DFFD1DC)
-            )
-        )
-    }
 }
 
 @Composable

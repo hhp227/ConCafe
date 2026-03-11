@@ -8,12 +8,14 @@
 import SwiftUI
 import UIKit
 
-struct ConCafeFormField<Trailing: View>: View {
+struct ConCafeFormField<Leading: View, Trailing: View>: View {
     let label: String
 
     @Binding var text: String
 
-    @ViewBuilder let leadingContent: () -> Trailing
+    @ViewBuilder let leadingContent: () -> Leading
+
+    @ViewBuilder let trailingContent: () -> Trailing
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -25,6 +27,7 @@ struct ConCafeFormField<Trailing: View>: View {
                 TextField("", text: $text)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                trailingContent()
             }
             .padding(.horizontal, 16)
             .frame(height: 52)
@@ -38,7 +41,7 @@ struct ConCafeFormField<Trailing: View>: View {
     }
 }
 
-extension ConCafeFormField where Trailing == EmptyView {
+extension ConCafeFormField where Leading == EmptyView, Trailing == EmptyView {
     init(
         label: String,
         text: Binding<String>
@@ -46,6 +49,33 @@ extension ConCafeFormField where Trailing == EmptyView {
         self.label = label
         self._text = text
         self.leadingContent = { EmptyView() }
+        self.trailingContent = { EmptyView() }
+    }
+}
+
+extension ConCafeFormField where Trailing == EmptyView {
+    init(
+        label: String,
+        text: Binding<String>,
+        @ViewBuilder leadingContent: @escaping () -> Leading
+    ) {
+        self.label = label
+        self._text = text
+        self.leadingContent = leadingContent
+        self.trailingContent = { EmptyView() }
+    }
+}
+
+extension ConCafeFormField where Leading == EmptyView {
+    init(
+        label: String,
+        text: Binding<String>,
+        @ViewBuilder trailingContent: @escaping () -> Trailing
+    ) {
+        self.label = label
+        self._text = text
+        self.leadingContent = { EmptyView() }
+        self.trailingContent = trailingContent
     }
 }
 
