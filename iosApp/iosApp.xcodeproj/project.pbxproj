@@ -61,6 +61,11 @@
 		0A6B334A2F610B700074940F /* MenuGoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33492F610B700074940F /* MenuGoodsView.swift */; };
 		0A6B334C2F610B860074940F /* MenuGoodsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B334B2F610B860074940F /* MenuGoodsAction.swift */; };
 		0A6B334E2F610BAC0074940F /* MenuGoodsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B334D2F610BAC0074940F /* MenuGoodsEvent.swift */; };
+		0A6B33512F610C440074940F /* NoticeEventViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33502F610C440074940F /* NoticeEventViewModel.swift */; };
+		0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33522F610C660074940F /* NoticeEventUiState.swift */; };
+		0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33542F610C870074940F /* NoticeEventAction.swift */; };
+		0A6B33572F610CAC0074940F /* NoticeEventEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33562F610CAC0074940F /* NoticeEventEvent.swift */; };
+		0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33582F610CDF0074940F /* NoticeEventView.swift */; };
 		0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6ABF2F60702C00E395C2 /* CafeInfoEditView.swift */; };
 		0A6B6AC22F60704300E395C2 /* CafeInfoEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC12F60704300E395C2 /* CafeInfoEditUiState.swift */; };
 		0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */; };
@@ -178,6 +183,11 @@
 		0A6B33492F610B700074940F /* MenuGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsView.swift; sourceTree = "<group>"; };
 		0A6B334B2F610B860074940F /* MenuGoodsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsAction.swift; sourceTree = "<group>"; };
 		0A6B334D2F610BAC0074940F /* MenuGoodsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEvent.swift; sourceTree = "<group>"; };
+		0A6B33502F610C440074940F /* NoticeEventViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeEventViewModel.swift; sourceTree = "<group>"; };
+		0A6B33522F610C660074940F /* NoticeEventUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeEventUiState.swift; sourceTree = "<group>"; };
+		0A6B33542F610C870074940F /* NoticeEventAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeEventAction.swift; sourceTree = "<group>"; };
+		0A6B33562F610CAC0074940F /* NoticeEventEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeEventEvent.swift; sourceTree = "<group>"; };
+		0A6B33582F610CDF0074940F /* NoticeEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeEventView.swift; sourceTree = "<group>"; };
 		0A6B6ABF2F60702C00E395C2 /* CafeInfoEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditView.swift; sourceTree = "<group>"; };
 		0A6B6AC12F60704300E395C2 /* CafeInfoEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditUiState.swift; sourceTree = "<group>"; };
 		0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditViewModel.swift; sourceTree = "<group>"; };
@@ -269,6 +279,7 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A6B334F2F610C2F0074940F /* NoticeEvent */,
 				0A6B33442F610B0B0074940F /* MenuGoods */,
 				0A6B6ABE2F60701300E395C2 /* CafeInfoEdit */,
 				0A341CAA2F6035AB00CC07CF /* CafeDashboard */,
@@ -496,6 +507,18 @@
 			path = MenuGoods;
 			sourceTree = "<group>";
 		};
+		0A6B334F2F610C2F0074940F /* NoticeEvent */ = {
+			isa = PBXGroup;
+			children = (
+				0A6B33502F610C440074940F /* NoticeEventViewModel.swift */,
+				0A6B33522F610C660074940F /* NoticeEventUiState.swift */,
+				0A6B33542F610C870074940F /* NoticeEventAction.swift */,
+				0A6B33562F610CAC0074940F /* NoticeEventEvent.swift */,
+				0A6B33582F610CDF0074940F /* NoticeEventView.swift */,
+			);
+			path = NoticeEvent;
+			sourceTree = "<group>";
+		};
 		0A6B6ABE2F60701300E395C2 /* CafeInfoEdit */ = {
 			isa = PBXGroup;
 			children = (
@@ -697,6 +720,7 @@
 				0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */,
 				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
 				0A0C66842F5C034600B0CDE4 /* MainViewModel.swift in Sources */,
+				0A6B33512F610C440074940F /* NoticeEventViewModel.swift in Sources */,
 				0A8ABA762F5C1D6E00265D4F /* SettingsUiState.swift in Sources */,
 				0A785CBD2F5A7DDE004037A8 /* RankingEvent.swift in Sources */,
 				0A785CB32F5A7D0B004037A8 /* MyInfoEvent.swift in Sources */,
@@ -722,6 +746,7 @@
 				0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */,
 				A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */,
 				0A0C669E2F5C0E3300B0CDE4 /* SignInUiState.swift in Sources */,
+				0A6B33572F610CAC0074940F /* NoticeEventEvent.swift in Sources */,
 				0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */,
 				0A0C66862F5C038D00B0CDE4 /* MainUiState.swift in Sources */,
 				0A8ABA6B2F5C1CA400265D4F /* FanManagementUiState.swift in Sources */,
@@ -743,6 +768,7 @@
 				0A785CBB2F5A7DC3004037A8 /* RankingAction.swift in Sources */,
 				0A785CB12F5A7CF1004037A8 /* MyInfoAction.swift in Sources */,
 				0A785CBF2F5A7E11004037A8 /* CastViewModel.swift in Sources */,
+				0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */,
 				0A8ABA722F5C1D2A00265D4F /* SettingsView.swift in Sources */,
 				0A8ABA692F5C1C8500265D4F /* FanManagementViewModel.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
@@ -766,6 +792,7 @@
 				0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */,
 				0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */,
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
+				0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */,
 				0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */,
 				0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */,
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
@@ -784,6 +811,7 @@
 				0A0C66952F5C05FF00B0CDE4 /* Color.swift in Sources */,
 				0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */,
 				0A785CC32F5A7E80004037A8 /* CafeUiState.swift in Sources */,
+				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
