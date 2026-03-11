@@ -9,7 +9,9 @@ import SwiftUI
 
 struct MenuGoodsEditView: View {
     let cafeId: String
+    
     let itemId: String?
+    
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: MenuGoodsEditViewModel
@@ -20,11 +22,9 @@ struct MenuGoodsEditView: View {
                 Text(viewModel.uiState.screenTitle)
                     .font(.title2.weight(.bold))
                     .frame(maxWidth: .infinity, alignment: .leading)
-
                 Text(viewModel.uiState.isEditMode ? "항목 정보를 수정합니다." : "새 항목을 등록합니다.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-
                 if let infoMessage = viewModel.uiState.infoMessage {
                     Text(infoMessage)
                         .font(.footnote)
@@ -34,7 +34,6 @@ struct MenuGoodsEditView: View {
                         .background(Color(hex: "FFF6D7"))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-
                 Group {
                     TextField(
                         "항목명",
@@ -44,7 +43,6 @@ struct MenuGoodsEditView: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-
                     TextField(
                         "가격",
                         text: Binding(
@@ -54,7 +52,6 @@ struct MenuGoodsEditView: View {
                     )
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
-
                     TextEditor(
                         text: Binding(
                             get: { viewModel.uiState.description },
@@ -65,7 +62,6 @@ struct MenuGoodsEditView: View {
                     .padding(8)
                     .background(Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
                     Toggle(
                         "재고 있음",
                         isOn: Binding(
@@ -74,7 +70,6 @@ struct MenuGoodsEditView: View {
                         )
                     )
                 }
-
                 Button {
                     viewModel.onAction(.clickSave)
                 } label: {
@@ -98,18 +93,8 @@ struct MenuGoodsEditView: View {
             }
             .padding(16)
         }
-        .navigationBarBackButtonHidden()
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.onAction(.clickBack)
-                } label: {
-                    Image(systemName: "chevron.left")
-                }
-            }
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:

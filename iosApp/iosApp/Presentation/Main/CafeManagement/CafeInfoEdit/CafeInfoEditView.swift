@@ -14,6 +14,7 @@ struct CafeInfoEditView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeInfoEditViewModel
+    
     @State private var showSaveSuccessAlert = false
 
     var body: some View {
@@ -21,18 +22,8 @@ struct CafeInfoEditView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationBarBackButtonHidden()
         .navigationTitle("카페 정보 관리")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.onAction(.clickBack)
-                } label: {
-                    Image(systemName: "chevron.left")
-                }
-            }
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:

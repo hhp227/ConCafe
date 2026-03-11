@@ -19,17 +19,9 @@ struct MenuGoodsView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationBarBackButtonHidden()
         .navigationTitle("메뉴&굿즈 관리")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.onAction(.clickBack)
-                } label: {
-                    Image(systemName: "chevron.left")
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     viewModel.onAction(.clickSearch)
@@ -196,6 +188,7 @@ private struct MenuGoodsContentView: View {
             HStack(spacing: 10) {
                 ForEach(uiState.visibleCategories, id: \.self) { chip in
                     let selected = chip.id == uiState.selectedCategoryId || (chip.id == nil && uiState.selectedCategoryId == nil)
+                    
                     Button {
                         onAction(.selectCategory(chip.id))
                     } label: {
