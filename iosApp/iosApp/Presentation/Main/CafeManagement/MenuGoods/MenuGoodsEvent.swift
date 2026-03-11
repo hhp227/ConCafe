@@ -8,5 +8,5 @@
 import Foundation
 
 enum MenuGoodsEvent {
-    
+    case navigateBack
 }

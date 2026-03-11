@@ -24,6 +24,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.cafeDashboard(param: id)))
         case .navigateToCafeInfoEdit(let id):
             event.send(.navigateTo(.cafeInfoEdit(param: id)))
+        case .navigateToMenuGoods(let id):
+            event.send(.navigateTo(.menuGoods(param: id)))
         case .navigateToSignIn:
             event.send(.navigateTo(.signIn))
         case .navigateToSignUp:

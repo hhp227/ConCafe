@@ -11,6 +11,7 @@ import org.hhp227.concafe.presentation.navigation.Route.CafeDashboard
 import org.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
 import org.hhp227.concafe.presentation.navigation.Route.Cast
 import org.hhp227.concafe.presentation.navigation.Route.Main
+import org.hhp227.concafe.presentation.navigation.Route.MenuGoods
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()
@@ -33,6 +34,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(NavigateTo(CafeInfoEdit(action.id)))
+                }
+                is NavigationAction.NavigateToMenuGoods -> {
+                    _event.emit(NavigateTo(MenuGoods(action.id)))
                 }
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))

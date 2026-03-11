@@ -29,6 +29,7 @@ import org.hhp227.concafe.presentation.cast.CastScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 import org.hhp227.concafe.presentation.settings.SettingsScreen
 
@@ -170,6 +171,12 @@ private fun DetailRoutePane(
         }
         is Route.CafeInfoEdit -> {
             CafeInfoEditScreen(
+                cafeId = route.param,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.MenuGoods -> {
+            MenuGoodsScreen(
                 cafeId = route.param,
                 onNavigationAction = onNavigationAction
             )

@@ -8,5 +8,14 @@
 import Foundation
 
 enum MenuGoodsAction {
-    
+    case clickBack
+    case clickSearch
+    case changeSearchQuery(String)
+    case selectCollection(MenuGoodsUiState.CollectionTab)
+    case selectCategory(String?)
+    case toggleItemAvailability(String)
+    case clickEditItem(String)
+    case clickDeleteItem(String)
+    case clickAddNewItem
+    case dismissInfoMessage
 }
