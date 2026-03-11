@@ -65,6 +65,7 @@ struct MenuGoodsEditView: View {
                             set: { viewModel.onAction(.changeDescription($0)) }
                         )
                     )
+                    categorySection
                     Toggle(
                         "재고 있음",
                         isOn: Binding(
@@ -115,6 +116,65 @@ struct MenuGoodsEditView: View {
         self.itemId = itemId
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: MenuGoodsEditViewModel(cafeId: cafeId, itemId: itemId))
+    }
+
+    private var categorySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("카테고리")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color(hex: "665A63"))
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ],
+                spacing: 12
+            ) {
+                ForEach(MenuGoodsEditUiState.ItemCategory.allCases) { category in
+                    categoryButton(category)
+                }
+            }
+        }
+    }
+
+    private func categoryButton(_ category: MenuGoodsEditUiState.ItemCategory) -> some View {
+        let isSelected = viewModel.uiState.selectedCategory == category
+        return Button {
+            viewModel.onAction(.selectCategory(category))
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: categorySymbolName(category))
+                    .font(.subheadline.weight(.semibold))
+                Text(category.label)
+                    .font(.subheadline.weight(.medium))
+            }
+            .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(isSelected ? Color(hex: "FFD1DC").opacity(0.2) : Color(hex: "F8F5F6"))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(
+                        isSelected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func categorySymbolName(_ category: MenuGoodsEditUiState.ItemCategory) -> String {
+        switch category {
+        case .drink:
+            return "cup.and.saucer.fill"
+        case .food:
+            return "fork.knife"
+        case .dessert:
+            return "birthday.cake.fill"
+        case .goods:
+            return "shippingbox.fill"
+        }
     }
 }
 
