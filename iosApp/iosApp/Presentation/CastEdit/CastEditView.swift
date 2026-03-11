@@ -220,7 +220,6 @@ private struct CastEditContentView: View {
                             }
                     }
                     .buttonStyle(.plain)
-
                     ForEach(visibleItems) { item in
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
