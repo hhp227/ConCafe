@@ -800,7 +800,7 @@ private fun maidHouseWorkingDaysByIndex(index: Int): List<String> {
 private fun maidHouseBirthdayByIndex(index: Int): String {
     val month = (index % 12) + 1
     val day = (index % 27) + 1
-    return "200${index % 5}-%02d-%02d".format(month, day)
+    return "200${index % 5}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
 }
 
 private fun maidHouseConceptRoleByIndex(index: Int): String {
