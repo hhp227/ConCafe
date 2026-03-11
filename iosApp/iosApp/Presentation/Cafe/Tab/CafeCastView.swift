@@ -14,16 +14,16 @@ struct CafeCastView: View {
     let canLoadMore: Bool
 
     let isLoadingMore: Bool
-    
+
     let onAction: (CafeAction) -> Void
-    
+
     var body: some View {
         if maids.isEmpty {
             emptyCard("등록된 메이드가 없습니다.")
         } else {
             VStack(spacing: 12) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(maids, id: \.cast.id) { maid in
+                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
                         VStack(alignment: .leading, spacing: 0) {
                             LinearGradient(
                                 colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
@@ -62,6 +62,12 @@ struct CafeCastView: View {
                         .onTapGesture {
                             onAction(.maidTapped(id: maid.cast.id))
                         }
+                        .onAppear {
+                            guard index == maids.indices.last,
+                                  canLoadMore,
+                                  !isLoadingMore else { return }
+                            onAction(.loadMoreCasts)
+                        }
                     }
                 }
                 if canLoadMore {
@@ -69,12 +75,6 @@ struct CafeCastView: View {
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
-                        } else {
-                            Color.clear
-                                .frame(height: 1)
-                                .onAppear {
-                                    onAction(.loadMoreCasts)
-                                }
                         }
                     }
                     .padding(.top, 12)
@@ -82,7 +82,7 @@ struct CafeCastView: View {
             }
         }
     }
-    
+
     private func emptyCard(_ text: String) -> some View {
         Text(text)
             .font(.subheadline)

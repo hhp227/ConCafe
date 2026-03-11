@@ -23,14 +23,14 @@ final class CafeViewModel: ObservableObject {
     
     let event = PassthroughSubject<CafeEvent, Never>()
     
-    private var loadTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadCafeDetail() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        tasks[.detail]?.cancel()
+        tasks[.detail] = Task {
             do {
                 let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
 
@@ -66,8 +66,8 @@ final class CafeViewModel: ObservableObject {
     }
 
     private func loadCastPage(cursor: String?, append: Bool) {
-        loadTask?.cancel()
-        loadTask = Task {
+        tasks[.castPage]?.cancel()
+        tasks[.castPage] = Task {
             uiState.isLoadingMoreCasts = append
 
             do {
@@ -101,8 +101,7 @@ final class CafeViewModel: ObservableObject {
     }
 
     private func toggleFavorite() {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await toggleFavoriteCafeUseCase.invoke(cafeId: cafeId)
 
@@ -152,6 +151,12 @@ final class CafeViewModel: ObservableObject {
     }
     
     deinit {
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case detail
+        case castPage
     }
 }

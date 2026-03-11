@@ -2,6 +2,7 @@ package org.hhp227.concafe.presentation.cafe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,8 @@ class CafeViewModel(
 
     val event = _event.asSharedFlow()
 
+    private val jobs = mutableMapOf<JobKey, Job>()
+
     private fun loadCafeDetail() {
         _uiState.update {
             it.copy(
@@ -37,7 +40,8 @@ class CafeViewModel(
             )
         }
 
-        viewModelScope.launch {
+        jobs[JobKey.DETAIL]?.cancel()
+        jobs[JobKey.DETAIL] = viewModelScope.launch {
             val result = getCafeDetailUseCase.invoke(cafeId)
 
             if (result is AppResult.Success) {
@@ -65,7 +69,8 @@ class CafeViewModel(
     }
 
     private fun loadCastPage(cursor: String?, append: Boolean) {
-        viewModelScope.launch {
+        jobs[JobKey.CAST_PAGE]?.cancel()
+        jobs[JobKey.CAST_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreCasts = append) }
 
             when (val result = getCafeCastListPageUseCase.invoke(cafeId, cursor)) {
@@ -136,7 +141,18 @@ class CafeViewModel(
         }
     }
 
+    override fun onCleared() {
+        jobs.values.forEach { it.cancel() }
+        jobs.clear()
+        super.onCleared()
+    }
+
     init {
         loadCafeDetail()
+    }
+
+    private enum class JobKey {
+        DETAIL,
+        CAST_PAGE
     }
 }

@@ -95,13 +95,14 @@ fun CafeContentScreen(
     LaunchedEffect(
         listState,
         uiState.selectedTab,
+        uiState.casts.size,
         uiState.canLoadMoreCasts,
         uiState.isLoadingMoreCasts
     ) {
         if (uiState.selectedTab != CafeUiState.TabType.MAIDS) return@LaunchedEffect
-        snapshotFlow { listState.canScrollForward }
+        snapshotFlow { listState.canScrollForward to uiState.casts.size }
             .distinctUntilChanged()
-            .collect { canScrollForward ->
+            .collect { (canScrollForward, _) ->
                 if (!canScrollForward && uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
                     onAction(CafeAction.LoadMoreCasts)
                 }
