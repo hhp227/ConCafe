@@ -27,6 +27,8 @@ interface CafeRepository {
 
     suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
 
+    suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail
+
     suspend fun isFavorite(userId: String, cafeId: String): Boolean
 
     suspend fun toggleFavorite(userId: String, cafeId: String): Boolean

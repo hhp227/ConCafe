@@ -63,6 +63,10 @@ class FakeCafeRepository(
         return dataSource.upsertCafeMenuGoods(update)
     }
 
+    override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
+        return dataSource.deleteCafeMenuGoods(cafeId, itemId)
+    }
+
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
         val set = dataSource.favoriteCafeIdsByUser[userId]
         return set?.contains(cafeId) ?: false

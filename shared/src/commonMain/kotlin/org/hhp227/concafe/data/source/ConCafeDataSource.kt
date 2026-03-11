@@ -71,6 +71,8 @@ interface ConCafeDataSource {
 
     fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
 
+    fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail
+
     fun castDetail(castId: String): CastDetail?
 
     fun rankingItemsFromCasts(): List<RankingItem>

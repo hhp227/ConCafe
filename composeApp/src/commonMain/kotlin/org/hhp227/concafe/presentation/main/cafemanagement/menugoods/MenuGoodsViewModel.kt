@@ -9,13 +9,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.hhp227.concafe.domain.common.AppResult
 import org.hhp227.concafe.domain.model.CafeMenu
 import org.hhp227.concafe.domain.model.Goods
+import org.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 
 class MenuGoodsViewModel(
     private val cafeId: String,
-    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase
+    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
+    private val deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MenuGoodsUiState())
     val uiState = _uiState.asStateFlow()
@@ -93,6 +96,30 @@ class MenuGoodsViewModel(
         }
     }
 
+    private fun clickDeleteItem(itemId: String) {
+        val targetItem = _uiState.value.visibleItems.firstOrNull { it.id == itemId } ?: return
+        _uiState.update { it.copy(pendingDeleteItem = targetItem) }
+    }
+
+    private fun confirmDeleteItem() {
+        val targetItem = _uiState.value.pendingDeleteItem ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(infoMessage = null, pendingDeleteItem = null) }
+            when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = targetItem.id)) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(infoMessage = "항목이 삭제되었습니다.") }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = "항목 삭제에 실패했습니다.") }
+                }
+            }
+        }
+    }
+
+    private fun cancelDeleteItem() {
+        _uiState.update { it.copy(pendingDeleteItem = null) }
+    }
+
     private fun dismissInfoMessage() {
         _uiState.update { it.copy(infoMessage = null) }
     }
@@ -107,10 +134,6 @@ class MenuGoodsViewModel(
         viewModelScope.launch {
             _event.emit(MenuGoodsEvent.NavigateToEdit(cafeId = cafeId, itemId = itemId))
         }
-    }
-
-    private fun showInfo(message: String) {
-        _uiState.update { it.copy(infoMessage = message) }
     }
 
     private fun buildMenuCategories(
@@ -224,7 +247,9 @@ class MenuGoodsViewModel(
             is MenuGoodsAction.SelectCategory -> selectCategory(action.categoryId)
             is MenuGoodsAction.ToggleItemAvailability -> toggleItemAvailability(action.itemId)
             is MenuGoodsAction.ClickEditItem -> clickEditItem(action.itemId)
-            is MenuGoodsAction.ClickDeleteItem -> showInfo("삭제 확인 플로우는 다음 단계에서 연결됩니다.")
+            is MenuGoodsAction.ClickDeleteItem -> clickDeleteItem(action.itemId)
+            MenuGoodsAction.ConfirmDeleteItem -> confirmDeleteItem()
+            MenuGoodsAction.CancelDeleteItem -> cancelDeleteItem()
             MenuGoodsAction.ClickAddNewItem -> clickAddNewItem()
             MenuGoodsAction.DismissInfoMessage -> dismissInfoMessage()
         }

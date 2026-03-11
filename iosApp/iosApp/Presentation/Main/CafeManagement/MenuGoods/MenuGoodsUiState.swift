@@ -20,6 +20,7 @@ struct MenuGoodsUiState {
     var menuItems: [ManageItem] = []
     var goodsItems: [ManageItem] = []
     var infoMessage: String? = nil
+    var pendingDeleteItem: ManageItem? = nil
 
     enum CollectionTab {
         case menu

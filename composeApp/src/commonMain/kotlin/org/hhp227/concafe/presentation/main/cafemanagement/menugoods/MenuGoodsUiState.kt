@@ -12,7 +12,8 @@ data class MenuGoodsUiState(
     val selectedGoodsCategoryId: String? = null,
     val menuItems: List<ManageItem> = emptyList(),
     val goodsItems: List<ManageItem> = emptyList(),
-    val infoMessage: String? = null
+    val infoMessage: String? = null,
+    val pendingDeleteItem: ManageItem? = null
 ) {
     enum class CollectionTab {
         MENU,

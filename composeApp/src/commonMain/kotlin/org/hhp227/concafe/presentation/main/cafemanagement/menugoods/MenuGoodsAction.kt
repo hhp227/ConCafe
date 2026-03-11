@@ -9,6 +9,8 @@ sealed interface MenuGoodsAction {
     data class ToggleItemAvailability(val itemId: String) : MenuGoodsAction
     data class ClickEditItem(val itemId: String) : MenuGoodsAction
     data class ClickDeleteItem(val itemId: String) : MenuGoodsAction
+    data object ConfirmDeleteItem : MenuGoodsAction
+    data object CancelDeleteItem : MenuGoodsAction
     data object ClickAddNewItem : MenuGoodsAction
     data object DismissInfoMessage : MenuGoodsAction
 }

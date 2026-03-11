@@ -15,11 +15,15 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
 
+    private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
+
     @Published private(set) var uiState = MenuGoodsUiState()
 
     let event = PassthroughSubject<MenuGoodsEvent, Never>()
 
     private var cafeDetailWatchHandle: WatchHandle?
+
+    private var deleteTask: Task<Void, Never>?
 
     private func loadMenuGoods() {
         uiState.isLoading = true
@@ -103,8 +107,35 @@ final class MenuGoodsViewModel: ObservableObject {
         }
     }
 
-    private func showInfo(_ message: String) {
-        uiState.infoMessage = message
+    private func deleteItem(_ itemId: String) {
+        guard let targetItem = uiState.visibleItems.first(where: { $0.id == itemId }) else { return }
+        uiState.pendingDeleteItem = targetItem
+    }
+
+    private func confirmDeleteItem() {
+        guard let targetItem = uiState.pendingDeleteItem else { return }
+        uiState.infoMessage = nil
+        uiState.pendingDeleteItem = nil
+        deleteTask?.cancel()
+        deleteTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: targetItem.id)
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.infoMessage = "항목이 삭제되었습니다."
+                } else {
+                    uiState.infoMessage = "항목 삭제에 실패했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.infoMessage = "항목 삭제에 실패했습니다."
+            }
+        }
+    }
+
+    private func cancelDeleteItem() {
+        uiState.pendingDeleteItem = nil
     }
 
     private func buildMenuCategories(items: [MenuGoodsUiState.ManageItem]) -> [MenuGoodsUiState.CategoryChip] {
@@ -224,8 +255,12 @@ final class MenuGoodsViewModel: ObservableObject {
             toggleItemAvailability(itemId)
         case .clickEditItem(let itemId):
             event.send(.navigateToEdit(cafeId: cafeId, itemId: itemId))
-        case .clickDeleteItem(_):
-            showInfo("삭제 확인 플로우는 다음 단계에서 연결됩니다.")
+        case .clickDeleteItem(let itemId):
+            deleteItem(itemId)
+        case .confirmDeleteItem:
+            confirmDeleteItem()
+        case .cancelDeleteItem:
+            cancelDeleteItem()
         case .clickAddNewItem:
             event.send(.navigateToEdit(cafeId: cafeId, itemId: nil))
         case .dismissInfoMessage:
@@ -235,15 +270,18 @@ final class MenuGoodsViewModel: ObservableObject {
 
     init(
         cafeId: String,
-        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase()
+        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
+        deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase()
     ) {
         self.cafeId = cafeId
         self.observeCafeDetailUseCase = observeCafeDetailUseCase
+        self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
 
         loadMenuGoods()
     }
 
     deinit {
         cafeDetailWatchHandle?.cancel()
+        deleteTask?.cancel()
     }
 }

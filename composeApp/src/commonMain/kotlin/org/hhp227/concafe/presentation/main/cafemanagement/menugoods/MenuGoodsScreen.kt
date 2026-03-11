@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveDeleteCafeMenuGoodsUseCase
 import org.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -42,7 +43,8 @@ fun MenuGoodsScreen(
             initializer {
                 MenuGoodsViewModel(
                     cafeId = cafeId,
-                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase()
+                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
+                    deleteCafeMenuGoodsUseCase = resolveDeleteCafeMenuGoodsUseCase()
                 )
             }
         }
@@ -69,6 +71,23 @@ fun MenuGoodsScreen(
         uiState = uiState,
         onAction = viewModel::onAction
     )
+    uiState.pendingDeleteItem?.let { item ->
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) },
+            title = { Text("항목 삭제") },
+            text = { Text("'${item.name}' 항목을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem) }) {
+                    Text("삭제", color = Color(0xFFD96B7A))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

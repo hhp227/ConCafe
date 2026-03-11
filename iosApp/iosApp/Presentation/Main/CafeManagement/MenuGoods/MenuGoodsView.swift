@@ -38,6 +38,27 @@ struct MenuGoodsView: View {
                 onNavigationAction(.navigateToMenuGoodsEdit(cafeId: cafeId, itemId: itemId))
             }
         }
+        .alert(
+            "항목 삭제",
+            isPresented: Binding(
+                get: { viewModel.uiState.pendingDeleteItem != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.cancelDeleteItem)
+                    }
+                }
+            ),
+            presenting: viewModel.uiState.pendingDeleteItem
+        ) { _ in
+            Button("취소", role: .cancel) {
+                viewModel.onAction(.cancelDeleteItem)
+            }
+            Button("삭제", role: .destructive) {
+                viewModel.onAction(.confirmDeleteItem)
+            }
+        } message: { item in
+            Text("'\(item.name)' 항목을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.")
+        }
     }
 
     init(

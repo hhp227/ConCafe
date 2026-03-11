@@ -446,6 +446,25 @@ class MockConCafeDataSource : ConCafeDataSource {
         return updatedDetail
     }
 
+    override fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
+        val cafe = cafes.firstOrNull { it.id == cafeId }
+            ?: throw NoSuchElementException("cafe not found")
+        val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(cafe)
+        val updatedMenus = currentDetail.menus.filterNot { it.id == itemId }
+        val updatedGoods = currentDetail.goods.filterNot { it.id == itemId }
+        if (updatedMenus.size == currentDetail.menus.size && updatedGoods.size == currentDetail.goods.size) {
+            throw NoSuchElementException("menu goods item not found")
+        }
+
+        val updatedDetail = currentDetail.copy(
+            menus = updatedMenus,
+            goods = updatedGoods
+        )
+        cafeDetailsById[cafeId] = updatedDetail
+        cafeDetailsState.value = cafeDetailsById.toMap()
+        return updatedDetail
+    }
+
     private fun buildCafeDetail(cafe: Cafe): CafeDetail {
         val cafeCasts = casts.filter { it.cafeId == cafe.id }
         val cafeNotices = notices.filter { it.cafeId == cafe.id }
