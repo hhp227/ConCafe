@@ -66,7 +66,7 @@ struct MainView: View {
     private var roleBasedThirdTabView: some View {
         switch viewModel.uiState.thirdTab {
         case .fanManagement:
-            FanManagementView(title: "팬관리", description: "캐스트가 팔로워, 출근 일정, 팬 대상 공지를 관리하는 메인 탭입니다.")
+            FanManagementView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("팬관리", systemImage: "person.2.fill") }
         case .cafeManagement:
             CafeManagementView(onNavigationAction: onNavigationAction)

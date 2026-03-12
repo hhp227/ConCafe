@@ -160,7 +160,7 @@ fun MainScreen(
                 CheckInScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.FAN_MANAGEMENT.route) {
-                FanManagementScreen()
+                FanManagementScreen(onNavigationAction = onNavigationAction)
             }
             composable(MainNavigationTab.CAFE_MANAGEMENT.route) {
                 CafeManagementScreen(onNavigate = onNavigationAction)

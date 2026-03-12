@@ -8,5 +8,12 @@
 import Foundation
 
 enum FanManagementAction {
-    
+    case clickEditProfile
+    case clickNotification
+    case clickPrimaryAnnouncement
+    case clickQuickAction(FanManagementUiState.QuickAction)
+    case clickViewAllFollowers
+    case clickRecentFollower(id: String)
+    case clickTopFan(id: String)
+    case dismissInfoMessage
 }
