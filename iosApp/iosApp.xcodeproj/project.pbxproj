@@ -149,6 +149,11 @@
 		0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */; };
 		0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
+		0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */; };
+		0AFECA4F2F62CDEF00C2C099 /* ReviewEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */; };
+		0AFECA512F62CE0D00C2C099 /* ReviewEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */; };
+		0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */; };
+		0AFECA552F62CE5600C2C099 /* ReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */; };
 		A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011001AABBCCDDEEFF0001 /* ContentView.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
@@ -298,6 +303,11 @@
 		0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreAction.swift; sourceTree = "<group>"; };
 		0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInComponents.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
+		0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditViewModel.swift; sourceTree = "<group>"; };
+		0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditUiState.swift; sourceTree = "<group>"; };
+		0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditAction.swift; sourceTree = "<group>"; };
+		0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditEvent.swift; sourceTree = "<group>"; };
+		0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditView.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011001AABBCCDDEEFF0001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
@@ -492,6 +502,7 @@
 				0A580D9D2F5965DB00390F67 /* Main */,
 				0A580D9C2F5965D200390F67 /* Navigation */,
 				0A580DC02F59732000390F67 /* Notification */,
+				0AFECA4B2F62CD8C00C2C099 /* Review */,
 				0A8ABA702F5C1D0B00265D4F /* Settings */,
 			);
 			path = Presentation;
@@ -691,6 +702,18 @@
 			path = Component;
 			sourceTree = "<group>";
 		};
+		0AFECA4B2F62CD8C00C2C099 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */,
+				0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */,
+				0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */,
+				0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */,
+				0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -851,6 +874,7 @@
 				0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */,
 				0A34707E2F611D19005F9A8C /* MenuGoodsEditView.swift in Sources */,
 				0A785CB52F5A7D24004037A8 /* MyInfoUiState.swift in Sources */,
+				0AFECA512F62CE0D00C2C099 /* ReviewEditAction.swift in Sources */,
 				0A580DAA2F5967DD00390F67 /* HomeView.swift in Sources */,
 				0A6B33482F610B4F0074940F /* MenuGoodsUiState.swift in Sources */,
 				0A580DB22F59691300390F67 /* MainView.swift in Sources */,
@@ -928,6 +952,7 @@
 				0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */,
 				0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */,
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
+				0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */,
 				0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */,
 				0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */,
 				0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */,
@@ -936,6 +961,7 @@
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
 				0A3470822F611D46005F9A8C /* MenuGoodsEditAction.swift in Sources */,
 				0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */,
+				0AFECA4F2F62CDEF00C2C099 /* ReviewEditUiState.swift in Sources */,
 				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
 				0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */,
 				0A6B334C2F610B860074940F /* MenuGoodsAction.swift in Sources */,
@@ -947,6 +973,7 @@
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
 				0A785C982F5A76FD004037A8 /* HomeUiState.swift in Sources */,
 				0A785CAF2F5A7CD0004037A8 /* MyInfoViewModel.swift in Sources */,
+				0AFECA552F62CE5600C2C099 /* ReviewEditView.swift in Sources */,
 				0A34707B2F611C64005F9A8C /* ExternalLinkEvent.swift in Sources */,
 				0A9B96162F62645300F6D8FE /* ConCafeCastCard.swift in Sources */,
 				0A8ABA6D2F5C1CC200265D4F /* FanManagementAction.swift in Sources */,
@@ -967,6 +994,7 @@
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
 				0A3470732F611AD6005F9A8C /* ExternalLinkView.swift in Sources */,
+				0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */,
 				0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */,
 				0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */,
 				0A785CC72F5A7EB9004037A8 /* CafeEvent.swift in Sources */,
