@@ -9,11 +9,11 @@ import SwiftUI
 
 struct AppNavigationView: View {
     @StateObject private var viewModel = NavigationViewModel()
-    
+
     @State var path: [Route] = []
-    
+
     @State var currentRoute: Route = .entry
-    
+
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
@@ -34,6 +34,8 @@ struct AppNavigationView: View {
                 CafeInfoEditView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .castEdit(let cafeId, let castId):
                 CastEditView(cafeId: cafeId, castId: castId, onNavigationAction: viewModel.onAction)
+            case .schedule(let castId):
+                ScheduleView(castId: castId, onNavigationAction: viewModel.onAction)
             case .menuGoods(let param):
                 MenuGoodsView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .menuGoodsEdit(let cafeId, let itemId):
@@ -69,6 +71,8 @@ struct AppNavigationView: View {
                     path.append(route)
                 case .castEdit:
                     path.append(route)
+                case .schedule:
+                    path.append(route)
                 case .menuGoods:
                     path.append(route)
                 case .menuGoodsEdit:
@@ -91,7 +95,7 @@ struct AppNavigationView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var rootContent: some View {
         switch currentRoute {

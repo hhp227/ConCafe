@@ -12,7 +12,7 @@ import Shared
 @MainActor
 final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
-    
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = MyInfoUiState.empty
@@ -20,7 +20,7 @@ final class MyInfoViewModel: ObservableObject {
     let event = PassthroughSubject<MyInfoEvent, Never>()
 
     private var loadTask: Task<Void, Never>?
-    
+
     private var sessionWatchHandle: WatchHandle?
 
     private func observeSession() {
@@ -50,6 +50,8 @@ final class MyInfoViewModel: ObservableObject {
                         isLoggedIn: feed.isLoggedIn,
                         user: feed.user,
                         summary: feed.summary,
+                        castDetail: feed.castDetail,
+                        ownedCafes: feed.ownedCafes,
                         badges: feed.badges,
                         popularCafes: feed.popularCafes,
                         recentVisits: feed.recentVisits,
@@ -89,7 +91,7 @@ final class MyInfoViewModel: ObservableObject {
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
-        
+
         observeSession()
     }
 

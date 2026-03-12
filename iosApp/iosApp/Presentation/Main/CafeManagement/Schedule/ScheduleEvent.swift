@@ -8,5 +8,6 @@
 import Foundation
 
 enum ScheduleEvent {
-    
+    case navigateBack
+    case showMessage(String)
 }

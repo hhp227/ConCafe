@@ -8,5 +8,7 @@
 import Foundation
 
 enum FanManagementEvent {
-    
+    case showMessage(String)
+    case navigateToCastEdit(cafeId: String, castId: String)
+    case navigateToSchedule(castId: String? = nil)
 }
