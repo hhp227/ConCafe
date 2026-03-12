@@ -116,6 +116,12 @@ private fun ScheduleContentScreen(
         ) {
             ScheduleCastSummaryCard(uiState.castSummary)
             WeekSelectorSection(uiState = uiState, onAction = onAction)
+            if (uiState.errorMessage != null) {
+                ScheduleInfoBanner(
+                    message = uiState.errorMessage,
+                    onDismiss = { onAction(ScheduleAction.DismissInfoMessage) }
+                )
+            }
             if (uiState.infoMessage != null) {
                 ScheduleInfoBanner(
                     message = uiState.infoMessage,
@@ -181,7 +187,7 @@ private fun ScheduleCastSummaryCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "SA",
+                    text = castSummary.initials,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF7C3F67)

@@ -1,0 +1,116 @@
+package com.hhp227.concafe.domain.usecase
+
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastSort
+import com.hhp227.concafe.domain.model.ScheduleManagementData
+import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
+import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
+import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+
+class GetScheduleManagementDataUseCase(
+    private val authRepository: AuthRepository,
+    private val castRepository: CastRepository
+) {
+    suspend operator fun invoke(): AppResult<ScheduleManagementData> {
+        return try {
+            val currentUser = authRepository.getCurrentUser()
+                ?: return AppResult.Failure(AppError.Unauthorized)
+
+            if (currentUser.role != UserRole.CAST) {
+                return AppResult.Failure(AppError.PermissionDenied)
+            }
+
+            val castId = castRepository.searchCasts(
+                query = null,
+                country = null,
+                city = null,
+                sort = CastSort.FOLLOWERS,
+                cursor = null,
+                pageSize = 100
+            ).items.firstOrNull { cast ->
+                cast.linkedUserId == currentUser.id
+            }?.id ?: return AppResult.Failure(AppError.NotFound)
+
+            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val weekStart = today.toWeekStart()
+            val weekEnd = weekStart.plus(DatePeriod(days = 6))
+            val detail = castRepository.getCastDetail(castId)
+            val scheduleByDate = castRepository.getCastSchedules(
+                castId = castId,
+                fromDate = weekStart.toString(),
+                toDate = weekEnd.toString()
+            ).associateBy { it.date }
+            val weekDates = (0..6).map { weekStart.plus(DatePeriod(days = it)) }
+
+            AppResult.Success(
+                ScheduleManagementData(
+                    detail = detail,
+                    weekRangeLabel = "${weekStart.year}년 ${weekStart.monthNumber}월 ${weekStart.dayOfMonth}일 - ${weekEnd.monthNumber}월 ${weekEnd.dayOfMonth}일",
+                    selectedDayId = today.toString(),
+                    weekDays = weekDates.map { date ->
+                        ScheduleManagementWeekDay(
+                            id = date.toString(),
+                            label = "${date.dayOfMonth}(${date.toKoreanDayLabel()})",
+                            number = date.dayOfMonth.toString(),
+                            isWorking = scheduleByDate.containsKey(date.toString())
+                        )
+                    },
+                    daySchedules = weekDates.map { date ->
+                        val schedule = scheduleByDate[date.toString()]
+                        ScheduleManagementDaySchedule(
+                            id = date.toString(),
+                            title = "${date.monthNumber}월 ${date.dayOfMonth}일 (${date.toKoreanDayLabel()})",
+                            timeLabel = schedule?.let {
+                                "${it.startTime} - ${it.endTime} (${calculateHourLabel(it.startTime, it.endTime)})"
+                            } ?: "일정이 없습니다",
+                            statusLabel = if (schedule != null) "근무 중" else "휴무",
+                            isWorking = schedule != null
+                        )
+                    }
+                )
+            )
+        } catch (e: NoSuchElementException) {
+            AppResult.Failure(AppError.NotFound)
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
+        }
+    }
+}
+
+private fun LocalDate.toWeekStart(): LocalDate {
+    val daysFromSunday = dayOfWeek.isoDayNumber % 7
+    return minus(DatePeriod(days = daysFromSunday))
+}
+
+private fun LocalDate.toKoreanDayLabel(): String {
+    return when (dayOfWeek) {
+        DayOfWeek.MONDAY -> "월"
+        DayOfWeek.TUESDAY -> "화"
+        DayOfWeek.WEDNESDAY -> "수"
+        DayOfWeek.THURSDAY -> "목"
+        DayOfWeek.FRIDAY -> "금"
+        DayOfWeek.SATURDAY -> "토"
+        DayOfWeek.SUNDAY -> "일"
+        else -> ""
+    }
+}
+
+private fun calculateHourLabel(startTime: String, endTime: String): String {
+    val startHour = startTime.substringBefore(':').toIntOrNull() ?: return "0시간"
+    val endHour = endTime.substringBefore(':').toIntOrNull() ?: return "0시간"
+    return "${(endHour - startHour).coerceAtLeast(0)}시간"
+}

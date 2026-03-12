@@ -7,12 +7,97 @@
 
 import Foundation
 import Combine
+import Shared
 
 @MainActor
 final class ScheduleViewModel: ObservableObject {
-    @Published private(set) var uiState = ScheduleUiState()
+    private let getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase
+    private let observeCastVersionUseCase: ObserveCastVersionUseCase
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
+    @Published private(set) var uiState = ScheduleUiState(isLoading: true)
 
     let event = PassthroughSubject<ScheduleEvent, Never>()
+
+    private var loadTask: Task<Void, Never>?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
+
+    init(
+        getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
+        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+    ) {
+        self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
+        self.observeCastVersionUseCase = observeCastVersionUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
+
+        observeSession()
+    }
+
+    private func observeSession() {
+        watchHandles[.session]?.cancel()
+        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                self.unbindCastVersion()
+                self.loadSchedule()
+            }
+        }
+    }
+
+    private func bindCastVersion(_ castId: String) {
+        watchHandles[.castVersion]?.cancel()
+
+        var isInitialEmission = true
+        watchHandles[.castVersion] = observeCastVersionUseCase.watch(castId: castId) { [weak self] _ in
+            guard let self else { return }
+            if isInitialEmission {
+                isInitialEmission = false
+                return
+            }
+            Task { @MainActor in
+                self.loadSchedule()
+            }
+        }
+    }
+
+    private func unbindCastVersion() {
+        watchHandles.removeValue(forKey: .castVersion)?.cancel()
+    }
+
+    private func loadSchedule() {
+        loadTask?.cancel()
+        uiState.isLoading = true
+        uiState.errorMessage = nil
+        uiState.infoMessage = nil
+
+        loadTask = Task {
+            do {
+                let result = try await getScheduleManagementDataUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let data = success.data as? Shared.ScheduleManagementData {
+                    bindCastVersion(data.detail.cast.id)
+                    uiState = data.toUiState()
+                } else {
+                    unbindCastVersion()
+                    uiState = ScheduleUiState(
+                        isLoading: false,
+                        isSaving: false,
+                        errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                    )
+                }
+            } catch {
+                if Task.isCancelled { return }
+                unbindCastVersion()
+                uiState = ScheduleUiState(
+                    isLoading: false,
+                    isSaving: false,
+                    errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                )
+            }
+        }
+    }
 
     func onAction(_ action: ScheduleAction) {
         switch action {
@@ -38,6 +123,74 @@ final class ScheduleViewModel: ObservableObject {
             uiState.isSaving = false
         case .dismissInfoMessage:
             uiState.infoMessage = nil
+            uiState.errorMessage = nil
         }
+    }
+
+    deinit {
+        loadTask?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum WatchKey {
+        case session
+        case castVersion
+    }
+}
+
+private extension Shared.ScheduleManagementData {
+    func toUiState() -> ScheduleUiState {
+        ScheduleUiState(
+            isLoading: false,
+            isSaving: false,
+            errorMessage: nil,
+            castSummary: .init(
+                title: detail.cast.name,
+                subtitle: "\(detail.cast.conceptRole.toDisplayConceptRole()) / \(detail.cafe.name)",
+                badge: "Cast Member",
+                initials: detail.cast.name.toInitials()
+            ),
+            weekRangeLabel: weekRangeLabel,
+            weekDays: weekDays.map { day in
+                ScheduleUiState.WeekDay(
+                    id: day.id,
+                    label: day.label,
+                    number: day.number,
+                    isSelected: day.id == selectedDayId,
+                    isWorking: day.isWorking
+                )
+            },
+            schedules: daySchedules.map { schedule in
+                ScheduleUiState.DaySchedule(
+                    id: schedule.id,
+                    title: schedule.title,
+                    timeLabel: schedule.timeLabel,
+                    statusLabel: schedule.statusLabel,
+                    isWorking: schedule.isWorking
+                )
+            },
+            selectedDayId: selectedDayId,
+            infoMessage: nil
+        )
+    }
+}
+
+private extension String {
+    func toDisplayConceptRole() -> String {
+        switch lowercased() {
+        case "maid":
+            return "메이드"
+        case "butler":
+            return "버틀러"
+        case "idol":
+            return "아이돌"
+        default:
+            return prefix(1).uppercased() + dropFirst()
+        }
+    }
+
+    func toInitials() -> String {
+        String(prefix(2)).uppercased()
     }
 }

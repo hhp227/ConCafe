@@ -90,6 +90,9 @@ private struct ScheduleContentView: View {
             VStack(spacing: 12) {
                 castSummaryCard
                 weekSelectorSection
+                if let errorMessage = uiState.errorMessage {
+                    infoBanner(message: errorMessage)
+                }
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
@@ -132,7 +135,7 @@ private struct ScheduleContentView: View {
                 )
                 .frame(width: 80, height: 80)
                 .overlay {
-                    Text("SA")
+                    Text(uiState.castSummary.initials)
                         .font(.title3.weight(.bold))
                         .foregroundStyle(Color(hex: "7C3F67"))
                 }

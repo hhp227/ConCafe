@@ -1,0 +1,10 @@
+<resources>
+    <string name="main_tab_home">홈</string>
+    <string name="main_tab_explore">탐색</string>
+    <string name="main_tab_checkin">체크인</string>
+    <string name="main_tab_fan_management">팬관리</string>
+    <string name="main_tab_cafe_management">카페관리</string>
+    <string name="main_tab_admin_operations">운영관리</string>
+    <string name="main_tab_ranking">랭킹</string>
+    <string name="main_tab_my_info">내 정보</string>
+</resources>
