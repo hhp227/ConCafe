@@ -589,7 +589,7 @@ private fun CastPreviewItem(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .offset(x = (-1).dp, y = (-1).dp)
+                        .offset(x = (-2).dp, y = (-2).dp)
                         .size(16.dp)
                         .background(
                             if (cast.isOnShift) Color(0xFF35C26B) else Color(0xFFC7CBD3),

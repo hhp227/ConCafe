@@ -262,41 +262,21 @@ private struct ProfileMyInfoView: View {
                 return "내 활동 요약"
             }
         }()
-        let isHighlighted = {
-            switch user?.role {
-            case .cast:
-                return !(castDetail?.schedule.isEmpty ?? true)
-            case .cafeOwner:
-                return ownerCafe != nil
-            case .admin:
-                return true
-            default:
-                return true
-            }
-        }()
-
         return HStack(spacing: 16) {
-            ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .frame(width: 78, height: 78)
-                    .overlay(
-                        Text(String(title.prefix(2)).uppercased())
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Color(hex: "7C3F67"))
-                    )
-                if isHighlighted {
-                    Circle()
-                        .fill(Color(hex: "37B26C"))
-                        .frame(width: 18, height: 18)
-                }
-            }
+                )
+                .frame(width: 78, height: 78)
+                .overlay(
+                    Text(String(title.prefix(2)).uppercased())
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(Color(hex: "7C3F67"))
+                )
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .bottom, spacing: 8) {
                     Text(title)

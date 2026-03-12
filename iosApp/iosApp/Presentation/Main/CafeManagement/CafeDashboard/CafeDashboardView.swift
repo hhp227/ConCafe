@@ -355,7 +355,7 @@ private struct CafeDashboardContentView: View {
                     Circle()
                         .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
                         .frame(width: 16, height: 16)
-                        .offset(x: 25, y: 25)
+                        .offset(x: 24, y: 24)
                 }
                 .frame(width: 78, height: 78)
                 Text(cast.name)

@@ -450,13 +450,6 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
         UserRole.VISITOR -> "내 활동 요약"
     }
     val profileAccent = title.take(2).uppercase()
-    val isHighlighted = when (user.role) {
-        UserRole.CAST -> castDetail?.schedule?.isNotEmpty() == true
-        UserRole.CAFE_OWNER -> ownerCafe != null
-        UserRole.ADMIN -> true
-        UserRole.VISITOR -> true
-    }
-
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
@@ -469,36 +462,25 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box {
-                Box(
-                    modifier = Modifier
-                        .size(78.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
-                            )
+            Box(
+                modifier = Modifier
+                    .size(78.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
                         )
-                        .background(Color(0xFFFFD7E5))
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = profileAccent,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7C3F67)
                     )
-                }
-                if (isHighlighted) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF37B26C))
-                    )
-                }
+                    .background(Color(0xFFFFD7E5))
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = profileAccent,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF7C3F67)
+                )
             }
             Column(
                 modifier = Modifier.weight(1f),
