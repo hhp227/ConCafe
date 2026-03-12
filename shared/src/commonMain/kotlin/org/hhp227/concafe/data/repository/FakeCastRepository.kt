@@ -92,6 +92,10 @@ class FakeCastRepository(
         return dataSource.observeCafeCastVersion(cafeId)
     }
 
+    override fun observeCastVersion(castId: String): Flow<Int> {
+        return dataSource.observeCastVersion(castId)
+    }
+
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
         return dataSource.upsertCast(update)
     }
@@ -118,6 +122,13 @@ class FakeCastRepository(
     override suspend fun unfollowCast(userId: String, castId: String) {
         val set = dataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.remove(castId)
+    }
+
+    override suspend fun getFollowerUserIds(castId: String): List<String> {
+        return dataSource.followedCastIdsByUser
+            .filterValues { followedIds -> followedIds.contains(castId) }
+            .keys
+            .sorted()
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {

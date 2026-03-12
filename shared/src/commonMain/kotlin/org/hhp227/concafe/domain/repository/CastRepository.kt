@@ -29,6 +29,8 @@ interface CastRepository {
 
     fun observeCafeCastVersion(cafeId: String): Flow<Int>
 
+    fun observeCastVersion(castId: String): Flow<Int>
+
     suspend fun upsertCast(update: CastUpsert): CastDetail
 
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
@@ -38,6 +40,8 @@ interface CastRepository {
     suspend fun followCast(userId: String, castId: String)
 
     suspend fun unfollowCast(userId: String, castId: String)
+
+    suspend fun getFollowerUserIds(castId: String): List<String>
 
     suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary>
 }

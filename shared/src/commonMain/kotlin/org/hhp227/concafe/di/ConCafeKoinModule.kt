@@ -31,6 +31,7 @@ import org.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import org.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import org.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import org.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
@@ -46,6 +47,7 @@ import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -89,6 +91,7 @@ val useCaseModule = module {
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
+    factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
@@ -97,6 +100,7 @@ val useCaseModule = module {
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }
+    factory { ObserveCastVersionUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignUpUseCase(get()) }

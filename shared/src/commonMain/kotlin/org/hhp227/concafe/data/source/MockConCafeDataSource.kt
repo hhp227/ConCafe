@@ -83,6 +83,33 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.CAFE_OWNER,
             banned = false,
             createdAt = "2026-03-10T09:40:00Z"
+        ),
+        User(
+            id = "user-6",
+            email = "fan.1@concafe.app",
+            nickname = "메이드팬123",
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = "2026-03-10T10:00:00Z"
+        ),
+        User(
+            id = "user-7",
+            email = "fan.2@concafe.app",
+            nickname = "리본러버",
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = "2026-03-10T10:10:00Z"
+        ),
+        User(
+            id = "user-8",
+            email = "fan.3@concafe.app",
+            nickname = "사쿠라오시",
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = "2026-03-10T10:20:00Z"
         )
     )
 
@@ -210,12 +237,12 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     )
     override val casts = mutableListOf(
-        Cast("maid-1", "cafe-1", "사쿠라", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
-        Cast("maid-2", "cafe-2", "미유", null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987, 4.8),
-        Cast("maid-3", "cafe-3", "유이", null, "리본 카페 인기 메이드", "2000-05-14", "maid", 856, 4.7),
-        Cast("maid-4", "cafe-2", "나나", null, "생일 이벤트 진행 중", "2001-03-05", "maid", 700, 4.8),
-        Cast("maid-5", "cafe-1", "레이", null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
-        Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5),
+        Cast("maid-1", "cafe-1", "사쿠라", "user-2", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
+        Cast("maid-2", "cafe-2", "미유", null, null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987, 4.8),
+        Cast("maid-3", "cafe-3", "유이", null, null, "리본 카페 인기 메이드", "2000-05-14", "maid", 856, 4.7),
+        Cast("maid-4", "cafe-2", "나나", null, null, "생일 이벤트 진행 중", "2001-03-05", "maid", 700, 4.8),
+        Cast("maid-5", "cafe-1", "레이", null, null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
+        Cast("maid-6", "cafe-3", "미키", null, null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5),
         *maidHouseAdditionalCasts.toTypedArray()
     )
 
@@ -237,6 +264,9 @@ class MockConCafeDataSource : ConCafeDataSource {
     private val cafeDetailsState = MutableStateFlow(cafeDetailsById.toMap())
     private val cafeCastVersionState = MutableStateFlow(
         cafes.associate { it.id to 0 }
+    )
+    private val castVersionState = MutableStateFlow(
+        casts.associate { it.id to 0 }
     )
     private val castImagesById = mutableMapOf(
         "maid-1" to listOf("", ""),
@@ -293,7 +323,12 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val favoriteCafeIdsByUser = mutableMapOf("user-1" to mutableSetOf("cafe-1"))
 
-    override val followedCastIdsByUser = mutableMapOf("user-1" to mutableSetOf("maid-1"))
+    override val followedCastIdsByUser = mutableMapOf(
+        "user-1" to mutableSetOf("maid-1"),
+        "user-6" to mutableSetOf("maid-1"),
+        "user-7" to mutableSetOf("maid-1"),
+        "user-8" to mutableSetOf("maid-1")
+    )
 
     override val ownedCafeIdsByUser = mapOf(
         "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
@@ -394,6 +429,10 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override fun observeCafeCastVersion(cafeId: String): Flow<Int> {
         return cafeCastVersionState.asStateFlow().map { it[cafeId] ?: 0 }
+    }
+
+    override fun observeCastVersion(castId: String): Flow<Int> {
+        return castVersionState.asStateFlow().map { it[castId] ?: 0 }
     }
 
     override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
@@ -680,6 +719,7 @@ class MockConCafeDataSource : ConCafeDataSource {
             id = castId,
             cafeId = targetCafeId,
             name = update.name.trim(),
+            linkedUserId = existingCast?.linkedUserId ?: currentUserId,
             profileImage = existingCast?.profileImage,
             desc = update.introduction.trim(),
             birthday = normalizedBirthday,
@@ -695,12 +735,25 @@ class MockConCafeDataSource : ConCafeDataSource {
             casts.add(nextCast)
         }
 
+        currentUserId?.let { signedInUserId ->
+            val userIndex = users.indexOfFirst { it.id == signedInUserId }
+            if (userIndex >= 0) {
+                val currentUser = users[userIndex]
+                if (currentUser.role == UserRole.CAST && nextCast.linkedUserId == signedInUserId) {
+                    users[userIndex] = currentUser.copy(nickname = nextCast.name)
+                }
+            }
+        }
+
         if (castImagesById[castId] == null) {
             castImagesById[castId] = listOfNotNull(nextCast.profileImage)
         }
         castSchedulesByCastId[castId] = buildCastSchedules(castId, targetCafeId, update.workingDays)
         cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
             this[targetCafeId] = (this[targetCafeId] ?: 0) + 1
+        }
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            this[castId] = (this[castId] ?: 0) + 1
         }
 
         return CastDetail(
@@ -778,6 +831,7 @@ private val maidHouseAdditionalCasts = listOf(
         id = "maid-$number",
         cafeId = "cafe-1",
         name = name,
+        linkedUserId = null,
         profileImage = null,
         desc = "메이드 하우스 인기 캐스트 $name",
         birthday = maidHouseBirthdayByIndex(index),

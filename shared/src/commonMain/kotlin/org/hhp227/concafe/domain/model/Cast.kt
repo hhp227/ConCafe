@@ -4,6 +4,7 @@ data class Cast(
     val id: String,
     val cafeId: String,
     val name: String,
+    val linkedUserId: String? = null,
     val profileImage: String?,
     val desc: String,
     val birthday: String?,

@@ -58,8 +58,14 @@ private struct FanManagementContentView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                profileSummaryCard
-                statsRow
+                if uiState.isLoading {
+                    loadingState
+                } else if uiState.fanManagementData == nil {
+                    emptySectionCard(message: uiState.errorMessage ?? "로그인한 캐스트 정보를 찾을 수 없습니다.")
+                } else {
+                    profileSummaryCard
+                    statsRow
+                }
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
@@ -81,6 +87,12 @@ private struct FanManagementContentView: View {
     }
 
     private var profileSummaryCard: some View {
+        let fanManagementData = uiState.fanManagementData!
+        let cast = fanManagementData.detail.cast
+        let cafe = fanManagementData.detail.cafe
+        let localizedName = fanManagementData.user.nickname == cast.name ? "" : fanManagementData.user.nickname
+        let profileAccent = String(cast.name.prefix(2)).uppercased()
+        let isOnline = !fanManagementData.detail.schedule.isEmpty
         HStack(spacing: 16) {
             ZStack(alignment: .bottomTrailing) {
                 Circle()
@@ -97,11 +109,11 @@ private struct FanManagementContentView: View {
                             .stroke(Color(hex: "FFD1DC"), lineWidth: 2)
                     )
                     .overlay {
-                        Text(uiState.castProfile.profileAccent)
+                        Text(profileAccent)
                             .font(.title3.weight(.bold))
                             .foregroundStyle(Color(hex: "7C3F67"))
                     }
-                if uiState.castProfile.isOnline {
+                if isOnline {
                     Circle()
                         .fill(Color(hex: "37B26C"))
                         .frame(width: 18, height: 18)
@@ -111,12 +123,14 @@ private struct FanManagementContentView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .bottom, spacing: 8) {
                     HStack(alignment: .bottom, spacing: 8) {
-                        Text(uiState.castProfile.stageName)
+                        Text(cast.name)
                             .font(.title2.weight(.bold))
                             .foregroundStyle(Color(hex: "24161E"))
-                        Text(uiState.castProfile.localizedName)
-                            .font(.subheadline)
-                            .foregroundStyle(Color(hex: "7A707A"))
+                        if !localizedName.isEmpty {
+                            Text(localizedName)
+                                .font(.subheadline)
+                                .foregroundStyle(Color(hex: "7A707A"))
+                        }
                     }
                     Spacer(minLength: 8)
                     Button {
@@ -140,7 +154,7 @@ private struct FanManagementContentView: View {
                     Image(systemName: "storefront")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color(hex: "EF6797"))
-                    Text(uiState.castProfile.cafeName)
+                    Text(cafe.name)
                         .font(.subheadline)
                         .foregroundStyle(Color(hex: "5B4A57"))
                 }
@@ -269,125 +283,134 @@ private struct FanManagementContentView: View {
     }
 
     private var recentFollowersSection: some View {
-        sectionContainer(title: "최근 팔로워", actionLabel: "전체보기") {
-            onAction(.clickViewAllFollowers)
-        } content: {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(uiState.recentFollowers) { follower in
-                        Button {
-                            onAction(.clickRecentFollower(id: follower.id))
-                        } label: {
-                            VStack(spacing: 8) {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: follower.accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
+        sectionContainer(title: "최근 팔로워") {
+            if uiState.recentFollowers.isEmpty {
+                emptySectionCard(message: "최근 팔로워 데이터가 아직 없습니다.")
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 14) {
+                        ForEach(uiState.recentFollowers) { follower in
+                            Button {
+                                onAction(.clickRecentFollower(id: follower.id))
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Circle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: follower.accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
                                         )
-                                    )
-                                    .frame(width: 58, height: 58)
-                                    .overlay {
-                                        Text(follower.initial)
-                                            .font(.headline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "6E5566"))
-                                    }
-                                    .overlay(
-                                        Circle().stroke(follower.accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
-                                    )
-                                Text(follower.name)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundStyle(Color(hex: "24161E"))
-                                Text(follower.joinedLabel)
-                                    .font(.caption2)
-                                    .foregroundStyle(Color(hex: "9C8C98"))
+                                        .frame(width: 58, height: 58)
+                                        .overlay {
+                                            Text(follower.initial)
+                                                .font(.headline.weight(.bold))
+                                                .foregroundStyle(Color(hex: "6E5566"))
+                                        }
+                                        .overlay(
+                                            Circle().stroke(follower.accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
+                                        )
+                                    Text(follower.name)
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(Color(hex: "24161E"))
+                                    Text(follower.joinedLabel)
+                                        .font(.caption2)
+                                        .foregroundStyle(Color(hex: "9C8C98"))
+                                }
+                                .frame(width: 74)
                             }
-                            .frame(width: 74)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
-                    VStack(spacing: 8) {
-                        Circle()
-                            .fill(Color(hex: "F8F1F4"))
-                            .frame(width: 58, height: 58)
-                            .overlay(
-                                Circle().stroke(Color(hex: "D9CBD4"), lineWidth: 1)
-                            )
-                            .overlay {
-                                Image(systemName: "person.2.fill")
-                                    .foregroundStyle(Color(hex: "A28E9B"))
-                            }
-                        Text("팬 확장")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(Color(hex: "7A707A"))
-                    }
-                    .frame(width: 74)
                 }
             }
         }
     }
 
     private var topFansSection: some View {
-        sectionContainer(title: "이달의 TOP 팬", actionLabel: "상호작용 기준", action: nil) {
-            VStack(spacing: 12) {
-                ForEach(uiState.topFans) { fan in
-                    Button {
-                        onAction(.clickTopFan(id: fan.id))
-                    } label: {
-                        HStack(spacing: 12) {
-                            Text("\(fan.rank)")
-                                .font(.headline.weight(.bold))
-                                .foregroundStyle(rankColor(fan.rank))
-                            Circle()
-                                .fill(Color(hex: "F6E3EC"))
-                                .frame(width: 42, height: 42)
-                                .overlay {
-                                    Text(String(fan.name.prefix(1)))
-                                        .font(.headline.weight(.bold))
-                                        .foregroundStyle(Color(hex: "7C3F67"))
-                                }
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(fan.name)
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "24161E"))
-                                Text("포인트: \(fan.pointsLabel)")
-                                    .font(.caption)
-                                    .foregroundStyle(Color(hex: "7A707A"))
-                            }
-                            Spacer()
-                            if fan.isBest {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "heart.fill")
+        sectionContainer(title: "이달의 TOP 팬") {
+            if uiState.topFans.isEmpty {
+                emptySectionCard(message: "TOP 팬 집계 데이터가 아직 없습니다.")
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(uiState.topFans) { fan in
+                        Button {
+                            onAction(.clickTopFan(id: fan.id))
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text("\(fan.rank)")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(rankColor(fan.rank))
+                                Circle()
+                                    .fill(Color(hex: "F6E3EC"))
+                                    .frame(width: 42, height: 42)
+                                    .overlay {
+                                        Text(String(fan.name.prefix(1)))
+                                            .font(.headline.weight(.bold))
+                                            .foregroundStyle(Color(hex: "7C3F67"))
+                                    }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(fan.name)
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(Color(hex: "24161E"))
+                                    Text("포인트: \(fan.pointsLabel)")
                                         .font(.caption)
-                                    Text("BEST")
-                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(Color(hex: "7A707A"))
                                 }
-                                .foregroundStyle(Color(hex: "D94A82"))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color(hex: "FFD1DC").opacity(0.12))
-                                .clipShape(Capsule())
+                                Spacer()
+                                if fan.isBest {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "heart.fill")
+                                            .font(.caption)
+                                        Text("BEST")
+                                            .font(.caption2.weight(.bold))
+                                    }
+                                    .foregroundStyle(Color(hex: "D94A82"))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                                    .clipShape(Capsule())
+                                }
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 14)
+                            .background(Color.white.opacity(0.92))
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
+                            )
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 14)
-                        .background(Color.white.opacity(0.92))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
-                        )
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
+    private var loadingState: some View {
+        emptySectionCard(message: "팬관리 정보를 불러오는 중입니다.")
+    }
+
+    private func emptySectionCard(message: String) -> some View {
+        Text(message)
+            .font(.subheadline)
+            .foregroundStyle(Color(hex: "7A707A"))
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 18)
+            .background(Color.white.opacity(0.88))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
+            )
+    }
+
     private func sectionContainer<Content: View>(
         title: String,
-        actionLabel: String,
+        actionLabel: String? = nil,
         action: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -397,13 +420,13 @@ private struct FanManagementContentView: View {
                     .font(.title3.weight(.bold))
                     .foregroundStyle(Color(hex: "24161E"))
                 Spacer()
-                if let action {
+                if let actionLabel, let action {
                     Button(actionLabel) {
                         action()
                     }
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "7A707A"))
-                } else {
+                } else if let actionLabel {
                     Text(actionLabel)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color(hex: "7A707A"))

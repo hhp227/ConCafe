@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.hhp227.concafe.domain.model.FanManagementData
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -112,11 +113,21 @@ private fun FanManagementContentScreen(
             .padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ProfileSummaryCard(
-            profile = uiState.castProfile,
-            onAction = onAction
-        )
-        StatsRow(stats = uiState.stats)
+        when {
+            uiState.isLoading -> {
+                LoadingState()
+            }
+            uiState.fanManagementData == null -> {
+                EmptySectionCard(message = uiState.errorMessage ?: "로그인한 캐스트 정보를 찾을 수 없습니다.")
+            }
+            else -> {
+                ProfileSummaryCard(
+                    fanManagementData = uiState.fanManagementData,
+                    onAction = onAction
+                )
+                StatsRow(stats = uiState.stats)
+            }
+        }
         if (uiState.infoMessage != null) {
             InfoBanner(
                 message = uiState.infoMessage,
@@ -131,7 +142,6 @@ private fun FanManagementContentScreen(
         )
         RecentFollowersSection(
             followers = uiState.recentFollowers,
-            onViewAllClick = { onAction(FanManagementAction.ClickViewAllFollowers) },
             onFollowerClick = { onAction(FanManagementAction.ClickRecentFollower(it)) }
         )
         TopFansSection(
@@ -144,9 +154,15 @@ private fun FanManagementContentScreen(
 
 @Composable
 private fun ProfileSummaryCard(
-    profile: FanManagementUiState.CastProfile,
+    fanManagementData: FanManagementData,
     onAction: (FanManagementAction) -> Unit
 ) {
+    val cast = fanManagementData.detail.cast
+    val cafe = fanManagementData.detail.cafe
+    val localizedName = fanManagementData.user.nickname.takeIf { it != cast.name }.orEmpty()
+    val profileAccent = cast.name.take(2).uppercase()
+    val isOnline = fanManagementData.detail.schedule.isNotEmpty()
+
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
@@ -173,13 +189,13 @@ private fun ProfileSummaryCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = profile.profileAccent,
+                        text = profileAccent,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF7C3F67)
                     )
                 }
-                if (profile.isOnline) {
+                if (isOnline) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -201,17 +217,19 @@ private fun ProfileSummaryCard(
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = profile.stageName,
+                            text = cast.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF24161E)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = profile.localizedName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF7A707A)
-                        )
+                        if (localizedName.isNotBlank()) {
+                            Text(
+                                text = localizedName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF7A707A)
+                            )
+                        }
                     }
                     Surface(
                         modifier = Modifier.clickable { onAction(FanManagementAction.ClickEditProfile) },
@@ -249,7 +267,7 @@ private fun ProfileSummaryCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = profile.cafeName,
+                        text = cafe.name,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF5B4A57)
                     )
@@ -441,67 +459,68 @@ private fun QuickActionGrid(
 @Composable
 private fun RecentFollowersSection(
     followers: List<FanManagementUiState.RecentFollower>,
-    onViewAllClick: () -> Unit,
     onFollowerClick: (String) -> Unit
 ) {
     SectionCard(
-        title = "최근 팔로워",
-        actionLabel = "전체보기",
-        onActionClick = onViewAllClick
+        title = "최근 팔로워"
     ) {
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            followers.forEach { follower ->
-                Column(
-                    modifier = Modifier
-                        .width(74.dp)
-                        .clickable { onFollowerClick(follower.id) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
+        if (followers.isEmpty()) {
+            EmptySectionCard(message = "최근 팔로워 데이터가 아직 없습니다.")
+        } else {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                followers.forEach { follower ->
+                    Column(
                         modifier = Modifier
-                            .size(58.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (follower.accent) Brush.linearGradient(
-                                    colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
-                                ) else Brush.linearGradient(
-                                    colors = listOf(Color(0xFFF2EEF1), Color(0xFFE3D9E2))
-                                )
-                            )
-                            .border(
-                                width = if (follower.accent) 2.dp else 0.dp,
-                                color = if (follower.accent) Color(0xFFFFD1DC) else Color.Transparent,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
+                            .width(74.dp)
+                            .clickable { onFollowerClick(follower.id) },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (follower.accent) Brush.linearGradient(
+                                        colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                                    ) else Brush.linearGradient(
+                                        colors = listOf(Color(0xFFF2EEF1), Color(0xFFE3D9E2))
+                                    )
+                                )
+                                .border(
+                                    width = if (follower.accent) 2.dp else 0.dp,
+                                    color = if (follower.accent) Color(0xFFFFD1DC) else Color.Transparent,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = follower.initial,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6E5566)
+                            )
+                        }
                         Text(
-                            text = follower.initial,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6E5566)
+                            text = follower.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF24161E),
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = follower.joinedLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF9C8C98),
+                            textAlign = TextAlign.Center
                         )
                     }
-                    Text(
-                        text = follower.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF24161E),
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = follower.joinedLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF9C8C98),
-                        textAlign = TextAlign.Center
-                    )
                 }
+                AddFollowerButton()
             }
-            AddFollowerButton()
         }
     }
 }
@@ -543,89 +562,91 @@ private fun TopFansSection(
     onFanClick: (String) -> Unit
 ) {
     SectionCard(
-        title = "이달의 TOP 팬",
-        actionLabel = "상호작용 기준",
-        onActionClick = null
+        title = "이달의 TOP 팬"
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            topFans.forEach { fan ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onFanClick(fan.id) },
-                    shape = RoundedCornerShape(18.dp),
-                    color = Color.White.copy(alpha = 0.92f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
-                ) {
-                    Row(
+        if (topFans.isEmpty()) {
+            EmptySectionCard(message = "TOP 팬 집계 데이터가 아직 없습니다.")
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                topFans.forEach { fan ->
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .clickable { onFanClick(fan.id) },
+                        shape = RoundedCornerShape(18.dp),
+                        color = Color.White.copy(alpha = 0.92f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
                     ) {
-                        Text(
-                            text = fan.rank.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = when (fan.rank) {
-                                1 -> Color(0xFFD99A00)
-                                2 -> Color(0xFF8E8896)
-                                else -> Color(0xFFDC8346)
-                            }
-                        )
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFF6E3EC)),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = fan.name.take(1),
+                                text = fan.rank.toString(),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7C3F67)
+                                color = when (fan.rank) {
+                                    1 -> Color(0xFFD99A00)
+                                    2 -> Color(0xFF8E8896)
+                                    else -> Color(0xFFDC8346)
+                                }
                             )
-                        }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = fan.name,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF24161E)
-                            )
-                            Text(
-                                text = "포인트: ${fan.pointsLabel}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Color(0xFF7A707A)
-                            )
-                        }
-                        if (fan.isBest) {
-                            Surface(
-                                shape = RoundedCornerShape(999.dp),
-                                color = Color(0x1AFFD1DC)
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF6E3EC)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                Text(
+                                    text = fan.name.take(1),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7C3F67)
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = fan.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF24161E)
+                                )
+                                Text(
+                                    text = "포인트: ${fan.pointsLabel}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color(0xFF7A707A)
+                                )
+                            }
+                            if (fan.isBest) {
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = Color(0x1AFFD1DC)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Favorite,
-                                        contentDescription = null,
-                                        tint = Color(0xFFD94A82),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = "BEST",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFD94A82)
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Favorite,
+                                            contentDescription = null,
+                                            tint = Color(0xFFD94A82),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = "BEST",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFD94A82)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -637,10 +658,50 @@ private fun TopFansSection(
 }
 
 @Composable
+private fun LoadingState() {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White.copy(alpha = 0.9f)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "팬관리 정보를 불러오는 중입니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF7A707A)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptySectionCard(message: String) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White.copy(alpha = 0.88f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+    ) {
+        Text(
+            text = message,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF7A707A),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
 private fun SectionCard(
     title: String,
-    actionLabel: String,
-    onActionClick: (() -> Unit)?,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -665,13 +726,15 @@ private fun SectionCard(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF24161E)
                 )
-                Text(
-                    text = actionLabel,
-                    modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF7A707A)
-                )
+                if (actionLabel != null) {
+                    Text(
+                        text = actionLabel,
+                        modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF7A707A)
+                    )
+                }
             }
             content()
         }

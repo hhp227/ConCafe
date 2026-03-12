@@ -13,6 +13,7 @@ import org.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import org.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import org.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import org.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import org.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import org.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
@@ -21,6 +22,7 @@ import org.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import org.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import org.hhp227.concafe.domain.usecase.SignInUseCase
 import org.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -141,6 +143,13 @@ fun resolveGetMyInfoUseCase(): GetMyInfoUseCase {
     return koin.get()
 }
 
+fun resolveGetFanManagementDataUseCase(): GetFanManagementDataUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetRankingFeedUseCase(): GetRankingFeedUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -205,6 +214,13 @@ fun resolveObserveCafeDetailUseCase(): ObserveCafeDetailUseCase {
 }
 
 fun resolveObserveCafeCastVersionUseCase(): ObserveCafeCastVersionUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveObserveCastVersionUseCase(): ObserveCastVersionUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
