@@ -117,6 +117,8 @@ final class CafeDashboardViewModel: ObservableObject {
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
         case .menuGoods:
             event.send(.navigateToMenuGoods(cafeId: cafeId))
+        case .castSchedule:
+            event.send(.navigateToSchedule)
         case .castManagement:
             event.send(.navigateToCastEdit(cafeId: cafeId, castId: nil))
         default:

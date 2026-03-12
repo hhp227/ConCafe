@@ -31,10 +31,12 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateToMenuGoods(id: cafeId))
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
+            case .navigateToSchedule:
+                onNavigationAction(.navigateToSchedule)
             }
         }
     }
-    
+
     init(
         cafeId: String,
         onNavigationAction: @escaping (NavigationAction) -> Void

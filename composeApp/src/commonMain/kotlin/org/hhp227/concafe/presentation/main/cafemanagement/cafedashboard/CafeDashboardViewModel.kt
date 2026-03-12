@@ -138,6 +138,11 @@ class CafeDashboardViewModel(
                     _event.emit(CafeDashboardEvent.NavigateToCastEdit(cafeId = cafeId))
                 }
             }
+            CafeDashboardShortcut.CAST_SCHEDULE -> {
+                viewModelScope.launch {
+                    _event.emit(CafeDashboardEvent.NavigateToSchedule)
+                }
+            }
             else -> {
                 _uiState.update {
                     it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")

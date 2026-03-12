@@ -120,7 +120,7 @@ final class FanManagementViewModel: ObservableObject {
     private func clickQuickAction(_ quickAction: FanManagementUiState.QuickAction) {
         switch quickAction {
         case .workSchedule:
-            setInfoMessage("출근 관리 화면 연결은 다음 단계에서 구현합니다.")
+            event.send(.navigateToSchedule)
         }
     }
 

@@ -27,6 +27,8 @@ struct FanManagementView: View {
                 alertMessage = message
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
+            case .navigateToSchedule:
+                onNavigationAction(.navigateToSchedule)
             }
         }
         .alert(

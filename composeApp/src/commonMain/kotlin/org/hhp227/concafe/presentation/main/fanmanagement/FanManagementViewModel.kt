@@ -136,7 +136,9 @@ class FanManagementViewModel(
     private fun clickQuickAction(quickAction: FanManagementUiState.QuickAction) {
         when (quickAction) {
             FanManagementUiState.QuickAction.WORK_SCHEDULE -> {
-                setInfoMessage("출근 관리 화면 연결은 다음 단계에서 구현합니다.")
+                viewModelScope.launch {
+                    _event.emit(FanManagementEvent.NavigateToSchedule)
+                }
             }
         }
     }

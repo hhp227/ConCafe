@@ -66,6 +66,9 @@ fun CafeDashboardScreen(
                 is CafeDashboardEvent.NavigateToCastEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
                 }
+                CafeDashboardEvent.NavigateToSchedule -> {
+                    onNavigationAction(NavigationAction.NavigateToSchedule)
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDas
 import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
+import org.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import org.hhp227.concafe.presentation.notification.NotificationScreen
 import org.hhp227.concafe.presentation.settings.SettingsScreen
 
@@ -102,6 +103,11 @@ fun NavigationScreen(
             CastEditScreen(
                 cafeId = castEditRoute.cafeId,
                 castId = castEditRoute.castId,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.Schedule> {
+            ScheduleScreen(
                 onNavigationAction = viewModel::onAction
             )
         }

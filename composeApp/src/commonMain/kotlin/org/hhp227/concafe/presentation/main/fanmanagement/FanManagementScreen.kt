@@ -74,6 +74,9 @@ fun FanManagementScreen(
                         )
                     )
                 }
+                FanManagementEvent.NavigateToSchedule -> {
+                    onNavigationAction(NavigationAction.NavigateToSchedule)
+                }
             }
         }
     }
