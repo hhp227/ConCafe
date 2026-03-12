@@ -9,7 +9,7 @@ import Foundation
 
 struct ReviewEditUiState {
     var reviewId: String? = nil
-    var cafeId = "cafe-1"
+    var cafeId = ""
     var userId = "user-1"
     var visitId = "visit-1"
     var rating = 4
@@ -17,11 +17,12 @@ struct ReviewEditUiState {
     var images = PhotoItem.defaultItems
     var likeCount = 0
     var createdAt = ""
+    var isLoading = false
     var screenTitle = "리뷰 작성"
     var topActionLabel = "등록"
     var submitButtonLabel = "리뷰 등록하기"
-    var cafeName = "Starlight Melody Cafe"
-    var cafeAddress = "서울 강남구 테헤란로 123"
+    var cafeName = ""
+    var cafeAddress = ""
     var isVisitVerified = true
     var atmosphereAnswer: Bool? = nil
     var isSubmitting = false

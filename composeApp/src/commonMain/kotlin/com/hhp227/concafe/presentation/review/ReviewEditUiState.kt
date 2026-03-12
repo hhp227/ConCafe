@@ -2,7 +2,7 @@ package com.hhp227.concafe.presentation.review
 
 data class ReviewEditUiState(
     val reviewId: String? = null,
-    val cafeId: String = "cafe-1",
+    val cafeId: String = "",
     val userId: String = "user-1",
     val visitId: String = "visit-1",
     val rating: Int = 4,
@@ -10,11 +10,12 @@ data class ReviewEditUiState(
     val images: List<PhotoItem> = defaultPhotoItems,
     val likeCount: Int = 0,
     val createdAt: String = "",
+    val isLoading: Boolean = false,
     val screenTitle: String = "리뷰 작성",
     val topActionLabel: String = "등록",
     val submitButtonLabel: String = "리뷰 등록하기",
-    val cafeName: String = "Starlight Melody Cafe",
-    val cafeAddress: String = "서울 강남구 테헤란로 123",
+    val cafeName: String = "",
+    val cafeAddress: String = "",
     val isVisitVerified: Boolean = true,
     val atmosphereAnswer: Boolean? = null,
     val isSubmitting: Boolean = false,

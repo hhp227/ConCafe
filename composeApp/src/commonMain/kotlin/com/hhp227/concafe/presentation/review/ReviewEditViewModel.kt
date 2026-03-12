@@ -2,6 +2,8 @@ package com.hhp227.concafe.presentation.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -9,12 +11,56 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReviewEditViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(ReviewEditUiState())
+class ReviewEditViewModel(
+    private val cafeId: String? = null,
+    private val getCafeDetailUseCase: GetCafeDetailUseCase
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(
+        ReviewEditUiState(
+            cafeId = cafeId.orEmpty()
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<ReviewEditEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private fun loadCafeInfo() {
+        if (cafeId.isNullOrBlank()) {
+            _uiState.update { it.copy(infoMessage = "카페 정보를 찾을 수 없습니다.") }
+        } else {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    infoMessage = null
+                )
+            }
+            viewModelScope.launch {
+                when (val result = getCafeDetailUseCase.invoke(cafeId)) {
+                    is AppResult.Success -> {
+                        val detail = result.data.detail
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                cafeId = cafeId,
+                                cafeName = detail.cafe.name,
+                                cafeAddress = detail.cafe.region.address,
+                                infoMessage = null
+                            )
+                        }
+                    }
+                    is AppResult.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                infoMessage = "카페 정보를 불러오지 못했습니다."
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private fun clickBack() {
         viewModelScope.launch {
@@ -83,6 +129,10 @@ class ReviewEditViewModel : ViewModel() {
             ReviewEditAction.ClickSubmit -> clickSubmit()
             ReviewEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
+    }
+
+    init {
+        loadCafeInfo()
     }
 }
 

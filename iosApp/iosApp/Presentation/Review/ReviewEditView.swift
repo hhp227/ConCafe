@@ -12,7 +12,7 @@ struct ReviewEditView: View {
 
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = ReviewEditViewModel()
+    @StateObject private var viewModel: ReviewEditViewModel
 
     var body: some View {
         ReviewEditContentView(
@@ -33,6 +33,7 @@ struct ReviewEditView: View {
     ) {
         self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: ReviewEditViewModel(cafeId: cafeId))
     }
 }
 
@@ -46,7 +47,14 @@ private struct ReviewEditContentView: View {
             topBar
             ScrollView {
                 VStack(spacing: 0) {
-                    cafeInfoSection
+                    if uiState.isLoading {
+                        ProgressView()
+                            .tint(Color(hex: "EF6797"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 32)
+                    } else {
+                        cafeInfoSection
+                    }
                     ratingSection
                     reviewSection
                     photoSection

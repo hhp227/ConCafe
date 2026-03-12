@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -29,7 +32,17 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 fun ReviewEditScreen(
     cafeId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
-    viewModel: ReviewEditViewModel = viewModel()
+    viewModel: ReviewEditViewModel = viewModel(
+        key = "review-edit-${cafeId ?: "unknown"}",
+        factory = viewModelFactory {
+            initializer {
+                ReviewEditViewModel(
+                    cafeId = cafeId,
+                    getCafeDetailUseCase = resolveGetCafeDetailUseCase()
+                )
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -128,7 +141,18 @@ private fun ReviewEditContentScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 12.dp)
         ) {
-            CafeInfoSection(uiState = uiState)
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFEF6797))
+                }
+            } else {
+                CafeInfoSection(uiState = uiState)
+            }
             RatingSection(uiState = uiState, onAction = onAction)
             ReviewFormSection(uiState = uiState, onAction = onAction)
             PhotoSection(uiState = uiState, onAction = onAction)

@@ -7,12 +7,53 @@
 
 import Foundation
 import Combine
+import Shared
 
 @MainActor
 final class ReviewEditViewModel: ObservableObject {
     @Published private(set) var uiState = ReviewEditUiState()
 
     let event = PassthroughSubject<ReviewEditEvent, Never>()
+
+    private let cafeId: String?
+
+    private let getCafeDetailUseCase: GetCafeDetailUseCase
+
+    private var loadTask: Task<Void, Never>?
+
+    private func loadCafeInfo() {
+        if let cafeId, !cafeId.isEmpty {
+            loadTask?.cancel()
+            uiState.isLoading = true
+            uiState.infoMessage = nil
+            uiState.cafeId = cafeId
+
+            loadTask = Task {
+                do {
+                    let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
+
+                    if let success = result as? AppResultSuccess<AnyObject>,
+                       let feed = success.data as? CafeDetailFeed {
+                        let detail = feed.detail
+                        uiState.isLoading = false
+                        uiState.cafeId = cafeId
+                        uiState.cafeName = detail.cafe.name
+                        uiState.cafeAddress = detail.cafe.region.address
+                        uiState.infoMessage = nil
+                    } else {
+                        uiState.isLoading = false
+                        uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.isLoading = false
+                    uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                }
+            }
+        } else {
+            uiState.infoMessage = "카페 정보를 찾을 수 없습니다."
+        }
+    }
 
     private func clickAddPhoto() {
         if uiState.images.count >= ReviewEditUiState.maximumPhotoCount {
@@ -75,5 +116,20 @@ final class ReviewEditViewModel: ObservableObject {
             accentColorHex: accentColors[colorIndex],
             backgroundColorHex: backgroundColors[colorIndex]
         )
+    }
+
+    init(
+        cafeId: String? = nil,
+        getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase()
+    ) {
+        self.cafeId = cafeId
+        self.getCafeDetailUseCase = getCafeDetailUseCase
+        uiState.cafeId = cafeId ?? ""
+
+        loadCafeInfo()
+    }
+
+    deinit {
+        loadTask?.cancel()
     }
 }
