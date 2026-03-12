@@ -8,5 +8,12 @@
 import Foundation
 
 enum ReviewEditAction {
-    
+    case clickBack
+    case selectRating(Int)
+    case clickAddPhoto
+    case removePhoto(String)
+    case changeReviewText(String)
+    case selectAtmosphereAnswer(Bool)
+    case clickSubmit
+    case dismissInfoMessage
 }

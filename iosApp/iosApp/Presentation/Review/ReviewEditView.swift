@@ -8,8 +8,369 @@
 import SwiftUI
 
 struct ReviewEditView: View {
+    let onNavigationAction: (NavigationAction) -> Void
+
+    @StateObject private var viewModel = ReviewEditViewModel()
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ReviewEditContentView(
+            uiState: viewModel.uiState,
+            onAction: viewModel.onAction
+        )
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateBack:
+                onNavigationAction(.navigateBack)
+            }
+        }
+    }
+
+    init(
+        onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
+    ) {
+        self.onNavigationAction = onNavigationAction
+    }
+}
+
+private struct ReviewEditContentView: View {
+    let uiState: ReviewEditUiState
+
+    let onAction: (ReviewEditAction) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            topBar
+            ScrollView {
+                VStack(spacing: 0) {
+                    cafeInfoSection
+                    ratingSection
+                    photoSection
+                    reviewSection
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(message: infoMessage)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                    }
+                }
+                .padding(.bottom, 12)
+            }
+            bottomBar
+        }
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .background(Color(hex: "F8F5F6"))
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 12) {
+            Button {
+                onAction(.clickBack)
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color(hex: "24161E"))
+                    .frame(width: 40, height: 40)
+                    .background(Color.white.opacity(0.9))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            Text(uiState.screenTitle)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "24161E"))
+                .frame(maxWidth: .infinity)
+            Button {
+                onAction(.clickSubmit)
+            } label: {
+                Text(uiState.topActionLabel)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+        .background(Color.white.opacity(0.95))
+    }
+
+    private var cafeInfoSection: some View {
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "FFE5EE"), Color(hex: "F4C6D5")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 68, height: 68)
+                .overlay {
+                    Text("Cafe")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color(hex: "8A5C71"))
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 2)
+                )
+            VStack(alignment: .leading, spacing: 4) {
+                if uiState.isVisitVerified {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.caption)
+                        Text("방문 인증됨")
+                            .font(.caption.weight(.bold))
+                    }
+                    .foregroundStyle(Color(hex: "EF6797"))
+                }
+                Text(uiState.cafeName)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color(hex: "24161E"))
+                Text(uiState.cafeAddress)
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "7A707A"))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 20)
+        .background(Color(hex: "FFD1DC").opacity(0.1))
+    }
+
+    private var ratingSection: some View {
+        VStack(spacing: 10) {
+            Text("카페 경험은 어떠셨나요?")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+            HStack(spacing: 6) {
+                ForEach(1...ReviewEditUiState.maximumRating, id: \.self) { index in
+                    let isSelected = index <= uiState.rating
+                    Image(systemName: isSelected ? "star.fill" : "star")
+                        .font(.system(size: 34))
+                        .foregroundStyle(isSelected ? Color(hex: "FFC94D") : Color(hex: "E9DDE1"))
+                        .onTapGesture {
+                            onAction(.selectRating(index))
+                        }
+                }
+            }
+            Text(uiState.ratingMessage)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Color(hex: "EF6797"))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 24)
+        .background(Color.white)
+    }
+
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("사진 등록 \(uiState.photoItems.count)/\(ReviewEditUiState.maximumPhotoCount)")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    Button {
+                        onAction(.clickAddPhoto)
+                    } label: {
+                        VStack(spacing: 6) {
+                            Image(systemName: "camera.badge.plus")
+                                .font(.title2)
+                            Text("사진 추가")
+                                .font(.caption.weight(.bold))
+                        }
+                        .foregroundStyle(Color(hex: "EF6797"))
+                        .frame(width: 96, height: 96)
+                        .background(Color(hex: "FFD1DC").opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
+                                .foregroundStyle(Color(hex: "FFD1DC").opacity(0.7))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    ForEach(uiState.photoItems) { item in
+                        ZStack(alignment: .topTrailing) {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(hex: item.backgroundColorHex),
+                                            Color(hex: item.accentColorHex).opacity(0.35)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 96, height: 96)
+                                .overlay {
+                                    Text(item.label)
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(Color(hex: item.accentColorHex))
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 8)
+                                }
+                            Button {
+                                onAction(.removePhoto(item.id))
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 22, height: 22)
+                                    .background(Color.black.opacity(0.72))
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .offset(x: 6, y: -6)
+                        }
+                        .padding(.top, 6)
+                        .padding(.trailing, 6)
+                    }
+                }
+                .padding(.horizontal, 1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 24)
+        .background(Color.white)
+    }
+
+    private var reviewSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("상세 리뷰")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+            ConCafeFormEditor(
+                label: "",
+                text: Binding(
+                    get: { uiState.reviewText },
+                    set: { onAction(.changeReviewText($0)) }
+                ),
+                placeholder: "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)"
+            )
+            Text("\(uiState.reviewLength)/\(ReviewEditUiState.minimumReviewLength)자 이상")
+                .font(.caption)
+                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : Color(hex: "9A8D95"))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            atmosphereCard
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 24)
+        .background(Color.white)
+    }
+
+    private var atmosphereCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(Color(hex: "FFD1DC").opacity(0.1))
+                    .frame(width: 34, height: 34)
+                    .overlay {
+                        Image(systemName: "face.smiling")
+                            .foregroundStyle(Color(hex: "EF6797"))
+                    }
+                Text("분위기가 좋았나요?")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color(hex: "2B2330"))
+            }
+            HStack(spacing: 8) {
+                answerChip(
+                    title: "네",
+                    isSelected: uiState.atmosphereAnswer == true,
+                    action: { onAction(.selectAtmosphereAnswer(true)) }
+                )
+                answerChip(
+                    title: "아니요",
+                    isSelected: uiState.atmosphereAnswer == false,
+                    action: { onAction(.selectAtmosphereAnswer(false)) }
+                )
+            }
+        }
+        .padding(16)
+        .background(Color(hex: "F8F5F6"))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var bottomBar: some View {
+        Button {
+            onAction(.clickSubmit)
+        } label: {
+            HStack {
+                if uiState.isSubmitting {
+                    ProgressView()
+                        .tint(Color(hex: "2B2330"))
+                } else {
+                    Text(uiState.submitButtonLabel)
+                        .fontWeight(.bold)
+                }
+            }
+            .foregroundStyle(uiState.isSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!uiState.isSubmitEnabled)
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, 14)
+        .background(Color.white.opacity(0.96))
+    }
+
+    private func answerChip(
+        title: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "8E7F88"))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 9)
+                .background(isSelected ? Color(hex: "FFD1DC") : Color.white)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color(hex: "FFD1DC") : Color(hex: "D9CFD5"), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func infoBanner(message: String) -> some View {
+        HStack(spacing: 12) {
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "6B5320"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                onAction(.dismissInfoMessage)
+            } label: {
+                Text("닫기")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color(hex: "6B5320"))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color(hex: "FFF6D7"))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+        )
     }
 }
 
