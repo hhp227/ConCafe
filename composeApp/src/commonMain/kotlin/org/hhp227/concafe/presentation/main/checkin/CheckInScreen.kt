@@ -39,6 +39,7 @@ import org.hhp227.concafe.domain.model.CheckInCafeSummary
 import org.hhp227.concafe.domain.model.CheckInCastSummary
 import org.hhp227.concafe.domain.model.CheckInVisitEntry
 import org.hhp227.concafe.presentation.component.CafeSummaryCard
+import org.hhp227.concafe.presentation.component.ConCafeFormField
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -661,41 +662,29 @@ private fun NewVisitCheckInBottomSheet(
         )
         if (cafeOptions.isEmpty()) {
             Text("현재 선택 가능한 카페가 없습니다.")
-            TextField(
+            ConCafeFormField(
+                label = "카페 선택",
                 value = "",
                 onValueChange = {},
+                placeholder = "선택 가능한 카페가 없습니다.",
                 readOnly = true,
-                enabled = false,
-                label = { Text("카페 선택") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                enabled = false
             )
         } else {
-            Text(
-                text = "카페 선택",
-                style = MaterialTheme.typography.labelMedium
-            )
             Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
+                ConCafeFormField(
+                    label = "카페 선택",
                     value = selectedCafeName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("카페 선택") },
-                    trailingIcon = {
+                    modifier = Modifier.onSizeChanged { cafeDropdownWidth = it.width },
+                    trailingContent = {
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "카페 선택",
                             modifier = Modifier.size(20.dp)
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onSizeChanged { cafeDropdownWidth = it.width }
-                        .clickable(
-                            interactionSource = MutableInteractionSource(),
-                            indication = null
-                        ) { isCafeDropdownExpanded = true },
-                    shape = RoundedCornerShape(16.dp)
+                    }
                 )
                 Box(
                     modifier = Modifier
@@ -728,22 +717,29 @@ private fun NewVisitCheckInBottomSheet(
                 }
             }
         }
-        Text(
-            text = "방문 시간",
-            style = MaterialTheme.typography.labelMedium
-        )
-        OutlinedTextField(
-            value = formatVisitTime(visitHour, visitMinute),
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    interactionSource = MutableInteractionSource(),
-                    indication = null
-                ) { isTimePickerVisible = true },
-            shape = RoundedCornerShape(16.dp)
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            ConCafeFormField(
+                label = "방문 시간",
+                value = formatVisitTime(visitHour, visitMinute),
+                onValueChange = {},
+                readOnly = true,
+                trailingContent = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "방문 시간 선택",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { isTimePickerVisible = true }
+            )
+        }
         if (isTimePickerVisible) {
             val timePickerState = rememberTimePickerState(
                 initialHour = visitHour,
@@ -773,18 +769,14 @@ private fun NewVisitCheckInBottomSheet(
                 }
             )
         }
-        Text(
-            text = "메모 (선택)",
-            style = MaterialTheme.typography.labelMedium
-        )
-        OutlinedTextField(
+        ConCafeFormField(
+            label = "메모 (선택)",
             value = memo,
             onValueChange = { memo = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(16.dp),
-            minLines = 4
+            placeholder = "방문 후기를 남겨보세요.",
+            modifier = Modifier.height(120.dp),
+            minLines = 4,
+            singleLine = false
         )
         Button(
             enabled = selectedCafeId.isNotBlank(),
