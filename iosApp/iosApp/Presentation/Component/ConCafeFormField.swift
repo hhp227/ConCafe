@@ -28,7 +28,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
                 .foregroundStyle(Color(hex: "665A63"))
             HStack(spacing: 8) {
                 leadingContent()
-                TextField("", text: $text, prompt: placeholderText)
+                TextField("", text: $text, prompt: placeholderText as? Text)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .allowsHitTesting(isEditable)

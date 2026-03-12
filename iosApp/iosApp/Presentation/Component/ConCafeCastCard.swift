@@ -70,6 +70,8 @@ struct ConCafeCastCard: View {
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7E7E7E"))
                     .lineLimit(subtitleLineLimit)
+                    .frame(minHeight: subtitleLineLimit == 2 ? 28 : nil, alignment: .topLeading)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let metaText, !metaText.isEmpty {
                     Text(metaText)
                         .font(.caption)

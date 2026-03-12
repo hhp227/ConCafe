@@ -27,8 +27,8 @@ struct CafeCastView: View {
                         ConCafeCastCard(
                             name: maid.cast.name,
                             subtitle: maid.cast.desc,
-                            isWorking: maid.isWorking,
                             subtitleLineLimit: 2,
+                            isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
                         .onAppear {
