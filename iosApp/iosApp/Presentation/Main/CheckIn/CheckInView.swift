@@ -610,8 +610,8 @@ private struct CheckInLoginPromptSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color(hex: "EF6797"))
-            .foregroundStyle(.white)
+            .background(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
             Spacer()
@@ -739,8 +739,8 @@ private struct CheckInNewVisitSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color(hex: "EF6797"))
-            .foregroundStyle(.white)
+            .background(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
             .font(.headline.weight(.bold))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .disabled(selectedCafeId == nil)

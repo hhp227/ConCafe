@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.hhp227.concafe.domain.model.Cafe
+import org.hhp227.concafe.presentation.component.ConCafeCastCard
 import org.hhp227.concafe.presentation.component.colorFromHex
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -180,36 +181,13 @@ fun HomeContentScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 items(uiState.popularCasts) { maid ->
-                    Column(
-                        modifier = Modifier
-                            .width(132.dp)
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(screenBackgroundColor)
-                            .clickable { onAction(HomeAction.ClickMaid(maid.id)) }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(130.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Brush.verticalGradient(listOf(Color(0xFFFFDCE8), Color(0xFFFFC4D8))))
-                        )
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Text(maid.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(
-                                cafeNameById[maid.cafeId] ?: maid.cafeId,
-                                color = Color(0xFF7E7E7E),
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                "👥 ${maid.followerCount}",
-                                color = Color(0xFFEF6797),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
+                    ConCafeCastCard(
+                        name = maid.name,
+                        subtitle = cafeNameById[maid.cafeId] ?: maid.cafeId,
+                        modifier = Modifier.width(132.dp),
+                        metaText = "👥 ${maid.followerCount}",
+                        onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
+                    )
                 }
             }
         }

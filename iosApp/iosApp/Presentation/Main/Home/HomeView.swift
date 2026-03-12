@@ -111,30 +111,13 @@ private struct HomeContentView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(uiState.popularCasts, id: \.id) { maid in
-                        VStack(alignment: .leading, spacing: 0) {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(LinearGradient(colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 132, height: 130)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(maid.name)
-                                    .font(.subheadline.weight(.semibold))
-                                    .lineLimit(1)
-                                Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                Text("👥 \(maid.followerCount)")
-                                    .font(.caption)
-                                    .foregroundStyle(Color(hex: "EF6797"))
-                            }
-                            .padding(10)
-                        }
+                        ConCafeCastCard(
+                            name: maid.name,
+                            subtitle: cafeNameById[maid.cafeId] ?? maid.cafeId,
+                            metaText: "👥 \(maid.followerCount)",
+                            onTap: { onAction(.maidTapped(id: maid.id)) }
+                        )
                         .frame(width: 132, alignment: .leading)
-                        .background(Color(hex: "FFF9FC"))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .onTapGesture {
-                            onAction(.maidTapped(id: maid.id))
-                        }
                     }
                 }
                 .padding(.horizontal, 16)
