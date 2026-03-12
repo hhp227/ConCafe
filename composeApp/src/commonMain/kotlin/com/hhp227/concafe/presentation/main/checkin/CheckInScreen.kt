@@ -34,7 +34,9 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
 import com.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
 import com.hhp227.concafe.di.resolveCreateVisitUseCase
+import com.hhp227.concafe.di.resolveDismissReviewPromptUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
@@ -52,7 +54,9 @@ fun CheckInScreen(
                     getCheckInGuestFeedUseCase = resolveGetCheckInGuestFeedUseCase(),
                     getCheckInUserFeedUseCase = resolveGetCheckInUserFeedUseCase(),
                     createVisitUseCase = resolveCreateVisitUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
+                    shouldShowReviewPromptUseCase = resolveShouldShowReviewPromptUseCase(),
+                    dismissReviewPromptUseCase = resolveDismissReviewPromptUseCase()
                 )
             }
         }
@@ -66,6 +70,7 @@ fun CheckInScreen(
             when (event) {
                 is CheckInEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is CheckInEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+                is CheckInEvent.NavigateToReviewEdit -> onNavigate(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 CheckInEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
             }
         }
@@ -106,6 +111,18 @@ fun CheckInScreen(
                         )
                     },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
+                )
+            }
+        }
+        uiState.reviewPrompt?.let { prompt ->
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissReviewPrompt) },
+                containerColor = Color.White
+            ) {
+                ReviewPromptBottomSheet(
+                    cafeName = prompt.cafeName,
+                    onWriteReview = { viewModel.onAction(CheckInAction.ClickWriteReviewPrompt) },
+                    onDismiss = { viewModel.onAction(CheckInAction.DismissReviewPrompt) }
                 )
             }
         }
@@ -155,6 +172,49 @@ private fun CheckInNewVisitDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ReviewPromptBottomSheet(
+    cafeName: String,
+    onWriteReview: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            text = "리뷰를 작성하면 어떠세요?",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "$cafeName 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.",
+            color = Color(0xFF6F6670),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Button(
+            onClick = onWriteReview,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330)
+            )
+        ) {
+            Text("지금 작성", fontWeight = FontWeight.Bold)
+        }
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("나중에")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

@@ -35,9 +35,9 @@ class CreateReviewUseCase(
                     userId = currentUser.id,
                     cursor = null,
                     pageSize = 50
-                ).items.firstOrNull { item ->
-                    item.cafeId == cafeId && item.verified
-                }
+                ).items
+                    .filter { item -> item.cafeId == cafeId && item.verified }
+                    .maxByOrNull { item -> item.visitedAt }
 
                 if (visit == null) {
                     AppResult.Failure(AppError.PermissionDenied)

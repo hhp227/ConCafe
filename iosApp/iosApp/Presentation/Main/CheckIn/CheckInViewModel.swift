@@ -19,6 +19,10 @@ final class CheckInViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase
+
+    private let dismissReviewPromptUseCase: DismissReviewPromptUseCase
+
     @Published private(set) var uiState = CheckInUiState.empty
 
     let event = PassthroughSubject<CheckInEvent, Never>()
@@ -93,6 +97,9 @@ final class CheckInViewModel: ObservableObject {
                 self.uiState.currentUser = user
                 self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
                 self.uiState.isNewVisitSheetVisible = false
+                if user == nil {
+                    self.uiState.reviewPrompt = nil
+                }
 
                 if user == nil {
                     self.uiState.todayVisits = []
@@ -124,6 +131,10 @@ final class CheckInViewModel: ObservableObject {
             uiState.isLoginPromptVisible = false
         case .dismissNewVisitSheet:
             uiState.isNewVisitSheetVisible = false
+        case .dismissReviewPrompt:
+            dismissReviewPrompt()
+        case .writeReviewPromptTapped:
+            writeReviewPrompt()
         case .submitNewVisit(let cafeId, let visitedAt, let memo):
             submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
         }
@@ -156,6 +167,10 @@ final class CheckInViewModel: ObservableObject {
                     uiState.isNewVisitSheetVisible = false
                     uiState.errorMessage = nil
                     loadUserFeed()
+                    if let success = result as? AppResultSuccess<AnyObject>,
+                       let visit = success.data as? Visit {
+                        await maybeShowReviewPrompt(visit: visit)
+                    }
                 } else if let failure = result as? AppResultFailure {
                     uiState.errorMessage = "\(failure.error)"
                 } else {
@@ -168,16 +183,63 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func maybeShowReviewPrompt(visit: Visit) async {
+        guard visit.verified else { return }
+
+        do {
+            let result = try await shouldShowReviewPromptUseCase.invoke(visitId: visit.id)
+            guard let success = result as? AppResultSuccess<AnyObject>,
+                  let shouldShow = success.data as? NSNumber,
+                  shouldShow.boolValue else { return }
+
+            let cafeName =
+                uiState.mapCafes.first(where: { $0.id == visit.cafeId })?.name ??
+                uiState.popularCafes.first(where: { $0.id == visit.cafeId })?.name ??
+                uiState.todayVisits.first(where: { $0.cafeId == visit.cafeId })?.cafeName ??
+                uiState.recentVisits.first(where: { $0.cafeId == visit.cafeId })?.cafeName ??
+                "방문한 카페"
+
+            uiState.reviewPrompt = CheckInUiState.ReviewPrompt(
+                visitId: visit.id,
+                cafeId: visit.cafeId,
+                cafeName: cafeName
+            )
+        } catch {
+            return
+        }
+    }
+
+    private func dismissReviewPrompt() {
+        guard let prompt = uiState.reviewPrompt else { return }
+        Task {
+            _ = try? await dismissReviewPromptUseCase.invoke(visitId: prompt.visitId)
+            uiState.reviewPrompt = nil
+        }
+    }
+
+    private func writeReviewPrompt() {
+        guard let prompt = uiState.reviewPrompt else { return }
+        Task {
+            _ = try? await dismissReviewPromptUseCase.invoke(visitId: prompt.visitId)
+            uiState.reviewPrompt = nil
+            event.send(.navigateToReviewEdit(cafeId: prompt.cafeId))
+        }
+    }
+
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
+        dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
+        self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
 
         observeSession()
         loadGuestFeed()

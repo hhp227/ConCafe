@@ -5,5 +5,7 @@ sealed interface CheckInEvent {
 
     data class NavigateToCast(val id: String) : CheckInEvent
 
+    data class NavigateToReviewEdit(val cafeId: String) : CheckInEvent
+
     data object NavigateToSignIn : CheckInEvent
 }

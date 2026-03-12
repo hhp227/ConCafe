@@ -385,6 +385,8 @@ class MockConCafeDataSource : ConCafeDataSource {
         "user-8" to mutableSetOf("maid-1")
     )
 
+    override val dismissedReviewPromptVisitIdsByUser = mutableMapOf<String, MutableSet<String>>()
+
     override val ownedCafeIdsByUser = mapOf(
         "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
     )

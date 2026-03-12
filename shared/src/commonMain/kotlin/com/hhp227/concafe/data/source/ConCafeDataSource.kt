@@ -44,6 +44,8 @@ interface ConCafeDataSource {
 
     val followedCastIdsByUser: MutableMap<String, MutableSet<String>>
 
+    val dismissedReviewPromptVisitIdsByUser: MutableMap<String, MutableSet<String>>
+
     val ownedCafeIdsByUser: Map<String, List<String>>
 
     val pendingCafeClaimsByUser: Map<String, List<CafeManagementData.PendingClaimSummary>>

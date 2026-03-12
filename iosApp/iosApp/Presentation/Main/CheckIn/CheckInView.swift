@@ -62,12 +62,32 @@ struct CheckInView: View {
             )
             .compatLargeSheetDetent()
         }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.uiState.reviewPrompt != nil },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissReviewPrompt)
+                    }
+                }
+            )
+        ) {
+            if let prompt = viewModel.uiState.reviewPrompt {
+                CheckInReviewPromptSheet(
+                    cafeName: prompt.cafeName,
+                    onAction: viewModel.onAction
+                )
+                .compatLargeSheetDetent()
+            }
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
+            case .navigateToReviewEdit(let cafeId):
+                onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             }
@@ -619,6 +639,47 @@ private struct CheckInLoginPromptSheet: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 24)
         .background(Color.white)
+    }
+}
+
+private struct CheckInReviewPromptSheet: View {
+    let cafeName: String
+
+    let onAction: (CheckInAction) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("리뷰를 작성하면 어떠세요?")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color(hex: "24161E"))
+            Text("\(cafeName) 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.")
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "6F6670"))
+            Button {
+                onAction(.writeReviewPromptTapped)
+            } label: {
+                Text("지금 작성")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color(hex: "2B2330"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(hex: "FFD1DC"))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            Button {
+                onAction(.dismissReviewPrompt)
+            } label: {
+                Text("나중에")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(20)
+        .presentationDragIndicator(.visible)
     }
 }
 

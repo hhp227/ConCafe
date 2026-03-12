@@ -46,6 +46,19 @@ class FakeReviewRepository(
         return review
     }
 
+    override suspend fun hasReviewForVisit(visitId: String): Boolean {
+        return dataSource.reviews.any { it.visitId == visitId }
+    }
+
+    override suspend fun isReviewPromptDismissed(userId: String, visitId: String): Boolean {
+        return dataSource.dismissedReviewPromptVisitIdsByUser[userId]?.contains(visitId) == true
+    }
+
+    override suspend fun dismissReviewPrompt(userId: String, visitId: String) {
+        val dismissedVisitIds = dataSource.dismissedReviewPromptVisitIdsByUser.getOrPut(userId) { mutableSetOf() }
+        dismissedVisitIds.add(visitId)
+    }
+
     override suspend fun likeReview(userId: String, reviewId: String) {
         val index = dataSource.reviews.indexOfFirst { it.id == reviewId }
 

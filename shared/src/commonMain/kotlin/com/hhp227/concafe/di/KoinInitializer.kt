@@ -2,6 +2,7 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
@@ -27,6 +28,7 @@ import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
@@ -119,6 +121,13 @@ fun resolveCreateReviewUseCase(): CreateReviewUseCase {
 }
 
 fun resolveDeleteCafeMenuGoodsUseCase(): DeleteCafeMenuGoodsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDismissReviewPromptUseCase(): DismissReviewPromptUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -245,6 +254,13 @@ fun resolveObserveCafeCastVersionUseCase(): ObserveCafeCastVersionUseCase {
 }
 
 fun resolveObserveCastVersionUseCase(): ObserveCastVersionUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveShouldShowReviewPromptUseCase(): ShouldShowReviewPromptUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
