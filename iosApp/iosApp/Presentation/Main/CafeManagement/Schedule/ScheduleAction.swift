@@ -8,5 +8,11 @@
 import Foundation
 
 enum ScheduleAction {
-    
+    case clickBack
+    case clickMore
+    case clickCalendar
+    case selectDay(id: String)
+    case clickEditDay(id: String)
+    case clickSave
+    case dismissInfoMessage
 }

@@ -1,4 +1,6 @@
 package org.hhp227.concafe.presentation.main.cafemanagement.schedule
 
-class ScheduleEvent {
+sealed interface ScheduleEvent {
+    data object NavigateBack : ScheduleEvent
+    data class ShowMessage(val message: String) : ScheduleEvent
 }
