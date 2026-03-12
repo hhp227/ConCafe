@@ -6,6 +6,7 @@ sealed interface ReviewEditAction {
     data object ClickAddPhoto : ReviewEditAction
     data class RemovePhoto(val photoId: String) : ReviewEditAction
     data class ChangeReviewText(val value: String) : ReviewEditAction
+    data class ToggleCastTag(val castId: String) : ReviewEditAction
     data class SelectAtmosphereAnswer(val isPositive: Boolean) : ReviewEditAction
     data object ClickSubmit : ReviewEditAction
     data object DismissInfoMessage : ReviewEditAction

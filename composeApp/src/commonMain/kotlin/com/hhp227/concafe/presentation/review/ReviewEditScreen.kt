@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveCreateReviewUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -38,7 +39,8 @@ fun ReviewEditScreen(
             initializer {
                 ReviewEditViewModel(
                     cafeId = cafeId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase()
+                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
+                    createReviewUseCase = resolveCreateReviewUseCase()
                 )
             }
         }
@@ -347,10 +349,63 @@ private fun ReviewFormSection(
             },
             style = MaterialTheme.typography.labelMedium
         )
+        if (uiState.availableCastTags.isNotEmpty()) {
+            CastTagSection(
+                availableCastTags = uiState.availableCastTags,
+                taggedCastIds = uiState.taggedCastIds,
+                onToggle = { onAction(ReviewEditAction.ToggleCastTag(it)) }
+            )
+        }
         AtmosphereQuestionCard(
             isSelected = uiState.atmosphereAnswer,
             onSelect = { onAction(ReviewEditAction.SelectAtmosphereAnswer(it)) }
         )
+    }
+}
+
+@Composable
+private fun CastTagSection(
+    availableCastTags: List<ReviewEditUiState.CastTag>,
+    taggedCastIds: List<String>,
+    onToggle: (String) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = "함께 언급한 캐스트",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF665A63),
+            fontWeight = FontWeight.Medium
+        )
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            availableCastTags.forEach { cast ->
+                val selected = taggedCastIds.contains(cast.id)
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (selected) Color(0xFFFFD1DC) else Color(0x1AFFD1DC))
+                        .border(
+                            width = 1.dp,
+                            color = if (selected) Color(0xFFFFD1DC) else Color(0x33FFD1DC),
+                            shape = RoundedCornerShape(999.dp)
+                        )
+                        .clickable { onToggle(cast.id) }
+                        .padding(horizontal = 14.dp, vertical = 9.dp)
+                ) {
+                    Text(
+                        text = cast.name,
+                        color = if (selected) Color(0xFF2B2330) else Color(0xFF6E6169),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
 

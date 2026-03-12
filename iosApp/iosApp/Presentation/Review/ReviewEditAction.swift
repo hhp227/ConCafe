@@ -13,6 +13,7 @@ enum ReviewEditAction {
     case clickAddPhoto
     case removePhoto(String)
     case changeReviewText(String)
+    case toggleCastTag(String)
     case selectAtmosphereAnswer(Bool)
     case clickSubmit
     case dismissInfoMessage

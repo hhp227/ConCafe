@@ -2,7 +2,9 @@ package com.hhp227.concafe.presentation.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class ReviewEditViewModel(
     private val cafeId: String? = null,
-    private val getCafeDetailUseCase: GetCafeDetailUseCase
+    private val getCafeDetailUseCase: GetCafeDetailUseCase,
+    private val createReviewUseCase: CreateReviewUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ReviewEditUiState(
@@ -45,6 +48,12 @@ class ReviewEditViewModel(
                                 cafeId = cafeId,
                                 cafeName = detail.cafe.name,
                                 cafeAddress = detail.cafe.region.address,
+                                availableCastTags = detail.casts.map { cast ->
+                                    ReviewEditUiState.CastTag(
+                                        id = cast.id,
+                                        name = cast.name
+                                    )
+                                },
                                 infoMessage = null
                             )
                         }
@@ -92,6 +101,19 @@ class ReviewEditViewModel(
         }
     }
 
+    private fun toggleCastTag(castId: String) {
+        _uiState.update { state ->
+            val nextIds = state.taggedCastIds.toMutableList().apply {
+                if (contains(castId)) {
+                    remove(castId)
+                } else {
+                    add(castId)
+                }
+            }
+            state.copy(taggedCastIds = nextIds)
+        }
+    }
+
     private fun clickSubmit() {
         val currentState = _uiState.value
 
@@ -103,10 +125,46 @@ class ReviewEditViewModel(
             _uiState.update {
                 it.copy(
                     isSubmitting = true,
-                    infoMessage = "리뷰 등록은 다음 단계에서 연결됩니다."
+                    infoMessage = null
                 )
             }
-            _uiState.update { it.copy(isSubmitting = false) }
+            viewModelScope.launch {
+                when (
+                    val result = createReviewUseCase.invoke(
+                        cafeId = currentState.cafeId,
+                        rating = currentState.rating.toFloat(),
+                        content = currentState.content,
+                        imageUrls = emptyList(),
+                        taggedCastIds = currentState.taggedCastIds
+                    )
+                ) {
+                    is AppResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                reviewId = result.data.id,
+                                userId = result.data.userId,
+                                visitId = result.data.visitId,
+                                createdAt = result.data.createdAt
+                            )
+                        }
+                        _event.emit(ReviewEditEvent.NavigateBack)
+                    }
+                    is AppResult.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                infoMessage = when (val error = result.error) {
+                                    is AppError.PermissionDenied -> "방문 인증된 사용자만 리뷰를 작성할 수 있습니다."
+                                    is AppError.Unauthorized -> "리뷰 작성은 로그인 후 가능해요."
+                                    is AppError.ValidationFailed -> error.reason.toReviewValidationMessage()
+                                    else -> "리뷰 등록에 실패했습니다."
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -123,6 +181,7 @@ class ReviewEditViewModel(
             is ReviewEditAction.ChangeReviewText -> _uiState.update {
                 it.copy(content = action.value)
             }
+            is ReviewEditAction.ToggleCastTag -> toggleCastTag(action.castId)
             is ReviewEditAction.SelectAtmosphereAnswer -> _uiState.update {
                 it.copy(atmosphereAnswer = action.isPositive)
             }
@@ -147,4 +206,13 @@ private fun placeholderPhotoItem(index: Int): ReviewEditUiState.PhotoItem {
         accentColorHex = accentColors[colorIndex],
         backgroundColorHex = backgroundColors[colorIndex]
     )
+}
+
+private fun String.toReviewValidationMessage(): String {
+    return when (this) {
+        "cafeId is required" -> "카페 정보를 찾을 수 없습니다."
+        "rating is required" -> "평점을 선택해주세요."
+        "review content is required" -> "상세 리뷰를 입력해주세요."
+        else -> this
+    }
 }

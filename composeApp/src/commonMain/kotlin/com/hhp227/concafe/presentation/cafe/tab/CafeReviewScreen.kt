@@ -121,6 +121,21 @@ fun CafeReviewScreen(detail: CafeDetail, reviews: List<CafeDetailReview>) {
                                 )
                             }
                         }
+                        if (review.taggedCastNames.isNotEmpty()) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                review.taggedCastNames.forEach { castName ->
+                                    Text(
+                                        text = castName,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(Color(0x1AFFD1DC))
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                        color = colorFromHex("C9527E"),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                        }
                         Text(text = review.content)
                     }
                 }

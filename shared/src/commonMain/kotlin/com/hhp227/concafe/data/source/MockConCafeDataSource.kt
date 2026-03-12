@@ -298,8 +298,8 @@ class MockConCafeDataSource : ConCafeDataSource {
     }
 
     override val reviews = mutableListOf(
-        Review("review-1", "user-1", "cafe-1", 4.5f, "분위기가 좋아요", emptyList(), 3, "2026-03-03T10:00:00Z"),
-        Review("review-2", "user-1", "cafe-2", 5.0f, "친절하고 재밌었어요", emptyList(), 5, "2026-03-04T14:00:00Z")
+        Review("review-1", "user-1", "cafe-1", "visit-1", 4.5f, "분위기가 좋아요", emptyList(), listOf("maid-1", "maid-2"), 3, "2026-03-03T10:00:00Z"),
+        Review("review-2", "user-1", "cafe-2", "visit-2", 5.0f, "친절하고 재밌었어요", emptyList(), listOf("maid-3"), 5, "2026-03-04T14:00:00Z")
     )
 
     override val visits = mutableListOf(

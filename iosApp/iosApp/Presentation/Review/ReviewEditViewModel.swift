@@ -19,6 +19,8 @@ final class ReviewEditViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
+    private let createReviewUseCase: CreateReviewUseCase
+
     private var loadTask: Task<Void, Never>?
 
     private func loadCafeInfo() {
@@ -39,6 +41,9 @@ final class ReviewEditViewModel: ObservableObject {
                         uiState.cafeId = cafeId
                         uiState.cafeName = detail.cafe.name
                         uiState.cafeAddress = detail.cafe.region.address
+                        uiState.availableCastTags = detail.casts.map { cast in
+                            ReviewEditUiState.CastTag(id: cast.id, name: cast.name)
+                        }
                         uiState.infoMessage = nil
                     } else {
                         uiState.isLoading = false
@@ -71,6 +76,16 @@ final class ReviewEditViewModel: ObservableObject {
         }
     }
 
+    private func toggleCastTag(_ castId: String) {
+        if uiState.taggedCastIds.contains(castId) {
+            uiState.taggedCastIds.removeAll { currentId in
+                currentId == castId
+            }
+        } else {
+            uiState.taggedCastIds.append(castId)
+        }
+    }
+
     private func clickSubmit() {
         let reviewLength = uiState.content.trimmingCharacters(in: .whitespacesAndNewlines).count
 
@@ -80,8 +95,48 @@ final class ReviewEditViewModel: ObservableObject {
             uiState.infoMessage = "상세 리뷰는 최소 10자 이상 입력해주세요."
         } else {
             uiState.isSubmitting = true
-            uiState.infoMessage = "리뷰 등록은 다음 단계에서 연결됩니다."
-            uiState.isSubmitting = false
+            uiState.infoMessage = nil
+
+            loadTask?.cancel()
+            loadTask = Task {
+                do {
+                    let result = try await createReviewUseCase.invoke(
+                        cafeId: uiState.cafeId,
+                        rating: Float(uiState.rating),
+                        content: uiState.content,
+                        imageUrls: [],
+                        taggedCastIds: uiState.taggedCastIds
+                    )
+
+                    if let success = result as? AppResultSuccess<AnyObject>,
+                       let review = success.data as? Review {
+                        uiState.isSubmitting = false
+                        uiState.reviewId = review.id
+                        uiState.userId = review.userId
+                        uiState.visitId = review.visitId
+                        uiState.createdAt = review.createdAt
+                        event.send(.navigateBack)
+                    } else if let failure = result as? AppResultFailure {
+                        uiState.isSubmitting = false
+                        if failure.error is AppErrorPermissionDenied {
+                            uiState.infoMessage = "방문 인증된 사용자만 리뷰를 작성할 수 있습니다."
+                        } else if failure.error is AppErrorUnauthorized {
+                            uiState.infoMessage = "리뷰 작성은 로그인 후 가능해요."
+                        } else if let error = failure.error as? AppErrorValidationFailed {
+                            uiState.infoMessage = Self.reviewValidationMessage(for: error.reason)
+                        } else {
+                            uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                        }
+                    } else {
+                        uiState.isSubmitting = false
+                        uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.isSubmitting = false
+                    uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                }
+            }
         }
     }
 
@@ -97,6 +152,8 @@ final class ReviewEditViewModel: ObservableObject {
             removePhoto(photoId)
         case .changeReviewText(let value):
             uiState.content = value
+        case .toggleCastTag(let castId):
+            toggleCastTag(castId)
         case .selectAtmosphereAnswer(let isPositive):
             uiState.atmosphereAnswer = isPositive
         case .clickSubmit:
@@ -118,12 +175,27 @@ final class ReviewEditViewModel: ObservableObject {
         )
     }
 
+    private static func reviewValidationMessage(for reason: String) -> String {
+        switch reason {
+        case "cafeId is required":
+            return "카페 정보를 찾을 수 없습니다."
+        case "rating is required":
+            return "평점을 선택해주세요."
+        case "review content is required":
+            return "상세 리뷰를 입력해주세요."
+        default:
+            return reason
+        }
+    }
+
     init(
         cafeId: String? = nil,
-        getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase()
+        getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        createReviewUseCase: CreateReviewUseCase = KoinInitializerKt.resolveCreateReviewUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.createReviewUseCase = createReviewUseCase
         uiState.cafeId = cafeId ?? ""
 
         loadCafeInfo()

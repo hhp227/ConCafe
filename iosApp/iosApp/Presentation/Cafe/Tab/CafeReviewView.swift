@@ -62,6 +62,21 @@ struct CafeReviewView: View {
                                     .foregroundStyle(index < Int(review.rating) ? Color.yellow : Color(hex: "E1E1E1"))
                             }
                         }
+                        if !review.taggedCastNames.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 6) {
+                                    ForEach(review.taggedCastNames, id: \.self) { castName in
+                                        Text(castName)
+                                            .font(.caption2.weight(.semibold))
+                                            .foregroundStyle(Color(hex: "C9527E"))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 5)
+                                            .background(Color(hex: "FFD1DC").opacity(0.12))
+                                            .clipShape(Capsule())
+                                    }
+                                }
+                            }
+                        }
                         Text(review.content)
                             .font(.subheadline)
                     }

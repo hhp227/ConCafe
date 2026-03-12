@@ -273,6 +273,9 @@ private struct ReviewEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : Color(hex: "9A8D95"))
                 .frame(maxWidth: .infinity, alignment: .trailing)
+            if !uiState.availableCastTags.isEmpty {
+                castTagSection
+            }
             atmosphereCard
         }
         .padding(.horizontal, 16)
@@ -310,6 +313,38 @@ private struct ReviewEditContentView: View {
         .padding(16)
         .background(Color(hex: "F8F5F6"))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var castTagSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("함께 언급한 캐스트")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color(hex: "665A63"))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(uiState.availableCastTags) { cast in
+                        let selected = uiState.taggedCastIds.contains(cast.id)
+
+                        Button {
+                            onAction(.toggleCastTag(cast.id))
+                        } label: {
+                            Text(cast.name)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(selected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 9)
+                                .background(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.1))
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .stroke(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
     }
 
     private var bottomBar: some View {

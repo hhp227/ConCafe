@@ -9,6 +9,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
+import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
@@ -103,6 +104,13 @@ fun resolveGetCheckInGuestFeedUseCase(): GetCheckInGuestFeedUseCase {
 }
 
 fun resolveCreateVisitUseCase(): CreateVisitUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateReviewUseCase(): CreateReviewUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

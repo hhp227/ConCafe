@@ -16,9 +16,11 @@ class FakeReviewRepository(
     override suspend fun createReview(
         userId: String,
         cafeId: String,
+        visitId: String,
         rating: Float,
         content: String,
-        imageUrls: List<String>
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
     ): Review {
         if (content.isBlank()) {
             throw IllegalArgumentException("review content is required")
@@ -28,9 +30,11 @@ class FakeReviewRepository(
             id = "review-${dataSource.reviews.size + 1}",
             userId = userId,
             cafeId = cafeId,
+            visitId = visitId,
             rating = rating,
             content = content,
             imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds,
             likeCount = 0,
             createdAt = "2026-03-05T00:00:00Z"
         )

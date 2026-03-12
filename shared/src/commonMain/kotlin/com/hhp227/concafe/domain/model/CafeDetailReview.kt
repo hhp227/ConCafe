@@ -5,6 +5,7 @@ data class CafeDetailReview(
     val userNickname: String,
     val rating: Float,
     val content: String,
+    val taggedCastNames: List<String>,
     val likeCount: Int,
     val createdDate: String,
     val verified: Boolean

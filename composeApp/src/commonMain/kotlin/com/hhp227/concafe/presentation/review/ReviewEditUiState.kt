@@ -3,11 +3,13 @@ package com.hhp227.concafe.presentation.review
 data class ReviewEditUiState(
     val reviewId: String? = null,
     val cafeId: String = "",
-    val userId: String = "user-1",
-    val visitId: String = "visit-1",
-    val rating: Int = 4,
+    val userId: String = "",
+    val visitId: String = "",
+    val rating: Int = 0,
     val content: String = "",
-    val images: List<PhotoItem> = defaultPhotoItems,
+    val images: List<PhotoItem> = emptyList(),
+    val taggedCastIds: List<String> = emptyList(),
+    val availableCastTags: List<CastTag> = emptyList(),
     val likeCount: Int = 0,
     val createdAt: String = "",
     val isLoading: Boolean = false,
@@ -37,31 +39,15 @@ data class ReviewEditUiState(
         val backgroundColorHex: Long
     )
 
+    data class CastTag(
+        val id: String,
+        val name: String
+    )
+
     companion object {
         const val maximumRating = 5
         const val maximumPhotoCount = 10
         const val minimumReviewLength = 10
-
-        val defaultPhotoItems = listOf(
-            PhotoItem(
-                id = "photo-1",
-                label = "라떼 아트",
-                accentColorHex = 0xFFA65A74,
-                backgroundColorHex = 0xFFFFE3EC
-            ),
-            PhotoItem(
-                id = "photo-2",
-                label = "테이블 뷰",
-                accentColorHex = 0xFF6D4C68,
-                backgroundColorHex = 0xFFF8E4EC
-            ),
-            PhotoItem(
-                id = "photo-3",
-                label = "머신 존",
-                accentColorHex = 0xFF7D5A4F,
-                backgroundColorHex = 0xFFFFEBDD
-            )
-        )
 
         fun ratingToMessage(rating: Int): String {
             return when (rating) {

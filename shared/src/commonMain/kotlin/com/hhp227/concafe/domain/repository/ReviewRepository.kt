@@ -9,9 +9,11 @@ interface ReviewRepository {
     suspend fun createReview(
         userId: String,
         cafeId: String,
+        visitId: String,
         rating: Float,
         content: String,
-        imageUrls: List<String>
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
     ): Review
 
     suspend fun likeReview(userId: String, reviewId: String)

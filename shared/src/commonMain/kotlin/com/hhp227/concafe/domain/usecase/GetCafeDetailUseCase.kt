@@ -41,16 +41,19 @@ class GetCafeDetailUseCase(
             } else {
                 false
             }
+            val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
             val reviewItems = reviews.map { review ->
                 val user = userRepository.getUser(review.userId)
                 val visits = visitRepository.getVisits(userId = review.userId, cursor = null, pageSize = 20).items
                 val verified = visits.any { it.cafeId == cafeId && it.verified }
+                val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                 CafeDetailReview(
                     id = review.id,
                     userNickname = user.nickname,
                     rating = review.rating,
                     content = review.content,
+                    taggedCastNames = taggedCastNames,
                     likeCount = review.likeCount,
                     createdDate = review.createdAt.take(10),
                     verified = verified

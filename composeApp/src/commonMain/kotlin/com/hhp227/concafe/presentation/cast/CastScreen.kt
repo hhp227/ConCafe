@@ -607,7 +607,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "최근 방문 후기",
+            text = "함께 언급된 후기",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -632,15 +632,44 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = review.userNickname,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = review.userNickname,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "${review.rating}",
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(Color(0x1AFFD1DC))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = colorFromHex("EF6797"),
+                                        fontSize = 12.sp
+                                    )
+                                }
                                 Text(
                                     text = review.createdDateLabel,
                                     color = Color(0xFF8A8087),
                                     fontSize = 12.sp
                                 )
+                            }
+                            if (review.taggedCastNames.isNotEmpty()) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    review.taggedCastNames.forEach { castName ->
+                                        Text(
+                                            text = castName,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .background(Color(0x1AFFD1DC))
+                                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                                            color = colorFromHex("C9527E"),
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
                             }
                             Text(
                                 text = review.content,
@@ -669,12 +698,12 @@ private fun CastRecentReviewEmptyView() {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "아직 방문 후기가 없어요.",
+                text = "아직 함께 언급된 후기가 없어요.",
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF4E4750)
             )
             Text(
-                text = "첫 후기를 기다리고 있어요.",
+                text = "이 캐스트가 태그된 카페 리뷰가 표시됩니다.",
                 color = Color(0xFF8A8087),
                 fontSize = 12.sp
             )

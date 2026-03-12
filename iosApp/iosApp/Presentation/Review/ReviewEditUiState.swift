@@ -10,11 +10,13 @@ import Foundation
 struct ReviewEditUiState {
     var reviewId: String? = nil
     var cafeId = ""
-    var userId = "user-1"
-    var visitId = "visit-1"
-    var rating = 4
+    var userId = ""
+    var visitId = ""
+    var rating = 0
     var content = ""
-    var images = PhotoItem.defaultItems
+    var images: [PhotoItem] = []
+    var taggedCastIds: [String] = []
+    var availableCastTags: [CastTag] = []
     var likeCount = 0
     var createdAt = ""
     var isLoading = false
@@ -67,10 +69,10 @@ struct ReviewEditUiState {
         let accentColorHex: String
         let backgroundColorHex: String
 
-        static let defaultItems = [
-            PhotoItem(id: "photo-1", label: "라떼 아트", accentColorHex: "A65A74", backgroundColorHex: "FFE3EC"),
-            PhotoItem(id: "photo-2", label: "테이블 뷰", accentColorHex: "6D4C68", backgroundColorHex: "F8E4EC"),
-            PhotoItem(id: "photo-3", label: "머신 존", accentColorHex: "7D5A4F", backgroundColorHex: "FFEBDD")
-        ]
+    }
+
+    struct CastTag: Identifiable, Hashable {
+        let id: String
+        let name: String
     }
 }
