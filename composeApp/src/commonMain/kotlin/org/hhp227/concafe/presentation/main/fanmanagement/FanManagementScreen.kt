@@ -49,8 +49,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.hhp227.concafe.domain.model.CastSchedule
 import org.hhp227.concafe.domain.model.FanManagementData
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -123,13 +125,7 @@ private fun FanManagementContentScreen(
             uiState.fanManagementData == null -> {
                 EmptySectionCard(message = uiState.errorMessage ?: "로그인한 캐스트 정보를 찾을 수 없습니다.")
             }
-            else -> {
-                ProfileSummaryCard(
-                    fanManagementData = uiState.fanManagementData,
-                    onAction = onAction
-                )
-                StatsRow(stats = uiState.stats)
-            }
+            else -> Unit
         }
         if (uiState.infoMessage != null) {
             InfoBanner(
@@ -142,6 +138,9 @@ private fun FanManagementContentScreen(
         )
         QuickActionGrid(
             onActionClick = { onAction(FanManagementAction.ClickQuickAction(it)) }
+        )
+        WeeklyScheduleSection(
+            schedule = uiState.fanManagementData?.detail?.schedule.orEmpty()
         )
         RecentFollowersSection(
             followers = uiState.recentFollowers,
@@ -529,6 +528,110 @@ private fun RecentFollowersSection(
 }
 
 @Composable
+private fun WeeklyScheduleSection(
+    schedule: List<CastSchedule>
+) {
+    val weeklyStatus = rememberWeeklySchedule(schedule)
+
+    SectionCard(title = "주간 출근") {
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = Color.White.copy(alpha = 0.88f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x14FFD1DC)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = Color(0xFFEF6797),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "이번 주 스케줄",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF24161E)
+                        )
+                        Text(
+                            text = "출근 관리에서 일정을 바로 조정할 수 있습니다.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF7A707A)
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    weeklyStatus.forEach { item ->
+                        WeeklyScheduleItemCard(
+                            modifier = Modifier.weight(1f),
+                            dayLabel = item.dayLabel,
+                            isWorking = item.isWorking
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeeklyScheduleItemCard(
+    modifier: Modifier = Modifier,
+    dayLabel: String,
+    isWorking: Boolean
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = if (isWorking) Color(0xFFEF6797) else Color(0xFFFDF8FA),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isWorking) Color.Transparent else Color(0x1AFFD1DC)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = dayLabel,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isWorking) Color.White else Color(0xFF4E4750)
+            )
+            Text(
+                text = if (isWorking) "출근" else "휴무",
+                fontSize = 12.sp,
+                color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
+            )
+        }
+    }
+}
+
+@Composable
 private fun AddFollowerButton() {
     Column(
         modifier = Modifier.width(74.dp),
@@ -556,6 +659,53 @@ private fun AddFollowerButton() {
             color = Color(0xFF7A707A),
             textAlign = TextAlign.Center
         )
+    }
+}
+
+private data class WeeklyScheduleStatus(
+    val dayLabel: String,
+    val isWorking: Boolean
+)
+
+private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleStatus> {
+    val workingDays = schedule.mapNotNull { it.date.toWeekdayLabelOrNull() }.toSet()
+
+    return listOf("월", "화", "수", "목", "금", "토", "일").map { dayLabel ->
+        WeeklyScheduleStatus(
+            dayLabel = dayLabel,
+            isWorking = workingDays.contains(dayLabel)
+        )
+    }
+}
+
+private fun String.toWeekdayLabelOrNull(): String? {
+    val parts = split("-")
+    if (parts.size != 3) return null
+    val year = parts[0].toIntOrNull() ?: return null
+    val month = parts[1].toIntOrNull() ?: return null
+    val day = parts[2].toIntOrNull() ?: return null
+
+    return listOf("월", "화", "수", "목", "금", "토", "일").getOrNull(dayOfWeekIndex(year, month, day))
+}
+
+private fun dayOfWeekIndex(year: Int, month: Int, day: Int): Int {
+    var adjustedYear = year
+    var adjustedMonth = month
+    if (adjustedMonth < 3) {
+        adjustedMonth += 12
+        adjustedYear -= 1
+    }
+    val k = adjustedYear % 100
+    val j = adjustedYear / 100
+    val h = (day + (13 * (adjustedMonth + 1)) / 5 + k + (k / 4) + (j / 4) + (5 * j)) % 7
+    return when (h) {
+        2 -> 0
+        3 -> 1
+        4 -> 2
+        5 -> 3
+        6 -> 4
+        0 -> 5
+        else -> 6
     }
 }
 

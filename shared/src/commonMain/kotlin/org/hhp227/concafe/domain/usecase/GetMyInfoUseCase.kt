@@ -2,11 +2,14 @@ package org.hhp227.concafe.domain.usecase
 
 import org.hhp227.concafe.domain.common.AppError
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.model.CafeManagementData
 import org.hhp227.concafe.domain.model.CafeSort
 import org.hhp227.concafe.domain.model.CastSort
 import org.hhp227.concafe.domain.model.MyInfoFeed
 import org.hhp227.concafe.domain.model.ProfileBadge
+import org.hhp227.concafe.domain.model.UserRole
 import org.hhp227.concafe.domain.repository.AuthRepository
+import org.hhp227.concafe.domain.repository.CafeManagementRepository
 import org.hhp227.concafe.domain.repository.CafeRepository
 import org.hhp227.concafe.domain.repository.CastRepository
 import org.hhp227.concafe.domain.repository.UserRepository
@@ -14,6 +17,7 @@ import org.hhp227.concafe.domain.repository.UserRepository
 class GetMyInfoUseCase(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val cafeManagementRepository: CafeManagementRepository,
     private val cafeRepository: CafeRepository,
     private val castRepository: CastRepository
 ) {
@@ -35,6 +39,8 @@ class GetMyInfoUseCase(
                         isLoggedIn = false,
                         user = null,
                         summary = null,
+                        castDetail = null,
+                        ownedCafes = emptyList(),
                         badges = emptyList(),
                         popularCafes = popularCafes,
                         recentVisits = emptyList(),
@@ -44,6 +50,27 @@ class GetMyInfoUseCase(
                 )
             } else {
                 val summary = userRepository.getMyPageSummary(currentUser.id)
+                val castDetail = if (currentUser.role == UserRole.CAST) {
+                    castRepository.searchCasts(
+                        query = null,
+                        country = null,
+                        city = null,
+                        sort = CastSort.FOLLOWERS,
+                        cursor = null,
+                        pageSize = 100
+                    ).items.firstOrNull { cast ->
+                        cast.linkedUserId == currentUser.id
+                    }?.id?.let { castId ->
+                        castRepository.getCastDetail(castId)
+                    }
+                } else {
+                    null
+                }
+                val ownedCafes = if (currentUser.role == UserRole.CAFE_OWNER) {
+                    cafeManagementRepository.getCafeManagementData(currentUser.id).ownedCafes
+                } else {
+                    emptyList()
+                }
                 val recentVisits = cafeRepository.searchCafes(
                     query = null,
                     country = null,
@@ -83,6 +110,8 @@ class GetMyInfoUseCase(
                         isLoggedIn = true,
                         user = currentUser,
                         summary = summary,
+                        castDetail = castDetail,
+                        ownedCafes = ownedCafes,
                         badges = badges,
                         popularCafes = popularCafes,
                         recentVisits = recentVisits,

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Shared
 
 struct FanManagementView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -64,15 +65,13 @@ private struct FanManagementContentView: View {
                     loadingState
                 } else if uiState.fanManagementData == nil {
                     emptySectionCard(message: uiState.errorMessage ?? "로그인한 캐스트 정보를 찾을 수 없습니다.")
-                } else {
-                    profileSummaryCard
-                    statsRow
                 }
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
                 }
                 primaryAnnouncementButton
                 quickActionGrid
+                weeklyScheduleSection
                 recentFollowersSection
                 topFansSection
             }
@@ -86,118 +85,6 @@ private struct FanManagementContentView: View {
                 endPoint: .bottom
             )
         )
-    }
-
-    private var profileSummaryCard: some View {
-        let fanManagementData = uiState.fanManagementData!
-        let cast = fanManagementData.detail.cast
-        let cafe = fanManagementData.detail.cafe
-        let localizedName = fanManagementData.user.nickname == cast.name ? "" : fanManagementData.user.nickname
-        let profileAccent = String(cast.name.prefix(2)).uppercased()
-        let isOnline = !fanManagementData.detail.schedule.isEmpty
-        HStack(spacing: 16) {
-            ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 78, height: 78)
-                    .overlay(
-                        Circle()
-                            .stroke(Color(hex: "FFD1DC"), lineWidth: 2)
-                    )
-                    .overlay {
-                        Text(profileAccent)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Color(hex: "7C3F67"))
-                    }
-                if isOnline {
-                    Circle()
-                        .fill(Color(hex: "37B26C"))
-                        .frame(width: 18, height: 18)
-                        .overlay(Circle().stroke(.white, lineWidth: 2))
-                }
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .bottom, spacing: 8) {
-                    HStack(alignment: .bottom, spacing: 8) {
-                        Text(cast.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(Color(hex: "24161E"))
-                        if !localizedName.isEmpty {
-                            Text(localizedName)
-                                .font(.subheadline)
-                                .foregroundStyle(Color(hex: "7A707A"))
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Button {
-                        onAction(.clickEditProfile)
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "pencil")
-                                .font(.caption.weight(.bold))
-                            Text("수정")
-                                .font(.caption.weight(.bold))
-                        }
-                        .foregroundStyle(Color(hex: "7C3F67"))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(hex: "FFD1DC").opacity(0.08))
-                        .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-                HStack(spacing: 6) {
-                    Image(systemName: "storefront")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
-                    Text(cafe.name)
-                        .font(.subheadline)
-                        .foregroundStyle(Color(hex: "5B4A57"))
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(18)
-        .background(Color.white.opacity(0.94))
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.65), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 6)
-    }
-
-    private var statsRow: some View {
-        HStack(spacing: 10) {
-            ForEach(uiState.stats, id: \.label) { stat in
-                let isPrimary = stat.highlight == .primary
-
-                VStack(spacing: 6) {
-                    Text(stat.label)
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: "7A707A"))
-                        .multilineTextAlignment(.center)
-                    Text(stat.value)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(isPrimary ? Color(hex: "D94A82") : Color(hex: "24161E"))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .padding(.horizontal, 10)
-                .background(isPrimary ? Color(hex: "FFD1DC").opacity(0.12) : Color.white.opacity(0.92))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(isPrimary ? Color(hex: "FFB3C6").opacity(0.4) : Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
-                )
-            }
-        }
     }
 
     private func infoBanner(message: String) -> some View {
@@ -330,6 +217,64 @@ private struct FanManagementContentView: View {
         }
     }
 
+    private var weeklyScheduleSection: some View {
+        let weeklyStatus = weeklySchedule(from: uiState.fanManagementData?.detail.schedule ?? [])
+
+        return sectionContainer(title: "주간 출근") {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(hex: "FFD1DC").opacity(0.08))
+                        .frame(width: 34, height: 34)
+                        .overlay {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(Color(hex: "EF6797"))
+                        }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("이번 주 스케줄")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "24161E"))
+                        Text("출근 관리에서 일정을 바로 조정할 수 있습니다.")
+                            .font(.caption)
+                            .foregroundStyle(Color(hex: "7A707A"))
+                    }
+                }
+                HStack(spacing: 8) {
+                    ForEach(weeklyStatus, id: \.dayLabel) { item in
+                        weeklyScheduleCard(item)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 16)
+            .background(Color.white.opacity(0.88))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+            )
+        }
+    }
+
+    private func weeklyScheduleCard(_ item: WeeklyScheduleItem) -> some View {
+        VStack(spacing: 4) {
+            Text(item.dayLabel)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(item.isWorking ? Color.white : Color(hex: "4E4750"))
+            Text(item.isWorking ? "출근" : "휴무")
+                .font(.caption)
+                .foregroundStyle(item.isWorking ? Color.white.opacity(0.92) : Color(hex: "8A8087"))
+        }
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .background(item.isWorking ? Color(hex: "EF6797") : Color(hex: "FDF8FA"))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(item.isWorking ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+        )
+    }
+
     private var topFansSection: some View {
         sectionContainer(title: "이달의 TOP 팬") {
             if uiState.topFans.isEmpty {
@@ -453,5 +398,54 @@ private struct FanManagementContentView: View {
 struct FanManagementView_Previews: PreviewProvider {
     static var previews: some View {
         FanManagementView(onNavigationAction: { _ in })
+    }
+}
+
+private struct WeeklyScheduleItem {
+    let dayLabel: String
+    let isWorking: Bool
+}
+
+private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleItem] {
+    let workingDays = Set(schedules.compactMap { weekdayLabel(from: $0.date) })
+
+    return ["월", "화", "수", "목", "금", "토", "일"].map { dayLabel in
+        WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
+    }
+}
+
+private func weekdayLabel(from date: String) -> String? {
+    let parts = date.split(separator: "-")
+    guard parts.count == 3,
+          let year = Int(parts[0]),
+          let month = Int(parts[1]),
+          let day = Int(parts[2]) else {
+        return nil
+    }
+
+    let labels = ["월", "화", "수", "목", "금", "토", "일"]
+    let index = dayOfWeekIndex(year: year, month: month, day: day)
+    guard labels.indices.contains(index) else { return nil }
+    return labels[index]
+}
+
+private func dayOfWeekIndex(year: Int, month: Int, day: Int) -> Int {
+    var adjustedYear = year
+    var adjustedMonth = month
+    if adjustedMonth < 3 {
+        adjustedMonth += 12
+        adjustedYear -= 1
+    }
+    let k = adjustedYear % 100
+    let j = adjustedYear / 100
+    let h = (day + (13 * (adjustedMonth + 1)) / 5 + k + (k / 4) + (j / 4) + (5 * j)) % 7
+    switch h {
+    case 2: return 0
+    case 3: return 1
+    case 4: return 2
+    case 5: return 3
+    case 6: return 4
+    case 0: return 5
+    default: return 6
     }
 }

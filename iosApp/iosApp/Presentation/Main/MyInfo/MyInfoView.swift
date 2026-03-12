@@ -47,16 +47,16 @@ struct MyInfoView: View {
 @MainActor
 private struct GuestMyInfoView: View {
     let uiState: MyInfoUiState
-    
+
     let onAction: @MainActor (MyInfoAction) -> Void
-    
+
     let features = [
         ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
         ("heart.fill", "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", "9C6ADE", "B388EB"),
         ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
         ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
     ]
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -206,9 +206,9 @@ private struct GuestMyInfoView: View {
 @MainActor
 private struct ProfileMyInfoView: View {
     let uiState: MyInfoUiState
-    
+
     let onAction: @MainActor (MyInfoAction) -> Void
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -217,72 +217,173 @@ private struct ProfileMyInfoView: View {
                 badgesSection
                 recentVisitsSection
                 favoritesSection
-                followedMaidsSection
+                if uiState.user?.role != .cast {
+                    followedMaidsSection
+                }
             }
             .padding(16)
         }
     }
-    
-    private var profileCard: some View {
-        let summary = uiState.summary
-        let nickname = uiState.user?.nickname ?? "메이드러버"
 
-        return VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 14) {
+    private var profileCard: some View {
+        let user = uiState.user
+        let castDetail = uiState.castDetail
+        let ownerCafe = uiState.ownedCafes.first
+        let title = {
+            switch user?.role {
+            case .cast:
+                return castDetail?.cast.name ?? user?.nickname ?? "메이드러버"
+            default:
+                return user?.nickname ?? "메이드러버"
+            }
+        }()
+        let subtitle = {
+            switch user?.role {
+            case .cast:
+                guard let user, let castDetail else { return "" }
+                return user.nickname == castDetail.cast.name ? "" : user.nickname
+            case .cafeOwner:
+                return "카페 운영자"
+            case .admin:
+                return "관리자 계정"
+            default:
+                return "레벨 \(uiState.summary?.level ?? 1) · 열정적인 팬"
+            }
+        }()
+        let accentText = {
+            switch user?.role {
+            case .cast:
+                return castDetail?.cafe.name ?? "소속 카페 없음"
+            case .cafeOwner:
+                return ownerCafe?.name ?? "운영 카페 없음"
+            case .admin:
+                return "ConCafe 운영"
+            default:
+                return "내 활동 요약"
+            }
+        }()
+        let isHighlighted = {
+            switch user?.role {
+            case .cast:
+                return !(castDetail?.schedule.isEmpty ?? true)
+            case .cafeOwner:
+                return ownerCafe != nil
+            case .admin:
+                return true
+            default:
+                return true
+            }
+        }()
+
+        return HStack(spacing: 16) {
+            ZStack(alignment: .bottomTrailing) {
                 Circle()
-                    .fill(Color.white.opacity(0.22))
-                    .frame(width: 72, height: 72)
-                    .overlay(
-                        Text(String(nickname.prefix(1)))
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(.white)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(nickname)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.white)
-                    Text("레벨 \(summary?.level ?? 1) · 열정적인 팬")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.9))
+                    .frame(width: 78, height: 78)
+                    .overlay(
+                        Text(String(title.prefix(2)).uppercased())
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(Color(hex: "7C3F67"))
+                    )
+                if isHighlighted {
+                    Circle()
+                        .fill(Color(hex: "37B26C"))
+                        .frame(width: 18, height: 18)
                 }
-                Spacer(minLength: 0)
             }
-            HStack(spacing: 18) {
-                ProfileMetricView(systemName: "mappin.and.ellipse", value: Int(summary?.totalVisits ?? 0))
-                ProfileMetricView(systemName: "heart.fill", value: Int(summary?.favoritesCount ?? 0))
-                ProfileMetricView(systemName: "person.2.fill", value: Int(summary?.followedCastsCount ?? 0))
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .bottom, spacing: 8) {
+                    Text(title)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Color(hex: "24161E"))
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(Color(hex: "7A707A"))
+                    }
+                }
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Text(accentText)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(hex: "5B4A57"))
+                }
             }
+            Spacer(minLength: 0)
         }
-        .padding(20)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(colors: [Color(hex: "EF6797"), Color(hex: "F8A0C2")], startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
+        .background(Color.white.opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.65), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 6)
     }
 
     private var statsCard: some View {
-        let summary = uiState.summary
         return HStack(spacing: 8) {
-            profileStat("방문 횟수", Int(summary?.totalVisits ?? 0))
-            profileStat("즐겨찾기", Int(summary?.favoritesCount ?? 0))
-            profileStat("팔로우", Int(summary?.followedCastsCount ?? 0))
+            ForEach(metricCards, id: \.title) { metric in
+                profileStat(metric)
+            }
         }
     }
 
-    private func profileStat(_ title: String, _ value: Int) -> some View {
-        VStack {
-            Text("\(value)")
-                .font(.headline)
-                .foregroundStyle(Color(hex: "EF6797"))
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+    private func profileStat(_ metric: MyInfoMetricCard) -> some View {
+        VStack(spacing: 6) {
+            Text(metric.title)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(Color(hex: "7A707A"))
+                .multilineTextAlignment(.center)
+            Text(metric.value)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(metric.highlight ? Color(hex: "D94A82") : Color(hex: "24161E"))
         }
         .frame(maxWidth: .infinity)
-        .padding(10)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.vertical, 16)
+        .padding(.horizontal, 10)
+        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color.white.opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: metric.highlight ? .clear : Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(metric.highlight ? Color(hex: "FFB3C6").opacity(0.20) : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+        )
+    }
+
+    private var metricCards: [MyInfoMetricCard] {
+        switch uiState.user?.role {
+        case .cast:
+            return [
+                .init(title: "전체 팔로워", value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
+                .init(title: "근무 일정", value: "\(uiState.castDetail?.schedule.count ?? 0)", highlight: true),
+                .init(title: "평점", value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
+            ]
+        case .cafeOwner:
+            let cafeCount = uiState.ownedCafes.count
+            let castCount = uiState.ownedCafes.reduce(0) { $0 + Int($1.castCount) }
+            let rating = uiState.ownedCafes.isEmpty ? 0 : uiState.ownedCafes.map(\.rating).reduce(0, +) / Double(uiState.ownedCafes.count)
+            return [
+                .init(title: "운영 카페", value: "\(cafeCount)", highlight: false),
+                .init(title: "소속 캐스트", value: "\(castCount)", highlight: true),
+                .init(title: "평균 평점", value: String(format: "%.1f", rating), highlight: false)
+            ]
+        default:
+            return [
+                .init(title: "방문 횟수", value: "\(uiState.summary?.totalVisits ?? 0)", highlight: false),
+                .init(title: "즐겨찾기", value: "\(uiState.summary?.favoritesCount ?? 0)", highlight: true),
+                .init(title: "팔로우", value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
+            ]
+        }
     }
 
     private var badgesSection: some View {
@@ -372,20 +473,10 @@ private struct ProfileMyInfoView: View {
     }
 }
 
-private struct ProfileMetricView: View {
-    let systemName: String
-
-    let value: Int
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: systemName)
-                .font(.system(size: 13, weight: .semibold))
-            Text("\(value)")
-                .font(.subheadline.weight(.semibold))
-        }
-        .foregroundStyle(.white)
-    }
+private struct MyInfoMetricCard {
+    let title: String
+    let value: String
+    let highlight: Bool
 }
 
 struct MyInfoView_Previews: PreviewProvider {

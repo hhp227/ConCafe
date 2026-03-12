@@ -38,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +59,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 import org.hhp227.concafe.presentation.navigation.NavigationAction.*
+import org.hhp227.concafe.domain.model.UserRole
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -290,30 +292,6 @@ private data class GuestFeatureItem(
 )
 
 @Composable
-private fun ProfileMetric(
-    icon: ImageVector,
-    value: Int
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(16.dp)
-        )
-        Text(
-            text = value.toString(),
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-@Composable
 private fun ProfileMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
@@ -326,71 +304,18 @@ private fun ProfileMyInfoScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Card(
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                val nickname = uiState.user?.nickname ?: "메이드러버"
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Brush.linearGradient(listOf(Color(0xFFEF6797), Color(0xFFF8A0C2))))
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.22f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = nickname.take(1),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                        }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = nickname,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = "레벨 ${uiState.summary?.level ?: 1} · 열정적인 팬",
-                                color = Color.White.copy(alpha = 0.9f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ProfileMetric(Icons.Filled.Place, uiState.summary?.totalVisits ?: 0)
-                        ProfileMetric(Icons.Filled.Favorite, uiState.summary?.favoritesCount ?: 0)
-                        ProfileMetric(Icons.Filled.Groups, uiState.summary?.followedCastsCount ?: 0)
-                    }
-                }
-            }
+            ProfileSummaryCard(uiState = uiState)
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatCard("방문 횟수", uiState.summary?.totalVisits ?: 0)
-                StatCard("즐겨찾기", uiState.summary?.favoritesCount ?: 0)
-                StatCard("팔로우", uiState.summary?.followedCastsCount ?: 0)
+                val metricCards = myInfoMetricCards(uiState)
+                metricCards.forEach { card ->
+                    MyInfoMetricCard(
+                        title = card.title,
+                        value = card.value,
+                        highlight = card.highlight
+                    )
+                }
             }
         }
         item {
@@ -480,17 +405,19 @@ private fun ProfileMyInfoScreen(
             }
         }
         item {
-            Text("팔로우한 메이드", fontWeight = FontWeight.Bold)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
-                items(uiState.followedMaids.take(6)) { maid ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
-                        )
-                        Text(maid.name, style = MaterialTheme.typography.bodySmall)
+            if (uiState.user?.role != UserRole.CAST) {
+                Text("팔로우한 메이드", fontWeight = FontWeight.Bold)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    items(uiState.followedMaids.take(6)) { maid ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
+                            )
+                            Text(maid.name, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
@@ -499,27 +426,195 @@ private fun ProfileMyInfoScreen(
 }
 
 @Composable
-private fun RowScope.StatCard(title: String, value: Int) {
+private fun ProfileSummaryCard(uiState: MyInfoUiState) {
+    val user = uiState.user ?: return
+    val castDetail = uiState.castDetail
+    val ownerCafe = uiState.ownedCafes.firstOrNull()
+    val title = when (user.role) {
+        UserRole.CAST -> castDetail?.cast?.name ?: user.nickname
+        else -> user.nickname
+    }
+    val subtitle = when (user.role) {
+        UserRole.CAST -> castDetail?.let { detail ->
+            val accountName = user.nickname.takeIf { it != detail.cast.name }.orEmpty()
+            accountName
+        }.orEmpty()
+        UserRole.CAFE_OWNER -> "카페 운영자"
+        UserRole.ADMIN -> "관리자 계정"
+        UserRole.VISITOR -> "레벨 ${uiState.summary?.level ?: 1} · 열정적인 팬"
+    }
+    val accentText = when (user.role) {
+        UserRole.CAST -> castDetail?.cafe?.name ?: "소속 카페 없음"
+        UserRole.CAFE_OWNER -> ownerCafe?.name ?: "운영 카페 없음"
+        UserRole.ADMIN -> "ConCafe 운영"
+        UserRole.VISITOR -> "내 활동 요약"
+    }
+    val profileAccent = title.take(2).uppercase()
+    val isHighlighted = when (user.role) {
+        UserRole.CAST -> castDetail?.schedule?.isNotEmpty() == true
+        UserRole.CAFE_OWNER -> ownerCafe != null
+        UserRole.ADMIN -> true
+        UserRole.VISITOR -> true
+    }
+
     Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(78.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                            )
+                        )
+                        .background(Color(0xFFFFD7E5))
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = profileAccent,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF7C3F67)
+                    )
+                }
+                if (isHighlighted) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF37B26C))
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF24161E)
+                    )
+                    if (subtitle.isNotBlank()) {
+                        Box(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF7A707A)
+                        )
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = null,
+                        tint = Color(0xFFEF6797),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = accentText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF5B4A57)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class MyInfoMetricCardModel(
+    val title: String,
+    val value: String,
+    val highlight: Boolean
+)
+
+private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardModel> {
+    val user = uiState.user ?: return emptyList()
+
+    return when (user.role) {
+        UserRole.CAST -> {
+            val cast = uiState.castDetail?.cast
+            val scheduleCount = uiState.castDetail?.schedule?.size ?: 0
+            listOf(
+                MyInfoMetricCardModel("전체 팔로워", (cast?.followerCount ?: 0).toString(), false),
+                MyInfoMetricCardModel("근무 일정", scheduleCount.toString(), true),
+                MyInfoMetricCardModel("평점", ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
+            )
+        }
+        UserRole.CAFE_OWNER -> {
+            val cafeCount = uiState.ownedCafes.size
+            val castCount = uiState.ownedCafes.sumOf { it.castCount }
+            val rating = if (uiState.ownedCafes.isEmpty()) 0.0 else uiState.ownedCafes.map { it.rating }.average()
+            listOf(
+                MyInfoMetricCardModel("운영 카페", cafeCount.toString(), false),
+                MyInfoMetricCardModel("소속 캐스트", castCount.toString(), true),
+                MyInfoMetricCardModel("평균 평점", ((rating * 10).toInt() / 10.0).toString(), false)
+            )
+        }
+        else -> {
+            listOf(
+                MyInfoMetricCardModel("방문 횟수", (uiState.summary?.totalVisits ?: 0).toString(), false),
+                MyInfoMetricCardModel("즐겨찾기", (uiState.summary?.favoritesCount ?: 0).toString(), true),
+                MyInfoMetricCardModel("팔로우", (uiState.summary?.followedCastsCount ?: 0).toString(), false)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.MyInfoMetricCard(
+    title: String,
+    value: String,
+    highlight: Boolean
+) {
+    Surface(
         modifier = Modifier.weight(1f),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = if (highlight) Color(0x1AFFD1DC) else Color.White.copy(alpha = 0.92f),
+        tonalElevation = if (highlight) 0.dp else 2.dp,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (highlight) Color(0x33FFB3C6) else Color(0x1AFFD1DC)
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 16.dp, horizontal = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = value.toString(),
-                color = Color(0xFFEF6797),
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF7A707A),
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF777777),
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                color = if (highlight) Color(0xFFD94A82) else Color(0xFF24161E),
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         }

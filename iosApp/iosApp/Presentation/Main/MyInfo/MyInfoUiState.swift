@@ -14,6 +14,8 @@ struct MyInfoUiState {
     var isLoggedIn: Bool
     var user: User?
     var summary: MyPageSummary?
+    var castDetail: CastDetail?
+    var ownedCafes: [CafeManagementData.OwnedCafeSummary]
     var badges: [ProfileBadge]
     var popularCafes: [Cafe]
     var recentVisits: [Cafe]
@@ -26,6 +28,8 @@ struct MyInfoUiState {
         isLoggedIn: false,
         user: nil,
         summary: nil,
+        castDetail: nil,
+        ownedCafes: [],
         badges: [],
         popularCafes: [],
         recentVisits: [],

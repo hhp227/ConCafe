@@ -93,7 +93,7 @@ val useCaseModule = module {
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }
-    factory { GetMyInfoUseCase(get(), get(), get(), get()) }
+    factory { GetMyInfoUseCase(get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
     factory { GetRankingFeedUseCase(get(), get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }

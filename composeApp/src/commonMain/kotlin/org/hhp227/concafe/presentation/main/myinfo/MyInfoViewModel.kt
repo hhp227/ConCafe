@@ -45,6 +45,8 @@ class MyInfoViewModel(
                         isLoggedIn = result.data.isLoggedIn,
                         user = result.data.user,
                         summary = result.data.summary,
+                        castDetail = result.data.castDetail,
+                        ownedCafes = result.data.ownedCafes,
                         badges = result.data.badges,
                         popularCafes = result.data.popularCafes,
                         recentVisits = result.data.recentVisits,
