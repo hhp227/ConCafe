@@ -231,7 +231,7 @@ private struct ProfileMyInfoView: View {
         let ownerCafe = uiState.ownedCafes.first
         let title = {
             switch user?.role {
-            case .cast:
+            case UserRole.cast:
                 return castDetail?.cast.name ?? user?.nickname ?? "메이드러버"
             default:
                 return user?.nickname ?? "메이드러버"
@@ -239,12 +239,12 @@ private struct ProfileMyInfoView: View {
         }()
         let subtitle = {
             switch user?.role {
-            case .cast:
+            case UserRole.cast:
                 guard let user, let castDetail else { return "" }
                 return user.nickname == castDetail.cast.name ? "" : user.nickname
-            case .cafeOwner:
+            case UserRole.cafeOwner:
                 return "카페 운영자"
-            case .admin:
+            case UserRole.admin:
                 return "관리자 계정"
             default:
                 return "레벨 \(uiState.summary?.level ?? 1) · 열정적인 팬"
@@ -252,11 +252,11 @@ private struct ProfileMyInfoView: View {
         }()
         let accentText = {
             switch user?.role {
-            case .cast:
+            case UserRole.cast:
                 return castDetail?.cafe.name ?? "소속 카페 없음"
-            case .cafeOwner:
+            case UserRole.cafeOwner:
                 return ownerCafe?.name ?? "운영 카페 없음"
-            case .admin:
+            case UserRole.admin:
                 return "ConCafe 운영"
             default:
                 return "내 활동 요약"
@@ -342,13 +342,13 @@ private struct ProfileMyInfoView: View {
 
     private var metricCards: [MyInfoMetricCard] {
         switch uiState.user?.role {
-        case .cast:
+        case UserRole.cast:
             return [
                 .init(title: "전체 팔로워", value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
                 .init(title: "근무 일정", value: "\(uiState.castDetail?.schedule.count ?? 0)", highlight: true),
                 .init(title: "평점", value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
             ]
-        case .cafeOwner:
+        case UserRole.cafeOwner:
             let cafeCount = uiState.ownedCafes.count
             let castCount = uiState.ownedCafes.reduce(0) { $0 + Int($1.castCount) }
             let rating = uiState.ownedCafes.isEmpty ? 0 : uiState.ownedCafes.map(\.rating).reduce(0, +) / Double(uiState.ownedCafes.count)
