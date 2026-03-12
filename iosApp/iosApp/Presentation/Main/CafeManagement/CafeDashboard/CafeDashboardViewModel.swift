@@ -72,7 +72,12 @@ final class CafeDashboardViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeCastPreview> {
-                    uiState.castPreviews = append ? (uiState.castPreviews + page.items as! [CafeCastPreview]) : page.items as! [CafeCastPreview]
+                    let mergedItems = append ? (uiState.castPreviews + (page.items as! [CafeCastPreview])) : (page.items as! [CafeCastPreview])
+                    uiState.castPreviews = mergedItems
+                    if let selectedCastId = uiState.selectedCastId,
+                       !mergedItems.contains(where: { $0.id == selectedCastId }) {
+                        uiState.selectedCastId = nil
+                    }
                     uiState.nextCastCursor = page.nextCursor
                     uiState.hasMoreCasts = page.hasNext
                     uiState.isLoadingMoreCasts = false
@@ -118,7 +123,11 @@ final class CafeDashboardViewModel: ObservableObject {
         case .menuGoods:
             event.send(.navigateToMenuGoods(cafeId: cafeId))
         case .castSchedule:
-            event.send(.navigateToSchedule)
+            guard let selectedCastId = uiState.selectedCastId else {
+                uiState.infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요."
+                return
+            }
+            event.send(.navigateToSchedule(castId: selectedCastId))
         case .castManagement:
             event.send(.navigateToCastEdit(cafeId: cafeId, castId: nil))
         default:
@@ -127,6 +136,11 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func dismissInfoMessage() {
+        uiState.infoMessage = nil
+    }
+
+    private func clickCastSchedule(_ castId: String) {
+        uiState.selectedCastId = uiState.selectedCastId == castId ? nil : castId
         uiState.infoMessage = nil
     }
 
@@ -158,6 +172,8 @@ final class CafeDashboardViewModel: ObservableObject {
             clickBack()
         case .clickShortcut(let shortcut):
             clickShortcut(shortcut)
+        case .clickCastSchedule(let castId):
+            clickCastSchedule(castId)
         case .clickLoadMoreCasts:
             clickLoadMoreCasts()
         case .dismissInfoMessage:

@@ -41,8 +41,8 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateToCastEdit -> {
                     _event.emit(NavigateTo(CastEdit(action.cafeId, action.castId)))
                 }
-                NavigationAction.NavigateToSchedule -> {
-                    _event.emit(NavigateTo(Schedule))
+                is NavigationAction.NavigateToSchedule -> {
+                    _event.emit(NavigateTo(Schedule(action.castId)))
                 }
                 is NavigationAction.NavigateToMenuGoods -> {
                     _event.emit(NavigateTo(MenuGoods(action.id)))

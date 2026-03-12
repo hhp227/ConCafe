@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,12 +19,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun ScheduleScreen(
+    castId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit,
-    viewModel: ScheduleViewModel = viewModel()
+    viewModel: ScheduleViewModel = viewModel(
+        key = "schedule-${castId ?: "self"}",
+        factory = viewModelFactory {
+            initializer {
+                ScheduleViewModel(castId = castId)
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -105,13 +116,14 @@ private fun ScheduleContentScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFF8FB), Color(0xFFFFEFF5))
                     )
                 )
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ScheduleCastSummaryCard(uiState.castSummary)
@@ -141,7 +153,7 @@ private fun ScheduleCastSummaryCard(
     castSummary: ScheduleUiState.CastSummary
 ) {
     Card(
-        modifier = Modifier.padding(top = 16.dp),
+        modifier = Modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)

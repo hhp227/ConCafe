@@ -106,8 +106,11 @@ fun NavigationScreen(
                 onNavigationAction = viewModel::onAction
             )
         }
-        composable<Route.Schedule> {
+        composable<Route.Schedule> { backStackEntry ->
+            val scheduleRoute = backStackEntry.toRoute<Route.Schedule>()
+
             ScheduleScreen(
+                castId = scheduleRoute.castId,
                 onNavigationAction = viewModel::onAction
             )
         }

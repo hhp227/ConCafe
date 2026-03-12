@@ -73,8 +73,13 @@ class CafeDashboardViewModel(
             when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor, pageSize)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
+                        val mergedItems = if (append) state.castPreviews + result.data.items else result.data.items
+                        val nextSelectedCastId = state.selectedCastId?.takeIf { selectedId ->
+                            mergedItems.any { it.id == selectedId }
+                        }
                         state.copy(
-                            castPreviews = if (append) state.castPreviews + result.data.items else result.data.items,
+                            castPreviews = mergedItems,
+                            selectedCastId = nextSelectedCastId,
                             nextCastCursor = result.data.nextCursor,
                             hasMoreCasts = result.data.hasNext,
                             isLoadingMoreCasts = false
@@ -139,8 +144,15 @@ class CafeDashboardViewModel(
                 }
             }
             CafeDashboardShortcut.CAST_SCHEDULE -> {
-                viewModelScope.launch {
-                    _event.emit(CafeDashboardEvent.NavigateToSchedule)
+                val selectedCastId = _uiState.value.selectedCastId
+                if (selectedCastId == null) {
+                    _uiState.update {
+                        it.copy(infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요.")
+                    }
+                } else {
+                    viewModelScope.launch {
+                        _event.emit(CafeDashboardEvent.NavigateToSchedule(selectedCastId))
+                    }
                 }
             }
             else -> {
@@ -154,6 +166,15 @@ class CafeDashboardViewModel(
     private fun dismissInfoMessage() {
         _uiState.update {
             it.copy(infoMessage = null)
+        }
+    }
+
+    private fun clickCastSchedule(castId: String) {
+        _uiState.update {
+            it.copy(
+                selectedCastId = if (it.selectedCastId == castId) null else castId,
+                infoMessage = null
+            )
         }
     }
 
@@ -179,6 +200,7 @@ class CafeDashboardViewModel(
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
+            is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
             CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
             CafeDashboardAction.DismissInfoMessage -> dismissInfoMessage()
         }

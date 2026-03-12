@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ScheduleViewModel(
+    private val castId: String? = null,
     private val getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = resolveGetScheduleManagementDataUseCase(),
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
     private val observeCastVersionUseCase: ObserveCastVersionUseCase = resolveObserveCastVersionUseCase()
@@ -73,7 +74,7 @@ class ScheduleViewModel(
             )
         }
         viewModelScope.launch {
-            when (val result = getScheduleManagementDataUseCase.invoke()) {
+            when (val result = getScheduleManagementDataUseCase.invoke(castId)) {
                 is AppResult.Success -> {
                     bindCastVersion(result.data.detail.cast.id)
                     _uiState.value = result.data.toUiState()

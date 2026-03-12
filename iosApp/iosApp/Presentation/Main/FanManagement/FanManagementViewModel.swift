@@ -120,7 +120,7 @@ final class FanManagementViewModel: ObservableObject {
     private func clickQuickAction(_ quickAction: FanManagementUiState.QuickAction) {
         switch quickAction {
         case .workSchedule:
-            event.send(.navigateToSchedule)
+            event.send(.navigateToSchedule(castId: nil))
         }
     }
 

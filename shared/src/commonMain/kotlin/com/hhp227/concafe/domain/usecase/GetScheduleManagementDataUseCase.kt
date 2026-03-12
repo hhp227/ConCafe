@@ -23,32 +23,31 @@ class GetScheduleManagementDataUseCase(
     private val authRepository: AuthRepository,
     private val castRepository: CastRepository
 ) {
-    suspend operator fun invoke(): AppResult<ScheduleManagementData> {
+    suspend operator fun invoke(castId: String? = null): AppResult<ScheduleManagementData> {
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
-
-            if (currentUser.role != UserRole.CAST) {
-                return AppResult.Failure(AppError.PermissionDenied)
+            val resolvedCastId = castId ?: run {
+                if (currentUser.role != UserRole.CAST) {
+                    return AppResult.Failure(AppError.PermissionDenied)
+                }
+                castRepository.searchCasts(
+                    query = null,
+                    country = null,
+                    city = null,
+                    sort = CastSort.FOLLOWERS,
+                    cursor = null,
+                    pageSize = 100
+                ).items.firstOrNull { cast ->
+                    cast.linkedUserId == currentUser.id
+                }?.id ?: return AppResult.Failure(AppError.NotFound)
             }
-
-            val castId = castRepository.searchCasts(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.FOLLOWERS,
-                cursor = null,
-                pageSize = 100
-            ).items.firstOrNull { cast ->
-                cast.linkedUserId == currentUser.id
-            }?.id ?: return AppResult.Failure(AppError.NotFound)
-
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val weekStart = today.toWeekStart()
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
-            val detail = castRepository.getCastDetail(castId)
+            val detail = castRepository.getCastDetail(resolvedCastId)
             val scheduleByDate = castRepository.getCastSchedules(
-                castId = castId,
+                castId = resolvedCastId,
                 fromDate = weekStart.toString(),
                 toDate = weekEnd.toString()
             ).associateBy { it.date }

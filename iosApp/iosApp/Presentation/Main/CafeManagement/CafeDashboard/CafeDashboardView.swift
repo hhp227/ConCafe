@@ -31,8 +31,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateToMenuGoods(id: cafeId))
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
-            case .navigateToSchedule:
-                onNavigationAction(.navigateToSchedule)
+            case .navigateToSchedule(let castId):
+                onNavigationAction(.navigateToSchedule(castId: castId))
             }
         }
     }
@@ -324,24 +324,47 @@ private struct CafeDashboardContentView: View {
     }
 
     private func castPreviewItem(cast: CafeCastPreview) -> some View {
-        VStack(spacing: 8) {
-            ZStack(alignment: .bottomTrailing) {
-                LinearGradient(
-                    colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(width: 72, height: 72)
-                .clipShape(Circle())
-                Circle()
-                    .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
-                    .frame(width: 16, height: 16)
+        let isSelected = uiState.selectedCastId == cast.id
+        return Button {
+            onAction(.clickCastSchedule(cast.id))
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .stroke(isSelected ? Color(hex: "EF6797") : .clear, lineWidth: 2)
+                        .frame(width: 78, height: 78)
+                    ZStack(alignment: .topTrailing) {
+                        LinearGradient(
+                            colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .frame(width: 72, height: 72)
+                        .clipShape(Circle())
+                        if isSelected {
+                            Circle()
+                                .fill(Color(hex: "EF6797"))
+                                .frame(width: 22, height: 22)
+                                .overlay {
+                                    Image(systemName: "checkmark")
+                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(.white)
+                                }
+                        }
+                    }
+                    Circle()
+                        .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
+                        .frame(width: 16, height: 16)
+                        .offset(x: 25, y: 25)
+                }
+                .frame(width: 78, height: 78)
+                Text(cast.name)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(isSelected ? Color(hex: "EF6797") : Color(hex: "2B2330"))
             }
-            Text(cast.name)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+            .frame(width: 80)
         }
-        .frame(width: 80)
+        .buttonStyle(.plain)
     }
 
     private var homeBannerSection: some View {

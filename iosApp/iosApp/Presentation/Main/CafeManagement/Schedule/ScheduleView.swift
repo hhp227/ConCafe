@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct ScheduleView: View {
+    let castId: String?
+
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = ScheduleViewModel()
+    @StateObject private var viewModel: ScheduleViewModel
 
     @State private var alertMessage: String?
 
@@ -78,6 +80,15 @@ struct ScheduleView: View {
             .background(Color.white)
         }
     }
+
+    init(
+        castId: String? = nil,
+        onNavigationAction: @escaping (NavigationAction) -> Void
+    ) {
+        self.castId = castId
+        self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: ScheduleViewModel(castId: castId))
+    }
 }
 
 private struct ScheduleContentView: View {
@@ -86,7 +97,7 @@ private struct ScheduleContentView: View {
     let onAction: (ScheduleAction) -> Void
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(spacing: 12) {
                 castSummaryCard
                 weekSelectorSection
@@ -101,7 +112,9 @@ private struct ScheduleContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 24)
+            .frame(maxWidth: .infinity, alignment: .top)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(
             LinearGradient(
                 colors: [Color(hex: "F8F5F6"), Color(hex: "FFF8FB"), Color(hex: "FFEFF5")],

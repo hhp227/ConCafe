@@ -11,8 +11,12 @@ import Shared
 
 @MainActor
 final class ScheduleViewModel: ObservableObject {
+    private let castId: String?
+
     private let getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase
+
     private let observeCastVersionUseCase: ObserveCastVersionUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = ScheduleUiState(isLoading: true)
@@ -20,19 +24,8 @@ final class ScheduleViewModel: ObservableObject {
     let event = PassthroughSubject<ScheduleEvent, Never>()
 
     private var loadTask: Task<Void, Never>?
+
     private var watchHandles: [WatchKey: WatchHandle] = [:]
-
-    init(
-        getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
-        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
-    ) {
-        self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
-        self.observeCastVersionUseCase = observeCastVersionUseCase
-        self.observeCurrentUserUseCase = observeCurrentUserUseCase
-
-        observeSession()
-    }
 
     private func observeSession() {
         watchHandles[.session]?.cancel()
@@ -73,7 +66,7 @@ final class ScheduleViewModel: ObservableObject {
 
         loadTask = Task {
             do {
-                let result = try await getScheduleManagementDataUseCase.invoke()
+                let result = try await getScheduleManagementDataUseCase.invoke(castId: castId)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.ScheduleManagementData {
@@ -125,6 +118,20 @@ final class ScheduleViewModel: ObservableObject {
             uiState.infoMessage = nil
             uiState.errorMessage = nil
         }
+    }
+
+    init(
+        castId: String? = nil,
+        getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
+        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+    ) {
+        self.castId = castId
+        self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
+        self.observeCastVersionUseCase = observeCastVersionUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
+
+        observeSession()
     }
 
     deinit {

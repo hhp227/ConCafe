@@ -11,6 +11,7 @@ import Shared
 struct CafeDashboardUiState {
     var cafe: CafeDashboardData?
     var castPreviews: [CafeCastPreview] = []
+    var selectedCastId: String?
     var nextCastCursor: String?
     var hasMoreCasts = false
     var isLoadingMoreCasts = false

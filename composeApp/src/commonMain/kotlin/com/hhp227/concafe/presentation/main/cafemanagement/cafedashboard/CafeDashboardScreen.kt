@@ -66,8 +66,8 @@ fun CafeDashboardScreen(
                 is CafeDashboardEvent.NavigateToCastEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
                 }
-                CafeDashboardEvent.NavigateToSchedule -> {
-                    onNavigationAction(NavigationAction.NavigateToSchedule)
+                is CafeDashboardEvent.NavigateToSchedule -> {
+                    onNavigationAction(NavigationAction.NavigateToSchedule(event.castId))
                 }
             }
         }
@@ -162,6 +162,10 @@ private fun CafeDashboardContentScreen(
                             },
                             onScheduleClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                            },
+                            selectedCastId = uiState.selectedCastId,
+                            onCastScheduleSelect = { castId ->
+                                onAction(CafeDashboardAction.ClickCastSchedule(castId))
                             },
                             onLoadMoreClick = {
                                 onAction(CafeDashboardAction.ClickLoadMoreCasts)
@@ -443,6 +447,8 @@ private fun CastManagementSection(
     isLoadingMoreCasts: Boolean,
     onCastManagementClick: () -> Unit,
     onScheduleClick: () -> Unit,
+    selectedCastId: String?,
+    onCastScheduleSelect: (String) -> Unit,
     onLoadMoreClick: () -> Unit
 ) {
     Card(
@@ -498,7 +504,11 @@ private fun CastManagementSection(
                     AddCastItem(onClick = onCastManagementClick)
                 }
                 items(casts, key = { it.id }) { cast ->
-                    CastPreviewItem(cast = cast)
+                    CastPreviewItem(
+                        cast = cast,
+                        isSelected = selectedCastId == cast.id,
+                        onClick = { onCastScheduleSelect(cast.id) }
+                    )
                 }
                 if (hasMoreCasts) {
                     item {
@@ -515,7 +525,9 @@ private fun CastManagementSection(
 
 @Composable
 private fun CastPreviewItem(
-    cast: CafeCastPreview
+    cast: CafeCastPreview,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.width(80.dp),
@@ -523,32 +535,74 @@ private fun CastPreviewItem(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            contentAlignment = Alignment.BottomEnd
+            modifier = Modifier.size(78.dp),
+            contentAlignment = Alignment.Center
         ) {
+            Surface(
+                onClick = onClick,
+                shape = CircleShape,
+                color = Color.Transparent,
+                border = BorderStroke(
+                    if (isSelected) 2.dp else 0.dp,
+                    if (isSelected) Color(0xFFEF6797) else Color.Transparent
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(3.dp)
+                        .size(72.dp)
+                )
+            }
             Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
-                        ),
-                        shape = CircleShape
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .background(
-                        if (cast.isOnShift) Color(0xFF35C26B) else Color(0xFFC7CBD3),
-                        CircleShape
-                    )
-            )
+                    modifier = Modifier
+                        .matchParentSize()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(72.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
+                            ),
+                            shape = CircleShape
+                        )
+                )
+                if (isSelected) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 4.dp, end = 4.dp),
+                        shape = CircleShape,
+                        color = Color(0xFFEF6797)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .size(12.dp)
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-1).dp, y = (-1).dp)
+                        .size(16.dp)
+                        .background(
+                            if (cast.isOnShift) Color(0xFF35C26B) else Color(0xFFC7CBD3),
+                            CircleShape
+                        )
+                )
+            }
         }
         Text(
             text = cast.name,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2330)
+            color = if (isSelected) Color(0xFFEF6797) else Color(0xFF2B2330)
         )
     }
 }
