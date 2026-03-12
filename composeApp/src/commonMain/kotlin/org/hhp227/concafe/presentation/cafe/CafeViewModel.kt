@@ -2,6 +2,7 @@ package org.hhp227.concafe.presentation.cafe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,12 +12,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.hhp227.concafe.domain.common.AppError
 import org.hhp227.concafe.domain.common.AppResult
+import org.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
+    private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
@@ -27,6 +30,8 @@ class CafeViewModel(
 
     val event = _event.asSharedFlow()
 
+    private val jobs = mutableMapOf<JobKey, Job>()
+
     private fun loadCafeDetail() {
         _uiState.update {
             it.copy(
@@ -35,20 +40,25 @@ class CafeViewModel(
             )
         }
 
-        viewModelScope.launch {
+        jobs[JobKey.DETAIL]?.cancel()
+        jobs[JobKey.DETAIL] = viewModelScope.launch {
             val result = getCafeDetailUseCase.invoke(cafeId)
 
             if (result is AppResult.Success) {
                 _uiState.value = CafeUiState(
                     isLoading = false,
+                    isLoadingMoreCasts = _uiState.value.isLoadingMoreCasts,
                     errorMessage = null,
                     selectedTab = _uiState.value.selectedTab,
                     detail = result.data.detail,
-                    casts = result.data.casts,
+                    casts = _uiState.value.casts,
+                    castsNextCursor = _uiState.value.castsNextCursor,
+                    canLoadMoreCasts = _uiState.value.canLoadMoreCasts,
                     reviews = result.data.reviews,
                     isFavorite = result.data.isFavorite,
                     isLoggedIn = result.data.isLoggedIn
                 )
+                refreshCastPage()
             } else if (result is AppResult.Failure) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -56,6 +66,40 @@ class CafeViewModel(
                 )
             }
         }
+    }
+
+    private fun loadCastPage(cursor: String?, append: Boolean) {
+        jobs[JobKey.CAST_PAGE]?.cancel()
+        jobs[JobKey.CAST_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreCasts = append) }
+
+            when (val result = getCafeCastListPageUseCase.invoke(cafeId, cursor)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            casts = if (append) state.casts + result.data.items else result.data.items,
+                            castsNextCursor = result.data.nextCursor,
+                            canLoadMoreCasts = result.data.hasNext,
+                            isLoadingMoreCasts = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoadingMoreCasts = false) }
+                }
+            }
+        }
+    }
+
+    private fun refreshCastPage() {
+        loadCastPage(cursor = null, append = false)
+    }
+
+    private fun loadMoreCasts() {
+        val currentState = _uiState.value
+        val cursor = currentState.castsNextCursor
+        if (currentState.isLoadingMoreCasts || !currentState.canLoadMoreCasts || cursor == null) return
+        loadCastPage(cursor = cursor, append = true)
     }
 
     private fun toggleFavorite() {
@@ -87,6 +131,9 @@ class CafeViewModel(
                 CafeAction.ClickFavorite -> {
                     toggleFavorite()
                 }
+                CafeAction.LoadMoreCasts -> {
+                    loadMoreCasts()
+                }
                 CafeAction.Refresh -> {
                     loadCafeDetail()
                 }
@@ -94,7 +141,18 @@ class CafeViewModel(
         }
     }
 
+    override fun onCleared() {
+        jobs.values.forEach { it.cancel() }
+        jobs.clear()
+        super.onCleared()
+    }
+
     init {
         loadCafeDetail()
+    }
+
+    private enum class JobKey {
+        DETAIL,
+        CAST_PAGE
     }
 }

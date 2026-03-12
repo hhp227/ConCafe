@@ -74,7 +74,8 @@ cafes/{cafeId}/casts/{castId}
 ├─ followerCount
 ├─ rating
 ├─ popularityScore
-└─ createdAt
+├─ createdAt
+└─ updatedAt
 
 cafes/{cafeId}/casts/{castId}/externalLinks/{linkId}
 ├─ platform: INSTAGRAM | X | TIKTOK | YOUTUBE | WEBSITE
@@ -125,6 +126,11 @@ castSchedules/{scheduleId}
 ├─ startTime
 ├─ endTime
 └─ createdAt
+
+구현 메모
+- 현재 캐스트 프로필 편집 화면의 저장 범위는 `cafes/{cafeId}/casts/{castId}` 기본 정보와 `castSchedules`이다.
+- 근무 요일 UI는 별도 `workingDays` 배열 필드가 아니라 `castSchedules` 문서 생성/수정 결과를 다시 읽어 계산한다.
+- 프로필 이미지, 갤러리 이미지, 외부 SNS 링크 저장은 후속 단계에서 연결한다.
 
 visits/{visitId}
 ├─ userId

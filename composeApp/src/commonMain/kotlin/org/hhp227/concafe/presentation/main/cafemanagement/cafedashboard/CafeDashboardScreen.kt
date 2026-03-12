@@ -24,8 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import org.hhp227.concafe.di.resolveGetCafeCastPageUseCase
 import org.hhp227.concafe.di.resolveGetCafeDashboardUseCase
+import org.hhp227.concafe.di.resolveObserveCafeCastVersionUseCase
 import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import org.hhp227.concafe.domain.model.CafeCastPreview
 import org.hhp227.concafe.domain.model.CafeDashboardData
 import org.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -39,7 +42,9 @@ fun CafeDashboardScreen(
             initializer {
                 CafeDashboardViewModel(
                     cafeId = cafeId,
+                    getCafeCastPageUseCase = resolveGetCafeCastPageUseCase(),
                     getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
+                    observeCafeCastVersionUseCase = resolveObserveCafeCastVersionUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
                 )
             }
@@ -57,6 +62,9 @@ fun CafeDashboardScreen(
                 }
                 is CafeDashboardEvent.NavigateToMenuGoods -> {
                     onNavigationAction(NavigationAction.NavigateToMenuGoods(event.cafeId))
+                }
+                is CafeDashboardEvent.NavigateToCastEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
                 }
             }
         }
@@ -143,12 +151,17 @@ private fun CafeDashboardContentScreen(
                     }
                     item {
                         CastManagementSection(
-                            casts = cafe.castPreviews,
+                            casts = uiState.castPreviews,
+                            hasMoreCasts = uiState.hasMoreCasts,
+                            isLoadingMoreCasts = uiState.isLoadingMoreCasts,
                             onCastManagementClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
                             },
                             onScheduleClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                            },
+                            onLoadMoreClick = {
+                                onAction(CafeDashboardAction.ClickLoadMoreCasts)
                             }
                         )
                     }
@@ -422,9 +435,12 @@ private fun ShortcutCard(
 
 @Composable
 private fun CastManagementSection(
-    casts: List<CafeDashboardData.CastPreview>,
+    casts: List<CafeCastPreview>,
+    hasMoreCasts: Boolean,
+    isLoadingMoreCasts: Boolean,
     onCastManagementClick: () -> Unit,
-    onScheduleClick: () -> Unit
+    onScheduleClick: () -> Unit,
+    onLoadMoreClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -475,11 +491,19 @@ private fun CastManagementSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item {
+                    AddCastItem(onClick = onCastManagementClick)
+                }
                 items(casts, key = { it.id }) { cast ->
                     CastPreviewItem(cast = cast)
                 }
-                item {
-                    AddCastItem(onClick = onCastManagementClick)
+                if (hasMoreCasts) {
+                    item {
+                        LoadMoreCastItem(
+                            isLoading = isLoadingMoreCasts,
+                            onClick = onLoadMoreClick
+                        )
+                    }
                 }
             }
         }
@@ -488,7 +512,7 @@ private fun CastManagementSection(
 
 @Composable
 private fun CastPreviewItem(
-    cast: CafeDashboardData.CastPreview
+    cast: CafeCastPreview
 ) {
     Column(
         modifier = Modifier.width(80.dp),
@@ -522,6 +546,48 @@ private fun CastPreviewItem(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2B2330)
+        )
+    }
+}
+
+@Composable
+private fun LoadMoreCastItem(
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.width(80.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = Color(0xFFF7F2F6),
+            border = BorderStroke(1.dp, Color(0xFFE3DCE3)),
+            onClick = onClick
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFFB8AEB7)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "캐스트 더 보기",
+                        tint = Color(0xFF8F848F)
+                    )
+                }
+            }
+        }
+        Text(
+            text = if (isLoading) "불러오는 중" else "더 보기",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color(0xFF8F848F),
+            fontWeight = FontWeight.Bold
         )
     }
 }

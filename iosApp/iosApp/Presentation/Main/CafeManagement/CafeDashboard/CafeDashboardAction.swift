@@ -10,5 +10,6 @@ import Foundation
 enum CafeDashboardAction {
     case clickBack
     case clickShortcut(CafeDashboardShortcut)
+    case clickLoadMoreCasts
     case dismissInfoMessage
 }

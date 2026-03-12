@@ -11,6 +11,7 @@ import org.hhp227.concafe.domain.model.CafeInfoUpdate
 import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
+import org.hhp227.concafe.domain.model.CastUpsert
 import org.hhp227.concafe.domain.model.HomeBanner
 import org.hhp227.concafe.domain.model.MyPageSummary
 import org.hhp227.concafe.domain.model.Notice
@@ -67,6 +68,8 @@ interface ConCafeDataSource {
 
     fun observeCafeDetail(cafeId: String): Flow<CafeDetail?>
 
+    fun observeCafeCastVersion(cafeId: String): Flow<Int>
+
     fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
@@ -74,6 +77,8 @@ interface ConCafeDataSource {
     fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail
 
     fun castDetail(castId: String): CastDetail?
+
+    fun upsertCast(update: CastUpsert): CastDetail
 
     fun rankingItemsFromCasts(): List<RankingItem>
 

@@ -13,6 +13,7 @@ import org.hhp227.concafe.presentation.auth.signin.SignInScreen
 import org.hhp227.concafe.presentation.auth.signup.SignUpScreen
 import org.hhp227.concafe.presentation.cafe.CafeScreen
 import org.hhp227.concafe.presentation.cast.CastScreen
+import org.hhp227.concafe.presentation.castedit.CastEditScreen
 import org.hhp227.concafe.presentation.main.MainScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
@@ -92,6 +93,15 @@ fun NavigationScreen(
 
             CafeInfoEditScreen(
                 cafeId = cafeInfoEditRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.CastEdit> { backStackEntry ->
+            val castEditRoute = backStackEntry.toRoute<Route.CastEdit>()
+
+            CastEditScreen(
+                cafeId = castEditRoute.cafeId,
+                castId = castEditRoute.castId,
                 onNavigationAction = viewModel::onAction
             )
         }

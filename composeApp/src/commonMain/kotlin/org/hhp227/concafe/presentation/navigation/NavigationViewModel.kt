@@ -10,6 +10,7 @@ import org.hhp227.concafe.presentation.navigation.Route.Cafe
 import org.hhp227.concafe.presentation.navigation.Route.CafeDashboard
 import org.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
 import org.hhp227.concafe.presentation.navigation.Route.Cast
+import org.hhp227.concafe.presentation.navigation.Route.CastEdit
 import org.hhp227.concafe.presentation.navigation.Route.Main
 import org.hhp227.concafe.presentation.navigation.Route.MenuGoods
 import org.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
@@ -35,6 +36,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(NavigateTo(CafeInfoEdit(action.id)))
+                }
+                is NavigationAction.NavigateToCastEdit -> {
+                    _event.emit(NavigateTo(CastEdit(action.cafeId, action.castId)))
                 }
                 is NavigationAction.NavigateToMenuGoods -> {
                     _event.emit(NavigateTo(MenuGoods(action.id)))

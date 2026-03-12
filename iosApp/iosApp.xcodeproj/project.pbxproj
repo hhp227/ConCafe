@@ -25,6 +25,16 @@
 		0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66A72F5C0EB700B0CDE4 /* SignUpUiState.swift */; };
 		0A0C66AA2F5C0EE100B0CDE4 /* SignUpAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66A92F5C0EE100B0CDE4 /* SignUpAction.swift */; };
 		0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */; };
+		0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D72F614BF700573900 /* CastManagementUiState.swift */; };
+		0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D92F614C1400573900 /* CastManagementAction.swift */; };
+		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
+		0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DD2F614C4600573900 /* CastManagementEvent.swift */; };
+		0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DF2F614C6100573900 /* CastManagementView.swift */; };
+		0A27C8E32F614C9000573900 /* ScheduleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E22F614C9000573900 /* ScheduleViewModel.swift */; };
+		0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E42F614CD100573900 /* ScheduleUiState.swift */; };
+		0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E62F614CDD00573900 /* ScheduleAction.swift */; };
+		0A27C8E92F614D1300573900 /* ScheduleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E82F614D1300573900 /* ScheduleEvent.swift */; };
+		0A27C8EB2F614D2F00573900 /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8EA2F614D2F00573900 /* ScheduleView.swift */; };
 		0A27F1E82F5D6CCD003D4763 /* Compat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1E72F5D6CCD003D4763 /* Compat.swift */; };
 		0A27F1EB2F5D6DF9003D4763 /* CafeInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1EA2F5D6DF9003D4763 /* CafeInfoView.swift */; };
 		0A27F1ED2F5D6E3C003D4763 /* CafeCastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1EC2F5D6E3C003D4763 /* CafeCastView.swift */; };
@@ -53,6 +63,11 @@
 		0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E34862F5E887600AA813D /* NotificationEvent.swift */; };
 		0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE922F5EB83400613093 /* CheckInUiState.swift */; };
 		0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE942F5EB86000613093 /* CheckInAction.swift */; };
+		0A51B04F2F6155C000051A97 /* CastEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B04E2F6155C000051A97 /* CastEditView.swift */; };
+		0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B0502F6155DB00051A97 /* CastEditUiState.swift */; };
+		0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B0522F6155F800051A97 /* CastEditViewModel.swift */; };
+		0A51B0552F61561A00051A97 /* CastEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B0542F61561A00051A97 /* CastEditAction.swift */; };
+		0A51B0572F61563A00051A97 /* CastEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B0562F61563A00051A97 /* CastEditEvent.swift */; };
 		0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580D9E2F59660000390F67 /* NavigationStackCompat.swift */; };
 		0A580DA12F5966E400390F67 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DA02F5966E400390F67 /* Route.swift */; };
 		0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DA22F59671900390F67 /* NavigationAction.swift */; };
@@ -158,6 +173,16 @@
 		0A0C66A72F5C0EB700B0CDE4 /* SignUpUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpUiState.swift; sourceTree = "<group>"; };
 		0A0C66A92F5C0EE100B0CDE4 /* SignUpAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpAction.swift; sourceTree = "<group>"; };
 		0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpEvent.swift; sourceTree = "<group>"; };
+		0A27C8D72F614BF700573900 /* CastManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementUiState.swift; sourceTree = "<group>"; };
+		0A27C8D92F614C1400573900 /* CastManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementAction.swift; sourceTree = "<group>"; };
+		0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementViewModel.swift; sourceTree = "<group>"; };
+		0A27C8DD2F614C4600573900 /* CastManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementEvent.swift; sourceTree = "<group>"; };
+		0A27C8DF2F614C6100573900 /* CastManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementView.swift; sourceTree = "<group>"; };
+		0A27C8E22F614C9000573900 /* ScheduleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleViewModel.swift; sourceTree = "<group>"; };
+		0A27C8E42F614CD100573900 /* ScheduleUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleUiState.swift; sourceTree = "<group>"; };
+		0A27C8E62F614CDD00573900 /* ScheduleAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleAction.swift; sourceTree = "<group>"; };
+		0A27C8E82F614D1300573900 /* ScheduleEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleEvent.swift; sourceTree = "<group>"; };
+		0A27C8EA2F614D2F00573900 /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
 		0A27F1E72F5D6CCD003D4763 /* Compat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compat.swift; sourceTree = "<group>"; };
 		0A27F1EA2F5D6DF9003D4763 /* CafeInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoView.swift; sourceTree = "<group>"; };
 		0A27F1EC2F5D6E3C003D4763 /* CafeCastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeCastView.swift; sourceTree = "<group>"; };
@@ -186,6 +211,11 @@
 		0A3E34862F5E887600AA813D /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
 		0A50FE922F5EB83400613093 /* CheckInUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInUiState.swift; sourceTree = "<group>"; };
 		0A50FE942F5EB86000613093 /* CheckInAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInAction.swift; sourceTree = "<group>"; };
+		0A51B04E2F6155C000051A97 /* CastEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditView.swift; sourceTree = "<group>"; };
+		0A51B0502F6155DB00051A97 /* CastEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditUiState.swift; sourceTree = "<group>"; };
+		0A51B0522F6155F800051A97 /* CastEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditViewModel.swift; sourceTree = "<group>"; };
+		0A51B0542F61561A00051A97 /* CastEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditAction.swift; sourceTree = "<group>"; };
+		0A51B0562F61563A00051A97 /* CastEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditEvent.swift; sourceTree = "<group>"; };
 		0A580D9E2F59660000390F67 /* NavigationStackCompat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackCompat.swift; sourceTree = "<group>"; };
 		0A580DA02F5966E400390F67 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		0A580DA22F59671900390F67 /* NavigationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationAction.swift; sourceTree = "<group>"; };
@@ -301,6 +331,8 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A27C8E12F614C7B00573900 /* Schedule */,
+				0A27C8D62F614BD300573900 /* CastManagement */,
 				0A34707C2F611CF9005F9A8C /* MenuGoodsEdit */,
 				0A3470712F611ABE005F9A8C /* ExternalLink */,
 				0A6B334F2F610C2F0074940F /* NoticeEvent */,
@@ -361,6 +393,30 @@
 			path = SignUp;
 			sourceTree = "<group>";
 		};
+		0A27C8D62F614BD300573900 /* CastManagement */ = {
+			isa = PBXGroup;
+			children = (
+				0A27C8D72F614BF700573900 /* CastManagementUiState.swift */,
+				0A27C8D92F614C1400573900 /* CastManagementAction.swift */,
+				0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */,
+				0A27C8DD2F614C4600573900 /* CastManagementEvent.swift */,
+				0A27C8DF2F614C6100573900 /* CastManagementView.swift */,
+			);
+			path = CastManagement;
+			sourceTree = "<group>";
+		};
+		0A27C8E12F614C7B00573900 /* Schedule */ = {
+			isa = PBXGroup;
+			children = (
+				0A27C8E22F614C9000573900 /* ScheduleViewModel.swift */,
+				0A27C8E42F614CD100573900 /* ScheduleUiState.swift */,
+				0A27C8E62F614CDD00573900 /* ScheduleAction.swift */,
+				0A27C8E82F614D1300573900 /* ScheduleEvent.swift */,
+				0A27C8EA2F614D2F00573900 /* ScheduleView.swift */,
+			);
+			path = Schedule;
+			sourceTree = "<group>";
+		};
 		0A27F1E92F5D6D8D003D4763 /* Tab */ = {
 			isa = PBXGroup;
 			children = (
@@ -411,6 +467,18 @@
 			path = MenuGoodsEdit;
 			sourceTree = "<group>";
 		};
+		0A51B04D2F6155A100051A97 /* CastEdit */ = {
+			isa = PBXGroup;
+			children = (
+				0A51B04E2F6155C000051A97 /* CastEditView.swift */,
+				0A51B0502F6155DB00051A97 /* CastEditUiState.swift */,
+				0A51B0522F6155F800051A97 /* CastEditViewModel.swift */,
+				0A51B0542F61561A00051A97 /* CastEditAction.swift */,
+				0A51B0562F61563A00051A97 /* CastEditEvent.swift */,
+			);
+			path = CastEdit;
+			sourceTree = "<group>";
+		};
 		0A580D9B2F59658900390F67 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -418,6 +486,7 @@
 				0ADC46E92F5B33A5003484E4 /* Component */,
 				0A785C9B2F5A7B17004037A8 /* Cafe */,
 				0A580DAE2F59689F00390F67 /* Cast */,
+				0A51B04D2F6155A100051A97 /* CastEdit */,
 				0A580D9D2F5965DB00390F67 /* Main */,
 				0A580D9C2F5965D200390F67 /* Navigation */,
 				0A580DC02F59732000390F67 /* Notification */,
@@ -795,6 +864,7 @@
 				0A580DA72F59678D00390F67 /* NavigationViewModel.swift in Sources */,
 				0A785CCD2F5A7F23004037A8 /* CastAction.swift in Sources */,
 				0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */,
+				0A51B0572F61563A00051A97 /* CastEditEvent.swift in Sources */,
 				0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */,
 				A1010001AABBCCDDEEFF0001 /* ContentView.swift in Sources */,
 				0A0C669E2F5C0E3300B0CDE4 /* SignInUiState.swift in Sources */,
@@ -802,10 +872,12 @@
 				0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */,
 				0A0C66862F5C038D00B0CDE4 /* MainUiState.swift in Sources */,
 				0A8ABA6B2F5C1CA400265D4F /* FanManagementUiState.swift in Sources */,
+				0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */,
 				0A8ABA6F2F5C1CD800265D4F /* FanManagementEvent.swift in Sources */,
 				0A0C66A22F5C0E6D00B0CDE4 /* SignInAction.swift in Sources */,
 				0A785CAD2F5A7C4D004037A8 /* CheckInViewModel.swift in Sources */,
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
+				0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */,
 				0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */,
 				0A785C9F2F5A7B76004037A8 /* ExploreViewModel.swift in Sources */,
 				0A580DB72F59711000390F67 /* CheckInView.swift in Sources */,
@@ -817,14 +889,17 @@
 				0A341CB42F60367400CC07CF /* CafeDashboardEvent.swift in Sources */,
 				0A0C66AA2F5C0EE100B0CDE4 /* SignUpAction.swift in Sources */,
 				0A27F1ED2F5D6E3C003D4763 /* CafeCastView.swift in Sources */,
+				0A51B04F2F6155C000051A97 /* CastEditView.swift in Sources */,
 				0A785CBB2F5A7DC3004037A8 /* RankingAction.swift in Sources */,
 				0A785CB12F5A7CF1004037A8 /* MyInfoAction.swift in Sources */,
 				0A785CBF2F5A7E11004037A8 /* CastViewModel.swift in Sources */,
 				0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */,
 				0A8ABA722F5C1D2A00265D4F /* SettingsView.swift in Sources */,
 				0A8ABA692F5C1C8500265D4F /* FanManagementViewModel.swift in Sources */,
+				0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
+				0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */,
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,
 				0A3470842F611D63005F9A8C /* MenuGoodsEditEvent.swift in Sources */,
 				0A8ABA782F5C1D8B00265D4F /* SettingsAction.swift in Sources */,
@@ -835,12 +910,15 @@
 				0A27F1F52F5D6EEC003D4763 /* CafeGoodsView.swift in Sources */,
 				0A785CA52F5A7BBC004037A8 /* ExploreEvent.swift in Sources */,
 				0A6B334E2F610BAC0074940F /* MenuGoodsEvent.swift in Sources */,
+				0A27C8EB2F614D2F00573900 /* ScheduleView.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */,
 				0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */,
+				0A27C8E32F614C9000573900 /* ScheduleViewModel.swift in Sources */,
 				0A27F1EF2F5D6E62003D4763 /* CafeMenuView.swift in Sources */,
 				0A580DB02F5968B200390F67 /* CastView.swift in Sources */,
 				0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */,
+				0A51B0552F61561A00051A97 /* CastEditAction.swift in Sources */,
 				0A27F1E82F5D6CCD003D4763 /* Compat.swift in Sources */,
 				0A34708A2F611DB0005F9A8C /* ConCafeFormField.swift in Sources */,
 				0A785C9D2F5A7B28004037A8 /* CafeView.swift in Sources */,
@@ -849,6 +927,7 @@
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
 				0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */,
 				0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */,
+				0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */,
 				0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */,
 				0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */,
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
@@ -859,12 +938,15 @@
 				0A6B334C2F610B860074940F /* MenuGoodsAction.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
 				0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */,
+				0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
+				0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
 				0A785C982F5A76FD004037A8 /* HomeUiState.swift in Sources */,
 				0A785CAF2F5A7CD0004037A8 /* MyInfoViewModel.swift in Sources */,
 				0A34707B2F611C64005F9A8C /* ExternalLinkEvent.swift in Sources */,
 				0A8ABA6D2F5C1CC200265D4F /* FanManagementAction.swift in Sources */,
+				0A27C8E92F614D1300573900 /* ScheduleEvent.swift in Sources */,
 				0A785CCB2F5A7F00004037A8 /* CafeAction.swift in Sources */,
 				0A0C66952F5C05FF00B0CDE4 /* Color.swift in Sources */,
 				0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */,
@@ -872,9 +954,11 @@
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
+				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,
+				0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */,
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,

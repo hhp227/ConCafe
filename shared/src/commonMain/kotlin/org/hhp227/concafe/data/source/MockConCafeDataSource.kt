@@ -15,6 +15,7 @@ import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import org.hhp227.concafe.domain.model.Cast
 import org.hhp227.concafe.domain.model.CastDetail
 import org.hhp227.concafe.domain.model.CastSchedule
+import org.hhp227.concafe.domain.model.CastUpsert
 import org.hhp227.concafe.domain.model.GeoPoint
 import org.hhp227.concafe.domain.model.Goods
 import org.hhp227.concafe.domain.model.HomeBanner
@@ -208,13 +209,14 @@ class MockConCafeDataSource : ConCafeDataSource {
             conceptType = "MAID"
         )
     )
-    override val casts = listOf(
+    override val casts = mutableListOf(
         Cast("maid-1", "cafe-1", "사쿠라", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
         Cast("maid-2", "cafe-2", "미유", null, "핑크 캐슬 시그니처 메이드", "2002-04-10", "maid", 987, 4.8),
         Cast("maid-3", "cafe-3", "유이", null, "리본 카페 인기 메이드", "2000-05-14", "maid", 856, 4.7),
         Cast("maid-4", "cafe-2", "나나", null, "생일 이벤트 진행 중", "2001-03-05", "maid", 700, 4.8),
         Cast("maid-5", "cafe-1", "레이", null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
-        Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5)
+        Cast("maid-6", "cafe-3", "미키", null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5),
+        *maidHouseAdditionalCasts.toTypedArray()
     )
 
     override val banners = listOf(
@@ -233,6 +235,37 @@ class MockConCafeDataSource : ConCafeDataSource {
         cafe.id to buildCafeDetail(cafe)
     }.toMutableMap()
     private val cafeDetailsState = MutableStateFlow(cafeDetailsById.toMap())
+    private val cafeCastVersionState = MutableStateFlow(
+        cafes.associate { it.id to 0 }
+    )
+    private val castImagesById = mutableMapOf(
+        "maid-1" to listOf("", ""),
+        "maid-2" to listOf("", ""),
+        "maid-3" to listOf("", ""),
+        "maid-4" to listOf("", ""),
+        "maid-5" to listOf("", ""),
+        "maid-6" to listOf("", "")
+    ).apply {
+        maidHouseAdditionalCasts.forEach { cast ->
+            this[cast.id] = emptyList()
+        }
+    }
+    private val castSchedulesByCastId = mutableMapOf(
+        "maid-1" to defaultCastSchedules("maid-1", "cafe-1", listOf("MONDAY", "TUESDAY")),
+        "maid-2" to defaultCastSchedules("maid-2", "cafe-2", listOf("MONDAY", "WEDNESDAY")),
+        "maid-3" to defaultCastSchedules("maid-3", "cafe-3", listOf("TUESDAY", "THURSDAY")),
+        "maid-4" to defaultCastSchedules("maid-4", "cafe-2", listOf("WEDNESDAY", "FRIDAY")),
+        "maid-5" to defaultCastSchedules("maid-5", "cafe-1", listOf("MONDAY", "FRIDAY")),
+        "maid-6" to defaultCastSchedules("maid-6", "cafe-3", listOf("THURSDAY", "SATURDAY"))
+    ).apply {
+        maidHouseAdditionalCasts.forEachIndexed { index, cast ->
+            this[cast.id] = defaultCastSchedules(
+                cast.id,
+                cast.cafeId,
+                maidHouseWorkingDaysByIndex(index)
+            )
+        }
+    }
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", 4.5f, "분위기가 좋아요", emptyList(), 3, "2026-03-03T10:00:00Z"),
@@ -312,7 +345,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     )
 
     override val onShiftCastIdsByCafeId = mapOf(
-        "cafe-1" to setOf("maid-1", "maid-5"),
+        "cafe-1" to setOf("maid-1", "maid-5", "maid-7", "maid-12", "maid-18", "maid-24", "maid-31"),
         "cafe-2" to setOf("maid-2", "maid-4"),
         "cafe-3" to emptySet()
     )
@@ -357,6 +390,10 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override fun observeCafeDetail(cafeId: String): Flow<CafeDetail?> {
         return cafeDetailsState.asStateFlow().map { detailsById -> detailsById[cafeId] }
+    }
+
+    override fun observeCafeCastVersion(cafeId: String): Flow<Int> {
+        return cafeCastVersionState.asStateFlow().map { it[cafeId] ?: 0 }
     }
 
     override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
@@ -612,20 +649,65 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun castDetail(castId: String): CastDetail? {
         val cast = casts.firstOrNull { it.id == castId } ?: return null
         val cafe = cafes.firstOrNull { it.id == cast.cafeId } ?: return null
-        val todaySchedule = if (cast.id == "maid-1" || cast.id == "maid-2" || cast.id == "maid-5") {
-            CastSchedule("schedule-1", cast.id, cast.cafeId, "2026-03-08", "18:00", "22:00")
-        } else {
-            CastSchedule("schedule-1", cast.id, cast.cafeId, "2026-03-09", "18:00", "22:00")
-        }
 
         return CastDetail(
             cast = cast,
             cafe = cafe,
-            images = listOf("", ""),
-            schedule = listOf(
-                todaySchedule,
-                CastSchedule("schedule-2", cast.id, cast.cafeId, "2026-03-10", "16:00", "21:00")
-            )
+            images = castImagesById[cast.id].orEmpty(),
+            schedule = castSchedulesByCastId[cast.id].orEmpty()
+        )
+    }
+
+    override fun upsertCast(update: CastUpsert): CastDetail {
+        if (update.name.isBlank()) {
+            throw IllegalArgumentException("cast name is required")
+        }
+        if (update.conceptRole.isBlank()) {
+            throw IllegalArgumentException("concept role is required")
+        }
+
+        val existingCast = update.castId?.let { castId ->
+            casts.firstOrNull { it.id == castId } ?: throw NoSuchElementException("cast detail not found")
+        }
+        val targetCafeId = update.cafeId
+            ?: existingCast?.cafeId
+            ?: throw IllegalArgumentException("cafeId is required")
+        val targetCafe = cafes.firstOrNull { it.id == targetCafeId }
+            ?: throw NoSuchElementException("cafe not found")
+        val normalizedBirthday = update.birthday?.takeIf { it.isNotBlank() }
+        val castId = existingCast?.id ?: nextId("maid", casts.map { it.id })
+        val nextCast = Cast(
+            id = castId,
+            cafeId = targetCafeId,
+            name = update.name.trim(),
+            profileImage = existingCast?.profileImage,
+            desc = update.introduction.trim(),
+            birthday = normalizedBirthday,
+            conceptRole = update.conceptRole.trim(),
+            followerCount = existingCast?.followerCount ?: 0,
+            rating = existingCast?.rating ?: 0.0
+        )
+
+        val existingIndex = casts.indexOfFirst { it.id == castId }
+        if (existingIndex >= 0) {
+            casts[existingIndex] = nextCast
+        } else {
+            casts.add(nextCast)
+        }
+
+        if (castImagesById[castId] == null) {
+            castImagesById[castId] = listOfNotNull(nextCast.profileImage)
+        }
+        castSchedulesByCastId[castId] = buildCastSchedules(castId, targetCafeId, update.workingDays)
+        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
+            this[targetCafeId] = (this[targetCafeId] ?: 0) + 1
+        }
+
+        return CastDetail(
+            cast = nextCast,
+            cafe = targetCafe,
+            images = castImagesById[castId].orEmpty(),
+            schedule = castSchedulesByCastId[castId].orEmpty()
         )
     }
 
@@ -677,5 +759,81 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     private fun Double.toRadians(): Double {
         return this * PI / 180.0
+    }
+}
+
+private fun defaultCastSchedules(castId: String, cafeId: String, workingDays: List<String>): List<CastSchedule> {
+    return buildCastSchedules(castId, cafeId, workingDays)
+}
+
+private val maidHouseAdditionalCasts = listOf(
+    "아카리", "하즈키", "마리", "코코", "루루", "시온", "히나", "노아", "세이라", "유즈",
+    "린", "모모", "아오이", "하나", "이오리", "카논", "리리", "마호", "네네", "스즈",
+    "미나", "카에데", "치카", "에리", "미오", "세나", "우이", "호노카", "리코", "유나",
+    "사나", "코하루", "아야", "츠키", "루나", "미레", "키라", "토와", "미호", "유리",
+    "아린", "나기사", "시로", "아이", "유카", "리사", "미카", "하루"
+).mapIndexed { index, name ->
+    val number = index + 7
+    Cast(
+        id = "maid-$number",
+        cafeId = "cafe-1",
+        name = name,
+        profileImage = null,
+        desc = "메이드 하우스 인기 캐스트 $name",
+        birthday = maidHouseBirthdayByIndex(index),
+        conceptRole = maidHouseConceptRoleByIndex(index),
+        followerCount = 580 - (index * 7),
+        rating = 4.2 + ((index % 7) * 0.1)
+    )
+}
+
+private fun maidHouseWorkingDaysByIndex(index: Int): List<String> {
+    return when (index % 5) {
+        0 -> listOf("MONDAY", "WEDNESDAY")
+        1 -> listOf("TUESDAY", "THURSDAY")
+        2 -> listOf("WEDNESDAY", "FRIDAY")
+        3 -> listOf("THURSDAY", "SATURDAY")
+        else -> listOf("FRIDAY", "SUNDAY")
+    }
+}
+
+private fun maidHouseBirthdayByIndex(index: Int): String {
+    val month = (index % 12) + 1
+    val day = (index % 27) + 1
+    return "200${index % 5}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+}
+
+private fun maidHouseConceptRoleByIndex(index: Int): String {
+    return when (index % 6) {
+        0 -> "maid"
+        1 -> "tea master"
+        2 -> "dessert maid"
+        3 -> "floor leader"
+        4 -> "live maid"
+        else -> "apprentice maid"
+    }
+}
+
+private fun buildCastSchedules(castId: String, cafeId: String, workingDays: List<String>): List<CastSchedule> {
+    val dateByWorkingDay = mapOf(
+        "MONDAY" to "2026-03-09",
+        "TUESDAY" to "2026-03-10",
+        "WEDNESDAY" to "2026-03-11",
+        "THURSDAY" to "2026-03-12",
+        "FRIDAY" to "2026-03-13",
+        "SATURDAY" to "2026-03-14",
+        "SUNDAY" to "2026-03-15"
+    )
+
+    return workingDays.distinct().mapIndexedNotNull { index, workingDay ->
+        val date = dateByWorkingDay[workingDay] ?: return@mapIndexedNotNull null
+        CastSchedule(
+            id = "schedule-${castId}-${index + 1}",
+            castId = castId,
+            cafeId = cafeId,
+            date = date,
+            startTime = "18:00",
+            endTime = "22:00"
+        )
     }
 }

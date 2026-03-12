@@ -10,20 +10,26 @@ import Shared
 
 struct CafeUiState {
     var isLoading: Bool
+    var isLoadingMoreCasts: Bool
     var errorMessage: String?
     var selectedTab: TabType
     var detail: CafeDetail?
     var casts: [CafeDetailCast]
+    var castsNextCursor: String?
+    var canLoadMoreCasts: Bool
     var reviews: [CafeDetailReview]
     var isFavorite: Bool
     var isLoggedIn: Bool
 
     static let empty = CafeUiState(
         isLoading: false,
+        isLoadingMoreCasts: false,
         errorMessage: nil,
         selectedTab: .info,
         detail: nil,
         casts: [],
+        castsNextCursor: nil,
+        canLoadMoreCasts: false,
         reviews: [],
         isFavorite: false,
         isLoggedIn: false

@@ -14,6 +14,8 @@ final class CafeViewModel: ObservableObject {
     private let cafeId: String
     
     private let getCafeDetailUseCase: GetCafeDetailUseCase
+
+    private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
     
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
     
@@ -21,14 +23,14 @@ final class CafeViewModel: ObservableObject {
     
     let event = PassthroughSubject<CafeEvent, Never>()
     
-    private var loadTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadCafeDetail() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        tasks[.detail]?.cancel()
+        tasks[.detail] = Task {
             do {
                 let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
 
@@ -36,14 +38,18 @@ final class CafeViewModel: ObservableObject {
                    let feed = success.data as? Shared.CafeDetailFeed {
                     uiState = CafeUiState(
                         isLoading: false,
+                        isLoadingMoreCasts: uiState.isLoadingMoreCasts,
                         errorMessage: nil,
                         selectedTab: uiState.selectedTab,
                         detail: feed.detail,
-                        casts: feed.casts,
+                        casts: uiState.casts,
+                        castsNextCursor: uiState.castsNextCursor,
+                        canLoadMoreCasts: uiState.canLoadMoreCasts,
                         reviews: feed.reviews,
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn
                     )
+                    refreshCastPage()
                 } else if result is AppResultFailure {
                     uiState.isLoading = false
                     uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
@@ -59,9 +65,43 @@ final class CafeViewModel: ObservableObject {
         }
     }
 
+    private func loadCastPage(cursor: String?, append: Bool) {
+        tasks[.castPage]?.cancel()
+        tasks[.castPage] = Task {
+            uiState.isLoadingMoreCasts = append
+
+            do {
+                let result = try await getCafeCastListPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeDetailCast> {
+                    uiState.casts = append ? (uiState.casts + page.items as! [CafeDetailCast]) : page.items as! [CafeDetailCast]
+                    uiState.castsNextCursor = page.nextCursor
+                    uiState.canLoadMoreCasts = page.hasNext
+                    uiState.isLoadingMoreCasts = false
+                } else {
+                    uiState.isLoadingMoreCasts = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreCasts = false
+            }
+        }
+    }
+
+    private func refreshCastPage() {
+        loadCastPage(cursor: nil, append: false)
+    }
+
+    private func loadMoreCasts() {
+        guard uiState.canLoadMoreCasts,
+              !uiState.isLoadingMoreCasts,
+              let cursor = uiState.castsNextCursor else { return }
+        loadCastPage(cursor: cursor, append: true)
+    }
+
     private func toggleFavorite() {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await toggleFavoriteCafeUseCase.invoke(cafeId: cafeId)
 
@@ -89,6 +129,8 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
             toggleFavorite()
+        case .loadMoreCasts:
+            loadMoreCasts()
         case .refresh:
             loadCafeDetail()
         }
@@ -97,16 +139,24 @@ final class CafeViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
         
         loadCafeDetail()
     }
     
     deinit {
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case detail
+        case castPage
     }
 }

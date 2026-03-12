@@ -29,6 +29,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
             case .navigateToMenuGoods(let cafeId):
                 onNavigationAction(.navigateToMenuGoods(id: cafeId))
+            case .navigateToCastEdit(let cafeId, let castId):
+                onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
             }
         }
     }
@@ -235,7 +237,6 @@ private struct CafeDashboardContentView: View {
     }
 
     private var castManagementSection: some View {
-        let cafe = uiState.cafe!
         return VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("소속 캐스트 관리")
@@ -261,9 +262,6 @@ private struct CafeDashboardContentView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    ForEach(cafe.castPreviews, id: \.id) { cast in
-                        castPreviewItem(cast: cast)
-                    }
                     Button {
                         onAction(.clickShortcut(.castManagement))
                     } label: {
@@ -282,6 +280,34 @@ private struct CafeDashboardContentView: View {
                         .frame(width: 80)
                     }
                     .buttonStyle(.plain)
+                    ForEach(uiState.castPreviews, id: \.id) { cast in
+                        castPreviewItem(cast: cast)
+                    }
+                    if uiState.hasMoreCasts {
+                        Button {
+                            onAction(.clickLoadMoreCasts)
+                        } label: {
+                            VStack(spacing: 8) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(hex: "F7F2F6"))
+                                        .frame(width: 72, height: 72)
+                                    if uiState.isLoadingMoreCasts {
+                                        ProgressView()
+                                            .tint(Color(hex: "B8AEB7"))
+                                    } else {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundStyle(Color(hex: "8F848F"))
+                                    }
+                                }
+                                Text(uiState.isLoadingMoreCasts ? "불러오는 중" : "더 보기")
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Color(hex: "8F848F"))
+                            }
+                            .frame(width: 80)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding(.vertical, 2)
             }
@@ -295,7 +321,7 @@ private struct CafeDashboardContentView: View {
         )
     }
 
-    private func castPreviewItem(cast: CafeDashboardData.CastPreview) -> some View {
+    private func castPreviewItem(cast: CafeCastPreview) -> some View {
         VStack(spacing: 8) {
             ZStack(alignment: .bottomTrailing) {
                 LinearGradient(
