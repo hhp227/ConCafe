@@ -24,44 +24,13 @@ struct CafeCastView: View {
             VStack(spacing: 12) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
-                        VStack(alignment: .leading, spacing: 0) {
-                            LinearGradient(
-                                colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 160)
-                            .overlay(alignment: .topTrailing) {
-                                HStack(spacing: 6) {
-                                    if maid.isWorking {
-                                        Text("출근중")
-                                            .font(.caption2.weight(.semibold))
-                                            .foregroundStyle(.white)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(Color.green)
-                                            .clipShape(Capsule())
-                                    }
-                                    Text(maid.cast.conceptRole.uppercased())
-                                        .font(.caption2.weight(.bold))
-                                        .foregroundStyle(Color.white.opacity(0.9))
-                                }
-                            }
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(maid.cast.name)
-                                    .font(.subheadline.weight(.semibold))
-                                Text(maid.cast.desc)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                            }
-                            .padding(12)
-                        }
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        .onTapGesture {
-                            onAction(.maidTapped(id: maid.cast.id))
-                        }
+                        ConCafeCastCard(
+                            name: maid.cast.name,
+                            subtitle: maid.cast.desc,
+                            subtitleLineLimit: 2,
+                            isWorking: maid.isWorking,
+                            onTap: { onAction(.maidTapped(id: maid.cast.id)) }
+                        )
                         .onAppear {
                             guard index == maids.indices.last,
                                   canLoadMore,

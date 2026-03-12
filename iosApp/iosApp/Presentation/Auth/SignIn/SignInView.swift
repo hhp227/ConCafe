@@ -102,10 +102,10 @@ private struct SignInContentView: View {
             } label: {
                 Text(uiState.isLoading ? "로그인 중..." : "로그인")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color(hex: "EF6797"))
+                    .background(Color(hex: "FFD1DC"))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(uiState.isLoading)

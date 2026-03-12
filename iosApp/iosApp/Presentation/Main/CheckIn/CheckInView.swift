@@ -610,8 +610,8 @@ private struct CheckInLoginPromptSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color(hex: "EF6797"))
-            .foregroundStyle(.white)
+            .background(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
             Spacer()
@@ -636,8 +636,6 @@ private struct CheckInNewVisitSheet: View {
     @State private var isTimePickerPresented = false
 
     @State private var memo = ""
-
-    @FocusState private var isMemoFocused: Bool
 
     private var selectedCafeName: String {
         cafes.first(where: { $0.id == selectedCafeId })?.name ?? cafes.first?.name ?? ""
@@ -672,19 +670,15 @@ private struct CheckInNewVisitSheet: View {
                             .font(.footnote)
                             .foregroundStyle(Color(hex: "7C7480"))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        CheckInSheetField(
-                            value: "",
-                            showsChevron: false,
-                            isEnabled: false,
-                            action: {}
+                        ConCafeFormField(
+                            label: "카페 선택",
+                            text: .constant(""),
+                            placeholder: "선택 가능한 카페가 없습니다.",
+                            isEditable: false
                         )
                     }
                 } else {
-                    VStack(spacing: 6) {
-                        Text("카페 선택")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(hex: "7C7480"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    ZStack {
                         Menu {
                             ForEach(cafes, id: \.id) { cafe in
                                 Button(cafe.name) {
@@ -692,49 +686,44 @@ private struct CheckInNewVisitSheet: View {
                                 }
                             }
                         } label: {
-                            CheckInSheetField(
-                                value: selectedCafeName,
-                                showsChevron: true,
-                                isEnabled: true,
-                                action: {}
+                            ConCafeFormField(
+                                label: "카페 선택",
+                                text: .constant(selectedCafeName),
+                                placeholder: "카페를 선택하세요.",
+                                isEditable: false,
+                                trailingContent: {
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(Color(hex: "7C7480"))
+                                }
                             )
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                VStack(spacing: 6) {
-                    Text("방문 시간")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "7C7480"))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    CheckInSheetField(
-                        value: formatVisitTime(visitTime),
-                        showsChevron: false,
-                        isEnabled: true,
-                        action: { isTimePickerPresented = true }
-                    )
-                }
-                VStack(spacing: 6) {
-                    Text("메모 (선택)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "7C7480"))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    ZStack(alignment: .topLeading) {
-                        TextEditor(text: $memo)
-                            .focused($isMemoFocused)
-                            .frame(height: 90)
-                            .padding(8)
-                            .background(Color(hex: "FFF9FC"))
-                            .cornerRadius(12)
-                        if memo.isEmpty {
-                            Text("방문 후기를 남겨보세요.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 14)
-                                .padding(.leading, 14)
+                ZStack {
+                    ConCafeFormField(
+                        label: "방문 시간",
+                        text: .constant(formatVisitTime(visitTime)),
+                        placeholder: "방문 시간을 선택하세요.",
+                        isEditable: false,
+                        trailingContent: {
+                            Image(systemName: "clock")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color(hex: "7C7480"))
                         }
+                    )
+                    Button(action: { isTimePickerPresented = true }) {
+                        Color.clear
                     }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                ConCafeFormEditor(
+                    label: "메모 (선택)",
+                    text: $memo,
+                    placeholder: "방문 후기를 남겨보세요."
+                )
             }
             Button("체크인 완료") {
                 guard let cafeId = selectedCafeId else { return }
@@ -750,8 +739,8 @@ private struct CheckInNewVisitSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color(hex: "EF6797"))
-            .foregroundStyle(.white)
+            .background(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
             .font(.headline.weight(.bold))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .disabled(selectedCafeId == nil)
@@ -762,9 +751,6 @@ private struct CheckInNewVisitSheet: View {
         .padding(.top, 10)
         .background(Color.white)
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .onAppear {
-            isMemoFocused = false
-        }
         .sheet(isPresented: $isTimePickerPresented) {
             CompatNavigationContainer(title: "방문 시간 선택") {
                 VStack {
@@ -815,57 +801,12 @@ private struct CheckInNewVisitSheet: View {
         return String(format: "%04d-%02d-%02dT%02d:%02d:00Z", year, month, day, hour, minute)
     }
 
-    private func formatVisitDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar.current
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-
     private func formatVisitTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.calendar = Calendar.current
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
-    }
-}
-
-private struct CheckInSheetField: View {
-    let value: String
-
-    let showsChevron: Bool
-
-    let isEnabled: Bool
-
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(value)
-                    .font(.body)
-                    .foregroundStyle(isEnabled ? Color.primary : Color(hex: "B8B0B7"))
-                Spacer()
-                if showsChevron {
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "7C7480"))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
-            .background(Color(hex: "FFF9FC"))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "F3D4E0"), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
     }
 }
 

@@ -385,7 +385,10 @@ private fun SignUpFormSection(
             onClick = { onAction(SignUpAction.ClickSubmit) },
             enabled = !uiState.isLoading,
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330)
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
