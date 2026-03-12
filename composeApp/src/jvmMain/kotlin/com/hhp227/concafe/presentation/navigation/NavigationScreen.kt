@@ -185,7 +185,7 @@ private fun DetailRoutePane(
                 onNavigationAction = onNavigationAction
             )
         }
-        Route.Schedule -> {
+        is Route.Schedule -> {
             ScheduleScreen(
                 onNavigationAction = onNavigationAction
             )
