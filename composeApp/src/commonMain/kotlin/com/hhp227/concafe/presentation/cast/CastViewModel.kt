@@ -7,16 +7,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
+    private val observeCastVersionUseCase: ObserveCastVersionUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastUiState.empty())
@@ -24,6 +27,19 @@ class CastViewModel(
 
     private val _event = MutableSharedFlow<CastEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private fun bindCastVersion() {
+        viewModelScope.launch {
+            var isInitialEmission = true
+            observeCastVersionUseCase.invoke(castId).collectLatest {
+                if (isInitialEmission) {
+                    isInitialEmission = false
+                    return@collectLatest
+                }
+                loadCastDetail()
+            }
+        }
+    }
 
     private fun loadCastDetail() {
         _uiState.update {
@@ -92,6 +108,7 @@ class CastViewModel(
     }
 
     init {
+        bindCastVersion()
         loadCastDetail()
     }
 }

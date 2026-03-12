@@ -36,7 +36,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MockConCafeDataSource : ConCafeDataSource {
-    override var currentUserId: String? = null
+    override var currentUserId: String? = "user-1"
 
     override val users = mutableListOf(
         User(
@@ -306,8 +306,14 @@ class MockConCafeDataSource : ConCafeDataSource {
         Visit("visit-1", "user-1", "cafe-1", "2026-03-09T08:30:00Z", "오픈 시간에 맞춰 방문", true),
         Visit("visit-2", "user-1", "cafe-2", "2026-03-09T13:15:00Z", "신규 메이드 이벤트 확인", true),
         Visit("visit-3", "user-1", "cafe-3", "2026-03-09T18:40:00Z", "저녁 타임 분위기 좋음", true),
+        Visit("visit-4", "user-1", "cafe-4", "2026-03-08T17:20:00Z", "퇴근 후 방문", true),
+        Visit("visit-5", "user-1", "cafe-5", "2026-03-08T19:00:00Z", "주말 메뉴 확인", true),
         Visit("visit-4", "user-1", "cafe-6", "2026-03-08T20:10:00Z", "체리 시즌 메뉴 주문", true),
-        Visit("visit-5", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true)
+        Visit("visit-7", "user-1", "cafe-7", "2026-03-07T16:40:00Z", "가든 분위기 확인", true),
+        Visit("visit-8", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true),
+        Visit("visit-9", "user-1", "cafe-9", "2026-03-06T18:05:00Z", "캐주얼 타임 방문", true),
+        Visit("visit-10", "user-1", "cafe-10", "2026-03-06T14:30:00Z", "티룸 콘셉트 체험", true),
+        Visit("visit-11", "user-1", "cafe-11", "2026-03-05T19:10:00Z", "공연 콘셉트 카페 방문", true)
     )
 
     override val notifications = mutableListOf(
@@ -762,6 +768,39 @@ class MockConCafeDataSource : ConCafeDataSource {
             images = castImagesById[castId].orEmpty(),
             schedule = castSchedulesByCastId[castId].orEmpty()
         )
+    }
+
+    override fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>) {
+        val cafeIndex = cafes.indexOfFirst { it.id == cafeId }
+        if (cafeIndex == -1) return
+
+        val cafeReviews = reviews.filter { it.cafeId == cafeId }
+        val reviewCount = cafeReviews.size
+        val ratingAverage = if (cafeReviews.isEmpty()) {
+            0.0
+        } else {
+            cafeReviews.map { it.rating.toDouble() }.average()
+        }
+
+        val currentCafe = cafes[cafeIndex]
+        val updatedCafe = currentCafe.copy(
+            ratingAvg = ratingAverage,
+            reviewCount = reviewCount
+        )
+        cafes[cafeIndex] = updatedCafe
+
+        val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(updatedCafe)
+        cafeDetailsById[cafeId] = currentDetail.copy(cafe = updatedCafe)
+        cafeDetailsState.value = cafeDetailsById.toMap()
+
+        val castIdsToRefresh = linkedSetOf<String>()
+        castIdsToRefresh.addAll(taggedCastIds)
+        castIdsToRefresh.addAll(casts.filter { it.cafeId == cafeId }.map { it.id })
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            castIdsToRefresh.forEach { castId ->
+                this[castId] = (this[castId] ?: 0) + 1
+            }
+        }
     }
 
     override fun rankingItemsFromCasts(): List<RankingItem> {

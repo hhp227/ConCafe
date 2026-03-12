@@ -18,6 +18,7 @@ data class ReviewEditUiState(
     val submitButtonLabel: String = "리뷰 등록하기",
     val cafeName: String = "",
     val cafeAddress: String = "",
+    val isLoggedIn: Boolean = false,
     val isVisitVerified: Boolean = true,
     val atmosphereAnswer: Boolean? = null,
     val isSubmitting: Boolean = false,

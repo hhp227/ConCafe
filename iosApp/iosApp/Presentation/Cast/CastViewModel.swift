@@ -15,6 +15,8 @@ final class CastViewModel: ObservableObject {
 
     private let getCastDetailUseCase: GetCastDetailUseCase
 
+    private let observeCastVersionUseCase: ObserveCastVersionUseCase
+
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
     @Published private(set) var uiState = CastUiState.empty
@@ -22,6 +24,21 @@ final class CastViewModel: ObservableObject {
     let event = PassthroughSubject<CastEvent, Never>()
 
     private var loadTask: Task<Void, Never>?
+
+    private var castVersionWatchHandle: WatchHandle?
+
+    private func bindCastVersion() {
+        castVersionWatchHandle?.cancel()
+        var isInitialEmission = true
+        castVersionWatchHandle = observeCastVersionUseCase.watch(castId: castId) { [weak self] _ in
+            guard let self else { return }
+            if isInitialEmission {
+                isInitialEmission = false
+                return
+            }
+            self.loadCastDetail()
+        }
+    }
 
     private func loadCastDetail() {
         loadTask?.cancel()
@@ -92,16 +109,20 @@ final class CastViewModel: ObservableObject {
     init(
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
+        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
+        self.observeCastVersionUseCase = observeCastVersionUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
 
+        bindCastVersion()
         loadCastDetail()
     }
 
     deinit {
+        castVersionWatchHandle?.cancel()
         loadTask?.cancel()
     }
 }

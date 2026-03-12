@@ -84,48 +84,52 @@ private fun ReviewEditContentScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { onAction(ReviewEditAction.ClickSubmit) }) {
-                        Text(
-                            text = uiState.topActionLabel,
-                            color = Color(0xFFEF6797),
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (uiState.isLoggedIn) {
+                        TextButton(onClick = { onAction(ReviewEditAction.ClickSubmit) }) {
+                            Text(
+                                text = uiState.topActionLabel,
+                                color = Color(0xFFEF6797),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.navigationBarsPadding(),
-                color = Color.White.copy(alpha = 0.96f),
-                shadowElevation = 10.dp
-            ) {
-                Button(
-                    onClick = { onAction(ReviewEditAction.ClickSubmit) },
-                    enabled = uiState.isSubmitEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330),
-                        disabledContainerColor = Color(0xFFF0D9E0),
-                        disabledContentColor = Color(0xFF7F7078)
-                    )
+            if (uiState.isLoggedIn) {
+                Surface(
+                    modifier = Modifier.navigationBarsPadding(),
+                    color = Color.White.copy(alpha = 0.96f),
+                    shadowElevation = 10.dp
                 ) {
-                    if (uiState.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = Color(0xFF2B2330)
+                    Button(
+                        onClick = { onAction(ReviewEditAction.ClickSubmit) },
+                        enabled = uiState.isSubmitEnabled,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD1DC),
+                            contentColor = Color(0xFF2B2330),
+                            disabledContainerColor = Color(0xFFF0D9E0),
+                            disabledContentColor = Color(0xFF7F7078)
                         )
-                    } else {
-                        Text(
-                            text = uiState.submitButtonLabel,
-                            fontWeight = FontWeight.Bold
-                        )
+                    ) {
+                        if (uiState.isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFF2B2330)
+                            )
+                        } else {
+                            Text(
+                                text = uiState.submitButtonLabel,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

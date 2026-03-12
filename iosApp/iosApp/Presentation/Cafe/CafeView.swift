@@ -61,7 +61,7 @@ private struct CafeContentView: View {
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
                 }
-                if uiState.selectedTab == .reviews, uiState.detail != nil {
+                if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
                         .padding(.trailing, 20)
                         .padding(.bottom, 24)

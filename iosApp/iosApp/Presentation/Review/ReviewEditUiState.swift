@@ -25,6 +25,7 @@ struct ReviewEditUiState {
     var submitButtonLabel = "리뷰 등록하기"
     var cafeName = ""
     var cafeAddress = ""
+    var isLoggedIn = false
     var isVisitVerified = true
     var atmosphereAnswer: Bool? = nil
     var isSubmitting = false

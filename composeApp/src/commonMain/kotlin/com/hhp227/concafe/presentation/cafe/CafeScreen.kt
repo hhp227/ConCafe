@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
@@ -54,6 +55,7 @@ fun CafeScreen(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
+                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
                     toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
                 )
             }
@@ -154,7 +156,7 @@ fun CafeContentScreen(
             )
         },
         floatingActionButton = {
-            if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null) {
+            if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null && uiState.isLoggedIn) {
                 ExtendedFloatingActionButton(
                     onClick = { onAction(CafeAction.ClickWriteReview) },
                     containerColor = Color(0xFFFFD1DC),

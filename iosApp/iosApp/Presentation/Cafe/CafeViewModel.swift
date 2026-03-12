@@ -16,6 +16,8 @@ final class CafeViewModel: ObservableObject {
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
+
+    private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
     
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
     
@@ -24,6 +26,21 @@ final class CafeViewModel: ObservableObject {
     let event = PassthroughSubject<CafeEvent, Never>()
     
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
+
+    private var cafeDetailWatchHandle: WatchHandle?
+
+    private func bindCafeDetail() {
+        cafeDetailWatchHandle?.cancel()
+        var isInitialEmission = true
+        cafeDetailWatchHandle = observeCafeDetailUseCase.watch(cafeId: cafeId) { [weak self] _ in
+            guard let self else { return }
+            if isInitialEmission {
+                isInitialEmission = false
+                return
+            }
+            self.loadCafeDetail()
+        }
+    }
 
     private func loadCafeDetail() {
         uiState.isLoading = true
@@ -146,17 +163,21 @@ final class CafeViewModel: ObservableObject {
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.observeCafeDetailUseCase = observeCafeDetailUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
-        
+
+        bindCafeDetail()
         loadCafeDetail()
     }
     
     deinit {
+        cafeDetailWatchHandle?.cancel()
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }

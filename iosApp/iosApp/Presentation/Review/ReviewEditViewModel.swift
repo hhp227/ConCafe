@@ -41,6 +41,7 @@ final class ReviewEditViewModel: ObservableObject {
                         uiState.cafeId = cafeId
                         uiState.cafeName = detail.cafe.name
                         uiState.cafeAddress = detail.cafe.region.address
+                        uiState.isLoggedIn = feed.isLoggedIn
                         uiState.availableCastTags = detail.casts.map { cast in
                             ReviewEditUiState.CastTag(id: cast.id, name: cast.name)
                         }

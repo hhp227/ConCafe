@@ -98,13 +98,19 @@ private struct ReviewEditContentView: View {
             Button {
                 onAction(.clickSubmit)
             } label: {
-                Text(uiState.topActionLabel)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                Group {
+                    if uiState.isLoggedIn {
+                        Text(uiState.topActionLabel)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "EF6797"))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                    }
+                }
             }
             .buttonStyle(.plain)
+            .disabled(!uiState.isLoggedIn)
+            .opacity(uiState.isLoggedIn ? 1 : 0)
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -348,30 +354,34 @@ private struct ReviewEditContentView: View {
     }
 
     private var bottomBar: some View {
-        Button {
-            onAction(.clickSubmit)
-        } label: {
-            HStack {
-                if uiState.isSubmitting {
-                    ProgressView()
-                        .tint(Color(hex: "2B2330"))
-                } else {
-                    Text(uiState.submitButtonLabel)
-                        .fontWeight(.bold)
+        Group {
+            if uiState.isLoggedIn {
+                Button {
+                    onAction(.clickSubmit)
+                } label: {
+                    HStack {
+                        if uiState.isSubmitting {
+                            ProgressView()
+                                .tint(Color(hex: "2B2330"))
+                        } else {
+                            Text(uiState.submitButtonLabel)
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .foregroundStyle(uiState.isSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                .buttonStyle(.plain)
+                .disabled(!uiState.isSubmitEnabled)
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+                .padding(.bottom, 14)
+                .background(Color.white.opacity(0.96))
             }
-            .foregroundStyle(uiState.isSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .disabled(!uiState.isSubmitEnabled)
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 14)
-        .background(Color.white.opacity(0.96))
     }
 
     private func answerChip(

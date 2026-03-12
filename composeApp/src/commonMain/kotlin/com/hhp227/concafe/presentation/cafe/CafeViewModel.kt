@@ -8,18 +8,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
+    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
@@ -31,6 +34,20 @@ class CafeViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<JobKey, Job>()
+
+    private fun bindCafeDetail() {
+        jobs[JobKey.OBSERVE_DETAIL]?.cancel()
+        jobs[JobKey.OBSERVE_DETAIL] = viewModelScope.launch {
+            var isInitialEmission = true
+            observeCafeDetailUseCase.invoke(cafeId).collectLatest {
+                if (isInitialEmission) {
+                    isInitialEmission = false
+                    return@collectLatest
+                }
+                loadCafeDetail()
+            }
+        }
+    }
 
     private fun loadCafeDetail() {
         _uiState.update {
@@ -157,11 +174,13 @@ class CafeViewModel(
     }
 
     init {
+        bindCafeDetail()
         loadCafeDetail()
     }
 
     private enum class JobKey {
         DETAIL,
-        CAST_PAGE
+        CAST_PAGE,
+        OBSERVE_DETAIL
     }
 }

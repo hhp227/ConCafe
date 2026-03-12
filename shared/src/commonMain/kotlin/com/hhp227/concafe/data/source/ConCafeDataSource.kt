@@ -82,6 +82,8 @@ interface ConCafeDataSource {
 
     fun upsertCast(update: CastUpsert): CastDetail
 
+    fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>)
+
     fun rankingItemsFromCasts(): List<RankingItem>
 
     fun rankingItemsFromCafes(): List<RankingItem>

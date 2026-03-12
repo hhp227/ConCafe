@@ -39,6 +39,10 @@ class FakeReviewRepository(
             createdAt = "2026-03-05T00:00:00Z"
         )
         dataSource.reviews.add(review)
+        dataSource.refreshReviewProjections(
+            cafeId = cafeId,
+            taggedCastIds = taggedCastIds
+        )
         return review
     }
 
