@@ -1,12 +1,12 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.model.UserRole
-import org.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.repository.AuthRepository
 
 class FakeAuthRepository(
     private val dataSource: ConCafeDataSource

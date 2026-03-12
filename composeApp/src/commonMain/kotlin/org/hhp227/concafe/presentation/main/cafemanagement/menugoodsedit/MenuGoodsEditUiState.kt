@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
 
 data class MenuGoodsEditUiState(
     val isLoading: Boolean = true,

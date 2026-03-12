@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.fanmanagement
+package com.hhp227.concafe.presentation.main.fanmanagement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.di.resolveGetFanManagementDataUseCase
-import org.hhp227.concafe.di.resolveObserveCastVersionUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveGetFanManagementDataUseCase
+import com.hhp227.concafe.di.resolveObserveCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class FanManagementViewModel(
     private val getFanManagementDataUseCase: GetFanManagementDataUseCase = resolveGetFanManagementDataUseCase(),

@@ -1,9 +1,9 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.RankingItem
-import org.hhp227.concafe.domain.model.RankingPeriod
-import org.hhp227.concafe.domain.repository.RankingRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.RankingItem
+import com.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.repository.RankingRepository
 
 class FakeRankingRepository(
     private val dataSource: ConCafeDataSource

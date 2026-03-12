@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.notification
+package com.hhp227.concafe.presentation.notification
 
 sealed interface NotificationAction {
     data object ClickBack : NotificationAction

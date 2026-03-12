@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.component
+package com.hhp227.concafe.presentation.component
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab

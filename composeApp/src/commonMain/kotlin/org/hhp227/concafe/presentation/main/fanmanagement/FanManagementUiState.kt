@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.main.fanmanagement
+package com.hhp227.concafe.presentation.main.fanmanagement
 
-import org.hhp227.concafe.domain.model.FanManagementData
+import com.hhp227.concafe.domain.model.FanManagementData
 
 data class FanManagementUiState(
     val isLoading: Boolean = true,

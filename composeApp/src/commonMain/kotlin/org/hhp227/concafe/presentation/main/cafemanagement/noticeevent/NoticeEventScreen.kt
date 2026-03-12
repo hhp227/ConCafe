@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.noticeevent
+package com.hhp227.concafe.presentation.main.cafemanagement.noticeevent
 
 import androidx.compose.runtime.Composable
 

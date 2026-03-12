@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe.tab
+package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.hhp227.concafe.domain.model.CafeMenu
-import org.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.presentation.component.colorFromHex
 
 @Composable
 fun CafeMenuScreen(menus: List<CafeMenu>) {

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.ranking
+package com.hhp227.concafe.presentation.main.ranking
 
 sealed interface RankingEvent {
     data class NavigateToCast(val id: String) : RankingEvent

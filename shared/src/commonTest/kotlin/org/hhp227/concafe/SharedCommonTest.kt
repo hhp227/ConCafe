@@ -1,4 +1,4 @@
-package org.hhp227.concafe
+package com.hhp227.concafe
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

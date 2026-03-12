@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
+package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,13 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCafeCastPageUseCase
-import org.hhp227.concafe.di.resolveGetCafeDashboardUseCase
-import org.hhp227.concafe.di.resolveObserveCafeCastVersionUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.model.CafeCastPreview
-import org.hhp227.concafe.domain.model.CafeDashboardData
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
+import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
+import com.hhp227.concafe.di.resolveObserveCafeCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.model.CafeCastPreview
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun CafeDashboardScreen(

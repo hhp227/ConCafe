@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.notification
+package com.hhp227.concafe.presentation.notification
 
-import org.hhp227.concafe.domain.model.NotificationSection
+import com.hhp227.concafe.domain.model.NotificationSection
 
 data class NotificationUiState(
     val isLoading: Boolean = true,

@@ -1,7 +1,7 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Review
 
 interface ReviewRepository {
     suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review>

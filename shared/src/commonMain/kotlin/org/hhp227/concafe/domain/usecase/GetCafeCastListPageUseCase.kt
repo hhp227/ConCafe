@@ -1,10 +1,10 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.CafeDetailCast
-import org.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.domain.repository.CastRepository
 
 class GetCafeCastListPageUseCase(
     private val castRepository: CastRepository

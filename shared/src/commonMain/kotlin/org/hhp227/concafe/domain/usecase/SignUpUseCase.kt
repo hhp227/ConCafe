@@ -1,10 +1,10 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.model.UserRole
-import org.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.repository.AuthRepository
 
 class SignUpUseCase(
     private val authRepository: AuthRepository

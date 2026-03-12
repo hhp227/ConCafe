@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.externallink
+package com.hhp227.concafe.presentation.main.cafemanagement.externallink
 
 class ExternalLinkUiState {
 }

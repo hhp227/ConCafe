@@ -1,8 +1,8 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.Notice
-import org.hhp227.concafe.domain.repository.NoticeRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.repository.NoticeRepository
 
 class FakeNoticeRepository(
     private val dataSource: ConCafeDataSource

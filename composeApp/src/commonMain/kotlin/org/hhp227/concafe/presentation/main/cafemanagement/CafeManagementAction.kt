@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement
+package com.hhp227.concafe.presentation.main.cafemanagement
 
 sealed interface CafeManagementAction {
     data class ClickCafe(val cafeId: String) : CafeManagementAction

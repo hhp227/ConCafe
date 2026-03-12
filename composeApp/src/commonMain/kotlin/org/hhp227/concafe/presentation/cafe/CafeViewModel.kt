@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe
+package com.hhp227.concafe.presentation.cafe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
-import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
-import org.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
     private val cafeId: String,

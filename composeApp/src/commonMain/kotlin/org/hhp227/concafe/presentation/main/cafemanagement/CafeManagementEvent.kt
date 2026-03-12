@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement
+package com.hhp227.concafe.presentation.main.cafemanagement
 
 sealed interface CafeManagementEvent {
     data class NavigateToCafeDashboard(val cafeId: String) : CafeManagementEvent

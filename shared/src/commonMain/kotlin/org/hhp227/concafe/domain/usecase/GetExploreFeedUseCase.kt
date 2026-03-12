@@ -1,12 +1,12 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.ExploreFeed
-import org.hhp227.concafe.domain.model.ExploreRegionFilter
-import org.hhp227.concafe.domain.model.ExploreSortFilter
-import org.hhp227.concafe.domain.repository.CafeRepository
-import org.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.ExploreFeed
+import com.hhp227.concafe.domain.model.ExploreRegionFilter
+import com.hhp227.concafe.domain.model.ExploreSortFilter
+import com.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.repository.CastRepository
 
 class GetExploreFeedUseCase(
     private val cafeRepository: CafeRepository,

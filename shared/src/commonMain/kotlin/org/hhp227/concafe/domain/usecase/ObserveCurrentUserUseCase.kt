@@ -1,4 +1,4 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -6,10 +6,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.WatchHandle
+import com.hhp227.concafe.domain.common.WatchHandle
 import kotlinx.coroutines.flow.Flow
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.repository.AuthRepository
 
 class ObserveCurrentUserUseCase(
     private val authRepository: AuthRepository

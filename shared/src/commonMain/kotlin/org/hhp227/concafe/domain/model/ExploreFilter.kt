@@ -1,4 +1,4 @@
-package org.hhp227.concafe.domain.model
+package com.hhp227.concafe.domain.model
 
 data class ExploreRegionFilter(
     val key: String,

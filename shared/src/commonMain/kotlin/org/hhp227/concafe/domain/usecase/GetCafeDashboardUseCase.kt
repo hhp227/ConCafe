@@ -1,11 +1,11 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeDashboardData
-import org.hhp227.concafe.domain.model.UserRole
-import org.hhp227.concafe.domain.repository.AuthRepository
-import org.hhp227.concafe.domain.repository.CafeDashboardRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.repository.CafeDashboardRepository
 
 class GetCafeDashboardUseCase(
     private val authRepository: AuthRepository,

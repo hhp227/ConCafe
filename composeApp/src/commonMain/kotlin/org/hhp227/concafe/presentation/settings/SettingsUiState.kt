@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.settings
+package com.hhp227.concafe.presentation.settings
 
 data class SettingsUiState(
     val isLoading: Boolean = false,

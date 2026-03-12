@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.main.checkin
 
 sealed interface CheckInEvent {
     data class NavigateToCafe(val id: String) : CheckInEvent

@@ -1,8 +1,8 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserRole
 
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User

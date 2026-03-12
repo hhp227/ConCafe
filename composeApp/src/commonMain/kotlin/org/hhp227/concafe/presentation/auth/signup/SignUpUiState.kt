@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.auth.signup
+package com.hhp227.concafe.presentation.auth.signup
 
-import org.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.Cafe
 
 data class SignUpUiState(
     val step: Step = Step.SELECT_TYPE,

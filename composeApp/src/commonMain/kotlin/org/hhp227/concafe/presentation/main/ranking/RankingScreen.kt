@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.ranking
+package com.hhp227.concafe.presentation.main.ranking
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,13 +31,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
-import org.hhp227.concafe.domain.model.RankingFeedEntry
-import org.hhp227.concafe.domain.model.RankingPeriod
-import org.hhp227.concafe.domain.model.RankingPromoAd
-import org.hhp227.concafe.presentation.component.CapsuleDropdown
-import org.hhp227.concafe.presentation.component.ConCafeTabBar
-import org.hhp227.concafe.presentation.component.colorFromHex
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.domain.model.RankingFeedEntry
+import com.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.model.RankingPromoAd
+import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun RankingScreen(

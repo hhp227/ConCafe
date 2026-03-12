@@ -1,25 +1,25 @@
-package org.hhp227.concafe.data.source
+package com.hhp227.concafe.data.source
 
 import kotlinx.coroutines.flow.Flow
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.AppNotification
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.CafeDashboardData
-import org.hhp227.concafe.domain.model.CafeManagementData
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeInfoUpdate
-import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import org.hhp227.concafe.domain.model.Cast
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.CastUpsert
-import org.hhp227.concafe.domain.model.HomeBanner
-import org.hhp227.concafe.domain.model.MyPageSummary
-import org.hhp227.concafe.domain.model.Notice
-import org.hhp227.concafe.domain.model.RankingItem
-import org.hhp227.concafe.domain.model.Review
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.model.Visit
-import org.hhp227.concafe.domain.model.VisitVerificationResult
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.AppNotification
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.MyPageSummary
+import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.RankingItem
+import com.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.Visit
+import com.hhp227.concafe.domain.model.VisitVerificationResult
 
 interface ConCafeDataSource {
     var currentUserId: String?

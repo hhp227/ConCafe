@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 
-import org.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeDetail
 
 data class CafeInfoEditUiState(
     val detail: CafeDetail? = null,

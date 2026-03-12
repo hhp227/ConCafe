@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 
 sealed interface CafeInfoEditAction {
     data object ClickBack : CafeInfoEditAction

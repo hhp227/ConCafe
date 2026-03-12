@@ -1,20 +1,20 @@
-package org.hhp227.concafe.presentation.navigation
+package com.hhp227.concafe.presentation.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.presentation.navigation.NavigationEvent.NavigateTo
-import org.hhp227.concafe.presentation.navigation.Route.Cafe
-import org.hhp227.concafe.presentation.navigation.Route.CafeDashboard
-import org.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
-import org.hhp227.concafe.presentation.navigation.Route.Cast
-import org.hhp227.concafe.presentation.navigation.Route.CastEdit
-import org.hhp227.concafe.presentation.navigation.Route.Main
-import org.hhp227.concafe.presentation.navigation.Route.MenuGoods
-import org.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
-import org.hhp227.concafe.presentation.navigation.Route.Schedule
+import com.hhp227.concafe.presentation.navigation.NavigationEvent.NavigateTo
+import com.hhp227.concafe.presentation.navigation.Route.Cafe
+import com.hhp227.concafe.presentation.navigation.Route.CafeDashboard
+import com.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
+import com.hhp227.concafe.presentation.navigation.Route.Cast
+import com.hhp227.concafe.presentation.navigation.Route.CastEdit
+import com.hhp227.concafe.presentation.navigation.Route.Main
+import com.hhp227.concafe.presentation.navigation.Route.MenuGoods
+import com.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
+import com.hhp227.concafe.presentation.navigation.Route.Schedule
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()

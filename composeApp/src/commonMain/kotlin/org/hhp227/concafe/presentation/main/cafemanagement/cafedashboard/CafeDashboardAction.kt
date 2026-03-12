@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
+package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 sealed interface CafeDashboardAction {
     data object ClickBack : CafeDashboardAction

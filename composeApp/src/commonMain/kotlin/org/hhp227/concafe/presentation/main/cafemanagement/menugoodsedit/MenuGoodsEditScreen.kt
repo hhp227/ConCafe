@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -61,10 +61,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import org.hhp227.concafe.di.resolveUpsertCafeMenuGoodsUseCase
-import org.hhp227.concafe.presentation.component.ConCafeFormField
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveUpsertCafeMenuGoodsUseCase
+import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun MenuGoodsEditScreen(

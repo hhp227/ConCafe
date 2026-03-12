@@ -1,7 +1,7 @@
-package org.hhp227.concafe.presentation.main.explore
+package com.hhp227.concafe.presentation.main.explore
 
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.Cast
 
 data class ExploreUiState(
     val isLoading: Boolean = false,

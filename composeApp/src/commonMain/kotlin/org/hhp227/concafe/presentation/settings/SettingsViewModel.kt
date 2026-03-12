@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.settings
+package com.hhp227.concafe.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.di.resolveSignOutUseCase
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.SignOutUseCase
+import com.hhp227.concafe.di.resolveSignOutUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.SignOutUseCase
 
 class SettingsViewModel(
     private val signOutUseCase: SignOutUseCase = resolveSignOutUseCase()

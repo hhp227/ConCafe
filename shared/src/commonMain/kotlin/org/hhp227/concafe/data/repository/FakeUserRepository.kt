@@ -1,9 +1,9 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.MyPageSummary
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.repository.UserRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.MyPageSummary
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.repository.UserRepository
 
 class FakeUserRepository(
     private val dataSource: ConCafeDataSource

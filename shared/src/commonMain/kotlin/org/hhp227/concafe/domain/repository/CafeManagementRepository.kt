@@ -1,6 +1,6 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
-import org.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeManagementData
 
 interface CafeManagementRepository {
     suspend fun getCafeManagementData(userId: String): CafeManagementData

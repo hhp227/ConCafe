@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.explore
+package com.hhp227.concafe.presentation.main.explore
 
 sealed interface ExploreEvent {
     data class NavigateToCast(val id: String) : ExploreEvent

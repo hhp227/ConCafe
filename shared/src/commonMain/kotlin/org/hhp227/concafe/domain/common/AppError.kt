@@ -1,4 +1,4 @@
-package org.hhp227.concafe.domain.common
+package com.hhp227.concafe.domain.common
 
 sealed interface AppError {
     data object Unauthorized : AppError

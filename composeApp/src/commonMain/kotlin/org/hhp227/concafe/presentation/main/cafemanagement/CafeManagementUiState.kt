@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.main.cafemanagement
+package com.hhp227.concafe.presentation.main.cafemanagement
 
-import org.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeManagementData
 
 data class CafeManagementUiState(
     val ownedCafes: List<CafeManagementData.OwnedCafeSummary> = emptyList(),

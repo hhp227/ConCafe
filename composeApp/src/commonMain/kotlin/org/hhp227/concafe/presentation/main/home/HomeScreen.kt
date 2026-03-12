@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.home
+package com.hhp227.concafe.presentation.main.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,10 +48,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.presentation.component.ConCafeCastCard
-import org.hhp227.concafe.presentation.component.colorFromHex
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement
+package com.hhp227.concafe.presentation.main.cafemanagement
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -53,10 +53,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCafeManagementUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.model.CafeManagementData
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun CafeManagementScreen(

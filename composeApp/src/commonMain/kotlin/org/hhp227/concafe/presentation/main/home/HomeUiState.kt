@@ -1,9 +1,9 @@
-package org.hhp227.concafe.presentation.main.home
+package com.hhp227.concafe.presentation.main.home
 
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.Cast
-import org.hhp227.concafe.domain.model.HomeBanner
-import org.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.Notice
 
 data class HomeUiState(
     val isLoading: Boolean = false,

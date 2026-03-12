@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.castedit
+package com.hhp227.concafe.presentation.castedit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.CastSchedule
-import org.hhp227.concafe.domain.model.CastUpsert
-import org.hhp227.concafe.domain.usecase.GetCastDetailUseCase
-import org.hhp227.concafe.domain.usecase.UpsertCastUseCase
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 
 class CastEditViewModel(
     private val cafeId: String? = null,

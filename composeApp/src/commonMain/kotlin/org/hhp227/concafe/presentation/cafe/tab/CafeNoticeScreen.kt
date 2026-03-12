@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe.tab
+package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.Notice
 
 @Composable
 fun CafeNoticeScreen(notices: List<Notice>) {

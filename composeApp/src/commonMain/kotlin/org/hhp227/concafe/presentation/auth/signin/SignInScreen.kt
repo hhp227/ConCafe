@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.auth.signin
+package com.hhp227.concafe.presentation.auth.signin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,11 +48,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.di.resolveSignInUseCase
-import org.hhp227.concafe.presentation.component.SignInDivider
-import org.hhp227.concafe.presentation.component.SignInLogoSection
-import org.hhp227.concafe.presentation.component.SignInSocialButton
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveSignInUseCase
+import com.hhp227.concafe.presentation.component.SignInDivider
+import com.hhp227.concafe.presentation.component.SignInLogoSection
+import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun SignInScreen(

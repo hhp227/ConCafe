@@ -1,7 +1,7 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
+package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
-import org.hhp227.concafe.domain.model.CafeCastPreview
-import org.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeCastPreview
+import com.hhp227.concafe.domain.model.CafeDashboardData
 
 data class CafeDashboardUiState(
     val cafe: CafeDashboardData? = null,

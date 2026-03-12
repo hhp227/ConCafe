@@ -1,10 +1,10 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.Visit
-import org.hhp227.concafe.domain.repository.AuthRepository
-import org.hhp227.concafe.domain.repository.VisitRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Visit
+import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.repository.VisitRepository
 
 class CreateVisitUseCase(
     private val authRepository: AuthRepository,

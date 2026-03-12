@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -63,10 +63,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import org.hhp227.concafe.di.resolveUpdateCafeInfoUseCase
-import org.hhp227.concafe.presentation.component.ConCafeFormField
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveUpdateCafeInfoUseCase
+import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun CafeInfoEditScreen(

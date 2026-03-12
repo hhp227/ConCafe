@@ -1,16 +1,16 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.CastSort
-import org.hhp227.concafe.domain.model.RankingFeed
-import org.hhp227.concafe.domain.model.RankingFeedEntry
-import org.hhp227.concafe.domain.model.RankingPeriod
-import org.hhp227.concafe.domain.model.RankingPromoAd
-import org.hhp227.concafe.domain.repository.CafeRepository
-import org.hhp227.concafe.domain.repository.CastRepository
-import org.hhp227.concafe.domain.repository.RankingRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.CastSort
+import com.hhp227.concafe.domain.model.RankingFeed
+import com.hhp227.concafe.domain.model.RankingFeedEntry
+import com.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.model.RankingPromoAd
+import com.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.RankingRepository
 
 class GetRankingFeedUseCase(
     private val rankingRepository: RankingRepository,

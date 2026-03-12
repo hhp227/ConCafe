@@ -1,10 +1,10 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.MainNavigationState
-import org.hhp227.concafe.domain.policy.MainNavigationPolicy
-import org.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.MainNavigationState
+import com.hhp227.concafe.domain.policy.MainNavigationPolicy
+import com.hhp227.concafe.domain.repository.AuthRepository
 
 class GetMainNavigationUseCase(
     private val authRepository: AuthRepository

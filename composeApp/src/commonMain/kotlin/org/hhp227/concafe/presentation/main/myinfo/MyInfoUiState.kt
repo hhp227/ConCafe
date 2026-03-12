@@ -1,12 +1,12 @@
-package org.hhp227.concafe.presentation.main.myinfo
+package com.hhp227.concafe.presentation.main.myinfo
 
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.CafeManagementData
-import org.hhp227.concafe.domain.model.Cast
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.MyPageSummary
-import org.hhp227.concafe.domain.model.ProfileBadge
-import org.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.MyPageSummary
+import com.hhp227.concafe.domain.model.ProfileBadge
+import com.hhp227.concafe.domain.model.User
 
 data class MyInfoUiState(
     val isLoading: Boolean = false,

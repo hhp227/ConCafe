@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoods
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeMenu
-import org.hhp227.concafe.domain.model.Goods
-import org.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.Goods
+import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 
 class MenuGoodsViewModel(
     private val cafeId: String,

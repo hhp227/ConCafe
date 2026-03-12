@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.main.checkin
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,16 +31,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
-import org.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
-import org.hhp227.concafe.di.resolveCreateVisitUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.model.CheckInCafeSummary
-import org.hhp227.concafe.domain.model.CheckInCastSummary
-import org.hhp227.concafe.domain.model.CheckInVisitEntry
-import org.hhp227.concafe.presentation.component.CafeSummaryCard
-import org.hhp227.concafe.presentation.component.ConCafeFormField
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
+import com.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
+import com.hhp227.concafe.di.resolveCreateVisitUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.CheckInVisitEntry
+import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

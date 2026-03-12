@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.notification
+package com.hhp227.concafe.presentation.notification
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.di.resolveGetNotificationFeedUseCase
-import org.hhp227.concafe.di.resolveMarkNotificationReadUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
-import org.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveGetNotificationFeedUseCase
+import com.hhp227.concafe.di.resolveMarkNotificationReadUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class NotificationViewModel(
     private val getNotificationFeedUseCase: GetNotificationFeedUseCase = resolveGetNotificationFeedUseCase(),

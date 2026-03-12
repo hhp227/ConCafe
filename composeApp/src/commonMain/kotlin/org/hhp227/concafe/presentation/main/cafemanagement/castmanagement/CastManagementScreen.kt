@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.castmanagement
+package com.hhp227.concafe.presentation.main.cafemanagement.castmanagement
 
 import androidx.compose.runtime.Composable
 

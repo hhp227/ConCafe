@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.auth.signup
+package com.hhp227.concafe.presentation.auth.signup
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -27,14 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetSignUpCafeListUseCase
-import org.hhp227.concafe.di.resolveSignInUseCase
-import org.hhp227.concafe.di.resolveSignUpUseCase
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.presentation.component.SignInDivider
-import org.hhp227.concafe.presentation.component.SignInLogoSection
-import org.hhp227.concafe.presentation.component.SignInSocialButton
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetSignUpCafeListUseCase
+import com.hhp227.concafe.di.resolveSignInUseCase
+import com.hhp227.concafe.di.resolveSignUpUseCase
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.presentation.component.SignInDivider
+import com.hhp227.concafe.presentation.component.SignInLogoSection
+import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun SignUpScreen(

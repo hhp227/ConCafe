@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.fanmanagement
+package com.hhp227.concafe.presentation.main.fanmanagement
 
 sealed interface FanManagementAction {
     data object ClickEditProfile : FanManagementAction

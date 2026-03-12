@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import org.hhp227.concafe.domain.model.CafeMenu
-import org.hhp227.concafe.domain.model.Goods
-import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
-import org.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.Goods
+import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 
 class MenuGoodsEditViewModel(
     private val cafeId: String,

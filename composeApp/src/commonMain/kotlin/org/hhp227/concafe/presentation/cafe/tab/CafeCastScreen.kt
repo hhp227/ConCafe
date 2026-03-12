@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe.tab
+package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.hhp227.concafe.domain.model.CafeDetailCast
-import org.hhp227.concafe.presentation.cafe.CafeAction
-import org.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.presentation.cafe.CafeAction
+import com.hhp227.concafe.presentation.component.ConCafeCastCard
 
 @Composable
 fun CafeCastScreen(

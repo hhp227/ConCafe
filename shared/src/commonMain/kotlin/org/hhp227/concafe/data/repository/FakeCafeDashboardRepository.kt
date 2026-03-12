@@ -1,8 +1,8 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.CafeDashboardData
-import org.hhp227.concafe.domain.repository.CafeDashboardRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.repository.CafeDashboardRepository
 
 class FakeCafeDashboardRepository(
     private val dataSource: ConCafeDataSource

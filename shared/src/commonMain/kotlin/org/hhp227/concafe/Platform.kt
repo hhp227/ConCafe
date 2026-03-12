@@ -1,4 +1,4 @@
-package org.hhp227.concafe
+package com.hhp227.concafe
 
 interface Platform {
     val name: String

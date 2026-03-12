@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.component
+package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.myinfo
+package com.hhp227.concafe.presentation.main.myinfo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,9 +57,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.presentation.navigation.NavigationAction
-import org.hhp227.concafe.presentation.navigation.NavigationAction.*
-import org.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.navigation.NavigationAction.*
+import com.hhp227.concafe.domain.model.UserRole
 import org.koin.core.context.GlobalContext
 
 @Composable

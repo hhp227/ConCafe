@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeInfoUpdate
-import org.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
-import org.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 
 class CafeInfoEditViewModel(
     private val cafeId: String,

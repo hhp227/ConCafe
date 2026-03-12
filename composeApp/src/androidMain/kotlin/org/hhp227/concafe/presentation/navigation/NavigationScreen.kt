@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.navigation
+package com.hhp227.concafe.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,19 +9,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
-import org.hhp227.concafe.presentation.auth.signin.SignInScreen
-import org.hhp227.concafe.presentation.auth.signup.SignUpScreen
-import org.hhp227.concafe.presentation.cafe.CafeScreen
-import org.hhp227.concafe.presentation.cast.CastScreen
-import org.hhp227.concafe.presentation.castedit.CastEditScreen
-import org.hhp227.concafe.presentation.main.MainScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
-import org.hhp227.concafe.presentation.notification.NotificationScreen
-import org.hhp227.concafe.presentation.settings.SettingsScreen
+import com.hhp227.concafe.presentation.auth.signin.SignInScreen
+import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
+import com.hhp227.concafe.presentation.cafe.CafeScreen
+import com.hhp227.concafe.presentation.cast.CastScreen
+import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.main.MainScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
+import com.hhp227.concafe.presentation.notification.NotificationScreen
+import com.hhp227.concafe.presentation.settings.SettingsScreen
 
 @Composable
 fun NavigationScreen(

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cast
+package com.hhp227.concafe.presentation.cast
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -32,13 +32,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCastDetailUseCase
-import org.hhp227.concafe.di.resolveToggleFollowCastUseCase
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.CastRecentReview
-import org.hhp227.concafe.domain.model.CastSchedule
-import org.hhp227.concafe.presentation.component.colorFromHex
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCastDetailUseCase
+import com.hhp227.concafe.di.resolveToggleFollowCastUseCase
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastRecentReview
+import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 private const val CURRENT_DATE = "2026-03-08"
 private val HeroHeight = 340.dp

@@ -1,12 +1,12 @@
-package org.hhp227.concafe.presentation.main.ranking
+package com.hhp227.concafe.presentation.main.ranking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.di.resolveGetRankingFeedUseCase
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
+import com.hhp227.concafe.di.resolveGetRankingFeedUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 
 class RankingViewModel(
     private val getRankingFeedUseCase: GetRankingFeedUseCase = resolveGetRankingFeedUseCase()

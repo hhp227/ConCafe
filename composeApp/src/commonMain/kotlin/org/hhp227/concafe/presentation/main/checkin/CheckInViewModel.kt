@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.main.checkin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.CreateVisitUseCase
-import org.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
-import org.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.explore
+package com.hhp227.concafe.presentation.main.explore
 
 sealed interface ExploreAction {
     data class QueryChanged(val query: String) : ExploreAction

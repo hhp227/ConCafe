@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.myinfo
+package com.hhp227.concafe.presentation.main.myinfo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.GetMyInfoUseCase
-import org.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
-import org.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
-import org.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
+import com.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
 
 class MyInfoViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,

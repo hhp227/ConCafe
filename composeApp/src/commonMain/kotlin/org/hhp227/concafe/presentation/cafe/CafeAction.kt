@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe
+package com.hhp227.concafe.presentation.cafe
 
 sealed interface CafeAction {
     data object ClickBack : CafeAction

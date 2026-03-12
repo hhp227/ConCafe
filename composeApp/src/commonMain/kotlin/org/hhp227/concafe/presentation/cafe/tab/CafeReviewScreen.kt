@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe.tab
+package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,9 +15,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeDetailReview
-import org.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.presentation.component.colorFromHex
 
 @Composable
 fun CafeReviewScreen(detail: CafeDetail, reviews: List<CafeDetailReview>) {

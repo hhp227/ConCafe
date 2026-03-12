@@ -1,10 +1,10 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeInfoUpdate
-import org.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.repository.CafeRepository
 
 class UpdateCafeInfoUseCase(
     private val cafeRepository: CafeRepository

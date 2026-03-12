@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.auth.signin
+package com.hhp227.concafe.presentation.auth.signin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.SignInUseCase
 
 class SignInViewModel(
     private val signInUseCase: SignInUseCase

@@ -50,11 +50,11 @@ kotlin {
 }
 
 android {
-    namespace = "org.hhp227.concafe"
+    namespace = "com.hhp227.concafe"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.hhp227.concafe"
+        applicationId = "com.hhp227.concafe"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -83,11 +83,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "org.hhp227.concafe.MainKt"
+        mainClass = "com.hhp227.concafe.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.hhp227.concafe"
+            packageName = "com.hhp227.concafe"
             packageVersion = "1.0.0"
         }
     }

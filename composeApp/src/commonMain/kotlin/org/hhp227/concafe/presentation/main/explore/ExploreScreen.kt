@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.explore
+package com.hhp227.concafe.presentation.main.explore
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -48,12 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.Cast
-import org.hhp227.concafe.presentation.component.CafeSummaryCard
-import org.hhp227.concafe.presentation.component.CapsuleDropdown
-import org.hhp227.concafe.presentation.component.ConCafeTabBar
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import kotlin.collections.chunked
 import kotlin.collections.map

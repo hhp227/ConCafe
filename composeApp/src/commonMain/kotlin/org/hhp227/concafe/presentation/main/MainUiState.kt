@@ -1,7 +1,7 @@
-package org.hhp227.concafe.presentation.main
+package com.hhp227.concafe.presentation.main
 
-import org.hhp227.concafe.domain.model.MainNavigationTab
-import org.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.MainNavigationTab
+import com.hhp227.concafe.domain.model.User
 
 data class MainUiState(
     val currentUser: User? = null,

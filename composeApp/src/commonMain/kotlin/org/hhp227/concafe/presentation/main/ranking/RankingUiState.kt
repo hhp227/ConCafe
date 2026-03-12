@@ -1,8 +1,8 @@
-package org.hhp227.concafe.presentation.main.ranking
+package com.hhp227.concafe.presentation.main.ranking
 
-import org.hhp227.concafe.domain.model.RankingFeedEntry
-import org.hhp227.concafe.domain.model.RankingPeriod
-import org.hhp227.concafe.domain.model.RankingPromoAd
+import com.hhp227.concafe.domain.model.RankingFeedEntry
+import com.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.model.RankingPromoAd
 
 data class RankingUiState(
     val isLoading: Boolean = false,

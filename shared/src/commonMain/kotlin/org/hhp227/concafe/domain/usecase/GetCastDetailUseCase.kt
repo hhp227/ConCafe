@@ -1,14 +1,14 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.CastDetailFeed
-import org.hhp227.concafe.domain.model.CastRecentReview
-import org.hhp227.concafe.domain.repository.AuthRepository
-import org.hhp227.concafe.domain.repository.CastRepository
-import org.hhp227.concafe.domain.repository.ReviewRepository
-import org.hhp227.concafe.domain.repository.UserRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastDetailFeed
+import com.hhp227.concafe.domain.model.CastRecentReview
+import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.ReviewRepository
+import com.hhp227.concafe.domain.repository.UserRepository
 
 class GetCastDetailUseCase(
     private val authRepository: AuthRepository,

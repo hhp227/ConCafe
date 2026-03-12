@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoods
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 sealed interface MenuGoodsAction {
     data object ClickBack : MenuGoodsAction

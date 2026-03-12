@@ -1,12 +1,12 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.CheckInUserFeed
-import org.hhp227.concafe.domain.model.CheckInVisitEntry
-import org.hhp227.concafe.domain.repository.AuthRepository
-import org.hhp227.concafe.domain.repository.CafeRepository
-import org.hhp227.concafe.domain.repository.VisitRepository
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CheckInUserFeed
+import com.hhp227.concafe.domain.model.CheckInVisitEntry
+import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.repository.VisitRepository
 
 class GetCheckInUserFeedUseCase(
     private val authRepository: AuthRepository,

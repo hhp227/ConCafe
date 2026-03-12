@@ -1,4 +1,4 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -7,8 +7,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.WatchHandle
-import org.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.common.WatchHandle
+import com.hhp227.concafe.domain.repository.CastRepository
 
 class ObserveCastVersionUseCase(
     private val castRepository: CastRepository

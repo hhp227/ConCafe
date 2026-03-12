@@ -1,13 +1,13 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeInfoUpdate
-import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.CheckInCafeSummary
 
 interface CafeRepository {
     suspend fun searchCafes(

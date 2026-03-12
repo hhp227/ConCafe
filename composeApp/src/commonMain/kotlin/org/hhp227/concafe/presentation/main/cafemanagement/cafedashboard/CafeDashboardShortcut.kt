@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
+package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 enum class CafeDashboardShortcut(
     val title: String

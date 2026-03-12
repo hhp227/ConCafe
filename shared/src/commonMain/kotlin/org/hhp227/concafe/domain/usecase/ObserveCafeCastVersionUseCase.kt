@@ -1,6 +1,6 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.CastRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -8,7 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.hhp227.concafe.domain.common.WatchHandle
+import com.hhp227.concafe.domain.common.WatchHandle
 
 class ObserveCafeCastVersionUseCase(
     private val castRepository: CastRepository

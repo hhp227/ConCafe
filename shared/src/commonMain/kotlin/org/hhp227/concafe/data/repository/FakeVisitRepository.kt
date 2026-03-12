@@ -1,10 +1,10 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Visit
-import org.hhp227.concafe.domain.model.VisitVerificationResult
-import org.hhp227.concafe.domain.repository.VisitRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Visit
+import com.hhp227.concafe.domain.model.VisitVerificationResult
+import com.hhp227.concafe.domain.repository.VisitRepository
 
 class FakeVisitRepository(
     private val dataSource: ConCafeDataSource

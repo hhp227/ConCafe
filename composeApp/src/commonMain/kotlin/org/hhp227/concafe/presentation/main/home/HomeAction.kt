@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.home
+package com.hhp227.concafe.presentation.main.home
 
 sealed interface HomeAction {
     data class ClickMaid(val id: String) : HomeAction

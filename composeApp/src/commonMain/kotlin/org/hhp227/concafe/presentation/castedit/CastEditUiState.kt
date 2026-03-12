@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.castedit
+package com.hhp227.concafe.presentation.castedit
 
 data class CastEditUiState(
     val isLoading: Boolean = false,

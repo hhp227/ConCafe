@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.myinfo
+package com.hhp227.concafe.presentation.main.myinfo
 
 sealed interface MyInfoEvent {
     data class NavigateToCafe(val id: String) : MyInfoEvent

@@ -1,7 +1,7 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
-import org.hhp227.concafe.domain.model.MyPageSummary
-import org.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.MyPageSummary
+import com.hhp227.concafe.domain.model.User
 
 interface UserRepository {
     suspend fun getUser(userId: String): User

@@ -1,9 +1,9 @@
-package org.hhp227.concafe
+package com.hhp227.concafe
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import org.hhp227.concafe.di.doInitConCafeAppKoin
-import org.hhp227.concafe.presentation.App
+import com.hhp227.concafe.di.doInitConCafeAppKoin
+import com.hhp227.concafe.presentation.App
 
 fun main() = application {
     Window(

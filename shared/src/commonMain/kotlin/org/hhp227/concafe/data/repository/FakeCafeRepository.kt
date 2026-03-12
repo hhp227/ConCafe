@@ -1,16 +1,16 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.data.source.ConCafeDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Cafe
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeInfoUpdate
-import org.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.CheckInCafeSummary
-import org.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(
     private val dataSource: ConCafeDataSource

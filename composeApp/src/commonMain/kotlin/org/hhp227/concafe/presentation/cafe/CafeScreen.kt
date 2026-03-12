@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cafe
+package com.hhp227.concafe.presentation.cafe
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -32,14 +32,14 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
-import org.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import org.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.presentation.cafe.tab.*
-import org.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
-import org.hhp227.concafe.presentation.component.colorFromHex
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
+import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.presentation.cafe.tab.*
+import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable

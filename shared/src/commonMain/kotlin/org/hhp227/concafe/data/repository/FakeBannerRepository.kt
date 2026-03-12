@@ -1,8 +1,8 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.HomeBanner
-import org.hhp227.concafe.domain.repository.BannerRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.repository.BannerRepository
 
 class FakeBannerRepository(
     private val dataSource: ConCafeDataSource

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.auth.signin
+package com.hhp227.concafe.presentation.auth.signin
 
 data class SignInUiState(
     val email: String = "",

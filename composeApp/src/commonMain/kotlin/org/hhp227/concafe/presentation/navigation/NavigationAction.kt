@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.navigation
+package com.hhp227.concafe.presentation.navigation
 
 sealed interface NavigationAction {
     data class NavigateToMain(val initialTab: String? = null) : NavigationAction

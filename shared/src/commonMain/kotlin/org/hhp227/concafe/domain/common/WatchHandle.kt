@@ -1,4 +1,4 @@
-package org.hhp227.concafe.domain.common
+package com.hhp227.concafe.domain.common
 
 class WatchHandle(
     private val onCancel: () -> Unit

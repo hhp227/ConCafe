@@ -1,8 +1,8 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.model.CafeManagementData
-import org.hhp227.concafe.domain.repository.CafeManagementRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.repository.CafeManagementRepository
 
 class FakeCafeManagementRepository(
     private val dataSource: ConCafeDataSource

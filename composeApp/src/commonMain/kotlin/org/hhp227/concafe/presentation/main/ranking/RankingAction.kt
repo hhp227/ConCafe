@@ -1,6 +1,6 @@
-package org.hhp227.concafe.presentation.main.ranking
+package com.hhp227.concafe.presentation.main.ranking
 
-import org.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.model.RankingPeriod
 
 sealed interface RankingAction {
     data class ChangeTab(val tab: RankingUiState.TabType) : RankingAction

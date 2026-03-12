@@ -1,8 +1,8 @@
-package org.hhp227.concafe.presentation.cafe
+package com.hhp227.concafe.presentation.cafe
 
-import org.hhp227.concafe.domain.model.CafeDetail
-import org.hhp227.concafe.domain.model.CafeDetailCast
-import org.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.domain.model.CafeDetailReview
 
 data class CafeUiState(
     val isLoading: Boolean = false,

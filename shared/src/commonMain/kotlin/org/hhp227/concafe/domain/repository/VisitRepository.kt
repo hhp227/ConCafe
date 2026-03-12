@@ -1,8 +1,8 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Visit
-import org.hhp227.concafe.domain.model.VisitVerificationResult
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Visit
+import com.hhp227.concafe.domain.model.VisitVerificationResult
 
 interface VisitRepository {
     suspend fun verifyVisit(cafeId: String, latitude: Double, longitude: Double, visitedAt: String): VisitVerificationResult

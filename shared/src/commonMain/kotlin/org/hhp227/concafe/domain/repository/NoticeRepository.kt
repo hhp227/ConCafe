@@ -1,6 +1,6 @@
-package org.hhp227.concafe.domain.repository
+package com.hhp227.concafe.domain.repository
 
-import org.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.Notice
 
 interface NoticeRepository {
     suspend fun getRecentNotices(limit: Int): List<Notice>

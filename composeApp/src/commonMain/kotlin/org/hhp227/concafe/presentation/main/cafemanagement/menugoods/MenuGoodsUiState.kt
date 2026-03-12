@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main.cafemanagement.menugoods
+package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 data class MenuGoodsUiState(
     val cafeName: String = "",

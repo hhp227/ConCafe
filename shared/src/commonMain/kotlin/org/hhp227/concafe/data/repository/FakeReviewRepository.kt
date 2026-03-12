@@ -1,9 +1,9 @@
-package org.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository
 
-import org.hhp227.concafe.data.source.ConCafeDataSource
-import org.hhp227.concafe.domain.common.PagedResult
-import org.hhp227.concafe.domain.model.Review
-import org.hhp227.concafe.domain.repository.ReviewRepository
+import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.repository.ReviewRepository
 
 class FakeReviewRepository(
     private val dataSource: ConCafeDataSource

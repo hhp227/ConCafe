@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.notification
+package com.hhp227.concafe.presentation.notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,9 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import org.hhp227.concafe.domain.model.NotificationListItem
-import org.hhp227.concafe.domain.model.NotificationSection
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.domain.model.NotificationListItem
+import com.hhp227.concafe.domain.model.NotificationSection
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,8 +1,8 @@
-package org.hhp227.concafe.domain.policy
+package com.hhp227.concafe.domain.policy
 
-import org.hhp227.concafe.domain.model.MainNavigationTab
-import org.hhp227.concafe.domain.model.User
-import org.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.model.MainNavigationTab
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserRole
 
 class MainNavigationPolicy {
     fun resolveThirdTab(user: User?): MainNavigationTab {

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.navigation
+package com.hhp227.concafe.presentation.navigation
 
 sealed interface NavigationEvent {
     data class NavigateTo(val route: Route) : NavigationEvent

@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.cast
+package com.hhp227.concafe.presentation.cast
 
 sealed interface CastEvent {
     data object NavigateBack : CastEvent

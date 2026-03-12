@@ -1,9 +1,9 @@
-package org.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.main.checkin
 
-import org.hhp227.concafe.domain.model.CheckInCafeSummary
-import org.hhp227.concafe.domain.model.CheckInCastSummary
-import org.hhp227.concafe.domain.model.CheckInVisitEntry
-import org.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.CheckInVisitEntry
+import com.hhp227.concafe.domain.model.User
 
 data class CheckInUiState(
     val isLoading: Boolean = false,

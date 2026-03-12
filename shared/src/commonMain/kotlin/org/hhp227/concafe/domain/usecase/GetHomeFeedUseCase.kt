@@ -1,14 +1,14 @@
-package org.hhp227.concafe.domain.usecase
+package com.hhp227.concafe.domain.usecase
 
-import org.hhp227.concafe.domain.common.AppError
-import org.hhp227.concafe.domain.common.AppResult
-import org.hhp227.concafe.domain.model.HomeFeed
-import org.hhp227.concafe.domain.repository.BannerRepository
-import org.hhp227.concafe.domain.repository.CafeRepository
-import org.hhp227.concafe.domain.repository.CastRepository
-import org.hhp227.concafe.domain.repository.NoticeRepository
-import org.hhp227.concafe.domain.model.CafeSort
-import org.hhp227.concafe.domain.model.CastSort
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.HomeFeed
+import com.hhp227.concafe.domain.repository.BannerRepository
+import com.hhp227.concafe.domain.repository.CafeRepository
+import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.NoticeRepository
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.CastSort
 
 class GetHomeFeedUseCase(
     private val bannerRepository: BannerRepository,

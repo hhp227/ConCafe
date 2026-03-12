@@ -1,7 +1,7 @@
-package org.hhp227.concafe.presentation.cast
+package com.hhp227.concafe.presentation.cast
 
-import org.hhp227.concafe.domain.model.CastDetail
-import org.hhp227.concafe.domain.model.CastRecentReview
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastRecentReview
 
 data class CastUiState(
     val isLoading: Boolean = false,

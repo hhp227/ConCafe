@@ -1,4 +1,4 @@
-package org.hhp227.concafe.presentation.main
+package com.hhp227.concafe.presentation.main
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -38,18 +38,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import org.hhp227.concafe.di.resolveGetMainNavigationUseCase
-import org.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import org.hhp227.concafe.domain.model.MainNavigationTab
-import org.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
-import org.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
-import org.hhp227.concafe.presentation.main.checkin.CheckInScreen
-import org.hhp227.concafe.presentation.main.explore.ExploreScreen
-import org.hhp227.concafe.presentation.main.home.HomeScreen
-import org.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
-import org.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
-import org.hhp227.concafe.presentation.main.ranking.RankingScreen
-import org.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.model.MainNavigationTab
+import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
+import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
+import com.hhp227.concafe.presentation.main.explore.ExploreScreen
+import com.hhp227.concafe.presentation.main.home.HomeScreen
+import com.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
+import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
+import com.hhp227.concafe.presentation.main.ranking.RankingScreen
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
