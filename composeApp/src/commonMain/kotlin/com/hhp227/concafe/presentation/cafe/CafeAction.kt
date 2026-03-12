@@ -13,5 +13,7 @@ sealed interface CafeAction {
 
     data object LoadMoreCasts : CafeAction
 
+    data object LoadMoreReviews : CafeAction
+
     data object Refresh : CafeAction
 }

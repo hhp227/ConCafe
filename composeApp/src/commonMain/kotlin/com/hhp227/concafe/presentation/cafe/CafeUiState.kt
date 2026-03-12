@@ -13,6 +13,9 @@ data class CafeUiState(
     val casts: List<CafeDetailCast> = emptyList(),
     val castsNextCursor: String? = null,
     val canLoadMoreCasts: Boolean = false,
+    val isLoadingMoreReviews: Boolean = false,
+    val reviewsNextCursor: String? = null,
+    val canLoadMoreReviews: Boolean = false,
     val reviews: List<CafeDetailReview> = emptyList(),
     val isFavorite: Boolean = false,
     val isLoggedIn: Boolean = false

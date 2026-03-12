@@ -31,6 +31,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
@@ -93,6 +94,7 @@ val useCaseModule = module {
     factory { DeleteCafeMenuGoodsUseCase(get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }

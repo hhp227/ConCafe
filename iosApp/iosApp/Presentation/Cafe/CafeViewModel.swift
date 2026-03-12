@@ -17,6 +17,8 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
 
+    private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
+
     private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
     
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
@@ -56,17 +58,23 @@ final class CafeViewModel: ObservableObject {
                     uiState = CafeUiState(
                         isLoading: false,
                         isLoadingMoreCasts: uiState.isLoadingMoreCasts,
+                        isLoadingMoreReviews: uiState.isLoadingMoreReviews,
                         errorMessage: nil,
                         selectedTab: uiState.selectedTab,
                         detail: feed.detail,
                         casts: uiState.casts,
                         castsNextCursor: uiState.castsNextCursor,
                         canLoadMoreCasts: uiState.canLoadMoreCasts,
+                        reviewsNextCursor: feed.reviewsNextCursor,
+                        canLoadMoreReviews: feed.canLoadMoreReviews,
                         reviews: feed.reviews,
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn
                     )
                     refreshCastPage()
+                    if uiState.selectedTab == .reviews {
+                        refreshReviewPage()
+                    }
                 } else if result is AppResultFailure {
                     uiState.isLoading = false
                     uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
@@ -117,6 +125,42 @@ final class CafeViewModel: ObservableObject {
         loadCastPage(cursor: cursor, append: true)
     }
 
+    private func loadReviewPage(cursor: String?, append: Bool) {
+        tasks[.reviewPage]?.cancel()
+        tasks[.reviewPage] = Task {
+            uiState.isLoadingMoreReviews = append
+
+            do {
+                let result = try await getCafeReviewPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor, pageSize: 15)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeDetailReview> {
+                    let items = page.items as! [CafeDetailReview]
+                    uiState.reviews = append ? (uiState.reviews + items) : items
+                    uiState.reviewsNextCursor = page.nextCursor
+                    uiState.canLoadMoreReviews = page.hasNext
+                    uiState.isLoadingMoreReviews = false
+                } else {
+                    uiState.isLoadingMoreReviews = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreReviews = false
+            }
+        }
+    }
+
+    private func refreshReviewPage() {
+        loadReviewPage(cursor: nil, append: false)
+    }
+
+    private func loadMoreReviews() {
+        guard uiState.canLoadMoreReviews,
+              !uiState.isLoadingMoreReviews,
+              let cursor = uiState.reviewsNextCursor else { return }
+        loadReviewPage(cursor: cursor, append: true)
+    }
+
     private func toggleFavorite() {
         Task {
             do {
@@ -146,6 +190,9 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateBack)
         case .changeTab(let tab):
             uiState.selectedTab = tab
+            if tab == .reviews, uiState.reviews.isEmpty {
+                refreshReviewPage()
+            }
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
@@ -154,6 +201,8 @@ final class CafeViewModel: ObservableObject {
             writeReview()
         case .loadMoreCasts:
             loadMoreCasts()
+        case .loadMoreReviews:
+            loadMoreReviews()
         case .refresh:
             loadCafeDetail()
         }
@@ -163,12 +212,14 @@ final class CafeViewModel: ObservableObject {
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.observeCafeDetailUseCase = observeCafeDetailUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
 
@@ -185,5 +236,6 @@ final class CafeViewModel: ObservableObject {
     private enum TaskKey {
         case detail
         case castPage
+        case reviewPage
     }
 }

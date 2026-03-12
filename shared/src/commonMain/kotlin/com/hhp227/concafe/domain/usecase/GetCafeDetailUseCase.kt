@@ -35,14 +35,18 @@ class GetCafeDetailUseCase(
                     isWorking = isWorking
                 )
             }
-            val reviews = reviewRepository.getCafeReviews(cafeId = cafeId, cursor = null, pageSize = 20).items
+            val reviewPage = reviewRepository.getCafeReviews(
+                cafeId = cafeId,
+                cursor = null,
+                pageSize = INITIAL_REVIEW_PAGE_SIZE
+            )
             val isFavorite = if (currentUser != null) {
                 cafeRepository.isFavorite(currentUser.id, cafeId)
             } else {
                 false
             }
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
-            val reviewItems = reviews.map { review ->
+            val reviewItems = reviewPage.items.map { review ->
                 val user = userRepository.getUser(review.userId)
                 val visits = visitRepository.getVisits(userId = review.userId, cursor = null, pageSize = 20).items
                 val verified = visits.any { it.cafeId == cafeId && it.verified }
@@ -65,6 +69,8 @@ class GetCafeDetailUseCase(
                     detail = detail,
                     casts = castItems,
                     reviews = reviewItems,
+                    reviewsNextCursor = reviewPage.nextCursor,
+                    canLoadMoreReviews = reviewPage.hasNext,
                     isFavorite = isFavorite,
                     isLoggedIn = currentUser != null
                 )
@@ -88,5 +94,9 @@ class GetCafeDetailUseCase(
             listOf("")
         }
         return detail.copy(images = normalizedImages)
+    }
+
+    companion object {
+        private const val INITIAL_REVIEW_PAGE_SIZE = 15
     }
 }

@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -55,6 +56,7 @@ fun CafeScreen(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
+                    getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
                     observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
                     toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
                 )
@@ -102,14 +104,37 @@ fun CafeContentScreen(
         uiState.selectedTab,
         uiState.casts.size,
         uiState.canLoadMoreCasts,
-        uiState.isLoadingMoreCasts
+        uiState.isLoadingMoreCasts,
+        uiState.reviews.size,
+        uiState.canLoadMoreReviews,
+        uiState.isLoadingMoreReviews
     ) {
-        if (uiState.selectedTab != CafeUiState.TabType.MAIDS) return@LaunchedEffect
-        snapshotFlow { listState.canScrollForward to uiState.casts.size }
-            .distinctUntilChanged()
-            .collect { (canScrollForward, _) ->
-                if (!canScrollForward && uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
-                    onAction(CafeAction.LoadMoreCasts)
+        snapshotFlow {
+            Triple(
+                listState.canScrollForward,
+                uiState.selectedTab,
+                when (uiState.selectedTab) {
+                    CafeUiState.TabType.MAIDS -> uiState.casts.size
+                    CafeUiState.TabType.REVIEWS -> uiState.reviews.size
+                    else -> 0
+                }
+            )
+        }.distinctUntilChanged()
+            .collect { (canScrollForward, _, _) ->
+                if (!canScrollForward) {
+                    when (uiState.selectedTab) {
+                        CafeUiState.TabType.MAIDS -> {
+                            if (uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
+                                onAction(CafeAction.LoadMoreCasts)
+                            }
+                        }
+                        CafeUiState.TabType.REVIEWS -> {
+                            if (uiState.canLoadMoreReviews && !uiState.isLoadingMoreReviews) {
+                                onAction(CafeAction.LoadMoreReviews)
+                            }
+                        }
+                        else -> Unit
+                    }
                 }
             }
     }
@@ -420,7 +445,12 @@ private fun CafeTabContent(
             onAction = onAction
         )
         CafeUiState.TabType.MENU -> CafeMenuScreen(detail.menus)
-        CafeUiState.TabType.REVIEWS -> CafeReviewScreen(detail, uiState.reviews)
+        CafeUiState.TabType.REVIEWS -> CafeReviewScreen(
+            detail = detail,
+            reviews = uiState.reviews,
+            canLoadMore = uiState.canLoadMoreReviews,
+            isLoadingMore = uiState.isLoadingMoreReviews
+        )
         CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
     }
 }

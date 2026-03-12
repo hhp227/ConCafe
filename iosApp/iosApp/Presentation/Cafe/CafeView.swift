@@ -250,7 +250,13 @@ private struct CafeContentView: View {
         case .menu:
             CafeMenuView(menus: detail.menus)
         case .reviews:
-            CafeReviewView(detail: detail, reviews: uiState.reviews)
+            CafeReviewView(
+                detail: detail,
+                reviews: uiState.reviews,
+                canLoadMore: uiState.canLoadMoreReviews,
+                isLoadingMore: uiState.isLoadingMoreReviews,
+                onLoadMore: { onAction(.loadMoreReviews) }
+            )
         case .notices:
             CafeNoticeView(notices: detail.notices)
         }

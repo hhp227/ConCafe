@@ -36,7 +36,7 @@ class FakeReviewRepository(
             imageUrls = imageUrls,
             taggedCastIds = taggedCastIds,
             likeCount = 0,
-            createdAt = "2026-03-05T00:00:00Z"
+            createdAt = nextCreatedAt(dataSource.reviews.size)
         )
         dataSource.reviews.add(review)
         dataSource.refreshReviewProjections(
@@ -66,4 +66,9 @@ class FakeReviewRepository(
             throw Exception("no permission to delete review")
         }
     }
+}
+
+private fun nextCreatedAt(reviewCount: Int): String {
+    val second = (reviewCount % 60).toString().padStart(2, '0')
+    return "2026-03-12T23:59:${second}Z"
 }

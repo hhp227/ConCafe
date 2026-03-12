@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
@@ -132,6 +133,13 @@ fun resolveGetCheckInUserFeedUseCase(): GetCheckInUserFeedUseCase {
 }
 
 fun resolveGetCafeDetailUseCase(): GetCafeDetailUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCafeReviewPageUseCase(): GetCafeReviewPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

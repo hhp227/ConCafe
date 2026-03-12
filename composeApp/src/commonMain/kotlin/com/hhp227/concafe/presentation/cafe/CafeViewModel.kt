@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
@@ -22,6 +23,7 @@ class CafeViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
+    private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 ) : ViewModel() {
@@ -65,6 +67,7 @@ class CafeViewModel(
                 _uiState.value = CafeUiState(
                     isLoading = false,
                     isLoadingMoreCasts = _uiState.value.isLoadingMoreCasts,
+                    isLoadingMoreReviews = _uiState.value.isLoadingMoreReviews,
                     errorMessage = null,
                     selectedTab = _uiState.value.selectedTab,
                     detail = result.data.detail,
@@ -72,10 +75,15 @@ class CafeViewModel(
                     castsNextCursor = _uiState.value.castsNextCursor,
                     canLoadMoreCasts = _uiState.value.canLoadMoreCasts,
                     reviews = result.data.reviews,
+                    reviewsNextCursor = result.data.reviewsNextCursor,
+                    canLoadMoreReviews = result.data.canLoadMoreReviews,
                     isFavorite = result.data.isFavorite,
                     isLoggedIn = result.data.isLoggedIn
                 )
                 refreshCastPage()
+                if (_uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
+                    refreshReviewPage()
+                }
             } else if (result is AppResult.Failure) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -119,6 +127,40 @@ class CafeViewModel(
         loadCastPage(cursor = cursor, append = true)
     }
 
+    private fun loadReviewPage(cursor: String?, append: Boolean) {
+        jobs[JobKey.REVIEW_PAGE]?.cancel()
+        jobs[JobKey.REVIEW_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreReviews = append) }
+
+            when (val result = getCafeReviewPageUseCase.invoke(cafeId = cafeId, cursor = cursor)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            reviews = if (append) state.reviews + result.data.items else result.data.items,
+                            reviewsNextCursor = result.data.nextCursor,
+                            canLoadMoreReviews = result.data.hasNext,
+                            isLoadingMoreReviews = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoadingMoreReviews = false) }
+                }
+            }
+        }
+    }
+
+    private fun refreshReviewPage() {
+        loadReviewPage(cursor = null, append = false)
+    }
+
+    private fun loadMoreReviews() {
+        val currentState = _uiState.value
+        val cursor = currentState.reviewsNextCursor
+        if (currentState.isLoadingMoreReviews || !currentState.canLoadMoreReviews || cursor == null) return
+        loadReviewPage(cursor = cursor, append = true)
+    }
+
     private fun toggleFavorite() {
         viewModelScope.launch {
             val result = toggleFavoriteCafeUseCase.invoke(cafeId)
@@ -147,6 +189,9 @@ class CafeViewModel(
                 }
                 is CafeAction.ChangeTab -> {
                     _uiState.update { it.copy(selectedTab = action.tab) }
+                    if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
+                        refreshReviewPage()
+                    }
                 }
                 is CafeAction.ClickMaid -> {
                     _event.emit(CafeEvent.NavigateToCast(action.id))
@@ -159,6 +204,9 @@ class CafeViewModel(
                 }
                 CafeAction.LoadMoreCasts -> {
                     loadMoreCasts()
+                }
+                CafeAction.LoadMoreReviews -> {
+                    loadMoreReviews()
                 }
                 CafeAction.Refresh -> {
                     loadCafeDetail()
@@ -181,6 +229,7 @@ class CafeViewModel(
     private enum class JobKey {
         DETAIL,
         CAST_PAGE,
+        REVIEW_PAGE,
         OBSERVE_DETAIL
     }
 }
