@@ -644,42 +644,41 @@ private struct CheckInLoginPromptSheet: View {
 
 private struct CheckInReviewPromptSheet: View {
     let cafeName: String
-
+    
     let onAction: (CheckInAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("리뷰를 작성하면 어떠세요?")
                 .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "24161E"))
+                .foregroundColor(Color(hex: "24161E"))
             Text("\(cafeName) 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.")
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6F6670"))
+                .foregroundColor(Color(hex: "6F6670"))
             Button {
                 onAction(.writeReviewPromptTapped)
             } label: {
                 Text("지금 작성")
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundColor(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color(hex: "FFD1DC"))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PlainButtonStyle())
             Button {
                 onAction(.dismissReviewPrompt)
             } label: {
                 Text("나중에")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.secondary)
+                    .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PlainButtonStyle())
         }
         .padding(20)
-        .presentationDragIndicator(.visible)
     }
 }
 
