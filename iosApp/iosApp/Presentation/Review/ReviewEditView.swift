@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ReviewEditView: View {
+    let cafeId: String?
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = ReviewEditViewModel()
@@ -26,8 +28,10 @@ struct ReviewEditView: View {
     }
 
     init(
+        cafeId: String? = nil,
         onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
     ) {
+        self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
     }
 }
@@ -44,8 +48,8 @@ private struct ReviewEditContentView: View {
                 VStack(spacing: 0) {
                     cafeInfoSection
                     ratingSection
-                    photoSection
                     reviewSection
+                    photoSection
                     if let infoMessage = uiState.infoMessage {
                         infoBanner(message: infoMessage)
                             .padding(.horizontal, 16)
@@ -172,7 +176,7 @@ private struct ReviewEditContentView: View {
 
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("사진 등록 \(uiState.photoItems.count)/\(ReviewEditUiState.maximumPhotoCount)")
+            Text("사진 등록 \(uiState.images.count)/\(ReviewEditUiState.maximumPhotoCount)")
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             ScrollView(.horizontal, showsIndicators: false) {
@@ -197,7 +201,7 @@ private struct ReviewEditContentView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    ForEach(uiState.photoItems) { item in
+                    ForEach(uiState.images) { item in
                         ZStack(alignment: .topTrailing) {
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .fill(
@@ -252,7 +256,7 @@ private struct ReviewEditContentView: View {
             ConCafeFormEditor(
                 label: "",
                 text: Binding(
-                    get: { uiState.reviewText },
+                    get: { uiState.content },
                     set: { onAction(.changeReviewText($0)) }
                 ),
                 placeholder: "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)"

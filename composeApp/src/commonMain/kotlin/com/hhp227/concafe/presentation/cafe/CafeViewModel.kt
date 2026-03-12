@@ -116,6 +116,12 @@ class CafeViewModel(
         }
     }
 
+    private fun clickWriteReview() {
+        viewModelScope.launch {
+            _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+        }
+    }
+
     fun onAction(action: CafeAction) {
         viewModelScope.launch {
             when (action) {
@@ -130,6 +136,9 @@ class CafeViewModel(
                 }
                 CafeAction.ClickFavorite -> {
                     toggleFavorite()
+                }
+                CafeAction.ClickWriteReview -> {
+                    clickWriteReview()
                 }
                 CafeAction.LoadMoreCasts -> {
                     loadMoreCasts()

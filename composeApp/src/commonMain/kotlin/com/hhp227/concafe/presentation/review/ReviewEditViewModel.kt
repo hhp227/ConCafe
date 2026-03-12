@@ -24,14 +24,14 @@ class ReviewEditViewModel : ViewModel() {
 
     private fun clickAddPhoto() {
         val currentState = _uiState.value
-        if (currentState.photoItems.size >= ReviewEditUiState.maximumPhotoCount) {
+        if (currentState.images.size >= ReviewEditUiState.maximumPhotoCount) {
             _uiState.update { it.copy(infoMessage = "사진은 최대 10장까지 등록할 수 있습니다.") }
         } else {
-            val nextIndex = currentState.photoItems.size + 1
+            val nextIndex = currentState.images.size + 1
             val nextPhoto = placeholderPhotoItem(nextIndex)
             _uiState.update {
                 it.copy(
-                    photoItems = it.photoItems + nextPhoto,
+                    images = it.images + nextPhoto,
                     infoMessage = "사진 업로드는 다음 단계에서 연결됩니다."
                 )
             }
@@ -41,7 +41,7 @@ class ReviewEditViewModel : ViewModel() {
     private fun removePhoto(photoId: String) {
         _uiState.update { state ->
             state.copy(
-                photoItems = state.photoItems.filterNot { it.id == photoId }
+                images = state.images.filterNot { it.id == photoId }
             )
         }
     }
@@ -51,7 +51,7 @@ class ReviewEditViewModel : ViewModel() {
 
         if (currentState.rating <= 0) {
             _uiState.update { it.copy(infoMessage = "평점을 선택해주세요.") }
-        } else if (currentState.reviewText.trim().length < ReviewEditUiState.minimumReviewLength) {
+        } else if (currentState.content.trim().length < ReviewEditUiState.minimumReviewLength) {
             _uiState.update { it.copy(infoMessage = "상세 리뷰는 최소 10자 이상 입력해주세요.") }
         } else {
             _uiState.update {
@@ -75,7 +75,7 @@ class ReviewEditViewModel : ViewModel() {
             ReviewEditAction.ClickAddPhoto -> clickAddPhoto()
             is ReviewEditAction.RemovePhoto -> removePhoto(action.photoId)
             is ReviewEditAction.ChangeReviewText -> _uiState.update {
-                it.copy(reviewText = action.value)
+                it.copy(content = action.value)
             }
             is ReviewEditAction.SelectAtmosphereAnswer -> _uiState.update {
                 it.copy(atmosphereAnswer = action.isPositive)

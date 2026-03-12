@@ -67,6 +67,9 @@ fun CafeScreen(
             when (event) {
                 CafeEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CafeEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
+                is CafeEvent.NavigateToReviewEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
             }
         }
@@ -149,6 +152,24 @@ fun CafeContentScreen(
                     actionIconContentColor = if (isTopBarVisible) Color(0xFF222222) else Color.White
                 )
             )
+        },
+        floatingActionButton = {
+            if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null) {
+                ExtendedFloatingActionButton(
+                    onClick = { onAction(CafeAction.ClickWriteReview) },
+                    containerColor = Color(0xFFFFD1DC),
+                    contentColor = Color(0xFF2B2330),
+                    text = {
+                        Text(
+                            text = "리뷰 작성",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    icon = {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         val topBarInset = innerPadding.calculateTopPadding()

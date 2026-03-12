@@ -25,6 +25,8 @@ struct CafeView: View {
                 onNavigationAction(.navigateBack)
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
+            case .navigateToReviewEdit(let cafeId):
+                onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             }
@@ -49,14 +51,21 @@ private struct CafeContentView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            ScrollView {
-                offsetReader
-                content(topSafeArea: proxy.safeAreaInsets.top)
-            }
-            .coordinateSpace(name: "cafeScroll")
-            .background(Color(hex: "FFF9FC"))
-            .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
-                scrollOffset = value
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    offsetReader
+                    content(topSafeArea: proxy.safeAreaInsets.top)
+                }
+                .coordinateSpace(name: "cafeScroll")
+                .background(Color(hex: "FFF9FC"))
+                .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
+                    scrollOffset = value
+                }
+                if uiState.selectedTab == .reviews, uiState.detail != nil {
+                    writeReviewButton
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 24)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -70,6 +79,25 @@ private struct CafeContentView: View {
                 }
             }
         }
+    }
+
+    private var writeReviewButton: some View {
+        Button {
+            onAction(.writeReviewTapped)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                Text("리뷰 작성")
+                    .font(.subheadline.weight(.bold))
+            }
+            .foregroundStyle(Color(hex: "2B2330"))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(Color(hex: "FFD1DC"))
+            .clipShape(Capsule())
+            .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+        }
+        .buttonStyle(.plain)
     }
 
     private var offsetReader: some View {

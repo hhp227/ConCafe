@@ -8,15 +8,21 @@
 import Foundation
 
 struct ReviewEditUiState {
+    var reviewId: String? = nil
+    var cafeId = "cafe-1"
+    var userId = "user-1"
+    var visitId = "visit-1"
+    var rating = 4
+    var content = ""
+    var images = PhotoItem.defaultItems
+    var likeCount = 0
+    var createdAt = ""
     var screenTitle = "리뷰 작성"
     var topActionLabel = "등록"
     var submitButtonLabel = "리뷰 등록하기"
     var cafeName = "Starlight Melody Cafe"
     var cafeAddress = "서울 강남구 테헤란로 123"
     var isVisitVerified = true
-    var rating = 4
-    var reviewText = ""
-    var photoItems = PhotoItem.defaultItems
     var atmosphereAnswer: Bool? = nil
     var isSubmitting = false
     var infoMessage: String? = nil
@@ -26,11 +32,11 @@ struct ReviewEditUiState {
     }
 
     var reviewLength: Int {
-        reviewText.count
+        content.count
     }
 
     var isSubmitEnabled: Bool {
-        rating > 0 && reviewText.trimmingCharacters(in: .whitespacesAndNewlines).count >= Self.minimumReviewLength && !isSubmitting
+        rating > 0 && content.trimmingCharacters(in: .whitespacesAndNewlines).count >= Self.minimumReviewLength && !isSubmitting
     }
 
     static let maximumRating = 5

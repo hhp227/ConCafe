@@ -1,15 +1,21 @@
 package com.hhp227.concafe.presentation.review
 
 data class ReviewEditUiState(
+    val reviewId: String? = null,
+    val cafeId: String = "cafe-1",
+    val userId: String = "user-1",
+    val visitId: String = "visit-1",
+    val rating: Int = 4,
+    val content: String = "",
+    val images: List<PhotoItem> = defaultPhotoItems,
+    val likeCount: Int = 0,
+    val createdAt: String = "",
     val screenTitle: String = "리뷰 작성",
     val topActionLabel: String = "등록",
     val submitButtonLabel: String = "리뷰 등록하기",
     val cafeName: String = "Starlight Melody Cafe",
     val cafeAddress: String = "서울 강남구 테헤란로 123",
     val isVisitVerified: Boolean = true,
-    val rating: Int = 4,
-    val reviewText: String = "",
-    val photoItems: List<PhotoItem> = defaultPhotoItems,
     val atmosphereAnswer: Boolean? = null,
     val isSubmitting: Boolean = false,
     val infoMessage: String? = null
@@ -18,10 +24,10 @@ data class ReviewEditUiState(
         get() = ratingToMessage(rating)
 
     val reviewLength: Int
-        get() = reviewText.length
+        get() = content.length
 
     val isSubmitEnabled: Boolean
-        get() = rating > 0 && reviewText.trim().length >= minimumReviewLength && !isSubmitting
+        get() = rating > 0 && content.trim().length >= minimumReviewLength && !isSubmitting
 
     data class PhotoItem(
         val id: String,

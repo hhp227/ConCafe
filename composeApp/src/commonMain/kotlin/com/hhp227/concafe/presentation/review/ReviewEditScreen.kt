@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Star
@@ -19,14 +18,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun ReviewEditScreen(
+    cafeId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: ReviewEditViewModel = viewModel()
 ) {
@@ -129,8 +130,8 @@ private fun ReviewEditContentScreen(
         ) {
             CafeInfoSection(uiState = uiState)
             RatingSection(uiState = uiState, onAction = onAction)
-            PhotoSection(uiState = uiState, onAction = onAction)
             ReviewFormSection(uiState = uiState, onAction = onAction)
+            PhotoSection(uiState = uiState, onAction = onAction)
             uiState.infoMessage?.let { message ->
                 InfoBanner(
                     message = message,
@@ -268,7 +269,7 @@ private fun PhotoSection(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "사진 등록 ${uiState.photoItems.size}/${ReviewEditUiState.maximumPhotoCount}",
+            text = "사진 등록 ${uiState.images.size}/${ReviewEditUiState.maximumPhotoCount}",
             style = MaterialTheme.typography.titleMedium,
             color = Color(0xFF2B2330),
             fontWeight = FontWeight.Bold
@@ -278,7 +279,7 @@ private fun PhotoSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AddPhotoCard(onClick = { onAction(ReviewEditAction.ClickAddPhoto) })
-            uiState.photoItems.forEach { item ->
+            uiState.images.forEach { item ->
                 PhotoCard(
                     item = item,
                     onRemove = { onAction(ReviewEditAction.RemovePhoto(item.id)) }
@@ -300,29 +301,16 @@ private fun ReviewFormSection(
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        Text(
-            text = "상세 리뷰",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF2B2330),
-            fontWeight = FontWeight.Bold
-        )
-        OutlinedTextField(
-            value = uiState.reviewText,
+        ConCafeFormField(
+            label = "상세 리뷰",
+            value = uiState.content,
             onValueChange = { onAction(ReviewEditAction.ChangeReviewText(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp),
-            placeholder = {
-                Text("카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)")
-            },
-            shape = RoundedCornerShape(20.dp),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFFDF8FA),
-                unfocusedContainerColor = Color(0xFFFDF8FA),
-                focusedBorderColor = Color(0xFFFFD1DC),
-                unfocusedBorderColor = Color(0x33FFD1DC)
-            )
+            placeholder = "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)",
+            minLines = 8,
+            singleLine = false
         )
         Text(
             text = "${uiState.reviewLength}/${ReviewEditUiState.minimumReviewLength}자 이상",
@@ -379,6 +367,9 @@ private fun PhotoCard(
     item: ReviewEditUiState.PhotoItem,
     onRemove: () -> Unit
 ) {
+    val backgroundColor = item.backgroundColorHex.toComposeColor()
+    val accentColor = item.accentColorHex.toComposeColor()
+
     Box(
         modifier = Modifier.size(96.dp)
     ) {
@@ -389,8 +380,8 @@ private fun PhotoCard(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(item.backgroundColorHex.toULong()),
-                            Color(item.accentColorHex.toULong()).copy(alpha = 0.35f)
+                            backgroundColor,
+                            accentColor.copy(alpha = 0.35f)
                         )
                     )
                 ),
@@ -398,7 +389,7 @@ private fun PhotoCard(
         ) {
             Text(
                 text = item.label,
-                color = Color(item.accentColorHex.toULong()),
+                color = accentColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -421,6 +412,10 @@ private fun PhotoCard(
             )
         }
     }
+}
+
+private fun Long.toComposeColor(): Color {
+    return colorFromHex(toString(16).padStart(8, '0'))
 }
 
 @Composable

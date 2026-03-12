@@ -21,6 +21,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsSc
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
+import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 
 @Composable
@@ -128,6 +129,14 @@ fun NavigationScreen(
             MenuGoodsEditScreen(
                 cafeId = menuGoodsEditRoute.cafeId,
                 itemId = menuGoodsEditRoute.itemId,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.ReviewEdit> { backStackEntry ->
+            val reviewEditRoute = backStackEntry.toRoute<Route.ReviewEdit>()
+
+            ReviewEditScreen(
+                cafeId = reviewEditRoute.cafeId,
                 onNavigationAction = viewModel::onAction
             )
         }

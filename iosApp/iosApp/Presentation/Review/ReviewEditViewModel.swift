@@ -15,23 +15,23 @@ final class ReviewEditViewModel: ObservableObject {
     let event = PassthroughSubject<ReviewEditEvent, Never>()
 
     private func clickAddPhoto() {
-        if uiState.photoItems.count >= ReviewEditUiState.maximumPhotoCount {
+        if uiState.images.count >= ReviewEditUiState.maximumPhotoCount {
             uiState.infoMessage = "사진은 최대 10장까지 등록할 수 있습니다."
         } else {
-            let nextIndex = uiState.photoItems.count + 1
-            uiState.photoItems.append(Self.placeholderPhotoItem(index: nextIndex))
+            let nextIndex = uiState.images.count + 1
+            uiState.images.append(Self.placeholderPhotoItem(index: nextIndex))
             uiState.infoMessage = "사진 업로드는 다음 단계에서 연결됩니다."
         }
     }
 
     private func removePhoto(_ photoId: String) {
-        uiState.photoItems.removeAll { item in
+        uiState.images.removeAll { item in
             item.id == photoId
         }
     }
 
     private func clickSubmit() {
-        let reviewLength = uiState.reviewText.trimmingCharacters(in: .whitespacesAndNewlines).count
+        let reviewLength = uiState.content.trimmingCharacters(in: .whitespacesAndNewlines).count
 
         if uiState.rating <= 0 {
             uiState.infoMessage = "평점을 선택해주세요."
@@ -55,7 +55,7 @@ final class ReviewEditViewModel: ObservableObject {
         case .removePhoto(let photoId):
             removePhoto(photoId)
         case .changeReviewText(let value):
-            uiState.reviewText = value
+            uiState.content = value
         case .selectAtmosphereAnswer(let isPositive):
             uiState.atmosphereAnswer = isPositive
         case .clickSubmit:

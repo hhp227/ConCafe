@@ -119,6 +119,10 @@ final class CafeViewModel: ObservableObject {
         }
     }
 
+    private func writeReview() {
+        event.send(.navigateToReviewEdit(cafeId: cafeId))
+    }
+
     func onAction(_ action: CafeAction) {
         switch action {
         case .backTapped:
@@ -129,6 +133,8 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
             toggleFavorite()
+        case .writeReviewTapped:
+            writeReview()
         case .loadMoreCasts:
             loadMoreCasts()
         case .refresh:
