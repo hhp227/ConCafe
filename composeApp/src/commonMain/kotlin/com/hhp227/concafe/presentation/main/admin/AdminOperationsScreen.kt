@@ -54,8 +54,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveApproveCafeRegistrationClaimUseCase
 import com.hhp227.concafe.di.resolveApproveCafeOwnerClaimUseCase
+import com.hhp227.concafe.di.resolveGetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.di.resolveGetPendingCafeOwnerClaimsUseCase
+import com.hhp227.concafe.di.resolveRejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.di.resolveRejectCafeOwnerClaimUseCase
 
 @Composable
@@ -64,8 +67,11 @@ fun AdminOperationsScreen(
         factory = viewModelFactory {
             initializer {
                 AdminOperationsViewModel(
+                    getPendingCafeRegistrationClaimsUseCase = resolveGetPendingCafeRegistrationClaimsUseCase(),
                     getPendingCafeOwnerClaimsUseCase = resolveGetPendingCafeOwnerClaimsUseCase(),
+                    approveCafeRegistrationClaimUseCase = resolveApproveCafeRegistrationClaimUseCase(),
                     approveCafeOwnerClaimUseCase = resolveApproveCafeOwnerClaimUseCase(),
+                    rejectCafeRegistrationClaimUseCase = resolveRejectCafeRegistrationClaimUseCase(),
                     rejectCafeOwnerClaimUseCase = resolveRejectCafeOwnerClaimUseCase()
                 )
             }

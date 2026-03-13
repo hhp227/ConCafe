@@ -4,6 +4,7 @@ import com.hhp227.concafe.domain.model.CafeDetail
 
 data class CafeInfoEditUiState(
     val detail: CafeDetail? = null,
+    val isRegistrationMode: Boolean = false,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val cafeName: String = "",
@@ -21,4 +22,10 @@ data class CafeInfoEditUiState(
 ) {
     val galleryLimitText: String
         get() = "${galleryImages.size} / 10"
+
+    val screenTitle: String
+        get() = if (isRegistrationMode) "새 카페 등록" else "카페 정보 관리"
+
+    val submitButtonText: String
+        get() = if (isRegistrationMode) "등록 신청하기" else "변경사항 저장"
 }

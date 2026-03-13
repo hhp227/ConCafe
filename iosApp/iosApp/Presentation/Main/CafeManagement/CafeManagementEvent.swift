@@ -10,4 +10,5 @@ import Foundation
 enum CafeManagementEvent {
     case navigateToCafeDashboard(cafeId: String)
     case navigateToCafe(cafeId: String)
+    case navigateToCafeInfoRegistration
 }

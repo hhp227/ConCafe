@@ -96,6 +96,7 @@ fun NavigationScreen(
 
             CafeInfoEditScreen(
                 cafeId = cafeInfoEditRoute.param,
+                isRegistrationMode = cafeInfoEditRoute.isRegistrationMode,
                 onNavigationAction = viewModel::onAction
             )
         }

@@ -5,6 +5,7 @@ import com.hhp227.concafe.data.repository.FakeBannerRepository
 import com.hhp227.concafe.data.repository.FakeCafeDashboardRepository
 import com.hhp227.concafe.data.repository.FakeCafeManagementRepository
 import com.hhp227.concafe.data.repository.FakeCafeOwnerClaimRepository
+import com.hhp227.concafe.data.repository.FakeCafeRegistrationClaimRepository
 import com.hhp227.concafe.data.repository.FakeCafeRepository
 import com.hhp227.concafe.data.repository.FakeCastRepository
 import com.hhp227.concafe.data.repository.FakeCastClaimRepository
@@ -21,6 +22,7 @@ import com.hhp227.concafe.domain.repository.BannerRepository
 import com.hhp227.concafe.domain.repository.CafeDashboardRepository
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
 import com.hhp227.concafe.domain.repository.CafeOwnerClaimRepository
+import com.hhp227.concafe.domain.repository.CafeRegistrationClaimRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.CastClaimRepository
@@ -47,6 +49,8 @@ import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
+import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
@@ -65,6 +69,7 @@ import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
+import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
@@ -85,8 +90,10 @@ import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeRegistrationClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
+import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
@@ -102,6 +109,7 @@ val repositoryModule = module {
     single<CafeDashboardRepository> { FakeCafeDashboardRepository(get()) }
     single<CafeManagementRepository> { FakeCafeManagementRepository(get()) }
     single<CafeOwnerClaimRepository> { FakeCafeOwnerClaimRepository(get()) }
+    single<CafeRegistrationClaimRepository> { FakeCafeRegistrationClaimRepository(get()) }
     single<CafeRepository> { FakeCafeRepository(get()) }
     single<CastRepository> { FakeCastRepository(get()) }
     single<CastClaimRepository> { FakeCastClaimRepository(get()) }
@@ -127,7 +135,9 @@ val useCaseModule = module {
     factory { CreateCafeEventUseCase(get()) }
     factory { CreateCafeNoticeUseCase(get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get()) }
+    factory { CreateCafeRegistrationClaimUseCase(get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get()) }
+    factory { ApproveCafeRegistrationClaimUseCase(get(), get()) }
     factory { DeleteCafeEventUseCase(get()) }
     factory { DeleteCafeNoticeUseCase(get()) }
     factory { DeleteCafeMenuGoodsUseCase(get()) }
@@ -148,8 +158,10 @@ val useCaseModule = module {
     factory { GetSignUpCafeListUseCase(get()) }
     factory { GetPendingCastClaimsForCafeUseCase(get(), get()) }
     factory { GetPendingCafeOwnerClaimsUseCase(get(), get()) }
+    factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCafeDetailEventUseCase(get()) }
+    factory { ObserveCafeRegistrationClaimEventUseCase(get()) }
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }
     factory { ObserveCastClaimEventUseCase(get()) }
@@ -170,6 +182,7 @@ val useCaseModule = module {
     factory { ApproveCastClaimUseCase(get(), get()) }
     factory { RejectCastClaimUseCase(get(), get()) }
     factory { RejectCafeOwnerClaimUseCase(get(), get()) }
+    factory { RejectCafeRegistrationClaimUseCase(get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get()) }
 }

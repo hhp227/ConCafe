@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
@@ -59,6 +60,8 @@ interface ConCafeDataSource {
 
     val pendingCafeClaimsByUser: MutableMap<String, MutableList<CafeManagementData.PendingClaimSummary>>
 
+    val pendingCafeRegistrationClaimsByUser: MutableMap<String, MutableList<CafeRegistrationClaim>>
+
     val affiliatedCafeIdByUser: MutableMap<String, String>
 
     val cafeCheckInCountById: Map<String, Int>
@@ -69,7 +72,7 @@ interface ConCafeDataSource {
 
     val onShiftCastIdsByCafeId: Map<String, Set<String>>
 
-    val cafeHomeBannerPreviewByCafeId: Map<String, CafeDashboardData.HomeBannerPreview>
+    val cafeHomeBannerPreviewByCafeId: MutableMap<String, CafeDashboardData.HomeBannerPreview>
 
     val castTodayVisitCountById: Map<String, Int>
 
@@ -84,6 +87,8 @@ interface ConCafeDataSource {
     fun observeCafeCastVersion(cafeId: String): Flow<Int>
 
     fun observeCastVersion(castId: String): Flow<Int>
+
+    fun publishCafeDetails()
 
     fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 

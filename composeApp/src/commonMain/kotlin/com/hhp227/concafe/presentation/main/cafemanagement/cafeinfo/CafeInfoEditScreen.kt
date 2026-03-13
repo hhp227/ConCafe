@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,6 +65,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import com.hhp227.concafe.di.resolveCreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.di.resolveUpdateCafeInfoUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -70,14 +73,17 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun CafeInfoEditScreen(
-    cafeId: String,
+    cafeId: String? = null,
+    isRegistrationMode: Boolean = false,
     onNavigationAction: (NavigationAction) -> Unit,
     viewModel: CafeInfoEditViewModel = viewModel(
-        key = "cafe-info-edit-$cafeId",
+        key = "cafe-info-edit-${cafeId ?: "registration"}-$isRegistrationMode",
         factory = viewModelFactory {
             initializer {
                 CafeInfoEditViewModel(
                     cafeId = cafeId,
+                    isRegistrationMode = isRegistrationMode,
+                    createCafeRegistrationClaimUseCase = resolveCreateCafeRegistrationClaimUseCase(),
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     updateCafeInfoUseCase = resolveUpdateCafeInfoUseCase()
                 )
@@ -120,7 +126,7 @@ private fun CafeInfoEditContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("카페 정보 관리", fontWeight = FontWeight.Bold)
+                    Text(uiState.screenTitle, fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeInfoEditAction.ClickBack) }) {
@@ -142,7 +148,7 @@ private fun CafeInfoEditContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .windowInsetsPadding(WindowInsets.navigationBars),
+                        .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFD1DC),
@@ -158,7 +164,7 @@ private fun CafeInfoEditContent(
                     } else {
                         Icon(Icons.Default.Save, contentDescription = null)
                     }
-                    Text("변경사항 저장", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
+                    Text(uiState.submitButtonText, modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -259,26 +265,28 @@ private fun CafeInfoEditContent(
                         }
                     }
                 }
-                item {
-                    EditSectionCard(
-                        title = "카페 갤러리",
-                        trailing = {
-                            Text(uiState.galleryLimitText, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
-                        }
-                    ) {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            maxItemsInEachRow = 3
-                        ) {
-                            uiState.galleryImages.forEachIndexed { index, imageUrl ->
-                                GalleryImageTile(
-                                    label = "이미지 ${index + 1}",
-                                    imageUrl = imageUrl,
-                                    index = index
-                                )
+                if (!uiState.isRegistrationMode) {
+                    item {
+                        EditSectionCard(
+                            title = "카페 갤러리",
+                            trailing = {
+                                Text(uiState.galleryLimitText, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
                             }
-                            AddGalleryTile(onClick = { onAction(CafeInfoEditAction.ClickAddGalleryImage) })
+                        ) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                maxItemsInEachRow = 3
+                            ) {
+                                uiState.galleryImages.forEachIndexed { index, imageUrl ->
+                                    GalleryImageTile(
+                                        label = "이미지 ${index + 1}",
+                                        imageUrl = imageUrl,
+                                        index = index
+                                    )
+                                }
+                                AddGalleryTile(onClick = { onAction(CafeInfoEditAction.ClickAddGalleryImage) })
+                            }
                         }
                     }
                 }

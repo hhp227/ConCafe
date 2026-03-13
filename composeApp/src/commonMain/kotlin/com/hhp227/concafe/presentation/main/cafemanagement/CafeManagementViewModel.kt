@@ -14,13 +14,16 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.model.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeRegistrationClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeManagementViewModel(
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
+    private val observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
@@ -31,6 +34,7 @@ class CafeManagementViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()
+    private var currentUserId: String? = null
 
     private fun loadCafeManagement() {
         viewModelScope.launch {
@@ -107,11 +111,7 @@ class CafeManagementViewModel(
     }
 
     private fun clickCreateCafe() {
-        _uiState.update {
-            it.copy(
-                infoMessage = "새 카페 등록 플로우는 다음 단계에서 연결됩니다."
-            )
-        }
+        viewModelScope.launch { _event.emit(CafeManagementEvent.NavigateToCafeInfoRegistration) }
     }
 
     private fun dismissInfoMessage() {
@@ -125,7 +125,8 @@ class CafeManagementViewModel(
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                currentUserId = user?.id
                 loadCafeManagement()
             }
         }
@@ -137,6 +138,23 @@ class CafeManagementViewModel(
             observeCafeDetailEventUseCase.invoke().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeInfo(event.cafe)
+                }
+            }
+        }
+    }
+
+    private fun observeCafeRegistrationClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
+            observeCafeRegistrationClaimEventUseCase.invoke().collectLatest { claimEvent ->
+                val userId = currentUserId ?: return@collectLatest
+                val shouldRefresh = when (claimEvent) {
+                    is CafeRegistrationClaimEvent.Created -> claimEvent.requesterUserId == userId
+                    is CafeRegistrationClaimEvent.Approved -> claimEvent.requesterUserId == userId
+                    is CafeRegistrationClaimEvent.Rejected -> claimEvent.requesterUserId == userId
+                }
+                if (shouldRefresh) {
+                    loadCafeManagement()
                 }
             }
         }
@@ -185,6 +203,7 @@ class CafeManagementViewModel(
     init {
         observeSession()
         observeCafeDetailEvent()
+        observeCafeRegistrationClaimEvent()
         loadCafeManagement()
     }
 
@@ -196,6 +215,7 @@ class CafeManagementViewModel(
 
     private enum class TaskKey {
         OBSERVE_SESSION,
-        OBSERVE_CAFE_DETAIL_EVENT
+        OBSERVE_CAFE_DETAIL_EVENT,
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT
     }
 }

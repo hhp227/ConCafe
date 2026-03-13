@@ -30,8 +30,12 @@ struct AppNavigationView: View {
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .cafeDashboard(let param):
                 CafeDashboardView(cafeId: param, onNavigationAction: viewModel.onAction)
-            case .cafeInfoEdit(let param):
-                CafeInfoEditView(cafeId: param, onNavigationAction: viewModel.onAction)
+            case .cafeInfoEdit(let param, let isRegistrationMode):
+                CafeInfoEditView(
+                    cafeId: param,
+                    isRegistrationMode: isRegistrationMode,
+                    onNavigationAction: viewModel.onAction
+                )
             case .noticeEvent(let param):
                 NoticeEventView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .castEdit(let cafeId, let castId):

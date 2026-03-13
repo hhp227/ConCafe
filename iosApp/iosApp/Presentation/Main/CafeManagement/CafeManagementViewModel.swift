@@ -15,6 +15,8 @@ final class CafeManagementViewModel: ObservableObject {
 
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
+    private let observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
@@ -24,6 +26,7 @@ final class CafeManagementViewModel: ObservableObject {
     let event = PassthroughSubject<CafeManagementEvent, Never>()
 
     private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var currentUserId: String?
 
     private func loadCafeManagement() {
         Task {
@@ -86,7 +89,7 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private func clickCreateCafe() {
-        uiState.infoMessage = "새 카페 등록 플로우는 다음 단계에서 연결됩니다."
+        event.send(.navigateToCafeInfoRegistration)
     }
 
     private func dismissInfoMessage() {
@@ -95,10 +98,11 @@ final class CafeManagementViewModel: ObservableObject {
 
     private func observeSession() {
         watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
+        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] user in
             guard let self else { return }
 
             Task { @MainActor in
+                self.currentUserId = user?.id
                 self.loadCafeManagement()
             }
         }
@@ -111,6 +115,30 @@ final class CafeManagementViewModel: ObservableObject {
             Task { @MainActor in
                 if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                     self.patchCafeInfo(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func observeCafeRegistrationClaimEvent() {
+        watchHandles[.cafeRegistrationClaimEvent]?.cancel()
+        watchHandles[.cafeRegistrationClaimEvent] = observeCafeRegistrationClaimEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                guard let currentUserId = self.currentUserId else { return }
+                let shouldRefresh: Bool
+                switch event {
+                case let created as CafeRegistrationClaimEvent.Created:
+                    shouldRefresh = created.requesterUserId == currentUserId
+                case let approved as CafeRegistrationClaimEvent.Approved:
+                    shouldRefresh = approved.requesterUserId == currentUserId
+                case let rejected as CafeRegistrationClaimEvent.Rejected:
+                    shouldRefresh = rejected.requesterUserId == currentUserId
+                default:
+                    shouldRefresh = false
+                }
+                if shouldRefresh {
+                    self.loadCafeManagement()
                 }
             }
         }
@@ -165,16 +193,19 @@ final class CafeManagementViewModel: ObservableObject {
     init(
         createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
+        observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase = KoinInitializerKt.resolveObserveCafeRegistrationClaimEventUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
+        self.observeCafeRegistrationClaimEventUseCase = observeCafeRegistrationClaimEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
         observeCafeDetailEvent()
+        observeCafeRegistrationClaimEvent()
         loadCafeManagement()
     }
 
@@ -186,5 +217,6 @@ final class CafeManagementViewModel: ObservableObject {
     private enum WatchKey {
         case session
         case cafeDetailEvent
+        case cafeRegistrationClaimEvent
     }
 }

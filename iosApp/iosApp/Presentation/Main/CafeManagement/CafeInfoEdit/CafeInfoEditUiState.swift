@@ -10,6 +10,7 @@ import Shared
 
 struct CafeInfoEditUiState {
     var detail: CafeDetail?
+    var isRegistrationMode = false
     var isLoading = true
     var isSaving = false
     var cafeName = ""
@@ -27,5 +28,13 @@ struct CafeInfoEditUiState {
 
     var galleryLimitText: String {
         "\(galleryImages.count) / 10"
+    }
+
+    var screenTitle: String {
+        isRegistrationMode ? "새 카페 등록" : "카페 정보 관리"
+    }
+
+    var submitButtonText: String {
+        isRegistrationMode ? "등록 신청하기" : "변경사항 저장"
     }
 }

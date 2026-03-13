@@ -12,31 +12,50 @@ import Shared
 final class AdminOperationsViewModel: ObservableObject {
     @Published private(set) var uiState = AdminOperationsUiState()
 
+    private let getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase
+
     private let getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase
 
+    private let approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase
+
     private let approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase
+
+    private let rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase
 
     private let rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase
 
     private func loadPendingRequests() {
         Task {
             do {
-                let result = try await getPendingCafeOwnerClaimsUseCase.invoke()
-                if let success = result as? AppResultSuccess<AnyObject>,
-                   let claims = success.data as? [PendingCafeOwnerClaimPreview] {
-                    let roleClaims = claims.map { Self.toAdminPendingRequest($0) }
-                    let mergedRequests = defaultCafeRegistrationPendingRequests + roleClaims
+                async let registrationResult = getPendingCafeRegistrationClaimsUseCase.invoke()
+                async let roleClaimResult = getPendingCafeOwnerClaimsUseCase.invoke()
+
+                let registration = try await registrationResult
+                let roleClaimsResult = try await roleClaimResult
+
+                if let registrationSuccess = registration as? AppResultSuccess<AnyObject>,
+                   let registrationClaims = registrationSuccess.data as? [PendingCafeRegistrationClaimPreview],
+                   let roleClaimSuccess = roleClaimsResult as? AppResultSuccess<AnyObject>,
+                   let roleClaims = roleClaimSuccess.data as? [PendingCafeOwnerClaimPreview] {
+                    let mergedRequests = (
+                        registrationClaims.map { Self.toAdminPendingRequest($0) } +
+                        roleClaims.map { Self.toAdminPendingRequest($0) }
+                    ).sorted { $0.requestedAt > $1.requestedAt }
                     uiState.pendingRequests = mergedRequests
-                    uiState.metrics = Self.buildMetrics(pendingCount: mergedRequests.count)
+                    uiState.metrics = buildAdminMetrics(pendingCount: mergedRequests.count)
                     uiState.infoMessage = nil
-                } else if let failure = result as? AppResultFailure {
-                    uiState.pendingRequests = defaultCafeRegistrationPendingRequests
-                    uiState.metrics = Self.buildMetrics(pendingCount: defaultCafeRegistrationPendingRequests.count)
+                } else if let failure = registration as? AppResultFailure {
+                    uiState.pendingRequests = []
+                    uiState.metrics = buildAdminMetrics(pendingCount: 0)
+                    uiState.infoMessage = "\(failure.error)"
+                } else if let failure = roleClaimsResult as? AppResultFailure {
+                    uiState.pendingRequests = []
+                    uiState.metrics = buildAdminMetrics(pendingCount: 0)
                     uiState.infoMessage = "\(failure.error)"
                 }
             } catch {
-                uiState.pendingRequests = defaultCafeRegistrationPendingRequests
-                uiState.metrics = Self.buildMetrics(pendingCount: defaultCafeRegistrationPendingRequests.count)
+                uiState.pendingRequests = []
+                uiState.metrics = buildAdminMetrics(pendingCount: 0)
                 uiState.infoMessage = error.localizedDescription
             }
         }
@@ -44,32 +63,33 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private func handlePendingResult(id: String, approved: Bool) {
         guard let request = uiState.pendingRequests.first(where: { $0.id == id }) else { return }
-        if request.type == .roleClaim {
-            Task {
-                do {
-                    let result = approved
+
+        Task {
+            do {
+                let result: AppResult
+                switch request.type {
+                case .cafeRegistration:
+                    result = approved
+                        ? try await approveCafeRegistrationClaimUseCase.invoke(claimId: id)
+                        : try await rejectCafeRegistrationClaimUseCase.invoke(claimId: id)
+                case .roleClaim:
+                    result = approved
                         ? try await approveCafeOwnerClaimUseCase.invoke(claimId: id)
                         : try await rejectCafeOwnerClaimUseCase.invoke(claimId: id)
-                    if result is AppResultSuccess<AnyObject> {
-                        loadPendingRequests()
-                        uiState.infoMessage = approved
-                            ? "\(request.title) 요청을 승인했습니다."
-                            : "\(request.title) 요청을 반려했습니다."
-                    } else if let failure = result as? AppResultFailure {
-                        uiState.infoMessage = "\(failure.error)"
-                    }
-                } catch {
-                    uiState.infoMessage = error.localizedDescription
                 }
-            }
-            return
-        }
 
-        uiState.pendingRequests.removeAll { $0.id == id }
-        uiState.metrics = Self.buildMetrics(pendingCount: uiState.pendingRequests.count)
-        uiState.infoMessage = approved
-        ? "\(request.title) 요청을 승인했습니다."
-        : "\(request.title) 요청을 반려했습니다."
+                if result is AppResultSuccess<AnyObject> {
+                    loadPendingRequests()
+                    uiState.infoMessage = approved
+                        ? "\(request.title) 요청을 승인했습니다."
+                        : "\(request.title) 요청을 반려했습니다."
+                } else if let failure = result as? AppResultFailure {
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
     }
 
     func onAction(_ action: AdminOperationsAction) {
@@ -95,12 +115,18 @@ final class AdminOperationsViewModel: ObservableObject {
     }
 
     init(
+        getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeRegistrationClaimsUseCase(),
         getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeOwnerClaimsUseCase(),
+        approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase = KoinInitializerKt.resolveApproveCafeRegistrationClaimUseCase(),
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
+        rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
         rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase = KoinInitializerKt.resolveRejectCafeOwnerClaimUseCase()
     ) {
+        self.getPendingCafeRegistrationClaimsUseCase = getPendingCafeRegistrationClaimsUseCase
         self.getPendingCafeOwnerClaimsUseCase = getPendingCafeOwnerClaimsUseCase
+        self.approveCafeRegistrationClaimUseCase = approveCafeRegistrationClaimUseCase
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
+        self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
         self.rejectCafeOwnerClaimUseCase = rejectCafeOwnerClaimUseCase
         loadPendingRequests()
     }
@@ -118,31 +144,14 @@ private extension AdminOperationsViewModel {
         )
     }
 
-    static func buildMetrics(pendingCount: Int) -> [AdminMetricCard] {
-        [
-            AdminMetricCard(title: "전체 사용자", value: "12,540", delta: "1.2%", icon: .users, trend: .up),
-            AdminMetricCard(title: "활성 카페", value: "842", delta: "0.5%", icon: .cafe, trend: .up),
-            AdminMetricCard(title: "승인 대기", value: "\(pendingCount)", delta: "\(pendingCount)건 대기", icon: .pending, trend: .new),
-            AdminMetricCard(title: "신고 항목", value: "32", delta: "8%", icon: .report, trend: .down)
-        ]
+    static func toAdminPendingRequest(_ claim: PendingCafeRegistrationClaimPreview) -> AdminPendingRequest {
+        AdminPendingRequest(
+            id: claim.claimId,
+            type: .cafeRegistration,
+            title: claim.cafeName,
+            subtitle: claim.location,
+            requestedAt: claim.requestedAt,
+            imageUrl: claim.imageUrl ?? ""
+        )
     }
 }
-
-private let defaultCafeRegistrationPendingRequests: [AdminPendingRequest] = [
-    AdminPendingRequest(
-        id: "pending-cafe-1",
-        type: .cafeRegistration,
-        title: "카페 모카라떼 홍대점",
-        subtitle: "서울 마포구 어울마당로 123",
-        requestedAt: "2시간 전",
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPTqu6TR5iE7rtn6cuSTaGUwIAdgNS9xaZqDyHkBXX25arxUP3ZAK6wS2HHUj-Efew3j9cuymLzCx7a7fUG8MqyZ1HFdgXXJoSTw9zIlWv0cvk_sjAIt-6daNAoEAg0lQTCaCkZ7CSKX2uNQpH9gyyUjrU2UdHrmBskzC9nIr06ms2YgAbzHhPdxZbEVZN41SPq6gUqSSTdRWJcI5AS-T3HTjq3n3yMJYZ7T_imgYTE1UrUdAnniws6bLwUzX_o9f7XcBOy5Ur9A"
-    ),
-    AdminPendingRequest(
-        id: "pending-cafe-2",
-        type: .cafeRegistration,
-        title: "디저트 빌리지 성수",
-        subtitle: "서울 성동구 아차산로 45",
-        requestedAt: "5시간 전",
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCe9Vib6B40fIweAG4csR1KYxnHTMoec_xzj6GS5343QHIszmvCk4_ZiPt1NOdpLruSfby0tdpH2myNthY3GZjMgDZw8Fjh70hjE55AGaHkmkMJdLkqsuISq4Gsa8WhO-JRD3SIBIY_FAoBdHYRxqq2AVZl7Xmrgp0OorSTkcVTdF6cO14mBMWbvzhU9Hga3y41jSo89iuQ8aG-D8oKHX5PPyeXXGllTSzc7oGE8PMT1rBx-DRviiY0QI2H9AvdAbcm8hHiBGfIVQ"
-    )
-]

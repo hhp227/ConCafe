@@ -11,9 +11,13 @@ import Shared
 
 @MainActor
 final class CafeInfoEditViewModel: ObservableObject {
-    private let cafeId: String
+    private let cafeId: String?
+
+    private let isRegistrationMode: Bool
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
+
+    private let createCafeRegistrationClaimUseCase: CreateCafeRegistrationClaimUseCase
 
     private let updateCafeInfoUseCase: UpdateCafeInfoUseCase
 
@@ -24,6 +28,7 @@ final class CafeInfoEditViewModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
 
     private func loadCafeInfo() {
+        guard let cafeId else { return }
         loadTask?.cancel()
         uiState.isLoading = true
         uiState.infoMessage = nil
@@ -65,6 +70,12 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     private func saveCafeInfo() {
+        if isRegistrationMode {
+            submitCafeRegistration()
+            return
+        }
+
+        guard let cafeId else { return }
         uiState.isSaving = true
         uiState.infoMessage = nil
 
@@ -101,7 +112,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.weekendOpen = parsedHours.weekendOpen
                     uiState.weekendClose = parsedHours.weekendClose
                     uiState.infoMessage = nil
-                    event.send(.showSaveSuccessAlert)
+                    event.send(.navigateBack)
                 } else {
                     uiState.isSaving = false
                     uiState.infoMessage = "카페 정보 저장에 실패했습니다."
@@ -112,6 +123,65 @@ final class CafeInfoEditViewModel: ObservableObject {
                 uiState.infoMessage = "카페 정보 저장에 실패했습니다."
             }
         }
+    }
+
+    private func submitCafeRegistration() {
+        uiState.isSaving = true
+        uiState.infoMessage = nil
+
+        loadTask?.cancel()
+        loadTask = Task {
+            do {
+                let result = try await createCafeRegistrationClaimUseCase.invoke(
+                    draft: CafeRegistrationDraft(
+                        name: uiState.cafeName.trimmingCharacters(in: .whitespacesAndNewlines),
+                        description: uiState.cafeDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+                        region: Region(
+                            country: "KR",
+                            city: "Seoul",
+                            address: uiState.address.trimmingCharacters(in: .whitespacesAndNewlines),
+                            location: GeoPoint(latitude: 37.5665, longitude: 126.9780)
+                        ),
+                        thumbnailImage: uiState.representativeImageUrl,
+                        conceptType: "MAID",
+                        businessHours: formatBusinessHours(),
+                        phoneNumber: uiState.contactNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+                    )
+                )
+
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSaving = false
+                    uiState.infoMessage = nil
+                    event.send(.navigateBack)
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSaving = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isSaving = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func formatBusinessHours() -> String {
+        let weekday = !uiState.weekdayOpen.isEmpty && !uiState.weekdayClose.isEmpty
+        let weekend = !uiState.weekendOpen.isEmpty && !uiState.weekendClose.isEmpty
+
+        if weekday && weekend && uiState.weekdayOpen == uiState.weekendOpen && uiState.weekdayClose == uiState.weekendClose {
+            return "매일 \(uiState.weekdayOpen) - \(uiState.weekdayClose)"
+        }
+        if weekday && weekend {
+            return "평일 \(uiState.weekdayOpen) - \(uiState.weekdayClose) / 주말 \(uiState.weekendOpen) - \(uiState.weekendClose)"
+        }
+        if weekday {
+            return "평일 \(uiState.weekdayOpen) - \(uiState.weekdayClose)"
+        }
+        if weekend {
+            return "주말 \(uiState.weekendOpen) - \(uiState.weekendClose)"
+        }
+        return ""
     }
 
     func onAction(_ action: CafeInfoEditAction) {
@@ -172,15 +242,24 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     init(
-        cafeId: String,
+        cafeId: String? = nil,
+        isRegistrationMode: Bool = false,
+        createCafeRegistrationClaimUseCase: CreateCafeRegistrationClaimUseCase = KoinInitializerKt.resolveCreateCafeRegistrationClaimUseCase(),
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         updateCafeInfoUseCase: UpdateCafeInfoUseCase = KoinInitializerKt.resolveUpdateCafeInfoUseCase()
     ) {
         self.cafeId = cafeId
+        self.isRegistrationMode = isRegistrationMode
+        self.createCafeRegistrationClaimUseCase = createCafeRegistrationClaimUseCase
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.updateCafeInfoUseCase = updateCafeInfoUseCase
+        self.uiState.isRegistrationMode = isRegistrationMode
 
-        loadCafeInfo()
+        if isRegistrationMode {
+            uiState.isLoading = false
+        } else {
+            loadCafeInfo()
+        }
     }
 
     deinit {

@@ -37,7 +37,21 @@ class FakeCafeManagementRepository(
             )
         }
 
-        val pendingClaims = dataSource.pendingCafeClaimsByUser[userId].orEmpty()
+        val pendingCafeOwnerClaims = dataSource.pendingCafeClaimsByUser[userId].orEmpty()
+        val pendingCafeRegistrationClaims = dataSource.pendingCafeRegistrationClaimsByUser[userId]
+            .orEmpty()
+            .map { claim ->
+                CafeManagementData.PendingClaimSummary(
+                    claimId = claim.claimId,
+                    cafeId = "",
+                    cafeName = claim.cafeName,
+                    requestedAt = claim.requestedAt,
+                    status = claim.status,
+                    message = claim.message
+                )
+            }
+        val pendingClaims = (pendingCafeOwnerClaims + pendingCafeRegistrationClaims)
+            .sortedByDescending { it.requestedAt }
 
         return CafeManagementData(
             ownedCafes = ownedCafes,

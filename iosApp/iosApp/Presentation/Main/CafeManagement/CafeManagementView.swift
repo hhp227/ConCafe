@@ -24,6 +24,8 @@ struct CafeManagementView: View {
                 onNavigationAction(.navigateToCafeDashboard(id: cafeId))
             case .navigateToCafe(let cafeId):
                 onNavigationAction(.navigateToCafe(id: cafeId))
+            case .navigateToCafeInfoRegistration:
+                onNavigationAction(.navigateToCafeInfoEdit(id: nil, isRegistrationMode: true))
             }
         }
     }
