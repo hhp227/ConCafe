@@ -109,13 +109,14 @@ final class ReviewEditViewModel: ObservableObject {
                         taggedCastIds: uiState.taggedCastIds
                     )
 
-                    if let success = result as? AppResultSuccess<AnyObject>,
-                       let review = success.data as? Review {
+                    if let success = result as? AppResultSuccess<AnyObject> {
                         uiState.isSubmitting = false
-                        uiState.reviewId = review.id
-                        uiState.userId = review.userId
-                        uiState.visitId = review.visitId
-                        uiState.createdAt = review.createdAt
+                        if let review = success.data as? Review {
+                            uiState.reviewId = review.id
+                            uiState.userId = review.userId
+                            uiState.visitId = review.visitId
+                            uiState.createdAt = review.createdAt
+                        }
                         event.send(.navigateBack)
                     } else if let failure = result as? AppResultFailure {
                         uiState.isSubmitting = false
