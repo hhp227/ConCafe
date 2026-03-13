@@ -469,7 +469,7 @@ private struct CastClaimSheetView: View {
     let onAction: (FanManagementAction) -> Void
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationContainer(title: "프로필 연결") {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(sheet.affiliatedCafeName)
@@ -525,8 +525,6 @@ private struct CastClaimSheetView: View {
                 }
                 .padding(20)
             }
-            .navigationTitle("프로필 연결")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("닫기") {
