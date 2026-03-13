@@ -27,6 +27,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateBack)
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
+            case .navigateToNoticeEvent(let cafeId):
+                onNavigationAction(.navigateToNoticeEvent(id: cafeId))
             case .navigateToMenuGoods(let cafeId):
                 onNavigationAction(.navigateToMenuGoods(id: cafeId))
             case .navigateToCastEdit(let cafeId, let castId):

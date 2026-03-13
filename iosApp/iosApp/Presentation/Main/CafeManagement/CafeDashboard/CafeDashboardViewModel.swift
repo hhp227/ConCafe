@@ -122,6 +122,8 @@ final class CafeDashboardViewModel: ObservableObject {
         switch shortcut {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
+        case .eventManagement:
+            event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
             event.send(.navigateToMenuGoods(cafeId: cafeId))
         case .castSchedule:

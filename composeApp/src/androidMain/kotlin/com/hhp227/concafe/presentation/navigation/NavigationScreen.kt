@@ -19,6 +19,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDas
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
@@ -95,6 +96,13 @@ fun NavigationScreen(
 
             CafeInfoEditScreen(
                 cafeId = cafeInfoEditRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.NoticeEvent> { backStackEntry ->
+            val noticeEventRoute = backStackEntry.toRoute<Route.NoticeEvent>()
+
+            NoticeEventScreen(
                 onNavigationAction = viewModel::onAction
             )
         }

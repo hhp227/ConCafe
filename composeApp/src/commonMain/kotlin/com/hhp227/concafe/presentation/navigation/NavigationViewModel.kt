@@ -14,6 +14,7 @@ import com.hhp227.concafe.presentation.navigation.Route.CastEdit
 import com.hhp227.concafe.presentation.navigation.Route.Main
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoods
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
+import com.hhp227.concafe.presentation.navigation.Route.NoticeEvent
 import com.hhp227.concafe.presentation.navigation.Route.ReviewEdit
 import com.hhp227.concafe.presentation.navigation.Route.Schedule
 
@@ -38,6 +39,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(NavigateTo(CafeInfoEdit(action.id)))
+                }
+                is NavigationAction.NavigateToNoticeEvent -> {
+                    _event.emit(NavigateTo(NoticeEvent(action.id)))
                 }
                 is NavigationAction.NavigateToCastEdit -> {
                     _event.emit(NavigateTo(CastEdit(action.cafeId, action.castId)))

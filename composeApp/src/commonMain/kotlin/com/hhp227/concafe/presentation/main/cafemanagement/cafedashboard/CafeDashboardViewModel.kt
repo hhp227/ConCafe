@@ -138,6 +138,11 @@ class CafeDashboardViewModel(
                     _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
                 }
             }
+            CafeDashboardShortcut.EVENT_MANAGEMENT -> {
+                viewModelScope.launch {
+                    _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
+                }
+            }
             CafeDashboardShortcut.MENU_GOODS -> {
                 viewModelScope.launch {
                     _event.emit(CafeDashboardEvent.NavigateToMenuGoods(cafeId))
