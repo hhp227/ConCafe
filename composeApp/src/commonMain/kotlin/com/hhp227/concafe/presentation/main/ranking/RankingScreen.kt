@@ -266,6 +266,7 @@ fun RankingPromoBanner(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RankingEntryCard(
     item: RankingFeedEntry,
@@ -273,10 +274,10 @@ fun RankingEntryCard(
     onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
