@@ -32,11 +32,6 @@ fun CafeNoticeScreen(
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             notices.forEachIndexed { index, notice ->
-                if (index == notices.lastIndex) {
-                    LaunchedEffect(notice.id) {
-                        onLoadMore()
-                    }
-                }
                 Card(
                     onClick = {
                         if (notice.id in expandableNoticeIds.value) {
@@ -87,7 +82,9 @@ fun CafeNoticeScreen(
             }
             if (canLoadMore || isLoadingMore) {
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isLoadingMore) {
@@ -95,6 +92,8 @@ fun CafeNoticeScreen(
                             modifier = Modifier.size(24.dp),
                             color = Color(0xFFEF6797)
                         )
+                    } else if (canLoadMore) {
+                        Spacer(modifier = Modifier.height(1.dp))
                     }
                 }
             }
