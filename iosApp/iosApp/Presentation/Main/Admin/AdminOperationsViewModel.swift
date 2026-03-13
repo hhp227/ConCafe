@@ -27,11 +27,8 @@ final class AdminOperationsViewModel: ObservableObject {
     private func loadPendingRequests() {
         Task { @MainActor in
             do {
-                async let registrationResult = getPendingCafeRegistrationClaimsUseCase.invoke()
-                async let roleClaimResult = getPendingCafeOwnerClaimsUseCase.invoke()
-
-                let registration = try await registrationResult
-                let roleClaimsResult = try await roleClaimResult
+                let registration = try await getPendingCafeRegistrationClaimsUseCase.invoke()
+                let roleClaimsResult = try await getPendingCafeOwnerClaimsUseCase.invoke()
 
                 if let registrationSuccess = registration as? AppResultSuccess<AnyObject>,
                    let registrationClaims = registrationSuccess.data as? [PendingCafeRegistrationClaimPreview],
