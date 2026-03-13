@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -36,6 +37,7 @@ import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
+import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
 import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
@@ -58,6 +60,7 @@ fun CafeScreen(
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
                     getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
                     observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
+                    observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
                     toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
                 )
             }
@@ -65,6 +68,7 @@ fun CafeScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -75,12 +79,14 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                CafeEvent.ScrollReviewsToTop -> listState.animateScrollToItem(3)
             }
         }
     }
     CafeContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction
+        onAction = viewModel::onAction,
+        listState = listState
     )
 }
 
@@ -88,9 +94,9 @@ fun CafeScreen(
 @Composable
 fun CafeContentScreen(
     uiState: CafeUiState,
-    onAction: (CafeAction) -> Unit
+    onAction: (CafeAction) -> Unit,
+    listState: LazyListState
 ) {
-    val listState = rememberLazyListState()
     val isTopBarVisible = uiState.detail != null && (
             listState.firstVisibleItemIndex > 1 ||
                     (listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 1 }?.offset

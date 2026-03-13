@@ -18,6 +18,8 @@ struct CafeReviewView: View {
     let isLoadingMore: Bool
 
     let onLoadMore: () -> Void
+
+    let topAnchorId: String
     
     var body: some View {
         VStack(spacing: 12) {
@@ -37,6 +39,7 @@ struct CafeReviewView: View {
             .padding(16)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .id(topAnchorId)
             if reviews.isEmpty {
                 emptyCard("아직 등록된 리뷰가 없습니다.")
             } else {

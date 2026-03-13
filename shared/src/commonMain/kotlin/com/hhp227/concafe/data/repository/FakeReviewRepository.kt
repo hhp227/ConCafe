@@ -3,11 +3,24 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.model.ReviewEvent
 import com.hhp227.concafe.domain.repository.ReviewRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeReviewRepository(
     private val dataSource: ConCafeDataSource
 ) : ReviewRepository {
+    private val reviewEvent = MutableSharedFlow<ReviewEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+
+    override fun observeReviewEvent(): Flow<ReviewEvent> {
+        return reviewEvent.asSharedFlow()
+    }
+
     override suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review> {
         val items = dataSource.reviews.filter { it.cafeId == cafeId }.sortedByDescending { it.createdAt }
         return dataSource.toPaged(items, cursor, pageSize)
@@ -43,6 +56,7 @@ class FakeReviewRepository(
             cafeId = cafeId,
             taggedCastIds = taggedCastIds
         )
+        reviewEvent.tryEmit(ReviewEvent.Created(cafeId))
         return review
     }
 
@@ -74,7 +88,12 @@ class FakeReviewRepository(
         val index = dataSource.reviews.indexOfFirst { it.id == reviewId && it.userId == requesterId }
 
         if (index >= 0) {
-            dataSource.reviews.removeAt(index)
+            val deletedReview = dataSource.reviews.removeAt(index)
+            dataSource.refreshReviewProjections(
+                cafeId = deletedReview.cafeId,
+                taggedCastIds = deletedReview.taggedCastIds
+            )
+            reviewEvent.tryEmit(ReviewEvent.Deleted(deletedReview.cafeId, reviewId))
         } else {
             throw Exception("no permission to delete review")
         }
