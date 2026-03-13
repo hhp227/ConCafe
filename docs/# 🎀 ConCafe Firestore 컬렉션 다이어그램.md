@@ -169,11 +169,19 @@ castClaims/{claimId}
 ├─ userId
 ├─ cafeId
 ├─ castId
-├─ status
-│  PENDING
-│  APPROVED
-│  REJECTED
+├─ status: PENDING | APPROVED | REJECTED
+├─ message
+├─ evidenceImageUrls: []
+├─ reviewedBy
+├─ reviewedAt
 └─ createdAt
+
+캐스트 Claim 정책 메모
+- `castClaims`는 캐스트 회원가입 자체가 아니라 `팬관리에서 보내는 기존 캐스트 프로필 연결 요청`을 의미한다.
+- 캐스트는 가입 시 선택한 `소속 카페` 기준으로 해당 카페의 캐스트 프로필에 연결 요청을 보낸다.
+- 요청 생성은 캐스트가 `소속 카페 대시보드`에서 수행한다.
+- 승인 / 반려는 소속 카페 운영자가 `카페 관리 대시보드 > 캐스트 관리 섹션`에서 처리한다.
+- 승인되면 `cafes/{cafeId}/casts/{castId}.linkedUserId = userId`로 연결한다.
 
 cafeOwnerClaims/{claimId}
 ├─ userId
