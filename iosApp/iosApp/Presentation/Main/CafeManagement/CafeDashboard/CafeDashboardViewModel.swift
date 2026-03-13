@@ -162,11 +162,37 @@ final class CafeDashboardViewModel: ObservableObject {
         watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
-                if event.matches(cafeId: self.cafeId) {
-                    self.loadCafeDashboard()
+                switch event {
+                case let updated as CafeDetailEvent.CafeInfoUpdated:
+                    if updated.cafeId == self.cafeId {
+                        self.patchCafeInfo(updated.cafe)
+                    }
+                case is CafeDetailEvent.MenuCreated,
+                     is CafeDetailEvent.MenuUpdated,
+                     is CafeDetailEvent.MenuDeleted,
+                     is CafeDetailEvent.GoodsCreated,
+                     is CafeDetailEvent.GoodsUpdated,
+                     is CafeDetailEvent.GoodsDeleted:
+                    break
+                default:
+                    break
                 }
             }
         }
+    }
+
+    private func patchCafeInfo(_ cafe: Cafe) {
+        guard let current = uiState.cafe else { return }
+        uiState.cafe = CafeDashboardData(
+            id: current.id,
+            name: cafe.name,
+            city: cafe.region.city,
+            todayCheckIns: current.todayCheckIns,
+            todayReviews: current.todayReviews,
+            rating: cafe.ratingAvg,
+            castPreviews: current.castPreviews,
+            homeBannerPreview: current.homeBannerPreview
+        )
     }
 
     private func observeCastEvent() {
@@ -178,15 +204,25 @@ final class CafeDashboardViewModel: ObservableObject {
                 switch event {
                 case let event as Shared.CastEvent.Created:
                     if event.cafeId == self.cafeId {
-                        self.loadCafeDashboard()
+                        self.refreshCastPreviews()
                     }
                 case let event as Shared.CastEvent.Updated:
                     if event.cafeId == self.cafeId {
-                        self.loadCafeDashboard()
+                        self.uiState.castPreviews = self.uiState.castPreviews.map { preview in
+                            guard preview.id == event.cast.id else { return preview }
+                            return CafeCastPreview(
+                                id: preview.id,
+                                name: event.cast.name,
+                                isOnShift: preview.isOnShift
+                            )
+                        }
                     }
                 case let event as Shared.CastEvent.Deleted:
                     if event.cafeId == self.cafeId {
-                        self.loadCafeDashboard()
+                        self.uiState.castPreviews.removeAll { $0.id == event.castId }
+                        if self.uiState.selectedCastId == event.castId {
+                            self.uiState.selectedCastId = nil
+                        }
                     }
                 default:
                     break
@@ -240,22 +276,5 @@ final class CafeDashboardViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case castEvent
-    }
-}
-
-private extension CafeDetailEvent {
-    func matches(cafeId: String) -> Bool {
-        switch self {
-        case let event as CafeDetailEvent.CafeInfoUpdated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsCreated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsUpdated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsDeleted:
-            return event.cafeId == cafeId
-        default:
-            return false
-        }
     }
 }

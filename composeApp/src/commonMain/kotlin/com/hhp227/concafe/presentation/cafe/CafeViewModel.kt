@@ -68,8 +68,11 @@ class CafeViewModel(
                     }
                     is ReviewEvent.Deleted -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
-                            loadCafeDetail(refreshReviews = false)
-                            refreshReviewPage()
+                            _uiState.update { state ->
+                                state.copy(
+                                    reviews = state.reviews.filterNot { review -> review.id == event.reviewId }
+                                )
+                            }
                         }
                     }
                 }

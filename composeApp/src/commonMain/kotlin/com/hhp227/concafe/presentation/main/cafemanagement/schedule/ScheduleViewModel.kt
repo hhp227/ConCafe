@@ -53,11 +53,20 @@ class ScheduleViewModel(
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
             observeCastEventUseCase.invoke().collectLatest { event ->
                 when (event) {
-                    is CastDomainEvent.Created -> if (event.castId == castId) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadSchedule()
                     }
-                    is CastDomainEvent.Updated -> if (event.castId == castId) {
-                        loadSchedule()
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            val cafeName = state.castSummary.subtitle.substringAfter(" / ", "")
+                            state.copy(
+                                castSummary = state.castSummary.copy(
+                                    title = event.cast.name,
+                                    subtitle = "${event.cast.conceptRole.toDisplayConceptRole()} / $cafeName",
+                                    initials = event.cast.name.toInitials()
+                                )
+                            )
+                        }
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
                         loadSchedule()

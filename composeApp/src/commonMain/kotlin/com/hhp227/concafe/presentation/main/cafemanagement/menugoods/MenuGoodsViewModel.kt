@@ -50,8 +50,28 @@ class MenuGoodsViewModel(
         jobs[JobKey.OBSERVE_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
             observeCafeDetailEventUseCase.invoke().collect { event ->
-                if (event.matches(cafeId)) {
-                    loadMenuGoods()
+                when (event) {
+                    is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
+                        loadMenuGoods()
+                    }
+                    is CafeDetailEvent.MenuCreated -> if (event.cafeId == cafeId) {
+                        loadMenuGoods()
+                    }
+                    is CafeDetailEvent.MenuUpdated -> if (event.cafeId == cafeId) {
+                        upsertLocalMenu(event.menu)
+                    }
+                    is CafeDetailEvent.MenuDeleted -> if (event.cafeId == cafeId) {
+                        removeLocalMenu(event.itemId)
+                    }
+                    is CafeDetailEvent.GoodsCreated -> if (event.cafeId == cafeId) {
+                        loadMenuGoods()
+                    }
+                    is CafeDetailEvent.GoodsUpdated -> if (event.cafeId == cafeId) {
+                        upsertLocalGoods(event.goods)
+                    }
+                    is CafeDetailEvent.GoodsDeleted -> if (event.cafeId == cafeId) {
+                        removeLocalGoods(event.itemId)
+                    }
                 }
             }
         }
@@ -72,6 +92,64 @@ class MenuGoodsViewModel(
                 goodsCategories = buildGoodsCategories(goodsItems),
                 menuItems = menuItems,
                 goodsItems = goodsItems
+            )
+        }
+    }
+
+    private fun upsertLocalMenu(menu: CafeMenu) {
+        _uiState.update { state ->
+            val nextMenuItems = state.menuItems.filterNot { it.id == menu.id } + menu.toManageItem(state.menuItems.size)
+            val nextGoodsItems = state.goodsItems.filterNot { it.id == menu.id }
+            state.copy(
+                isLoading = false,
+                menuCategories = buildMenuCategories(nextMenuItems),
+                goodsCategories = buildGoodsCategories(nextGoodsItems),
+                menuItems = nextMenuItems,
+                goodsItems = nextGoodsItems,
+                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == menu.id }
+            )
+        }
+    }
+
+    private fun upsertLocalGoods(goods: Goods) {
+        _uiState.update { state ->
+            val nextMenuItems = state.menuItems.filterNot { it.id == goods.id }
+            val nextGoodsItems = state.goodsItems.filterNot { it.id == goods.id } + goods.toManageItem(state.goodsItems.size)
+            state.copy(
+                isLoading = false,
+                menuCategories = buildMenuCategories(nextMenuItems),
+                goodsCategories = buildGoodsCategories(nextGoodsItems),
+                menuItems = nextMenuItems,
+                goodsItems = nextGoodsItems,
+                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == goods.id }
+            )
+        }
+    }
+
+    private fun removeLocalMenu(itemId: String) {
+        _uiState.update { state ->
+            val nextMenuItems = state.menuItems.filterNot { it.id == itemId }
+            state.copy(
+                isLoading = false,
+                menuCategories = buildMenuCategories(nextMenuItems),
+                goodsCategories = buildGoodsCategories(state.goodsItems),
+                menuItems = nextMenuItems,
+                goodsItems = state.goodsItems,
+                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == itemId }
+            )
+        }
+    }
+
+    private fun removeLocalGoods(itemId: String) {
+        _uiState.update { state ->
+            val nextGoodsItems = state.goodsItems.filterNot { it.id == itemId }
+            state.copy(
+                isLoading = false,
+                menuCategories = buildMenuCategories(state.menuItems),
+                goodsCategories = buildGoodsCategories(nextGoodsItems),
+                menuItems = state.menuItems,
+                goodsItems = nextGoodsItems,
+                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == itemId }
             )
         }
     }
@@ -293,14 +371,5 @@ class MenuGoodsViewModel(
     private enum class JobKey {
         LOAD,
         OBSERVE_EVENT
-    }
-}
-
-private fun CafeDetailEvent.matches(cafeId: String): Boolean {
-    return when (this) {
-        is CafeDetailEvent.CafeInfoUpdated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsCreated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsUpdated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsDeleted -> this.cafeId == cafeId
     }
 }

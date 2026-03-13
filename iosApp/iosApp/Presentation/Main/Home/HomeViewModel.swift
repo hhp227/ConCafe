@@ -12,12 +12,18 @@ import Shared
 @MainActor
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
+
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
     
     @Published private(set) var uiState = HomeUiState.empty
     
     let event = PassthroughSubject<HomeEvent, Never>()
     
     private var loadTask: Task<Void, Never>?
+
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadHomeFeed() {
         loadTask?.cancel()
@@ -76,6 +82,73 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafeInfo(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func observeCastEvent() {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let updated as Shared.CastEvent.Updated:
+                    self.patchCast(updated.cast)
+                case let deleted as Shared.CastEvent.Deleted:
+                    self.removeCast(deleted.castId)
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func patchCafeInfo(_ cafe: Cafe) {
+        uiState = HomeUiState(
+            banners: uiState.banners,
+            popularCasts: uiState.popularCasts,
+            nearbyCafes: uiState.nearbyCafes.map { item in
+                item.id == cafe.id ? cafe : item
+            },
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts,
+            notices: uiState.notices
+        )
+    }
+
+    private func patchCast(_ cast: Cast) {
+        uiState = HomeUiState(
+            banners: uiState.banners,
+            popularCasts: uiState.popularCasts.map { $0.id == cast.id ? cast : $0 },
+            nearbyCafes: uiState.nearbyCafes,
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts.map { $0.id == cast.id ? cast : $0 },
+            notices: uiState.notices
+        )
+    }
+
+    private func removeCast(_ castId: String) {
+        uiState = HomeUiState(
+            banners: uiState.banners,
+            popularCasts: uiState.popularCasts.filter { $0.id != castId },
+            nearbyCafes: uiState.nearbyCafes,
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts.filter { $0.id != castId },
+            notices: uiState.notices
+        )
+    }
+
     func onAction(_ action: HomeAction) {
         switch action {
         case .maidTapped(let id):
@@ -95,14 +168,27 @@ final class HomeViewModel: ObservableObject {
     }
 
     init(
-        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase()
+        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadHomeFeed()
     }
     
     deinit {
         loadTask?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum WatchKey {
+        case cafeDetailEvent
+        case castEvent
     }
 }

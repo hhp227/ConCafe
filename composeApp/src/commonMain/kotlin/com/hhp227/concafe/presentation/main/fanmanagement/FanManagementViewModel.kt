@@ -47,11 +47,25 @@ class FanManagementViewModel(
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
             observeCastEventUseCase.invoke().collectLatest { event ->
                 when (event) {
-                    is CastDomainEvent.Created -> if (event.castId == castId) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadFanManagement()
                     }
-                    is CastDomainEvent.Updated -> if (event.castId == castId) {
-                        loadFanManagement()
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            val currentData = state.fanManagementData ?: return@update state
+                            state.copy(
+                                fanManagementData = currentData.copy(
+                                    detail = currentData.detail.copy(cast = event.cast)
+                                ),
+                                stats = state.stats.map { card ->
+                                    if (card.label == "평점") {
+                                        card.copy(value = event.cast.rating.toOneDecimalString())
+                                    } else {
+                                        card
+                                    }
+                                }
+                            )
+                        }
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
                         loadFanManagement()

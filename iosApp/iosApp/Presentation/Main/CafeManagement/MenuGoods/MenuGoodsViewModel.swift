@@ -55,10 +55,41 @@ final class MenuGoodsViewModel: ObservableObject {
     private func observeCafeDetailEvent() {
         watchHandles[.detailEvent]?.cancel()
         watchHandles[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self, event.matches(cafeId: cafeId) else { return }
+            guard let self else { return }
 
             Task { @MainActor in
-                self.loadMenuGoods()
+                switch event {
+                case let event as CafeDetailEvent.CafeInfoUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.MenuCreated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.MenuUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.upsertLocalMenu(event.menu)
+                    }
+                case let event as CafeDetailEvent.MenuDeleted:
+                    if event.cafeId == self.cafeId {
+                        self.removeLocalMenu(itemId: event.itemId)
+                    }
+                case let event as CafeDetailEvent.GoodsCreated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.GoodsUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.upsertLocalGoods(event.goods)
+                    }
+                case let event as CafeDetailEvent.GoodsDeleted:
+                    if event.cafeId == self.cafeId {
+                        self.removeLocalGoods(itemId: event.itemId)
+                    }
+                default:
+                    break
+                }
             }
         }
     }
@@ -80,6 +111,63 @@ final class MenuGoodsViewModel: ObservableObject {
         nextState.goodsItems = goodsItems
         nextState.infoMessage = nil
         self.uiState = nextState
+    }
+
+    private func upsertLocalMenu(_ menu: CafeMenu) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != menu.id } + [mapMenuToManageItem(menu, index: nextState.menuItems.count)]
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != menu.id }
+
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.menuItems = nextMenuItems
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == menu.id {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func upsertLocalGoods(_ goods: Goods) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != goods.id }
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != goods.id } + [mapGoodsToManageItem(goods, index: nextState.goodsItems.count)]
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.menuItems = nextMenuItems
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == goods.id {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func removeLocalMenu(itemId: String) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != itemId }
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextState.goodsItems)
+        nextState.menuItems = nextMenuItems
+        if nextState.pendingDeleteItem?.id == itemId {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func removeLocalGoods(itemId: String) {
+        var nextState = uiState
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != itemId }
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextState.menuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == itemId {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
     }
 
     private func toggleSearch() {
@@ -328,22 +416,5 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private enum WatchKey {
         case detailEvent
-    }
-}
-
-private extension CafeDetailEvent {
-    func matches(cafeId: String) -> Bool {
-        switch self {
-        case let event as CafeDetailEvent.CafeInfoUpdated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsCreated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsUpdated:
-            return event.cafeId == cafeId
-        case let event as CafeDetailEvent.MenuGoodsDeleted:
-            return event.cafeId == cafeId
-        default:
-            return false
-        }
     }
 }

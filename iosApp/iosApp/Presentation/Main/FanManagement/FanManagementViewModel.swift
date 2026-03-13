@@ -43,12 +43,29 @@ final class FanManagementViewModel: ObservableObject {
             Task { @MainActor in
                 switch event {
                 case let event as Shared.CastEvent.Created:
-                    if event.castId == castId {
+                    if event.cast.id == castId {
                         self.loadFanManagement()
                     }
                 case let event as Shared.CastEvent.Updated:
-                    if event.castId == castId {
-                        self.loadFanManagement()
+                    if event.cast.id == castId, let currentData = self.uiState.fanManagementData {
+                        self.uiState.fanManagementData = FanManagementData(
+                            user: currentData.user,
+                            detail: CastDetail(
+                                cast: event.cast,
+                                cafe: currentData.detail.cafe,
+                                images: currentData.detail.images,
+                                schedule: currentData.detail.schedule
+                            ),
+                            followers: currentData.followers
+                        )
+                        self.uiState.stats = self.uiState.stats.map { card in
+                            guard card.label == "평점" else { return card }
+                            return FanManagementUiState.StatCard(
+                                label: card.label,
+                                value: String(format: "%.1f", event.cast.rating),
+                                highlight: card.highlight
+                            )
+                        }
                     }
                 case let event as Shared.CastEvent.Deleted:
                     if event.castId == castId {

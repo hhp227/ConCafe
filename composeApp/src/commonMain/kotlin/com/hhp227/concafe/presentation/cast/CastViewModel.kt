@@ -33,11 +33,13 @@ class CastViewModel(
         viewModelScope.launch {
             observeCastEventUseCase.invoke().collectLatest { event ->
                 when (event) {
-                    is CastDomainEvent.Created -> if (event.castId == castId) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadCastDetail()
                     }
-                    is CastDomainEvent.Updated -> if (event.castId == castId) {
-                        loadCastDetail()
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            state.copy(detail = state.detail?.copy(cast = event.cast))
+                        }
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
                         _event.emit(CastEvent.NavigateBack)

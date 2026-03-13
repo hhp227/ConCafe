@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -195,10 +196,30 @@ class CafeDashboardViewModel(
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
             observeCafeDetailEventUseCase.invoke().collectLatest { event ->
-                if (event.matches(cafeId)) {
-                    loadCafeDashboard()
+                when (event) {
+                    is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
+                        patchCafeInfo(event.cafe)
+                    }
+                    is CafeDetailEvent.MenuCreated,
+                    is CafeDetailEvent.MenuUpdated,
+                    is CafeDetailEvent.MenuDeleted,
+                    is CafeDetailEvent.GoodsCreated,
+                    is CafeDetailEvent.GoodsUpdated,
+                    is CafeDetailEvent.GoodsDeleted -> Unit
                 }
             }
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                cafe = state.cafe?.copy(
+                    name = cafe.name,
+                    city = cafe.region.city,
+                    rating = cafe.ratingAvg
+                )
+            )
         }
     }
 
@@ -208,13 +229,28 @@ class CafeDashboardViewModel(
             observeCastEventUseCase.invoke().collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cafeId == cafeId) {
-                        loadCafeDashboard()
+                        refreshCastPreviews()
                     }
                     is CastDomainEvent.Updated -> if (event.cafeId == cafeId) {
-                        loadCafeDashboard()
+                        _uiState.update { state ->
+                            state.copy(
+                                castPreviews = state.castPreviews.map { preview ->
+                                    if (preview.id == event.cast.id) {
+                                        preview.copy(name = event.cast.name)
+                                    } else {
+                                        preview
+                                    }
+                                }
+                            )
+                        }
                     }
                     is CastDomainEvent.Deleted -> if (event.cafeId == cafeId) {
-                        loadCafeDashboard()
+                        _uiState.update { state ->
+                            state.copy(
+                                castPreviews = state.castPreviews.filterNot { it.id == event.castId },
+                                selectedCastId = state.selectedCastId?.takeUnless { it == event.castId }
+                            )
+                        }
                     }
                 }
             }
@@ -248,14 +284,5 @@ class CafeDashboardViewModel(
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT
-    }
-}
-
-private fun CafeDetailEvent.matches(cafeId: String): Boolean {
-    return when (this) {
-        is CafeDetailEvent.CafeInfoUpdated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsCreated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsUpdated -> this.cafeId == cafeId
-        is CafeDetailEvent.MenuGoodsDeleted -> this.cafeId == cafeId
     }
 }

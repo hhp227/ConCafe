@@ -17,6 +17,10 @@ final class CheckInViewModel: ObservableObject {
 
     private let createVisitUseCase: CreateVisitUseCase
 
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase
@@ -29,7 +33,7 @@ final class CheckInViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private var sessionWatchHandle: WatchHandle?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadGuestFeed() {
         uiState.isLoading = true
@@ -90,7 +94,8 @@ final class CheckInViewModel: ObservableObject {
     }
 
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] user in
+        watchHandles[.session]?.cancel()
+        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] user in
             guard let self else { return }
 
             Task { @MainActor in
@@ -209,6 +214,92 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafe(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func observeCastEvent() {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let updated as Shared.CastEvent.Updated:
+                    self.patchCast(updated.cast)
+                case let deleted as Shared.CastEvent.Deleted:
+                    self.uiState.popularCasts.removeAll { $0.id == deleted.castId }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func patchCafe(_ cafe: Cafe) {
+        uiState.mapCafes = uiState.mapCafes.map { item in
+            guard item.id == cafe.id else { return item }
+            return CheckInCafeSummary(
+                id: item.id,
+                name: cafe.name,
+                locationLabel: cafe.region.city,
+                geoPoint: item.geoPoint,
+                rating: cafe.ratingAvg,
+                checkInCount: item.checkInCount
+            )
+        }
+        uiState.popularCafes = uiState.popularCafes.map { item in
+            guard item.id == cafe.id else { return item }
+            return CheckInCafeSummary(
+                id: item.id,
+                name: cafe.name,
+                locationLabel: cafe.region.city,
+                geoPoint: item.geoPoint,
+                rating: cafe.ratingAvg,
+                checkInCount: item.checkInCount
+            )
+        }
+        uiState.popularCasts = uiState.popularCasts.map { item in
+            guard item.cafeId == cafe.id else { return item }
+            return CheckInCastSummary(
+                id: item.id,
+                cafeId: item.cafeId,
+                cafeName: cafe.name,
+                name: item.name,
+                profileImage: item.profileImage,
+                todayVisit: item.todayVisit
+            )
+        }
+        if let prompt = uiState.reviewPrompt, prompt.cafeId == cafe.id {
+            uiState.reviewPrompt = CheckInUiState.ReviewPrompt(
+                visitId: prompt.visitId,
+                cafeId: prompt.cafeId,
+                cafeName: cafe.name
+            )
+        }
+    }
+
+    private func patchCast(_ cast: Cast) {
+        uiState.popularCasts = uiState.popularCasts.map { item in
+            guard item.id == cast.id else { return item }
+            return CheckInCastSummary(
+                id: item.id,
+                cafeId: item.cafeId,
+                cafeName: item.cafeName,
+                name: cast.name,
+                profileImage: cast.profileImage,
+                todayVisit: item.todayVisit
+            )
+        }
+    }
+
     private func dismissReviewPrompt() {
         guard let prompt = uiState.reviewPrompt else { return }
         Task {
@@ -230,6 +321,8 @@ final class CheckInViewModel: ObservableObject {
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
         dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase()
@@ -237,23 +330,34 @@ final class CheckInViewModel: ObservableObject {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
 
         observeSession()
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadGuestFeed()
     }
 
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        sessionWatchHandle?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
     }
 
     private enum TaskKey {
         case guestFeed
         case userFeed
         case submitVisit
+    }
+
+    private enum WatchKey {
+        case session
+        case cafeDetailEvent
+        case castEvent
     }
 }

@@ -58,8 +58,7 @@ final class CafeViewModel: ObservableObject {
                 }
             } else if let deleted = event as? ReviewEvent.Deleted {
                 if deleted.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.loadCafeDetail(refreshReviews: false)
-                    self.refreshReviewPage()
+                    self.uiState.reviews.removeAll { $0.id == deleted.reviewId }
                 }
             }
         }

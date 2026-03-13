@@ -68,7 +68,7 @@ class FakeCafeRepository(
 
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         return dataSource.updateCafeInfo(update).also {
-            cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId))
+            cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId, it.cafe))
         }
     }
 
@@ -76,15 +76,17 @@ class FakeCafeRepository(
         val existingItemId = update.itemId
         val isCreate = existingItemId.isNullOrBlank()
         val updatedDetail = dataSource.upsertCafeMenuGoods(update)
-        val resolvedItemId = existingItemId
-            ?: updatedDetail.menus.lastOrNull()?.id
-            ?: updatedDetail.goods.lastOrNull()?.id
-            ?: throw NoSuchElementException("menu goods item not found")
+        val updatedMenu = updatedDetail.menus.firstOrNull { it.id == existingItemId }
+            ?: updatedDetail.menus.lastOrNull()?.takeIf { update.category.lowercase() != "goods" }
+        val updatedGoods = updatedDetail.goods.firstOrNull { it.id == existingItemId }
+            ?: updatedDetail.goods.lastOrNull()?.takeIf { update.category.lowercase() == "goods" }
 
-        val event = if (isCreate) {
-            CafeDetailEvent.MenuGoodsCreated(update.cafeId, resolvedItemId)
-        } else {
-            CafeDetailEvent.MenuGoodsUpdated(update.cafeId, resolvedItemId)
+        val event = when {
+            updatedMenu != null && isCreate -> CafeDetailEvent.MenuCreated(update.cafeId, updatedMenu)
+            updatedMenu != null -> CafeDetailEvent.MenuUpdated(update.cafeId, updatedMenu)
+            updatedGoods != null && isCreate -> CafeDetailEvent.GoodsCreated(update.cafeId, updatedGoods)
+            updatedGoods != null -> CafeDetailEvent.GoodsUpdated(update.cafeId, updatedGoods)
+            else -> throw NoSuchElementException("menu goods item not found")
         }
         cafeDetailEvent.tryEmit(event)
         return updatedDetail
@@ -92,7 +94,13 @@ class FakeCafeRepository(
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
         return dataSource.deleteCafeMenuGoods(cafeId, itemId).also {
-            cafeDetailEvent.tryEmit(CafeDetailEvent.MenuGoodsDeleted(cafeId, itemId))
+            cafeDetailEvent.tryEmit(
+                if (itemId.startsWith("goods")) {
+                    CafeDetailEvent.GoodsDeleted(cafeId, itemId)
+                } else {
+                    CafeDetailEvent.MenuDeleted(cafeId, itemId)
+                }
+            )
         }
     }
 

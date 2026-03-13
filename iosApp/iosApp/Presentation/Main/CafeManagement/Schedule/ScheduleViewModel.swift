@@ -45,12 +45,18 @@ final class ScheduleViewModel: ObservableObject {
             Task { @MainActor in
                 switch event {
                 case let event as Shared.CastEvent.Created:
-                    if event.castId == castId {
+                    if event.cast.id == castId {
                         self.loadSchedule()
                     }
                 case let event as Shared.CastEvent.Updated:
-                    if event.castId == castId {
-                        self.loadSchedule()
+                    if event.cast.id == castId {
+                        let cafeName = self.uiState.castSummary.subtitle.components(separatedBy: " / ").last ?? ""
+                        self.uiState.castSummary = ScheduleUiState.CastSummary(
+                            title: event.cast.name,
+                            subtitle: "\(event.cast.conceptRole.toDisplayConceptRole()) / \(cafeName)",
+                            badge: self.uiState.castSummary.badge,
+                            initials: event.cast.name.toInitials()
+                        )
                     }
                 case let event as Shared.CastEvent.Deleted:
                     if event.castId == castId {

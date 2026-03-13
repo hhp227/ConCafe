@@ -13,13 +13,15 @@ import Shared
 final class CafeManagementViewModel: ObservableObject {
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = CafeManagementUiState()
 
     let event = PassthroughSubject<CafeManagementEvent, Never>()
 
-    private var sessionWatchHandle: WatchHandle?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadCafeManagement() {
         Task {
@@ -77,12 +79,52 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+        watchHandles[.session]?.cancel()
+        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
 
             Task { @MainActor in
                 self.loadCafeManagement()
             }
+        }
+    }
+
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafeInfo(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func patchCafeInfo(_ cafe: Cafe) {
+        uiState.ownedCafes = uiState.ownedCafes.map { item in
+            guard item.id == cafe.id else { return item }
+            return CafeManagementData.OwnedCafeSummary(
+                id: item.id,
+                name: cafe.name,
+                city: cafe.region.city,
+                isApproved: item.isApproved,
+                todayVisitors: item.todayVisitors,
+                todayCheckIns: item.todayCheckIns,
+                todayReviews: item.todayReviews,
+                rating: cafe.ratingAvg,
+                castCount: item.castCount,
+                noticeCount: item.noticeCount,
+                externalLinkCount: item.externalLinkCount
+            )
+        }
+        uiState.searchableCafes = uiState.searchableCafes.map { item in
+            guard item.id == cafe.id else { return item }
+            return CafeManagementData.SearchableCafeSummary(
+                id: item.id,
+                name: cafe.name,
+                location: cafe.region.address
+            )
         }
     }
 
@@ -107,16 +149,25 @@ final class CafeManagementViewModel: ObservableObject {
 
     init(
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getCafeManagementUseCase = getCafeManagementUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
+        observeCafeDetailEvent()
         loadCafeManagement()
     }
 
     deinit {
-        sessionWatchHandle?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum WatchKey {
+        case session
+        case cafeDetailEvent
     }
 }

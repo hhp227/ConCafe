@@ -111,9 +111,9 @@ class FakeCastRepository(
         val isCreate = update.castId.isNullOrBlank()
         return dataSource.upsertCast(update).also { detail ->
             val event = if (isCreate) {
-                CastEvent.Created(detail.cast.cafeId, detail.cast.id)
+                CastEvent.Created(detail.cast.cafeId, detail.cast)
             } else {
-                CastEvent.Updated(detail.cast.cafeId, detail.cast.id)
+                CastEvent.Updated(detail.cast.cafeId, detail.cast)
             }
             castEvent.tryEmit(event)
         }

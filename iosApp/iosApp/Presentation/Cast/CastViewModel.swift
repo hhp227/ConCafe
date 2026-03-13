@@ -34,12 +34,17 @@ final class CastViewModel: ObservableObject {
             Task { @MainActor in
                 switch event {
                 case let event as Shared.CastEvent.Created:
-                    if event.castId == self.castId {
+                    if event.cast.id == self.castId {
                         self.loadCastDetail()
                     }
                 case let event as Shared.CastEvent.Updated:
-                    if event.castId == self.castId {
-                        self.loadCastDetail()
+                    if event.cast.id == self.castId, let detail = self.uiState.detail {
+                        self.uiState.detail = CastDetail(
+                            cast: event.cast,
+                            cafe: detail.cafe,
+                            images: detail.images,
+                            schedule: detail.schedule
+                        )
                     }
                 case let event as Shared.CastEvent.Deleted:
                     if event.castId == self.castId {
