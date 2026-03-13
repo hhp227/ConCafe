@@ -133,6 +133,15 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.CAST,
             banned = false,
             createdAt = "2026-03-13T11:00:00Z"
+        ),
+        User(
+            id = "user-11",
+            email = "owner1@concafe.app",
+            nickname = "카페신청전점장",
+            profileImage = null,
+            role = UserRole.CAFE_OWNER,
+            banned = false,
+            createdAt = "2026-03-14T09:00:00Z"
         )
     )
 
@@ -427,21 +436,25 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val dismissedReviewPromptVisitIdsByUser = mutableMapOf<String, MutableSet<String>>()
 
-    override val ownedCafeIdsByUser = mapOf(
-        "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
+    override val ownedCafeIdsByUser = mutableMapOf(
+        "user-3" to mutableListOf("cafe-1", "cafe-2", "cafe-3")
     )
 
-    override val pendingCafeClaimsByUser = mapOf(
-        "user-3" to listOf(
+    override val pendingCafeClaimsByUser = mutableMapOf(
+        "user-3" to mutableListOf(
             CafeManagementData.PendingClaimSummary(
-                cafeName = "Ribbon Cafe Hongdae",
+                claimId = "cafe-claim-1",
+                cafeId = "cafe-4",
+                cafeName = "슈가 드롭",
                 requestedAt = "2026.03.10",
                 status = "승인 대기 중",
                 message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
             )
         ),
-        "user-5" to listOf(
+        "user-5" to mutableListOf(
             CafeManagementData.PendingClaimSummary(
+                claimId = "cafe-claim-2",
+                cafeId = "cafe-2",
                 cafeName = "Pink Castle Sinchon",
                 requestedAt = "2026.03.09",
                 status = "승인 대기 중",

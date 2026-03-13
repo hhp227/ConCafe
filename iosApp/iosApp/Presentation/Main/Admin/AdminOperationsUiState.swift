@@ -105,7 +105,7 @@ enum QuickMenuAccent {
 private let defaultAdminMetrics: [AdminMetricCard] = [
     AdminMetricCard(title: "전체 사용자", value: "12,540", delta: "1.2%", icon: .users, trend: .up),
     AdminMetricCard(title: "활성 카페", value: "842", delta: "0.5%", icon: .cafe, trend: .up),
-    AdminMetricCard(title: "승인 대기", value: "15", delta: "5건 신규", icon: .pending, trend: .new),
+    AdminMetricCard(title: "승인 대기", value: "2", delta: "2건 대기", icon: .pending, trend: .new),
     AdminMetricCard(title: "신고 항목", value: "32", delta: "8%", icon: .report, trend: .down)
 ]
 
@@ -124,22 +124,6 @@ private let defaultPendingRequests: [AdminPendingRequest] = [
         title: "디저트 빌리지 성수",
         subtitle: "서울 성동구 아차산로 45",
         requestedAt: "5시간 전",
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCe9Vib6B40fIweAG4csR1KYxnHTMoec_xzj6GS5343QHIszmvCk4_ZiPt1NOdpLruSfby0tdpH2myNthY3GZjMgDZw8Fjh70hjE55AGaHkmkMJdLkqsuISq4Gsa8WhO-JRD3SIBIY_FAoBdHYRxqq2AVZl7Xmrgp0OorSTkcVTdF6cO14mBMWbvzhU9Hga3y41jSo89iuQ8aG-D8oKHX5PPyeXXGllTSzc7oGE8PMT1rBx-DRviiY0QI2H9AvdAbcm8hHiBGfIVQ"
-    ),
-    AdminPendingRequest(
-        id: "pending-role-1",
-        type: .roleClaim,
-        title: "점장 권한 신청 - 리본냥",
-        subtitle: "메이드 하우스 운영 계정 전환 요청",
-        requestedAt: "1시간 전",
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPTqu6TR5iE7rtn6cuSTaGUwIAdgNS9xaZqDyHkBXX25arxUP3ZAK6wS2HHUj-Efew3j9cuymLzCx7a7fUG8MqyZ1HFdgXXJoSTw9zIlWv0cvk_sjAIt-6daNAoEAg0lQTCaCkZ7CSKX2uNQpH9gyyUjrU2UdHrmBskzC9nIr06ms2YgAbzHhPdxZbEVZN41SPq6gUqSSTdRWJcI5AS-T3HTjq3n3yMJYZ7T_imgYTE1UrUdAnniws6bLwUzX_o9f7XcBOy5Ur9A"
-    ),
-    AdminPendingRequest(
-        id: "pending-role-2",
-        type: .roleClaim,
-        title: "캐스트 권한 신청 - 사쿠라",
-        subtitle: "메이드 하우스 캐스트 인증 요청",
-        requestedAt: "3시간 전",
         imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCe9Vib6B40fIweAG4csR1KYxnHTMoec_xzj6GS5343QHIszmvCk4_ZiPt1NOdpLruSfby0tdpH2myNthY3GZjMgDZw8Fjh70hjE55AGaHkmkMJdLkqsuISq4Gsa8WhO-JRD3SIBIY_FAoBdHYRxqq2AVZl7Xmrgp0OorSTkcVTdF6cO14mBMWbvzhU9Hga3y41jSo89iuQ8aG-D8oKHX5PPyeXXGllTSzc7oGE8PMT1rBx-DRviiY0QI2H9AvdAbcm8hHiBGfIVQ"
     )
 ]

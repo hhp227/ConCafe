@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeManagementViewModel(
+    private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
@@ -28,8 +30,7 @@ class CafeManagementViewModel(
     private val _event = MutableSharedFlow<CafeManagementEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    private var observeSessionJob: Job? = null
-    private var observeCafeDetailEventJob: Job? = null
+    private val jobs = mutableMapOf<TaskKey, Job>()
 
     private fun loadCafeManagement() {
         viewModelScope.launch {
@@ -80,11 +81,20 @@ class CafeManagementViewModel(
 
     private fun clickClaimCafe(cafeId: String) {
         val cafeName = _uiState.value.searchableCafes.firstOrNull { it.id == cafeId }?.name ?: "선택한 카페"
-
-        _uiState.update {
-            it.copy(
-                infoMessage = "$cafeName 운영자 신청 연결은 다음 단계에서 이어집니다."
-            )
+        viewModelScope.launch {
+            when (val result = createCafeOwnerClaimUseCase.invoke(cafeId)) {
+                is AppResult.Success -> {
+                    loadCafeManagement()
+                    _uiState.update {
+                        it.copy(infoMessage = "$cafeName 운영자 신청을 등록했습니다.")
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(infoMessage = result.error.toString())
+                    }
+                }
+            }
         }
     }
 
@@ -113,7 +123,8 @@ class CafeManagementViewModel(
     }
 
     private fun observeSession() {
-        observeSessionJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
                 loadCafeManagement()
             }
@@ -121,8 +132,8 @@ class CafeManagementViewModel(
     }
 
     private fun observeCafeDetailEvent() {
-        observeCafeDetailEventJob?.cancel()
-        observeCafeDetailEventJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
             observeCafeDetailEventUseCase.invoke().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeInfo(event.cafe)
@@ -149,7 +160,7 @@ class CafeManagementViewModel(
                     if (item.id == cafe.id) {
                         item.copy(
                             name = cafe.name,
-                            location = cafe.region.address
+                            location = "${cafe.region.city} ${cafe.region.address}"
                         )
                     } else {
                         item
@@ -178,8 +189,13 @@ class CafeManagementViewModel(
     }
 
     override fun onCleared() {
-        observeSessionJob?.cancel()
-        observeCafeDetailEventJob?.cancel()
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
         super.onCleared()
+    }
+
+    private enum class TaskKey {
+        OBSERVE_SESSION,
+        OBSERVE_CAFE_DETAIL_EVENT
     }
 }

@@ -5,6 +5,8 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
@@ -33,6 +35,7 @@ import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
@@ -54,6 +57,7 @@ import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.core.KoinApplication
@@ -161,6 +165,13 @@ fun resolveCreateCafeEventUseCase(): CreateCafeEventUseCase {
 }
 
 fun resolveCreateCafeNoticeUseCase(): CreateCafeNoticeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateCafeOwnerClaimUseCase(): CreateCafeOwnerClaimUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -280,6 +291,13 @@ fun resolveGetSignUpCafeListUseCase(): GetSignUpCafeListUseCase {
 }
 
 fun resolveGetPendingCastClaimsForCafeUseCase(): GetPendingCastClaimsForCafeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetPendingCafeOwnerClaimsUseCase(): GetPendingCafeOwnerClaimsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -426,7 +444,21 @@ fun resolveApproveCastClaimUseCase(): ApproveCastClaimUseCase {
     return koin.get()
 }
 
+fun resolveApproveCafeOwnerClaimUseCase(): ApproveCafeOwnerClaimUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveRejectCastClaimUseCase(): RejectCastClaimUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRejectCafeOwnerClaimUseCase(): RejectCafeOwnerClaimUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

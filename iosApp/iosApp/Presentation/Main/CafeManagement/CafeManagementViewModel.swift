@@ -11,6 +11,8 @@ import Shared
 
 @MainActor
 final class CafeManagementViewModel: ObservableObject {
+    private let createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase
+
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
@@ -63,7 +65,20 @@ final class CafeManagementViewModel: ObservableObject {
 
     private func clickClaimCafe(_ cafeId: String) {
         let cafeName = uiState.searchableCafes.first(where: { $0.id == cafeId })?.name ?? "선택한 카페"
-        uiState.infoMessage = "\(cafeName) 운영자 신청 연결은 다음 단계에서 이어집니다."
+        Task {
+            do {
+                let result = try await createCafeOwnerClaimUseCase.invoke(cafeId: cafeId)
+
+                if result is AppResultSuccess<AnyObject> {
+                    loadCafeManagement()
+                    uiState.infoMessage = "\(cafeName) 운영자 신청을 등록했습니다."
+                } else if let failure = result as? AppResultFailure {
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
     }
 
     private func toggleCafeListExpanded() {
@@ -123,7 +138,7 @@ final class CafeManagementViewModel: ObservableObject {
             return CafeManagementData.SearchableCafeSummary(
                 id: item.id,
                 name: cafe.name,
-                location: cafe.region.address
+                location: "\(cafe.region.city) \(cafe.region.address)"
             )
         }
     }
@@ -148,10 +163,12 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     init(
+        createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
+        self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase

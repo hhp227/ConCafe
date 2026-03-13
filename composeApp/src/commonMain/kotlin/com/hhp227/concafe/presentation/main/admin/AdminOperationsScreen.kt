@@ -52,10 +52,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveApproveCafeOwnerClaimUseCase
+import com.hhp227.concafe.di.resolveGetPendingCafeOwnerClaimsUseCase
+import com.hhp227.concafe.di.resolveRejectCafeOwnerClaimUseCase
 
 @Composable
 fun AdminOperationsScreen(
-    viewModel: AdminOperationsViewModel = viewModel()
+    viewModel: AdminOperationsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                AdminOperationsViewModel(
+                    getPendingCafeOwnerClaimsUseCase = resolveGetPendingCafeOwnerClaimsUseCase(),
+                    approveCafeOwnerClaimUseCase = resolveApproveCafeOwnerClaimUseCase(),
+                    rejectCafeOwnerClaimUseCase = resolveRejectCafeOwnerClaimUseCase()
+                )
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
