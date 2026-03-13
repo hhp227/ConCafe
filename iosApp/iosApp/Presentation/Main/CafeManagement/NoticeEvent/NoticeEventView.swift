@@ -219,7 +219,7 @@ private struct NoticeEventContentView: View {
                         .foregroundStyle(Color(hex: "23161C"))
                         .lineLimit(1)
                     Spacer()
-                    iconButton("ellipsis") { onAction(.clickEventMenu(item.id)) }
+                    iconButton("square.and.pencil") { onAction(.clickEditEvent(item.id)) }
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
