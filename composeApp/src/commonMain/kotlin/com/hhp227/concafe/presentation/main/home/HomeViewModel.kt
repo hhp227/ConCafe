@@ -2,27 +2,37 @@ package com.hhp227.concafe.presentation.main.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
-    private val getHomeFeedUseCase: GetHomeFeedUseCase
+    private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
-
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<HomeEvent>(replay = 0)
-
     val event = _event.asSharedFlow()
+
+    private val jobs = mutableMapOf<TaskKey, Job>()
 
     private fun loadHomeFeed() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -75,6 +85,62 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCafeDetailEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
+            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+                if (event is CafeDetailEvent.CafeInfoUpdated) {
+                    patchCafeInfo(event.cafe)
+                }
+            }
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                nearbyCafes = state.nearbyCafes.map { item ->
+                    if (item.id == cafe.id) cafe else item
+                }
+            )
+        }
+    }
+
+    private fun observeCastEvent() {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastEvent.Created -> Unit
+                    is CastEvent.Updated -> patchCast(event.cast)
+                    is CastEvent.Deleted -> removeCast(event.castId)
+                }
+            }
+        }
+    }
+
+    private fun patchCast(cast: Cast) {
+        _uiState.update { state ->
+            state.copy(
+                popularCasts = state.popularCasts.map { item ->
+                    if (item.id == cast.id) cast else item
+                },
+                birthdayCasts = state.birthdayCasts.map { item ->
+                    if (item.id == cast.id) cast else item
+                }
+            )
+        }
+    }
+
+    private fun removeCast(castId: String) {
+        _uiState.update { state ->
+            state.copy(
+                popularCasts = state.popularCasts.filterNot { it.id == castId },
+                birthdayCasts = state.birthdayCasts.filterNot { it.id == castId }
+            )
+        }
+    }
+
     fun onAction(action: HomeAction) {
         viewModelScope.launch {
             when (action) {
@@ -86,7 +152,20 @@ class HomeViewModel(
         }
     }
 
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
     init {
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadHomeFeed()
+    }
+
+    private enum class TaskKey {
+        OBSERVE_CAFE_DETAIL_EVENT,
+        OBSERVE_CAST_EVENT
     }
 }

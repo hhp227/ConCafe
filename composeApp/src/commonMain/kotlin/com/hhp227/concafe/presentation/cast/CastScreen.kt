@@ -33,7 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCastDetailUseCase
-import com.hhp227.concafe.di.resolveObserveCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveToggleFollowCastUseCase
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
@@ -56,7 +56,7 @@ fun CastScreen(
                 CastViewModel(
                     castId = castId,
                     getCastDetailUseCase = resolveGetCastDetailUseCase(),
-                    observeCastVersionUseCase = resolveObserveCastVersionUseCase(),
+                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
                     toggleFollowCastUseCase = resolveToggleFollowCastUseCase()
                 )
             }

@@ -77,59 +77,63 @@ private struct MenuGoodsContentView: View {
     let onAction: (MenuGoodsAction) -> Void
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            ScrollView {
-                VStack(spacing: 16) {
-                    cafeContextCard
-                    collectionTabs
-                    if uiState.isSearchVisible {
-                        searchField
-                    }
-                    categoryChips
-                    if let infoMessage = uiState.infoMessage {
-                        infoBanner(message: infoMessage)
-                    }
-                    if uiState.isLoading {
-                        loadingCard
-                    } else if uiState.filteredVisibleItems.isEmpty {
-                        emptyStateCard
-                    } else {
-                        VStack(spacing: 14) {
-                            ForEach(uiState.filteredVisibleItems, id: \.id) { item in
-                                manageItemCard(item: item)
-                            }
+        ScrollView {
+            VStack(spacing: 16) {
+                cafeContextCard
+                collectionTabs
+                if uiState.isSearchVisible {
+                    searchField
+                }
+                categoryChips
+                if let infoMessage = uiState.infoMessage {
+                    infoBanner(message: infoMessage)
+                }
+                if uiState.isLoading {
+                    loadingCard
+                } else if uiState.filteredVisibleItems.isEmpty {
+                    emptyStateCard
+                } else {
+                    VStack(spacing: 14) {
+                        ForEach(uiState.filteredVisibleItems, id: \.id) { item in
+                            manageItemCard(item: item)
                         }
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 104)
             }
-            .background(
-                LinearGradient(
-                    colors: [Color(hex: "FFF8FB"), Color(hex: "FFF2F6"), Color(hex: "FFFCFD")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            Button {
-                onAction(.clickAddNewItem)
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                    Text("새 항목 추가")
-                        .font(.subheadline.weight(.bold))
-                }
-                .foregroundStyle(Color(hex: "2B2330"))
-                .padding(.horizontal, 18)
-                .padding(.vertical, 14)
-                .background(Color(hex: "FFD1DC"))
-                .clipShape(Capsule())
-                .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
-            }
-            .buttonStyle(.plain)
-            .padding(.trailing, 20)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
             .padding(.bottom, 24)
+        }
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "FFF8FB"), Color(hex: "FFF2F6"), Color(hex: "FFFCFD")],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            HStack {
+                Spacer()
+                Button {
+                    onAction(.clickAddNewItem)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                        Text("새 항목 추가")
+                            .font(.subheadline.weight(.bold))
+                    }
+                    .foregroundStyle(Color(hex: "2B2330"))
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 14)
+                    .background(Color(hex: "FFD1DC"))
+                    .clipShape(Capsule())
+                    .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.trailing, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
         }
     }
 

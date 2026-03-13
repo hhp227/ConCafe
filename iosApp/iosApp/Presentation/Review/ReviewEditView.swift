@@ -44,7 +44,6 @@ private struct ReviewEditContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            topBar
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
@@ -76,46 +75,6 @@ private struct ReviewEditContentView: View {
             )
         )
         .background(Color(hex: "F8F5F6"))
-    }
-
-    private var topBar: some View {
-        HStack(spacing: 12) {
-            Button {
-                onAction(.clickBack)
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color(hex: "24161E"))
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.9))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            Text(uiState.screenTitle)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "24161E"))
-                .frame(maxWidth: .infinity)
-            Button {
-                onAction(.clickSubmit)
-            } label: {
-                Group {
-                    if uiState.isLoggedIn {
-                        Text(uiState.topActionLabel)
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                    }
-                }
-            }
-            .buttonStyle(.plain)
-            .disabled(!uiState.isLoggedIn)
-            .opacity(uiState.isLoggedIn ? 1 : 0)
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-        .background(Color.white.opacity(0.95))
     }
 
     private var cafeInfoSection: some View {

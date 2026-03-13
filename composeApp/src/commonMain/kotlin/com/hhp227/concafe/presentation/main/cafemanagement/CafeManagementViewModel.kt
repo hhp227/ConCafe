@@ -11,11 +11,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeManagementViewModel(
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
+    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeManagementUiState())
@@ -25,6 +29,7 @@ class CafeManagementViewModel(
     val event = _event.asSharedFlow()
 
     private var observeSessionJob: Job? = null
+    private var observeCafeDetailEventJob: Job? = null
 
     private fun loadCafeManagement() {
         viewModelScope.launch {
@@ -115,6 +120,45 @@ class CafeManagementViewModel(
         }
     }
 
+    private fun observeCafeDetailEvent() {
+        observeCafeDetailEventJob?.cancel()
+        observeCafeDetailEventJob = viewModelScope.launch {
+            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+                if (event is CafeDetailEvent.CafeInfoUpdated) {
+                    patchCafeInfo(event.cafe)
+                }
+            }
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                ownedCafes = state.ownedCafes.map { item ->
+                    if (item.id == cafe.id) {
+                        item.copy(
+                            name = cafe.name,
+                            city = cafe.region.city,
+                            rating = cafe.ratingAvg
+                        )
+                    } else {
+                        item
+                    }
+                },
+                searchableCafes = state.searchableCafes.map { item ->
+                    if (item.id == cafe.id) {
+                        item.copy(
+                            name = cafe.name,
+                            location = cafe.region.address
+                        )
+                    } else {
+                        item
+                    }
+                }
+            )
+        }
+    }
+
     fun onAction(action: CafeManagementAction) {
         when (action) {
             is CafeManagementAction.ClickCafe -> clickCafe(action.cafeId)
@@ -129,6 +173,13 @@ class CafeManagementViewModel(
 
     init {
         observeSession()
+        observeCafeDetailEvent()
         loadCafeManagement()
+    }
+
+    override fun onCleared() {
+        observeSessionJob?.cancel()
+        observeCafeDetailEventJob?.cancel()
+        super.onCleared()
     }
 }

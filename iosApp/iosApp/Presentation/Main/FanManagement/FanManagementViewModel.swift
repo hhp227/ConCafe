@@ -13,7 +13,7 @@ import Shared
 final class FanManagementViewModel: ObservableObject {
     private let getFanManagementDataUseCase: GetFanManagementDataUseCase
 
-    private let observeCastVersionUseCase: ObserveCastVersionUseCase
+    private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -30,30 +30,56 @@ final class FanManagementViewModel: ObservableObject {
         watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                self.unbindCastVersion()
+                self.unbindCastEvent()
                 self.loadFanManagement()
             }
         }
     }
 
-    private func bindCastVersion(_ castId: String) {
-        watchHandles[.castVersion]?.cancel()
-
-        var isInitialEmission = true
-        watchHandles[.castVersion] = observeCastVersionUseCase.watch(castId: castId) { [weak self] _ in
+    private func bindCastEvent(_ castId: String) {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
-            if isInitialEmission {
-                isInitialEmission = false
-                return
-            }
             Task { @MainActor in
-                self.loadFanManagement()
+                switch event {
+                case let event as Shared.CastEvent.Created:
+                    if event.cast.id == castId {
+                        self.loadFanManagement()
+                    }
+                case let event as Shared.CastEvent.Updated:
+                    if event.cast.id == castId, let currentData = self.uiState.fanManagementData {
+                        self.uiState.fanManagementData = FanManagementData(
+                            user: currentData.user,
+                            detail: CastDetail(
+                                cast: event.cast,
+                                cafe: currentData.detail.cafe,
+                                images: currentData.detail.images,
+                                schedule: currentData.detail.schedule
+                            ),
+                            followers: currentData.followers
+                        )
+                        self.uiState.stats = self.uiState.stats.map { card in
+                            guard card.label == "평점" else { return card }
+                            return FanManagementUiState.StatCard(
+                                label: card.label,
+                                value: String(format: "%.1f", event.cast.rating),
+                                highlight: card.highlight
+                            )
+                        }
+                    }
+                case let event as Shared.CastEvent.Deleted:
+                    if event.castId == castId {
+                        self.loadFanManagement()
+                    }
+                default:
+                    break
+                }
             }
         }
     }
 
-    private func unbindCastVersion() {
-        watchHandles.removeValue(forKey: .castVersion)?.cancel()
+    private func unbindCastEvent() {
+        watchHandles.removeValue(forKey: .castEvent)?.cancel()
     }
 
     private func setInfoMessage(_ message: String) {
@@ -73,7 +99,7 @@ final class FanManagementViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.FanManagementData {
                     let cast = data.detail.cast
-                    bindCastVersion(cast.id)
+                    bindCastEvent(cast.id)
                     uiState = FanManagementUiState(
                         isLoading: false,
                         errorMessage: nil,
@@ -102,14 +128,14 @@ final class FanManagementViewModel: ObservableObject {
                         infoMessage: nil
                     )
                 } else {
-                    unbindCastVersion()
+                    unbindCastEvent()
                     uiState = .empty
                     uiState.isLoading = false
                     uiState.errorMessage = "팬관리 데이터를 불러오지 못했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
-                unbindCastVersion()
+                unbindCastEvent()
                 uiState = .empty
                 uiState.isLoading = false
                 uiState.errorMessage = "팬관리 데이터를 불러오지 못했습니다."
@@ -156,11 +182,11 @@ final class FanManagementViewModel: ObservableObject {
 
     init(
         getFanManagementDataUseCase: GetFanManagementDataUseCase = KoinInitializerKt.resolveGetFanManagementDataUseCase(),
-        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
-        self.observeCastVersionUseCase = observeCastVersionUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
@@ -174,6 +200,6 @@ final class FanManagementViewModel: ObservableObject {
 
     private enum WatchKey {
         case session
-        case castVersion
+        case castEvent
     }
 }

@@ -17,6 +17,8 @@ import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
+import com.hhp227.concafe.domain.model.ReviewEvent
+import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
@@ -25,6 +27,7 @@ class CafeViewModel(
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
+    private val observeReviewEventUseCase: ObserveReviewEventUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
@@ -51,7 +54,33 @@ class CafeViewModel(
         }
     }
 
-    private fun loadCafeDetail() {
+    private fun observeReviewEvent() {
+        jobs[JobKey.OBSERVE_REVIEW_EVENT]?.cancel()
+        jobs[JobKey.OBSERVE_REVIEW_EVENT] = viewModelScope.launch {
+            observeReviewEventUseCase.invoke().collect { event ->
+                when (event) {
+                    is ReviewEvent.Created -> {
+                        if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
+                            _event.emit(CafeEvent.ScrollReviewsToTop)
+                            loadCafeDetail(refreshReviews = false)
+                            refreshReviewPage()
+                        }
+                    }
+                    is ReviewEvent.Deleted -> {
+                        if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
+                            _uiState.update { state ->
+                                state.copy(
+                                    reviews = state.reviews.filterNot { review -> review.id == event.reviewId }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadCafeDetail(refreshReviews: Boolean = true) {
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -81,7 +110,7 @@ class CafeViewModel(
                     isLoggedIn = result.data.isLoggedIn
                 )
                 refreshCastPage()
-                if (_uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
+                if (refreshReviews && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                     refreshReviewPage()
                 }
             } else if (result is AppResult.Failure) {
@@ -223,6 +252,7 @@ class CafeViewModel(
 
     init {
         bindCafeDetail()
+        observeReviewEvent()
         loadCafeDetail()
     }
 
@@ -230,6 +260,7 @@ class CafeViewModel(
         DETAIL,
         CAST_PAGE,
         REVIEW_PAGE,
-        OBSERVE_DETAIL
+        OBSERVE_DETAIL,
+        OBSERVE_REVIEW_EVENT
     }
 }

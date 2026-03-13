@@ -13,29 +13,38 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
+    private let reviewTopAnchorId = "CAFE_REVIEW_TOP"
+
     var body: some View {
-        CafeContentView(
-            uiState: viewModel.uiState,
-            onAction: viewModel.onAction
-        )
-        .navigationBarTitleDisplayMode(.inline)
-        .onReceive(viewModel.event) { event in
-            switch event {
-            case .navigateBack:
-                onNavigationAction(.navigateBack)
-            case .navigateToCast(let id):
-                onNavigationAction(.navigateToCast(id: id))
-            case .navigateToReviewEdit(let cafeId):
-                onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
-            case .navigateToSignIn:
-                onNavigationAction(.navigateToSignIn)
+        ScrollViewReader { proxy in
+            CafeContentView(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction,
+                reviewTopAnchorId: reviewTopAnchorId
+            )
+            .navigationBarTitleDisplayMode(.inline)
+            .onReceive(viewModel.event) { event in
+                switch event {
+                case .navigateBack:
+                    onNavigationAction(.navigateBack)
+                case .navigateToCast(let id):
+                    onNavigationAction(.navigateToCast(id: id))
+                case .navigateToReviewEdit(let cafeId):
+                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+                case .navigateToSignIn:
+                    onNavigationAction(.navigateToSignIn)
+                case .scrollReviewsToTop:
+                    withAnimation {
+                        proxy.scrollTo(reviewTopAnchorId, anchor: .top)
+                    }
+                }
             }
         }
     }
 
     init(
-    cafeId: String,
-    onNavigationAction: @escaping (NavigationAction) -> Void
+        cafeId: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
@@ -46,6 +55,8 @@ private struct CafeContentView: View {
     let uiState: CafeUiState
 
     let onAction: (CafeAction) -> Void
+
+    let reviewTopAnchorId: String
 
     @State private var scrollOffset: CGFloat = 0
 
@@ -255,7 +266,8 @@ private struct CafeContentView: View {
                 reviews: uiState.reviews,
                 canLoadMore: uiState.canLoadMoreReviews,
                 isLoadingMore: uiState.isLoadingMoreReviews,
-                onLoadMore: { onAction(.loadMoreReviews) }
+                onLoadMore: { onAction(.loadMoreReviews) },
+                topAnchorId: reviewTopAnchorId
             )
         case .notices:
             CafeNoticeView(notices: detail.notices)

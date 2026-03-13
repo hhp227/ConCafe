@@ -35,6 +35,8 @@ import com.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
 import com.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
 import com.hhp227.concafe.di.resolveCreateVisitUseCase
 import com.hhp227.concafe.di.resolveDismissReviewPromptUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.di.resolveShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
@@ -54,6 +56,8 @@ fun CheckInScreen(
                     getCheckInGuestFeedUseCase = resolveGetCheckInGuestFeedUseCase(),
                     getCheckInUserFeedUseCase = resolveGetCheckInUserFeedUseCase(),
                     createVisitUseCase = resolveCreateVisitUseCase(),
+                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
+                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
                     shouldShowReviewPromptUseCase = resolveShouldShowReviewPromptUseCase(),
                     dismissReviewPromptUseCase = resolveDismissReviewPromptUseCase()

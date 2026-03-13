@@ -3,12 +3,13 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.di.resolveGetScheduleManagementDataUseCase
-import com.hhp227.concafe.di.resolveObserveCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,8 +23,8 @@ import kotlinx.coroutines.launch
 class ScheduleViewModel(
     private val castId: String? = null,
     private val getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = resolveGetScheduleManagementDataUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
-    private val observeCastVersionUseCase: ObserveCastVersionUseCase = resolveObserveCastVersionUseCase()
+    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
@@ -41,28 +42,42 @@ class ScheduleViewModel(
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
-                unbindCastVersion()
+                unbindCastEvent()
                 loadSchedule()
             }
         }
     }
 
-    private fun bindCastVersion(castId: String) {
-        jobs[TaskKey.OBSERVE_CAST_VERSION]?.cancel()
-        jobs[TaskKey.OBSERVE_CAST_VERSION] = viewModelScope.launch {
-            var isInitialEmission = true
-            observeCastVersionUseCase.invoke(castId).collectLatest {
-                if (isInitialEmission) {
-                    isInitialEmission = false
-                    return@collectLatest
+    private fun bindCastEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
+                        loadSchedule()
+                    }
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            val cafeName = state.castSummary.subtitle.substringAfter(" / ", "")
+                            state.copy(
+                                castSummary = state.castSummary.copy(
+                                    title = event.cast.name,
+                                    subtitle = "${event.cast.conceptRole.toDisplayConceptRole()} / $cafeName",
+                                    initials = event.cast.name.toInitials()
+                                )
+                            )
+                        }
+                    }
+                    is CastDomainEvent.Deleted -> if (event.castId == castId) {
+                        loadSchedule()
+                    }
                 }
-                loadSchedule()
             }
         }
     }
 
-    private fun unbindCastVersion() {
-        jobs.remove(TaskKey.OBSERVE_CAST_VERSION)?.cancel()
+    private fun unbindCastEvent() {
+        jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
     }
 
     private fun loadSchedule() {
@@ -76,11 +91,11 @@ class ScheduleViewModel(
         viewModelScope.launch {
             when (val result = getScheduleManagementDataUseCase.invoke(castId)) {
                 is AppResult.Success -> {
-                    bindCastVersion(result.data.detail.cast.id)
+                    bindCastEvent(result.data.detail.cast.id)
                     _uiState.value = result.data.toUiState()
                 }
                 is AppResult.Failure -> {
-                    unbindCastVersion()
+                    unbindCastEvent()
                     _uiState.value = ScheduleUiState(
                         isLoading = false,
                         errorMessage = "출근표 데이터를 불러오지 못했습니다.",
@@ -187,5 +202,5 @@ private fun String.toInitials(): String {
 
 private enum class TaskKey {
     OBSERVE_SESSION,
-    OBSERVE_CAST_VERSION
+    OBSERVE_CAST_EVENT
 }

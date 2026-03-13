@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -66,6 +67,7 @@ fun CafeManagementScreen(
             initializer {
                 CafeManagementViewModel(
                     getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
+                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
                 )
             }

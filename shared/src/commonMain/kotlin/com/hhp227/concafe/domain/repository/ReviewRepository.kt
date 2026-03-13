@@ -1,9 +1,13 @@
 package com.hhp227.concafe.domain.repository
 
 import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.ReviewEvent
 import com.hhp227.concafe.domain.model.Review
+import kotlinx.coroutines.flow.Flow
 
 interface ReviewRepository {
+    fun observeReviewEvent(): Flow<ReviewEvent>
+
     suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review>
 
     suspend fun createReview(

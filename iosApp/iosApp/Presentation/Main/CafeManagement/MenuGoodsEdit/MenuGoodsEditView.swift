@@ -74,28 +74,11 @@ struct MenuGoodsEditView: View {
                         )
                     )
                 }
-                Button {
-                    viewModel.onAction(.clickSave)
-                } label: {
-                    HStack {
-                        Spacer()
-                        if viewModel.uiState.isSaving {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                        } else {
-                            Text(viewModel.uiState.saveButtonLabel)
-                                .font(.headline.weight(.bold))
-                        }
-                        Spacer()
-                    }
-                    .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "FFD1DC"))
-                .foregroundStyle(Color(hex: "2B2330"))
-                .disabled(viewModel.uiState.isSaving || viewModel.uiState.isLoading)
             }
             .padding(16)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            saveButtonBar
         }
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -116,6 +99,38 @@ struct MenuGoodsEditView: View {
         self.itemId = itemId
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: MenuGoodsEditViewModel(cafeId: cafeId, itemId: itemId))
+    }
+
+    private var saveButtonBar: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .frame(height: 1)
+            Button {
+                viewModel.onAction(.clickSave)
+            } label: {
+                HStack {
+                    Spacer()
+                    if viewModel.uiState.isSaving {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    } else {
+                        Text(viewModel.uiState.saveButtonLabel)
+                            .font(.headline.weight(.bold))
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
+            .disabled(viewModel.uiState.isSaving || viewModel.uiState.isLoading)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 14)
+            .background(Color.white.opacity(0.92))
+        }
     }
 
     private var categorySection: some View {
