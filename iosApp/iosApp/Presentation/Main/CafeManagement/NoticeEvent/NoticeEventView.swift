@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct NoticeEventView: View {
+    let cafeId: String
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = NoticeEventViewModel()
+    @StateObject private var viewModel: NoticeEventViewModel
 
     var body: some View {
         NoticeEventContentView(
@@ -51,8 +52,13 @@ struct NoticeEventView: View {
         }
     }
 
-    init(onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }) {
+    init(
+        cafeId: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
+    ) {
+        self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: NoticeEventViewModel(cafeId: cafeId))
     }
 }
 
@@ -84,16 +90,41 @@ private struct NoticeEventContentView: View {
                             infoBanner(message: infoMessage)
                                 .padding(.horizontal, 16)
                         }
-                        if uiState.selectedTab == .notice {
-                            ForEach(uiState.filteredNotices) { item in
+                        if uiState.isCurrentTabLoading && uiState.isCurrentTabEmpty {
+                            loadingCard
+                                .padding(.horizontal, 16)
+                        } else if uiState.selectedTab == .notice && uiState.notices.isEmpty {
+                            emptyStateCard(message: "등록된 공지사항이 없습니다.")
+                                .padding(.horizontal, 16)
+                        } else if uiState.selectedTab == .event && uiState.events.isEmpty {
+                            emptyStateCard(message: "등록된 이벤트가 없습니다.")
+                                .padding(.horizontal, 16)
+                        } else if uiState.selectedTab == .notice {
+                            ForEach(uiState.notices) { item in
                                 noticeCard(item)
                                     .padding(.horizontal, 16)
+                                    .onAppear {
+                                        if item.id == uiState.notices.last?.id {
+                                            onAction(.loadMoreNotices)
+                                        }
+                                    }
                             }
                         } else {
-                            ForEach(uiState.filteredEvents) { item in
+                            ForEach(uiState.events) { item in
                                 eventCard(item)
                                     .padding(.horizontal, 16)
+                                    .onAppear {
+                                        if item.id == uiState.events.last?.id {
+                                            onAction(.loadMoreEvents)
+                                        }
+                                    }
                             }
+                        }
+                        if uiState.isCurrentTabLoadingMore {
+                            ProgressView()
+                                .tint(Color(hex: "EF6797"))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
                         }
                     }
                     .padding(.top, 12)
@@ -257,6 +288,27 @@ private struct NoticeEventContentView: View {
         .padding(.vertical, 14)
         .background(Color(hex: "FFF2D8"))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var loadingCard: some View {
+        ProgressView()
+            .tint(Color(hex: "EF6797"))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+    }
+
+    private func emptyStateCard(message: String) -> some View {
+        HStack {
+            Spacer()
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "8F848F"))
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .padding(.vertical, 28)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
@@ -467,6 +519,6 @@ private struct NoticeEventFormSheet: View {
 
 struct NoticeEventView_Previews: PreviewProvider {
     static var previews: some View {
-        NoticeEventView()
+        NoticeEventView(cafeId: "cafe-1")
     }
 }

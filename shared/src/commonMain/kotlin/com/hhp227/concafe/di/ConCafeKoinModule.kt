@@ -28,9 +28,11 @@ import com.hhp227.concafe.domain.repository.UserRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
@@ -89,6 +91,7 @@ val repositoryModule = module {
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
+    factory { GetCafeEventPageUseCase(get()) }
     factory { GetCafeCastPageUseCase(get(), get()) }
     factory { GetCafeCastListPageUseCase(get()) }
     factory { GetCafeManagementUseCase(get(), get()) }
@@ -100,6 +103,7 @@ val useCaseModule = module {
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { GetCafeNoticePageUseCase(get()) }
     factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }

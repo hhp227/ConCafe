@@ -5,8 +5,10 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
@@ -33,6 +35,10 @@ interface ConCafeDataSource {
     val banners: List<HomeBanner>
 
     val notices: List<Notice>
+
+    val cafeNoticeManagementItems: List<CafeNoticeManagementItem>
+
+    val cafeEventManagementItems: List<CafeEventManagementItem>
 
     val reviews: MutableList<Review>
 

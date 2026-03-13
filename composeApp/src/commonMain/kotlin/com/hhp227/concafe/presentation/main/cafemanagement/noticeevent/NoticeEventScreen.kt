@@ -22,8 +22,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material.icons.Icons
@@ -41,12 +40,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -69,6 +68,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
+import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -76,8 +79,20 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeEventScreen(
+    cafeId: String,
     onNavigationAction: (NavigationAction) -> Unit,
-    viewModel: NoticeEventViewModel = viewModel()
+    viewModel: NoticeEventViewModel = viewModel(
+        key = "notice-event-$cafeId",
+        factory = viewModelFactory {
+            initializer {
+                NoticeEventViewModel(
+                    cafeId = cafeId,
+                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
+                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase()
+                )
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -122,23 +137,23 @@ private fun NoticeEventContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                    title = {
-                        if (isSearchMode) {
-                            ConCafeFormField(
-                                label = "",
-                                value = uiState.query,
-                                onValueChange = { onAction(NoticeEventAction.ChangeQuery(it)) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(end = 8.dp),
-                                singleLine = true,
-                                placeholder = if (uiState.selectedTab == NoticeEventTab.NOTICE) "공지사항 검색" else "이벤트 검색",
-                                leadingContent = {
-                                    Icon(Icons.Default.Search, contentDescription = null)
-                                }
-                            )
-                        } else {
-                            Text(
+                title = {
+                    if (isSearchMode) {
+                        ConCafeFormField(
+                            label = "",
+                            value = uiState.query,
+                            onValueChange = { onAction(NoticeEventAction.ChangeQuery(it)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 8.dp),
+                            singleLine = true,
+                            placeholder = if (uiState.selectedTab == NoticeEventTab.NOTICE) "공지사항 검색" else "이벤트 검색",
+                            leadingContent = {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            }
+                        )
+                    } else {
+                        Text(
                             text = "공지 및 이벤트 관리",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
@@ -218,8 +233,31 @@ private fun NoticeEventContent(
                     }
                 }
 
-                if (uiState.selectedTab == NoticeEventTab.NOTICE) {
-                    items(uiState.filteredNotices, key = { it.id }) { notice ->
+                if (uiState.isCurrentTabLoading && uiState.isCurrentTabEmpty) {
+                    item {
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            LoadingStateCard()
+                        }
+                    }
+                } else if (uiState.selectedTab == NoticeEventTab.NOTICE && uiState.notices.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            EmptyStateCard(message = "등록된 공지사항이 없습니다.")
+                        }
+                    }
+                } else if (uiState.selectedTab == NoticeEventTab.EVENT && uiState.events.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            EmptyStateCard(message = "등록된 이벤트가 없습니다.")
+                        }
+                    }
+                } else if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                    itemsIndexed(uiState.notices, key = { _, item -> item.id }) { index, notice ->
+                        if (index == uiState.notices.lastIndex) {
+                            LaunchedEffect(notice.id) {
+                                onAction(NoticeEventAction.LoadMoreNotices)
+                            }
+                        }
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                             NoticeCard(
                                 item = notice,
@@ -229,9 +267,26 @@ private fun NoticeEventContent(
                         }
                     }
                 } else {
-                    items(uiState.filteredEvents, key = { it.id }) { event ->
+                    itemsIndexed(uiState.events, key = { _, item -> item.id }) { index, event ->
+                        if (index == uiState.events.lastIndex) {
+                            LaunchedEffect(event.id) {
+                                onAction(NoticeEventAction.LoadMoreEvents)
+                            }
+                        }
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                             EventCard(item = event, onMenuClick = { onAction(NoticeEventAction.ClickEventMenu(event.id)) })
+                        }
+                    }
+                }
+                if (uiState.isCurrentTabLoadingMore) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFFEF6797))
                         }
                     }
                 }
@@ -500,6 +555,39 @@ private fun NoticeCard(
             Text(
                 text = item.date,
                 style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFF8F848F)
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingStateCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = Color(0xFFEF6797))
+    }
+}
+
+@Composable
+private fun EmptyStateCard(message: String) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 28.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF8F848F)
             )
         }

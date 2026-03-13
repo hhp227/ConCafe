@@ -182,6 +182,7 @@ private fun DetailRoutePane(
         }
         is Route.NoticeEvent -> {
             NoticeEventScreen(
+                cafeId = route.param,
                 onNavigationAction = onNavigationAction
             )
         }

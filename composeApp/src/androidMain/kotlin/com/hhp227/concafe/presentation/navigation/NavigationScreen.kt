@@ -103,6 +103,7 @@ fun NavigationScreen(
             val noticeEventRoute = backStackEntry.toRoute<Route.NoticeEvent>()
 
             NoticeEventScreen(
+                cafeId = noticeEventRoute.param,
                 onNavigationAction = viewModel::onAction
             )
         }

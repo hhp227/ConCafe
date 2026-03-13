@@ -11,6 +11,8 @@ enum NoticeEventAction {
     case clickBack
     case selectTab(NoticeEventTab)
     case changeQuery(String)
+    case loadMoreNotices
+    case loadMoreEvents
     case clickRegister
     case clickMoreEvents
     case clickEditNotice(String)

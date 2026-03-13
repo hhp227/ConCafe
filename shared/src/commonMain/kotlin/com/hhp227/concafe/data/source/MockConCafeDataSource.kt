@@ -10,7 +10,9 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastDetail
@@ -22,6 +24,7 @@ import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.RankingItem
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
@@ -257,6 +260,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         Notice("notice-2", "cafe-2", "핑크 캐슬", "신규 메이드 입장", "신규 메이드 입장! 많은 관심 부탁드려요", "2026-03-05T04:00:00Z", "5시간 전"),
         Notice("notice-3", "cafe-3", "리본 카페", "주말 예약 마감", "주말 예약이 마감되었습니다", "2026-03-04T09:00:00Z", "1일 전")
     )
+
+    override val cafeNoticeManagementItems = buildCafeNoticeManagementItems()
+
+    override val cafeEventManagementItems = buildCafeEventManagementItems()
 
     override val cafeDetailsById = cafes.associate { cafe ->
         cafe.id to buildCafeDetail(cafe)
@@ -907,6 +914,125 @@ class MockConCafeDataSource : ConCafeDataSource {
 
 private fun defaultCastSchedules(castId: String, cafeId: String, workingDays: List<String>): List<CastSchedule> {
     return buildCastSchedules(castId, cafeId, workingDays)
+}
+
+private fun buildCafeNoticeManagementItems(): List<CafeNoticeManagementItem> {
+    val cafe1 = listOf(
+        Triple("[필독] 추석 연휴 영업 안내", "2026-03-13T09:00:00Z", true),
+        Triple("화이트데이 한정 디저트 출시", "2026-03-12T08:00:00Z", false),
+        Triple("3월 셋째 주 예약 오픈", "2026-03-11T10:30:00Z", false),
+        Triple("주말 입장 웨이팅 정책 안내", "2026-03-10T11:20:00Z", false),
+        Triple("포토타임 운영 시간 변경", "2026-03-09T12:10:00Z", false),
+        Triple("사쿠라 생일 위크 현장 유의사항", "2026-03-08T13:00:00Z", true),
+        Triple("한정 굿즈 재입고 안내", "2026-03-07T14:10:00Z", false),
+        Triple("우천 시 우산 보관 안내", "2026-03-06T15:15:00Z", false),
+        Triple("테라스석 운영 재개", "2026-03-05T16:20:00Z", false),
+        Triple("3월 포인트 적립 이벤트 안내", "2026-03-04T17:25:00Z", false),
+        Triple("카운터 주문 동선 변경", "2026-03-03T18:10:00Z", false),
+        Triple("늦은 밤 타임 좌석 제한 안내", "2026-03-02T19:40:00Z", false),
+        Triple("메이드 하우스 촬영 정책 업데이트", "2026-03-01T20:00:00Z", true),
+        Triple("신규 방문자 스탬프 적립 안내", "2026-02-28T14:00:00Z", false),
+        Triple("매장 리뉴얼 공사 일정 공지", "2026-02-27T13:00:00Z", false),
+        Triple("봄 시즌 신메뉴 선공개", "2026-02-26T12:00:00Z", false),
+        Triple("평일 오픈 시간 조정 안내", "2026-02-25T11:00:00Z", false),
+        Triple("가맹 굿즈 택배 수령 지연 안내", "2026-02-24T10:00:00Z", false),
+        Triple("2월 마지막 주 좌석 배치 변경", "2026-02-23T09:00:00Z", false),
+        Triple("발렌타인 스페셜 종료 안내", "2026-02-22T08:00:00Z", false),
+        Triple("메이드 하우스 포토존 정비 일정", "2026-02-21T07:00:00Z", false),
+        Triple("봄 시즌 유니폼 선공개", "2026-02-20T12:00:00Z", true),
+        Triple("2월 셋째 주 예약 안내", "2026-02-19T11:00:00Z", false),
+        Triple("매장 내 취식 시간 안내", "2026-02-18T10:00:00Z", false),
+        Triple("체키 촬영 운영 시간 변경", "2026-02-17T09:30:00Z", false),
+        Triple("시그니처 음료 일시 품절 공지", "2026-02-16T09:10:00Z", false),
+        Triple("메이드 하우스 멤버십 혜택 안내", "2026-02-15T08:40:00Z", true),
+        Triple("주말 선입장 티켓 오픈", "2026-02-14T08:20:00Z", false),
+        Triple("발렌타인 한정 포토카드 배부", "2026-02-13T07:50:00Z", false),
+        Triple("2월 둘째 주 출근 스케줄 요약", "2026-02-12T07:20:00Z", false),
+        Triple("라스트 오더 기준 변경 안내", "2026-02-11T12:40:00Z", false),
+        Triple("신규 굿즈 온라인 판매 일정", "2026-02-10T12:10:00Z", false),
+        Triple("메이드 하우스 이용 수칙 업데이트", "2026-02-09T11:30:00Z", true),
+        Triple("주중 한정 디저트 프로모션", "2026-02-08T10:50:00Z", false),
+        Triple("2월 첫째 주 예약 오픈", "2026-02-07T10:10:00Z", false),
+        Triple("매장 배경음악 플레이리스트 변경", "2026-02-06T09:30:00Z", false),
+        Triple("촬영 가능 구역 재안내", "2026-02-05T09:00:00Z", false),
+        Triple("1월 방문 스탬프 정산 공지", "2026-02-04T08:00:00Z", false),
+        Triple("메이드 하우스 2월 운영 캘린더", "2026-02-03T07:00:00Z", true)
+    ).mapIndexed { index, (title, createdAt, pinned) ->
+        CafeNoticeManagementItem(
+            id = "cafe-1-notice-${index + 1}",
+            cafeId = "cafe-1",
+            title = title,
+            content = "$title 관련 상세 운영 안내입니다.",
+            createdAt = createdAt,
+            displayDate = createdAt.take(10).replace("-", "."),
+            isPinned = pinned,
+            statusLabel = if (index % 5 == 0) "임시 저장" else "게시 중",
+            statusAccent = if (index % 5 == 0) NoticeStatusAccent.DRAFT else NoticeStatusAccent.PUBLISHED
+        )
+    }
+
+    val cafe2 = listOf(
+        CafeNoticeManagementItem("cafe-2-notice-1", "cafe-2", "핑크 캐슬 신규 메이드 입장", "신규 메이드 입장 안내입니다.", "2026-03-12T09:00:00Z", "2026.03.12", false, "게시 중", NoticeStatusAccent.PUBLISHED),
+        CafeNoticeManagementItem("cafe-2-notice-2", "cafe-2", "주말 예약 조기 마감", "주말 예약이 조기 마감되었습니다.", "2026-03-10T09:00:00Z", "2026.03.10", false, "게시 중", NoticeStatusAccent.PUBLISHED)
+    )
+
+    val cafe3 = listOf(
+        CafeNoticeManagementItem("cafe-3-notice-1", "cafe-3", "리본 카페 3월 이벤트 티저", "3월 이벤트 예고 안내입니다.", "2026-03-11T09:00:00Z", "2026.03.11", true, "게시 중", NoticeStatusAccent.PUBLISHED)
+    )
+
+    return cafe1 + cafe2 + cafe3
+}
+
+private fun buildCafeEventManagementItems(): List<CafeEventManagementItem> {
+    val primaryImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuA2f4YforgbxHgDTUjuv_2-RNCTUL3Nre_9UOtgIPd1ugt6LYUiIx76nm7_LgA5CEqxoInyz5vaG6_Y96e9PU_B8AU5MlUWUmBHksD3K88DkEvW6pvdLEL20-1X4le2RT-qXGt5K36xGWrhrbrf9JixW_R24QHx0M1qwPSCPasTk8ptf-Qy5TT7nHf9zj-2Jm-AZmrXB0Q9DGhfGb0fn-6Rw2jBi0LSh_21SpOScyRYwxqn5c1F4mp1uK7J7kJV3ktNxj8oaAp6bA"
+    val secondaryImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuDArCFaz3BWKTYq7t8oOL1HsuyHfrKScipbsR3WQ-W_afd8Yw_pYUfesi9f0iQJcZNrA5ikV_MRjFqc9S_KvTEiJnblQVm4gFSdsxXTKdjO3ZTZSw-0PkABSNHwTvHeQ1TM48PsVSw9AzZfrmmt9wrA_hNyhSL9GI859V7XvGYkXFv90pS4sAyYlc5uvrC9zSB-lVBYsyQjSwQmuQ9h9_txvxSFAcAmvXZr3DIzZ8EbYjvV04z7XQNuPJi5FiwqXya9zWY_6Zd1vw"
+
+    val cafe1 = listOf(
+        "화이트데이 커플 세트 프로모션",
+        "메이드 하우스 봄 한정 파르페 이벤트",
+        "사쿠라 생일 위크 스페셜",
+        "리본 스탬프 더블 적립전",
+        "야간 타임 음료 업그레이드 이벤트",
+        "신규 방문자 웰컴 쿠폰",
+        "3월 한정 체키 세트 판매",
+        "테라스 오픈 기념 음료 할인",
+        "평일 런치 타임 디저트 증정",
+        "메이드 인기투표 이벤트",
+        "굿즈 패키지 할인 주간",
+        "화이트 라떼 재출시 이벤트",
+        "주말 선착순 브로마이드 증정",
+        "3월 말 대관 이벤트 안내",
+        "봄 시즌 메뉴 사전 체험단",
+        "밤 10시 이후 디저트 타임",
+        "메이드 하우스 사진 콘테스트"
+    ).mapIndexed { index, title ->
+        val monthDay = (13 - (index % 10)).coerceAtLeast(1).toString().padStart(2, '0')
+        val startDate = "2026.03.$monthDay"
+        val endDate = "2026.03.${(monthDay.toInt() + 7).coerceAtMost(31).toString().padStart(2, '0')}"
+        val isEnded = index >= 12
+        CafeEventManagementItem(
+            id = "cafe-1-event-${index + 1}",
+            cafeId = "cafe-1",
+            title = title,
+            content = "$title 관련 진행 안내입니다.",
+            imageUrl = if (index % 2 == 0) primaryImage else secondaryImage,
+            startDate = startDate,
+            endDate = endDate,
+            statusLabel = if (isEnded) "종료" else "진행 중",
+            isDimmed = isEnded
+        )
+    }
+
+    val cafe2 = listOf(
+        CafeEventManagementItem("cafe-2-event-1", "cafe-2", "핑크 캐슬 신규 메이드 데뷔 이벤트", "신규 메이드 데뷔 이벤트입니다.", primaryImage, "2026.03.08", "2026.03.20", "진행 중", false),
+        CafeEventManagementItem("cafe-2-event-2", "cafe-2", "화이트데이 스페셜 세트", "화이트데이 스페셜 구성 안내입니다.", secondaryImage, "2026.03.01", "2026.03.14", "진행 중", false)
+    )
+
+    val cafe3 = listOf(
+        CafeEventManagementItem("cafe-3-event-1", "cafe-3", "리본 카페 주말 예약 이벤트", "주말 예약 이벤트 안내입니다.", secondaryImage, "2026.03.03", "2026.03.31", "진행 중", false)
+    )
+
+    return cafe1 + cafe2 + cafe3
 }
 
 private val maidHouseAdditionalCasts = listOf(

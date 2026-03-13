@@ -4,6 +4,8 @@ sealed interface NoticeEventAction {
     data object ClickBack : NoticeEventAction
     data class SelectTab(val tab: NoticeEventTab) : NoticeEventAction
     data class ChangeQuery(val value: String) : NoticeEventAction
+    data object LoadMoreNotices : NoticeEventAction
+    data object LoadMoreEvents : NoticeEventAction
     data object ClickRegister : NoticeEventAction
     data object ClickMoreEvents : NoticeEventAction
     data class ClickEditNotice(val id: String) : NoticeEventAction
