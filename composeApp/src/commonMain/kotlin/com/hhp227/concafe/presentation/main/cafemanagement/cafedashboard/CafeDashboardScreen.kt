@@ -26,7 +26,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
-import com.hhp227.concafe.di.resolveObserveCafeCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
@@ -44,7 +45,8 @@ fun CafeDashboardScreen(
                     cafeId = cafeId,
                     getCafeCastPageUseCase = resolveGetCafeCastPageUseCase(),
                     getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
-                    observeCafeCastVersionUseCase = resolveObserveCafeCastVersionUseCase(),
+                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
+                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
                 )
             }

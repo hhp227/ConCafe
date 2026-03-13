@@ -15,7 +15,7 @@ final class CastViewModel: ObservableObject {
 
     private let getCastDetailUseCase: GetCastDetailUseCase
 
-    private let observeCastVersionUseCase: ObserveCastVersionUseCase
+    private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
@@ -25,18 +25,30 @@ final class CastViewModel: ObservableObject {
 
     private var loadTask: Task<Void, Never>?
 
-    private var castVersionWatchHandle: WatchHandle?
+    private var castEventWatchHandle: WatchHandle?
 
-    private func bindCastVersion() {
-        castVersionWatchHandle?.cancel()
-        var isInitialEmission = true
-        castVersionWatchHandle = observeCastVersionUseCase.watch(castId: castId) { [weak self] _ in
+    private func observeCastEvent() {
+        castEventWatchHandle?.cancel()
+        castEventWatchHandle = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
-            if isInitialEmission {
-                isInitialEmission = false
-                return
+            Task { @MainActor in
+                switch event {
+                case let event as Shared.CastEventCreated:
+                    if event.castId == self.castId {
+                        self.loadCastDetail()
+                    }
+                case let event as Shared.CastEventUpdated:
+                    if event.castId == self.castId {
+                        self.loadCastDetail()
+                    }
+                case let event as Shared.CastEventDeleted:
+                    if event.castId == self.castId {
+                        self.event.send(.navigateBack)
+                    }
+                default:
+                    break
+                }
             }
-            self.loadCastDetail()
         }
     }
 
@@ -109,20 +121,20 @@ final class CastViewModel: ObservableObject {
     init(
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
-        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
-        self.observeCastVersionUseCase = observeCastVersionUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
 
-        bindCastVersion()
+        observeCastEvent()
         loadCastDetail()
     }
 
     deinit {
-        castVersionWatchHandle?.cancel()
+        castEventWatchHandle?.cancel()
         loadTask?.cancel()
     }
 }

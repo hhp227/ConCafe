@@ -17,7 +17,9 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let getCafeDashboardUseCase: GetCafeDashboardUseCase
 
-    private let observeCafeCastVersionUseCase: ObserveCafeCastVersionUseCase
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -155,13 +157,40 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
-    private func observeCastVersion() {
-        watchHandles[.castVersion]?.cancel()
-        watchHandles[.castVersion] = observeCafeCastVersionUseCase.watch(cafeId: cafeId) { [weak self] _ in
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if event.matches(cafeId: self.cafeId) {
+                    self.loadCafeDashboard()
+                }
+            }
+        }
+    }
+
+    private func observeCastEvent() {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
 
             Task { @MainActor in
-                self.refreshCastPreviews()
+                switch event {
+                case let event as Shared.CastEventCreated:
+                    if event.cafeId == self.cafeId {
+                        self.loadCafeDashboard()
+                    }
+                case let event as Shared.CastEventUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.loadCafeDashboard()
+                    }
+                case let event as Shared.CastEventDeleted:
+                    if event.cafeId == self.cafeId {
+                        self.loadCafeDashboard()
+                    }
+                default:
+                    break
+                }
             }
         }
     }
@@ -185,17 +214,20 @@ final class CafeDashboardViewModel: ObservableObject {
         cafeId: String,
         getCafeCastPageUseCase: GetCafeCastPageUseCase = KoinInitializerKt.resolveGetCafeCastPageUseCase(),
         getCafeDashboardUseCase: GetCafeDashboardUseCase = KoinInitializerKt.resolveGetCafeDashboardUseCase(),
-        observeCafeCastVersionUseCase: ObserveCafeCastVersionUseCase = KoinInitializerKt.resolveObserveCafeCastVersionUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeCastPageUseCase = getCafeCastPageUseCase
         self.getCafeDashboardUseCase = getCafeDashboardUseCase
-        self.observeCafeCastVersionUseCase = observeCafeCastVersionUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
-        observeCastVersion()
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadCafeDashboard()
     }
 
@@ -206,6 +238,24 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private enum WatchKey {
         case session
-        case castVersion
+        case cafeDetailEvent
+        case castEvent
+    }
+}
+
+private extension CafeDetailEvent {
+    func matches(cafeId: String) -> Bool {
+        switch self {
+        case let event as CafeDetailEventCafeInfoUpdated:
+            return event.cafeId == cafeId
+        case let event as CafeDetailEventMenuGoodsCreated:
+            return event.cafeId == cafeId
+        case let event as CafeDetailEventMenuGoodsUpdated:
+            return event.cafeId == cafeId
+        case let event as CafeDetailEventMenuGoodsDeleted:
+            return event.cafeId == cafeId
+        default:
+            return false
+        }
     }
 }

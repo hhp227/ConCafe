@@ -2,22 +2,27 @@ package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 
 class MenuGoodsViewModel(
     private val cafeId: String,
-    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
+    private val getCafeDetailUseCase: GetCafeDetailUseCase,
+    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MenuGoodsUiState())
@@ -26,28 +31,48 @@ class MenuGoodsViewModel(
     private val _event = MutableSharedFlow<MenuGoodsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
+    private val jobs = mutableMapOf<JobKey, Job>()
+
     private fun loadMenuGoods() {
-        viewModelScope.launch {
+        jobs[JobKey.LOAD]?.cancel()
+        jobs[JobKey.LOAD] = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, infoMessage = null) }
-            observeCafeDetailUseCase(cafeId).collectLatest { detail ->
-                val menuItems = detail.menus.mapIndexed { index, menu ->
-                    menu.toManageItem(index)
-                }
-                val goodsItems = detail.goods.mapIndexed { index, goods ->
-                    goods.toManageItem(index)
-                }
-                _uiState.update {
-                    it.copy(
-                        cafeName = detail.cafe.name,
-                        isLoading = false,
-                        menuCategories = buildMenuCategories(menuItems),
-                        goodsCategories = buildGoodsCategories(goodsItems),
-                        menuItems = menuItems,
-                        goodsItems = goodsItems,
-                        infoMessage = null
-                    )
+            when (val result = getCafeDetailUseCase.invoke(cafeId)) {
+                is AppResult.Success -> applyDetail(result.data.detail)
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, infoMessage = "항목 정보를 불러오지 못했습니다.") }
                 }
             }
+        }
+    }
+
+    private fun observeCafeDetailEvent() {
+        jobs[JobKey.OBSERVE_EVENT]?.cancel()
+        jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
+            observeCafeDetailEventUseCase.invoke().collect { event ->
+                if (event.matches(cafeId)) {
+                    loadMenuGoods()
+                }
+            }
+        }
+    }
+
+    private fun applyDetail(detail: CafeDetail) {
+        val menuItems = detail.menus.mapIndexed { index, menu ->
+            menu.toManageItem(index)
+        }
+        val goodsItems = detail.goods.mapIndexed { index, goods ->
+            goods.toManageItem(index)
+        }
+        _uiState.update {
+            it.copy(
+                cafeName = detail.cafe.name,
+                isLoading = false,
+                menuCategories = buildMenuCategories(menuItems),
+                goodsCategories = buildGoodsCategories(goodsItems),
+                menuItems = menuItems,
+                goodsItems = goodsItems
+            )
         }
     }
 
@@ -255,6 +280,27 @@ class MenuGoodsViewModel(
     }
 
     init {
+        observeCafeDetailEvent()
         loadMenuGoods()
+    }
+
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
+    private enum class JobKey {
+        LOAD,
+        OBSERVE_EVENT
+    }
+}
+
+private fun CafeDetailEvent.matches(cafeId: String): Boolean {
+    return when (this) {
+        is CafeDetailEvent.CafeInfoUpdated -> this.cafeId == cafeId
+        is CafeDetailEvent.MenuGoodsCreated -> this.cafeId == cafeId
+        is CafeDetailEvent.MenuGoodsUpdated -> this.cafeId == cafeId
+        is CafeDetailEvent.MenuGoodsDeleted -> this.cafeId == cafeId
     }
 }

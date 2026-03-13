@@ -15,7 +15,7 @@ final class ScheduleViewModel: ObservableObject {
 
     private let getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase
 
-    private let observeCastVersionUseCase: ObserveCastVersionUseCase
+    private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -32,30 +32,39 @@ final class ScheduleViewModel: ObservableObject {
         watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                self.unbindCastVersion()
+                self.unbindCastEvent()
                 self.loadSchedule()
             }
         }
     }
 
-    private func bindCastVersion(_ castId: String) {
-        watchHandles[.castVersion]?.cancel()
-
-        var isInitialEmission = true
-        watchHandles[.castVersion] = observeCastVersionUseCase.watch(castId: castId) { [weak self] _ in
+    private func bindCastEvent(_ castId: String) {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
-            if isInitialEmission {
-                isInitialEmission = false
-                return
-            }
             Task { @MainActor in
-                self.loadSchedule()
+                switch event {
+                case let event as Shared.CastEventCreated:
+                    if event.castId == castId {
+                        self.loadSchedule()
+                    }
+                case let event as Shared.CastEventUpdated:
+                    if event.castId == castId {
+                        self.loadSchedule()
+                    }
+                case let event as Shared.CastEventDeleted:
+                    if event.castId == castId {
+                        self.loadSchedule()
+                    }
+                default:
+                    break
+                }
             }
         }
     }
 
-    private func unbindCastVersion() {
-        watchHandles.removeValue(forKey: .castVersion)?.cancel()
+    private func unbindCastEvent() {
+        watchHandles.removeValue(forKey: .castEvent)?.cancel()
     }
 
     private func loadSchedule() {
@@ -70,10 +79,10 @@ final class ScheduleViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.ScheduleManagementData {
-                    bindCastVersion(data.detail.cast.id)
+                    bindCastEvent(data.detail.cast.id)
                     uiState = data.toUiState()
                 } else {
-                    unbindCastVersion()
+                    unbindCastEvent()
                     uiState = ScheduleUiState(
                         isLoading: false,
                         isSaving: false,
@@ -82,7 +91,7 @@ final class ScheduleViewModel: ObservableObject {
                 }
             } catch {
                 if Task.isCancelled { return }
-                unbindCastVersion()
+                unbindCastEvent()
                 uiState = ScheduleUiState(
                     isLoading: false,
                     isSaving: false,
@@ -123,12 +132,12 @@ final class ScheduleViewModel: ObservableObject {
     init(
         castId: String? = nil,
         getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
-        observeCastVersionUseCase: ObserveCastVersionUseCase = KoinInitializerKt.resolveObserveCastVersionUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.castId = castId
         self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
-        self.observeCastVersionUseCase = observeCastVersionUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
@@ -142,7 +151,7 @@ final class ScheduleViewModel: ObservableObject {
 
     private enum WatchKey {
         case session
-        case castVersion
+        case castEvent
     }
 }
 

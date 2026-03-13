@@ -49,8 +49,10 @@ import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -108,8 +110,10 @@ val useCaseModule = module {
     factory { GetScheduleManagementDataUseCase(get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
+    factory { ObserveCafeDetailEventUseCase(get()) }
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }
+    factory { ObserveCastEventUseCase(get()) }
     factory { ObserveReviewEventUseCase(get()) }
     factory { ObserveCastVersionUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }

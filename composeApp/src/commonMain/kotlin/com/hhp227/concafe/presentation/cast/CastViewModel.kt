@@ -12,14 +12,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
-    private val observeCastVersionUseCase: ObserveCastVersionUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastUiState.empty())
@@ -28,15 +29,20 @@ class CastViewModel(
     private val _event = MutableSharedFlow<CastEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    private fun bindCastVersion() {
+    private fun observeCastEvent() {
         viewModelScope.launch {
-            var isInitialEmission = true
-            observeCastVersionUseCase.invoke(castId).collectLatest {
-                if (isInitialEmission) {
-                    isInitialEmission = false
-                    return@collectLatest
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.castId == castId) {
+                        loadCastDetail()
+                    }
+                    is CastDomainEvent.Updated -> if (event.castId == castId) {
+                        loadCastDetail()
+                    }
+                    is CastDomainEvent.Deleted -> if (event.castId == castId) {
+                        _event.emit(CastEvent.NavigateBack)
+                    }
                 }
-                loadCastDetail()
             }
         }
     }
@@ -108,7 +114,7 @@ class CastViewModel(
     }
 
     init {
-        bindCastVersion()
+        observeCastEvent()
         loadCastDetail()
     }
 }
