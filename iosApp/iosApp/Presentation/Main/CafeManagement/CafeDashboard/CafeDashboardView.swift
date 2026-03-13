@@ -68,6 +68,9 @@ private struct CafeDashboardContentView: View {
                         .padding(.vertical, 48)
                 } else if uiState.cafe != nil {
                     metricGrid
+                    if !uiState.pendingCastClaims.isEmpty {
+                        pendingCastClaimSection
+                    }
                     shortcutGrid
                     castManagementSection
                     homeBannerSection
@@ -153,6 +156,57 @@ private struct CafeDashboardContentView: View {
                 dashboardMetricCard(title: "오늘 체크인", value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
                 dashboardMetricCard(title: "오늘 리뷰", value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
                 dashboardMetricCard(title: "평점", value: formatRating(cafe.rating), accent: Color(hex: "F59E0B"))
+            }
+        }
+    }
+
+    private var pendingCastClaimSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("프로필 연결 요청")
+                .font(.headline.weight(.bold))
+            ForEach(Array(uiState.pendingCastClaims.prefix(3)), id: \.claimId) { claim in
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("\(claim.requesterNickname) → \(claim.castName)")
+                            .font(.subheadline.weight(.bold))
+                        Spacer()
+                        Text(claim.requestedAtLabel)
+                            .font(.caption2)
+                            .foregroundStyle(Color(hex: "8A808A"))
+                    }
+                    if let message = claim.message {
+                        Text(message)
+                            .font(.subheadline)
+                            .foregroundStyle(Color(hex: "5C5760"))
+                    }
+                    HStack(spacing: 10) {
+                        Button("승인") {
+                            onAction(.clickApproveCastClaim(claim.claimId))
+                        }
+                        .font(.subheadline.weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color(hex: "FFD1DC"))
+                        .foregroundStyle(Color(hex: "2B2330"))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        Button("반려") {
+                            onAction(.clickRejectCastClaim(claim.claimId))
+                        }
+                        .font(.subheadline.weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.white)
+                        .foregroundStyle(Color(hex: "6F6670"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .background(Color.white.opacity(0.95))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
     }

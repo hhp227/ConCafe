@@ -8,6 +8,10 @@
 import Foundation
 
 enum FanManagementAction {
+    case clickClaimProfile
+    case selectClaimCandidate(String)
+    case submitCastClaim
+    case dismissClaimSheet
     case clickEditProfile
     case clickPrimaryAnnouncement
     case clickQuickAction(FanManagementUiState.QuickAction)

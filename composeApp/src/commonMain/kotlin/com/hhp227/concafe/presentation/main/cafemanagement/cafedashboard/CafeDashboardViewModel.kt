@@ -13,20 +13,27 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
+import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
     private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
     private val getCafeDashboardUseCase: GetCafeDashboardUseCase,
+    private val getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase,
+    private val approveCastClaimUseCase: ApproveCastClaimUseCase,
+    private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -49,12 +56,14 @@ class CafeDashboardViewModel(
                         )
                     }
                     refreshCastPreviews(resetMessage = false)
+                    refreshClaimData(resetMessage = false)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             cafe = null,
                             castPreviews = emptyList(),
+                            pendingCastClaims = emptyList(),
                             nextCastCursor = null,
                             hasMoreCasts = false,
                             isLoading = false,
@@ -116,7 +125,6 @@ class CafeDashboardViewModel(
 
     private fun clickLoadMoreCasts() {
         val currentState = _uiState.value
-
         if (currentState.isLoadingMoreCasts || !currentState.hasMoreCasts) return
         loadCastPage(
             cursor = currentState.nextCastCursor,
@@ -133,25 +141,17 @@ class CafeDashboardViewModel(
 
     private fun clickShortcut(shortcut: CafeDashboardShortcut) {
         when (shortcut) {
-            CafeDashboardShortcut.CAFE_SETTINGS -> {
-                viewModelScope.launch {
-                    _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
-                }
+            CafeDashboardShortcut.CAFE_SETTINGS -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
             }
-            CafeDashboardShortcut.EVENT_MANAGEMENT -> {
-                viewModelScope.launch {
-                    _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
-                }
+            CafeDashboardShortcut.EVENT_MANAGEMENT -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
             }
-            CafeDashboardShortcut.MENU_GOODS -> {
-                viewModelScope.launch {
-                    _event.emit(CafeDashboardEvent.NavigateToMenuGoods(cafeId))
-                }
+            CafeDashboardShortcut.MENU_GOODS -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToMenuGoods(cafeId))
             }
-            CafeDashboardShortcut.CAST_MANAGEMENT -> {
-                viewModelScope.launch {
-                    _event.emit(CafeDashboardEvent.NavigateToCastEdit(cafeId = cafeId))
-                }
+            CafeDashboardShortcut.CAST_MANAGEMENT -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToCastEdit(cafeId = cafeId))
             }
             CafeDashboardShortcut.CAST_SCHEDULE -> {
                 val selectedCastId = _uiState.value.selectedCastId
@@ -174,9 +174,7 @@ class CafeDashboardViewModel(
     }
 
     private fun dismissInfoMessage() {
-        _uiState.update {
-            it.copy(infoMessage = null)
-        }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
     private fun clickCastSchedule(castId: String) {
@@ -188,11 +186,51 @@ class CafeDashboardViewModel(
         }
     }
 
-    private fun observeSession() {
-        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
-        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
-                loadCafeDashboard()
+    private fun clickApproveCastClaim(claimId: String) {
+        viewModelScope.launch {
+            when (val result = approveCastClaimUseCase.invoke(claimId)) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 승인했습니다.") }
+                    refreshClaimData(resetMessage = false)
+                    refreshCastPreviews(resetMessage = false)
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = result.error.toString()) }
+                }
+            }
+        }
+    }
+
+    private fun clickRejectCastClaim(claimId: String) {
+        viewModelScope.launch {
+            when (val result = rejectCastClaimUseCase.invoke(claimId)) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 반려했습니다.") }
+                    refreshClaimData(resetMessage = false)
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = result.error.toString()) }
+                }
+            }
+        }
+    }
+
+    private fun refreshClaimData(resetMessage: Boolean = true) {
+        if (resetMessage) {
+            _uiState.update { it.copy(infoMessage = null) }
+        }
+        loadPendingCastClaims()
+    }
+
+    private fun loadPendingCastClaims() {
+        viewModelScope.launch {
+            when (val result = getPendingCastClaimsForCafeUseCase.invoke(cafeId)) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(pendingCastClaims = result.data) }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(pendingCastClaims = emptyList()) }
+                }
             }
         }
     }
@@ -262,19 +300,37 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun observeCastClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
+            observeCastClaimEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastClaimDomainEvent.Created -> if (event.claim.cafeId == cafeId) {
+                        refreshClaimData()
+                    }
+                    is CastClaimDomainEvent.Updated -> if (event.claim.cafeId == cafeId) {
+                        refreshClaimData()
+                    }
+                }
+            }
+        }
+    }
+
     fun onAction(action: CafeDashboardAction) {
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
+            is CafeDashboardAction.ClickApproveCastClaim -> clickApproveCastClaim(action.claimId)
+            is CafeDashboardAction.ClickRejectCastClaim -> clickRejectCastClaim(action.claimId)
             CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
             CafeDashboardAction.DismissInfoMessage -> dismissInfoMessage()
         }
     }
 
     init {
-        observeSession()
         observeCafeDetailEvent()
+        observeCastClaimEvent()
         observeCastEvent()
         loadCafeDashboard()
     }
@@ -286,8 +342,8 @@ class CafeDashboardViewModel(
     }
 
     private enum class TaskKey {
-        OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAST_EVENT
+        OBSERVE_CAST_EVENT,
+        OBSERVE_CAST_CLAIM_EVENT
     }
 }

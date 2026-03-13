@@ -26,11 +26,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
+import com.hhp227.concafe.di.resolveGetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
+import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -45,9 +49,12 @@ fun CafeDashboardScreen(
                     cafeId = cafeId,
                     getCafeCastPageUseCase = resolveGetCafeCastPageUseCase(),
                     getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
+                    getPendingCastClaimsForCafeUseCase = resolveGetPendingCastClaimsForCafeUseCase(),
+                    approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
+                    rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                    observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
+                    observeCastEventUseCase = resolveObserveCastEventUseCase()
                 )
             }
         }
@@ -150,6 +157,15 @@ private fun CafeDashboardContentScreen(
                     item {
                         DashboardMetricGrid(cafe = cafe)
                     }
+                    if (uiState.pendingCastClaims.isNotEmpty()) {
+                        item {
+                            PendingCastClaimSection(
+                                claims = uiState.pendingCastClaims,
+                                onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
+                                onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                            )
+                        }
+                    }
                     item {
                         ShortcutGrid(
                             onShortcutClick = { shortcut ->
@@ -191,6 +207,64 @@ private fun CafeDashboardContentScreen(
     }
 }
 
+
+@Composable
+private fun PendingCastClaimSection(
+    claims: List<PendingCastClaimPreview>,
+    onApprove: (String) -> Unit,
+    onReject: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("프로필 연결 요청", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        claims.take(3).forEach { claim ->
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${claim.requesterNickname} → ${claim.castName}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = Color(0xFF8A808A))
+                    }
+                    claim.message?.let { message ->
+                        Text(message, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF5C5760))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { onApprove(claim.claimId) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFD1DC),
+                                contentColor = Color(0xFF2B2330)
+                            )
+                        ) {
+                            Text("승인", fontWeight = FontWeight.Bold)
+                        }
+                        OutlinedButton(
+                            onClick = { onReject(claim.claimId) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("반려", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun DashboardHeroCard(

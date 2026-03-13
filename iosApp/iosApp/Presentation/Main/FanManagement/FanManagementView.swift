@@ -32,6 +32,21 @@ struct FanManagementView: View {
                 onNavigationAction(.navigateToSchedule(castId: castId))
             }
         }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.uiState.isClaimSheetVisible && viewModel.uiState.castClaimSheet != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.dismissClaimSheet)
+                    }
+                }
+            )
+        ) {
+            if let sheet = viewModel.uiState.castClaimSheet {
+                CastClaimSheetView(sheet: sheet, onAction: viewModel.onAction)
+                    .compatLargeSheetDetent()
+            }
+        }
         .alert(
             "안내",
             isPresented: Binding(
@@ -63,11 +78,14 @@ private struct FanManagementContentView: View {
             VStack(spacing: 16) {
                 if uiState.isLoading {
                     loadingState
-                } else if uiState.fanManagementData == nil {
+                } else if uiState.fanManagementData == nil && uiState.castClaimStatus == nil {
                     emptySectionCard(message: uiState.errorMessage ?? "로그인한 캐스트 정보를 찾을 수 없습니다.")
                 }
                 if let infoMessage = uiState.infoMessage {
                     infoBanner(message: infoMessage)
+                }
+                if let claimStatus = uiState.castClaimStatus {
+                    castClaimStatusCard(claimStatus)
                 }
                 primaryAnnouncementButton
                 quickActionGrid
@@ -131,9 +149,60 @@ private struct FanManagementContentView: View {
         .buttonStyle(.plain)
     }
 
+    private func castClaimStatusCard(_ status: FanManagementUiState.CastClaimStatusCard) -> some View {
+        let accentBackground: Color = {
+            switch status.accent {
+            case .pending: return Color(hex: "FFD1DC")
+            case .linked: return Color(hex: "EAF8EF")
+            case .rejected: return Color(hex: "F8E9EE")
+            }
+        }()
+        let accentForeground: Color = {
+            switch status.accent {
+            case .pending: return Color(hex: "6B3050")
+            case .linked: return Color(hex: "2E8B57")
+            case .rejected: return Color(hex: "8B4A5A")
+            }
+        }()
+        return Button {
+            onAction(.clickClaimProfile)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(status.affiliatedCafeName)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(accentForeground)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(accentBackground)
+                    .clipShape(Capsule())
+                Text(status.headline)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color(hex: "24161E"))
+                Text(status.body)
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "6C6270"))
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Text("프로필 연결 상태 보기")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(Color(hex: "EF6797"))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .background(Color.white.opacity(0.95))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var quickActionGrid: some View {
         HStack(spacing: 12) {
             ForEach(FanManagementUiState.QuickAction.allCases, id: \.self) { quickAction in
+                let iconName = quickAction == .workSchedule ? "calendar" : "storefront"
                 Button {
                     onAction(.clickQuickAction(quickAction))
                 } label: {
@@ -143,7 +212,7 @@ private struct FanManagementContentView: View {
                                 .fill(Color(hex: "FFD1DC").opacity(0.08))
                                 .frame(width: 40, height: 40)
                                 .overlay {
-                                    Image(systemName: "calendar")
+                                    Image(systemName: iconName)
                                         .foregroundStyle(Color(hex: "5D525B"))
                                 }
                             Text(quickAction.title)
@@ -164,10 +233,10 @@ private struct FanManagementContentView: View {
                                 .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
                         )
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
             }
-            Spacer(minLength: 0)
         }
     }
 
@@ -391,6 +460,80 @@ private struct FanManagementContentView: View {
             return Color(hex: "8E8896")
         default:
             return Color(hex: "DC8346")
+        }
+    }
+}
+
+private struct CastClaimSheetView: View {
+    let sheet: FanManagementUiState.CastClaimSheet
+    let onAction: (FanManagementAction) -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(sheet.affiliatedCafeName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Text(sheet.headline)
+                        .font(.title3.weight(.bold))
+                    Text(sheet.body)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(hex: "6C6270"))
+
+                    if !sheet.requestableCasts.isEmpty {
+                        VStack(spacing: 10) {
+                            ForEach(sheet.requestableCasts) { candidate in
+                                Button {
+                                    onAction(.selectClaimCandidate(candidate.id))
+                                } label: {
+                                    Text(candidate.name)
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(Color(hex: "24161E"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 14)
+                                        .background(sheet.selectedCastId == candidate.id ? Color(hex: "FFD1DC") : Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    if sheet.canSubmit {
+                        Button {
+                            onAction(.submitCastClaim)
+                        } label: {
+                            Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(Color(hex: "24161E"))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color(hex: "FFD1DC"))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(sheet.isSubmitting)
+                    }
+
+                    Spacer(minLength: 8)
+                }
+                .padding(20)
+            }
+            .navigationTitle("프로필 연결")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("닫기") {
+                        onAction(.dismissClaimSheet)
+                    }
+                }
+            }
         }
     }
 }

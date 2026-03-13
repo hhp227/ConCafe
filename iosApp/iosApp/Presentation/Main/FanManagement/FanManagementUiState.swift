@@ -12,10 +12,37 @@ struct FanManagementUiState {
     var isLoading: Bool = true
     var errorMessage: String? = nil
     var fanManagementData: FanManagementData? = nil
+    var castClaimStatus: CastClaimStatusCard? = nil
+    var castClaimSheet: CastClaimSheet? = nil
+    var isClaimSheetVisible: Bool = false
     var stats: [StatCard] = []
     var recentFollowers: [RecentFollower] = []
     var topFans: [TopFan] = []
     var infoMessage: String? = nil
+
+    struct CastClaimStatusCard: Hashable {
+        let affiliatedCafeId: String
+        let affiliatedCafeName: String
+        let headline: String
+        let body: String
+        let accent: Accent
+    }
+
+    struct CastClaimSheet: Hashable {
+        let affiliatedCafeId: String
+        let affiliatedCafeName: String
+        let headline: String
+        let body: String
+        let requestableCasts: [ClaimCandidate]
+        let selectedCastId: String?
+        let canSubmit: Bool
+        let isSubmitting: Bool
+    }
+
+    struct ClaimCandidate: Identifiable, Hashable {
+        let id: String
+        let name: String
+    }
 
     struct StatCard: Hashable {
         let label: String
@@ -59,11 +86,14 @@ struct FanManagementUiState {
 
     enum QuickAction: CaseIterable, Hashable {
         case workSchedule
+        case cafeDashboard
 
         var title: String {
             switch self {
             case .workSchedule:
                 return "출근 관리"
+            case .cafeDashboard:
+                return "프로필 연결"
             }
         }
 
@@ -71,6 +101,8 @@ struct FanManagementUiState {
             switch self {
             case .workSchedule:
                 return "이번 주 스케줄을 조정합니다."
+            case .cafeDashboard:
+                return "내 캐스트 프로필 연결 상태를 관리합니다."
             }
         }
     }
@@ -80,10 +112,17 @@ struct FanManagementUiState {
         case primary
     }
 
+    enum Accent {
+        case pending
+        case linked
+        case rejected
+    }
+
     static let empty = FanManagementUiState(
         isLoading: true,
         errorMessage: nil,
         fanManagementData: nil,
+        castClaimStatus: nil,
         stats: [],
         recentFollowers: [],
         topFans: [],

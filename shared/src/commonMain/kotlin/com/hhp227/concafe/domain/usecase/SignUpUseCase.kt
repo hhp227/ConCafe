@@ -13,10 +13,11 @@ class SignUpUseCase(
         email: String,
         password: String,
         nickname: String,
-        role: UserRole
+        role: UserRole,
+        affiliatedCafeId: String? = null
     ): AppResult<User> {
         return try {
-            AppResult.Success(authRepository.signUp(email, password, nickname, role))
+            AppResult.Success(authRepository.signUp(email, password, nickname, role, affiliatedCafeId))
         } catch (e: IllegalArgumentException) {
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: Exception) {

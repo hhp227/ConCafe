@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -31,6 +32,8 @@ interface ConCafeDataSource {
     val cafes: MutableList<Cafe>
 
     val casts: List<Cast>
+
+    val castClaims: MutableList<CastClaim>
 
     val banners: List<HomeBanner>
 
@@ -55,6 +58,8 @@ interface ConCafeDataSource {
     val ownedCafeIdsByUser: Map<String, List<String>>
 
     val pendingCafeClaimsByUser: Map<String, List<CafeManagementData.PendingClaimSummary>>
+
+    val affiliatedCafeIdByUser: MutableMap<String, String>
 
     val cafeCheckInCountById: Map<String, Int>
 

@@ -6,6 +6,7 @@ import com.hhp227.concafe.data.repository.FakeCafeDashboardRepository
 import com.hhp227.concafe.data.repository.FakeCafeManagementRepository
 import com.hhp227.concafe.data.repository.FakeCafeRepository
 import com.hhp227.concafe.data.repository.FakeCastRepository
+import com.hhp227.concafe.data.repository.FakeCastClaimRepository
 import com.hhp227.concafe.data.repository.FakeNoticeRepository
 import com.hhp227.concafe.data.repository.FakeNotificationRepository
 import com.hhp227.concafe.data.repository.FakeRankingRepository
@@ -20,6 +21,7 @@ import com.hhp227.concafe.domain.repository.CafeDashboardRepository
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.CastClaimRepository
 import com.hhp227.concafe.domain.repository.NoticeRepository
 import com.hhp227.concafe.domain.repository.NotificationRepository
 import com.hhp227.concafe.domain.repository.RankingRepository
@@ -38,6 +40,7 @@ import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
+import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
@@ -49,15 +52,18 @@ import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
+import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
+import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
@@ -72,6 +78,8 @@ import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
@@ -88,6 +96,7 @@ val repositoryModule = module {
     single<CafeManagementRepository> { FakeCafeManagementRepository(get()) }
     single<CafeRepository> { FakeCafeRepository(get()) }
     single<CastRepository> { FakeCastRepository(get()) }
+    single<CastClaimRepository> { FakeCastClaimRepository(get()) }
     single<VisitRepository> { FakeVisitRepository(get()) }
     single<ReviewRepository> { FakeReviewRepository(get()) }
     single<NoticeRepository> { FakeNoticeRepository(get()) }
@@ -106,6 +115,7 @@ val useCaseModule = module {
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { CreateVisitUseCase(get(), get()) }
     factory { CreateReviewUseCase(get(), get(), get()) }
+    factory { CreateCastClaimUseCase(get(), get()) }
     factory { CreateCafeEventUseCase(get()) }
     factory { CreateCafeNoticeUseCase(get()) }
     factory { DeleteCafeEventUseCase(get()) }
@@ -119,15 +129,18 @@ val useCaseModule = module {
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }
+    factory { GetMyCastClaimStatusUseCase(get(), get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
     factory { GetRankingFeedUseCase(get(), get(), get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
+    factory { GetPendingCastClaimsForCafeUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCafeDetailEventUseCase(get()) }
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }
+    factory { ObserveCastClaimEventUseCase(get()) }
     factory { ObserveCastEventUseCase(get()) }
     factory { ObserveNoticeManagementEventUseCase(get()) }
     factory { ObserveReviewEventUseCase(get()) }
@@ -142,6 +155,8 @@ val useCaseModule = module {
     factory { UpdateCafeInfoUseCase(get()) }
     factory { UpdateCafeEventUseCase(get()) }
     factory { UpdateCafeNoticeUseCase(get()) }
+    factory { ApproveCastClaimUseCase(get(), get()) }
+    factory { RejectCastClaimUseCase(get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get()) }
 }

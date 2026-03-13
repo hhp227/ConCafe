@@ -198,7 +198,8 @@ class SignUpViewModel(
                     email = uiState.value.email.trim(),
                     password = uiState.value.password,
                     nickname = nickname,
-                    role = role
+                    role = role,
+                    affiliatedCafeId = if (role == UserRole.CAST) uiState.value.selectedCafe?.id else null
                 )
             ) {
                 is AppResult.Success -> {

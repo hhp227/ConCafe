@@ -15,6 +15,8 @@ import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastClaim
+import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastUpsert
@@ -113,6 +115,24 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.VISITOR,
             banned = false,
             createdAt = "2026-03-10T10:20:00Z"
+        ),
+        User(
+            id = "user-9",
+            email = "cast.pending@concafe.app",
+            nickname = "마유",
+            profileImage = null,
+            role = UserRole.CAST,
+            banned = false,
+            createdAt = "2026-03-10T10:30:00Z"
+        ),
+        User(
+            id = "user-10",
+            email = "cast1@concafe.app",
+            nickname = "유메",
+            profileImage = null,
+            role = UserRole.CAST,
+            banned = false,
+            createdAt = "2026-03-13T11:00:00Z"
         )
     )
 
@@ -247,6 +267,19 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cast("maid-5", "cafe-1", "레이", null, null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
         Cast("maid-6", "cafe-3", "미키", null, null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5),
         *maidHouseAdditionalCasts.toTypedArray()
+    )
+
+    override val castClaims = mutableListOf(
+        CastClaim(
+            id = "cast-claim-1",
+            userId = "user-9",
+            cafeId = "cafe-1",
+            castId = "maid-5",
+            status = CastClaimStatus.PENDING,
+            message = "현재 활동 중인 마유입니다. 레이 프로필과 연결 부탁드려요.",
+            createdAt = "2026-03-12T09:00:00Z",
+            createdAtLabel = "1일 전"
+        )
     )
 
     override val banners = listOf(
@@ -415,6 +448,12 @@ class MockConCafeDataSource : ConCafeDataSource {
                 message = "기존 카페 운영자 신청이 검토 중입니다"
             )
         )
+    )
+
+    override val affiliatedCafeIdByUser = mutableMapOf(
+        "user-2" to "cafe-1",
+        "user-9" to "cafe-1",
+        "user-10" to "cafe-1"
     )
 
     override val cafeCheckInCountById = mapOf(
