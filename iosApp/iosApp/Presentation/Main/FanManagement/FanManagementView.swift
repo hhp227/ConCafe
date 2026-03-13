@@ -466,6 +466,7 @@ private struct FanManagementContentView: View {
 
 private struct CastClaimSheetView: View {
     let sheet: FanManagementUiState.CastClaimSheet
+    
     let onAction: (FanManagementAction) -> Void
 
     var body: some View {
@@ -480,7 +481,6 @@ private struct CastClaimSheetView: View {
                     Text(sheet.body)
                         .font(.subheadline)
                         .foregroundStyle(Color(hex: "6C6270"))
-
                     if !sheet.requestableCasts.isEmpty {
                         VStack(spacing: 10) {
                             ForEach(sheet.requestableCasts) { candidate in
@@ -504,7 +504,6 @@ private struct CastClaimSheetView: View {
                             }
                         }
                     }
-
                     if sheet.canSubmit {
                         Button {
                             onAction(.submitCastClaim)
@@ -520,7 +519,6 @@ private struct CastClaimSheetView: View {
                         .buttonStyle(.plain)
                         .disabled(sheet.isSubmitting)
                     }
-
                     Spacer(minLength: 8)
                 }
                 .padding(20)
