@@ -1,0 +1,30 @@
+package com.hhp227.concafe.domain.usecase
+
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
+import com.hhp227.concafe.domain.repository.NoticeRepository
+
+class GetCafeEventPageUseCase(
+    private val noticeRepository: NoticeRepository
+) {
+    suspend operator fun invoke(
+        cafeId: String,
+        query: String,
+        cursor: String?,
+        pageSize: Int = DEFAULT_PAGE_SIZE
+    ): AppResult<PagedResult<CafeEventManagementItem>> {
+        return try {
+            AppResult.Success(noticeRepository.getCafeEventPage(cafeId, query, cursor, pageSize))
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
+        }
+    }
+
+    companion object {
+        const val DEFAULT_PAGE_SIZE = 15
+    }
+}

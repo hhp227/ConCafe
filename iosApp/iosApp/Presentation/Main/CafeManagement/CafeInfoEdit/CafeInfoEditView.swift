@@ -9,41 +9,45 @@ import SwiftUI
 import UIKit
 
 struct CafeInfoEditView: View {
-    let cafeId: String
+    let cafeId: String?
+
+    let isRegistrationMode: Bool
 
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeInfoEditViewModel
-    
-    @State private var showSaveSuccessAlert = false
 
     var body: some View {
         CafeInfoEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("카페 정보 관리")
+        .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             case .showSaveSuccessAlert:
-                showSaveSuccessAlert = true
+                break
             }
-        }
-        .alert("카페 정보가 저장되었습니다.", isPresented: $showSaveSuccessAlert) {
-            Button("확인", role: .cancel) {}
         }
     }
 
     init(
-        cafeId: String,
+        cafeId: String? = nil,
+        isRegistrationMode: Bool = false,
         onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.cafeId = cafeId
+        self.isRegistrationMode = isRegistrationMode
         self.onNavigationAction = onNavigationAction
-        _viewModel = StateObject(wrappedValue: CafeInfoEditViewModel(cafeId: cafeId))
+        _viewModel = StateObject(
+            wrappedValue: CafeInfoEditViewModel(
+                cafeId: cafeId,
+                isRegistrationMode: isRegistrationMode
+            )
+        )
     }
 }
 
@@ -53,34 +57,29 @@ private struct CafeInfoEditContentView: View {
     let onAction: (CafeInfoEditAction) -> Void
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(spacing: 16) {
-                    if uiState.isLoading {
-                        ProgressView()
-                            .tint(Color(hex: "EF6797"))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 32)
-                    }
-                    if let infoMessage = uiState.infoMessage {
-                        infoBanner(message: infoMessage)
-                    }
-                    basicInformationSection
-                    representativeImageSection
-                    gallerySection
-                    locationContactSection
-                    businessHoursSection
+        ScrollView {
+            VStack(spacing: 16) {
+                if uiState.isLoading {
+                    ProgressView()
+                        .tint(Color(hex: "EF6797"))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
                 }
-                .padding(16)
-                .padding(.bottom, 100)
+                if let infoMessage = uiState.infoMessage {
+                    infoBanner(message: infoMessage)
+                }
+                basicInformationSection
+                representativeImageSection
+                if !uiState.isRegistrationMode {
+                    gallerySection
+                }
+                locationContactSection
+                businessHoursSection
             }
-            .background(
-                LinearGradient(
-                    colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+            .padding(16)
+            .padding(.bottom, 100)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomSaveBar
         }
         .background(Color(hex: "F8F5F6"))
@@ -257,36 +256,33 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var bottomSaveBar: some View {
-        VStack {
-            Spacer()
-            Button {
-                onAction(.clickSave)
-            } label: {
-                HStack(spacing: 8) {
-                    if uiState.isSaving {
-                        ProgressView()
-                            .tint(Color(hex: "2B2330"))
-                    } else {
-                        Image(systemName: "square.and.arrow.down.fill")
-                    }
-                    Text("변경사항 저장")
-                        .fontWeight(.bold)
+        Button {
+            onAction(.clickSave)
+        } label: {
+            HStack(spacing: 8) {
+                if uiState.isSaving {
+                    ProgressView()
+                        .tint(Color(hex: "2B2330"))
+                } else {
+                    Image(systemName: "square.and.arrow.down.fill")
                 }
-                .foregroundStyle(Color(hex: "2B2330"))
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(Color(hex: "FFD1DC"))
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                Text(uiState.submitButtonText)
+                    .fontWeight(.bold)
             }
-            .disabled(uiState.isSaving)
-            .buttonStyle(.plain)
-            .padding(16)
-            .background(Color.white.opacity(0.92))
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(Color(hex: "FFD1DC").opacity(0.2))
-                    .frame(height: 1)
-            }
+            .foregroundStyle(Color(hex: "2B2330"))
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Color(hex: "FFD1DC"))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .disabled(uiState.isSaving)
+        .buttonStyle(.plain)
+        .padding(16)
+        .background(Color.white.opacity(0.92))
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .frame(height: 1)
         }
     }
 

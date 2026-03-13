@@ -14,6 +14,7 @@ enum CafeAction {
     case favoriteTapped
     case writeReviewTapped
     case loadMoreCasts
+    case loadMoreNotices
     case loadMoreReviews
     case refresh
 }

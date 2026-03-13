@@ -5,11 +5,15 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -30,9 +34,15 @@ interface ConCafeDataSource {
 
     val casts: List<Cast>
 
+    val castClaims: MutableList<CastClaim>
+
     val banners: List<HomeBanner>
 
-    val notices: List<Notice>
+    val notices: MutableList<Notice>
+
+    val cafeNoticeManagementItems: MutableList<CafeNoticeManagementItem>
+
+    val cafeEventManagementItems: MutableList<CafeEventManagementItem>
 
     val reviews: MutableList<Review>
 
@@ -46,9 +56,13 @@ interface ConCafeDataSource {
 
     val dismissedReviewPromptVisitIdsByUser: MutableMap<String, MutableSet<String>>
 
-    val ownedCafeIdsByUser: Map<String, List<String>>
+    val ownedCafeIdsByUser: MutableMap<String, MutableList<String>>
 
-    val pendingCafeClaimsByUser: Map<String, List<CafeManagementData.PendingClaimSummary>>
+    val pendingCafeClaimsByUser: MutableMap<String, MutableList<CafeManagementData.PendingClaimSummary>>
+
+    val pendingCafeRegistrationClaimsByUser: MutableMap<String, MutableList<CafeRegistrationClaim>>
+
+    val affiliatedCafeIdByUser: MutableMap<String, String>
 
     val cafeCheckInCountById: Map<String, Int>
 
@@ -58,7 +72,7 @@ interface ConCafeDataSource {
 
     val onShiftCastIdsByCafeId: Map<String, Set<String>>
 
-    val cafeHomeBannerPreviewByCafeId: Map<String, CafeDashboardData.HomeBannerPreview>
+    val cafeHomeBannerPreviewByCafeId: MutableMap<String, CafeDashboardData.HomeBannerPreview>
 
     val castTodayVisitCountById: Map<String, Int>
 
@@ -74,6 +88,8 @@ interface ConCafeDataSource {
 
     fun observeCastVersion(castId: String): Flow<Int>
 
+    fun publishCafeDetails()
+
     fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
@@ -83,6 +99,8 @@ interface ConCafeDataSource {
     fun castDetail(castId: String): CastDetail?
 
     fun upsertCast(update: CastUpsert): CastDetail
+
+    fun deleteCast(castId: String): Cast
 
     fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>)
 

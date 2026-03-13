@@ -26,11 +26,16 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
+import com.hhp227.concafe.di.resolveGetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
+import com.hhp227.concafe.di.resolveDeleteCastUseCase
+import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -45,9 +50,13 @@ fun CafeDashboardScreen(
                     cafeId = cafeId,
                     getCafeCastPageUseCase = resolveGetCafeCastPageUseCase(),
                     getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
+                    getPendingCastClaimsForCafeUseCase = resolveGetPendingCastClaimsForCafeUseCase(),
+                    approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
+                    rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
+                    deleteCastUseCase = resolveDeleteCastUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                    observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
+                    observeCastEventUseCase = resolveObserveCastEventUseCase()
                 )
             }
         }
@@ -62,6 +71,9 @@ fun CafeDashboardScreen(
                 is CafeDashboardEvent.NavigateToCafeInfoEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCafeInfoEdit(event.cafeId))
                 }
+                is CafeDashboardEvent.NavigateToNoticeEvent -> {
+                    onNavigationAction(NavigationAction.NavigateToNoticeEvent(event.cafeId))
+                }
                 is CafeDashboardEvent.NavigateToMenuGoods -> {
                     onNavigationAction(NavigationAction.NavigateToMenuGoods(event.cafeId))
                 }
@@ -73,6 +85,23 @@ fun CafeDashboardScreen(
                 }
             }
         }
+    }
+    if (uiState.isDeleteCastDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) },
+            title = { Text("캐스트 프로필 삭제") },
+            text = { Text("캐스트 프로필을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CafeDashboardAction.ConfirmDeleteCast) }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) }) {
+                    Text("취소")
+                }
+            }
+        )
     }
     CafeDashboardContentScreen(
         uiState = uiState,
@@ -147,6 +176,15 @@ private fun CafeDashboardContentScreen(
                     item {
                         DashboardMetricGrid(cafe = cafe)
                     }
+                    if (uiState.pendingCastClaims.isNotEmpty()) {
+                        item {
+                            PendingCastClaimSection(
+                                claims = uiState.pendingCastClaims,
+                                onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
+                                onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                            )
+                        }
+                    }
                     item {
                         ShortcutGrid(
                             onShortcutClick = { shortcut ->
@@ -162,6 +200,10 @@ private fun CafeDashboardContentScreen(
                             onCastManagementClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
                             },
+                            onDeleteClick = {
+                                onAction(CafeDashboardAction.ClickDeleteCast)
+                            },
+                            canDelete = uiState.selectedCastId != null,
                             onScheduleClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
                             },
@@ -188,6 +230,64 @@ private fun CafeDashboardContentScreen(
     }
 }
 
+
+@Composable
+private fun PendingCastClaimSection(
+    claims: List<PendingCastClaimPreview>,
+    onApprove: (String) -> Unit,
+    onReject: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("프로필 연결 요청", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        claims.take(3).forEach { claim ->
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${claim.requesterNickname} → ${claim.castName}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = Color(0xFF8A808A))
+                    }
+                    claim.message?.let { message ->
+                        Text(message, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF5C5760))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { onApprove(claim.claimId) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFD1DC),
+                                contentColor = Color(0xFF2B2330)
+                            )
+                        ) {
+                            Text("승인", fontWeight = FontWeight.Bold)
+                        }
+                        OutlinedButton(
+                            onClick = { onReject(claim.claimId) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("반려", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun DashboardHeroCard(
@@ -448,6 +548,8 @@ private fun CastManagementSection(
     hasMoreCasts: Boolean,
     isLoadingMoreCasts: Boolean,
     onCastManagementClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    canDelete: Boolean,
     onScheduleClick: () -> Unit,
     selectedCastId: String?,
     onCastScheduleSelect: (String) -> Unit,
@@ -473,28 +575,45 @@ private fun CastManagementSection(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8C7A83)
                 )
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
-                    color = Color(0xFFFCE6EF),
-                    onClick = onScheduleClick
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onDeleteClick,
+                        enabled = canDelete,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color(0xFFFCE6EF),
+                            contentColor = Color(0xFFEF6797),
+                            disabledContainerColor = Color(0xFFF6EEF2),
+                            disabledContentColor = Color(0xFFC8B7C0)
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = Color(0xFFEF6797),
-                            modifier = Modifier.size(16.dp)
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "캐스트 삭제"
                         )
-                        Text(
-                            text = "출근표 관리",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFFEF6797),
-                            fontWeight = FontWeight.Bold
-                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = Color(0xFFFCE6EF),
+                        onClick = onScheduleClick
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = Color(0xFFEF6797),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "출근표 관리",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFEF6797),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

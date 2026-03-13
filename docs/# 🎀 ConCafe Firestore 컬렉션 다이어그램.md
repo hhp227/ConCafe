@@ -169,11 +169,20 @@ castClaims/{claimId}
 ├─ userId
 ├─ cafeId
 ├─ castId
-├─ status
-│  PENDING
-│  APPROVED
-│  REJECTED
+├─ status: PENDING | APPROVED | REJECTED
+├─ message
+├─ evidenceImageUrls: []
+├─ reviewedBy
+├─ reviewedAt
 └─ createdAt
+
+캐스트 Claim 정책 메모
+- `castClaims`는 캐스트 회원가입 자체가 아니라 `팬관리에서 보내는 기존 캐스트 프로필 연결 요청`을 의미한다.
+- 캐스트는 가입 시 선택한 `소속 카페` 기준으로 해당 카페의 캐스트 프로필에 연결 요청을 보낸다.
+- 요청 생성은 캐스트가 `팬관리` 내부 전용 신청 UI에서 수행한다.
+- 승인 / 반려는 소속 카페 운영자가 `카페 관리 대시보드 > 캐스트 관리 섹션`에서 처리한다.
+- 승인되면 `cafes/{cafeId}/casts/{castId}.linkedUserId = userId`로 연결한다.
+- 연결된 캐스트 프로필이 삭제되면 다시 미연결 상태가 되며 새 `castClaims` 생성이 가능하다.
 
 cafeOwnerClaims/{claimId}
 ├─ userId
@@ -184,3 +193,21 @@ cafeOwnerClaims/{claimId}
 ├─ reviewedBy
 ├─ reviewedAt
 └─ createdAt
+
+cafeRegistrationClaims/{claimId}
+├─ userId
+├─ draft
+│  ├─ name
+│  ├─ description
+│  ├─ region
+│  ├─ thumbnailImage
+│  └─ businessHours
+├─ status: PENDING | APPROVED | REJECTED
+├─ reviewedBy
+├─ reviewedAt
+└─ createdAt
+
+공지/이벤트 관리 메모
+- `cafes/{cafeId}/notices`, `cafes/{cafeId}/events`는 카페별 페이지네이션 조회를 사용하며 현재 페이지 크기는 15개다.
+- 공지 문서는 고정 여부(`isPinned`)와 게시 상태를 함께 관리한다.
+- 이벤트 문서는 제목/설명 외에 대표 이미지와 기간을 함께 관리한다.

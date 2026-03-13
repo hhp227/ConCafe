@@ -36,6 +36,8 @@ interface CastRepository {
 
     suspend fun upsertCast(update: CastUpsert): CastDetail
 
+    suspend fun deleteCast(castId: String): Cast
+
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
 
     suspend fun isFollowing(userId: String, castId: String): Boolean

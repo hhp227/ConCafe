@@ -5,7 +5,11 @@ sealed interface NavigationAction {
     data class NavigateToCast(val id: String) : NavigationAction
     data class NavigateToCafe(val id: String) : NavigationAction
     data class NavigateToCafeDashboard(val id: String) : NavigationAction
-    data class NavigateToCafeInfoEdit(val id: String) : NavigationAction
+    data class NavigateToCafeInfoEdit(
+        val id: String? = null,
+        val isRegistrationMode: Boolean = false
+    ) : NavigationAction
+    data class NavigateToNoticeEvent(val id: String) : NavigationAction
     data class NavigateToCastEdit(val cafeId: String? = null, val castId: String? = null) : NavigationAction
     data class NavigateToSchedule(val castId: String? = null) : NavigationAction
     data class NavigateToMenuGoods(val id: String) : NavigationAction

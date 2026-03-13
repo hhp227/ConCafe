@@ -15,9 +15,13 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
+import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
 import com.hhp227.concafe.domain.model.ReviewEvent
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
+import com.hhp227.concafe.domain.model.NoticeStatusAccent as DomainNoticeStatusAccent
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
@@ -25,6 +29,7 @@ class CafeViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
+    private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
     private val observeReviewEventUseCase: ObserveReviewEventUseCase,
@@ -96,6 +101,7 @@ class CafeViewModel(
                 _uiState.value = CafeUiState(
                     isLoading = false,
                     isLoadingMoreCasts = _uiState.value.isLoadingMoreCasts,
+                    isLoadingMoreNotices = _uiState.value.isLoadingMoreNotices,
                     isLoadingMoreReviews = _uiState.value.isLoadingMoreReviews,
                     errorMessage = null,
                     selectedTab = _uiState.value.selectedTab,
@@ -103,6 +109,9 @@ class CafeViewModel(
                     casts = _uiState.value.casts,
                     castsNextCursor = _uiState.value.castsNextCursor,
                     canLoadMoreCasts = _uiState.value.canLoadMoreCasts,
+                    notices = _uiState.value.notices,
+                    noticesNextCursor = _uiState.value.noticesNextCursor,
+                    canLoadMoreNotices = _uiState.value.canLoadMoreNotices,
                     reviews = result.data.reviews,
                     reviewsNextCursor = result.data.reviewsNextCursor,
                     canLoadMoreReviews = result.data.canLoadMoreReviews,
@@ -110,6 +119,9 @@ class CafeViewModel(
                     isLoggedIn = result.data.isLoggedIn
                 )
                 refreshCastPage()
+                if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
+                    refreshNoticePage()
+                }
                 if (refreshReviews && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                     refreshReviewPage()
                 }
@@ -154,6 +166,40 @@ class CafeViewModel(
         val cursor = currentState.castsNextCursor
         if (currentState.isLoadingMoreCasts || !currentState.canLoadMoreCasts || cursor == null) return
         loadCastPage(cursor = cursor, append = true)
+    }
+
+    private fun loadNoticePage(cursor: String?, append: Boolean) {
+        jobs[JobKey.NOTICE_PAGE]?.cancel()
+        jobs[JobKey.NOTICE_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreNotices = append) }
+
+            when (val result = getCafeNoticePageUseCase.invoke(cafeId = cafeId, query = "", cursor = cursor)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            notices = if (append) state.notices + result.data.items.map(::mapNotice) else result.data.items.map(::mapNotice),
+                            noticesNextCursor = result.data.nextCursor,
+                            canLoadMoreNotices = result.data.hasNext,
+                            isLoadingMoreNotices = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoadingMoreNotices = false) }
+                }
+            }
+        }
+    }
+
+    private fun refreshNoticePage() {
+        loadNoticePage(cursor = null, append = false)
+    }
+
+    private fun loadMoreNotices() {
+        val currentState = _uiState.value
+        val cursor = currentState.noticesNextCursor
+        if (currentState.isLoadingMoreNotices || !currentState.canLoadMoreNotices || cursor == null) return
+        loadNoticePage(cursor = cursor, append = true)
     }
 
     private fun loadReviewPage(cursor: String?, append: Boolean) {
@@ -218,6 +264,9 @@ class CafeViewModel(
                 }
                 is CafeAction.ChangeTab -> {
                     _uiState.update { it.copy(selectedTab = action.tab) }
+                    if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
+                        refreshNoticePage()
+                    }
                     if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
                         refreshReviewPage()
                     }
@@ -233,6 +282,9 @@ class CafeViewModel(
                 }
                 CafeAction.LoadMoreCasts -> {
                     loadMoreCasts()
+                }
+                CafeAction.LoadMoreNotices -> {
+                    loadMoreNotices()
                 }
                 CafeAction.LoadMoreReviews -> {
                     loadMoreReviews()
@@ -256,9 +308,26 @@ class CafeViewModel(
         loadCafeDetail()
     }
 
+    private fun mapNotice(item: CafeNoticeManagementItem): NoticeItem {
+        return NoticeItem(
+            id = item.id,
+            title = item.title,
+            content = item.content,
+            date = item.displayDate,
+            isPinned = item.isPinned,
+            statusLabel = item.statusLabel,
+            statusAccent = when (item.statusAccent) {
+                DomainNoticeStatusAccent.PUBLISHED -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.PUBLISHED
+                DomainNoticeStatusAccent.DRAFT -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.DRAFT
+                DomainNoticeStatusAccent.ENDED -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.ENDED
+            }
+        )
+    }
+
     private enum class JobKey {
         DETAIL,
         CAST_PAGE,
+        NOTICE_PAGE,
         REVIEW_PAGE,
         OBSERVE_DETAIL,
         OBSERVE_REVIEW_EVENT

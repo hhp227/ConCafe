@@ -41,7 +41,7 @@
 - [ ] 랭킹 점수식 확정 (팔로우/리뷰 언급/인증 방문 가중치)
 - [ ] 홈 섹션 우선순위 데이터 기준 확정 (인기/근처/생일/최신 공지)
 - [ ] 리뷰/프로필 이미지 업로드 용량·해상도 정책 확정
-- [ ] `CAST`/`CAFE_OWNER` claim 승인 흐름 확정
+- [x] `CAST` 프로필 연결 claim / `CAFE_OWNER` 운영자 claim 승인 흐름 확정
 
 ## 2. 아키텍처 WBS
 - [ ] 모듈 책임 고정: `composeApp`(UI), `shared`(도메인/유스케이스)
@@ -87,7 +87,7 @@
 - [ ] 평점 평균/리뷰 수 집계 원자적 업데이트
 - [ ] 팔로워 수/랭킹 점수 집계 업데이트
 - [ ] `banned` 사용자 쓰기 차단 검증
-- [ ] `CAFE_OWNER`/`CAST` claim 승인 전 비관리 쓰기 차단 검증
+- [ ] `CAFE_OWNER` claim 승인 전 운영 쓰기 차단 / `CAST` 프로필 연결 전 캐스트 전용 쓰기 차단 검증
 - [ ] 스탬프 적립 중복 방지 검증 (`visitId` 단위)
 
 ## 4. 보안/권한 WBS
@@ -97,7 +97,7 @@
 - [ ] `CAFE_OWNER` 수정 범위 제한 검증 (본인 cafe만)
 - [ ] ADMIN 승인/반려/밴 권한 검증
 - [ ] 승인되지 않은 카페 노출 제한 검증
-- [ ] `castClaims`, `cafeOwnerClaims` 승인 상태별 접근 권한 검증
+- [x] `castClaims`, `cafeOwnerClaims` 승인 상태별 접근 권한 검증
 - [ ] 공지/이벤트 작성 주체 검증 (`CAFE_OWNER` 기본, `CAST` 선택 허용 범위 명시)
 
 ## 5. 기능 구현 WBS (MVP)
@@ -160,8 +160,8 @@
 - [x] `GetCafeManagementUseCase` 기반 카페관리 데이터 로딩 연결
 - [x] `CafeManagementRepository` 추가 및 운영 카페/검색 카페/신청 상태 조합
 - [x] `CafeManagementRepository`가 `ConCafeDataSource`를 원천 데이터로 사용하도록 정리
-- [ ] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
-- [ ] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
+- [x] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
+- [x] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
 - [ ] 카페 설정 내 외부 링크 관리 섹션 제공
 - [ ] 카페 외부 링크 CRUD(`cafes/{cafeId}/externalLinks`)
 - [ ] 캐스트 외부 링크 CRUD(`cafes/{cafeId}/casts/{castId}/externalLinks`)
@@ -181,6 +181,11 @@
 - [x] 수정 모드 초기값은 `GetCastDetailUseCase`로 실제 캐스트 상세를 로드
 - [x] `캐스트 프로필 추가/수정` 저장은 `UpsertCastUseCase`를 통해 처리
 - [x] 캐스트 이름/컨셉 역할/생일/소개/근무 요일 수정 결과가 KMP shared mock 데이터에 반영됨
+- [x] 팬관리에서 캐스트 프로필 연결 신청 UI 제공
+- [x] 카페 대시보드 캐스트 관리 섹션에서 캐스트 연결 요청 승인/반려 가능
+- [x] 카페 대시보드에서 선택된 캐스트 프로필 삭제 가능
+- [x] 새 카페 등록은 카페 정보 입력 폼 재사용 + `cafeRegistrationClaims` 생성
+- [x] Admin 운영관리에서 기존 카페 운영자 신청 / 신규 카페 등록 신청 승인·반려 가능
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능
@@ -219,7 +224,7 @@
 - [x] 메뉴/굿즈 운영 CRUD(mock shared 데이터 기준)
 - [x] Owner/CAST 공용 `캐스트 프로필 추가/수정` 화면(Android/iOS)
 - [x] 캐스트 프로필 기본 정보 CRUD(mock shared 데이터 기준, 이미지 업로드 제외)
-- [ ] 이벤트 운영 CRUD
+- [x] 이벤트 운영 CRUD(mock shared 데이터 기준)
 - [ ] 광고/상단 고정/수수료 기능
 - [ ] 글로벌 확장(한국→일본) 다국가 운영 정책
 

@@ -45,7 +45,8 @@ class FakeAuthRepository(
         email: String,
         password: String,
         nickname: String,
-        role: UserRole
+        role: UserRole,
+        affiliatedCafeId: String?
     ): User {
         if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
             throw IllegalArgumentException("email/password/nickname is required")
@@ -67,6 +68,9 @@ class FakeAuthRepository(
             createdAt = "2026-03-05T00:00:00Z"
         )
         dataSource.users.add(user)
+        if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+            dataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+        }
         dataSource.currentUserId = user.id
         currentUserFlow.value = user
         return user

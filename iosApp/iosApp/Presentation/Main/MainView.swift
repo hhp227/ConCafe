@@ -72,7 +72,7 @@ struct MainView: View {
             CafeManagementView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("카페관리", systemImage: "storefront.fill") }
         case .adminOperations:
-            AdminOperationsView(title: "운영관리", description: "관리자가 승인, Claim, 신고, 밴 처리를 수행하는 메인 탭입니다.")
+            AdminOperationsView()
                 .tabItem { Label("운영관리", systemImage: "shield.lefthalf.filled") }
         default:
             CheckInView(onNavigationAction: onNavigationAction)

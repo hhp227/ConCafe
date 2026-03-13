@@ -119,6 +119,12 @@ class FakeCastRepository(
         }
     }
 
+    override suspend fun deleteCast(castId: String): Cast {
+        return dataSource.deleteCast(castId).also { deletedCast ->
+            castEvent.tryEmit(CastEvent.Deleted(deletedCast.cafeId, deletedCast.id))
+        }
+    }
+
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
         val castDetail = dataSource.castDetail(castId)
 

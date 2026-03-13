@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
 import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
@@ -58,6 +59,7 @@ fun CafeScreen(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
+                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
                     getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
                     observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
                     observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
@@ -111,6 +113,9 @@ fun CafeContentScreen(
         uiState.casts.size,
         uiState.canLoadMoreCasts,
         uiState.isLoadingMoreCasts,
+        uiState.notices.size,
+        uiState.canLoadMoreNotices,
+        uiState.isLoadingMoreNotices,
         uiState.reviews.size,
         uiState.canLoadMoreReviews,
         uiState.isLoadingMoreReviews
@@ -121,6 +126,7 @@ fun CafeContentScreen(
                 uiState.selectedTab,
                 when (uiState.selectedTab) {
                     CafeUiState.TabType.MAIDS -> uiState.casts.size
+                    CafeUiState.TabType.NOTICES -> uiState.notices.size
                     CafeUiState.TabType.REVIEWS -> uiState.reviews.size
                     else -> 0
                 }
@@ -132,6 +138,11 @@ fun CafeContentScreen(
                         CafeUiState.TabType.MAIDS -> {
                             if (uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
                                 onAction(CafeAction.LoadMoreCasts)
+                            }
+                        }
+                        CafeUiState.TabType.NOTICES -> {
+                            if (uiState.canLoadMoreNotices && !uiState.isLoadingMoreNotices) {
+                                onAction(CafeAction.LoadMoreNotices)
                             }
                         }
                         CafeUiState.TabType.REVIEWS -> {
@@ -457,7 +468,12 @@ private fun CafeTabContent(
             canLoadMore = uiState.canLoadMoreReviews,
             isLoadingMore = uiState.isLoadingMoreReviews
         )
-        CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
+        CafeUiState.TabType.NOTICES -> CafeNoticeScreen(
+            notices = uiState.notices,
+            canLoadMore = uiState.canLoadMoreNotices,
+            isLoadingMore = uiState.isLoadingMoreNotices,
+            onLoadMore = { onAction(CafeAction.LoadMoreNotices) }
+        )
     }
 }
 

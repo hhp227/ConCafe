@@ -17,11 +17,15 @@ class GetCafeDashboardUseCase(
 
             if (currentUser == null) {
                 AppResult.Failure(AppError.Unauthorized)
-            } else if (currentUser.role != UserRole.CAFE_OWNER && currentUser.role != UserRole.ADMIN) {
-                AppResult.Failure(AppError.PermissionDenied)
             } else {
-                val ownerUserId = if (currentUser.role == UserRole.ADMIN) null else currentUser.id
-                AppResult.Success(cafeDashboardRepository.getCafeDashboardData(cafeId, ownerUserId))
+                val canAccess = currentUser.role == UserRole.ADMIN || currentUser.role == UserRole.CAFE_OWNER
+
+                if (!canAccess) {
+                    AppResult.Failure(AppError.PermissionDenied)
+                } else {
+                    val ownerUserId = if (currentUser.role == UserRole.CAFE_OWNER) currentUser.id else null
+                    AppResult.Success(cafeDashboardRepository.getCafeDashboardData(cafeId, ownerUserId))
+                }
             }
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)

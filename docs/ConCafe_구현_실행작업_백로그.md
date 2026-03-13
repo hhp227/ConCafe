@@ -33,7 +33,7 @@
 
 ### A-08. 운영 승인/Claim 흐름 확정
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 산출물: `cafeOwnerClaims`/`castClaims` 상태 전이표 + 승인 주체 규칙서
 - 작업:
   1. 기존 카페 운영자 Claim 흐름 정의
@@ -44,6 +44,12 @@
   - `PENDING/APPROVED/REJECTED` 상태 전이가 문서화된다.
   - `CAFE_OWNER`/`CAST` 권한 상승 조건이 명확하다.
   - 승인 전 데이터 오남용 경로가 없다.
+- 결정사항:
+  1. 기존 카페 운영자 신청은 `cafeOwnerClaims`로 저장하고 Admin이 승인 / 반려한다.
+  2. 신규 카페 등록은 `cafeRegistrationClaims`로 저장하고 Admin 승인 시 실제 카페 문서와 owner 연결을 생성한다.
+  3. 캐스트 프로필 연결은 `castClaims`로 저장하며 신청은 `팬관리`, 승인은 `카페 대시보드 > 캐스트 관리 섹션`에서 처리한다.
+  4. 캐스트는 운영자용 카페 대시보드로 진입하지 않는다.
+  5. claim 생성/승인/반려 후 관련 목록 화면은 explicit event 패턴으로 즉시 갱신한다.
 
 ### A-02. Firebase 보안 정책 초안 확정
 - 우선순위: P0
