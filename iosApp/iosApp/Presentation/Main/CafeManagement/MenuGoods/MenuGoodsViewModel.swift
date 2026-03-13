@@ -334,13 +334,13 @@ final class MenuGoodsViewModel: ObservableObject {
 private extension CafeDetailEvent {
     func matches(cafeId: String) -> Bool {
         switch self {
-        case let event as CafeDetailEventCafeInfoUpdated:
+        case let event as CafeDetailEvent.CafeInfoUpdated:
             return event.cafeId == cafeId
-        case let event as CafeDetailEventMenuGoodsCreated:
+        case let event as CafeDetailEvent.MenuGoodsCreated:
             return event.cafeId == cafeId
-        case let event as CafeDetailEventMenuGoodsUpdated:
+        case let event as CafeDetailEvent.MenuGoodsUpdated:
             return event.cafeId == cafeId
-        case let event as CafeDetailEventMenuGoodsDeleted:
+        case let event as CafeDetailEvent.MenuGoodsDeleted:
             return event.cafeId == cafeId
         default:
             return false

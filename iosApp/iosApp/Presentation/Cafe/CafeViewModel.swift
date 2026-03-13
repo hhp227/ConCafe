@@ -50,13 +50,13 @@ final class CafeViewModel: ObservableObject {
         watchHandles[.reviewEvent]?.cancel()
         watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
             guard let self else { return }
-            if let created = event as? ReviewEventCreated {
+            if let created = event as? ReviewEvent.Created {
                 if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
                     self.event.send(.scrollReviewsToTop)
                     self.loadCafeDetail(refreshReviews: false)
                     self.refreshReviewPage()
                 }
-            } else if let deleted = event as? ReviewEventDeleted {
+            } else if let deleted = event as? ReviewEvent.Deleted {
                 if deleted.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
                     self.loadCafeDetail(refreshReviews: false)
                     self.refreshReviewPage()

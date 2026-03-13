@@ -44,15 +44,15 @@ final class ScheduleViewModel: ObservableObject {
             guard let self else { return }
             Task { @MainActor in
                 switch event {
-                case let event as Shared.CastEventCreated:
+                case let event as Shared.CastEvent.Created:
                     if event.castId == castId {
                         self.loadSchedule()
                     }
-                case let event as Shared.CastEventUpdated:
+                case let event as Shared.CastEvent.Updated:
                     if event.castId == castId {
                         self.loadSchedule()
                     }
-                case let event as Shared.CastEventDeleted:
+                case let event as Shared.CastEvent.Deleted:
                     if event.castId == castId {
                         self.loadSchedule()
                     }
