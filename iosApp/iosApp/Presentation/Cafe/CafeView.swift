@@ -270,7 +270,12 @@ private struct CafeContentView: View {
                 topAnchorId: reviewTopAnchorId
             )
         case .notices:
-            CafeNoticeView(notices: detail.notices)
+            CafeNoticeView(
+                notices: uiState.notices,
+                canLoadMore: uiState.canLoadMoreNotices,
+                isLoadingMore: uiState.isLoadingMoreNotices,
+                onLoadMore: { onAction(.loadMoreNotices) }
+            )
         }
     }
 }

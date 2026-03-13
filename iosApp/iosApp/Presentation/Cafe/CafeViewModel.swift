@@ -17,6 +17,8 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
 
+    private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
+
     private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
 
     private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
@@ -78,12 +80,16 @@ final class CafeViewModel: ObservableObject {
                     uiState = CafeUiState(
                         isLoading: false,
                         isLoadingMoreCasts: uiState.isLoadingMoreCasts,
+                        isLoadingMoreNotices: uiState.isLoadingMoreNotices,
                         errorMessage: nil,
                         selectedTab: uiState.selectedTab,
                         detail: feed.detail,
                         casts: uiState.casts,
                         castsNextCursor: uiState.castsNextCursor,
                         canLoadMoreCasts: uiState.canLoadMoreCasts,
+                        noticesNextCursor: uiState.noticesNextCursor,
+                        canLoadMoreNotices: uiState.canLoadMoreNotices,
+                        notices: uiState.notices,
                         isLoadingMoreReviews: uiState.isLoadingMoreReviews,
                         reviewsNextCursor: feed.reviewsNextCursor,
                         canLoadMoreReviews: feed.canLoadMoreReviews,
@@ -92,6 +98,9 @@ final class CafeViewModel: ObservableObject {
                         isLoggedIn: feed.isLoggedIn
                     )
                     refreshCastPage()
+                    if uiState.selectedTab == .notices, uiState.notices.isEmpty {
+                        refreshNoticePage()
+                    }
                     if refreshReviews, uiState.selectedTab == .reviews {
                         refreshReviewPage()
                     }
@@ -143,6 +152,42 @@ final class CafeViewModel: ObservableObject {
               !uiState.isLoadingMoreCasts,
               let cursor = uiState.castsNextCursor else { return }
         loadCastPage(cursor: cursor, append: true)
+    }
+
+    private func loadNoticePage(cursor: String?, append: Bool) {
+        tasks[.noticePage]?.cancel()
+        tasks[.noticePage] = Task {
+            uiState.isLoadingMoreNotices = append
+
+            do {
+                let result = try await getCafeNoticePageUseCase.invoke(cafeId: self.cafeId, query: "", cursor: cursor, pageSize: 15)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeNoticeManagementItem> {
+                    let items = (page.items as! [CafeNoticeManagementItem]).map(mapNotice)
+                    uiState.notices = append ? (uiState.notices + items) : items
+                    uiState.noticesNextCursor = page.nextCursor
+                    uiState.canLoadMoreNotices = page.hasNext
+                    uiState.isLoadingMoreNotices = false
+                } else {
+                    uiState.isLoadingMoreNotices = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreNotices = false
+            }
+        }
+    }
+
+    private func refreshNoticePage() {
+        loadNoticePage(cursor: nil, append: false)
+    }
+
+    private func loadMoreNotices() {
+        guard uiState.canLoadMoreNotices,
+              !uiState.isLoadingMoreNotices,
+              let cursor = uiState.noticesNextCursor else { return }
+        loadNoticePage(cursor: cursor, append: true)
     }
 
     private func loadReviewPage(cursor: String?, append: Bool) {
@@ -210,6 +255,9 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateBack)
         case .changeTab(let tab):
             uiState.selectedTab = tab
+            if tab == .notices, uiState.notices.isEmpty {
+                refreshNoticePage()
+            }
             if tab == .reviews, uiState.reviews.isEmpty {
                 refreshReviewPage()
             }
@@ -221,6 +269,8 @@ final class CafeViewModel: ObservableObject {
             writeReview()
         case .loadMoreCasts:
             loadMoreCasts()
+        case .loadMoreNotices:
+            loadMoreNotices()
         case .loadMoreReviews:
             loadMoreReviews()
         case .refresh:
@@ -232,6 +282,7 @@ final class CafeViewModel: ObservableObject {
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
         observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
@@ -240,6 +291,7 @@ final class CafeViewModel: ObservableObject {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.observeCafeDetailUseCase = observeCafeDetailUseCase
         self.observeReviewEventUseCase = observeReviewEventUseCase
@@ -260,11 +312,36 @@ final class CafeViewModel: ObservableObject {
     private enum TaskKey {
         case detail
         case castPage
+        case noticePage
         case reviewPage
     }
 
     private enum WatchKey {
         case cafeDetail
         case reviewEvent
+    }
+
+    private func mapNotice(_ item: CafeNoticeManagementItem) -> NoticeItem {
+        let accent: NoticeStatusAccent
+        switch item.statusAccent {
+        case .published:
+            accent = .published
+        case .draft:
+            accent = .draft
+        case .ended:
+            accent = .ended
+        default:
+            accent = .published
+        }
+
+        return NoticeItem(
+            id: item.id,
+            title: item.title,
+            content: item.content,
+            date: item.displayDate,
+            isPinned: item.isPinned,
+            statusLabel: item.statusLabel,
+            statusAccent: accent
+        )
     }
 }

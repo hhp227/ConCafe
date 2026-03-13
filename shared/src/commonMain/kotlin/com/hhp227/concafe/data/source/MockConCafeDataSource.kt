@@ -917,6 +917,12 @@ private fun defaultCastSchedules(castId: String, cafeId: String, workingDays: Li
 }
 
 private fun buildCafeNoticeManagementItems(): List<CafeNoticeManagementItem> {
+    val longNoticeContent = """
+        이번 공지에서는 운영 시간, 입장 대기, 촬영 가능 구역, 주문 마감 시간까지 한 번에 안내드립니다.
+        방문 전 반드시 확인해 주시고, 현장 상황에 따라 일부 운영 방식이 조정될 수 있습니다.
+        원활한 이용을 위해 예약 시간 10분 전 도착과 기본 이용 수칙 준수를 부탁드립니다.
+    """.trimIndent()
+
     val cafe1 = listOf(
         Triple("[필독] 추석 연휴 영업 안내", "2026-03-13T09:00:00Z", true),
         Triple("화이트데이 한정 디저트 출시", "2026-03-12T08:00:00Z", false),
@@ -962,7 +968,7 @@ private fun buildCafeNoticeManagementItems(): List<CafeNoticeManagementItem> {
             id = "cafe-1-notice-${index + 1}",
             cafeId = "cafe-1",
             title = title,
-            content = "$title 관련 상세 운영 안내입니다.",
+            content = if (index in setOf(0, 5, 12, 20, 32)) longNoticeContent else "$title 관련 상세 운영 안내입니다.",
             createdAt = createdAt,
             displayDate = createdAt.take(10).replace("-", "."),
             isPinned = pinned,

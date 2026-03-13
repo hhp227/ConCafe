@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
 import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
 import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
@@ -58,6 +59,7 @@ fun CafeScreen(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
+                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
                     getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
                     observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
                     observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
@@ -457,7 +459,12 @@ private fun CafeTabContent(
             canLoadMore = uiState.canLoadMoreReviews,
             isLoadingMore = uiState.isLoadingMoreReviews
         )
-        CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
+        CafeUiState.TabType.NOTICES -> CafeNoticeScreen(
+            notices = uiState.notices,
+            canLoadMore = uiState.canLoadMoreNotices,
+            isLoadingMore = uiState.isLoadingMoreNotices,
+            onLoadMore = { onAction(CafeAction.LoadMoreNotices) }
+        )
     }
 }
 

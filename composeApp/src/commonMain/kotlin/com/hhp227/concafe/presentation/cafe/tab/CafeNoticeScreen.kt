@@ -4,27 +4,49 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CafeNoticeScreen(notices: List<Notice>) {
+fun CafeNoticeScreen(
+    notices: List<NoticeItem>,
+    canLoadMore: Boolean,
+    isLoadingMore: Boolean,
+    onLoadMore: () -> Unit
+) {
+    var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val expandableNoticeIds = remember(notices) { mutableStateOf(setOf<String>()) }
+
     if (notices.isEmpty()) {
         EmptyContent(text = "등록된 공지가 없습니다.")
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            notices.forEach { notice ->
+            notices.forEachIndexed { index, notice ->
+                if (index == notices.lastIndex) {
+                    LaunchedEffect(notice.id) {
+                        onLoadMore()
+                    }
+                }
                 Card(
+                    onClick = {
+                        if (notice.id in expandableNoticeIds.value) {
+                            expandedNoticeIds = if (notice.id in expandedNoticeIds) {
+                                expandedNoticeIds - notice.id
+                            } else {
+                                expandedNoticeIds + notice.id
+                            }
+                        }
+                    },
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
@@ -44,14 +66,34 @@ fun CafeNoticeScreen(notices: List<Notice>) {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = notice.createdAt.take(10),
+                                text = notice.date,
                                 color = Color(0xFF999999),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
                             text = notice.content,
-                            color = Color(0xFF666666)
+                            color = Color(0xFF666666),
+                            maxLines = if (notice.id in expandedNoticeIds) Int.MAX_VALUE else 3,
+                            overflow = TextOverflow.Ellipsis,
+                            onTextLayout = { layoutResult ->
+                                if (layoutResult.hasVisualOverflow && notice.id !in expandableNoticeIds.value) {
+                                    expandableNoticeIds.value = expandableNoticeIds.value + notice.id
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+            if (canLoadMore || isLoadingMore) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoadingMore) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color(0xFFEF6797)
                         )
                     }
                 }
