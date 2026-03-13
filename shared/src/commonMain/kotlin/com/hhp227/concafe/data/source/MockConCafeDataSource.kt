@@ -12,9 +12,12 @@ import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastClaim
+import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastUpsert
@@ -113,6 +116,33 @@ class MockConCafeDataSource : ConCafeDataSource {
             role = UserRole.VISITOR,
             banned = false,
             createdAt = "2026-03-10T10:20:00Z"
+        ),
+        User(
+            id = "user-9",
+            email = "cast.pending@concafe.app",
+            nickname = "마유",
+            profileImage = null,
+            role = UserRole.CAST,
+            banned = false,
+            createdAt = "2026-03-10T10:30:00Z"
+        ),
+        User(
+            id = "user-10",
+            email = "cast1@concafe.app",
+            nickname = "유메",
+            profileImage = null,
+            role = UserRole.CAST,
+            banned = false,
+            createdAt = "2026-03-13T11:00:00Z"
+        ),
+        User(
+            id = "user-11",
+            email = "owner1@concafe.app",
+            nickname = "카페신청전점장",
+            profileImage = null,
+            role = UserRole.CAFE_OWNER,
+            banned = false,
+            createdAt = "2026-03-14T09:00:00Z"
         )
     )
 
@@ -247,6 +277,19 @@ class MockConCafeDataSource : ConCafeDataSource {
         Cast("maid-5", "cafe-1", "레이", null, null, "생일 위크", "2003-03-05", "maid", 620, 4.6),
         Cast("maid-6", "cafe-3", "미키", null, null, "생일 한정 출근", "2002-03-05", "maid", 540, 4.5),
         *maidHouseAdditionalCasts.toTypedArray()
+    )
+
+    override val castClaims = mutableListOf(
+        CastClaim(
+            id = "cast-claim-1",
+            userId = "user-9",
+            cafeId = "cafe-1",
+            castId = "maid-5",
+            status = CastClaimStatus.PENDING,
+            message = "현재 활동 중인 마유입니다. 레이 프로필과 연결 부탁드려요.",
+            createdAt = "2026-03-12T09:00:00Z",
+            createdAtLabel = "1일 전"
+        )
     )
 
     override val banners = listOf(
@@ -394,27 +437,39 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val dismissedReviewPromptVisitIdsByUser = mutableMapOf<String, MutableSet<String>>()
 
-    override val ownedCafeIdsByUser = mapOf(
-        "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
+    override val ownedCafeIdsByUser = mutableMapOf(
+        "user-3" to mutableListOf("cafe-1", "cafe-2", "cafe-3")
     )
 
-    override val pendingCafeClaimsByUser = mapOf(
-        "user-3" to listOf(
+    override val pendingCafeClaimsByUser = mutableMapOf(
+        "user-3" to mutableListOf(
             CafeManagementData.PendingClaimSummary(
-                cafeName = "Ribbon Cafe Hongdae",
+                claimId = "cafe-claim-1",
+                cafeId = "cafe-4",
+                cafeName = "슈가 드롭",
                 requestedAt = "2026.03.10",
                 status = "승인 대기 중",
                 message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
             )
         ),
-        "user-5" to listOf(
+        "user-5" to mutableListOf(
             CafeManagementData.PendingClaimSummary(
+                claimId = "cafe-claim-2",
+                cafeId = "cafe-2",
                 cafeName = "Pink Castle Sinchon",
                 requestedAt = "2026.03.09",
                 status = "승인 대기 중",
                 message = "기존 카페 운영자 신청이 검토 중입니다"
             )
         )
+    )
+
+    override val pendingCafeRegistrationClaimsByUser = mutableMapOf<String, MutableList<CafeRegistrationClaim>>()
+
+    override val affiliatedCafeIdByUser = mutableMapOf(
+        "user-2" to "cafe-1",
+        "user-9" to "cafe-1",
+        "user-10" to "cafe-1"
     )
 
     override val cafeCheckInCountById = mapOf(
@@ -449,7 +504,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         "cafe-3" to emptySet()
     )
 
-    override val cafeHomeBannerPreviewByCafeId = mapOf(
+    override val cafeHomeBannerPreviewByCafeId = mutableMapOf(
         "cafe-1" to CafeDashboardData.HomeBannerPreview(
             title = "여름 한정 신메뉴 출시!",
             period = "2026.06.01 - 2026.08.31",
@@ -499,6 +554,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         return castVersionState.asStateFlow().map { it[castId] ?: 0 }
     }
 
+    override fun publishCafeDetails() {
+        cafeDetailsState.value = cafeDetailsById.toMap()
+    }
+
     override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         val cafeIndex = cafes.indexOfFirst { it.id == update.cafeId }
         if (cafeIndex == -1) {
@@ -518,7 +577,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
         cafes[cafeIndex] = updatedCafe
         cafeDetailsById[update.cafeId] = updatedDetail
-        cafeDetailsState.value = cafeDetailsById.toMap()
+        publishCafeDetails()
         return updatedDetail
     }
 
@@ -582,7 +641,7 @@ class MockConCafeDataSource : ConCafeDataSource {
             goods = updatedGoods
         )
         cafeDetailsById[update.cafeId] = updatedDetail
-        cafeDetailsState.value = cafeDetailsById.toMap()
+        publishCafeDetails()
         return updatedDetail
     }
 
@@ -601,7 +660,7 @@ class MockConCafeDataSource : ConCafeDataSource {
             goods = updatedGoods
         )
         cafeDetailsById[cafeId] = updatedDetail
-        cafeDetailsState.value = cafeDetailsById.toMap()
+        publishCafeDetails()
         return updatedDetail
     }
 
@@ -828,6 +887,38 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     }
 
+    override fun deleteCast(castId: String): Cast {
+        val castIndex = casts.indexOfFirst { it.id == castId }
+        if (castIndex == -1) {
+            throw NoSuchElementException("cast detail not found")
+        }
+
+        val deletedCast = casts.removeAt(castIndex)
+        castImagesById.remove(castId)
+        castSchedulesByCastId.remove(castId)
+        castClaims.removeAll { it.castId == castId }
+        followedCastIdsByUser.values.forEach { it.remove(castId) }
+        deletedCast.linkedUserId?.let { linkedUserId ->
+            if (!affiliatedCafeIdByUser.containsKey(linkedUserId)) {
+                affiliatedCafeIdByUser[linkedUserId] = deletedCast.cafeId
+            }
+        }
+        cafeDetailsById[deletedCast.cafeId]?.let { currentDetail ->
+            cafeDetailsById[deletedCast.cafeId] = currentDetail.copy(
+                casts = currentDetail.casts.filterNot { it.id == castId }
+            )
+            publishCafeDetails()
+        }
+        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
+            this[deletedCast.cafeId] = (this[deletedCast.cafeId] ?: 0) + 1
+        }
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            this[castId] = (this[castId] ?: 0) + 1
+        }
+
+        return deletedCast
+    }
+
     override fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>) {
         val cafeIndex = cafes.indexOfFirst { it.id == cafeId }
         if (cafeIndex == -1) return
@@ -849,7 +940,7 @@ class MockConCafeDataSource : ConCafeDataSource {
 
         val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(updatedCafe)
         cafeDetailsById[cafeId] = currentDetail.copy(cafe = updatedCafe)
-        cafeDetailsState.value = cafeDetailsById.toMap()
+        publishCafeDetails()
 
         val castIdsToRefresh = linkedSetOf<String>()
         castIdsToRefresh.addAll(taggedCastIds)

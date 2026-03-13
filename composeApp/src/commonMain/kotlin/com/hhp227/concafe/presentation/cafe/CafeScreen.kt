@@ -113,6 +113,9 @@ fun CafeContentScreen(
         uiState.casts.size,
         uiState.canLoadMoreCasts,
         uiState.isLoadingMoreCasts,
+        uiState.notices.size,
+        uiState.canLoadMoreNotices,
+        uiState.isLoadingMoreNotices,
         uiState.reviews.size,
         uiState.canLoadMoreReviews,
         uiState.isLoadingMoreReviews
@@ -123,6 +126,7 @@ fun CafeContentScreen(
                 uiState.selectedTab,
                 when (uiState.selectedTab) {
                     CafeUiState.TabType.MAIDS -> uiState.casts.size
+                    CafeUiState.TabType.NOTICES -> uiState.notices.size
                     CafeUiState.TabType.REVIEWS -> uiState.reviews.size
                     else -> 0
                 }
@@ -134,6 +138,11 @@ fun CafeContentScreen(
                         CafeUiState.TabType.MAIDS -> {
                             if (uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
                                 onAction(CafeAction.LoadMoreCasts)
+                            }
+                        }
+                        CafeUiState.TabType.NOTICES -> {
+                            if (uiState.canLoadMoreNotices && !uiState.isLoadingMoreNotices) {
+                                onAction(CafeAction.LoadMoreNotices)
                             }
                         }
                         CafeUiState.TabType.REVIEWS -> {

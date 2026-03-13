@@ -136,7 +136,8 @@ class SignUpViewModel: ObservableObject {
                     email: uiState.email.trimmingCharacters(in: .whitespacesAndNewlines),
                     password: uiState.password,
                     nickname: resolveNickname(uiState),
-                    role: role
+                    role: role,
+                    affiliatedCafeId: role == .cast ? uiState.selectedCafe?.id : nil
                 )
 
                 if result is AppResultSuccess<AnyObject> {

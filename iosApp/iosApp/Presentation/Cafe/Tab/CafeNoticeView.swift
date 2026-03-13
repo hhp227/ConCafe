@@ -24,7 +24,7 @@ struct CafeNoticeView: View {
         if notices.isEmpty {
             emptyCard("등록된 공지가 없습니다.")
         } else {
-            VStack(spacing: 12) {
+            LazyVStack(spacing: 12) {
                 ForEach(notices, id: \.id) { notice in
                     let isExpandable = isNoticeExpandable(notice.content)
                     VStack(alignment: .leading, spacing: 8) {
@@ -55,11 +55,6 @@ struct CafeNoticeView: View {
                             expandedNoticeIds.insert(notice.id)
                         }
                     }
-                    .onAppear {
-                        if notice.id == notices.last?.id {
-                            onLoadMore()
-                        }
-                    }
                 }
                 if isLoadingMore {
                     ProgressView()
@@ -68,6 +63,9 @@ struct CafeNoticeView: View {
                 } else if canLoadMore {
                     Color.clear
                         .frame(height: 1)
+                        .onAppear {
+                            onLoadMore()
+                        }
                 }
             }
         }

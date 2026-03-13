@@ -53,7 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveCreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
+import com.hhp227.concafe.di.resolveObserveCafeRegistrationClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeManagementData
@@ -66,7 +68,9 @@ fun CafeManagementScreen(
         factory = viewModelFactory {
             initializer {
                 CafeManagementViewModel(
+                    createCafeOwnerClaimUseCase = resolveCreateCafeOwnerClaimUseCase(),
                     getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
+                    observeCafeRegistrationClaimEventUseCase = resolveObserveCafeRegistrationClaimEventUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
                 )
@@ -84,6 +88,9 @@ fun CafeManagementScreen(
                 }
                 is CafeManagementEvent.NavigateToCafe -> {
                     onNavigate(NavigationAction.NavigateToCafe(event.cafeId))
+                }
+                CafeManagementEvent.NavigateToCafeInfoRegistration -> {
+                    onNavigate(NavigationAction.NavigateToCafeInfoEdit(isRegistrationMode = true))
                 }
             }
         }

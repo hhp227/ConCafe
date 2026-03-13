@@ -8,5 +8,11 @@
 import Foundation
 
 enum AdminOperationsAction {
-    
+    case clickNotifications
+    case clickSeeAllPending
+    case selectPendingFilter(PendingFilter)
+    case approvePending(String)
+    case rejectPending(String)
+    case clickQuickMenu(String)
+    case dismissInfoMessage
 }

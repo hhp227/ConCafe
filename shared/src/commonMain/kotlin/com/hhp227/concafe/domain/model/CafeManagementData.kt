@@ -26,6 +26,8 @@ data class CafeManagementData(
     )
 
     data class PendingClaimSummary(
+        val claimId: String,
+        val cafeId: String,
         val cafeName: String,
         val requestedAt: String,
         val status: String,

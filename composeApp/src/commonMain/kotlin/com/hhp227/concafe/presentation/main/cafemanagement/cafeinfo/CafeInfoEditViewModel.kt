@@ -9,22 +9,29 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CafeRegistrationDraft
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.GeoPoint
+import com.hhp227.concafe.domain.model.Region
+import com.hhp227.concafe.domain.usecase.CreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 
 class CafeInfoEditViewModel(
-    private val cafeId: String,
+    private val cafeId: String?,
+    private val isRegistrationMode: Boolean,
+    private val createCafeRegistrationClaimUseCase: CreateCafeRegistrationClaimUseCase,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val updateCafeInfoUseCase: UpdateCafeInfoUseCase
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(CafeInfoEditUiState())
+    private val _uiState = MutableStateFlow(CafeInfoEditUiState(isRegistrationMode = isRegistrationMode))
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CafeInfoEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
     private fun loadCafeInfo() {
+        val targetCafeId = cafeId ?: return
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -32,7 +39,7 @@ class CafeInfoEditViewModel(
             )
         }
         viewModelScope.launch {
-            when (val result = getCafeDetailUseCase.invoke(cafeId)) {
+            when (val result = getCafeDetailUseCase.invoke(targetCafeId)) {
                 is AppResult.Success -> {
                     val detail = result.data.detail
                     val parsedHours = parseBusinessHours(detail.businessHours)
@@ -69,6 +76,12 @@ class CafeInfoEditViewModel(
     }
 
     private fun saveCafeInfo() {
+        if (isRegistrationMode) {
+            submitCafeRegistration()
+            return
+        }
+
+        val targetCafeId = cafeId ?: return
         val currentState = _uiState.value
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
 
@@ -76,7 +89,7 @@ class CafeInfoEditViewModel(
             when (
                 val result = updateCafeInfoUseCase.invoke(
                     CafeInfoUpdate(
-                        cafeId = cafeId,
+                        cafeId = targetCafeId,
                         name = currentState.cafeName,
                         description = currentState.cafeDescription,
                         address = currentState.address,
@@ -109,7 +122,7 @@ class CafeInfoEditViewModel(
                             infoMessage = null
                         )
                     }
-                    _event.emit(CafeInfoEvent.ShowSaveSuccessMessage)
+                    _event.emit(CafeInfoEvent.NavigateBack)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
@@ -120,6 +133,61 @@ class CafeInfoEditViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private fun submitCafeRegistration() {
+        val currentState = _uiState.value
+        _uiState.update { it.copy(isSaving = true, infoMessage = null) }
+
+        viewModelScope.launch {
+            when (
+                val result = createCafeRegistrationClaimUseCase.invoke(
+                    CafeRegistrationDraft(
+                        name = currentState.cafeName.trim(),
+                        description = currentState.cafeDescription.trim(),
+                        region = Region(
+                            country = "KR",
+                            city = "Seoul",
+                            address = currentState.address.trim(),
+                            location = GeoPoint(37.5665, 126.9780)
+                        ),
+                        thumbnailImage = currentState.representativeImageUrl,
+                        conceptType = "MAID",
+                        businessHours = formatBusinessHours(currentState),
+                        phoneNumber = currentState.contactNumber.trim()
+                    )
+                )
+            ) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(isSaving = false, infoMessage = null) }
+                    _event.emit(CafeInfoEvent.NavigateBack)
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun formatBusinessHours(state: CafeInfoEditUiState): String {
+        val weekday = listOf(state.weekdayOpen, state.weekdayClose).all { it.isNotBlank() }
+        val weekend = listOf(state.weekendOpen, state.weekendClose).all { it.isNotBlank() }
+        return when {
+            weekday && weekend && state.weekdayOpen == state.weekendOpen && state.weekdayClose == state.weekendClose ->
+                "매일 ${state.weekdayOpen} - ${state.weekdayClose}"
+            weekday && weekend ->
+                "평일 ${state.weekdayOpen} - ${state.weekdayClose} / 주말 ${state.weekendOpen} - ${state.weekendClose}"
+            weekday ->
+                "평일 ${state.weekdayOpen} - ${state.weekdayClose}"
+            weekend ->
+                "주말 ${state.weekendOpen} - ${state.weekendClose}"
+            else -> ""
         }
     }
 
@@ -170,6 +238,10 @@ class CafeInfoEditViewModel(
     )
 
     init {
-        loadCafeInfo()
+        if (isRegistrationMode) {
+            _uiState.update { it.copy(isLoading = false, infoMessage = null) }
+        } else {
+            loadCafeInfo()
+        }
     }
 }

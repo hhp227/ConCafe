@@ -38,7 +38,14 @@ class NavigationViewModel : ViewModel() {
                     _event.emit(NavigateTo(CafeDashboard(action.id)))
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
-                    _event.emit(NavigateTo(CafeInfoEdit(action.id)))
+                    _event.emit(
+                        NavigateTo(
+                            CafeInfoEdit(
+                                param = action.id,
+                                isRegistrationMode = action.isRegistrationMode
+                            )
+                        )
+                    )
                 }
                 is NavigationAction.NavigateToNoticeEvent -> {
                     _event.emit(NavigateTo(NoticeEvent(action.id)))

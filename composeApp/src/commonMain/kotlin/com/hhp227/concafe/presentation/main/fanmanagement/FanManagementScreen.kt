@@ -31,12 +31,16 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,12 +60,14 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FanManagementScreen(
     onNavigationAction: (NavigationAction) -> Unit,
     viewModel: FanManagementViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val claimSheet = uiState.castClaimSheet
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
@@ -90,6 +96,21 @@ fun FanManagementScreen(
             uiState = uiState,
             onAction = viewModel::onAction
         )
+        if (uiState.isClaimSheetVisible && claimSheet != null) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.onAction(FanManagementAction.DismissClaimSheet) },
+                sheetState = sheetState
+            ) {
+                CastClaimSheet(
+                    sheet = claimSheet,
+                    onSelect = { viewModel.onAction(FanManagementAction.SelectClaimCandidate(it)) },
+                    onSubmit = { viewModel.onAction(FanManagementAction.SubmitCastClaim) },
+                    onDismiss = { viewModel.onAction(FanManagementAction.DismissClaimSheet) }
+                )
+            }
+        }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -122,7 +143,7 @@ private fun FanManagementContentScreen(
             uiState.isLoading -> {
                 LoadingState()
             }
-            uiState.fanManagementData == null -> {
+            uiState.fanManagementData == null && uiState.castClaimStatus == null -> {
                 EmptySectionCard(message = uiState.errorMessage ?: "로그인한 캐스트 정보를 찾을 수 없습니다.")
             }
             else -> Unit
@@ -131,6 +152,12 @@ private fun FanManagementContentScreen(
             InfoBanner(
                 message = uiState.infoMessage,
                 onDismiss = { onAction(FanManagementAction.DismissInfoMessage) }
+            )
+        }
+        uiState.castClaimStatus?.let { status ->
+            CastClaimStatusCard(
+                status = status,
+                onClick = { onAction(FanManagementAction.ClickClaimProfile) }
             )
         }
         PrimaryAnnouncementButton(
@@ -151,6 +178,73 @@ private fun FanManagementContentScreen(
             onFanClick = { onAction(FanManagementAction.ClickTopFan(it)) }
         )
         Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun CastClaimStatusCard(
+    status: FanManagementUiState.CastClaimStatusCard,
+    onClick: () -> Unit
+) {
+    val accent = when (status.accent) {
+        FanManagementUiState.Accent.PENDING -> Color(0xFFFFD1DC)
+        FanManagementUiState.Accent.LINKED -> Color(0xFFEAF8EF)
+        FanManagementUiState.Accent.REJECTED -> Color(0xFFF8E9EE)
+    }
+    val contentColor = when (status.accent) {
+        FanManagementUiState.Accent.PENDING -> Color(0xFF6B3050)
+        FanManagementUiState.Accent.LINKED -> Color(0xFF2E8B57)
+        FanManagementUiState.Accent.REJECTED -> Color(0xFF8B4A5A)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(999.dp),
+                color = accent
+            ) {
+                Text(
+                    text = status.affiliatedCafeName,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = contentColor,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = status.headline,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF24161E)
+            )
+            Text(
+                text = status.body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6C6270)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "프로필 연결 상태 보기",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFEF6797)
+                )
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFEF6797))
+            }
+        }
     }
 }
 
@@ -405,10 +499,12 @@ private fun QuickActionGrid(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        listOf(FanManagementUiState.QuickAction.WORK_SCHEDULE).forEach { quickAction ->
+        FanManagementUiState.QuickAction.entries.forEach { quickAction ->
             val icon = when (quickAction) {
                 FanManagementUiState.QuickAction.WORK_SCHEDULE -> Icons.Default.CalendarMonth
+                FanManagementUiState.QuickAction.CAFE_DASHBOARD -> Icons.Default.Storefront
             }
+
             Surface(
                 modifier = Modifier
                     .weight(1f)
@@ -453,8 +549,75 @@ private fun QuickActionGrid(
                     }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
         }
+    }
+}
+
+@Composable
+private fun CastClaimSheet(
+    sheet: FanManagementUiState.CastClaimSheet,
+    onSelect: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+            }
+            TextButton(onClick = onDismiss) {
+                Text("닫기")
+            }
+        }
+        Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
+        if (sheet.requestableCasts.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                sheet.requestableCasts.forEach { candidate ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(candidate.id) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                    ) {
+                        Text(
+                            text = candidate.name,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF24161E)
+                        )
+                    }
+                }
+            }
+        }
+        if (sheet.canSubmit) {
+            ElevatedButton(
+                onClick = onSubmit,
+                enabled = !sheet.isSubmitting,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 14.dp),
+                colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
+                    containerColor = Color(0xFFFFD1DC),
+                    contentColor = Color(0xFF24161E)
+                )
+            ) {
+                Text(if (sheet.isSubmitting) "요청 보내는 중..." else "연결 요청 보내기", fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

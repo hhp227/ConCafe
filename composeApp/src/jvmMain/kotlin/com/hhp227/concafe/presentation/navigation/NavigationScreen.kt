@@ -177,6 +177,7 @@ private fun DetailRoutePane(
         is Route.CafeInfoEdit -> {
             CafeInfoEditScreen(
                 cafeId = route.param,
+                isRegistrationMode = route.isRegistrationMode,
                 onNavigationAction = onNavigationAction
             )
         }
