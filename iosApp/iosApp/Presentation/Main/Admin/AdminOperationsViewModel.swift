@@ -25,7 +25,7 @@ final class AdminOperationsViewModel: ObservableObject {
     private let rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase
 
     private func loadPendingRequests() {
-        Task {
+        Task { @MainActor in
             do {
                 async let registrationResult = getPendingCafeRegistrationClaimsUseCase.invoke()
                 async let roleClaimResult = getPendingCafeOwnerClaimsUseCase.invoke()
@@ -64,7 +64,7 @@ final class AdminOperationsViewModel: ObservableObject {
     private func handlePendingResult(id: String, approved: Bool) {
         guard let request = uiState.pendingRequests.first(where: { $0.id == id }) else { return }
 
-        Task {
+        Task { @MainActor in
             do {
                 let result: AppResult
                 switch request.type {
