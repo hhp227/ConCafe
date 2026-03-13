@@ -11,17 +11,18 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.di.resolveGetFanManagementDataUseCase
-import com.hhp227.concafe.di.resolveObserveCastVersionUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class FanManagementViewModel(
     private val getFanManagementDataUseCase: GetFanManagementDataUseCase = resolveGetFanManagementDataUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
-    private val observeCastVersionUseCase: ObserveCastVersionUseCase = resolveObserveCastVersionUseCase()
+    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FanManagementUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -35,28 +36,47 @@ class FanManagementViewModel(
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
-                unbindCastVersion()
+                unbindCastEvent()
                 loadFanManagement()
             }
         }
     }
 
-    private fun bindCastVersion(castId: String) {
-        jobs[TaskKey.OBSERVE_CAST_VERSION]?.cancel()
-        jobs[TaskKey.OBSERVE_CAST_VERSION] = viewModelScope.launch {
-            var isInitialEmission = true
-            observeCastVersionUseCase.invoke(castId).collectLatest {
-                if (isInitialEmission) {
-                    isInitialEmission = false
-                    return@collectLatest
+    private fun bindCastEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
+                        loadFanManagement()
+                    }
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            val currentData = state.fanManagementData ?: return@update state
+                            state.copy(
+                                fanManagementData = currentData.copy(
+                                    detail = currentData.detail.copy(cast = event.cast)
+                                ),
+                                stats = state.stats.map { card ->
+                                    if (card.label == "평점") {
+                                        card.copy(value = event.cast.rating.toOneDecimalString())
+                                    } else {
+                                        card
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    is CastDomainEvent.Deleted -> if (event.castId == castId) {
+                        loadFanManagement()
+                    }
                 }
-                loadFanManagement()
             }
         }
     }
 
-    private fun unbindCastVersion() {
-        jobs.remove(TaskKey.OBSERVE_CAST_VERSION)?.cancel()
+    private fun unbindCastEvent() {
+        jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
     }
 
     private fun setInfoMessage(message: String) {
@@ -77,7 +97,7 @@ class FanManagementViewModel(
                     val data = result.data
                     val detail = data.detail
                     val cast = detail.cast
-                    bindCastVersion(cast.id)
+                    bindCastEvent(cast.id)
                     _uiState.value = FanManagementUiState(
                         isLoading = false,
                         errorMessage = null,
@@ -117,7 +137,7 @@ class FanManagementViewModel(
                     )
                 }
                 is AppResult.Failure -> {
-                    unbindCastVersion()
+                    unbindCastEvent()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -200,5 +220,5 @@ private fun Double.toOneDecimalString(): String {
 
 private enum class TaskKey {
     OBSERVE_SESSION,
-    OBSERVE_CAST_VERSION
+    OBSERVE_CAST_EVENT
 }

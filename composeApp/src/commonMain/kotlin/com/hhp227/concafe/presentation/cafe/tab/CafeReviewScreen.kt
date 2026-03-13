@@ -20,7 +20,12 @@ import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.presentation.component.colorFromHex
 
 @Composable
-fun CafeReviewScreen(detail: CafeDetail, reviews: List<CafeDetailReview>) {
+fun CafeReviewScreen(
+    detail: CafeDetail,
+    reviews: List<CafeDetailReview>,
+    canLoadMore: Boolean,
+    isLoadingMore: Boolean
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -121,8 +126,49 @@ fun CafeReviewScreen(detail: CafeDetail, reviews: List<CafeDetailReview>) {
                                 )
                             }
                         }
+                        if (review.taggedCastNames.isNotEmpty()) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                review.taggedCastNames.forEach { castName ->
+                                    Text(
+                                        text = castName,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(Color(0x1AFFD1DC))
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                        color = colorFromHex("C9527E"),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                        }
                         Text(text = review.content)
                     }
+                }
+            }
+            if (isLoadingMore) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            } else if (canLoadMore) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "스크롤하면 더 불러옵니다.",
+                        color = Color(0xFF999999),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }

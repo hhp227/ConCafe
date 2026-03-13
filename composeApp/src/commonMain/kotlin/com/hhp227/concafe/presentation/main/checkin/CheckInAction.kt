@@ -15,6 +15,10 @@ sealed interface CheckInAction {
 
     data object DismissNewVisitSheet : CheckInAction
 
+    data object DismissReviewPrompt : CheckInAction
+
+    data object ClickWriteReviewPrompt : CheckInAction
+
     data class SubmitNewVisit(
         val cafeId: String,
         val visitedAt: String,

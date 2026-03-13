@@ -13,27 +13,38 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
+    private let reviewTopAnchorId = "CAFE_REVIEW_TOP"
+
     var body: some View {
-        CafeContentView(
-            uiState: viewModel.uiState,
-            onAction: viewModel.onAction
-        )
-        .navigationBarTitleDisplayMode(.inline)
-        .onReceive(viewModel.event) { event in
-            switch event {
-            case .navigateBack:
-                onNavigationAction(.navigateBack)
-            case .navigateToCast(let id):
-                onNavigationAction(.navigateToCast(id: id))
-            case .navigateToSignIn:
-                onNavigationAction(.navigateToSignIn)
+        ScrollViewReader { proxy in
+            CafeContentView(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction,
+                reviewTopAnchorId: reviewTopAnchorId
+            )
+            .navigationBarTitleDisplayMode(.inline)
+            .onReceive(viewModel.event) { event in
+                switch event {
+                case .navigateBack:
+                    onNavigationAction(.navigateBack)
+                case .navigateToCast(let id):
+                    onNavigationAction(.navigateToCast(id: id))
+                case .navigateToReviewEdit(let cafeId):
+                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+                case .navigateToSignIn:
+                    onNavigationAction(.navigateToSignIn)
+                case .scrollReviewsToTop:
+                    withAnimation {
+                        proxy.scrollTo(reviewTopAnchorId, anchor: .top)
+                    }
+                }
             }
         }
     }
 
     init(
-    cafeId: String,
-    onNavigationAction: @escaping (NavigationAction) -> Void
+        cafeId: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
@@ -45,18 +56,27 @@ private struct CafeContentView: View {
 
     let onAction: (CafeAction) -> Void
 
+    let reviewTopAnchorId: String
+
     @State private var scrollOffset: CGFloat = 0
 
     var body: some View {
         GeometryReader { proxy in
-            ScrollView {
-                offsetReader
-                content(topSafeArea: proxy.safeAreaInsets.top)
-            }
-            .coordinateSpace(name: "cafeScroll")
-            .background(Color(hex: "FFF9FC"))
-            .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
-                scrollOffset = value
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    offsetReader
+                    content(topSafeArea: proxy.safeAreaInsets.top)
+                }
+                .coordinateSpace(name: "cafeScroll")
+                .background(Color(hex: "FFF9FC"))
+                .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
+                    scrollOffset = value
+                }
+                if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
+                    writeReviewButton
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 24)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -70,6 +90,25 @@ private struct CafeContentView: View {
                 }
             }
         }
+    }
+
+    private var writeReviewButton: some View {
+        Button {
+            onAction(.writeReviewTapped)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                Text("리뷰 작성")
+                    .font(.subheadline.weight(.bold))
+            }
+            .foregroundStyle(Color(hex: "2B2330"))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(Color(hex: "FFD1DC"))
+            .clipShape(Capsule())
+            .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+        }
+        .buttonStyle(.plain)
     }
 
     private var offsetReader: some View {
@@ -222,7 +261,14 @@ private struct CafeContentView: View {
         case .menu:
             CafeMenuView(menus: detail.menus)
         case .reviews:
-            CafeReviewView(detail: detail, reviews: uiState.reviews)
+            CafeReviewView(
+                detail: detail,
+                reviews: uiState.reviews,
+                canLoadMore: uiState.canLoadMoreReviews,
+                isLoadingMore: uiState.isLoadingMoreReviews,
+                onLoadMore: { onAction(.loadMoreReviews) },
+                topAnchorId: reviewTopAnchorId
+            )
         case .notices:
             CafeNoticeView(notices: detail.notices)
         }

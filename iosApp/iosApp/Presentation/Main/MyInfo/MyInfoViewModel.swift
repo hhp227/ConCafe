@@ -13,6 +13,10 @@ import Shared
 final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
 
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = MyInfoUiState.empty
@@ -21,14 +25,44 @@ final class MyInfoViewModel: ObservableObject {
 
     private var loadTask: Task<Void, Never>?
 
-    private var sessionWatchHandle: WatchHandle?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+        watchHandles[.session]?.cancel()
+        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
 
             Task { @MainActor in
                 self.loadMyInfo()
+            }
+        }
+    }
+
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafe(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func observeCastEvent() {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let updated as Shared.CastEvent.Updated:
+                    self.patchCast(updated.cast)
+                case let deleted as Shared.CastEvent.Deleted:
+                    self.removeCast(deleted.castId)
+                default:
+                    break
+                }
             }
         }
     }
@@ -72,6 +106,55 @@ final class MyInfoViewModel: ObservableObject {
         }
     }
 
+    private func patchCafe(_ cafe: Cafe) {
+        uiState.ownedCafes = uiState.ownedCafes.map { item in
+            guard item.id == cafe.id else { return item }
+            return CafeManagementData.OwnedCafeSummary(
+                id: item.id,
+                name: cafe.name,
+                city: cafe.region.city,
+                isApproved: item.isApproved,
+                todayVisitors: item.todayVisitors,
+                todayCheckIns: item.todayCheckIns,
+                todayReviews: item.todayReviews,
+                rating: cafe.ratingAvg,
+                castCount: item.castCount,
+                noticeCount: item.noticeCount,
+                externalLinkCount: item.externalLinkCount
+            )
+        }
+        uiState.popularCafes = uiState.popularCafes.map { $0.id == cafe.id ? cafe : $0 }
+        uiState.recentVisits = uiState.recentVisits.map { $0.id == cafe.id ? cafe : $0 }
+        uiState.favorites = uiState.favorites.map { $0.id == cafe.id ? cafe : $0 }
+        if let detail = uiState.castDetail, detail.cafe.id == cafe.id {
+            uiState.castDetail = CastDetail(
+                cast: detail.cast,
+                cafe: cafe,
+                images: detail.images,
+                schedule: detail.schedule
+            )
+        }
+    }
+
+    private func patchCast(_ cast: Cast) {
+        uiState.followedMaids = uiState.followedMaids.map { $0.id == cast.id ? cast : $0 }
+        if let detail = uiState.castDetail, detail.cast.id == cast.id {
+            uiState.castDetail = CastDetail(
+                cast: cast,
+                cafe: detail.cafe,
+                images: detail.images,
+                schedule: detail.schedule
+            )
+        }
+    }
+
+    private func removeCast(_ castId: String) {
+        uiState.followedMaids.removeAll { $0.id == castId }
+        if uiState.castDetail?.cast.id == castId {
+            uiState.castDetail = nil
+        }
+    }
+
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
@@ -87,16 +170,29 @@ final class MyInfoViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
+        observeCafeDetailEvent()
+        observeCastEvent()
     }
 
     deinit {
         loadTask?.cancel()
-        sessionWatchHandle?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum WatchKey {
+        case session
+        case cafeDetailEvent
+        case castEvent
     }
 }

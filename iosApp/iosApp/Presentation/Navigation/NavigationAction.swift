@@ -17,6 +17,7 @@ enum NavigationAction {
     case navigateToSchedule(castId: String? = nil)
     case navigateToMenuGoods(id: String)
     case navigateToMenuGoodsEdit(cafeId: String, itemId: String? = nil)
+    case navigateToReviewEdit(cafeId: String)
     case navigateToSignIn
     case navigateToSignUp
     case navigateToNotification

@@ -13,7 +13,9 @@ import Shared
 final class MenuGoodsViewModel: ObservableObject {
     private let cafeId: String
 
-    private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
+    private let getCafeDetailUseCase: GetCafeDetailUseCase
+
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 
@@ -21,35 +23,151 @@ final class MenuGoodsViewModel: ObservableObject {
 
     let event = PassthroughSubject<MenuGoodsEvent, Never>()
 
-    private var cafeDetailWatchHandle: WatchHandle?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private var deleteTask: Task<Void, Never>?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadMenuGoods() {
+        tasks[.load]?.cancel()
         uiState.isLoading = true
         uiState.infoMessage = nil
 
-        cafeDetailWatchHandle?.cancel()
-        cafeDetailWatchHandle = observeCafeDetailUseCase.watch(cafeId: cafeId) { [weak self] detail in
+        tasks[.load] = Task { [weak self] in
             guard let self else { return }
 
-            let menuItems = detail.menus.enumerated().map { index, menu in
-                self.mapMenuToManageItem(menu, index: index)
+            do {
+                let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? CafeDetailFeed {
+                    applyDetail(feed.detail)
+                } else {
+                    uiState.isLoading = false
+                    uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
             }
-            let goodsItems = detail.goods.enumerated().map { index, goods in
-                self.mapGoodsToManageItem(goods, index: index)
-            }
-
-            var nextState = self.uiState
-            nextState.cafeName = detail.cafe.name
-            nextState.isLoading = false
-            nextState.menuCategories = self.buildMenuCategories(items: menuItems)
-            nextState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
-            nextState.menuItems = menuItems
-            nextState.goodsItems = goodsItems
-            nextState.infoMessage = nil
-            self.uiState = nextState
         }
+    }
+
+    private func observeCafeDetailEvent() {
+        watchHandles[.detailEvent]?.cancel()
+        watchHandles[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+
+            Task { @MainActor in
+                switch event {
+                case let event as CafeDetailEvent.CafeInfoUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.MenuCreated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.MenuUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.upsertLocalMenu(event.menu)
+                    }
+                case let event as CafeDetailEvent.MenuDeleted:
+                    if event.cafeId == self.cafeId {
+                        self.removeLocalMenu(itemId: event.itemId)
+                    }
+                case let event as CafeDetailEvent.GoodsCreated:
+                    if event.cafeId == self.cafeId {
+                        self.loadMenuGoods()
+                    }
+                case let event as CafeDetailEvent.GoodsUpdated:
+                    if event.cafeId == self.cafeId {
+                        self.upsertLocalGoods(event.goods)
+                    }
+                case let event as CafeDetailEvent.GoodsDeleted:
+                    if event.cafeId == self.cafeId {
+                        self.removeLocalGoods(itemId: event.itemId)
+                    }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func applyDetail(_ detail: CafeDetail) {
+        let menuItems = detail.menus.enumerated().map { index, menu in
+            self.mapMenuToManageItem(menu, index: index)
+        }
+        let goodsItems = detail.goods.enumerated().map { index, goods in
+            self.mapGoodsToManageItem(goods, index: index)
+        }
+
+        var nextState = self.uiState
+        nextState.cafeName = detail.cafe.name
+        nextState.isLoading = false
+        nextState.menuCategories = self.buildMenuCategories(items: menuItems)
+        nextState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
+        nextState.menuItems = menuItems
+        nextState.goodsItems = goodsItems
+        nextState.infoMessage = nil
+        self.uiState = nextState
+    }
+
+    private func upsertLocalMenu(_ menu: CafeMenu) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != menu.id } + [mapMenuToManageItem(menu, index: nextState.menuItems.count)]
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != menu.id }
+
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.menuItems = nextMenuItems
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == menu.id {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func upsertLocalGoods(_ goods: Goods) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != goods.id }
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != goods.id } + [mapGoodsToManageItem(goods, index: nextState.goodsItems.count)]
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.menuItems = nextMenuItems
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == goods.id {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func removeLocalMenu(itemId: String) {
+        var nextState = uiState
+        let nextMenuItems = nextState.menuItems.filter { $0.id != itemId }
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextState.goodsItems)
+        nextState.menuItems = nextMenuItems
+        if nextState.pendingDeleteItem?.id == itemId {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
+    }
+
+    private func removeLocalGoods(itemId: String) {
+        var nextState = uiState
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != itemId }
+        nextState.isLoading = false
+        nextState.menuCategories = buildMenuCategories(items: nextState.menuItems)
+        nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
+        nextState.goodsItems = nextGoodsItems
+        if nextState.pendingDeleteItem?.id == itemId {
+            nextState.pendingDeleteItem = nil
+        }
+        uiState = nextState
     }
 
     private func toggleSearch() {
@@ -117,8 +235,8 @@ final class MenuGoodsViewModel: ObservableObject {
     private func confirmDeleteItem(_ itemId: String) {
         uiState.infoMessage = nil
         uiState.pendingDeleteItem = nil
-        deleteTask?.cancel()
-        deleteTask = Task { [weak self] in
+        tasks[.delete]?.cancel()
+        tasks[.delete] = Task { [weak self] in
             guard let self else { return }
 
             do {
@@ -271,18 +389,32 @@ final class MenuGoodsViewModel: ObservableObject {
 
     init(
         cafeId: String,
-        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
+        getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase()
     ) {
         self.cafeId = cafeId
-        self.observeCafeDetailUseCase = observeCafeDetailUseCase
+        self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
 
+        observeCafeDetailEvent()
         loadMenuGoods()
     }
 
     deinit {
-        cafeDetailWatchHandle?.cancel()
-        deleteTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum TaskKey {
+        case load
+        case delete
+    }
+
+    private enum WatchKey {
+        case detailEvent
     }
 }

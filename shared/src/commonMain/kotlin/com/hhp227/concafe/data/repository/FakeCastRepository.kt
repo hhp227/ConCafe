@@ -1,11 +1,13 @@
 package com.hhp227.concafe.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastSort
@@ -16,6 +18,15 @@ import com.hhp227.concafe.domain.repository.CastRepository
 class FakeCastRepository(
     private val dataSource: ConCafeDataSource
 ) : CastRepository {
+    private val castEvent = MutableSharedFlow<CastEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+
+    override fun observeCastEvent(): Flow<CastEvent> {
+        return castEvent
+    }
+
     override suspend fun searchCasts(
         query: String?,
         country: String?,
@@ -97,7 +108,15 @@ class FakeCastRepository(
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        return dataSource.upsertCast(update)
+        val isCreate = update.castId.isNullOrBlank()
+        return dataSource.upsertCast(update).also { detail ->
+            val event = if (isCreate) {
+                CastEvent.Created(detail.cast.cafeId, detail.cast)
+            } else {
+                CastEvent.Updated(detail.cast.cafeId, detail.cast)
+            }
+            castEvent.tryEmit(event)
+        }
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {

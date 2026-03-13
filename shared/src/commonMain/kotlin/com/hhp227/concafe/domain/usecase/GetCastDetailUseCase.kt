@@ -20,16 +20,28 @@ class GetCastDetailUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
             val detail = normalizeDetail(castRepository.getCastDetail(castId))
+            val cafeCasts = castRepository.getCafeCastListPage(
+                cafeId = detail.cafe.id,
+                cursor = null,
+                pageSize = 50
+            ).items.map { it.cast }
             val recentReviews = reviewRepository.getCafeReviews(
                 cafeId = detail.cafe.id,
                 cursor = null,
-                pageSize = 3
-            ).items.map { review ->
+                pageSize = 20
+            ).items.filter { review ->
+                review.taggedCastIds.contains(castId)
+            }.take(3).map { review ->
                 val user = userRepository.getUser(review.userId)
-                CastRecentReview(
+                val taggedCastNames = cafeCasts
+                    .filter { cast -> review.taggedCastIds.contains(cast.id) }
+                    .map { cast -> cast.name }
+                return@map CastRecentReview(
                     id = review.id,
                     userNickname = user.nickname,
+                    rating = review.rating,
                     content = review.content,
+                    taggedCastNames = taggedCastNames,
                     createdDateLabel = review.createdAt.toRelativeDateLabel()
                 )
             }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -34,6 +35,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
+import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
 import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
@@ -54,6 +58,9 @@ fun CafeScreen(
                     cafeId = cafeId,
                     getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
                     getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
+                    getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
+                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
+                    observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
                     toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
                 )
             }
@@ -61,19 +68,25 @@ fun CafeScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
                 CafeEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CafeEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
+                is CafeEvent.NavigateToReviewEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                CafeEvent.ScrollReviewsToTop -> listState.animateScrollToItem(3)
             }
         }
     }
     CafeContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction
+        onAction = viewModel::onAction,
+        listState = listState
     )
 }
 
@@ -81,9 +94,9 @@ fun CafeScreen(
 @Composable
 fun CafeContentScreen(
     uiState: CafeUiState,
-    onAction: (CafeAction) -> Unit
+    onAction: (CafeAction) -> Unit,
+    listState: LazyListState
 ) {
-    val listState = rememberLazyListState()
     val isTopBarVisible = uiState.detail != null && (
             listState.firstVisibleItemIndex > 1 ||
                     (listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 1 }?.offset
@@ -97,14 +110,37 @@ fun CafeContentScreen(
         uiState.selectedTab,
         uiState.casts.size,
         uiState.canLoadMoreCasts,
-        uiState.isLoadingMoreCasts
+        uiState.isLoadingMoreCasts,
+        uiState.reviews.size,
+        uiState.canLoadMoreReviews,
+        uiState.isLoadingMoreReviews
     ) {
-        if (uiState.selectedTab != CafeUiState.TabType.MAIDS) return@LaunchedEffect
-        snapshotFlow { listState.canScrollForward to uiState.casts.size }
-            .distinctUntilChanged()
-            .collect { (canScrollForward, _) ->
-                if (!canScrollForward && uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
-                    onAction(CafeAction.LoadMoreCasts)
+        snapshotFlow {
+            Triple(
+                listState.canScrollForward,
+                uiState.selectedTab,
+                when (uiState.selectedTab) {
+                    CafeUiState.TabType.MAIDS -> uiState.casts.size
+                    CafeUiState.TabType.REVIEWS -> uiState.reviews.size
+                    else -> 0
+                }
+            )
+        }.distinctUntilChanged()
+            .collect { (canScrollForward, _, _) ->
+                if (!canScrollForward) {
+                    when (uiState.selectedTab) {
+                        CafeUiState.TabType.MAIDS -> {
+                            if (uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
+                                onAction(CafeAction.LoadMoreCasts)
+                            }
+                        }
+                        CafeUiState.TabType.REVIEWS -> {
+                            if (uiState.canLoadMoreReviews && !uiState.isLoadingMoreReviews) {
+                                onAction(CafeAction.LoadMoreReviews)
+                            }
+                        }
+                        else -> Unit
+                    }
                 }
             }
     }
@@ -149,6 +185,24 @@ fun CafeContentScreen(
                     actionIconContentColor = if (isTopBarVisible) Color(0xFF222222) else Color.White
                 )
             )
+        },
+        floatingActionButton = {
+            if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null && uiState.isLoggedIn) {
+                ExtendedFloatingActionButton(
+                    onClick = { onAction(CafeAction.ClickWriteReview) },
+                    containerColor = Color(0xFFFFD1DC),
+                    contentColor = Color(0xFF2B2330),
+                    text = {
+                        Text(
+                            text = "리뷰 작성",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    icon = {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         val topBarInset = innerPadding.calculateTopPadding()
@@ -397,7 +451,12 @@ private fun CafeTabContent(
             onAction = onAction
         )
         CafeUiState.TabType.MENU -> CafeMenuScreen(detail.menus)
-        CafeUiState.TabType.REVIEWS -> CafeReviewScreen(detail, uiState.reviews)
+        CafeUiState.TabType.REVIEWS -> CafeReviewScreen(
+            detail = detail,
+            reviews = uiState.reviews,
+            canLoadMore = uiState.canLoadMoreReviews,
+            isLoadingMore = uiState.isLoadingMoreReviews
+        )
         CafeUiState.TabType.NOTICES -> CafeNoticeScreen(detail.notices)
     }
 }

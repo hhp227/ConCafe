@@ -411,6 +411,7 @@ Android Compose와 iOS SwiftUI에 동일한 상태 구조의 운영 UI를 제공
 - rating
 - content
 - images[]
+- taggedCastIds[]
 - likeCount
 - createdAt
 
@@ -466,6 +467,7 @@ Android Compose와 iOS SwiftUI에 동일한 상태 구조의 운영 UI를 제공
 
 - 팔로우 수
 - 리뷰 언급 수
+  - 현재 단계에서는 카페 리뷰의 `taggedCastIds[]` 기반 언급 수를 사용
 - 방문 인증 수
 - 좋아요 수
 

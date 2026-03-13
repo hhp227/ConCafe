@@ -3,11 +3,24 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.model.ReviewEvent
 import com.hhp227.concafe.domain.repository.ReviewRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeReviewRepository(
     private val dataSource: ConCafeDataSource
 ) : ReviewRepository {
+    private val reviewEvent = MutableSharedFlow<ReviewEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+
+    override fun observeReviewEvent(): Flow<ReviewEvent> {
+        return reviewEvent.asSharedFlow()
+    }
+
     override suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review> {
         val items = dataSource.reviews.filter { it.cafeId == cafeId }.sortedByDescending { it.createdAt }
         return dataSource.toPaged(items, cursor, pageSize)
@@ -16,9 +29,11 @@ class FakeReviewRepository(
     override suspend fun createReview(
         userId: String,
         cafeId: String,
+        visitId: String,
         rating: Float,
         content: String,
-        imageUrls: List<String>
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
     ): Review {
         if (content.isBlank()) {
             throw IllegalArgumentException("review content is required")
@@ -28,14 +43,34 @@ class FakeReviewRepository(
             id = "review-${dataSource.reviews.size + 1}",
             userId = userId,
             cafeId = cafeId,
+            visitId = visitId,
             rating = rating,
             content = content,
             imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds,
             likeCount = 0,
-            createdAt = "2026-03-05T00:00:00Z"
+            createdAt = nextCreatedAt(dataSource.reviews.size)
         )
         dataSource.reviews.add(review)
+        dataSource.refreshReviewProjections(
+            cafeId = cafeId,
+            taggedCastIds = taggedCastIds
+        )
+        reviewEvent.tryEmit(ReviewEvent.Created(cafeId))
         return review
+    }
+
+    override suspend fun hasReviewForVisit(visitId: String): Boolean {
+        return dataSource.reviews.any { it.visitId == visitId }
+    }
+
+    override suspend fun isReviewPromptDismissed(userId: String, visitId: String): Boolean {
+        return dataSource.dismissedReviewPromptVisitIdsByUser[userId]?.contains(visitId) == true
+    }
+
+    override suspend fun dismissReviewPrompt(userId: String, visitId: String) {
+        val dismissedVisitIds = dataSource.dismissedReviewPromptVisitIdsByUser.getOrPut(userId) { mutableSetOf() }
+        dismissedVisitIds.add(visitId)
     }
 
     override suspend fun likeReview(userId: String, reviewId: String) {
@@ -53,9 +88,19 @@ class FakeReviewRepository(
         val index = dataSource.reviews.indexOfFirst { it.id == reviewId && it.userId == requesterId }
 
         if (index >= 0) {
-            dataSource.reviews.removeAt(index)
+            val deletedReview = dataSource.reviews.removeAt(index)
+            dataSource.refreshReviewProjections(
+                cafeId = deletedReview.cafeId,
+                taggedCastIds = deletedReview.taggedCastIds
+            )
+            reviewEvent.tryEmit(ReviewEvent.Deleted(deletedReview.cafeId, reviewId))
         } else {
             throw Exception("no permission to delete review")
         }
     }
+}
+
+private fun nextCreatedAt(reviewCount: Int): String {
+    val second = (reviewCount % 60).toString().padStart(2, '0')
+    return "2026-03-12T23:59:${second}Z"
 }

@@ -10,5 +10,7 @@ import Foundation
 enum CafeEvent {
     case navigateBack
     case navigateToCast(id: String)
+    case navigateToReviewEdit(cafeId: String)
     case navigateToSignIn
+    case scrollReviewsToTop
 }

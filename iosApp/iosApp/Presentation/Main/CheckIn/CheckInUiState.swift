@@ -20,6 +20,7 @@ struct CheckInUiState {
     var recentVisits: [CheckInVisitEntry]
     var isLoginPromptVisible: Bool
     var isNewVisitSheetVisible: Bool
+    var reviewPrompt: ReviewPrompt?
 
     static let empty = CheckInUiState(
         isLoading: false,
@@ -32,6 +33,13 @@ struct CheckInUiState {
         todayVisits: [],
         recentVisits: [],
         isLoginPromptVisible: false,
-        isNewVisitSheetVisible: false
+        isNewVisitSheetVisible: false,
+        reviewPrompt: nil
     )
+
+    struct ReviewPrompt {
+        let visitId: String
+        let cafeId: String
+        let cafeName: String
+    }
 }

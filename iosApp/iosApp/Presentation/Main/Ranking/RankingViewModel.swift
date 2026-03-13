@@ -13,11 +13,17 @@ import Shared
 final class RankingViewModel: ObservableObject {
     private let getRankingFeedUseCase: GetRankingFeedUseCase
 
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
+
     @Published private(set) var uiState = RankingUiState.empty
 
     let event = PassthroughSubject<RankingEvent, Never>()
 
     private var loadTask: Task<Void, Never>?
+
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadRankingFeed() {
         let period = uiState.selectedPeriod
@@ -50,6 +56,73 @@ final class RankingViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeDetailEvent() {
+        watchHandles[.cafeDetailEvent]?.cancel()
+        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafeRanking(updated.cafe)
+                }
+            }
+        }
+    }
+
+    private func observeCastEvent() {
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let updated as Shared.CastEvent.Updated:
+                    self.patchCastRanking(updated.cast)
+                case let deleted as Shared.CastEvent.Deleted:
+                    self.uiState.maidRankings.removeAll { $0.id == deleted.castId }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func patchCafeRanking(_ cafe: Cafe) {
+        let subtitle = cafe.region.address.components(separatedBy: "구").first?
+            .components(separatedBy: "로").first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let nextSubtitle = (subtitle?.isEmpty == false ? subtitle! : cafe.region.city)
+        uiState.cafeRankings = uiState.cafeRankings.map { entry in
+            guard entry.id == cafe.id else { return entry }
+            return RankingFeedEntry(
+                id: entry.id,
+                rank: entry.rank,
+                name: cafe.name,
+                subtitle: nextSubtitle,
+                score: entry.score,
+                change: entry.change,
+                startColorHex: entry.startColorHex,
+                endColorHex: entry.endColorHex,
+                symbol: entry.symbol
+            )
+        }
+    }
+
+    private func patchCastRanking(_ cast: Cast) {
+        uiState.maidRankings = uiState.maidRankings.map { entry in
+            guard entry.id == cast.id else { return entry }
+            return RankingFeedEntry(
+                id: entry.id,
+                rank: entry.rank,
+                name: cast.name,
+                subtitle: entry.subtitle,
+                score: entry.score,
+                change: entry.change,
+                startColorHex: entry.startColorHex,
+                endColorHex: entry.endColorHex,
+                symbol: entry.symbol
+            )
+        }
+    }
+
     func onAction(_ action: RankingAction) {
         switch action {
         case .changeTab(let tab):
@@ -71,10 +144,27 @@ final class RankingViewModel: ObservableObject {
     }
 
     init(
-        getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase()
+        getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
         
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadRankingFeed()
+    }
+
+    deinit {
+        loadTask?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
+    }
+
+    private enum WatchKey {
+        case cafeDetailEvent
+        case castEvent
     }
 }

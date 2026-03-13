@@ -12,6 +12,14 @@ struct CafeReviewView: View {
     let detail: CafeDetail
 
     let reviews: [CafeDetailReview]
+
+    let canLoadMore: Bool
+
+    let isLoadingMore: Bool
+
+    let onLoadMore: () -> Void
+
+    let topAnchorId: String
     
     var body: some View {
         VStack(spacing: 12) {
@@ -31,44 +39,78 @@ struct CafeReviewView: View {
             .padding(16)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .id(topAnchorId)
             if reviews.isEmpty {
                 emptyCard("아직 등록된 리뷰가 없습니다.")
             } else {
-                ForEach(reviews, id: \.id) { review in
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            HStack(spacing: 8) {
-                                Text(review.userNickname)
-                                    .font(.subheadline.weight(.semibold))
-                                if review.verified {
-                                    Text("방문인증")
-                                        .font(.caption2.weight(.semibold))
-                                        .foregroundStyle(.white)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color(hex: "EF6797"))
-                                        .clipShape(Capsule())
+                LazyVStack(spacing: 12) {
+                    ForEach(Array(reviews.enumerated()), id: \.element.id) { index, review in
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                HStack(spacing: 8) {
+                                    Text(review.userNickname)
+                                        .font(.subheadline.weight(.semibold))
+                                    if review.verified {
+                                        Text("방문인증")
+                                            .font(.caption2.weight(.semibold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color(hex: "EF6797"))
+                                            .clipShape(Capsule())
+                                    }
+                                }
+                                Spacer()
+                                Text(review.createdDate)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            HStack(spacing: 2) {
+                                ForEach(0..<5, id: \.self) { starIndex in
+                                    Image(systemName: "star.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(starIndex < Int(review.rating) ? Color.yellow : Color(hex: "E1E1E1"))
                                 }
                             }
-                            Spacer()
-                            Text(review.createdDate)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            if !review.taggedCastNames.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(review.taggedCastNames, id: \.self) { castName in
+                                            Text(castName)
+                                                .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(Color(hex: "C9527E"))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(Color(hex: "FFD1DC").opacity(0.12))
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                }
+                            }
+                            Text(review.content)
+                                .font(.subheadline)
                         }
-                        HStack(spacing: 2) {
-                            ForEach(0..<5, id: \.self) { index in
-                                Image(systemName: "star.fill")
-                                    .font(.caption)
-                                    .foregroundStyle(index < Int(review.rating) ? Color.yellow : Color(hex: "E1E1E1"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .onAppear {
+                            if index == reviews.count - 1, canLoadMore, !isLoadingMore {
+                                onLoadMore()
                             }
                         }
-                        Text(review.content)
-                            .font(.subheadline)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    if isLoadingMore {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    } else if canLoadMore {
+                        Text("스크롤하면 더 불러옵니다.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                    }
                 }
             }
         }

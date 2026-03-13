@@ -34,6 +34,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsSc
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
+import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 
 private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
@@ -201,6 +202,12 @@ private fun DetailRoutePane(
             MenuGoodsEditScreen(
                 cafeId = route.cafeId,
                 itemId = route.itemId,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.ReviewEdit -> {
+            ReviewEditScreen(
+                cafeId = route.cafeId,
                 onNavigationAction = onNavigationAction
             )
         }

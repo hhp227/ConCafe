@@ -110,8 +110,15 @@ cafes/{cafeId}/reviews/{reviewId}
 ├─ rating
 ├─ content
 ├─ images[]
+├─ taggedCastIds[]
 ├─ likeCount
 └─ createdAt
+
+리뷰 정책 메모
+- 현재 단계의 리뷰는 `카페 리뷰`만 작성한다.
+- 리뷰 작성 시 같은 카페에 소속된 캐스트를 선택적으로 태그할 수 있다.
+- `taggedCastIds[]`는 캐스트 전용 리뷰를 의미하지 않고, 카페 리뷰 안에서 함께 언급된 캐스트 연결 정보로만 사용한다.
+- 캐스트 상세 화면에서는 `taggedCastIds[]`에 현재 캐스트 id가 포함된 카페 리뷰만 `함께 언급된 후기`로 노출한다.
 
 cafes/{cafeId}/notices/{noticeId}
 ├─ title

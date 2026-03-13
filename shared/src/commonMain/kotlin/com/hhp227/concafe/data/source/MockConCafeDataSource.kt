@@ -36,7 +36,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MockConCafeDataSource : ConCafeDataSource {
-    override var currentUserId: String? = null
+    override var currentUserId: String? = "user-1"
 
     override val users = mutableListOf(
         User(
@@ -298,16 +298,71 @@ class MockConCafeDataSource : ConCafeDataSource {
     }
 
     override val reviews = mutableListOf(
-        Review("review-1", "user-1", "cafe-1", 4.5f, "분위기가 좋아요", emptyList(), 3, "2026-03-03T10:00:00Z"),
-        Review("review-2", "user-1", "cafe-2", 5.0f, "친절하고 재밌었어요", emptyList(), 5, "2026-03-04T14:00:00Z")
+        Review("review-1", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라가 응대도 좋고 전체 분위기도 정말 만족스러웠어요. 재방문 의사 있습니다.", emptyList(), listOf("maid-1"), 12, "2026-03-09T19:00:00Z"),
+        Review("review-2", "user-6", "cafe-1", "visit-1", 4.0f, "디저트가 맛있고 사쿠라 태그 남기고 싶을 만큼 기억에 남는 방문이었어요.", emptyList(), listOf("maid-1"), 4, "2026-03-09T18:40:00Z"),
+        Review("review-3", "user-7", "cafe-1", "visit-1", 5.0f, "좌석 간격도 편했고 사쿠라가 있는 타임 분위기가 특히 좋았습니다.", emptyList(), listOf("maid-1"), 7, "2026-03-09T18:20:00Z"),
+        Review("review-4", "user-8", "cafe-1", "visit-1", 4.0f, "시그니처 음료가 괜찮았고 사쿠라 태그 후기 남길 정도로 응대가 인상적이었어요.", emptyList(), listOf("maid-1"), 3, "2026-03-09T18:00:00Z"),
+        Review("review-5", "user-1", "cafe-1", "visit-1", 5.0f, "주말 오픈 직후 방문했는데 사쿠라 포함 전체 서비스가 안정적이었어요.", emptyList(), listOf("maid-1"), 9, "2026-03-09T17:40:00Z"),
+        Review("review-6", "user-6", "cafe-1", "visit-1", 4.0f, "매장 음악 볼륨이 적당했고 사쿠라 태그를 남기고 싶을 정도로 친절했습니다.", emptyList(), listOf("maid-1"), 5, "2026-03-09T17:20:00Z"),
+        Review("review-7", "user-7", "cafe-1", "visit-1", 5.0f, "오므라이스와 체리 에이드 조합이 좋았고 사쿠라 응대도 만족스러웠어요.", emptyList(), listOf("maid-1"), 6, "2026-03-09T17:00:00Z"),
+        Review("review-8", "user-8", "cafe-1", "visit-1", 4.0f, "대기 시간이 길지 않았고 사쿠라가 있는 시간대 분위기가 편안했어요.", emptyList(), listOf("maid-1"), 2, "2026-03-09T16:40:00Z"),
+        Review("review-9", "user-1", "cafe-1", "visit-1", 5.0f, "사진 찍기 좋은 포인트가 많고 사쿠라 태그 후기 남길 만큼 기억에 남았습니다.", emptyList(), listOf("maid-1"), 11, "2026-03-09T16:20:00Z"),
+        Review("review-10", "user-6", "cafe-1", "visit-1", 4.0f, "첫 방문이었는데 사쿠라 덕분에 입문하기 좋은 카페라는 인상을 받았어요.", emptyList(), listOf("maid-1"), 4, "2026-03-09T16:00:00Z"),
+        Review("review-11", "user-7", "cafe-1", "visit-1", 5.0f, "전체 연출이 과하지 않고 사쿠라 태그를 남기고 싶을 정도로 밸런스가 좋았어요.", emptyList(), listOf("maid-1"), 8, "2026-03-09T15:40:00Z"),
+        Review("review-12", "user-8", "cafe-1", "visit-1", 4.0f, "디저트 플레이팅이 예쁘고 사쿠라가 응대한 테이블 분위기도 좋았습니다.", emptyList(), listOf("maid-1"), 3, "2026-03-09T15:20:00Z"),
+        Review("review-13", "user-1", "cafe-1", "visit-1", 5.0f, "재방문했는데도 만족도가 높았고 사쿠라 태그를 꼭 남기고 싶은 날이었어요.", emptyList(), listOf("maid-1"), 10, "2026-03-09T15:00:00Z"),
+        Review("review-14", "user-6", "cafe-1", "visit-1", 4.0f, "매장 청결도와 서비스 템포가 좋았고 사쿠라 응대가 안정적이었습니다.", emptyList(), listOf("maid-1"), 4, "2026-03-09T14:40:00Z"),
+        Review("review-15", "user-7", "cafe-1", "visit-1", 5.0f, "친구와 방문했는데 사쿠라 태그 후기 남길 정도로 전체 경험이 좋았어요.", emptyList(), listOf("maid-1"), 7, "2026-03-09T14:20:00Z"),
+        Review("review-16", "user-8", "cafe-1", "visit-1", 4.0f, "브라우니가 맛있었고 사쿠라와 함께한 시간대 응대가 자연스러웠습니다.", emptyList(), listOf("maid-1"), 2, "2026-03-09T14:00:00Z"),
+        Review("review-17", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그를 남기지 않기 아쉬울 정도로 전체 연출과 서비스가 좋았어요.", emptyList(), listOf("maid-1"), 9, "2026-03-09T13:40:00Z"),
+        Review("review-18", "user-6", "cafe-1", "visit-1", 4.0f, "음료 나오는 속도가 빨랐고 사쿠라 응대도 깔끔해서 만족했습니다.", emptyList(), listOf("maid-1"), 3, "2026-03-09T13:20:00Z"),
+        Review("review-19", "user-7", "cafe-1", "visit-1", 5.0f, "좌석이 편하고 대화하기 좋았으며 사쿠라 태그 후기로 남길 만한 방문이었어요.", emptyList(), listOf("maid-1"), 6, "2026-03-09T13:00:00Z"),
+        Review("review-20", "user-8", "cafe-1", "visit-1", 4.0f, "적당히 활기찬 분위기라 좋았고 사쿠라가 있는 시간대 만족도가 높았습니다.", emptyList(), listOf("maid-1"), 2, "2026-03-09T12:40:00Z"),
+        Review("review-21", "user-1", "cafe-1", "visit-1", 5.0f, "메뉴 설명이 친절했고 사쿠라 태그 후기를 남기고 싶을 정도로 응대가 좋았어요.", emptyList(), listOf("maid-1"), 8, "2026-03-09T12:20:00Z"),
+        Review("review-22", "user-6", "cafe-1", "visit-1", 4.0f, "처음엔 긴장했는데 사쿠라 덕분에 편하게 즐기고 왔습니다.", emptyList(), listOf("maid-1"), 4, "2026-03-09T12:00:00Z"),
+        Review("review-23", "user-7", "cafe-1", "visit-1", 5.0f, "사쿠라 태그와 함께 남기고 싶은 정도로 이날 전체 접객 흐름이 좋았습니다.", emptyList(), listOf("maid-1"), 7, "2026-03-09T11:40:00Z"),
+        Review("review-24", "user-8", "cafe-1", "visit-1", 4.0f, "카페 컨셉이 선명하고 사쿠라 응대가 특히 기억에 남아요.", emptyList(), listOf("maid-1"), 3, "2026-03-09T11:20:00Z"),
+        Review("review-25", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그 리뷰를 남기기 위해 다시 생각날 만큼 기분 좋은 방문이었어요.", emptyList(), listOf("maid-1"), 9, "2026-03-09T11:00:00Z"),
+        Review("review-26", "user-6", "cafe-1", "visit-1", 4.0f, "주문 동선이 매끄럽고 사쿠라가 있는 타임의 텐션이 안정적이었습니다.", emptyList(), listOf("maid-1"), 3, "2026-03-08T20:40:00Z"),
+        Review("review-27", "user-7", "cafe-1", "visit-1", 5.0f, "친구 추천으로 갔는데 사쿠라 태그 남길 만큼 서비스 경험이 좋았어요.", emptyList(), listOf("maid-1"), 8, "2026-03-08T20:20:00Z"),
+        Review("review-28", "user-8", "cafe-1", "visit-1", 4.0f, "대기 후 입장했지만 사쿠라 응대 덕분에 피로감이 덜했습니다.", emptyList(), listOf("maid-1"), 2, "2026-03-08T20:00:00Z"),
+        Review("review-29", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그와 함께 남기는 후기답게 응대와 분위기 모두 만족이에요.", emptyList(), listOf("maid-1"), 10, "2026-03-08T19:40:00Z"),
+        Review("review-30", "user-6", "cafe-1", "visit-1", 4.0f, "메뉴 가격 대비 만족도가 높고 사쿠라가 있는 시간대가 특히 좋았습니다.", emptyList(), listOf("maid-1"), 4, "2026-03-08T19:20:00Z"),
+        Review("review-31", "user-7", "cafe-1", "visit-1", 5.0f, "사진보다 실물이 더 예쁜 공간이었고 사쿠라 응대도 기대 이상이었어요.", emptyList(), listOf("maid-1"), 6, "2026-03-08T19:00:00Z"),
+        Review("review-32", "user-8", "cafe-1", "visit-1", 4.0f, "사쿠라 태그 후기 남길 정도로 첫 응대 인상이 좋았던 카페입니다.", emptyList(), listOf("maid-1"), 3, "2026-03-08T18:40:00Z"),
+        Review("review-33", "user-1", "cafe-1", "visit-1", 5.0f, "공간 연출과 서비스 톤이 잘 맞았고 사쿠라 덕분에 더 즐거웠어요.", emptyList(), listOf("maid-1"), 9, "2026-03-08T18:20:00Z"),
+        Review("review-34", "user-6", "cafe-1", "visit-1", 4.0f, "한적한 시간대라 여유롭게 즐겼고 사쿠라 태그를 남기고 싶었습니다.", emptyList(), listOf("maid-1"), 2, "2026-03-08T18:00:00Z"),
+        Review("review-35", "user-7", "cafe-1", "visit-1", 5.0f, "사쿠라 태그와 함께 추천하고 싶은 카페예요. 메뉴와 접객이 안정적입니다.", emptyList(), listOf("maid-1"), 7, "2026-03-08T17:40:00Z"),
+        Review("review-36", "user-8", "cafe-1", "visit-1", 4.0f, "디저트 퀄리티가 기대 이상이었고 사쿠라 응대도 부드러웠어요.", emptyList(), listOf("maid-1"), 3, "2026-03-08T17:20:00Z"),
+        Review("review-37", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그를 붙인 이유가 분명할 만큼 전체 경험이 선명하게 좋았습니다.", emptyList(), listOf("maid-1"), 11, "2026-03-08T17:00:00Z"),
+        Review("review-38", "user-6", "cafe-1", "visit-1", 4.0f, "조명이 예쁘고 사진도 잘 나와서 사쿠라 태그 후기 남기기 좋았어요.", emptyList(), listOf("maid-1"), 4, "2026-03-08T16:40:00Z"),
+        Review("review-39", "user-7", "cafe-1", "visit-1", 5.0f, "친절한 설명과 안정적인 서비스 덕분에 사쿠라 태그 후기를 남깁니다.", emptyList(), listOf("maid-1"), 8, "2026-03-08T16:20:00Z"),
+        Review("review-40", "user-8", "cafe-1", "visit-1", 4.0f, "적당히 활기차고 부담 없는 분위기라 사쿠라 응대가 더 돋보였어요.", emptyList(), listOf("maid-1"), 2, "2026-03-08T16:00:00Z"),
+        Review("review-41", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그 후기를 남기면서도 카페 전체 만족도가 높다고 말할 수 있어요.", emptyList(), listOf("maid-1"), 9, "2026-03-08T15:40:00Z"),
+        Review("review-42", "user-6", "cafe-1", "visit-1", 4.0f, "재방문 의사 있고 사쿠라가 있는 날 다시 오고 싶을 정도였습니다.", emptyList(), listOf("maid-1"), 3, "2026-03-08T15:20:00Z"),
+        Review("review-43", "user-7", "cafe-1", "visit-1", 5.0f, "메뉴 구성, 응대, 공간 분위기까지 전반적으로 좋아 사쿠라 태그를 달았어요.", emptyList(), listOf("maid-1"), 6, "2026-03-08T15:00:00Z"),
+        Review("review-44", "user-8", "cafe-1", "visit-1", 4.0f, "크게 시끄럽지 않아 대화하기 좋았고 사쿠라 응대가 자연스러웠습니다.", emptyList(), listOf("maid-1"), 2, "2026-03-08T14:40:00Z"),
+        Review("review-45", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라 태그와 함께 남길 정도로 방문 경험 전체가 선명하게 좋았어요.", emptyList(), listOf("maid-1"), 10, "2026-03-08T14:20:00Z"),
+        Review("review-46", "user-6", "cafe-1", "visit-1", 4.0f, "메뉴 추천이 좋았고 사쿠라 응대도 차분해서 만족했습니다.", emptyList(), listOf("maid-1"), 4, "2026-03-08T14:00:00Z"),
+        Review("review-47", "user-7", "cafe-1", "visit-1", 5.0f, "처음 방문한 친구도 만족했고 사쿠라 태그 후기를 같이 남기고 싶었어요.", emptyList(), listOf("maid-1"), 7, "2026-03-08T13:40:00Z"),
+        Review("review-48", "user-8", "cafe-1", "visit-1", 4.0f, "사쿠라가 태그된 후기답게 응대 인상이 좋았고 카페도 깔끔했습니다.", emptyList(), listOf("maid-1"), 3, "2026-03-08T13:20:00Z"),
+        Review("review-49", "user-1", "cafe-1", "visit-1", 5.0f, "공간과 서비스가 잘 맞물려서 사쿠라 태그와 함께 추천하고 싶은 카페예요.", emptyList(), listOf("maid-1"), 8, "2026-03-08T13:00:00Z"),
+        Review("review-50", "user-6", "cafe-1", "visit-1", 4.0f, "마무리까지 만족스러운 방문이었고 사쿠라 태그 후기 남기고 갑니다.", emptyList(), listOf("maid-1"), 4, "2026-03-08T12:40:00Z"),
+        Review("review-51", "user-1", "cafe-2", "visit-2", 5.0f, "친절하고 재밌었어요", emptyList(), listOf("maid-3"), 5, "2026-03-04T14:00:00Z")
     )
 
     override val visits = mutableListOf(
         Visit("visit-1", "user-1", "cafe-1", "2026-03-09T08:30:00Z", "오픈 시간에 맞춰 방문", true),
         Visit("visit-2", "user-1", "cafe-2", "2026-03-09T13:15:00Z", "신규 메이드 이벤트 확인", true),
         Visit("visit-3", "user-1", "cafe-3", "2026-03-09T18:40:00Z", "저녁 타임 분위기 좋음", true),
+        Visit("visit-4", "user-1", "cafe-4", "2026-03-08T17:20:00Z", "퇴근 후 방문", true),
+        Visit("visit-5", "user-1", "cafe-5", "2026-03-08T19:00:00Z", "주말 메뉴 확인", true),
         Visit("visit-4", "user-1", "cafe-6", "2026-03-08T20:10:00Z", "체리 시즌 메뉴 주문", true),
-        Visit("visit-5", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true)
+        Visit("visit-7", "user-1", "cafe-7", "2026-03-07T16:40:00Z", "가든 분위기 확인", true),
+        Visit("visit-8", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true),
+        Visit("visit-9", "user-1", "cafe-9", "2026-03-06T18:05:00Z", "캐주얼 타임 방문", true),
+        Visit("visit-10", "user-1", "cafe-10", "2026-03-06T14:30:00Z", "티룸 콘셉트 체험", true),
+        Visit("visit-11", "user-1", "cafe-11", "2026-03-05T19:10:00Z", "공연 콘셉트 카페 방문", true)
     )
 
     override val notifications = mutableListOf(
@@ -329,6 +384,8 @@ class MockConCafeDataSource : ConCafeDataSource {
         "user-7" to mutableSetOf("maid-1"),
         "user-8" to mutableSetOf("maid-1")
     )
+
+    override val dismissedReviewPromptVisitIdsByUser = mutableMapOf<String, MutableSet<String>>()
 
     override val ownedCafeIdsByUser = mapOf(
         "user-3" to listOf("cafe-1", "cafe-2", "cafe-3")
@@ -762,6 +819,39 @@ class MockConCafeDataSource : ConCafeDataSource {
             images = castImagesById[castId].orEmpty(),
             schedule = castSchedulesByCastId[castId].orEmpty()
         )
+    }
+
+    override fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>) {
+        val cafeIndex = cafes.indexOfFirst { it.id == cafeId }
+        if (cafeIndex == -1) return
+
+        val cafeReviews = reviews.filter { it.cafeId == cafeId }
+        val reviewCount = cafeReviews.size
+        val ratingAverage = if (cafeReviews.isEmpty()) {
+            0.0
+        } else {
+            cafeReviews.map { it.rating.toDouble() }.average()
+        }
+
+        val currentCafe = cafes[cafeIndex]
+        val updatedCafe = currentCafe.copy(
+            ratingAvg = ratingAverage,
+            reviewCount = reviewCount
+        )
+        cafes[cafeIndex] = updatedCafe
+
+        val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(updatedCafe)
+        cafeDetailsById[cafeId] = currentDetail.copy(cafe = updatedCafe)
+        cafeDetailsState.value = cafeDetailsById.toMap()
+
+        val castIdsToRefresh = linkedSetOf<String>()
+        castIdsToRefresh.addAll(taggedCastIds)
+        castIdsToRefresh.addAll(casts.filter { it.cafeId == cafeId }.map { it.id })
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            castIdsToRefresh.forEach { castId ->
+                this[castId] = (this[castId] ?: 0) + 1
+            }
+        }
     }
 
     override fun rankingItemsFromCasts(): List<RankingItem> {

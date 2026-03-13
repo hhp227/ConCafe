@@ -17,6 +17,9 @@ struct CafeUiState {
     var casts: [CafeDetailCast]
     var castsNextCursor: String?
     var canLoadMoreCasts: Bool
+    var isLoadingMoreReviews: Bool
+    var reviewsNextCursor: String?
+    var canLoadMoreReviews: Bool
     var reviews: [CafeDetailReview]
     var isFavorite: Bool
     var isLoggedIn: Bool
@@ -30,6 +33,9 @@ struct CafeUiState {
         casts: [],
         castsNextCursor: nil,
         canLoadMoreCasts: false,
+        isLoadingMoreReviews: false,
+        reviewsNextCursor: nil,
+        canLoadMoreReviews: false,
         reviews: [],
         isFavorite: false,
         isLoggedIn: false

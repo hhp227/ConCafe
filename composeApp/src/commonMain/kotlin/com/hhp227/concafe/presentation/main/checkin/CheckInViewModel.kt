@@ -11,16 +11,28 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
+import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 
 class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
     private val createVisitUseCase: CreateVisitUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase,
+    private val dismissReviewPromptUseCase: DismissReviewPromptUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
 
@@ -31,6 +43,8 @@ class CheckInViewModel(
     val event = _event.asSharedFlow()
 
     private var observeSessionJob: Job? = null
+    private var observeCafeDetailEventJob: Job? = null
+    private var observeCastEventJob: Job? = null
 
     private fun loadGuestFeed() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -68,7 +82,8 @@ class CheckInViewModel(
                     it.copy(
                         currentUser = user,
                         isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false,
-                        isNewVisitSheetVisible = if (user == null) it.isNewVisitSheetVisible else false
+                        isNewVisitSheetVisible = if (user == null) it.isNewVisitSheetVisible else false,
+                        reviewPrompt = if (user == null) null else it.reviewPrompt
                     )
                 }
 
@@ -143,6 +158,8 @@ class CheckInViewModel(
                 CheckInAction.DismissNewVisitSheet -> {
                     _uiState.update { it.copy(isNewVisitSheetVisible = false) }
                 }
+                CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
+                CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
                 is CheckInAction.SubmitNewVisit -> {
                     submitNewVisit(
                         cafeId = action.cafeId,
@@ -176,6 +193,7 @@ class CheckInViewModel(
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
                     loadUserFeed()
+                    maybeShowReviewPrompt(result.data)
                 }
                 is AppResult.Failure -> {
                     _uiState.update { it.copy(errorMessage = result.error.toString()) }
@@ -184,8 +202,132 @@ class CheckInViewModel(
         }
     }
 
+    private fun observeCafeDetailEvent() {
+        observeCafeDetailEventJob?.cancel()
+        observeCafeDetailEventJob = viewModelScope.launch {
+            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+                if (event is CafeDetailEvent.CafeInfoUpdated) {
+                    patchCafe(event.cafe)
+                }
+            }
+        }
+    }
+
+    private fun observeCastEvent() {
+        observeCastEventJob?.cancel()
+        observeCastEventJob = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastEvent.Created -> Unit
+                    is CastEvent.Updated -> patchCast(event.cast)
+                    is CastEvent.Deleted -> removeCast(event.castId)
+                }
+            }
+        }
+    }
+
+    private fun patchCafe(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                mapCafes = state.mapCafes.map { item ->
+                    if (item.id == cafe.id) {
+                        item.copy(name = cafe.name, locationLabel = cafe.region.city, rating = cafe.ratingAvg)
+                    } else {
+                        item
+                    }
+                },
+                popularCafes = state.popularCafes.map { item ->
+                    if (item.id == cafe.id) {
+                        item.copy(name = cafe.name, locationLabel = cafe.region.city, rating = cafe.ratingAvg)
+                    } else {
+                        item
+                    }
+                },
+                popularCasts = state.popularCasts.map { item ->
+                    if (item.cafeId == cafe.id) item.copy(cafeName = cafe.name) else item
+                },
+                reviewPrompt = state.reviewPrompt?.let { prompt ->
+                    if (prompt.cafeId == cafe.id) prompt.copy(cafeName = cafe.name) else prompt
+                }
+            )
+        }
+    }
+
+    private fun patchCast(cast: Cast) {
+        _uiState.update { state ->
+            state.copy(
+                popularCasts = state.popularCasts.map { item ->
+                    if (item.id == cast.id) {
+                        item.copy(name = cast.name, profileImage = cast.profileImage)
+                    } else {
+                        item
+                    }
+                }
+            )
+        }
+    }
+
+    private fun removeCast(castId: String) {
+        _uiState.update { state ->
+            state.copy(popularCasts = state.popularCasts.filterNot { it.id == castId })
+        }
+    }
+
+    private suspend fun maybeShowReviewPrompt(visit: com.hhp227.concafe.domain.model.Visit) {
+        if (!visit.verified) return
+
+        val shouldShow = when (val result = shouldShowReviewPromptUseCase.invoke(visit.id)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> false
+        }
+
+        if (!shouldShow) return
+
+        val cafeName = _uiState.value.mapCafes.firstOrNull { it.id == visit.cafeId }?.name
+            ?: _uiState.value.popularCafes.firstOrNull { it.id == visit.cafeId }?.name
+            ?: _uiState.value.todayVisits.firstOrNull { it.cafeId == visit.cafeId }?.cafeName
+            ?: _uiState.value.recentVisits.firstOrNull { it.cafeId == visit.cafeId }?.cafeName
+            ?: "방문한 카페"
+
+        _uiState.update {
+            it.copy(
+                reviewPrompt = CheckInUiState.ReviewPrompt(
+                    visitId = visit.id,
+                    cafeId = visit.cafeId,
+                    cafeName = cafeName
+                )
+            )
+        }
+    }
+
+    private fun dismissReviewPrompt() {
+        val prompt = _uiState.value.reviewPrompt ?: return
+        viewModelScope.launch {
+            dismissReviewPromptUseCase.invoke(prompt.visitId)
+            _uiState.update { it.copy(reviewPrompt = null) }
+        }
+    }
+
+    private fun clickWriteReviewPrompt() {
+        val prompt = _uiState.value.reviewPrompt ?: return
+        viewModelScope.launch {
+            dismissReviewPromptUseCase.invoke(prompt.visitId)
+            _uiState.update { it.copy(reviewPrompt = null) }
+            _event.emit(CheckInEvent.NavigateToReviewEdit(prompt.cafeId))
+        }
+    }
+
     init {
         observeSession()
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadGuestFeed()
+    }
+
+    override fun onCleared() {
+        observeSessionJob?.cancel()
+        observeCafeDetailEventJob?.cancel()
+        observeCastEventJob?.cancel()
+        super.onCleared()
     }
 }

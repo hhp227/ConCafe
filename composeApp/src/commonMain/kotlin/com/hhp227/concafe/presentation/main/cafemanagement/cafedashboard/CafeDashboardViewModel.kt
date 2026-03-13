@@ -11,16 +11,21 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
     private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
     private val getCafeDashboardUseCase: GetCafeDashboardUseCase,
-    private val observeCafeCastVersionUseCase: ObserveCafeCastVersionUseCase,
+    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
@@ -187,11 +192,67 @@ class CafeDashboardViewModel(
         }
     }
 
-    private fun observeCastVersion() {
-        jobs[TaskKey.OBSERVE_CAST_VERSION]?.cancel()
-        jobs[TaskKey.OBSERVE_CAST_VERSION] = viewModelScope.launch {
-            observeCafeCastVersionUseCase.invoke(cafeId).collectLatest {
-                refreshCastPreviews()
+    private fun observeCafeDetailEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
+            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
+                        patchCafeInfo(event.cafe)
+                    }
+                    is CafeDetailEvent.MenuCreated,
+                    is CafeDetailEvent.MenuUpdated,
+                    is CafeDetailEvent.MenuDeleted,
+                    is CafeDetailEvent.GoodsCreated,
+                    is CafeDetailEvent.GoodsUpdated,
+                    is CafeDetailEvent.GoodsDeleted -> Unit
+                }
+            }
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                cafe = state.cafe?.copy(
+                    name = cafe.name,
+                    city = cafe.region.city,
+                    rating = cafe.ratingAvg
+                )
+            )
+        }
+    }
+
+    private fun observeCastEvent() {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.cafeId == cafeId) {
+                        refreshCastPreviews()
+                    }
+                    is CastDomainEvent.Updated -> if (event.cafeId == cafeId) {
+                        _uiState.update { state ->
+                            state.copy(
+                                castPreviews = state.castPreviews.map { preview ->
+                                    if (preview.id == event.cast.id) {
+                                        preview.copy(name = event.cast.name)
+                                    } else {
+                                        preview
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    is CastDomainEvent.Deleted -> if (event.cafeId == cafeId) {
+                        _uiState.update { state ->
+                            state.copy(
+                                castPreviews = state.castPreviews.filterNot { it.id == event.castId },
+                                selectedCastId = state.selectedCastId?.takeUnless { it == event.castId }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -208,7 +269,8 @@ class CafeDashboardViewModel(
 
     init {
         observeSession()
-        observeCastVersion()
+        observeCafeDetailEvent()
+        observeCastEvent()
         loadCafeDashboard()
     }
 
@@ -220,6 +282,7 @@ class CafeDashboardViewModel(
 
     private enum class TaskKey {
         OBSERVE_SESSION,
-        OBSERVE_CAST_VERSION
+        OBSERVE_CAFE_DETAIL_EVENT,
+        OBSERVE_CAST_EVENT
     }
 }

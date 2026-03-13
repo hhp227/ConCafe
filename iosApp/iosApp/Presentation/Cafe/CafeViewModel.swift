@@ -16,6 +16,12 @@ final class CafeViewModel: ObservableObject {
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
+
+    private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
+
+    private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
+
+    private let observeReviewEventUseCase: ObserveReviewEventUseCase
     
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
     
@@ -25,7 +31,40 @@ final class CafeViewModel: ObservableObject {
     
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private func loadCafeDetail() {
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
+
+    private func bindCafeDetail() {
+        watchHandles[.cafeDetail]?.cancel()
+        var isInitialEmission = true
+        watchHandles[.cafeDetail] = observeCafeDetailUseCase.watch(cafeId: cafeId) { [weak self] _ in
+            guard let self else { return }
+            if isInitialEmission {
+                isInitialEmission = false
+                return
+            }
+            self.loadCafeDetail()
+        }
+    }
+
+    private func observeReviewEvent() {
+        watchHandles[.reviewEvent]?.cancel()
+        watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            if let created = event as? ReviewEvent.Created {
+                if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
+                    self.event.send(.scrollReviewsToTop)
+                    self.loadCafeDetail(refreshReviews: false)
+                    self.refreshReviewPage()
+                }
+            } else if let deleted = event as? ReviewEvent.Deleted {
+                if deleted.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
+                    self.uiState.reviews.removeAll { $0.id == deleted.reviewId }
+                }
+            }
+        }
+    }
+
+    private func loadCafeDetail(refreshReviews: Bool = true) {
         uiState.isLoading = true
         uiState.errorMessage = nil
 
@@ -45,11 +84,17 @@ final class CafeViewModel: ObservableObject {
                         casts: uiState.casts,
                         castsNextCursor: uiState.castsNextCursor,
                         canLoadMoreCasts: uiState.canLoadMoreCasts,
+                        isLoadingMoreReviews: uiState.isLoadingMoreReviews,
+                        reviewsNextCursor: feed.reviewsNextCursor,
+                        canLoadMoreReviews: feed.canLoadMoreReviews,
                         reviews: feed.reviews,
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn
                     )
                     refreshCastPage()
+                    if refreshReviews, uiState.selectedTab == .reviews {
+                        refreshReviewPage()
+                    }
                 } else if result is AppResultFailure {
                     uiState.isLoading = false
                     uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
@@ -100,6 +145,42 @@ final class CafeViewModel: ObservableObject {
         loadCastPage(cursor: cursor, append: true)
     }
 
+    private func loadReviewPage(cursor: String?, append: Bool) {
+        tasks[.reviewPage]?.cancel()
+        tasks[.reviewPage] = Task {
+            uiState.isLoadingMoreReviews = append
+
+            do {
+                let result = try await getCafeReviewPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor, pageSize: 15)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeDetailReview> {
+                    let items = page.items as! [CafeDetailReview]
+                    uiState.reviews = append ? (uiState.reviews + items) : items
+                    uiState.reviewsNextCursor = page.nextCursor
+                    uiState.canLoadMoreReviews = page.hasNext
+                    uiState.isLoadingMoreReviews = false
+                } else {
+                    uiState.isLoadingMoreReviews = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreReviews = false
+            }
+        }
+    }
+
+    private func refreshReviewPage() {
+        loadReviewPage(cursor: nil, append: false)
+    }
+
+    private func loadMoreReviews() {
+        guard uiState.canLoadMoreReviews,
+              !uiState.isLoadingMoreReviews,
+              let cursor = uiState.reviewsNextCursor else { return }
+        loadReviewPage(cursor: cursor, append: true)
+    }
+
     private func toggleFavorite() {
         Task {
             do {
@@ -119,18 +200,29 @@ final class CafeViewModel: ObservableObject {
         }
     }
 
+    private func writeReview() {
+        event.send(.navigateToReviewEdit(cafeId: cafeId))
+    }
+
     func onAction(_ action: CafeAction) {
         switch action {
         case .backTapped:
             event.send(.navigateBack)
         case .changeTab(let tab):
             uiState.selectedTab = tab
+            if tab == .reviews, uiState.reviews.isEmpty {
+                refreshReviewPage()
+            }
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
             toggleFavorite()
+        case .writeReviewTapped:
+            writeReview()
         case .loadMoreCasts:
             loadMoreCasts()
+        case .loadMoreReviews:
+            loadMoreReviews()
         case .refresh:
             loadCafeDetail()
         }
@@ -140,17 +232,27 @@ final class CafeViewModel: ObservableObject {
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
+        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
+        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
+        self.observeCafeDetailUseCase = observeCafeDetailUseCase
+        self.observeReviewEventUseCase = observeReviewEventUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
-        
+
+        bindCafeDetail()
+        observeReviewEvent()
         loadCafeDetail()
     }
     
     deinit {
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
@@ -158,5 +260,11 @@ final class CafeViewModel: ObservableObject {
     private enum TaskKey {
         case detail
         case castPage
+        case reviewPage
+    }
+
+    private enum WatchKey {
+        case cafeDetail
+        case reviewEvent
     }
 }

@@ -414,7 +414,7 @@ private struct CastRecentReviewSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("최근 방문 후기")
+            Text("함께 언급된 후기")
                 .font(.headline)
             if reviews.isEmpty {
                 CastRecentReviewEmptyView()
@@ -425,10 +425,32 @@ private struct CastRecentReviewSection: View {
                             HStack {
                                 Text(review.userNickname)
                                     .font(.subheadline.weight(.semibold))
+                                Text("\(review.rating)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color(hex: "EF6797"))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                                    .clipShape(Capsule())
                                 Spacer()
                                 Text(review.createdDateLabel)
                                     .font(.caption)
                                     .foregroundStyle(Color.secondary)
+                            }
+                            if !review.taggedCastNames.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(review.taggedCastNames, id: \.self) { castName in
+                                            Text(castName)
+                                                .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(Color(hex: "C9527E"))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(Color(hex: "FFD1DC").opacity(0.12))
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                }
                             }
                             Text(review.content)
                                 .font(.subheadline)
@@ -450,10 +472,10 @@ private struct CastRecentReviewSection: View {
 private struct CastRecentReviewEmptyView: View {
     var body: some View {
         VStack(spacing: 6) {
-            Text("아직 방문 후기가 없어요.")
+            Text("아직 함께 언급된 후기가 없어요.")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "4E4750"))
-            Text("첫 후기를 기다리고 있어요.")
+            Text("이 캐스트가 태그된 카페 리뷰가 표시됩니다.")
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
         }

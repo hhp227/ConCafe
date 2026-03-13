@@ -16,8 +16,15 @@ data class CheckInUiState(
     val todayVisits: List<CheckInVisitEntry> = emptyList(),
     val recentVisits: List<CheckInVisitEntry> = emptyList(),
     val isLoginPromptVisible: Boolean = false,
-    val isNewVisitSheetVisible: Boolean = false
+    val isNewVisitSheetVisible: Boolean = false,
+    val reviewPrompt: ReviewPrompt? = null
 ) {
+    data class ReviewPrompt(
+        val visitId: String,
+        val cafeId: String,
+        val cafeName: String
+    )
+
     companion object {
         fun empty() = CheckInUiState()
     }

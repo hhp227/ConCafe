@@ -7,16 +7,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
+    private val observeCastEventUseCase: ObserveCastEventUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastUiState.empty())
@@ -24,6 +28,26 @@ class CastViewModel(
 
     private val _event = MutableSharedFlow<CastEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private fun observeCastEvent() {
+        viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
+                        loadCastDetail()
+                    }
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            state.copy(detail = state.detail?.copy(cast = event.cast))
+                        }
+                    }
+                    is CastDomainEvent.Deleted -> if (event.castId == castId) {
+                        _event.emit(CastEvent.NavigateBack)
+                    }
+                }
+            }
+        }
+    }
 
     private fun loadCastDetail() {
         _uiState.update {
@@ -92,6 +116,7 @@ class CastViewModel(
     }
 
     init {
+        observeCastEvent()
         loadCastDetail()
     }
 }

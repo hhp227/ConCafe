@@ -29,8 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.di.resolveDeleteCafeMenuGoodsUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
+import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -43,7 +44,8 @@ fun MenuGoodsScreen(
             initializer {
                 MenuGoodsViewModel(
                     cafeId = cafeId,
-                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
+                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
+                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     deleteCafeMenuGoodsUseCase = resolveDeleteCafeMenuGoodsUseCase()
                 )
             }
@@ -121,20 +123,22 @@ private fun MenuGoodsContentScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onAction(MenuGoodsAction.ClickAddNewItem) },
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330),
-                text = {
-                    Text(
-                        text = "새 항목 추가",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                icon = {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                }
-            )
+            Box(modifier = Modifier.navigationBarsPadding()) {
+                ExtendedFloatingActionButton(
+                    onClick = { onAction(MenuGoodsAction.ClickAddNewItem) },
+                    containerColor = Color(0xFFFFD1DC),
+                    contentColor = Color(0xFF2B2330),
+                    text = {
+                        Text(
+                            text = "새 항목 추가",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    icon = {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         Box(
