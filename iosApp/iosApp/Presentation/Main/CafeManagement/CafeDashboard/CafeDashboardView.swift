@@ -21,6 +21,23 @@ struct CafeDashboardView: View {
         )
         .navigationTitle(viewModel.uiState.cafe?.name ?? "카페 관리")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("캐스트 프로필 삭제", isPresented: Binding(
+            get: { viewModel.uiState.isDeleteCastDialogVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissDeleteCastDialog)
+                }
+            }
+        )) {
+            Button("취소", role: .cancel) {
+                viewModel.onAction(.dismissDeleteCastDialog)
+            }
+            Button("확인", role: .destructive) {
+                viewModel.onAction(.confirmDeleteCast)
+            }
+        } message: {
+            Text("캐스트 프로필을 삭제하시겠습니까?")
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -301,6 +318,19 @@ private struct CafeDashboardContentView: View {
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "8C7A83"))
                 Spacer()
+                Button {
+                    onAction(.clickDeleteCast)
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                        .frame(width: 34, height: 34)
+                        .background(Color(hex: "FCE6EF"))
+                        .clipShape(Circle())
+                        .opacity(uiState.selectedCastId == nil ? 0.45 : 1)
+                }
+                .buttonStyle(.plain)
+                .disabled(uiState.selectedCastId == nil)
                 Button {
                     onAction(.clickShortcut(.castSchedule))
                 } label: {

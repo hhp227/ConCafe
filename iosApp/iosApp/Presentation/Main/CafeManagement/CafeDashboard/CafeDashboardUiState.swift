@@ -16,6 +16,7 @@ struct CafeDashboardUiState {
     var nextCastCursor: String?
     var hasMoreCasts = false
     var isLoadingMoreCasts = false
+    var isDeleteCastDialogVisible = false
     var isLoading = true
     var infoMessage: String?
 }

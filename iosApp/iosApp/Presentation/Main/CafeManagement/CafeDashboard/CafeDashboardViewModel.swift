@@ -12,13 +12,23 @@ import Shared
 @MainActor
 final class CafeDashboardViewModel: ObservableObject {
     private let cafeId: String
+
     private let getCafeCastPageUseCase: GetCafeCastPageUseCase
+
     private let getCafeDashboardUseCase: GetCafeDashboardUseCase
+
     private let getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase
+
     private let approveCastClaimUseCase: ApproveCastClaimUseCase
+
     private let rejectCastClaimUseCase: RejectCastClaimUseCase
+
+    private let deleteCastUseCase: DeleteCastUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
     private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
+
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
     @Published private(set) var uiState = CafeDashboardUiState()
@@ -150,6 +160,43 @@ final class CafeDashboardViewModel: ObservableObject {
         uiState.infoMessage = nil
     }
 
+    private func clickDeleteCast() {
+        guard uiState.selectedCastId != nil else {
+            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            return
+        }
+        uiState.isDeleteCastDialogVisible = true
+        uiState.infoMessage = nil
+    }
+
+    private func dismissDeleteCastDialog() {
+        uiState.isDeleteCastDialogVisible = false
+    }
+
+    private func confirmDeleteCast() {
+        guard let selectedCastId = uiState.selectedCastId else {
+            uiState.isDeleteCastDialogVisible = false
+            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            return
+        }
+
+        Task {
+            do {
+                let result = try await deleteCastUseCase.invoke(castId: selectedCastId)
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isDeleteCastDialogVisible = false
+                    uiState.infoMessage = "캐스트 프로필을 삭제했습니다."
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isDeleteCastDialogVisible = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isDeleteCastDialogVisible = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func clickApproveCastClaim(_ claimId: String) {
         Task {
             do {
@@ -272,6 +319,8 @@ final class CafeDashboardViewModel: ObservableObject {
                         if self.uiState.selectedCastId == event.castId {
                             self.uiState.selectedCastId = nil
                         }
+                        self.uiState.isDeleteCastDialogVisible = false
+                        self.refreshClaimData(resetMessage: false)
                     }
                 default:
                     break
@@ -309,6 +358,12 @@ final class CafeDashboardViewModel: ObservableObject {
             clickShortcut(shortcut)
         case .clickCastSchedule(let castId):
             clickCastSchedule(castId)
+        case .clickDeleteCast:
+            clickDeleteCast()
+        case .confirmDeleteCast:
+            confirmDeleteCast()
+        case .dismissDeleteCastDialog:
+            dismissDeleteCastDialog()
         case .clickApproveCastClaim(let claimId):
             clickApproveCastClaim(claimId)
         case .clickRejectCastClaim(let claimId):
@@ -327,6 +382,7 @@ final class CafeDashboardViewModel: ObservableObject {
         getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase = KoinInitializerKt.resolveGetPendingCastClaimsForCafeUseCase(),
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
+        deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
@@ -337,6 +393,7 @@ final class CafeDashboardViewModel: ObservableObject {
         self.getPendingCastClaimsForCafeUseCase = getPendingCastClaimsForCafeUseCase
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
+        self.deleteCastUseCase = deleteCastUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase

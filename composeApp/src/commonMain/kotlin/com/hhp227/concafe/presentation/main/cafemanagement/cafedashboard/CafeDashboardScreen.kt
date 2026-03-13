@@ -28,6 +28,7 @@ import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
 import com.hhp227.concafe.di.resolveGetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
+import com.hhp227.concafe.di.resolveDeleteCastUseCase
 import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
@@ -52,6 +53,7 @@ fun CafeDashboardScreen(
                     getPendingCastClaimsForCafeUseCase = resolveGetPendingCastClaimsForCafeUseCase(),
                     approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
                     rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
+                    deleteCastUseCase = resolveDeleteCastUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
                     observeCastEventUseCase = resolveObserveCastEventUseCase()
@@ -83,6 +85,23 @@ fun CafeDashboardScreen(
                 }
             }
         }
+    }
+    if (uiState.isDeleteCastDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) },
+            title = { Text("캐스트 프로필 삭제") },
+            text = { Text("캐스트 프로필을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CafeDashboardAction.ConfirmDeleteCast) }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) }) {
+                    Text("취소")
+                }
+            }
+        )
     }
     CafeDashboardContentScreen(
         uiState = uiState,
@@ -181,6 +200,10 @@ private fun CafeDashboardContentScreen(
                             onCastManagementClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
                             },
+                            onDeleteClick = {
+                                onAction(CafeDashboardAction.ClickDeleteCast)
+                            },
+                            canDelete = uiState.selectedCastId != null,
                             onScheduleClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
                             },
@@ -525,6 +548,8 @@ private fun CastManagementSection(
     hasMoreCasts: Boolean,
     isLoadingMoreCasts: Boolean,
     onCastManagementClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    canDelete: Boolean,
     onScheduleClick: () -> Unit,
     selectedCastId: String?,
     onCastScheduleSelect: (String) -> Unit,
@@ -550,28 +575,45 @@ private fun CastManagementSection(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8C7A83)
                 )
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
-                    color = Color(0xFFFCE6EF),
-                    onClick = onScheduleClick
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onDeleteClick,
+                        enabled = canDelete,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color(0xFFFCE6EF),
+                            contentColor = Color(0xFFEF6797),
+                            disabledContainerColor = Color(0xFFF6EEF2),
+                            disabledContentColor = Color(0xFFC8B7C0)
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = Color(0xFFEF6797),
-                            modifier = Modifier.size(16.dp)
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "캐스트 삭제"
                         )
-                        Text(
-                            text = "출근표 관리",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFFEF6797),
-                            fontWeight = FontWeight.Bold
-                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = Color(0xFFFCE6EF),
+                        onClick = onScheduleClick
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = Color(0xFFEF6797),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "출근표 관리",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFEF6797),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

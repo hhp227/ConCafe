@@ -12,6 +12,7 @@ data class CafeDashboardUiState(
     val nextCastCursor: String? = null,
     val hasMoreCasts: Boolean = false,
     val isLoadingMoreCasts: Boolean = false,
+    val isDeleteCastDialogVisible: Boolean = false,
     val isLoading: Boolean = true,
     val infoMessage: String? = null
 )

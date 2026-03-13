@@ -11,6 +11,9 @@ enum CafeDashboardAction {
     case clickBack
     case clickShortcut(CafeDashboardShortcut)
     case clickCastSchedule(String)
+    case clickDeleteCast
+    case confirmDeleteCast
+    case dismissDeleteCastDialog
     case clickApproveCastClaim(String)
     case clickRejectCastClaim(String)
     case clickLoadMoreCasts

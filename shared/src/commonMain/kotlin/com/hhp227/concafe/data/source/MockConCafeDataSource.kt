@@ -867,6 +867,38 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     }
 
+    override fun deleteCast(castId: String): Cast {
+        val castIndex = casts.indexOfFirst { it.id == castId }
+        if (castIndex == -1) {
+            throw NoSuchElementException("cast detail not found")
+        }
+
+        val deletedCast = casts.removeAt(castIndex)
+        castImagesById.remove(castId)
+        castSchedulesByCastId.remove(castId)
+        castClaims.removeAll { it.castId == castId }
+        followedCastIdsByUser.values.forEach { it.remove(castId) }
+        deletedCast.linkedUserId?.let { linkedUserId ->
+            if (!affiliatedCafeIdByUser.containsKey(linkedUserId)) {
+                affiliatedCafeIdByUser[linkedUserId] = deletedCast.cafeId
+            }
+        }
+        cafeDetailsById[deletedCast.cafeId]?.let { currentDetail ->
+            cafeDetailsById[deletedCast.cafeId] = currentDetail.copy(
+                casts = currentDetail.casts.filterNot { it.id == castId }
+            )
+            cafeDetailsState.value = cafeDetailsById.toMap()
+        }
+        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
+            this[deletedCast.cafeId] = (this[deletedCast.cafeId] ?: 0) + 1
+        }
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            this[castId] = (this[castId] ?: 0) + 1
+        }
+
+        return deletedCast
+    }
+
     override fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>) {
         val cafeIndex = cafes.indexOfFirst { it.id == cafeId }
         if (cafeIndex == -1) return

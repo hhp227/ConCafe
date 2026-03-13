@@ -46,6 +46,7 @@ import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
@@ -121,6 +122,7 @@ val useCaseModule = module {
     factory { DeleteCafeEventUseCase(get()) }
     factory { DeleteCafeNoticeUseCase(get()) }
     factory { DeleteCafeMenuGoodsUseCase(get()) }
+    factory { DeleteCastUseCase(get(), get(), get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }

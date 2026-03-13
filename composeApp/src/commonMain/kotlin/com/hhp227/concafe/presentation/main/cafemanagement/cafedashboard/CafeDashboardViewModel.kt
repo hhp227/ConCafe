@@ -16,6 +16,7 @@ import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
@@ -31,6 +32,7 @@ class CafeDashboardViewModel(
     private val getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase,
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
+    private val deleteCastUseCase: DeleteCastUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
@@ -186,6 +188,53 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun clickDeleteCast() {
+        val selectedCastId = _uiState.value.selectedCastId
+        if (selectedCastId == null) {
+            _uiState.update { it.copy(infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요.") }
+            return
+        }
+        _uiState.update { it.copy(isDeleteCastDialogVisible = true, infoMessage = null) }
+    }
+
+    private fun dismissDeleteCastDialog() {
+        _uiState.update { it.copy(isDeleteCastDialogVisible = false) }
+    }
+
+    private fun confirmDeleteCast() {
+        val selectedCastId = _uiState.value.selectedCastId
+        if (selectedCastId == null) {
+            _uiState.update {
+                it.copy(
+                    isDeleteCastDialogVisible = false,
+                    infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            when (val result = deleteCastUseCase.invoke(selectedCastId)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isDeleteCastDialogVisible = false,
+                            infoMessage = "캐스트 프로필을 삭제했습니다."
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isDeleteCastDialogVisible = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun clickApproveCastClaim(claimId: String) {
         viewModelScope.launch {
             when (val result = approveCastClaimUseCase.invoke(claimId)) {
@@ -291,9 +340,11 @@ class CafeDashboardViewModel(
                         _uiState.update { state ->
                             state.copy(
                                 castPreviews = state.castPreviews.filterNot { it.id == event.castId },
-                                selectedCastId = state.selectedCastId?.takeUnless { it == event.castId }
+                                selectedCastId = state.selectedCastId?.takeUnless { it == event.castId },
+                                isDeleteCastDialogVisible = false
                             )
                         }
+                        refreshClaimData(resetMessage = false)
                     }
                 }
             }
@@ -321,6 +372,9 @@ class CafeDashboardViewModel(
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
+            CafeDashboardAction.ClickDeleteCast -> clickDeleteCast()
+            CafeDashboardAction.ConfirmDeleteCast -> confirmDeleteCast()
+            CafeDashboardAction.DismissDeleteCastDialog -> dismissDeleteCastDialog()
             is CafeDashboardAction.ClickApproveCastClaim -> clickApproveCastClaim(action.claimId)
             is CafeDashboardAction.ClickRejectCastClaim -> clickRejectCastClaim(action.claimId)
             CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
