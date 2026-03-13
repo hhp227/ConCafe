@@ -10,7 +10,8 @@ sealed interface NoticeEventAction {
     data object ClickMoreEvents : NoticeEventAction
     data class ClickEditNotice(val id: String) : NoticeEventAction
     data class ClickDeleteNotice(val id: String) : NoticeEventAction
-    data class ClickEventMenu(val id: String) : NoticeEventAction
+    data class ClickEditEvent(val id: String) : NoticeEventAction
+    data class ClickDeleteEvent(val id: String) : NoticeEventAction
     data object DismissFormSheet : NoticeEventAction
     data class ChangeFormTitle(val value: String) : NoticeEventAction
     data class ChangeFormContent(val value: String) : NoticeEventAction

@@ -38,6 +38,10 @@ import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
@@ -55,6 +59,7 @@ import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -65,6 +70,8 @@ import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
@@ -99,6 +106,10 @@ val useCaseModule = module {
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { CreateVisitUseCase(get(), get()) }
     factory { CreateReviewUseCase(get(), get(), get()) }
+    factory { CreateCafeEventUseCase(get()) }
+    factory { CreateCafeNoticeUseCase(get()) }
+    factory { DeleteCafeEventUseCase(get()) }
+    factory { DeleteCafeNoticeUseCase(get()) }
     factory { DeleteCafeMenuGoodsUseCase(get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
@@ -118,6 +129,7 @@ val useCaseModule = module {
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }
     factory { ObserveCastEventUseCase(get()) }
+    factory { ObserveNoticeManagementEventUseCase(get()) }
     factory { ObserveReviewEventUseCase(get()) }
     factory { ObserveCastVersionUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }
@@ -128,6 +140,8 @@ val useCaseModule = module {
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
     factory { UpdateCafeInfoUseCase(get()) }
+    factory { UpdateCafeEventUseCase(get()) }
+    factory { UpdateCafeNoticeUseCase(get()) }
     factory { UpsertCastUseCase(get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get()) }
 }

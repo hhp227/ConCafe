@@ -34,11 +34,11 @@ interface ConCafeDataSource {
 
     val banners: List<HomeBanner>
 
-    val notices: List<Notice>
+    val notices: MutableList<Notice>
 
-    val cafeNoticeManagementItems: List<CafeNoticeManagementItem>
+    val cafeNoticeManagementItems: MutableList<CafeNoticeManagementItem>
 
-    val cafeEventManagementItems: List<CafeEventManagementItem>
+    val cafeEventManagementItems: MutableList<CafeEventManagementItem>
 
     val reviews: MutableList<Review>
 

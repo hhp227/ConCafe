@@ -17,7 +17,8 @@ enum NoticeEventAction {
     case clickMoreEvents
     case clickEditNotice(String)
     case clickDeleteNotice(String)
-    case clickEventMenu(String)
+    case clickEditEvent(String)
+    case clickDeleteEvent(String)
     case dismissFormSheet
     case changeFormTitle(String)
     case changeFormContent(String)

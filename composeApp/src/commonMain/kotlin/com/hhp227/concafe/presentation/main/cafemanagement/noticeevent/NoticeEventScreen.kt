@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Switch
@@ -70,8 +69,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveCreateCafeEventUseCase
+import com.hhp227.concafe.di.resolveCreateCafeNoticeUseCase
+import com.hhp227.concafe.di.resolveDeleteCafeEventUseCase
+import com.hhp227.concafe.di.resolveDeleteCafeNoticeUseCase
 import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
+import com.hhp227.concafe.di.resolveObserveNoticeManagementEventUseCase
+import com.hhp227.concafe.di.resolveUpdateCafeEventUseCase
+import com.hhp227.concafe.di.resolveUpdateCafeNoticeUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -88,7 +94,14 @@ fun NoticeEventScreen(
                 NoticeEventViewModel(
                     cafeId = cafeId,
                     getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
-                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase()
+                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase(),
+                    createCafeNoticeUseCase = resolveCreateCafeNoticeUseCase(),
+                    createCafeEventUseCase = resolveCreateCafeEventUseCase(),
+                    updateCafeNoticeUseCase = resolveUpdateCafeNoticeUseCase(),
+                    updateCafeEventUseCase = resolveUpdateCafeEventUseCase(),
+                    deleteCafeNoticeUseCase = resolveDeleteCafeNoticeUseCase(),
+                    deleteCafeEventUseCase = resolveDeleteCafeEventUseCase(),
+                    observeNoticeManagementEventUseCase = resolveObserveNoticeManagementEventUseCase()
                 )
             }
         }
@@ -274,7 +287,11 @@ private fun NoticeEventContent(
                             }
                         }
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            EventCard(item = event, onMenuClick = { onAction(NoticeEventAction.ClickEventMenu(event.id)) })
+                            EventCard(
+                                item = event,
+                                onEdit = { onAction(NoticeEventAction.ClickEditEvent(event.id)) },
+                                onDelete = { onAction(NoticeEventAction.ClickDeleteEvent(event.id)) }
+                            )
                         }
                     }
                 }
@@ -597,7 +614,8 @@ private fun EmptyStateCard(message: String) {
 @Composable
 private fun EventCard(
     item: EventItem,
-    onMenuClick: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.alpha(if (item.isDimmed) 0.72f else 1f),
@@ -649,8 +667,13 @@ private fun EventCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "메뉴", tint = Color(0xFF9A8D95))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Edit, contentDescription = "수정", tint = Color(0xFF9A8D95))
+                        }
+                        IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "삭제", tint = Color(0xFF9A8D95))
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {

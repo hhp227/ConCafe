@@ -3,6 +3,10 @@ package com.hhp227.concafe.di
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -30,6 +34,7 @@ import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -40,6 +45,8 @@ import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.core.KoinApplication
@@ -126,6 +133,34 @@ fun resolveCreateVisitUseCase(): CreateVisitUseCase {
 }
 
 fun resolveCreateReviewUseCase(): CreateReviewUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateCafeEventUseCase(): CreateCafeEventUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateCafeNoticeUseCase(): CreateCafeNoticeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteCafeEventUseCase(): DeleteCafeEventUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteCafeNoticeUseCase(): DeleteCafeNoticeUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -293,6 +328,13 @@ fun resolveObserveCastEventUseCase(): ObserveCastEventUseCase {
     return koin.get()
 }
 
+fun resolveObserveNoticeManagementEventUseCase(): ObserveNoticeManagementEventUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveObserveCastVersionUseCase(): ObserveCastVersionUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -315,6 +357,20 @@ fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
 }
 
 fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeEventUseCase(): UpdateCafeEventUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeNoticeUseCase(): UpdateCafeNoticeUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

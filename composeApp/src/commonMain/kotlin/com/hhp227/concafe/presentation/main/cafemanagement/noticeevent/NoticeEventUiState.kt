@@ -15,6 +15,8 @@ data class NoticeEventUiState(
     val canLoadMoreEvents: Boolean = false,
     val infoMessage: String? = null,
     val isFormSheetVisible: Boolean = false,
+    val isSubmittingForm: Boolean = false,
+    val formEditingId: String? = null,
     val formTitle: String = "",
     val formContent: String = "",
     val formImageUrl: String = "",
@@ -22,7 +24,12 @@ data class NoticeEventUiState(
     val formReservedAt: String = ""
 ) {
     val formSheetTitle: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "공지사항 등록" else "이벤트 등록"
+        get() = when {
+            selectedTab == NoticeEventTab.NOTICE && formEditingId != null -> "공지사항 수정"
+            selectedTab == NoticeEventTab.NOTICE -> "공지사항 등록"
+            formEditingId != null -> "이벤트 수정"
+            else -> "이벤트 등록"
+        }
 
     val formTitlePlaceholder: String
         get() = if (selectedTab == NoticeEventTab.NOTICE) "제목을 입력해 주세요" else "이벤트 제목을 입력해 주세요"
@@ -31,7 +38,12 @@ data class NoticeEventUiState(
         get() = if (selectedTab == NoticeEventTab.NOTICE) "공지사항 내용을 입력해 주세요" else "이벤트 상세 내용을 입력해 주세요"
 
     val formSubmitLabel: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "등록하기" else "이벤트 등록하기"
+        get() = when {
+            selectedTab == NoticeEventTab.NOTICE && formEditingId != null -> "수정하기"
+            selectedTab == NoticeEventTab.NOTICE -> "등록하기"
+            formEditingId != null -> "이벤트 수정하기"
+            else -> "이벤트 등록하기"
+        }
 
     val formScheduleLabel: String
         get() = if (selectedTab == NoticeEventTab.NOTICE) "게시글 예약" else "이벤트 기간"
@@ -64,7 +76,7 @@ data class NoticeEventUiState(
         get() = if (selectedTab == NoticeEventTab.NOTICE) notices.isEmpty() else events.isEmpty()
 
     val isFormSubmitEnabled: Boolean
-        get() = formTitle.isNotBlank() && formContent.isNotBlank() && (!showsImageSection || hasAttachedImage)
+        get() = !isSubmittingForm && formTitle.isNotBlank() && formContent.isNotBlank() && (!showsImageSection || hasAttachedImage)
 }
 
 enum class NoticeEventTab(val title: String) {
@@ -75,6 +87,7 @@ enum class NoticeEventTab(val title: String) {
 data class NoticeItem(
     val id: String,
     val title: String,
+    val content: String,
     val date: String,
     val isPinned: Boolean,
     val statusLabel: String,
@@ -84,6 +97,7 @@ data class NoticeItem(
 data class EventItem(
     val id: String,
     val title: String,
+    val content: String,
     val period: String,
     val statusLabel: String,
     val imageUrl: String,

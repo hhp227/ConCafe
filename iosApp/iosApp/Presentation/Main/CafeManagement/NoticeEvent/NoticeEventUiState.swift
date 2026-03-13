@@ -22,6 +22,8 @@ struct NoticeEventUiState {
     var canLoadMoreEvents: Bool = false
     var infoMessage: String? = nil
     var isFormSheetVisible: Bool = false
+    var isSubmittingForm: Bool = false
+    var formEditingId: String? = nil
     var formTitle: String = ""
     var formContent: String = ""
     var formImageUrl: String = ""
@@ -29,7 +31,10 @@ struct NoticeEventUiState {
     var formReservedAt: String = ""
 
     var formSheetTitle: String {
-        selectedTab == .notice ? "공지사항 등록" : "이벤트 등록"
+        if selectedTab == .notice {
+            return formEditingId == nil ? "공지사항 등록" : "공지사항 수정"
+        }
+        return formEditingId == nil ? "이벤트 등록" : "이벤트 수정"
     }
 
     var formTitlePlaceholder: String {
@@ -41,7 +46,10 @@ struct NoticeEventUiState {
     }
 
     var formSubmitLabel: String {
-        selectedTab == .notice ? "등록하기" : "이벤트 등록하기"
+        if selectedTab == .notice {
+            return formEditingId == nil ? "등록하기" : "수정하기"
+        }
+        return formEditingId == nil ? "이벤트 등록하기" : "이벤트 수정하기"
     }
 
     var formScheduleLabel: String {
@@ -85,6 +93,7 @@ struct NoticeEventUiState {
     }
 
     var isFormSubmitEnabled: Bool {
+        !isSubmittingForm &&
         !formTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !formContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         (!showsImageSection || hasAttachedImage)
@@ -99,6 +108,7 @@ enum NoticeEventTab: String, CaseIterable {
 struct NoticeItem: Identifiable, Equatable {
     let id: String
     let title: String
+    let content: String
     let date: String
     let isPinned: Bool
     let statusLabel: String
@@ -108,6 +118,7 @@ struct NoticeItem: Identifiable, Equatable {
 struct EventItem: Identifiable, Equatable {
     let id: String
     let title: String
+    let content: String
     let period: String
     let statusLabel: String
     let imageUrl: String

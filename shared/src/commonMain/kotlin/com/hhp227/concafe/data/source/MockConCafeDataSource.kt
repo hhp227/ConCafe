@@ -255,15 +255,15 @@ class MockConCafeDataSource : ConCafeDataSource {
         HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF")
     )
 
-    override val notices = listOf(
+    override val notices = mutableListOf(
         Notice("notice-1", "cafe-1", "메이드 하우스", "3월 특별 이벤트", "3월 특별 이벤트 진행 중!", "2026-03-05T07:00:00Z", "2시간 전"),
         Notice("notice-2", "cafe-2", "핑크 캐슬", "신규 메이드 입장", "신규 메이드 입장! 많은 관심 부탁드려요", "2026-03-05T04:00:00Z", "5시간 전"),
         Notice("notice-3", "cafe-3", "리본 카페", "주말 예약 마감", "주말 예약이 마감되었습니다", "2026-03-04T09:00:00Z", "1일 전")
     )
 
-    override val cafeNoticeManagementItems = buildCafeNoticeManagementItems()
+    override val cafeNoticeManagementItems = buildCafeNoticeManagementItems().toMutableList()
 
-    override val cafeEventManagementItems = buildCafeEventManagementItems()
+    override val cafeEventManagementItems = buildCafeEventManagementItems().toMutableList()
 
     override val cafeDetailsById = cafes.associate { cafe ->
         cafe.id to buildCafeDetail(cafe)
