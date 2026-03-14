@@ -17,13 +17,17 @@ final class ScheduleViewModel: ObservableObject {
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
+    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
+    private let updateCastScheduleUseCase: UpdateCastScheduleUseCase
 
     @Published private(set) var uiState = ScheduleUiState(isLoading: true)
 
     let event = PassthroughSubject<ScheduleEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private var watchHandles: [WatchKey: WatchHandle] = [:]
 
@@ -69,26 +73,56 @@ final class ScheduleViewModel: ObservableObject {
         }
     }
 
+    private func bindScheduleManagementEvent(_ castId: String) {
+        watchHandles[.scheduleEvent]?.cancel()
+        watchHandles[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let event as Shared.ScheduleManagementEvent.Updated:
+                    if event.castId == castId {
+                        self.loadSchedule(showLoading: false)
+                        let message: String
+                        switch event.status {
+                        case .work:
+                            message = "근무 시간이 저장되었습니다."
+                        case .off:
+                            message = "휴무로 변경되었습니다."
+                        default:
+                            message = "휴가 일정으로 변경되었습니다."
+                        }
+                        self.event.send(.showMessage(message))
+                    }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
     private func unbindCastEvent() {
         watchHandles.removeValue(forKey: .castEvent)?.cancel()
     }
 
-    private func loadSchedule() {
-        loadTask?.cancel()
-        uiState.isLoading = true
+    private func loadSchedule(showLoading: Bool = true) {
+        tasks[.load]?.cancel()
+        uiState.isLoading = showLoading
+        uiState.isSaving = false
         uiState.errorMessage = nil
         uiState.infoMessage = nil
 
-        loadTask = Task {
+        tasks[.load] = Task {
             do {
                 let result = try await getScheduleManagementDataUseCase.invoke(castId: castId)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.ScheduleManagementData {
                     bindCastEvent(data.detail.cast.id)
+                    bindScheduleManagementEvent(data.detail.cast.id)
                     uiState = data.toUiState()
                 } else {
                     unbindCastEvent()
+                    watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
                     uiState = ScheduleUiState(
                         isLoading: false,
                         isSaving: false,
@@ -98,6 +132,7 @@ final class ScheduleViewModel: ObservableObject {
             } catch {
                 if Task.isCancelled { return }
                 unbindCastEvent()
+                watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
                 uiState = ScheduleUiState(
                     isLoading: false,
                     isSaving: false,
@@ -142,37 +177,52 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editEndTime = value
         case .submitEditDay:
             guard let editingId = uiState.editingScheduleId else { return }
-            let statusLabel = uiState.editStatus.label
-            let isWorking = uiState.editStatus == .work
-            let timeLabel = isWorking ? "\(uiState.editStartTime) - \(uiState.editEndTime)" : "-"
-            uiState.schedules = uiState.schedules.map { schedule in
-                guard schedule.id == editingId else { return schedule }
-                return ScheduleUiState.DaySchedule(
-                    id: schedule.id,
-                    title: schedule.title,
-                    timeLabel: timeLabel,
-                    statusLabel: statusLabel,
-                    isWorking: isWorking,
-                    status: uiState.editStatus
-                )
-            }
-            uiState.weekDays = uiState.weekDays.map { day in
-                guard day.id == editingId else { return day }
-                return ScheduleUiState.WeekDay(
-                    id: day.id,
-                    label: day.label,
-                    number: day.number,
-                    isSelected: day.isSelected,
-                    isWorking: isWorking
-                )
+            guard !uiState.managedCastId.isEmpty else { return }
+            if uiState.editStatus == .work && uiState.editStartTime >= uiState.editEndTime {
+                uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+                return
             }
             uiState.isEditSheetVisible = false
             uiState.editingScheduleId = nil
-            uiState.infoMessage = "\(uiState.editingScheduleTitle) 시간을 수정했습니다."
-        case .clickSave:
             uiState.isSaving = true
-            uiState.infoMessage = "주간 시간표를 저장했습니다."
-            uiState.isSaving = false
+            uiState.errorMessage = nil
+            uiState.infoMessage = nil
+
+            let managedCastId = uiState.managedCastId
+            let editStatus = uiState.editStatus
+            let editStartTime = uiState.editStartTime
+            let editEndTime = uiState.editEndTime
+
+            tasks[.submit]?.cancel()
+            tasks[.submit] = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let result = try await updateCastScheduleUseCase.invoke(
+                        input: CastScheduleUpdate(
+                            castId: managedCastId,
+                            date: editingId,
+                            status: editStatus.toDomainStatus(),
+                            startTime: editStatus == .work ? editStartTime : nil,
+                            endTime: editStatus == .work ? editEndTime : nil
+                        )
+                    )
+                    if Task.isCancelled { return }
+                    if let failure = result as? AppResultFailure {
+                        if let validation = failure.error as? AppErrorValidationFailed {
+                            uiState.errorMessage = validation.reason.toScheduleValidationMessage()
+                        } else {
+                            uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                        }
+                        uiState.isSaving = false
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.isSaving = false
+                    uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                }
+            }
+        case .clickSave:
+            uiState.infoMessage = "일자별 수정 시 즉시 저장됩니다."
         case .dismissInfoMessage:
             uiState.infoMessage = nil
             uiState.errorMessage = nil
@@ -183,31 +233,43 @@ final class ScheduleViewModel: ObservableObject {
         castId: String? = nil,
         getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        updateCastScheduleUseCase: UpdateCastScheduleUseCase = KoinInitializerKt.resolveUpdateCastScheduleUseCase()
     ) {
         self.castId = castId
         self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
+        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.updateCastScheduleUseCase = updateCastScheduleUseCase
 
         observeSession()
     }
 
     deinit {
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
         watchHandles.values.forEach { $0.cancel() }
         watchHandles.removeAll()
+    }
+
+    private enum TaskKey {
+        case load
+        case submit
     }
 
     private enum WatchKey {
         case session
         case castEvent
+        case scheduleEvent
     }
 }
 
 private extension Shared.ScheduleManagementData {
     func toUiState() -> ScheduleUiState {
         ScheduleUiState(
+            managedCastId: detail.cast.id,
             isLoading: false,
             isSaving: false,
             errorMessage: nil,
@@ -234,7 +296,7 @@ private extension Shared.ScheduleManagementData {
                     timeLabel: schedule.timeLabel,
                     statusLabel: schedule.statusLabel,
                     isWorking: schedule.isWorking,
-                    status: schedule.isWorking ? .work : (schedule.statusLabel.contains("휴가") ? .vacation : .off)
+                    status: schedule.status.toUiStatus()
                 )
             },
             selectedDayId: selectedDayId,
@@ -244,6 +306,19 @@ private extension Shared.ScheduleManagementData {
 }
 
 private extension String {
+    func toScheduleValidationMessage() -> String {
+        switch self {
+        case "start time is required":
+            return "시작 시간을 선택해주세요."
+        case "end time is required":
+            return "종료 시간을 선택해주세요."
+        case "end time must be after start time":
+            return "종료 시간은 시작 시간보다 늦어야 합니다."
+        default:
+            return "근무 시간 저장에 실패했습니다."
+        }
+    }
+
     func toDisplayConceptRole() -> String {
         switch lowercased() {
         case "maid":
@@ -259,5 +334,31 @@ private extension String {
 
     func toInitials() -> String {
         String(prefix(2)).uppercased()
+    }
+}
+
+private extension ScheduleEditStatus {
+    func toDomainStatus() -> CastScheduleStatus {
+        switch self {
+        case .work:
+            return .work
+        case .off:
+            return .off
+        case .vacation:
+            return .vacation
+        }
+    }
+}
+
+private extension CastScheduleStatus {
+    func toUiStatus() -> ScheduleEditStatus {
+        switch self {
+        case .work:
+            return .work
+        case .off:
+            return .off
+        default:
+            return .vacation
+        }
     }
 }

@@ -8,6 +8,7 @@
 import Foundation
 
 struct ScheduleUiState {
+    var managedCastId: String = ""
     var isLoading: Bool = false
     var isSaving: Bool = false
     var isEditSheetVisible: Bool = false

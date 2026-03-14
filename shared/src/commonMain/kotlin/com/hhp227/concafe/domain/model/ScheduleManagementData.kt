@@ -20,5 +20,6 @@ data class ScheduleManagementDaySchedule(
     val title: String,
     val timeLabel: String,
     val statusLabel: String,
-    val isWorking: Boolean
+    val isWorking: Boolean,
+    val status: CastScheduleStatus
 )

@@ -5,12 +5,20 @@ import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.di.resolveGetScheduleManagementDataUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveObserveScheduleManagementEventUseCase
+import com.hhp227.concafe.di.resolveUpdateCastScheduleUseCase
+import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.ScheduleManagementEvent as ScheduleManagementDomainEvent
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +32,9 @@ class ScheduleViewModel(
     private val castId: String? = null,
     private val getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = resolveGetScheduleManagementDataUseCase(),
     private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
+    private val updateCastScheduleUseCase: UpdateCastScheduleUseCase = resolveUpdateCastScheduleUseCase(),
+    private val observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = resolveObserveScheduleManagementEventUseCase()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
@@ -76,14 +86,37 @@ class ScheduleViewModel(
         }
     }
 
+    private fun bindScheduleManagementEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
+            observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
+                        loadSchedule(showLoading = false)
+                        _event.emit(
+                            ScheduleEvent.ShowMessage(
+                                when (event.status) {
+                                    CastScheduleStatus.WORK -> "근무 시간이 저장되었습니다."
+                                    CastScheduleStatus.OFF -> "휴무로 변경되었습니다."
+                                    CastScheduleStatus.VACATION -> "휴가 일정으로 변경되었습니다."
+                                }
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun unbindCastEvent() {
         jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
     }
 
-    private fun loadSchedule() {
+    private fun loadSchedule(showLoading: Boolean = true) {
         _uiState.update {
             it.copy(
-                isLoading = true,
+                isLoading = showLoading,
+                isSaving = false,
                 errorMessage = null,
                 infoMessage = null
             )
@@ -92,10 +125,12 @@ class ScheduleViewModel(
             when (val result = getScheduleManagementDataUseCase.invoke(castId)) {
                 is AppResult.Success -> {
                     bindCastEvent(result.data.detail.cast.id)
+                    bindScheduleManagementEvent(result.data.detail.cast.id)
                     _uiState.value = result.data.toUiState()
                 }
                 is AppResult.Failure -> {
                     unbindCastEvent()
+                    jobs.remove(TaskKey.OBSERVE_SCHEDULE_EVENT)?.cancel()
                     _uiState.value = ScheduleUiState(
                         isLoading = false,
                         errorMessage = "출근표 데이터를 불러오지 못했습니다.",
@@ -160,46 +195,55 @@ class ScheduleViewModel(
             ScheduleAction.SubmitEditDay -> {
                 val currentState = _uiState.value
                 val editingId = currentState.editingScheduleId ?: return
-                val nextStatusLabel = when (currentState.editStatus) {
-                    ScheduleEditStatus.WORK -> "근무"
-                    ScheduleEditStatus.OFF -> "휴무"
-                    ScheduleEditStatus.VACATION -> "휴가"
+                val managedCastId = currentState.managedCastId.ifBlank { return }
+                if (currentState.editStatus == ScheduleEditStatus.WORK && currentState.editStartTime >= currentState.editEndTime) {
+                    _uiState.update { it.copy(errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다.") }
+                    return
                 }
-                val nextTimeLabel = if (currentState.editStatus == ScheduleEditStatus.WORK) {
-                    "${currentState.editStartTime} - ${currentState.editEndTime}"
-                } else {
-                    "-"
-                }
-                val isWorking = currentState.editStatus == ScheduleEditStatus.WORK
                 _uiState.update { state ->
                     state.copy(
+                        isSaving = true,
                         isEditSheetVisible = false,
                         editingScheduleId = null,
-                        schedules = state.schedules.map { schedule ->
-                            if (schedule.id == editingId) {
-                                schedule.copy(
-                                    timeLabel = nextTimeLabel,
-                                    statusLabel = nextStatusLabel,
-                                    isWorking = isWorking,
-                                    status = currentState.editStatus
-                                )
-                            } else {
-                                schedule
-                            }
-                        },
-                        weekDays = state.weekDays.map { day ->
-                            if (day.id == editingId) day.copy(isWorking = isWorking) else day
-                        },
-                        infoMessage = "${currentState.editingScheduleTitle} 시간을 수정했습니다."
+                        errorMessage = null,
+                        infoMessage = null
                     )
+                }
+                jobs[TaskKey.SUBMIT]?.cancel()
+                jobs[TaskKey.SUBMIT] = viewModelScope.launch {
+                    when (
+                        val result = updateCastScheduleUseCase.invoke(
+                            CastScheduleUpdate(
+                                castId = managedCastId,
+                                date = editingId,
+                                status = currentState.editStatus.toDomainStatus(),
+                                startTime = currentState.editStartTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK },
+                                endTime = currentState.editEndTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK }
+                            )
+                        )
+                    ) {
+                        is AppResult.Success -> Unit
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                val error = result.error
+                                it.copy(
+                                    isSaving = false,
+                                    errorMessage = when (error) {
+                                        is AppError.ValidationFailed ->
+                                            error.reason.toScheduleValidationMessage()
+                                        else -> "근무 시간 저장에 실패했습니다."
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
             ScheduleAction.ClickMore -> {
                 _uiState.update { it.copy(infoMessage = "추가 메뉴는 다음 단계에서 제공합니다.") }
             }
             ScheduleAction.ClickSave -> {
-                _uiState.update { it.copy(isSaving = true, infoMessage = "주간 시간표를 저장했습니다.") }
-                _uiState.update { it.copy(isSaving = false) }
+                _uiState.update { it.copy(infoMessage = "일자별 수정 시 즉시 저장됩니다.") }
             }
             ScheduleAction.DismissInfoMessage -> {
                 _uiState.update { it.copy(infoMessage = null, errorMessage = null) }
@@ -216,6 +260,7 @@ class ScheduleViewModel(
 
 private fun ScheduleManagementData.toUiState(): ScheduleUiState {
     return ScheduleUiState(
+        managedCastId = detail.cast.id,
         isLoading = false,
         isSaving = false,
         errorMessage = null,
@@ -242,11 +287,7 @@ private fun ScheduleManagementData.toUiState(): ScheduleUiState {
                 timeLabel = schedule.timeLabel,
                 statusLabel = schedule.statusLabel,
                 isWorking = schedule.isWorking,
-                status = when {
-                    schedule.isWorking -> ScheduleEditStatus.WORK
-                    schedule.statusLabel.contains("휴가") -> ScheduleEditStatus.VACATION
-                    else -> ScheduleEditStatus.OFF
-                }
+                status = schedule.status.toUiStatus()
             )
         },
         selectedDayId = selectedDayId,
@@ -269,5 +310,32 @@ private fun String.toInitials(): String {
 
 private enum class TaskKey {
     OBSERVE_SESSION,
-    OBSERVE_CAST_EVENT
+    OBSERVE_CAST_EVENT,
+    OBSERVE_SCHEDULE_EVENT,
+    SUBMIT
+}
+
+private fun ScheduleEditStatus.toDomainStatus(): CastScheduleStatus {
+    return when (this) {
+        ScheduleEditStatus.WORK -> CastScheduleStatus.WORK
+        ScheduleEditStatus.OFF -> CastScheduleStatus.OFF
+        ScheduleEditStatus.VACATION -> CastScheduleStatus.VACATION
+    }
+}
+
+private fun CastScheduleStatus.toUiStatus(): ScheduleEditStatus {
+    return when (this) {
+        CastScheduleStatus.WORK -> ScheduleEditStatus.WORK
+        CastScheduleStatus.OFF -> ScheduleEditStatus.OFF
+        CastScheduleStatus.VACATION -> ScheduleEditStatus.VACATION
+    }
+}
+
+private fun String.toScheduleValidationMessage(): String {
+    return when (this) {
+        "start time is required" -> "시작 시간을 선택해주세요."
+        "end time is required" -> "종료 시간을 선택해주세요."
+        "end time must be after start time" -> "종료 시간은 시작 시간보다 늦어야 합니다."
+        else -> "근무 시간 저장에 실패했습니다."
+    }
 }

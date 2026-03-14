@@ -78,6 +78,7 @@ import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
@@ -91,6 +92,7 @@ import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeRegistrationClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
@@ -170,6 +172,7 @@ val useCaseModule = module {
     factory { ObserveCafeCastVersionUseCase(get()) }
     factory { ObserveCastClaimEventUseCase(get()) }
     factory { ObserveCastEventUseCase(get()) }
+    factory { ObserveScheduleManagementEventUseCase(get()) }
     factory { ObserveNoticeManagementEventUseCase(get()) }
     factory { ObserveReviewEventUseCase(get()) }
     factory { ObserveCastVersionUseCase(get()) }
@@ -183,6 +186,7 @@ val useCaseModule = module {
     factory { UpdateCafeInfoUseCase(get()) }
     factory { UpdateCafeEventUseCase(get()) }
     factory { UpdateCafeNoticeUseCase(get()) }
+    factory { UpdateCastScheduleUseCase(get(), get()) }
     factory { ApproveCastClaimUseCase(get(), get()) }
     factory { RejectCastClaimUseCase(get(), get()) }
     factory { RejectCafeOwnerClaimUseCase(get(), get()) }

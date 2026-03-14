@@ -1,6 +1,7 @@
 package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 
 data class ScheduleUiState(
+    val managedCastId: String = "",
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val isEditSheetVisible: Boolean = false,
