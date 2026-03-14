@@ -13,6 +13,8 @@ import Shared
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
@@ -94,6 +96,16 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func observeBannerEvent() {
+        watchHandles[.bannerEvent]?.cancel()
+        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                self.loadHomeFeed()
+            }
+        }
+    }
+
     private func observeCastEvent() {
         watchHandles[.castEvent]?.cancel()
         watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
@@ -169,13 +181,16 @@ final class HomeViewModel: ObservableObject {
 
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.observeBannerEventUseCase = observeBannerEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
         
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
@@ -188,6 +203,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private enum WatchKey {
+        case bannerEvent
         case cafeDetailEvent
         case castEvent
     }

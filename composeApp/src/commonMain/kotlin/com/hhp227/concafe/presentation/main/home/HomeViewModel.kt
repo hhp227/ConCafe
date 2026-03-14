@@ -12,17 +12,20 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
 ) : ViewModel() {
@@ -96,6 +99,17 @@ class HomeViewModel(
         }
     }
 
+    private fun observeBannerEvent() {
+        jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
+            observeBannerEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is BannerEvent.Created -> loadHomeFeed()
+                }
+            }
+        }
+    }
+
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
@@ -159,12 +173,14 @@ class HomeViewModel(
     }
 
     init {
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
     }
 
     private enum class TaskKey {
+        OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT
     }

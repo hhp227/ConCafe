@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
@@ -20,6 +21,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
@@ -33,6 +35,7 @@ class CafeDashboardViewModel(
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
+    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
@@ -306,6 +309,19 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun observeBannerEvent() {
+        jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
+            observeBannerEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
+                        loadCafeDashboard()
+                    }
+                }
+            }
+        }
+    }
+
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
@@ -386,6 +402,7 @@ class CafeDashboardViewModel(
     }
 
     init {
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
@@ -399,6 +416,7 @@ class CafeDashboardViewModel(
     }
 
     private enum class TaskKey {
+        OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_CAST_CLAIM_EVENT

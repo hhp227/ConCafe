@@ -31,6 +31,7 @@ import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
 import com.hhp227.concafe.di.resolveDeleteCastUseCase
 import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveBannerEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
@@ -54,6 +55,7 @@ fun CafeDashboardScreen(
                     approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
                     rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
                     deleteCastUseCase = resolveDeleteCastUseCase(),
+                    observeBannerEventUseCase = resolveObserveBannerEventUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
                     observeCastEventUseCase = resolveObserveCastEventUseCase()

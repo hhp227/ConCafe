@@ -11,5 +11,7 @@ data class HomeBanner(
     val targetType: BannerLinkTargetType = BannerLinkTargetType.EXTERNAL_LINK,
     val targetValue: String = "",
     val displayDays: Int = 1,
-    val statusLabel: String = "ACTIVE"
+    val statusLabel: String = "ACTIVE",
+    val createdAtEpochMillis: Long = 0L,
+    val activatedAtEpochMillis: Long = 0L
 )

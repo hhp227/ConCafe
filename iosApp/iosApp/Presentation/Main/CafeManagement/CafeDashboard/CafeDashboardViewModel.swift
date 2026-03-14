@@ -25,6 +25,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let deleteCastUseCase: DeleteCastUseCase
 
+    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
@@ -279,6 +281,18 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func observeBannerEvent() {
+        watchHandles[.bannerEvent]?.cancel()
+        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let created = event as? BannerEvent.Created, created.banner.cafeId == self.cafeId {
+                    self.loadCafeDashboard()
+                }
+            }
+        }
+    }
+
     private func patchCafeInfo(_ cafe: Cafe) {
         guard let current = uiState.cafe else { return }
         uiState.cafe = CafeDashboardData(
@@ -385,6 +399,7 @@ final class CafeDashboardViewModel: ObservableObject {
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
+        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
@@ -396,10 +411,12 @@ final class CafeDashboardViewModel: ObservableObject {
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
         self.deleteCastUseCase = deleteCastUseCase
+        self.observeBannerEventUseCase = observeBannerEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
 
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
@@ -412,6 +429,7 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private enum WatchKey {
+        case bannerEvent
         case cafeDetailEvent
         case castClaimEvent
         case castEvent

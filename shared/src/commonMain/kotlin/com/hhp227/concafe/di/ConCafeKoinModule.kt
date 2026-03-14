@@ -75,6 +75,7 @@ import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
@@ -163,6 +164,7 @@ val useCaseModule = module {
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCafeDetailEventUseCase(get()) }
+    factory { ObserveBannerEventUseCase(get()) }
     factory { ObserveCafeRegistrationClaimEventUseCase(get()) }
     factory { ObserveCafeDetailUseCase(get()) }
     factory { ObserveCafeCastVersionUseCase(get()) }

@@ -366,13 +366,8 @@ class BannerEditViewModel(
         viewModelScope.launch {
             when (val result = createHomeBannerUseCase.invoke(currentState.toCreateInput())) {
                 is AppResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            infoMessage = "배너가 등록되었습니다."
-                        )
-                    }
-                    _event.emit(BannerEditEvent.ShowSaveSuccessMessage)
+                    _uiState.update { it.copy(isSaving = false, infoMessage = null) }
+                    _event.emit(BannerEditEvent.NavigateBack)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {

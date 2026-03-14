@@ -283,8 +283,8 @@ final class BannerEditViewModel: ObservableObject {
                 let result = try await createHomeBannerUseCase.invoke(input: uiState.toCreateInput())
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isSaving = false
-                    uiState.infoMessage = "배너가 등록되었습니다."
-                    event.send(.showSaveSuccessAlert)
+                    uiState.infoMessage = nil
+                    event.send(.navigateBack)
                 } else if let failure = result as? AppResultFailure {
                     uiState.isSaving = false
                     uiState.infoMessage = failure.error.toUserMessage()
