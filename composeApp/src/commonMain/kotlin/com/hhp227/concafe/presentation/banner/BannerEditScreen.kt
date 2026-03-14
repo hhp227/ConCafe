@@ -27,6 +27,7 @@ import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
 import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
 import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveCreateHomeBannerUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -38,6 +39,7 @@ fun BannerEditScreen(
         factory = viewModelFactory {
             initializer {
                 BannerEditViewModel(
+                    createHomeBannerUseCase = resolveCreateHomeBannerUseCase(),
                     getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
                     getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
                     getCafeEventPageUseCase = resolveGetCafeEventPageUseCase(),
@@ -55,7 +57,7 @@ fun BannerEditScreen(
             when (event) {
                 BannerEditEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 BannerEditEvent.ShowSaveSuccessMessage -> {
-                    snackbarHostState.showSnackbar("배너 초안이 저장되었습니다.")
+                    snackbarHostState.showSnackbar("배너가 등록되었습니다.")
                 }
             }
         }

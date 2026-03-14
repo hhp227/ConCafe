@@ -47,6 +47,7 @@ import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
@@ -134,6 +135,7 @@ val useCaseModule = module {
     factory { CreateCastClaimUseCase(get(), get()) }
     factory { CreateCafeEventUseCase(get()) }
     factory { CreateCafeNoticeUseCase(get()) }
+    factory { CreateHomeBannerUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get()) }

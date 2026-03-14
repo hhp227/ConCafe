@@ -11,6 +11,8 @@ import Shared
 
 @MainActor
 final class BannerEditViewModel: ObservableObject {
+    private let createHomeBannerUseCase: CreateHomeBannerUseCase
+
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
     private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
@@ -270,17 +272,36 @@ final class BannerEditViewModel: ObservableObject {
 
         uiState.isSaving = true
         uiState.infoMessage = nil
-        uiState.isSaving = false
-        uiState.infoMessage = "배너 초안이 저장되었습니다. 실제 업로드 연동은 다음 단계에서 연결됩니다."
-        event.send(.showSaveSuccessAlert)
+        Task {
+            do {
+                let result = try await createHomeBannerUseCase.invoke(input: uiState.toCreateInput())
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSaving = false
+                    uiState.infoMessage = "배너가 등록되었습니다."
+                    event.send(.showSaveSuccessAlert)
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSaving = false
+                    uiState.infoMessage = failure.error.toUserMessage()
+                } else {
+                    uiState.isSaving = false
+                    uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isSaving = false
+                uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
+            }
+        }
     }
 
     init(
+        createHomeBannerUseCase: CreateHomeBannerUseCase = KoinInitializerKt.resolveCreateHomeBannerUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
+        self.createHomeBannerUseCase = createHomeBannerUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeEventPageUseCase = getCafeEventPageUseCase
@@ -292,5 +313,55 @@ final class BannerEditViewModel: ObservableObject {
     deinit {
         selectorTask?.cancel()
         sessionWatchHandle?.cancel()
+    }
+}
+
+private extension BannerEditUiState {
+    func toCreateInput() -> HomeBannerCreate {
+        HomeBannerCreate(
+            cafeId: selectedCafeOption?.id,
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            subtitle: subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
+            imageUrl: selectedImageLabel,
+            targetType: selectedTarget.toDomainType(),
+            targetValue: targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
+            displayDays: Int32(displayDays)
+        )
+    }
+}
+
+private extension BannerTargetType {
+    func toDomainType() -> BannerLinkTargetType {
+        switch self {
+        case .cafeDetail:
+            return .cafeDetail
+        case .eventDetail:
+            return .eventDetail
+        case .notice:
+            return .notice
+        case .externalLink:
+            return .externalLink
+        }
+    }
+}
+
+private extension AppError {
+    func toUserMessage() -> String {
+        if self is AppErrorUnauthorized {
+            return "로그인 후 배너를 등록해주세요."
+        }
+        if self is AppErrorPermissionDenied {
+            return "배너 등록 권한이 없습니다."
+        }
+        if self is AppErrorNotFound {
+            return "연결 대상을 찾을 수 없습니다."
+        }
+        if let error = self as? AppErrorValidationFailed {
+            return error.reason
+        }
+        if self is AppErrorNetworkError {
+            return "배너를 등록하지 못했습니다."
+        }
+        return "배너 등록 중 오류가 발생했습니다."
     }
 }

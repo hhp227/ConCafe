@@ -36,7 +36,7 @@ interface ConCafeDataSource {
 
     val castClaims: MutableList<CastClaim>
 
-    val banners: List<HomeBanner>
+    val banners: MutableList<HomeBanner>
 
     val notices: MutableList<Notice>
 

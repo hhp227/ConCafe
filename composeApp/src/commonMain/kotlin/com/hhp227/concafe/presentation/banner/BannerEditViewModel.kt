@@ -2,8 +2,12 @@ package com.hhp227.concafe.presentation.banner
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.HomeBannerCreate
+import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BannerEditViewModel(
+    private val createHomeBannerUseCase: CreateHomeBannerUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeEventPageUseCase: GetCafeEventPageUseCase,
@@ -344,18 +349,62 @@ class BannerEditViewModel(
 
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isSaving = false,
-                    infoMessage = "배너 초안이 저장되었습니다. 실제 업로드 연동은 다음 단계에서 연결됩니다."
-                )
+            when (val result = createHomeBannerUseCase.invoke(currentState.toCreateInput())) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            infoMessage = "배너가 등록되었습니다."
+                        )
+                    }
+                    _event.emit(BannerEditEvent.ShowSaveSuccessMessage)
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            infoMessage = result.error.toUserMessage()
+                        )
+                    }
+                }
             }
-            _event.emit(BannerEditEvent.ShowSaveSuccessMessage)
         }
     }
 
     init {
         observeSession()
         loadOwnedCafeOptions()
+    }
+}
+
+private fun BannerEditUiState.toCreateInput(): HomeBannerCreate {
+    return HomeBannerCreate(
+        cafeId = selectedCafeOption?.id,
+        title = title.trim(),
+        subtitle = subtitle.trim(),
+        imageUrl = selectedImageLabel,
+        targetType = selectedTarget.toDomainType(),
+        targetValue = targetValue.trim(),
+        displayDays = displayDays
+    )
+}
+
+private fun BannerTargetType.toDomainType(): BannerLinkTargetType {
+    return when (this) {
+        BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
+        BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
+        BannerTargetType.NOTICE -> BannerLinkTargetType.NOTICE
+        BannerTargetType.EXTERNAL_LINK -> BannerLinkTargetType.EXTERNAL_LINK
+    }
+}
+
+private fun AppError.toUserMessage(): String {
+    return when (this) {
+        AppError.Unauthorized -> "로그인 후 배너를 등록해주세요."
+        AppError.PermissionDenied -> "배너 등록 권한이 없습니다."
+        AppError.NotFound -> "연결 대상을 찾을 수 없습니다."
+        is AppError.ValidationFailed -> reason
+        is AppError.NetworkError -> "배너를 등록하지 못했습니다."
+        is AppError.Unknown -> "배너 등록 중 오류가 발생했습니다."
     }
 }

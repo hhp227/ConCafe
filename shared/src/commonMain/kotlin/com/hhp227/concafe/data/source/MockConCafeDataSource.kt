@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AppNotification
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeManagementData
@@ -292,10 +293,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     )
 
-    override val banners = listOf(
-        HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E"),
-        HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A"),
-        HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF")
+    override val banners = mutableListOf(
+        HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E", subtitle = "3월 한정 혜택을 확인해보세요", cafeId = "cafe-1", targetType = BannerLinkTargetType.EVENT_DETAIL, targetValue = "event-management-1", displayDays = 7),
+        HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A", subtitle = "핑크 캐슬 신규 캐스트 소식을 확인하세요", cafeId = "cafe-2", targetType = BannerLinkTargetType.NOTICE, targetValue = "notice-management-2", displayDays = 5),
+        HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF", subtitle = "주말 예약 일정을 미리 확인하세요", cafeId = "cafe-3", targetType = BannerLinkTargetType.CAFE_DETAIL, targetValue = "cafe-3", displayDays = 3)
     )
 
     override val notices = mutableListOf(
