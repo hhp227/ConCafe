@@ -157,11 +157,14 @@ final class ScheduleViewModel: ObservableObject {
                 )
             }
             uiState.weekDays = uiState.weekDays.map { day in
-                var next = day
-                if day.id == editingId {
-                    next.isWorking = isWorking
-                }
-                return next
+                guard day.id == editingId else { return day }
+                return ScheduleUiState.WeekDay(
+                    id: day.id,
+                    label: day.label,
+                    number: day.number,
+                    isSelected: day.isSelected,
+                    isWorking: isWorking
+                )
             }
             uiState.isEditSheetVisible = false
             uiState.editingScheduleId = nil
