@@ -333,7 +333,7 @@ final class CafeDashboardViewModel: ObservableObject {
         watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
-                if let created = event as? BannerEvent.Created, created.banner.cafeId == self.cafeId {
+                if let created = event as? Shared.BannerEvent.Created, created.banner.cafeId == self.cafeId {
                     self.loadCafeDashboard()
                 }
             }
