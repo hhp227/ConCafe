@@ -568,59 +568,6 @@ private struct CafeDashboardContentView: View {
         }
         return String(format: "%.1f", floor(rating * 10) / 10.0)
     }
-}
-
-private struct ExternalLinkInputSheet: View {
-    let uiState: CafeDashboardUiState
-
-    let onAction: (CafeDashboardAction) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("외부 링크 추가")
-                .font(.title3.weight(.bold))
-            Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
-                .font(.subheadline)
-                .foregroundStyle(Color(hex: "7A707A"))
-            ConCafeFormField(
-                label: "제목",
-                text: Binding(
-                    get: { uiState.externalLinkTitle },
-                    set: { onAction(.changeExternalLinkTitle($0)) }
-                ),
-                placeholder: "예: 공식 X 계정"
-            )
-            ConCafeFormField(
-                label: "링크 URL",
-                text: Binding(
-                    get: { uiState.externalLinkUrl },
-                    set: { onAction(.changeExternalLinkUrl($0)) }
-                ),
-                placeholder: "https://"
-            )
-            Button {
-                onAction(.submitExternalLink)
-            } label: {
-                Text("외부 링크 추가")
-                    .font(.headline.weight(.bold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
-                    .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(!uiState.isExternalLinkSubmitEnabled)
-            Button("닫기") {
-                onAction(.dismissExternalLinkSheet)
-            }
-            .font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity)
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(hex: "FFFBFD"))
-    }
 
     private var externalLinkSection: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -711,5 +658,58 @@ private struct ExternalLinkInputSheet: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
         )
+    }
+}
+
+private struct ExternalLinkInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("외부 링크 추가")
+                .font(.title3.weight(.bold))
+            Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "7A707A"))
+            ConCafeFormField(
+                label: "제목",
+                text: Binding(
+                    get: { uiState.externalLinkTitle },
+                    set: { onAction(.changeExternalLinkTitle($0)) }
+                ),
+                placeholder: "예: 공식 X 계정"
+            )
+            ConCafeFormField(
+                label: "링크 URL",
+                text: Binding(
+                    get: { uiState.externalLinkUrl },
+                    set: { onAction(.changeExternalLinkUrl($0)) }
+                ),
+                placeholder: "https://"
+            )
+            Button {
+                onAction(.submitExternalLink)
+            } label: {
+                Text("외부 링크 추가")
+                    .font(.headline.weight(.bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
+                    .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!uiState.isExternalLinkSubmitEnabled)
+            Button("닫기") {
+                onAction(.dismissExternalLinkSheet)
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "FFFBFD"))
     }
 }
