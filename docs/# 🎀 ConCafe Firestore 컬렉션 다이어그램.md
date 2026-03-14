@@ -25,12 +25,18 @@ homeBanners/{bannerId}
 ├─ linkType: CAFE | EVENT | NOTICE | EXTERNAL
 ├─ linkTarget
 ├─ priority
-├─ maxVisibleGroup: 3 | 4 | 5
-├─ startAt
-├─ endAt
+├─ maxVisibleGroup: 5
+├─ displayDays: 1..10
+├─ activeFrom
+├─ activeUntil
 ├─ status: DRAFT | SCHEDULED | ACTIVE | ENDED | PAUSED
 ├─ createdAt
 └─ updatedAt
+
+구현 메모
+- 현재 mock/shared 구현은 `displayDays`를 저장하고, 활성 배너는 최대 5개까지만 홈에 노출한다.
+- 홈 피드 조회 시 종료된 `ACTIVE` 배너를 `ENDED`로 정리하고, 빈 슬롯이 있으면 `SCHEDULED` 배너를 자동 승격한다.
+- 외부 링크 타입 배너는 홈에서 탭 시 외부 브라우저가 아니라 앱 내부 외부 링크 화면(WebView)으로 이동한다.
 
 cafes/{cafeId}
 ├─ ownerIds: []
@@ -134,9 +140,17 @@ castSchedules/{scheduleId}
 ├─ endTime
 └─ createdAt
 
+castScheduleStatuses/{castId}/days/{date}
+├─ status: WORK | OFF | VACATION
+├─ updatedAt
+└─ updatedBy
+
 구현 메모
 - 현재 캐스트 프로필 편집 화면의 저장 범위는 `cafes/{cafeId}/casts/{castId}` 기본 정보와 `castSchedules`이다.
 - 근무 요일 UI는 별도 `workingDays` 배열 필드가 아니라 `castSchedules` 문서 생성/수정 결과를 다시 읽어 계산한다.
+- 현재 출근표 수정 구현은 `castSchedules`와 별도로 날짜별 상태(`WORK/OFF/VACATION`)를 함께 관리한다.
+- `WORK`일 때만 `castSchedules` 문서에 실제 시작/종료 시간이 존재한다.
+- `OFF`, `VACATION`은 상태 문서로 유지하고, UI는 `GetScheduleManagementDataUseCase`가 두 데이터를 조합해 만든다.
 - 프로필 이미지, 갤러리 이미지, 외부 SNS 링크 저장은 후속 단계에서 연결한다.
 
 visits/{visitId}
