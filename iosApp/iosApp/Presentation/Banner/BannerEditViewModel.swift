@@ -11,6 +11,8 @@ import Shared
 
 @MainActor
 final class BannerEditViewModel: ObservableObject {
+    private let initialCafeId: String?
+
     private let createHomeBannerUseCase: CreateHomeBannerUseCase
 
     private let getCafeManagementUseCase: GetCafeManagementUseCase
@@ -85,7 +87,9 @@ final class BannerEditViewModel: ObservableObject {
                         BannerSelectableItem(id: item.id, title: item.name, subtitle: item.city)
                     }
                     uiState.ownedCafeOptions = options
-                    if uiState.selectedCafeOption == nil {
+                    if let initialCafeId {
+                        uiState.selectedCafeOption = options.first(where: { $0.id == initialCafeId })
+                    } else if uiState.selectedCafeOption == nil && !uiState.isAdmin {
                         uiState.selectedCafeOption = options.first
                     }
                     if uiState.selectedTarget == .cafeDetail {
@@ -111,7 +115,9 @@ final class BannerEditViewModel: ObservableObject {
         uiState.isSelectorLoading = false
         switch target {
         case .cafeDetail:
-            if uiState.selectedCafeOption == nil {
+            if let initialCafeId {
+                uiState.selectedCafeOption = uiState.ownedCafeOptions.first(where: { $0.id == initialCafeId })
+            } else if uiState.selectedCafeOption == nil && !uiState.isAdmin {
                 uiState.selectedCafeOption = uiState.ownedCafeOptions.first
             }
             uiState.targetValue = uiState.selectedCafeOption?.id ?? ""
@@ -295,12 +301,14 @@ final class BannerEditViewModel: ObservableObject {
     }
 
     init(
+        initialCafeId: String? = nil,
         createHomeBannerUseCase: CreateHomeBannerUseCase = KoinInitializerKt.resolveCreateHomeBannerUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
+        self.initialCafeId = initialCafeId
         self.createHomeBannerUseCase = createHomeBannerUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase

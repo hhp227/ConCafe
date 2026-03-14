@@ -34,11 +34,14 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BannerEditScreen(
+    initialCafeId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: BannerEditViewModel = viewModel(
+        key = "banner-edit-${initialCafeId.orEmpty()}",
         factory = viewModelFactory {
             initializer {
                 BannerEditViewModel(
+                    initialCafeId = initialCafeId,
                     createHomeBannerUseCase = resolveCreateHomeBannerUseCase(),
                     getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
                     getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
@@ -206,11 +209,20 @@ private fun BannerEditContentScreen(
                                     )
                                 }
                                 BannerTargetType.CAFE_DETAIL -> {
-                                    FixedSelectionCard(
-                                        label = "적용 카페",
-                                        selectedItem = uiState.selectedCafeOption,
-                                        placeholder = "연결할 운영 카페가 없습니다."
-                                    )
+                                    if (uiState.isAdmin) {
+                                        SelectionFieldCard(
+                                            label = "운영 카페",
+                                            selectedItem = uiState.selectedCafeOption,
+                                            placeholder = "운영 카페를 선택해주세요",
+                                            onClick = { onAction(BannerEditAction.ClickCafeSelector) }
+                                        )
+                                    } else {
+                                        FixedSelectionCard(
+                                            label = "적용 카페",
+                                            selectedItem = uiState.selectedCafeOption,
+                                            placeholder = "연결할 운영 카페가 없습니다."
+                                        )
+                                    }
                                 }
                                 BannerTargetType.NOTICE,
                                 BannerTargetType.EVENT_DETAIL -> {

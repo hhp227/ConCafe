@@ -37,7 +37,7 @@ struct AdminOperationsView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToBannerEdit:
-                onNavigationAction(.navigateToBannerEdit)
+                onNavigationAction(.navigateToBannerEdit())
             }
         }
     }

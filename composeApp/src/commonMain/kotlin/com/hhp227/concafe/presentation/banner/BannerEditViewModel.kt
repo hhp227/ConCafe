@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BannerEditViewModel(
+    private val initialCafeId: String? = null,
     private val createHomeBannerUseCase: CreateHomeBannerUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
@@ -69,9 +70,15 @@ class BannerEditViewModel(
                         )
                     }
                     _uiState.update { state ->
-                        val selectedCafe = state.selectedCafeOption?.let { current ->
+                        val selectedCafe = initialCafeId?.let { targetCafeId ->
+                            options.firstOrNull { it.id == targetCafeId }
+                        } ?: state.selectedCafeOption?.let { current ->
                             options.firstOrNull { it.id == current.id }
-                        } ?: options.firstOrNull()
+                        } ?: if (state.isAdmin) {
+                            state.selectedCafeOption
+                        } else {
+                            options.firstOrNull()
+                        }
                         state.copy(
                             ownedCafeOptions = options,
                             selectedCafeOption = selectedCafe,
@@ -128,11 +135,19 @@ class BannerEditViewModel(
             state.copy(
                 selectedTarget = target,
                 selectedCafeOption = when (target) {
-                    BannerTargetType.CAFE_DETAIL -> state.selectedCafeOption ?: state.ownedCafeOptions.firstOrNull()
+                    BannerTargetType.CAFE_DETAIL -> when {
+                        state.isAdmin -> state.selectedCafeOption
+                        initialCafeId != null -> state.ownedCafeOptions.firstOrNull { it.id == initialCafeId }
+                        else -> state.selectedCafeOption ?: state.ownedCafeOptions.firstOrNull()
+                    }
                     else -> state.selectedCafeOption
                 },
                 targetValue = when (target) {
-                    BannerTargetType.CAFE_DETAIL -> (state.selectedCafeOption ?: state.ownedCafeOptions.firstOrNull())?.id.orEmpty()
+                    BannerTargetType.CAFE_DETAIL -> when {
+                        state.isAdmin -> state.selectedCafeOption?.id.orEmpty()
+                        initialCafeId != null -> state.ownedCafeOptions.firstOrNull { it.id == initialCafeId }?.id.orEmpty()
+                        else -> (state.selectedCafeOption ?: state.ownedCafeOptions.firstOrNull())?.id.orEmpty()
+                    }
                     BannerTargetType.EXTERNAL_LINK -> ""
                     else -> ""
                 },

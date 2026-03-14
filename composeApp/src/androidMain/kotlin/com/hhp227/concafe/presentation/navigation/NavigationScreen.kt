@@ -92,8 +92,13 @@ fun NavigationScreen(
                 onNavigationAction = viewModel::onAction
             )
         }
-        composable<Route.BannerEdit> {
-            BannerEditScreen(onNavigationAction = viewModel::onAction)
+        composable<Route.BannerEdit> { backStackEntry ->
+            val bannerEditRoute = backStackEntry.toRoute<Route.BannerEdit>()
+
+            BannerEditScreen(
+                initialCafeId = bannerEditRoute.cafeId,
+                onNavigationAction = viewModel::onAction
+            )
         }
         composable<Route.CafeInfoEdit> { backStackEntry ->
             val cafeInfoEditRoute = backStackEntry.toRoute<Route.CafeInfoEdit>()

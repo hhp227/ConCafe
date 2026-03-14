@@ -87,7 +87,7 @@ fun AdminOperationsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 AdminOperationsEvent.NavigateToBannerEdit -> {
-                    onNavigationAction(NavigationAction.NavigateToBannerEdit)
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit())
                 }
             }
         }

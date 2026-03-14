@@ -69,7 +69,7 @@ fun CafeDashboardScreen(
             when (event) {
                 CafeDashboardEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 CafeDashboardEvent.NavigateToBannerEdit -> {
-                    onNavigationAction(NavigationAction.NavigateToBannerEdit)
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit(cafeId))
                 }
                 is CafeDashboardEvent.NavigateToCafeInfoEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCafeInfoEdit(event.cafeId))

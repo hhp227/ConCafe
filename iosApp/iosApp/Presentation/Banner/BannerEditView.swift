@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct BannerEditView: View {
+    let initialCafeId: String?
+
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = BannerEditViewModel()
+    @StateObject private var viewModel: BannerEditViewModel
 
     var body: some View {
         BannerEditContentView(
@@ -55,9 +57,12 @@ struct BannerEditView: View {
     }
 
     init(
+        initialCafeId: String? = nil,
         onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
     ) {
+        self.initialCafeId = initialCafeId
         self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: BannerEditViewModel(initialCafeId: initialCafeId))
     }
 }
 
@@ -189,11 +194,21 @@ private struct BannerEditContentView: View {
                     placeholder: uiState.targetFieldPlaceholder
                 )
             case .cafeDetail:
-                fixedSelectionField(
-                    label: "적용 카페",
-                    selectedItem: uiState.selectedCafeOption,
-                    placeholder: "연결할 운영 카페가 없습니다."
-                )
+                if uiState.isAdmin {
+                    selectionField(
+                        label: "운영 카페",
+                        selectedItem: uiState.selectedCafeOption,
+                        placeholder: "운영 카페를 선택해주세요"
+                    ) {
+                        onAction(.clickCafeSelector)
+                    }
+                } else {
+                    fixedSelectionField(
+                        label: "적용 카페",
+                        selectedItem: uiState.selectedCafeOption,
+                        placeholder: "연결할 운영 카페가 없습니다."
+                    )
+                }
             case .notice, .eventDetail:
                 if uiState.isAdmin {
                     selectionField(

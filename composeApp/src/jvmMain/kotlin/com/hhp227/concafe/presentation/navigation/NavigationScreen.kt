@@ -175,8 +175,11 @@ private fun DetailRoutePane(
                 onNavigationAction = onNavigationAction
             )
         }
-        Route.BannerEdit -> {
-            BannerEditScreen(onNavigationAction = onNavigationAction)
+        is Route.BannerEdit -> {
+            BannerEditScreen(
+                initialCafeId = route.cafeId,
+                onNavigationAction = onNavigationAction
+            )
         }
         is Route.CafeInfoEdit -> {
             CafeInfoEditScreen(

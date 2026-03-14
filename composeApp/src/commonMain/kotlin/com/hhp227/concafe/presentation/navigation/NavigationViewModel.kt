@@ -38,8 +38,8 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateToCafeDashboard -> {
                     _event.emit(NavigateTo(CafeDashboard(action.id)))
                 }
-                NavigationAction.NavigateToBannerEdit -> {
-                    _event.emit(NavigateTo(BannerEdit))
+                is NavigationAction.NavigateToBannerEdit -> {
+                    _event.emit(NavigateTo(BannerEdit(action.cafeId)))
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(
