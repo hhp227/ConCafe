@@ -163,6 +163,8 @@ final class HomeViewModel: ObservableObject {
 
     func onAction(_ action: HomeAction) {
         switch action {
+        case .bannerTapped(let banner):
+            handleBannerTap(banner)
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
         case .birthdayMaidTapped(let id):
@@ -176,6 +178,22 @@ final class HomeViewModel: ObservableObject {
                     await loadMoreNearbyCafes()
                 }
             }
+        }
+    }
+
+    private func handleBannerTap(_ banner: HomeBanner) {
+        switch banner.targetType {
+        case .externalLink:
+            if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                event.send(.openExternalLink(url: banner.targetValue))
+            }
+        case .cafeDetail, .eventDetail, .notice:
+            let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
+            if let cafeId, !cafeId.isEmpty {
+                event.send(.navigateToCafe(id: cafeId))
+            }
+        default:
+            break
         }
     }
 

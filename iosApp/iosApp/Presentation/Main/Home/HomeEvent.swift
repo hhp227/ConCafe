@@ -8,6 +8,7 @@
 import Foundation
 
 enum HomeEvent {
+    case openExternalLink(url: String)
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
 }

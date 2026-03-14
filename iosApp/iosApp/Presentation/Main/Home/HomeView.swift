@@ -11,6 +11,7 @@ import Shared
 
 struct HomeView: View {
     let onNavigationAction: (NavigationAction) -> Void
+    @Environment(\.openURL) private var openURL
 
     @StateObject private var viewModel = HomeViewModel()
     
@@ -26,6 +27,10 @@ struct HomeView: View {
         )
         .onReceive(viewModel.event) { event in
             switch event {
+            case .openExternalLink(let url):
+                if let target = URL(string: url) {
+                    openURL(target)
+                }
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToCafe(let id):
@@ -88,6 +93,10 @@ private struct HomeContentView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .padding(.horizontal, 16)
+                    .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .onTapGesture {
+                        onAction(.bannerTapped(banner))
+                    }
                     .tag(index)
                 }
             }

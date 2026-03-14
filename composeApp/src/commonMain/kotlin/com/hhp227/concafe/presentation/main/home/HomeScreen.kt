@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,10 +69,12 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { uiState.banners.size })
+    val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
+                is HomeEvent.OpenExternalLink -> uriHandler.openUri(event.url)
                 is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
             }
@@ -125,7 +128,9 @@ fun HomeContentScreen(
                         val banner = uiState.banners[page]
 
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onAction(HomeAction.ClickBanner(banner)) },
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Box(

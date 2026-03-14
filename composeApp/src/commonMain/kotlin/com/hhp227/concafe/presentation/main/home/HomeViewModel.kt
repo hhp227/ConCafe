@@ -12,11 +12,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
@@ -158,10 +160,29 @@ class HomeViewModel(
     fun onAction(action: HomeAction) {
         viewModelScope.launch {
             when (action) {
+                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
                 is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafe(action.id))
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
+            }
+        }
+    }
+
+    private suspend fun handleBannerClick(banner: HomeBanner) {
+        when (banner.targetType) {
+            BannerLinkTargetType.EXTERNAL_LINK -> {
+                if (banner.targetValue.isNotBlank()) {
+                    _event.emit(HomeEvent.OpenExternalLink(banner.targetValue))
+                }
+            }
+            BannerLinkTargetType.CAFE_DETAIL,
+            BannerLinkTargetType.EVENT_DETAIL,
+            BannerLinkTargetType.NOTICE -> {
+                val cafeId = banner.cafeId ?: banner.targetValue.takeIf { banner.targetType == BannerLinkTargetType.CAFE_DETAIL }
+                if (!cafeId.isNullOrBlank()) {
+                    _event.emit(HomeEvent.NavigateToCafe(cafeId))
+                }
             }
         }
     }
