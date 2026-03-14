@@ -8,5 +8,6 @@
 import Foundation
 
 enum BannerEditEvent {
-    
+    case navigateBack
+    case showSaveSuccessAlert
 }

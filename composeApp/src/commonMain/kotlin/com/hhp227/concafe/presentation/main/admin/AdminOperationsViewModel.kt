@@ -11,8 +11,10 @@ import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +29,9 @@ class AdminOperationsViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AdminOperationsUiState())
     val uiState: StateFlow<AdminOperationsUiState> = _uiState.asStateFlow()
+
+    private val _event = MutableSharedFlow<AdminOperationsEvent>(replay = 0)
+    val event = _event.asSharedFlow()
 
     private fun loadPendingRequests() {
         viewModelScope.launch {
@@ -117,6 +122,11 @@ class AdminOperationsViewModel(
             AdminOperationsAction.ClickSeeAllPending -> {
                 _uiState.update { it.copy(infoMessage = "전체보기 연결은 다음 단계에서 이어집니다.") }
             }
+            AdminOperationsAction.ClickBannerRegister -> {
+                viewModelScope.launch {
+                    _event.emit(AdminOperationsEvent.NavigateToBannerEdit)
+                }
+            }
             is AdminOperationsAction.SelectPendingFilter -> {
                 _uiState.update { it.copy(selectedPendingFilter = action.filter, infoMessage = null) }
             }
@@ -127,8 +137,14 @@ class AdminOperationsViewModel(
                 handlePendingResult(action.id, approved = false)
             }
             is AdminOperationsAction.ClickQuickMenu -> {
-                val label = _uiState.value.quickMenus.firstOrNull { it.id == action.id }?.title ?: "메뉴"
-                _uiState.update { it.copy(infoMessage = "$label 연결은 다음 단계에서 이어집니다.") }
+                if (action.id == ADMIN_BANNER_MENU_ID) {
+                    viewModelScope.launch {
+                        _event.emit(AdminOperationsEvent.NavigateToBannerEdit)
+                    }
+                } else {
+                    val label = _uiState.value.quickMenus.firstOrNull { it.id == action.id }?.title ?: "메뉴"
+                    _uiState.update { it.copy(infoMessage = "$label 연결은 다음 단계에서 이어집니다.") }
+                }
             }
             AdminOperationsAction.DismissInfoMessage -> {
                 _uiState.update { it.copy(infoMessage = null) }
@@ -140,6 +156,8 @@ class AdminOperationsViewModel(
         loadPendingRequests()
     }
 }
+
+private const val ADMIN_BANNER_MENU_ID = "banner"
 
 private fun PendingCafeOwnerClaimPreview.toAdminPendingRequest(): AdminPendingRequest {
     return AdminPendingRequest(

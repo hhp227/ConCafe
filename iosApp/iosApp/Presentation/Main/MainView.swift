@@ -72,7 +72,7 @@ struct MainView: View {
             CafeManagementView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("카페관리", systemImage: "storefront.fill") }
         case .adminOperations:
-            AdminOperationsView()
+            AdminOperationsView(onNavigationAction: onNavigationAction)
                 .tabItem { Label("운영관리", systemImage: "shield.lefthalf.filled") }
         default:
             CheckInView(onNavigationAction: onNavigationAction)

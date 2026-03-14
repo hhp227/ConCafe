@@ -102,7 +102,7 @@ fun MainScreen(
                         MainNavigationTab.CHECK_IN.route -> CheckInScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen(onNavigationAction = onNavigationAction)
                         MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen(onNavigate = onNavigationAction)
-                        MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen()
+                        MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen(onNavigationAction = onNavigationAction)
                         MainNavigationTab.RANKING.route -> RankingScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
                         else -> HomeScreen(onNavigate = onNavigationAction)

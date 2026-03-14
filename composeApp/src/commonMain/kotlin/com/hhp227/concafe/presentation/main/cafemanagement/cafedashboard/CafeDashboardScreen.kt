@@ -68,6 +68,9 @@ fun CafeDashboardScreen(
         viewModel.event.collect { event ->
             when (event) {
                 CafeDashboardEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                CafeDashboardEvent.NavigateToBannerEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit)
+                }
                 is CafeDashboardEvent.NavigateToCafeInfoEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCafeInfoEdit(event.cafeId))
                 }

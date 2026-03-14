@@ -146,6 +146,9 @@ class CafeDashboardViewModel(
             CafeDashboardShortcut.CAFE_SETTINGS -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
             }
+            CafeDashboardShortcut.HOME_BANNER -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
+            }
             CafeDashboardShortcut.EVENT_MANAGEMENT -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
             }
@@ -167,7 +170,7 @@ class CafeDashboardViewModel(
                     }
                 }
             }
-            else -> {
+            CafeDashboardShortcut.EXTERNAL_LINKS -> {
                 _uiState.update {
                     it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")
                 }

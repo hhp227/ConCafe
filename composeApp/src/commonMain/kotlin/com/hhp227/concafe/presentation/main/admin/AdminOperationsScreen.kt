@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -60,9 +61,11 @@ import com.hhp227.concafe.di.resolveGetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.di.resolveGetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.di.resolveRejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.di.resolveRejectCafeOwnerClaimUseCase
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
 fun AdminOperationsScreen(
+    onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: AdminOperationsViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -80,6 +83,15 @@ fun AdminOperationsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(viewModel) {
+        viewModel.event.collect { event ->
+            when (event) {
+                AdminOperationsEvent.NavigateToBannerEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit)
+                }
+            }
+        }
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -105,11 +117,47 @@ fun AdminOperationsScreen(
         item {
             QuickMenuSection(uiState = uiState, onAction = viewModel::onAction)
         }
+        item {
+            BannerRegisterCard(onClick = { viewModel.onAction(AdminOperationsAction.ClickBannerRegister) })
+        }
         uiState.infoMessage?.let { message ->
             item {
                 InfoBanner(message = message) {
                     viewModel.onAction(AdminOperationsAction.DismissInfoMessage)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerRegisterCard(
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("배너 등록", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "플랫폼 공지 또는 프로모션 배너를 바로 등록합니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF7A707A)
+            )
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFD1DC),
+                    contentColor = Color(0xFF2B2330)
+                )
+            ) {
+                Icon(Icons.Default.Campaign, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("새 배너 등록", fontWeight = FontWeight.Bold)
             }
         }
     }

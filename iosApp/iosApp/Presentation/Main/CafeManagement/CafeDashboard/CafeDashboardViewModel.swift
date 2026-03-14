@@ -134,6 +134,8 @@ final class CafeDashboardViewModel: ObservableObject {
         switch shortcut {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
+        case .homeBanner:
+            event.send(.navigateToBannerEdit)
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
@@ -146,7 +148,7 @@ final class CafeDashboardViewModel: ObservableObject {
             event.send(.navigateToSchedule(castId: selectedCastId))
         case .castManagement:
             event.send(.navigateToCastEdit(cafeId: cafeId, castId: nil))
-        default:
+        case .externalLinks:
             uiState.infoMessage = "\(shortcut.title) 연결은 다음 단계에서 이어집니다."
         }
     }

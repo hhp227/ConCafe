@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import Combine
 import Shared
 
 @MainActor
 final class AdminOperationsViewModel: ObservableObject {
     @Published private(set) var uiState = AdminOperationsUiState()
+    let event = PassthroughSubject<AdminOperationsEvent, Never>()
 
     private let getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase
 
@@ -96,6 +98,8 @@ final class AdminOperationsViewModel: ObservableObject {
             uiState.infoMessage = "새 알림을 모두 확인했습니다."
         case .clickSeeAllPending:
             uiState.infoMessage = "전체보기 연결은 다음 단계에서 이어집니다."
+        case .clickBannerRegister:
+            event.send(.navigateToBannerEdit)
         case .selectPendingFilter(let filter):
             uiState.selectedPendingFilter = filter
             uiState.infoMessage = nil
@@ -104,8 +108,12 @@ final class AdminOperationsViewModel: ObservableObject {
         case .rejectPending(let id):
             handlePendingResult(id: id, approved: false)
         case .clickQuickMenu(let id):
-            let label = uiState.quickMenus.first(where: { $0.id == id })?.title ?? "메뉴"
-            uiState.infoMessage = "\(label) 연결은 다음 단계에서 이어집니다."
+            if id == adminBannerMenuId {
+                event.send(.navigateToBannerEdit)
+            } else {
+                let label = uiState.quickMenus.first(where: { $0.id == id })?.title ?? "메뉴"
+                uiState.infoMessage = "\(label) 연결은 다음 단계에서 이어집니다."
+            }
         case .dismissInfoMessage:
             uiState.infoMessage = nil
         }
@@ -128,6 +136,8 @@ final class AdminOperationsViewModel: ObservableObject {
         loadPendingRequests()
     }
 }
+
+private let adminBannerMenuId = "banner"
 
 private extension AdminOperationsViewModel {
     static func toAdminPendingRequest(_ claim: PendingCafeOwnerClaimPreview) -> AdminPendingRequest {

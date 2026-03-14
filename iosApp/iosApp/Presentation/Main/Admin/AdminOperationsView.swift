@@ -10,12 +10,15 @@ import SwiftUI
 struct AdminOperationsView: View {
     @StateObject private var viewModel = AdminOperationsViewModel()
 
+    let onNavigationAction: (NavigationAction) -> Void
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 metricsGrid
                 pendingSection
                 quickMenuSection
+                bannerRegisterSection
                 if let message = viewModel.uiState.infoMessage {
                     infoBanner(message)
                 }
@@ -31,6 +34,18 @@ struct AdminOperationsView: View {
                 endPoint: .bottom
             )
         )
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateToBannerEdit:
+                onNavigationAction(.navigateToBannerEdit)
+            }
+        }
+    }
+
+    init(
+        onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
+    ) {
+        self.onNavigationAction = onNavigationAction
     }
 
     private var metricsGrid: some View {
@@ -226,6 +241,35 @@ private extension AdminMetricIcon {
         case .pending: return "clock.badge.exclamationmark"
         case .report: return "exclamationmark.bubble.fill"
         }
+    }
+
+    private var bannerRegisterSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("배너 등록")
+                .font(.title3.weight(.bold))
+            Text("플랫폼 공지 또는 프로모션 배너를 바로 등록합니다.")
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "7A707A"))
+            Button {
+                viewModel.onAction(.clickBannerRegister)
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                    Text("새 배너 등록")
+                        .fontWeight(.bold)
+                }
+                .foregroundStyle(Color(hex: "2B2330"))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(Color(hex: "FFD1DC"))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
 

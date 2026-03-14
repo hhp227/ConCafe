@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.presentation.navigation.NavigationEvent.NavigateTo
 import com.hhp227.concafe.presentation.navigation.Route.Cafe
+import com.hhp227.concafe.presentation.navigation.Route.BannerEdit
 import com.hhp227.concafe.presentation.navigation.Route.CafeDashboard
 import com.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
 import com.hhp227.concafe.presentation.navigation.Route.Cast
@@ -36,6 +37,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToCafeDashboard -> {
                     _event.emit(NavigateTo(CafeDashboard(action.id)))
+                }
+                NavigationAction.NavigateToBannerEdit -> {
+                    _event.emit(NavigateTo(BannerEdit))
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(
