@@ -151,8 +151,55 @@ final class CafeDashboardViewModel: ObservableObject {
         case .castManagement:
             event.send(.navigateToCastEdit(cafeId: cafeId, castId: nil))
         case .externalLinks:
-            uiState.infoMessage = "\(shortcut.title) 연결은 다음 단계에서 이어집니다."
+            uiState.isExternalLinkSheetVisible = true
+            uiState.infoMessage = nil
         }
+    }
+
+    private func dismissExternalLinkSheet() {
+        uiState.isExternalLinkSheetVisible = false
+        uiState.externalLinkTitle = ""
+        uiState.externalLinkUrl = ""
+    }
+
+    private func changeExternalLinkTitle(_ value: String) {
+        uiState.externalLinkTitle = value
+    }
+
+    private func changeExternalLinkUrl(_ value: String) {
+        uiState.externalLinkUrl = value
+    }
+
+    private func submitExternalLink() {
+        guard uiState.isExternalLinkSubmitEnabled else {
+            uiState.infoMessage = "제목과 링크 URL을 모두 입력해 주세요."
+            return
+        }
+
+        let title = uiState.externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let url = uiState.externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isExternalLinkSheetVisible = false
+        uiState.externalLinks.insert(
+            CafeDashboardExternalLink(
+                id: "external-link-\(UUID().uuidString)",
+                title: title,
+                url: url
+            ),
+            at: 0
+        )
+        uiState.externalLinkTitle = ""
+        uiState.externalLinkUrl = ""
+        uiState.infoMessage = "외부 링크를 추가했습니다."
+    }
+
+    private func clickExternalLinkItem(_ linkId: String) {
+        guard let link = uiState.externalLinks.first(where: { $0.id == linkId }) else { return }
+        event.send(.navigateToExternalLink(title: link.title, url: link.url))
+    }
+
+    private func clickDeleteExternalLink(_ linkId: String) {
+        uiState.externalLinks.removeAll { $0.id == linkId }
+        uiState.infoMessage = "외부 링크를 삭제했습니다."
     }
 
     private func dismissInfoMessage() {
@@ -372,6 +419,18 @@ final class CafeDashboardViewModel: ObservableObject {
             clickBack()
         case .clickShortcut(let shortcut):
             clickShortcut(shortcut)
+        case .dismissExternalLinkSheet:
+            dismissExternalLinkSheet()
+        case .changeExternalLinkTitle(let value):
+            changeExternalLinkTitle(value)
+        case .changeExternalLinkUrl(let value):
+            changeExternalLinkUrl(value)
+        case .submitExternalLink:
+            submitExternalLink()
+        case .clickExternalLinkItem(let linkId):
+            clickExternalLinkItem(linkId)
+        case .clickDeleteExternalLink(let linkId):
+            clickDeleteExternalLink(linkId)
         case .clickCastSchedule(let castId):
             clickCastSchedule(castId)
         case .clickDeleteCast:

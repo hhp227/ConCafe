@@ -38,6 +38,19 @@ struct CafeDashboardView: View {
         } message: {
             Text("캐스트 프로필을 삭제하시겠습니까?")
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isExternalLinkSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissExternalLinkSheet)
+                }
+            }
+        )) {
+            ExternalLinkInputSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -54,6 +67,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
             case .navigateToSchedule(let castId):
                 onNavigationAction(.navigateToSchedule(castId: castId))
+            case .navigateToExternalLink(let title, let url):
+                onNavigationAction(.navigateToExternalLink(title: title, url: url))
             }
         }
     }
@@ -92,6 +107,9 @@ private struct CafeDashboardContentView: View {
                     }
                     shortcutGrid
                     castManagementSection
+                    if !uiState.externalLinks.isEmpty {
+                        externalLinkSection
+                    }
                     homeBannerSection
                 }
             }
@@ -549,5 +567,149 @@ private struct CafeDashboardContentView: View {
             return "-"
         }
         return String(format: "%.1f", floor(rating * 10) / 10.0)
+    }
+}
+
+private struct ExternalLinkInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("외부 링크 추가")
+                .font(.title3.weight(.bold))
+            Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "7A707A"))
+            ConCafeFormField(
+                label: "제목",
+                text: Binding(
+                    get: { uiState.externalLinkTitle },
+                    set: { onAction(.changeExternalLinkTitle($0)) }
+                ),
+                placeholder: "예: 공식 X 계정"
+            )
+            ConCafeFormField(
+                label: "링크 URL",
+                text: Binding(
+                    get: { uiState.externalLinkUrl },
+                    set: { onAction(.changeExternalLinkUrl($0)) }
+                ),
+                placeholder: "https://"
+            )
+            Button {
+                onAction(.submitExternalLink)
+            } label: {
+                Text("외부 링크 추가")
+                    .font(.headline.weight(.bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
+                    .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!uiState.isExternalLinkSubmitEnabled)
+            Button("닫기") {
+                onAction(.dismissExternalLinkSheet)
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "FFFBFD"))
+    }
+
+    private var externalLinkSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("외부 링크")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(Color(hex: "8C7A83"))
+                    Text("앱 외부로 연결할 링크를 관리합니다.")
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "7E7480"))
+                }
+                Spacer()
+                Button("추가") {
+                    onAction(.clickShortcut(.externalLinks))
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color(hex: "EF6797"))
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(uiState.externalLinks) { link in
+                    HStack(spacing: 14) {
+                        Button {
+                            onAction(.clickExternalLinkItem(link.id))
+                        } label: {
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    LinearGradient(
+                                        colors: [Color(hex: "FFD1DC"), Color(hex: "FFE4EC")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                    Image(systemName: "link")
+                                        .foregroundStyle(.white)
+                                }
+                                .frame(width: 52, height: 52)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                Text(link.title)
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Color(hex: "2B2330"))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(.plain)
+                        Button {
+                            onAction(.clickDeleteExternalLink(link.id))
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(Color(hex: "8F848F"))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .background(Color(hex: "FFFBFD"))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color(hex: "F0E6EC"), lineWidth: 1)
+                    )
+                }
+                Button {
+                    onAction(.clickShortcut(.externalLinks))
+                } label: {
+                    Text("외부 링크 추가")
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color(hex: "2B2330"))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(hex: "FFD1DC"))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(16)
+            .background(Color(hex: "FFFBFD"))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color(hex: "F0E6EC"), lineWidth: 1)
+            )
+        }
+        .padding(18)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+        )
     }
 }
