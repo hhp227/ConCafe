@@ -185,7 +185,7 @@ final class HomeViewModel: ObservableObject {
         switch banner.targetType {
         case .externalLink:
             if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                event.send(.openExternalLink(url: banner.targetValue))
+                event.send(.navigateToExternalLink(title: banner.title, url: banner.targetValue))
             }
         case .cafeDetail, .eventDetail, .notice:
             let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)

@@ -68,6 +68,7 @@ struct BannerEditView: View {
 
 private struct BannerEditContentView: View {
     let uiState: BannerEditUiState
+
     let onAction: (BannerEditAction) -> Void
 
     var body: some View {
@@ -185,7 +186,6 @@ private struct BannerEditContentView: View {
                     .buttonStyle(.plain)
                 }
             }
-
             switch uiState.selectedTarget {
             case .externalLink:
                 ConCafeFormField(
@@ -409,6 +409,7 @@ private struct BannerEditContentView: View {
 
 private struct BannerSelectorSheet: View {
     let uiState: BannerEditUiState
+
     let onAction: (BannerEditAction) -> Void
 
     var body: some View {
@@ -469,7 +470,7 @@ private struct BannerSelectorSheet: View {
 
 struct BannerEditView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        CompatNavigationContainer {
             BannerEditView()
         }
     }

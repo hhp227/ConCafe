@@ -173,7 +173,12 @@ class HomeViewModel(
         when (banner.targetType) {
             BannerLinkTargetType.EXTERNAL_LINK -> {
                 if (banner.targetValue.isNotBlank()) {
-                    _event.emit(HomeEvent.OpenExternalLink(banner.targetValue))
+                    _event.emit(
+                        HomeEvent.NavigateToExternalLink(
+                            title = banner.title,
+                            url = banner.targetValue
+                        )
+                    )
                 }
             }
             BannerLinkTargetType.CAFE_DETAIL,

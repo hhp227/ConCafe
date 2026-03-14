@@ -6,15 +6,93 @@
 //
 
 import SwiftUI
+import WebKit
 
 struct ExternalLinkView: View {
+    let onNavigationAction: (NavigationAction) -> Void
+
+    @StateObject private var viewModel: ExternalLinkViewModel
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ExternalLinkContentView(
+            uiState: viewModel.uiState
+        )
+        .navigationBarBackButtonHidden(true)
+        .navigationTitle(viewModel.uiState.displayTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    viewModel.onAction(.tapBack)
+                } label: {
+                    Image(systemName: "chevron.backward")
+                }
+            }
+        }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateBack:
+                onNavigationAction(.navigateBack)
+            }
+        }
+    }
+
+    init(
+        title: String,
+        url: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
+    ) {
+        self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(
+            wrappedValue: ExternalLinkViewModel(
+                title: title,
+                url: url
+            )
+        )
+    }
+}
+
+private struct ExternalLinkContentView: View {
+    let uiState: ExternalLinkUiState
+
+    var body: some View {
+        ExternalWebView(urlString: uiState.url)
+            .background(Color.white)
+    }
+}
+
+private struct ExternalWebView: UIViewRepresentable {
+    let urlString: String
+
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+        webView.allowsBackForwardNavigationGestures = true
+        load(urlString, into: webView)
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        guard webView.url?.absoluteString != urlString else { return }
+        load(urlString, into: webView)
+    }
+
+    private func load(_ urlString: String, into webView: WKWebView) {
+        guard let url = URL(string: urlString) else { return }
+        webView.load(URLRequest(url: url))
     }
 }
 
 struct ExternalLinkView_Previews: PreviewProvider {
     static var previews: some View {
-        ExternalLinkView()
+        CompatNavigationContainer {
+            ExternalLinkView(
+                title: "ConCafe",
+                url: "https://example.com"
+            )
+        }
     }
 }

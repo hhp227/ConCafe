@@ -6,7 +6,22 @@
 //
 
 import Foundation
+import Combine
 
-class ExternalLinkViewModel: ObservableObject {
-    
+@MainActor
+final class ExternalLinkViewModel: ObservableObject {
+    @Published private(set) var uiState: ExternalLinkUiState
+
+    let event = PassthroughSubject<ExternalLinkEvent, Never>()
+
+    init(title: String, url: String) {
+        self.uiState = ExternalLinkUiState(title: title, url: url)
+    }
+
+    func onAction(_ action: ExternalLinkAction) {
+        switch action {
+        case .tapBack:
+            event.send(.navigateBack)
+        }
+    }
 }

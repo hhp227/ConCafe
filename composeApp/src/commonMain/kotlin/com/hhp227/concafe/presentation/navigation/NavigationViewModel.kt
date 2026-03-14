@@ -12,6 +12,7 @@ import com.hhp227.concafe.presentation.navigation.Route.CafeDashboard
 import com.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
 import com.hhp227.concafe.presentation.navigation.Route.Cast
 import com.hhp227.concafe.presentation.navigation.Route.CastEdit
+import com.hhp227.concafe.presentation.navigation.Route.ExternalLink
 import com.hhp227.concafe.presentation.navigation.Route.Main
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoods
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
@@ -40,6 +41,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToBannerEdit -> {
                     _event.emit(NavigateTo(BannerEdit(action.cafeId)))
+                }
+                is NavigationAction.NavigateToExternalLink -> {
+                    _event.emit(NavigateTo(ExternalLink(action.title, action.url)))
                 }
                 is NavigationAction.NavigateToCafeInfoEdit -> {
                     _event.emit(

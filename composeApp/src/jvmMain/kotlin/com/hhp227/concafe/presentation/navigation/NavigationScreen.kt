@@ -28,6 +28,7 @@ import com.hhp227.concafe.presentation.banner.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.external.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
@@ -178,6 +179,13 @@ private fun DetailRoutePane(
         is Route.BannerEdit -> {
             BannerEditScreen(
                 initialCafeId = route.cafeId,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.ExternalLink -> {
+            ExternalLinkScreen(
+                title = route.title,
+                url = route.url,
                 onNavigationAction = onNavigationAction
             )
         }

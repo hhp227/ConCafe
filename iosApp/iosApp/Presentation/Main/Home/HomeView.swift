@@ -11,7 +11,6 @@ import Shared
 
 struct HomeView: View {
     let onNavigationAction: (NavigationAction) -> Void
-    @Environment(\.openURL) private var openURL
 
     @StateObject private var viewModel = HomeViewModel()
     
@@ -27,10 +26,8 @@ struct HomeView: View {
         )
         .onReceive(viewModel.event) { event in
             switch event {
-            case .openExternalLink(let url):
-                if let target = URL(string: url) {
-                    openURL(target)
-                }
+            case .navigateToExternalLink(let title, let url):
+                onNavigationAction(.navigateToExternalLink(title: title, url: url))
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToCafe(let id):

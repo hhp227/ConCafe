@@ -32,6 +32,8 @@ struct AppNavigationView: View {
                 CafeDashboardView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .bannerEdit(let cafeId):
                 BannerEditView(initialCafeId: cafeId, onNavigationAction: viewModel.onAction)
+            case .externalLink(let title, let url):
+                ExternalLinkView(title: title, url: url, onNavigationAction: viewModel.onAction)
             case .cafeInfoEdit(let param, let isRegistrationMode):
                 CafeInfoEditView(
                     cafeId: param,
@@ -78,6 +80,8 @@ struct AppNavigationView: View {
                 case .cafeDashboard:
                     path.append(route)
                 case .bannerEdit:
+                    path.append(route)
+                case .externalLink:
                     path.append(route)
                 case .cafeInfoEdit:
                     path.append(route)

@@ -15,6 +15,7 @@ import com.hhp227.concafe.presentation.banner.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.external.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
@@ -97,6 +98,15 @@ fun NavigationScreen(
 
             BannerEditScreen(
                 initialCafeId = bannerEditRoute.cafeId,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.ExternalLink> { backStackEntry ->
+            val externalLinkRoute = backStackEntry.toRoute<Route.ExternalLink>()
+
+            ExternalLinkScreen(
+                title = externalLinkRoute.title,
+                url = externalLinkRoute.url,
                 onNavigationAction = viewModel::onAction
             )
         }
