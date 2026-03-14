@@ -28,6 +28,22 @@ struct BannerEditView: View {
                 .disabled(!viewModel.uiState.isSaveEnabled)
             }
         }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.uiState.selectorType != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.dismissSelector)
+                    }
+                }
+            )
+        ) {
+            BannerSelectorSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+            .compatLargeSheetDetent()
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -47,7 +63,6 @@ struct BannerEditView: View {
 
 private struct BannerEditContentView: View {
     let uiState: BannerEditUiState
-
     let onAction: (BannerEditAction) -> Void
 
     var body: some View {
@@ -132,18 +147,12 @@ private struct BannerEditContentView: View {
         sectionCard(title: "배너 기본 정보") {
             ConCafeFormField(
                 label: "배너 제목",
-                text: Binding(
-                    get: { uiState.title },
-                    set: { onAction(.changeTitle($0)) }
-                ),
+                text: Binding(get: { uiState.title }, set: { onAction(.changeTitle($0)) }),
                 placeholder: "배너 제목을 입력해주세요"
             )
             ConCafeFormField(
                 label: "서브 문구",
-                text: Binding(
-                    get: { uiState.subtitle },
-                    set: { onAction(.changeSubtitle($0)) }
-                ),
+                text: Binding(get: { uiState.subtitle }, set: { onAction(.changeSubtitle($0)) }),
                 placeholder: "서브 문구를 입력해주세요"
             )
         }
@@ -171,27 +180,51 @@ private struct BannerEditContentView: View {
                     .buttonStyle(.plain)
                 }
             }
-            ConCafeFormField(
-                label: "대상 값",
-                text: Binding(
-                    get: { uiState.targetValue },
-                    set: { onAction(.changeTargetValue($0)) }
-                ),
-                placeholder: uiState.targetFieldPlaceholder
-            )
+
+            switch uiState.selectedTarget {
+            case .externalLink:
+                ConCafeFormField(
+                    label: "외부 링크",
+                    text: Binding(get: { uiState.targetValue }, set: { onAction(.changeTargetValue($0)) }),
+                    placeholder: uiState.targetFieldPlaceholder
+                )
+            case .cafeDetail:
+                fixedSelectionField(
+                    label: "적용 카페",
+                    selectedItem: uiState.selectedCafeOption,
+                    placeholder: "연결할 운영 카페가 없습니다."
+                )
+            case .notice, .eventDetail:
+                if uiState.isAdmin {
+                    selectionField(
+                        label: "운영 카페",
+                        selectedItem: uiState.selectedCafeOption,
+                        placeholder: "운영 카페를 선택해주세요"
+                    ) {
+                        onAction(.clickCafeSelector)
+                    }
+                } else {
+                    fixedSelectionField(
+                        label: "적용 카페",
+                        selectedItem: uiState.selectedCafeOption,
+                        placeholder: "연결할 운영 카페가 없습니다."
+                    )
+                }
+                selectionField(
+                    label: uiState.targetSelectionLabel,
+                    selectedItem: uiState.selectedContentOption,
+                    placeholder: uiState.targetSelectionPlaceholder
+                ) {
+                    onAction(.clickTargetSelector)
+                }
+            }
         }
     }
 
     private var periodSection: some View {
         sectionCard(title: "노출 기간 설정") {
             VStack(spacing: 8) {
-            Text(uiState.displayDaysLabel)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(Color(hex: "EF6797"))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(hex: "EF6797").opacity(0.08))
-                .clipShape(Capsule())
+                badgeText(uiState.displayDaysLabel)
                 Slider(
                     value: Binding(
                         get: { Double(uiState.displayDays) },
@@ -209,7 +242,7 @@ private struct BannerEditContentView: View {
                 .font(.caption2)
                 .foregroundStyle(Color(hex: "9A8D95"))
             }
-        } 
+        }
     }
 
     private var bottomSaveBar: some View {
@@ -218,13 +251,11 @@ private struct BannerEditContentView: View {
         } label: {
             HStack(spacing: 8) {
                 if uiState.isSaving {
-                    ProgressView()
-                        .tint(Color(hex: "2B2330"))
+                    ProgressView().tint(Color(hex: "2B2330"))
                 } else {
                     Image(systemName: "square.and.arrow.down")
                 }
-                Text(uiState.submitButtonText)
-                    .fontWeight(.bold)
+                Text(uiState.submitButtonText).fontWeight(.bold)
             }
             .foregroundStyle(Color(hex: "2B2330"))
             .frame(maxWidth: .infinity)
@@ -244,31 +275,98 @@ private struct BannerEditContentView: View {
         title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        sectionCard(title: title, trailing: { EmptyView() }, content: content)
-    }
-
-    private func sectionCard<Content: View, Trailing: View>(
-        title: String,
-        @ViewBuilder trailing: () -> Trailing,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                HStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 999, style: .continuous)
-                        .fill(Color(hex: "FFD1DC"))
-                        .frame(width: 4, height: 18)
-                    Text(title)
-                        .font(.title3.weight(.bold))
-                }
-                Spacer()
-                trailing()
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 999, style: .continuous)
+                    .fill(Color(hex: "FFD1DC"))
+                    .frame(width: 4, height: 18)
+                Text(title).font(.title3.weight(.bold))
             }
             content()
         }
         .padding(18)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func selectionField(
+        label: String,
+        selectedItem: BannerSelectableItem?,
+        placeholder: String,
+        onTap: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color(hex: "665A63"))
+            Button(action: onTap) {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(selectedItem?.title ?? placeholder)
+                            .font(.subheadline.weight(selectedItem == nil ? .regular : .semibold))
+                            .foregroundStyle(selectedItem == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                        if let subtitle = selectedItem?.subtitle, !subtitle.isEmpty {
+                            Text(subtitle)
+                                .font(.caption)
+                                .foregroundStyle(Color(hex: "8F848F"))
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(Color(hex: "8F848F"))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(Color(hex: "F8F5F6"))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func fixedSelectionField(
+        label: String,
+        selectedItem: BannerSelectableItem?,
+        placeholder: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color(hex: "665A63"))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(selectedItem?.title ?? placeholder)
+                    .font(.subheadline.weight(selectedItem == nil ? .regular : .semibold))
+                    .foregroundStyle(selectedItem == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                if let subtitle = selectedItem?.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "8F848F"))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Color(hex: "F8F5F6"))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+            )
+        }
+    }
+
+    private func badgeText(_ text: String) -> some View {
+        Text(text)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(Color(hex: "EF6797"))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(hex: "EF6797").opacity(0.08))
+            .clipShape(Capsule())
     }
 
     private func infoBanner(message: String) -> some View {
@@ -291,6 +389,66 @@ private struct BannerEditContentView: View {
         .padding(.vertical, 14)
         .background(Color(hex: "FFD1DC").opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct BannerSelectorSheet: View {
+    let uiState: BannerEditUiState
+    let onAction: (BannerEditAction) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(uiState.selectorTitle)
+                .font(.title3.weight(.bold))
+                .padding(.horizontal, 24)
+            ConCafeFormField(
+                label: "검색",
+                text: Binding(get: { uiState.selectorQuery }, set: { onAction(.changeSelectorQuery($0)) }),
+                placeholder: uiState.selectorSearchPlaceholder
+            )
+            .padding(.horizontal, 24)
+            if uiState.isSelectorLoading {
+                ProgressView()
+                    .tint(Color(hex: "EF6797"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+            } else if uiState.selectorOptions.isEmpty {
+                Text("선택 가능한 항목이 없습니다.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "8F848F"))
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 24)
+            } else {
+                ScrollView {
+                    VStack(spacing: 10) {
+                        ForEach(uiState.selectorOptions) { item in
+                            Button {
+                                onAction(.selectSelectorItem(item.id))
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(item.title)
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(Color(hex: "23161C"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(item.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(Color(hex: "8F848F"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .padding(16)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                }
+            }
+        }
+        .padding(.top, 16)
+        .background(Color(hex: "F8F5F6"))
     }
 }
 

@@ -15,6 +15,11 @@ enum BannerEditAction {
     case selectTarget(BannerTargetType)
     case changeTargetValue(String)
     case changeDisplayDays(Int)
+    case clickCafeSelector
+    case clickTargetSelector
+    case changeSelectorQuery(String)
+    case selectSelectorItem(String)
+    case dismissSelector
     case clickSave
     case dismissInfoMessage
 }

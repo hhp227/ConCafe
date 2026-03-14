@@ -19,6 +19,14 @@ struct BannerEditUiState {
     var selectedTarget: BannerTargetType = .cafeDetail
     var targetValue = ""
     var displayDays = 5
+    var ownedCafeOptions: [BannerSelectableItem] = []
+    var selectedCafeOption: BannerSelectableItem? = nil
+    var selectedContentOption: BannerSelectableItem? = nil
+    var selectorType: BannerSelectorType? = nil
+    var selectorQuery = ""
+    var selectorOptions: [BannerSelectableItem] = []
+    var isSelectorLoading = false
+    var isAdmin = false
     var isSaving = false
     var infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
 
@@ -30,12 +38,48 @@ struct BannerEditUiState {
         selectedTarget.placeholder
     }
 
+    var selectorTitle: String {
+        selectorType?.title ?? ""
+    }
+
+    var selectorSearchPlaceholder: String {
+        selectorType?.searchPlaceholder ?? ""
+    }
+
+    var targetSelectionLabel: String {
+        switch selectedTarget {
+        case .notice:
+            return "공지사항 선택"
+        case .eventDetail:
+            return "이벤트 선택"
+        default:
+            return ""
+        }
+    }
+
+    var targetSelectionPlaceholder: String {
+        switch selectedTarget {
+        case .notice:
+            return "공지사항을 검색하고 선택해주세요"
+        case .eventDetail:
+            return "이벤트를 검색하고 선택해주세요"
+        default:
+            return ""
+        }
+    }
+
     var isSaveEnabled: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !isSaving
     }
+}
+
+struct BannerSelectableItem: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let subtitle: String
 }
 
 enum BannerTargetType: String, CaseIterable, Identifiable {
@@ -49,13 +93,35 @@ enum BannerTargetType: String, CaseIterable, Identifiable {
     var placeholder: String {
         switch self {
         case .cafeDetail:
-            return "대상 카페 ID를 입력해주세요"
+            return "운영 카페를 선택해주세요"
         case .eventDetail:
-            return "대상 이벤트 ID를 입력해주세요"
+            return "이벤트를 검색하고 선택해주세요"
         case .notice:
-            return "대상 공지 ID를 입력해주세요"
+            return "공지사항을 검색하고 선택해주세요"
         case .externalLink:
             return "외부 URL을 입력해주세요"
+        }
+    }
+}
+
+enum BannerSelectorType {
+    case cafe
+    case notice
+    case event
+
+    var title: String {
+        switch self {
+        case .cafe: return "운영 카페 선택"
+        case .notice: return "공지사항 선택"
+        case .event: return "이벤트 선택"
+        }
+    }
+
+    var searchPlaceholder: String {
+        switch self {
+        case .cafe: return "운영 카페 이름을 검색해주세요"
+        case .notice: return "공지 제목을 검색해주세요"
+        case .event: return "이벤트 제목을 검색해주세요"
         }
     }
 }

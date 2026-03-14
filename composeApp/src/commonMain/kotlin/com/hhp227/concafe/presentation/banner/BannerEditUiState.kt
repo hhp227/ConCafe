@@ -12,6 +12,14 @@ data class BannerEditUiState(
     val selectedTarget: BannerTargetType = BannerTargetType.CAFE_DETAIL,
     val targetValue: String = "",
     val displayDays: Int = 5,
+    val ownedCafeOptions: List<BannerSelectableItem> = emptyList(),
+    val selectedCafeOption: BannerSelectableItem? = null,
+    val selectedContentOption: BannerSelectableItem? = null,
+    val selectorType: BannerSelectorType? = null,
+    val selectorQuery: String = "",
+    val selectorOptions: List<BannerSelectableItem> = emptyList(),
+    val isSelectorLoading: Boolean = false,
+    val isAdmin: Boolean = false,
     val isSaving: Boolean = false,
     val infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
 ) {
@@ -21,19 +29,54 @@ data class BannerEditUiState(
     val targetFieldPlaceholder: String
         get() = selectedTarget.placeholder
 
+    val selectorTitle: String
+        get() = selectorType?.title.orEmpty()
+
+    val selectorSearchPlaceholder: String
+        get() = selectorType?.searchPlaceholder.orEmpty()
+
     val isSaveEnabled: Boolean
         get() = title.isNotBlank() &&
             subtitle.isNotBlank() &&
             targetValue.isNotBlank() &&
             !isSaving
+
+    val targetSelectionLabel: String
+        get() = when (selectedTarget) {
+            BannerTargetType.NOTICE -> "공지사항 선택"
+            BannerTargetType.EVENT_DETAIL -> "이벤트 선택"
+            else -> ""
+        }
+
+    val targetSelectionPlaceholder: String
+        get() = when (selectedTarget) {
+            BannerTargetType.NOTICE -> "공지사항을 검색하고 선택해주세요"
+            BannerTargetType.EVENT_DETAIL -> "이벤트를 검색하고 선택해주세요"
+            else -> ""
+        }
 }
+
+data class BannerSelectableItem(
+    val id: String,
+    val title: String,
+    val subtitle: String
+)
 
 enum class BannerTargetType(
     val label: String,
     val placeholder: String
 ) {
-    CAFE_DETAIL("카페 상세", "대상 카페 ID를 입력해주세요"),
-    EVENT_DETAIL("이벤트 상세", "대상 이벤트 ID를 입력해주세요"),
-    NOTICE("공지사항", "대상 공지 ID를 입력해주세요"),
+    CAFE_DETAIL("카페 상세", "운영 카페를 선택해주세요"),
+    EVENT_DETAIL("이벤트 상세", "이벤트를 검색하고 선택해주세요"),
+    NOTICE("공지사항", "공지사항을 검색하고 선택해주세요"),
     EXTERNAL_LINK("외부 링크", "외부 URL을 입력해주세요")
+}
+
+enum class BannerSelectorType(
+    val title: String,
+    val searchPlaceholder: String
+) {
+    CAFE("운영 카페 선택", "운영 카페 이름을 검색해주세요"),
+    NOTICE("공지사항 선택", "공지 제목을 검색해주세요"),
+    EVENT("이벤트 선택", "이벤트 제목을 검색해주세요")
 }

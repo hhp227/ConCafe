@@ -4,52 +4,15 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -58,6 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
+import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
+import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -65,7 +34,18 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @Composable
 fun BannerEditScreen(
     onNavigationAction: (NavigationAction) -> Unit = {},
-    viewModel: BannerEditViewModel = viewModel()
+    viewModel: BannerEditViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                BannerEditViewModel(
+                    getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
+                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
+                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase(),
+                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+                )
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,6 +65,20 @@ fun BannerEditScreen(
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState
     )
+    uiState.selectorType?.let {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(BannerEditAction.DismissSelector) },
+            sheetState = sheetState,
+            containerColor = Color(0xFFF8F5F6)
+        ) {
+            BannerSelectorSheet(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,12 +93,7 @@ private fun BannerEditContentScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = uiState.screenTitle,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+                title = { Text(uiState.screenTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(BannerEditAction.ClickBack) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
@@ -205,19 +194,53 @@ private fun BannerEditContentScreen(
                                 selectedTarget = uiState.selectedTarget,
                                 onSelect = { onAction(BannerEditAction.SelectTarget(it)) }
                             )
-                            ConCafeFormField(
-                                label = "대상 값",
-                                value = uiState.targetValue,
-                                onValueChange = { onAction(BannerEditAction.ChangeTargetValue(it)) },
-                                placeholder = uiState.targetFieldPlaceholder
-                            )
+                            when (uiState.selectedTarget) {
+                                BannerTargetType.EXTERNAL_LINK -> {
+                                    ConCafeFormField(
+                                        label = "외부 링크",
+                                        value = uiState.targetValue,
+                                        onValueChange = { onAction(BannerEditAction.ChangeTargetValue(it)) },
+                                        placeholder = uiState.targetFieldPlaceholder
+                                    )
+                                }
+                                BannerTargetType.CAFE_DETAIL -> {
+                                    FixedSelectionCard(
+                                        label = "적용 카페",
+                                        selectedItem = uiState.selectedCafeOption,
+                                        placeholder = "연결할 운영 카페가 없습니다."
+                                    )
+                                }
+                                BannerTargetType.NOTICE,
+                                BannerTargetType.EVENT_DETAIL -> {
+                                    if (uiState.isAdmin) {
+                                        SelectionFieldCard(
+                                            label = "운영 카페",
+                                            selectedItem = uiState.selectedCafeOption,
+                                            placeholder = "운영 카페를 선택해주세요",
+                                            onClick = { onAction(BannerEditAction.ClickCafeSelector) }
+                                        )
+                                    } else {
+                                        FixedSelectionCard(
+                                            label = "적용 카페",
+                                            selectedItem = uiState.selectedCafeOption,
+                                            placeholder = "연결할 운영 카페가 없습니다."
+                                        )
+                                    }
+                                    SelectionFieldCard(
+                                        label = uiState.targetSelectionLabel,
+                                        selectedItem = uiState.selectedContentOption,
+                                        placeholder = uiState.targetSelectionPlaceholder,
+                                        onClick = { onAction(BannerEditAction.ClickTargetSelector) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
                 item {
                     BannerSectionCard(title = "노출 기간 설정") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PriorityBadge(label = uiState.displayDaysLabel)
+                            BadgeText(label = uiState.displayDaysLabel)
                             Slider(
                                 value = uiState.displayDays.toFloat(),
                                 onValueChange = { onAction(BannerEditAction.ChangeDisplayDays(it.toInt())) },
@@ -241,6 +264,64 @@ private fun BannerEditContentScreen(
                             onDismiss = { onAction(BannerEditAction.DismissInfoMessage) }
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerSelectorSheet(
+    uiState: BannerEditUiState,
+    onAction: (BannerEditAction) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = uiState.selectorTitle,
+            modifier = Modifier.padding(horizontal = 24.dp),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        ConCafeFormField(
+            label = "검색",
+            value = uiState.selectorQuery,
+            onValueChange = { onAction(BannerEditAction.ChangeSelectorQuery(it)) },
+            modifier = Modifier.padding(horizontal = 24.dp),
+            placeholder = uiState.selectorSearchPlaceholder
+        )
+        if (uiState.isSelectorLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFFEF6797))
+            }
+        } else if (uiState.selectorOptions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
+            ) {
+                Text(
+                    text = "선택 가능한 항목이 없습니다.",
+                    color = Color(0xFF8F848F)
+                )
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(uiState.selectorOptions, key = { it.id }) { item ->
+                    SelectorOptionCard(
+                        item = item,
+                        onClick = { onAction(BannerEditAction.SelectSelectorItem(item.id)) }
+                    )
                 }
             }
         }
@@ -318,7 +399,6 @@ private fun BannerImageCard(
 @Composable
 private fun BannerSectionCard(
     title: String,
-    trailing: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -329,25 +409,18 @@ private fun BannerSectionCard(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .size(width = 4.dp, height = 18.dp)
-                            .background(Color(0xFFFFD1DC), RoundedCornerShape(999.dp))
-                    )
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                trailing?.invoke()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(width = 4.dp, height = 18.dp)
+                        .background(Color(0xFFFFD1DC), RoundedCornerShape(999.dp))
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
             content()
         }
@@ -397,7 +470,105 @@ private fun TargetTypeGrid(
 }
 
 @Composable
-private fun PriorityBadge(label: String) {
+private fun SelectionFieldCard(
+    label: String,
+    selectedItem: BannerSelectableItem?,
+    placeholder: String,
+    onClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF665A63), fontWeight = FontWeight.Medium)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
+            border = BorderStroke(1.dp, Color(0x33FFD1DC))
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = selectedItem?.title ?: placeholder,
+                        color = if (selectedItem == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                        fontWeight = if (selectedItem == null) FontWeight.Normal else FontWeight.SemiBold
+                    )
+                    selectedItem?.subtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF8F848F)
+                        )
+                    }
+                }
+                Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color(0xFF8F848F))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FixedSelectionCard(
+    label: String,
+    selectedItem: BannerSelectableItem?,
+    placeholder: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF665A63), fontWeight = FontWeight.Medium)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
+            border = BorderStroke(1.dp, Color(0x33FFD1DC))
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = selectedItem?.title ?: placeholder,
+                    color = if (selectedItem == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                    fontWeight = if (selectedItem == null) FontWeight.Normal else FontWeight.SemiBold
+                )
+                selectedItem?.subtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF8F848F)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectorOptionCard(
+    item: BannerSelectableItem,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(item.title, fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
+            Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8F848F))
+        }
+    }
+}
+
+@Composable
+private fun BadgeText(label: String) {
     Surface(
         color = Color(0x14EF6797),
         shape = RoundedCornerShape(999.dp)
@@ -438,11 +609,14 @@ private fun InfoBanner(
     }
 }
 
-@Preview()
+@Preview
 @Composable
 private fun BannerEditContentPreview() {
     BannerEditContentScreen(
-        uiState = BannerEditUiState(),
+        uiState = BannerEditUiState(
+            ownedCafeOptions = listOf(BannerSelectableItem("cafe-1", "루나 메이드 카페", "서울 홍대")),
+            selectedCafeOption = BannerSelectableItem("cafe-1", "루나 메이드 카페", "서울 홍대")
+        ),
         onAction = {},
         snackbarHostState = remember { SnackbarHostState() }
     )

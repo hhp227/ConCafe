@@ -8,6 +8,11 @@ sealed interface BannerEditAction {
     data class SelectTarget(val target: BannerTargetType) : BannerEditAction
     data class ChangeTargetValue(val value: String) : BannerEditAction
     data class ChangeDisplayDays(val value: Int) : BannerEditAction
+    data object ClickCafeSelector : BannerEditAction
+    data object ClickTargetSelector : BannerEditAction
+    data class ChangeSelectorQuery(val value: String) : BannerEditAction
+    data class SelectSelectorItem(val id: String) : BannerEditAction
+    data object DismissSelector : BannerEditAction
     data object ClickSave : BannerEditAction
     data object DismissInfoMessage : BannerEditAction
 }
