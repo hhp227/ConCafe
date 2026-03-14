@@ -231,17 +231,6 @@ struct AdminOperationsView: View {
         .background(Color(hex: "FFF2D8"))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
-}
-
-private extension AdminMetricIcon {
-    var systemName: String {
-        switch self {
-        case .users: return "person.2.fill"
-        case .cafe: return "cup.and.saucer.fill"
-        case .pending: return "clock.badge.exclamationmark"
-        case .report: return "exclamationmark.bubble.fill"
-        }
-    }
 
     private var bannerRegisterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -270,6 +259,17 @@ private extension AdminMetricIcon {
         .padding(18)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+}
+
+private extension AdminMetricIcon {
+    var systemName: String {
+        switch self {
+        case .users: return "person.2.fill"
+        case .cafe: return "cup.and.saucer.fill"
+        case .pending: return "clock.badge.exclamationmark"
+        case .report: return "exclamationmark.bubble.fill"
+        }
     }
 }
 
