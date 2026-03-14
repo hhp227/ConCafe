@@ -15,10 +15,10 @@ import com.hhp227.concafe.presentation.banner.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
-import com.hhp227.concafe.presentation.external.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen

@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.external
+package com.hhp227.concafe.presentation.main.cafemanagement.externallink
 
 import android.annotation.SuppressLint
 import android.webkit.WebChromeClient

@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.external
+package com.hhp227.concafe.presentation.main.cafemanagement.externallink
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
