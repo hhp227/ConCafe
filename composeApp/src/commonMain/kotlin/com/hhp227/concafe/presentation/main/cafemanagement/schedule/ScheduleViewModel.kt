@@ -129,7 +129,69 @@ class ScheduleViewModel(
             is ScheduleAction.ClickEditDay -> {
                 val selected = _uiState.value.schedules.firstOrNull { it.id == action.dayId } ?: return
                 _uiState.update {
-                    it.copy(infoMessage = "${selected.title} 수정은 다음 단계에서 제공합니다.")
+                    it.copy(
+                        isEditSheetVisible = true,
+                        editingScheduleId = selected.id,
+                        editingScheduleTitle = selected.title,
+                        editStatus = selected.status,
+                        editStartTime = selected.timeLabel.substringBefore(" - ").takeIf { time -> ":" in time } ?: "10:00",
+                        editEndTime = selected.timeLabel.substringAfter(" - ", "19:00").takeIf { time -> ":" in time } ?: "19:00",
+                        infoMessage = null
+                    )
+                }
+            }
+            ScheduleAction.DismissEditSheet -> {
+                _uiState.update {
+                    it.copy(
+                        isEditSheetVisible = false,
+                        editingScheduleId = null
+                    )
+                }
+            }
+            is ScheduleAction.ChangeEditStatus -> {
+                _uiState.update { it.copy(editStatus = action.status) }
+            }
+            is ScheduleAction.ChangeEditStartTime -> {
+                _uiState.update { it.copy(editStartTime = action.value) }
+            }
+            is ScheduleAction.ChangeEditEndTime -> {
+                _uiState.update { it.copy(editEndTime = action.value) }
+            }
+            ScheduleAction.SubmitEditDay -> {
+                val currentState = _uiState.value
+                val editingId = currentState.editingScheduleId ?: return
+                val nextStatusLabel = when (currentState.editStatus) {
+                    ScheduleEditStatus.WORK -> "근무"
+                    ScheduleEditStatus.OFF -> "휴무"
+                    ScheduleEditStatus.VACATION -> "휴가"
+                }
+                val nextTimeLabel = if (currentState.editStatus == ScheduleEditStatus.WORK) {
+                    "${currentState.editStartTime} - ${currentState.editEndTime}"
+                } else {
+                    "-"
+                }
+                val isWorking = currentState.editStatus == ScheduleEditStatus.WORK
+                _uiState.update { state ->
+                    state.copy(
+                        isEditSheetVisible = false,
+                        editingScheduleId = null,
+                        schedules = state.schedules.map { schedule ->
+                            if (schedule.id == editingId) {
+                                schedule.copy(
+                                    timeLabel = nextTimeLabel,
+                                    statusLabel = nextStatusLabel,
+                                    isWorking = isWorking,
+                                    status = currentState.editStatus
+                                )
+                            } else {
+                                schedule
+                            }
+                        },
+                        weekDays = state.weekDays.map { day ->
+                            if (day.id == editingId) day.copy(isWorking = isWorking) else day
+                        },
+                        infoMessage = "${currentState.editingScheduleTitle} 시간을 수정했습니다."
+                    )
                 }
             }
             ScheduleAction.ClickMore -> {
@@ -179,7 +241,12 @@ private fun ScheduleManagementData.toUiState(): ScheduleUiState {
                 title = schedule.title,
                 timeLabel = schedule.timeLabel,
                 statusLabel = schedule.statusLabel,
-                isWorking = schedule.isWorking
+                isWorking = schedule.isWorking,
+                status = when {
+                    schedule.isWorking -> ScheduleEditStatus.WORK
+                    schedule.statusLabel.contains("휴가") -> ScheduleEditStatus.VACATION
+                    else -> ScheduleEditStatus.OFF
+                }
             )
         },
         selectedDayId = selectedDayId,

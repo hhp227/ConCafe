@@ -1,6 +1,5 @@
 package com.hhp227.concafe.presentation.banner
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -623,7 +622,6 @@ private fun InfoBanner(
     }
 }
 
-@Preview
 @Composable
 private fun BannerEditContentPreview() {
     BannerEditContentScreen(

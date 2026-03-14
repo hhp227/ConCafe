@@ -32,6 +32,19 @@ struct ScheduleView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isEditSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissEditSheet)
+                }
+            }
+        )) {
+            ScheduleEditModal(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -88,6 +101,160 @@ struct ScheduleView: View {
         self.castId = castId
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: ScheduleViewModel(castId: castId))
+    }
+}
+
+private struct ScheduleEditModal: View {
+    let uiState: ScheduleUiState
+    let onAction: (ScheduleAction) -> Void
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onAction(.dismissEditSheet)
+                }
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(Color(hex: "E5DDE2"))
+                    .frame(width: 48, height: 5)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+                VStack(spacing: 16) {
+                    VStack(spacing: 4) {
+                        Text("근무 시간 수정")
+                            .font(.title3.weight(.bold))
+                        Text(uiState.editingScheduleTitle)
+                            .font(.subheadline)
+                            .foregroundStyle(Color(hex: "7A707A"))
+                    }
+                    HStack(spacing: 8) {
+                        ForEach(ScheduleEditStatus.allCases, id: \.rawValue) { status in
+                            Button {
+                                onAction(.changeEditStatus(status))
+                            } label: {
+                                Text(status.label)
+                                    .font(.subheadline.weight(.medium))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(uiState.editStatus == status ? Color.white : Color.clear)
+                                    .foregroundStyle(uiState.editStatus == status ? Color(hex: "24161E") : Color(hex: "7A707A"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(6)
+                    .background(Color(hex: "F8F5F6"))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    HStack(spacing: 12) {
+                        TimePickerField(
+                            title: "시작 시간",
+                            value: uiState.editStartTime,
+                            isEnabled: uiState.isEditingWorking,
+                            options: uiState.timeOptions,
+                            onSelect: { onAction(.changeEditStartTime($0)) }
+                        )
+                        TimePickerField(
+                            title: "종료 시간",
+                            value: uiState.editEndTime,
+                            isEnabled: uiState.isEditingWorking,
+                            options: uiState.timeOptions,
+                            onSelect: { onAction(.changeEditEndTime($0)) }
+                        )
+                    }
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(Color(hex: "EF6797"))
+                            .font(.caption)
+                        Text("휴게 시간 1시간(12:00 - 13:00)이 자동으로 포함되어 총 근무 시간에서 제외됩니다.")
+                            .font(.caption)
+                            .foregroundStyle(Color(hex: "6B5A63"))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(12)
+                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                    )
+                    HStack {
+                        Text("실제 근무 합계")
+                            .foregroundStyle(Color(hex: "7A707A"))
+                        Spacer()
+                        HStack(alignment: .bottom, spacing: 4) {
+                            Text("총")
+                                .font(.caption)
+                                .foregroundStyle(Color(hex: "7A707A"))
+                            Text(uiState.totalWorkDurationLabel)
+                                .font(.title2.weight(.bold))
+                        }
+                    }
+                    Button {
+                        onAction(.submitEditDay)
+                    } label: {
+                        Text("저장하기")
+                            .font(.headline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color(hex: "FFD1DC"))
+                            .foregroundStyle(Color(hex: "24161E"))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 20)
+            }
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+}
+
+private struct TimePickerField: View {
+    let title: String
+    let value: String
+    let isEnabled: Bool
+    let options: [String]
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(Color(hex: "7A707A"))
+            Menu {
+                ForEach(options, id: \.self) { option in
+                    Button(option) {
+                        onSelect(option)
+                    }
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "clock")
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Text(value)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isEnabled ? Color(hex: "24161E") : Color(hex: "B0A3AC"))
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "8F848F"))
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 52)
+                .background(isEnabled ? Color(hex: "F8F5F6") : Color(hex: "F2EDF0"))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .disabled(!isEnabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

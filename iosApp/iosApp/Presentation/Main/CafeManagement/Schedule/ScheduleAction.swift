@@ -13,6 +13,11 @@ enum ScheduleAction {
     case clickCalendar
     case selectDay(id: String)
     case clickEditDay(id: String)
+    case dismissEditSheet
+    case changeEditStatus(ScheduleEditStatus)
+    case changeEditStartTime(String)
+    case changeEditEndTime(String)
+    case submitEditDay
     case clickSave
     case dismissInfoMessage
 }

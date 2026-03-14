@@ -124,7 +124,48 @@ final class ScheduleViewModel: ObservableObject {
             }
         case .clickEditDay(let id):
             guard let selected = uiState.schedules.first(where: { $0.id == id }) else { return }
-            uiState.infoMessage = "\(selected.title) 수정은 다음 단계에서 제공합니다."
+            uiState.isEditSheetVisible = true
+            uiState.editingScheduleId = selected.id
+            uiState.editingScheduleTitle = selected.title
+            uiState.editStatus = selected.status
+            uiState.editStartTime = selected.timeLabel.components(separatedBy: " - ").first.flatMap { $0.contains(":") ? $0 : nil } ?? "10:00"
+            uiState.editEndTime = selected.timeLabel.components(separatedBy: " - ").last.flatMap { $0.contains(":") ? $0 : nil } ?? "19:00"
+            uiState.infoMessage = nil
+        case .dismissEditSheet:
+            uiState.isEditSheetVisible = false
+            uiState.editingScheduleId = nil
+        case .changeEditStatus(let status):
+            uiState.editStatus = status
+        case .changeEditStartTime(let value):
+            uiState.editStartTime = value
+        case .changeEditEndTime(let value):
+            uiState.editEndTime = value
+        case .submitEditDay:
+            guard let editingId = uiState.editingScheduleId else { return }
+            let statusLabel = uiState.editStatus.label
+            let isWorking = uiState.editStatus == .work
+            let timeLabel = isWorking ? "\(uiState.editStartTime) - \(uiState.editEndTime)" : "-"
+            uiState.schedules = uiState.schedules.map { schedule in
+                guard schedule.id == editingId else { return schedule }
+                return ScheduleUiState.DaySchedule(
+                    id: schedule.id,
+                    title: schedule.title,
+                    timeLabel: timeLabel,
+                    statusLabel: statusLabel,
+                    isWorking: isWorking,
+                    status: uiState.editStatus
+                )
+            }
+            uiState.weekDays = uiState.weekDays.map { day in
+                var next = day
+                if day.id == editingId {
+                    next.isWorking = isWorking
+                }
+                return next
+            }
+            uiState.isEditSheetVisible = false
+            uiState.editingScheduleId = nil
+            uiState.infoMessage = "\(uiState.editingScheduleTitle) 시간을 수정했습니다."
         case .clickSave:
             uiState.isSaving = true
             uiState.infoMessage = "주간 시간표를 저장했습니다."
@@ -189,7 +230,8 @@ private extension Shared.ScheduleManagementData {
                     title: schedule.title,
                     timeLabel: schedule.timeLabel,
                     statusLabel: schedule.statusLabel,
-                    isWorking: schedule.isWorking
+                    isWorking: schedule.isWorking,
+                    status: schedule.isWorking ? .work : (schedule.statusLabel.contains("휴가") ? .vacation : .off)
                 )
             },
             selectedDayId: selectedDayId,
