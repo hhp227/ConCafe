@@ -17,18 +17,8 @@ struct ExternalLinkView: View {
         ExternalLinkContentView(
             uiState: viewModel.uiState
         )
-        .navigationBarBackButtonHidden(true)
         .navigationTitle(viewModel.uiState.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.onAction(.tapBack)
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
