@@ -8,5 +8,5 @@
 import Foundation
 
 enum ExternalLinkAction {
-    
+    case tapBack
 }

@@ -8,5 +8,10 @@
 import Foundation
 
 struct ExternalLinkUiState {
-    
+    let title: String
+    let url: String
+
+    var displayTitle: String {
+        title.isEmpty ? "외부 링크" : title
+    }
 }

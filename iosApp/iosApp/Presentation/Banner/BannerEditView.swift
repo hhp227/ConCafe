@@ -26,7 +26,7 @@ struct BannerEditView: View {
                 Button("저장") {
                     viewModel.onAction(.clickSave)
                 }
-                .fontWeight(.bold)
+                .font(.system(size: 16, weight: .bold))
                 .disabled(!viewModel.uiState.isSaveEnabled)
             }
         }

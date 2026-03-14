@@ -8,5 +8,5 @@
 import Foundation
 
 enum ExternalLinkEvent {
-    
+    case navigateBack
 }
