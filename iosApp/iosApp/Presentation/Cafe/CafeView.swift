@@ -131,10 +131,8 @@ private struct CafeContentView: View {
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Color.clear
-                    .frame(height: 0)
-                    .id(topAnchorId)
                 heroSection(detail: detail, topSafeArea: topSafeArea)
+                .id(topAnchorId)
                 .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
                 Section {
