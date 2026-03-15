@@ -1032,6 +1032,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun rankingItemsFromCasts(): List<RankingItem> {
         return casts
             .sortedByDescending { it.followerCount }
+            .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cast ->
                 RankingItem(cast.id, cast.name, cast.followerCount, index + 1, cast.profileImage)
             }
@@ -1040,6 +1041,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun rankingItemsFromCafes(): List<RankingItem> {
         return cafes
             .sortedByDescending { it.ratingAvg }
+            .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cafe ->
                 RankingItem(cafe.id, cafe.name, (cafe.ratingAvg * 100).toInt(), index + 1, cafe.thumbnailImage)
             }
@@ -1088,6 +1090,7 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     private companion object {
         private const val HOME_POPULAR_CAST_MAX_COUNT = 50
+        private const val RANKING_MAX_COUNT = 50
     }
 }
 

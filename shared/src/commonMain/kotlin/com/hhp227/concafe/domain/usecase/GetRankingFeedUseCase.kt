@@ -31,7 +31,7 @@ class GetRankingFeedUseCase(
                 city = city,
                 sort = CastSort.FOLLOWERS,
                 cursor = null,
-                pageSize = 50
+                pageSize = Int.MAX_VALUE
             ).items.associateBy { it.id }
             val cafes = cafeRepository.searchCafes(
                 query = null,
@@ -39,7 +39,7 @@ class GetRankingFeedUseCase(
                 city = city,
                 sort = CafeSort.RATING,
                 cursor = null,
-                pageSize = 50
+                pageSize = Int.MAX_VALUE
             ).items.associateBy { it.id }
 
             AppResult.Success(
