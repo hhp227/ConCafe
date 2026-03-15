@@ -502,8 +502,18 @@ private struct CastClaimSheetView: View {
                                             )
                                     }
                                     .buttonStyle(.plain)
+                                    .onAppear {
+                                        if candidate.id == sheet.requestableCasts.last?.id, sheet.canLoadMore, !sheet.isLoadingMore {
+                                            onAction(.loadMoreClaimCandidates)
+                                        }
+                                    }
                                 }
                             }
+                        }
+                        if sheet.canLoadMore || sheet.isLoadingMore {
+                            Text(sheet.isLoadingMore ? "다음 캐스트 목록을 불러오는 중입니다." : "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.")
+                                .font(.caption)
+                                .foregroundStyle(Color(hex: "7A707A"))
                         }
                         Spacer(minLength: 8)
                     }

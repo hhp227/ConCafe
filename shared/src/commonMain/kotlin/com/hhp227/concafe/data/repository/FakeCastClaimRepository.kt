@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.repository
 
+import com.hhp227.concafe.domain.common.PagedResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import com.hhp227.concafe.data.source.ConCafeDataSource
@@ -44,15 +45,27 @@ class FakeCastClaimRepository(
             linkedCastName = linkedCast?.name,
             pendingClaim = userClaims.firstOrNull { it.status == CastClaimStatus.PENDING },
             latestRejectedClaim = userClaims.firstOrNull { it.status == CastClaimStatus.REJECTED },
-            requestableCasts = if (linkedCast != null || affiliatedCafeId == null) {
-                emptyList()
-            } else {
-                dataSource.casts
-                    .filter { it.cafeId == affiliatedCafeId && it.linkedUserId == null }
-                    .sortedBy { it.name }
-                    .map { CastClaimCandidate(it.id, it.name) }
-            }
+            hasRequestableCasts = linkedCast == null &&
+                affiliatedCafeId != null &&
+                dataSource.casts.any { it.cafeId == affiliatedCafeId && it.linkedUserId == null }
         )
+    }
+
+    override suspend fun getMyRequestableCastPage(
+        userId: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CastClaimCandidate> {
+        val linkedCast = dataSource.casts.firstOrNull { it.linkedUserId == userId }
+        val affiliatedCafeId = dataSource.affiliatedCafeIdByUser[userId] ?: linkedCast?.cafeId
+        if (linkedCast != null || affiliatedCafeId == null) {
+            return PagedResult(emptyList(), nextCursor = null, hasNext = false)
+        }
+        val items = dataSource.casts
+            .filter { it.cafeId == affiliatedCafeId && it.linkedUserId == null }
+            .sortedBy { it.name }
+            .map { CastClaimCandidate(it.id, it.name) }
+        return dataSource.toPaged(items, cursor, pageSize)
     }
 
     override suspend fun getPendingCastClaimsForCafe(cafeId: String): List<PendingCastClaimPreview> {

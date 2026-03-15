@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -108,6 +110,7 @@ fun FanManagementScreen(
                 CastClaimSheet(
                     sheet = claimSheet,
                     onSelect = { viewModel.onAction(FanManagementAction.SelectClaimCandidate(it)) },
+                    onLoadMore = { viewModel.onAction(FanManagementAction.LoadMoreClaimCandidates) },
                     onSubmit = { viewModel.onAction(FanManagementAction.SubmitCastClaim) },
                     onDismiss = { viewModel.onAction(FanManagementAction.DismissClaimSheet) }
                 )
@@ -559,6 +562,7 @@ private fun QuickActionGrid(
 private fun CastClaimSheet(
     sheet: FanManagementUiState.CastClaimSheet,
     onSelect: (String) -> Unit,
+    onLoadMore: () -> Unit,
     onSubmit: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -568,50 +572,65 @@ private fun CastClaimSheet(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .weight(1f, fill = false)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
-                }
-                TextButton(onClick = onDismiss) {
-                    Text("닫기")
-                }
-            }
-            Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
-            if (sheet.requestableCasts.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    sheet.requestableCasts.forEach { candidate ->
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onSelect(candidate.id) },
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
-                        ) {
-                            Text(
-                                text = candidate.name,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF24161E)
-                            )
-                        }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+                    }
+                    TextButton(onClick = onDismiss) {
+                        Text("닫기")
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            item {
+                Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
+            }
+            if (sheet.requestableCasts.isNotEmpty()) {
+                itemsIndexed(sheet.requestableCasts, key = { _, candidate -> candidate.id }) { index, candidate ->
+                    if (index == sheet.requestableCasts.lastIndex && sheet.canLoadMore && !sheet.isLoadingMore) {
+                        LaunchedEffect(candidate.id, sheet.requestableCasts.size) {
+                            onLoadMore()
+                        }
+                    }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(candidate.id) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                    ) {
+                        Text(
+                            text = candidate.name,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF24161E)
+                        )
+                    }
+                }
+            }
+            if (sheet.canLoadMore || sheet.isLoadingMore) {
+                item {
+                    Text(
+                        text = if (sheet.isLoadingMore) "다음 캐스트 목록을 불러오는 중입니다." else "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7A707A)
+                    )
+                }
+            }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
         if (sheet.canSubmit) {
             Surface(

@@ -9,6 +9,7 @@ import Foundation
 
 enum FanManagementAction {
     case clickClaimProfile
+    case loadMoreClaimCandidates
     case selectClaimCandidate(String)
     case submitCastClaim
     case dismissClaimSheet
