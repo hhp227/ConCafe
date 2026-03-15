@@ -113,7 +113,7 @@ private struct HomeContentView: View {
 
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "❤", title: "인기 메이드")
+            SectionTitle(icon: "heart.fill", title: "인기 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(uiState.popularCasts, id: \.id) { maid in
@@ -138,7 +138,7 @@ private struct HomeContentView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
-                    icon: "📍",
+                    icon: "mappin.and.ellipse",
                     title: "근처 메이드카페",
                     actionTitle: uiState.canLoadMoreNearbyCafes ? "더보기" : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
@@ -180,7 +180,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "🎂", title: "생일인 메이드")
+            SectionTitle(icon: "birthday.cake.fill", title: "생일인 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
@@ -203,7 +203,7 @@ private struct HomeContentView: View {
 
     private var noticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "📢", title: "최근 카페 공지")
+            SectionTitle(icon: "megaphone.fill", title: "최근 카페 공지")
             VStack(spacing: 10) {
                 ForEach(uiState.notices, id: \.id) { notice in
                     HStack(alignment: .top, spacing: 8) {
@@ -244,7 +244,9 @@ private struct SectionTitle: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(icon)
+            Image(systemName: icon)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "EF6797"))
             Text(title)
                 .font(.headline)
             Spacer()
