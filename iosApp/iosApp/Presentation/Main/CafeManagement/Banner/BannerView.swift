@@ -12,7 +12,7 @@ struct BannerView: View {
     
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = BannerViewModel()
+    @StateObject private var viewModel: BannerViewModel
     
     @State private var alertMessage: String?
 
@@ -35,6 +35,8 @@ struct BannerView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToBannerEdit(let cafeId):
+                onNavigationAction(.navigateToBannerEdit(cafeId: cafeId))
             case .showMessage(let message):
                 alertMessage = message
             }
@@ -58,6 +60,15 @@ struct BannerView: View {
             Text(message)
         }
     }
+
+    init(
+        cafeId: String?,
+        onNavigationAction: @escaping (NavigationAction) -> Void
+    ) {
+        self.cafeId = cafeId
+        self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: BannerViewModel(cafeId: cafeId))
+    }
 }
 
 private struct BannerContentView: View {
@@ -68,7 +79,14 @@ private struct BannerContentView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                tabBar
+                ConCafeTabBar(
+                    labels: BannerTab.allCases.map(\.rawValue),
+                    selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
+                    backgroundColor: Color(hex: "F8F5F6"),
+                    onSelect: { index in
+                        onAction(.selectTab(BannerTab.allCases[index]))
+                    }
+                )
                 headerRow
                 ForEach(uiState.filteredBanners) { banner in
                     BannerCardView(
@@ -109,32 +127,6 @@ private struct BannerContentView: View {
             .padding(.bottom, 14)
             .background(Color(hex: "F8F5F6"))
         }
-    }
-
-    private var tabBar: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                ForEach(BannerTab.allCases, id: \.rawValue) { tab in
-                    let isSelected = tab == uiState.selectedTab
-                    Button {
-                        onAction(.selectTab(tab))
-                    } label: {
-                        VStack(spacing: 10) {
-                            Text(tab.rawValue)
-                                .font(.subheadline.weight(isSelected ? .bold : .medium))
-                                .foregroundStyle(isSelected ? Color(hex: "24161E") : Color(hex: "8F848F"))
-                                .frame(maxWidth: .infinity)
-                            Rectangle()
-                                .fill(isSelected ? Color(hex: "FFD1DC") : Color.clear)
-                                .frame(height: 2)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var headerRow: some View {

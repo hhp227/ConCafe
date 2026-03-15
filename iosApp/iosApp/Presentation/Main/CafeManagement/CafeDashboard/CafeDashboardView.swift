@@ -57,6 +57,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateBack)
             case .navigateToBanner:
                 onNavigationAction(.navigateToBanner(cafeId: viewModel.uiState.cafe?.id))
+            case .navigateToBannerEdit:
+                onNavigationAction(.navigateToBannerEdit(cafeId: viewModel.uiState.cafe?.id))
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
             case .navigateToNoticeEvent(let cafeId):
@@ -518,7 +520,7 @@ private struct CafeDashboardContentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button {
-                    onAction(.clickShortcut(.homeBanner))
+                    onAction(.clickCreateBanner)
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "photo.on.rectangle.angled")

@@ -184,6 +184,12 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun clickCreateBanner() {
+        viewModelScope.launch {
+            _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
+        }
+    }
+
     private fun dismissExternalLinkSheet() {
         _uiState.update {
             it.copy(
@@ -453,6 +459,7 @@ class CafeDashboardViewModel(
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
+            CafeDashboardAction.ClickCreateBanner -> clickCreateBanner()
             CafeDashboardAction.DismissExternalLinkSheet -> dismissExternalLinkSheet()
             is CafeDashboardAction.ChangeExternalLinkTitle -> changeExternalLinkTitle(action.value)
             is CafeDashboardAction.ChangeExternalLinkUrl -> changeExternalLinkUrl(action.value)

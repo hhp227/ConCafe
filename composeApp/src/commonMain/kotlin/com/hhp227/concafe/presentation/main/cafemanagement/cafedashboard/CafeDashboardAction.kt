@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 sealed interface CafeDashboardAction {
     data object ClickBack : CafeDashboardAction
     data class ClickShortcut(val shortcut: CafeDashboardShortcut) : CafeDashboardAction
+    data object ClickCreateBanner : CafeDashboardAction
     data object DismissExternalLinkSheet : CafeDashboardAction
     data class ChangeExternalLinkTitle(val value: String) : CafeDashboardAction
     data class ChangeExternalLinkUrl(val value: String) : CafeDashboardAction

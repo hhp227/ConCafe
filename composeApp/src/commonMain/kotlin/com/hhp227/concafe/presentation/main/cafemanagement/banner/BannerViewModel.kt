@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class BannerViewModel : ViewModel() {
+class BannerViewModel(
+    private val cafeId: String? = null
+) : ViewModel() {
     private val _uiState = MutableStateFlow(BannerUiState.empty())
     val uiState: StateFlow<BannerUiState> = _uiState.asStateFlow()
 
@@ -21,7 +23,7 @@ class BannerViewModel : ViewModel() {
     fun onAction(action: BannerAction) {
         when (action) {
             BannerAction.ClickBack -> emitEvent(BannerEvent.NavigateBack)
-            BannerAction.ClickCreateBanner -> emitEvent(BannerEvent.ShowMessage("배너 등록 화면은 다음 단계에서 연결됩니다."))
+            BannerAction.ClickCreateBanner -> emitEvent(BannerEvent.NavigateToBannerEdit(cafeId))
             is BannerAction.ClickDeleteBanner -> emitEvent(BannerEvent.ShowMessage("삭제 기능은 아직 연결되지 않았습니다."))
             is BannerAction.ClickEditBanner -> emitEvent(BannerEvent.ShowMessage("편집 기능은 아직 연결되지 않았습니다."))
             is BannerAction.SelectTab -> _uiState.update { it.copy(selectedTab = action.tab) }

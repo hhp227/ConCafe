@@ -9,6 +9,8 @@ import Foundation
 import Combine
 
 final class BannerViewModel: ObservableObject {
+    private let cafeId: String?
+
     @Published private(set) var uiState = BannerUiState()
 
     let event = PassthroughSubject<BannerEvent, Never>()
@@ -20,11 +22,15 @@ final class BannerViewModel: ObservableObject {
         case .selectTab(let tab):
             uiState.selectedTab = tab
         case .createBannerTapped:
-            event.send(.showMessage("배너 등록 화면은 다음 단계에서 연결됩니다."))
+            event.send(.navigateToBannerEdit(cafeId: cafeId))
         case .editBannerTapped:
             event.send(.showMessage("편집 기능은 아직 연결되지 않았습니다."))
         case .deleteBannerTapped:
             event.send(.showMessage("삭제 기능은 아직 연결되지 않았습니다."))
         }
+    }
+
+    init(cafeId: String? = nil) {
+        self.cafeId = cafeId
     }
 }

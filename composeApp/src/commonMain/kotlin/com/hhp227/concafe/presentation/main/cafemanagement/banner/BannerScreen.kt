@@ -63,7 +63,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,14 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 fun BannerScreen(
     cafeId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit,
-    viewModel: BannerViewModel = viewModel()
+    viewModel: BannerViewModel = viewModel(
+        key = "banner-${cafeId ?: "global"}",
+        factory = viewModelFactory {
+            initializer {
+                BannerViewModel(cafeId = cafeId)
+            }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -80,11 +89,13 @@ fun BannerScreen(
         viewModel.event.collect { event ->
             when (event) {
                 BannerEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is BannerEvent.NavigateToBannerEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit(event.cafeId))
+                }
                 is BannerEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
-
     BannerContentScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -123,10 +134,9 @@ private fun BannerContentScreen(
                         }
                     }
                 )
-                ScrollableConCafeTabBar(
+                ConCafeTabBar(
                     labels = BannerTab.values().map { it.label },
                     selectedIndex = BannerTab.values().indexOf(uiState.selectedTab),
-                    backgroundColor = Color.White,
                     modifier = Modifier.fillMaxWidth(),
                     onTabSelected = { index ->
                         onAction(BannerAction.SelectTab(BannerTab.values()[index]))
