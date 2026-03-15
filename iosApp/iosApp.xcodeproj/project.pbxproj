@@ -81,6 +81,11 @@
 		0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E222F655F3500BD41C7 /* InquiryEvent.swift */; };
 		0A400E252F655F4F00BD41C7 /* InquiryUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E242F655F4F00BD41C7 /* InquiryUiState.swift */; };
 		0A400E272F655F6900BD41C7 /* InquiryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */; };
+		0A491C892F669F5F005C106F /* BannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C882F669F5F005C106F /* BannerView.swift */; };
+		0A491C8B2F669F74005C106F /* BannerUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8A2F669F74005C106F /* BannerUiState.swift */; };
+		0A491C8D2F669F8F005C106F /* BannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8C2F669F8F005C106F /* BannerViewModel.swift */; };
+		0A491C8F2F669FA7005C106F /* BannerAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8E2F669FA7005C106F /* BannerAction.swift */; };
+		0A491C912F669FBD005C106F /* BannerEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C902F669FBD005C106F /* BannerEvent.swift */; };
 		0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE922F5EB83400613093 /* CheckInUiState.swift */; };
 		0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A50FE942F5EB86000613093 /* CheckInAction.swift */; };
 		0A51B04F2F6155C000051A97 /* CastEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A51B04E2F6155C000051A97 /* CastEditView.swift */; };
@@ -255,6 +260,11 @@
 		0A400E222F655F3500BD41C7 /* InquiryEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryEvent.swift; sourceTree = "<group>"; };
 		0A400E242F655F4F00BD41C7 /* InquiryUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryUiState.swift; sourceTree = "<group>"; };
 		0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryViewModel.swift; sourceTree = "<group>"; };
+		0A491C882F669F5F005C106F /* BannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerView.swift; sourceTree = "<group>"; };
+		0A491C8A2F669F74005C106F /* BannerUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerUiState.swift; sourceTree = "<group>"; };
+		0A491C8C2F669F8F005C106F /* BannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerViewModel.swift; sourceTree = "<group>"; };
+		0A491C8E2F669FA7005C106F /* BannerAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAction.swift; sourceTree = "<group>"; };
+		0A491C902F669FBD005C106F /* BannerEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEvent.swift; sourceTree = "<group>"; };
 		0A50FE922F5EB83400613093 /* CheckInUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInUiState.swift; sourceTree = "<group>"; };
 		0A50FE942F5EB86000613093 /* CheckInAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInAction.swift; sourceTree = "<group>"; };
 		0A51B04E2F6155C000051A97 /* CastEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEditView.swift; sourceTree = "<group>"; };
@@ -383,6 +393,8 @@
 		0A0C668E2F5C04F700B0CDE4 /* CafeManagement */ = {
 			isa = PBXGroup;
 			children = (
+				0A491C872F669F4B005C106F /* Banner */,
+				0A3DB8082F649EFC00064804 /* BannerEdit */,
 				0A27C8E12F614C7B00573900 /* Schedule */,
 				0A27C8D62F614BD300573900 /* CastManagement */,
 				0A34707C2F611CF9005F9A8C /* MenuGoodsEdit */,
@@ -543,7 +555,7 @@
 			path = MenuGoodsEdit;
 			sourceTree = "<group>";
 		};
-		0A3DB8082F649EFC00064804 /* Banner */ = {
+		0A3DB8082F649EFC00064804 /* BannerEdit */ = {
 			isa = PBXGroup;
 			children = (
 				0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */,
@@ -552,7 +564,7 @@
 				0A3DB80F2F649F8700064804 /* BannerEditViewModel.swift */,
 				0A3DB8112F649FB400064804 /* BannerEditView.swift */,
 			);
-			path = Banner;
+			path = BannerEdit;
 			sourceTree = "<group>";
 		};
 		0A400E1D2F655EC900BD41C7 /* Inquiry */ = {
@@ -565,6 +577,18 @@
 				0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */,
 			);
 			path = Inquiry;
+			sourceTree = "<group>";
+		};
+		0A491C872F669F4B005C106F /* Banner */ = {
+			isa = PBXGroup;
+			children = (
+				0A491C882F669F5F005C106F /* BannerView.swift */,
+				0A491C8A2F669F74005C106F /* BannerUiState.swift */,
+				0A491C8C2F669F8F005C106F /* BannerViewModel.swift */,
+				0A491C8E2F669FA7005C106F /* BannerAction.swift */,
+				0A491C902F669FBD005C106F /* BannerEvent.swift */,
+			);
+			path = Banner;
 			sourceTree = "<group>";
 		};
 		0A51B04D2F6155A100051A97 /* CastEdit */ = {
@@ -583,7 +607,6 @@
 			isa = PBXGroup;
 			children = (
 				0A0C66962F5C0DCC00B0CDE4 /* Auth */,
-				0A3DB8082F649EFC00064804 /* Banner */,
 				0A785C9B2F5A7B17004037A8 /* Cafe */,
 				0A580DAE2F59689F00390F67 /* Cast */,
 				0A51B04D2F6155A100051A97 /* CastEdit */,
@@ -963,6 +986,7 @@
 				0A785CB32F5A7D0B004037A8 /* MyInfoEvent.swift in Sources */,
 				0A400E212F655F1900BD41C7 /* InquiryAction.swift in Sources */,
 				0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */,
+				0A491C8F2F669FA7005C106F /* BannerAction.swift in Sources */,
 				0A341CAE2F6035E500CC07CF /* CafeDashboardUiState.swift in Sources */,
 				0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */,
 				0A34707E2F611D19005F9A8C /* MenuGoodsEditView.swift in Sources */,
@@ -975,6 +999,7 @@
 				0A341CAC2F6035CB00CC07CF /* CafeDashboardView.swift in Sources */,
 				0A580DB52F59710000390F67 /* RankingView.swift in Sources */,
 				0A27F1EB2F5D6DF9003D4763 /* CafeInfoView.swift in Sources */,
+				0A491C8B2F669F74005C106F /* BannerUiState.swift in Sources */,
 				0A785CC12F5A7E28004037A8 /* CafeViewModel.swift in Sources */,
 				0A8ABA612F5C1C0B00265D4F /* CafeManagementViewModel.swift in Sources */,
 				0A0C66992F5C0DE000B0CDE4 /* SignInView.swift in Sources */,
@@ -993,6 +1018,7 @@
 				0A6B33572F610CAC0074940F /* NoticeEventEvent.swift in Sources */,
 				0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */,
 				0A0C66862F5C038D00B0CDE4 /* MainUiState.swift in Sources */,
+				0A491C912F669FBD005C106F /* BannerEvent.swift in Sources */,
 				0A8ABA6B2F5C1CA400265D4F /* FanManagementUiState.swift in Sources */,
 				0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */,
 				0A400E1F2F655EFF00BD41C7 /* InquiryView.swift in Sources */,
@@ -1047,6 +1073,8 @@
 				0A51B0552F61561A00051A97 /* CastEditAction.swift in Sources */,
 				0A27F1E82F5D6CCD003D4763 /* Compat.swift in Sources */,
 				0A34708A2F611DB0005F9A8C /* ConCafeFormField.swift in Sources */,
+				0A491C892F669F5F005C106F /* BannerView.swift in Sources */,
+				0A491C8D2F669F8F005C106F /* BannerViewModel.swift in Sources */,
 				0A785C9D2F5A7B28004037A8 /* CafeView.swift in Sources */,
 				0A50FE952F5EB86000613093 /* CheckInAction.swift in Sources */,
 				0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */,
