@@ -48,8 +48,8 @@ struct CafeView: View {
     }
 
     init(
-    cafeId: String,
-    onNavigationAction: @escaping (NavigationAction) -> Void
+        cafeId: String,
+        onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
