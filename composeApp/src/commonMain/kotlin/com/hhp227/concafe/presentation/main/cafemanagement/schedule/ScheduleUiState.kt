@@ -17,8 +17,12 @@ data class ScheduleUiState(
     val editStatus: ScheduleEditStatus = ScheduleEditStatus.WORK,
     val editStartTime: String = "10:00",
     val editEndTime: String = "19:00",
+    val pendingUpdates: List<PendingScheduleUpdate> = emptyList(),
     val timeOptions: List<String> = defaultTimeOptions()
 ) {
+    val hasPendingChanges: Boolean
+        get() = pendingUpdates.isNotEmpty()
+
     val isEditingWorking: Boolean
         get() = editStatus == ScheduleEditStatus.WORK
 
@@ -54,6 +58,13 @@ data class ScheduleUiState(
         val statusLabel: String,
         val isWorking: Boolean,
         val status: ScheduleEditStatus = if (isWorking) ScheduleEditStatus.WORK else ScheduleEditStatus.OFF
+    )
+
+    data class PendingScheduleUpdate(
+        val date: String,
+        val status: ScheduleEditStatus,
+        val startTime: String?,
+        val endTime: String?
     )
 
     companion object {

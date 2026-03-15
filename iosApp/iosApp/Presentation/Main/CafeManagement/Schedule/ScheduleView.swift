@@ -77,7 +77,7 @@ struct ScheduleView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.down")
-                    Text("주간 시간표 저장하기")
+                    Text(viewModel.uiState.isSaving ? "저장 중..." : "주간 시간표 저장하기")
                         .fontWeight(.bold)
                 }
                 .frame(maxWidth: .infinity)
@@ -87,6 +87,8 @@ struct ScheduleView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
+            .disabled(!viewModel.uiState.hasPendingChanges || viewModel.uiState.isSaving)
+            .opacity((!viewModel.uiState.hasPendingChanges || viewModel.uiState.isSaving) ? 0.55 : 1)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
@@ -195,7 +197,7 @@ private struct ScheduleEditModal: View {
                     Button {
                         onAction(.submitEditDay)
                     } label: {
-                        Text("저장하기")
+                        Text("편집 내용 반영하기")
                             .font(.headline.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)

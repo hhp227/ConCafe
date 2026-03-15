@@ -16,15 +16,18 @@ import com.hhp227.concafe.di.resolveGetMyCastClaimStatusUseCase
 import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveObserveScheduleManagementEventUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.model.ScheduleManagementEvent as ScheduleManagementDomainEvent
 import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
 
 class FanManagementViewModel(
     private val getFanManagementDataUseCase: GetFanManagementDataUseCase = resolveGetFanManagementDataUseCase(),
@@ -32,7 +35,8 @@ class FanManagementViewModel(
     private val getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = resolveGetMyCastClaimStatusUseCase(),
     private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
     private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
+    private val observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = resolveObserveScheduleManagementEventUseCase()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FanManagementUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -97,8 +101,22 @@ class FanManagementViewModel(
         }
     }
 
+    private fun bindScheduleManagementEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
+            observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
+                        loadFanManagement()
+                    }
+                }
+            }
+        }
+    }
+
     private fun unbindCastEvent() {
         jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
+        jobs.remove(TaskKey.OBSERVE_SCHEDULE_EVENT)?.cancel()
     }
 
     private fun setInfoMessage(message: String) {
@@ -128,6 +146,7 @@ class FanManagementViewModel(
                     val detail = data.detail
                     val cast = detail.cast
                     bindCastEvent(cast.id)
+                    bindScheduleManagementEvent(cast.id)
                     _uiState.value = FanManagementUiState(
                         isLoading = false,
                         errorMessage = null,
@@ -401,5 +420,6 @@ private fun Double.toOneDecimalString(): String {
 private enum class TaskKey {
     OBSERVE_SESSION,
     OBSERVE_CAST_EVENT,
+    OBSERVE_SCHEDULE_EVENT,
     OBSERVE_CAST_CLAIM_EVENT
 }

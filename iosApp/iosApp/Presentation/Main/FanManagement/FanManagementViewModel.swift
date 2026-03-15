@@ -18,6 +18,8 @@ final class FanManagementViewModel: ObservableObject {
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
+    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = FanManagementUiState.empty
@@ -81,8 +83,26 @@ final class FanManagementViewModel: ObservableObject {
         }
     }
 
+    private func bindScheduleManagementEvent(_ castId: String) {
+        watchHandles[.scheduleEvent]?.cancel()
+        watchHandles[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let event as Shared.ScheduleManagementEvent.Updated:
+                    if event.castId == castId {
+                        self.loadFanManagement()
+                    }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
     private func unbindCastEvent() {
         watchHandles.removeValue(forKey: .castEvent)?.cancel()
+        watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
     }
 
     private func setInfoMessage(_ message: String) {
@@ -114,6 +134,7 @@ final class FanManagementViewModel: ObservableObject {
                    let data = success.data as? Shared.FanManagementData {
                     let cast = data.detail.cast
                     bindCastEvent(cast.id)
+                    bindScheduleManagementEvent(cast.id)
                     uiState = FanManagementUiState(
                         isLoading: false,
                         errorMessage: nil,
@@ -297,6 +318,7 @@ final class FanManagementViewModel: ObservableObject {
         getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = KoinInitializerKt.resolveGetMyCastClaimStatusUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
+        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
@@ -304,6 +326,7 @@ final class FanManagementViewModel: ObservableObject {
         self.getMyCastClaimStatusUseCase = getMyCastClaimStatusUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
+        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
@@ -320,6 +343,7 @@ final class FanManagementViewModel: ObservableObject {
         case session
         case castClaimEvent
         case castEvent
+        case scheduleEvent
     }
 
     private static func toStatusCard(_ status: Shared.MyCastClaimStatus) -> FanManagementUiState.CastClaimStatusCard? {

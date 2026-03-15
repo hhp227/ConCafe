@@ -92,6 +92,9 @@ class ScheduleViewModel(
             observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
                 when (event) {
                     is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
+                        if (_uiState.value.isSaving) {
+                            return@collectLatest
+                        }
                         loadSchedule(showLoading = false)
                         _event.emit(
                             ScheduleEvent.ShowMessage(
@@ -110,6 +113,7 @@ class ScheduleViewModel(
 
     private fun unbindCastEvent() {
         jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
+        jobs.remove(TaskKey.OBSERVE_SCHEDULE_EVENT)?.cancel()
     }
 
     private fun loadSchedule(showLoading: Boolean = true) {
@@ -118,7 +122,8 @@ class ScheduleViewModel(
                 isLoading = showLoading,
                 isSaving = false,
                 errorMessage = null,
-                infoMessage = null
+                infoMessage = null,
+                pendingUpdates = emptyList()
             )
         }
         viewModelScope.launch {
@@ -195,55 +200,87 @@ class ScheduleViewModel(
             ScheduleAction.SubmitEditDay -> {
                 val currentState = _uiState.value
                 val editingId = currentState.editingScheduleId ?: return
-                val managedCastId = currentState.managedCastId.ifBlank { return }
                 if (currentState.editStatus == ScheduleEditStatus.WORK && currentState.editStartTime >= currentState.editEndTime) {
                     _uiState.update { it.copy(errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다.") }
                     return
                 }
                 _uiState.update { state ->
+                    val pendingUpdate = ScheduleUiState.PendingScheduleUpdate(
+                        date = editingId,
+                        status = currentState.editStatus,
+                        startTime = currentState.editStartTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK },
+                        endTime = currentState.editEndTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK }
+                    )
                     state.copy(
-                        isSaving = true,
                         isEditSheetVisible = false,
                         editingScheduleId = null,
                         errorMessage = null,
-                        infoMessage = null
-                    )
-                }
-                jobs[TaskKey.SUBMIT]?.cancel()
-                jobs[TaskKey.SUBMIT] = viewModelScope.launch {
-                    when (
-                        val result = updateCastScheduleUseCase.invoke(
-                            CastScheduleUpdate(
-                                castId = managedCastId,
-                                date = editingId,
-                                status = currentState.editStatus.toDomainStatus(),
-                                startTime = currentState.editStartTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK },
-                                endTime = currentState.editEndTime.takeIf { currentState.editStatus == ScheduleEditStatus.WORK }
-                            )
-                        )
-                    ) {
-                        is AppResult.Success -> Unit
-                        is AppResult.Failure -> {
-                            _uiState.update {
-                                val error = result.error
-                                it.copy(
-                                    isSaving = false,
-                                    errorMessage = when (error) {
-                                        is AppError.ValidationFailed ->
-                                            error.reason.toScheduleValidationMessage()
-                                        else -> "근무 시간 저장에 실패했습니다."
-                                    }
-                                )
+                        infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요.",
+                        schedules = state.schedules.map { schedule ->
+                            if (schedule.id == editingId) {
+                                pendingUpdate.toDaySchedule(title = schedule.title)
+                            } else {
+                                schedule
                             }
-                        }
-                    }
+                        },
+                        weekDays = state.weekDays.map { day ->
+                            if (day.id == editingId) {
+                                day.copy(isWorking = pendingUpdate.status == ScheduleEditStatus.WORK)
+                            } else {
+                                day
+                            }
+                        },
+                        pendingUpdates = state.pendingUpdates
+                            .filterNot { it.date == editingId } + pendingUpdate
+                    )
                 }
             }
             ScheduleAction.ClickMore -> {
                 _uiState.update { it.copy(infoMessage = "추가 메뉴는 다음 단계에서 제공합니다.") }
             }
             ScheduleAction.ClickSave -> {
-                _uiState.update { it.copy(infoMessage = "일자별 수정 시 즉시 저장됩니다.") }
+                val currentState = _uiState.value
+                val managedCastId = currentState.managedCastId.ifBlank { return }
+                if (currentState.pendingUpdates.isEmpty()) {
+                    _uiState.update { it.copy(infoMessage = "저장할 변경사항이 없습니다.", errorMessage = null) }
+                    return
+                }
+                _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
+                jobs[TaskKey.SUBMIT]?.cancel()
+                jobs[TaskKey.SUBMIT] = viewModelScope.launch {
+                    val pendingUpdates = currentState.pendingUpdates
+                    for (pendingUpdate in pendingUpdates) {
+                        when (
+                            val result = updateCastScheduleUseCase.invoke(
+                                CastScheduleUpdate(
+                                    castId = managedCastId,
+                                    date = pendingUpdate.date,
+                                    status = pendingUpdate.status.toDomainStatus(),
+                                    startTime = pendingUpdate.startTime,
+                                    endTime = pendingUpdate.endTime
+                                )
+                            )
+                        ) {
+                            is AppResult.Success -> Unit
+                            is AppResult.Failure -> {
+                                _uiState.update {
+                                    val error = result.error
+                                    it.copy(
+                                        isSaving = false,
+                                        errorMessage = when (error) {
+                                            is AppError.ValidationFailed ->
+                                                error.reason.toScheduleValidationMessage()
+                                            else -> "주간 시간표 저장에 실패했습니다."
+                                        }
+                                    )
+                                }
+                                return@launch
+                            }
+                        }
+                    }
+                    loadSchedule(showLoading = false)
+                    _event.emit(ScheduleEvent.ShowMessage("주간 시간표를 저장했습니다."))
+                }
             }
             ScheduleAction.DismissInfoMessage -> {
                 _uiState.update { it.copy(infoMessage = null, errorMessage = null) }
@@ -302,6 +339,22 @@ private fun String.toDisplayConceptRole(): String {
         "idol" -> "아이돌"
         else -> replaceFirstChar { char -> char.uppercase() }
     }
+}
+
+private fun ScheduleUiState.PendingScheduleUpdate.toDaySchedule(title: String): ScheduleUiState.DaySchedule {
+    val isWorking = status == ScheduleEditStatus.WORK
+    return ScheduleUiState.DaySchedule(
+        id = date,
+        title = title,
+        timeLabel = when (status) {
+            ScheduleEditStatus.WORK -> "${startTime ?: "10:00"} - ${endTime ?: "19:00"}"
+            ScheduleEditStatus.OFF -> "휴무"
+            ScheduleEditStatus.VACATION -> "휴가"
+        },
+        statusLabel = status.label,
+        isWorking = isWorking,
+        status = status
+    )
 }
 
 private fun String.toInitials(): String {

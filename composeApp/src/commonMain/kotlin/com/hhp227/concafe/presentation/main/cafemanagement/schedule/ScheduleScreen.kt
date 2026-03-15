@@ -184,7 +184,7 @@ private fun ScheduleEditSheet(
             shape = RoundedCornerShape(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            Text("저장하기", fontWeight = FontWeight.Bold)
+            Text("편집 내용 반영하기", fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(4.dp))
     }
@@ -294,6 +294,7 @@ private fun ScheduleContentScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .navigationBarsPadding(),
+                    enabled = uiState.hasPendingChanges && !uiState.isSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC)),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
@@ -301,7 +302,7 @@ private fun ScheduleContentScreen(
                     Icon(Icons.Default.Save, contentDescription = null, tint = Color(0xFF24161E))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "주간 시간표 저장하기",
+                        text = if (uiState.isSaving) "저장 중..." else "주간 시간표 저장하기",
                         color = Color(0xFF24161E),
                         fontWeight = FontWeight.Bold
                     )

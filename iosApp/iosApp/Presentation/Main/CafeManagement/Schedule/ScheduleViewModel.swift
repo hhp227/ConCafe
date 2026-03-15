@@ -81,6 +81,9 @@ final class ScheduleViewModel: ObservableObject {
                 switch event {
                 case let event as Shared.ScheduleManagementEvent.Updated:
                     if event.castId == castId {
+                        if self.uiState.isSaving {
+                            return
+                        }
                         self.loadSchedule(showLoading: false)
                         let message: String
                         switch event.status {
@@ -102,6 +105,7 @@ final class ScheduleViewModel: ObservableObject {
 
     private func unbindCastEvent() {
         watchHandles.removeValue(forKey: .castEvent)?.cancel()
+        watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
     }
 
     private func loadSchedule(showLoading: Bool = true) {
@@ -110,6 +114,7 @@ final class ScheduleViewModel: ObservableObject {
         uiState.isSaving = false
         uiState.errorMessage = nil
         uiState.infoMessage = nil
+        uiState.pendingUpdates = []
 
         tasks[.load] = Task {
             do {
@@ -177,52 +182,79 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editEndTime = value
         case .submitEditDay:
             guard let editingId = uiState.editingScheduleId else { return }
-            guard !uiState.managedCastId.isEmpty else { return }
             if uiState.editStatus == .work && uiState.editStartTime >= uiState.editEndTime {
                 uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
                 return
             }
+            let pendingUpdate = ScheduleUiState.PendingScheduleUpdate(
+                date: editingId,
+                status: uiState.editStatus,
+                startTime: uiState.editStatus == .work ? uiState.editStartTime : nil,
+                endTime: uiState.editStatus == .work ? uiState.editEndTime : nil
+            )
             uiState.isEditSheetVisible = false
             uiState.editingScheduleId = nil
+            uiState.errorMessage = nil
+            uiState.infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요."
+            uiState.schedules = uiState.schedules.map { schedule in
+                guard schedule.id == editingId else { return schedule }
+                return pendingUpdate.toDaySchedule(title: schedule.title)
+            }
+            uiState.weekDays = uiState.weekDays.map { day in
+                var nextDay = day
+                if day.id == editingId {
+                    nextDay.isWorking = pendingUpdate.status == .work
+                }
+                return nextDay
+            }
+            uiState.pendingUpdates.removeAll { $0.date == editingId }
+            uiState.pendingUpdates.append(pendingUpdate)
+        case .clickSave:
+            guard !uiState.managedCastId.isEmpty else { return }
+            if uiState.pendingUpdates.isEmpty {
+                uiState.infoMessage = "저장할 변경사항이 없습니다."
+                uiState.errorMessage = nil
+                return
+            }
             uiState.isSaving = true
             uiState.errorMessage = nil
             uiState.infoMessage = nil
 
             let managedCastId = uiState.managedCastId
-            let editStatus = uiState.editStatus
-            let editStartTime = uiState.editStartTime
-            let editEndTime = uiState.editEndTime
-
+            let pendingUpdates = uiState.pendingUpdates
             tasks[.submit]?.cancel()
             tasks[.submit] = Task { [weak self] in
                 guard let self else { return }
                 do {
-                    let result = try await updateCastScheduleUseCase.invoke(
-                        input: CastScheduleUpdate(
-                            castId: managedCastId,
-                            date: editingId,
-                            status: editStatus.toDomainStatus(),
-                            startTime: editStatus == .work ? editStartTime : nil,
-                            endTime: editStatus == .work ? editEndTime : nil
+                    for pendingUpdate in pendingUpdates {
+                        let result = try await updateCastScheduleUseCase.invoke(
+                            input: CastScheduleUpdate(
+                                castId: managedCastId,
+                                date: pendingUpdate.date,
+                                status: pendingUpdate.status.toDomainStatus(),
+                                startTime: pendingUpdate.startTime,
+                                endTime: pendingUpdate.endTime
+                            )
                         )
-                    )
-                    if Task.isCancelled { return }
-                    if let failure = result as? AppResultFailure {
-                        if let validation = failure.error as? AppErrorValidationFailed {
-                            uiState.errorMessage = validation.reason.toScheduleValidationMessage()
-                        } else {
-                            uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                        if Task.isCancelled { return }
+                        if let failure = result as? AppResultFailure {
+                            if let validation = failure.error as? AppErrorValidationFailed {
+                                uiState.errorMessage = validation.reason.toScheduleValidationMessage()
+                            } else {
+                                uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
+                            }
+                            uiState.isSaving = false
+                            return
                         }
-                        uiState.isSaving = false
                     }
+                    self.loadSchedule(showLoading: false)
+                    self.event.send(.showMessage("주간 시간표를 저장했습니다."))
                 } catch {
                     if Task.isCancelled { return }
                     uiState.isSaving = false
-                    uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                    uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
                 }
             }
-        case .clickSave:
-            uiState.infoMessage = "일자별 수정 시 즉시 저장됩니다."
         case .dismissInfoMessage:
             uiState.infoMessage = nil
             uiState.errorMessage = nil
@@ -360,5 +392,28 @@ private extension CastScheduleStatus {
         default:
             return .vacation
         }
+    }
+}
+
+private extension ScheduleUiState.PendingScheduleUpdate {
+    func toDaySchedule(title: String) -> ScheduleUiState.DaySchedule {
+        let isWorking = status == .work
+        return ScheduleUiState.DaySchedule(
+            id: date,
+            title: title,
+            timeLabel: {
+                switch status {
+                case .work:
+                    return "\(startTime ?? "10:00") - \(endTime ?? "19:00")"
+                case .off:
+                    return "휴무"
+                case .vacation:
+                    return "휴가"
+                }
+            }(),
+            statusLabel: status.label,
+            isWorking: isWorking,
+            status: status
+        )
     }
 }

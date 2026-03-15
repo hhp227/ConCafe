@@ -24,7 +24,12 @@ struct ScheduleUiState {
     var editStatus: ScheduleEditStatus = .work
     var editStartTime: String = "10:00"
     var editEndTime: String = "19:00"
+    var pendingUpdates: [PendingScheduleUpdate] = []
     var timeOptions: [String] = ScheduleUiState.defaultTimeOptions()
+
+    var hasPendingChanges: Bool {
+        !pendingUpdates.isEmpty
+    }
 
     var isEditingWorking: Bool {
         editStatus == .work
@@ -51,7 +56,7 @@ struct ScheduleUiState {
         let label: String
         let number: String
         var isSelected: Bool
-        let isWorking: Bool
+        var isWorking: Bool
     }
 
     struct DaySchedule: Identifiable {
@@ -61,6 +66,15 @@ struct ScheduleUiState {
         let statusLabel: String
         let isWorking: Bool
         let status: ScheduleEditStatus
+    }
+
+    struct PendingScheduleUpdate: Identifiable {
+        let date: String
+        let status: ScheduleEditStatus
+        let startTime: String?
+        let endTime: String?
+
+        var id: String { date }
     }
 
     static func defaultTimeOptions() -> [String] {
