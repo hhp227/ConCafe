@@ -12,6 +12,8 @@ struct CafeView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeViewModel
+    @State private var pendingScrollToTop = false
+    @State private var isViewVisible = false
 
     private let topAnchorId = "CAFE_TOP"
 
@@ -23,6 +25,13 @@ struct CafeView: View {
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                isViewVisible = true
+                performScrollToTopIfNeeded(with: proxy)
+            }
+            .onDisappear {
+                isViewVisible = false
+            }
             .onReceive(viewModel.event) { event in
                 switch event {
                 case .navigateBack:
@@ -37,11 +46,9 @@ struct CafeView: View {
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
                 guard shouldScroll else { return }
-                viewModel.onAction(.consumeScrollToTopOnReturn)
-                DispatchQueue.main.async {
-                    withAnimation {
-                        proxy.scrollTo(topAnchorId, anchor: .top)
-                    }
+                pendingScrollToTop = true
+                if isViewVisible {
+                    performScrollToTopIfNeeded(with: proxy)
                 }
             }
         }
@@ -53,6 +60,17 @@ struct CafeView: View {
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
+    }
+
+    private func performScrollToTopIfNeeded(with proxy: ScrollViewProxy) {
+        guard pendingScrollToTop || viewModel.uiState.shouldScrollToTopOnReturn else { return }
+        DispatchQueue.main.async {
+            withAnimation {
+                proxy.scrollTo(topAnchorId, anchor: .top)
+            }
+            pendingScrollToTop = false
+            viewModel.onAction(.consumeScrollToTopOnReturn)
+        }
     }
 }
 
