@@ -47,6 +47,7 @@ struct AccountSettingsView: View {
 
 private struct AccountSettingsContentView: View {
     let uiState: AccountSettingsUiState
+    
     let onAction: (AccountSettingsAction) -> Void
 
     private var myInfoFeed: Shared.MyInfoFeed? { uiState.myInfoFeed }
@@ -141,7 +142,7 @@ private struct AccountSettingsContentView: View {
     private var infoSummaryCard: some View {
         VStack(spacing: 10) {
             infoRow(label: "권한", value: uiState.role.displayText)
-            infoRow(label: "가입일", value: (currentUser?.createdAt?.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
+            infoRow(label: "가입일", value: (currentUser?.createdAt.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
             if uiState.role == .cafeOwner {
                 infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
             }
@@ -223,7 +224,7 @@ private struct AccountSettingsContentView: View {
     }
 
     private var castDescriptionText: String {
-        (currentCast?.desc?.isEmpty == false ? currentCast?.desc : nil)
+        (currentCast?.desc.isEmpty == false ? currentCast?.desc : nil)
         ?? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다."
     }
 
@@ -242,11 +243,11 @@ private struct AccountSettingsContentView: View {
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(currentUser?.nickname?.isEmpty == false ? (currentUser?.nickname ?? "") : "ConCafe User")
+            Text(currentUser?.nickname.isEmpty == false ? (currentUser?.nickname ?? "") : "ConCafe User")
                 .font(.title3)
                 .bold()
                 .foregroundStyle(.white)
-            Text(currentUser?.email?.isEmpty == false ? (currentUser?.email ?? "") : "로그인 정보 없음")
+            Text(currentUser?.email.isEmpty == false ? (currentUser?.email ?? "") : "로그인 정보 없음")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
             Text(uiState.role.roleSummary)
