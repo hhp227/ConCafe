@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.banner
+package com.hhp227.concafe.presentation.main.banneredit
 
 sealed interface BannerEditAction {
     data object ClickBack : BannerEditAction

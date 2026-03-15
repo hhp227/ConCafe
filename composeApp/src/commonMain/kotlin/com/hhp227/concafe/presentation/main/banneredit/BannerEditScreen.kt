@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.banner
+package com.hhp227.concafe.presentation.main.banneredit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

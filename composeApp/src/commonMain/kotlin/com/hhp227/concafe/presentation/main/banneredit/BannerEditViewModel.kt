@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.banner
+package com.hhp227.concafe.presentation.main.banneredit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

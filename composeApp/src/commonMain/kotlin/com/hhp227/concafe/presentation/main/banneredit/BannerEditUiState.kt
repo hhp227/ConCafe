@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.banner
+package com.hhp227.concafe.presentation.main.banneredit
 
 data class BannerEditUiState(
     val screenTitle: String = "새 배너 등록",

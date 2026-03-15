@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
-import com.hhp227.concafe.presentation.banner.BannerEditScreen
+import com.hhp227.concafe.presentation.main.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
