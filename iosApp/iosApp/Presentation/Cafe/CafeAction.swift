@@ -17,4 +17,5 @@ enum CafeAction {
     case loadMoreNotices
     case loadMoreReviews
     case refresh
+    case consumeScrollToTopOnReturn
 }

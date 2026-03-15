@@ -87,8 +87,14 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
-                CafeEvent.ScrollReviewsToTop -> listState.animateScrollToItem(3)
+                CafeEvent.ScrollReviewsToTop -> listState.animateScrollToItem(0)
             }
+        }
+    }
+    LaunchedEffect(uiState.shouldScrollToTopOnReturn) {
+        if (uiState.shouldScrollToTopOnReturn) {
+            listState.animateScrollToItem(0)
+            viewModel.onAction(CafeAction.ConsumeScrollToTopOnReturn)
         }
     }
     CafeContentScreen(

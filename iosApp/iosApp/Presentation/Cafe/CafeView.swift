@@ -13,14 +13,14 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
-    private let reviewTopAnchorId = "CAFE_REVIEW_TOP"
+    private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
         ScrollViewReader { proxy in
             CafeContentView(
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction,
-                reviewTopAnchorId: reviewTopAnchorId
+                topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
             .onReceive(viewModel.event) { event in
@@ -35,8 +35,17 @@ struct CafeView: View {
                     onNavigationAction(.navigateToSignIn)
                 case .scrollReviewsToTop:
                     withAnimation {
-                        proxy.scrollTo(reviewTopAnchorId, anchor: .top)
+                        proxy.scrollTo(topAnchorId, anchor: .top)
                     }
+                }
+            }
+            .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
+                guard shouldScroll else { return }
+                DispatchQueue.main.async {
+                    withAnimation {
+                        proxy.scrollTo(topAnchorId, anchor: .top)
+                    }
+                    viewModel.onAction(.consumeScrollToTopOnReturn)
                 }
             }
         }
@@ -56,7 +65,7 @@ private struct CafeContentView: View {
 
     let onAction: (CafeAction) -> Void
 
-    let reviewTopAnchorId: String
+    let topAnchorId: String
 
     @State private var scrollOffset: CGFloat = 0
 
@@ -126,6 +135,9 @@ private struct CafeContentView: View {
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Color.clear
+                    .frame(height: 0)
+                    .id(topAnchorId)
                 heroSection(detail: detail, topSafeArea: topSafeArea)
                 .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
@@ -266,8 +278,7 @@ private struct CafeContentView: View {
                 reviews: uiState.reviews,
                 canLoadMore: uiState.canLoadMoreReviews,
                 isLoadingMore: uiState.isLoadingMoreReviews,
-                onLoadMore: { onAction(.loadMoreReviews) },
-                topAnchorId: reviewTopAnchorId
+                onLoadMore: { onAction(.loadMoreReviews) }
             )
         case .notices:
             CafeNoticeView(

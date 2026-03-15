@@ -23,7 +23,8 @@ data class CafeUiState(
     val canLoadMoreReviews: Boolean = false,
     val reviews: List<CafeDetailReview> = emptyList(),
     val isFavorite: Boolean = false,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val shouldScrollToTopOnReturn: Boolean = false
 ) {
     enum class TabType(val label: String) {
         INFO("정보"),
