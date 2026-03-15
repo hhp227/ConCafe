@@ -15,13 +15,15 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
-import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState.Companion.empty
 
 class ExploreViewModel(
-    private val getExploreFeedUseCase: GetExploreFeedUseCase,
+    private val getExploreCafePageUseCase: GetExploreCafePageUseCase,
+    private val getExploreCastPageUseCase: GetExploreCastPageUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
 ) : ViewModel() {
@@ -33,16 +35,42 @@ class ExploreViewModel(
 
     private val jobs = mutableMapOf<TaskKey, Job>()
 
-    private fun loadExploreFeed() {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-        viewModelScope.launch {
+    private fun refreshCurrentTab() {
+        jobs[TaskKey.CAFE_PAGE]?.cancel()
+        jobs[TaskKey.MAID_PAGE]?.cancel()
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                errorMessage = null,
+                cafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) emptyList() else it.cafes,
+                cafesNextCursor = if (it.selectedTab == ExploreUiState.TabType.CAFE) null else it.cafesNextCursor,
+                canLoadMoreCafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) false else it.canLoadMoreCafes,
+                isLoadingMoreCafes = false,
+                maids = if (it.selectedTab == ExploreUiState.TabType.MAID) emptyList() else it.maids,
+                maidsNextCursor = if (it.selectedTab == ExploreUiState.TabType.MAID) null else it.maidsNextCursor,
+                canLoadMoreMaids = if (it.selectedTab == ExploreUiState.TabType.MAID) false else it.canLoadMoreMaids,
+                isLoadingMoreMaids = false
+            )
+        }
+        if (_uiState.value.selectedTab == ExploreUiState.TabType.CAFE) {
+            loadCafePage(cursor = null, append = false)
+        } else {
+            loadMaidPage(cursor = null, append = false)
+        }
+    }
+
+    private fun loadCafePage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.CAFE_PAGE]?.cancel()
+        jobs[TaskKey.CAFE_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreCafes = append) }
             val state = _uiState.value
             when (
-                val result = getExploreFeedUseCase.invoke(
+                val result = getExploreCafePageUseCase.invoke(
                     query = state.query,
                     regionKey = state.selectedRegion.key,
                     sortKey = state.selectedSort.key,
-                    pageSize = 50
+                    cursor = cursor,
+                    pageSize = PAGE_SIZE
                 )
             ) {
                 is AppResult.Success -> {
@@ -50,8 +78,10 @@ class ExploreViewModel(
                         it.copy(
                             isLoading = false,
                             errorMessage = null,
-                            cafes = result.data.cafes,
-                            maids = result.data.maids
+                            cafes = if (append) it.cafes + result.data.items else result.data.items,
+                            cafesNextCursor = result.data.nextCursor,
+                            canLoadMoreCafes = result.data.hasNext,
+                            isLoadingMoreCafes = false
                         )
                     }
                 }
@@ -60,13 +90,63 @@ class ExploreViewModel(
                         it.copy(
                             isLoading = false,
                             errorMessage = result.error.toString(),
-                            cafes = emptyList(),
-                            maids = emptyList()
+                            isLoadingMoreCafes = false
                         )
                     }
                 }
             }
         }
+    }
+
+    private fun loadMoreCafes() {
+        val state = _uiState.value
+        val cursor = state.cafesNextCursor
+        if (state.isLoadingMoreCafes || !state.canLoadMoreCafes || cursor == null) return
+        loadCafePage(cursor, append = true)
+    }
+
+    private fun loadMaidPage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.MAID_PAGE]?.cancel()
+        jobs[TaskKey.MAID_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreMaids = append) }
+            val state = _uiState.value
+            when (
+                val result = getExploreCastPageUseCase.invoke(
+                    query = state.query,
+                    regionKey = state.selectedRegion.key,
+                    sortKey = state.selectedSort.key,
+                    cursor = cursor,
+                    pageSize = PAGE_SIZE
+                )
+            ) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            maids = if (append) it.maids + result.data.items else result.data.items,
+                            maidsNextCursor = result.data.nextCursor,
+                            canLoadMoreMaids = result.data.hasNext,
+                            isLoadingMoreMaids = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.error.toString(),
+                        isLoadingMoreMaids = false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadMoreMaids() {
+        val state = _uiState.value
+        val cursor = state.maidsNextCursor
+        if (state.isLoadingMoreMaids || !state.canLoadMoreMaids || cursor == null) return
+        loadMaidPage(cursor, append = true)
     }
 
     private fun observeCafeDetailEvent() {
@@ -147,18 +227,24 @@ class ExploreViewModel(
         when (action) {
             is ExploreAction.QueryChanged -> {
                 _uiState.update { it.copy(query = action.query) }
-                loadExploreFeed()
+                refreshCurrentTab()
             }
             is ExploreAction.RegionChanged -> {
                 _uiState.update { it.copy(selectedRegion = action.region) }
-                loadExploreFeed()
+                refreshCurrentTab()
             }
             is ExploreAction.SortChanged -> {
                 _uiState.update { it.copy(selectedSort = action.sort) }
-                loadExploreFeed()
+                refreshCurrentTab()
             }
             is ExploreAction.TabChanged -> {
                 _uiState.update { it.copy(selectedTab = action.tab) }
+                val nextState = _uiState.value
+                if (action.tab == ExploreUiState.TabType.CAFE && nextState.cafes.isEmpty()) {
+                    refreshCurrentTab()
+                } else if (action.tab == ExploreUiState.TabType.MAID && nextState.maids.isEmpty()) {
+                    refreshCurrentTab()
+                }
             }
             is ExploreAction.ClickCafe -> {
                 viewModelScope.launch {
@@ -170,14 +256,16 @@ class ExploreViewModel(
                     _event.emit(ExploreEvent.NavigateToCast(action.id))
                 }
             }
-            is ExploreAction.Refresh -> loadExploreFeed()
+            ExploreAction.LoadMoreCafes -> loadMoreCafes()
+            ExploreAction.LoadMoreMaids -> loadMoreMaids()
+            is ExploreAction.Refresh -> refreshCurrentTab()
         }
     }
 
     init {
         observeCafeDetailEvent()
         observeCastEvent()
-        loadExploreFeed()
+        refreshCurrentTab()
     }
 
     override fun onCleared() {
@@ -188,7 +276,13 @@ class ExploreViewModel(
 
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAST_EVENT
+        OBSERVE_CAST_EVENT,
+        CAFE_PAGE,
+        MAID_PAGE
+    }
+
+    private companion object {
+        private const val PAGE_SIZE = 15
     }
 }
 

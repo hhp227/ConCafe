@@ -70,6 +70,10 @@ class FakeCastRepository(
         return dataSource.toPaged(filtered, cursor, pageSize)
     }
 
+    override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
+        return dataSource.homePopularCastPage(cursor, pageSize)
+    }
+
     override suspend fun getCastDetail(castId: String): CastDetail {
         return dataSource.castDetail(castId)
             ?: throw NoSuchElementException("cast detail not found")

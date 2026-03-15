@@ -11,7 +11,9 @@ import Shared
 
 @MainActor
 class ExploreViewModel: ObservableObject {
-    private let getExploreFeedUseCase: GetExploreFeedUseCase
+    private let getExploreCafePageUseCase: GetExploreCafePageUseCase
+
+    private let getExploreCastPageUseCase: GetExploreCastPageUseCase
 
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
@@ -21,52 +23,109 @@ class ExploreViewModel: ObservableObject {
 
     let event = PassthroughSubject<ExploreEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private var watchHandles: [WatchKey: WatchHandle] = [:]
 
-    private func loadExploreFeed() {
-        loadTask?.cancel()
+    private func refreshCurrentTab() {
+        tasks[.cafePage]?.cancel()
+        tasks[.maidPage]?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
+        uiState.isLoadingMoreCafes = false
+        uiState.isLoadingMoreMaids = false
 
+        if uiState.selectedTab == .cafe {
+            uiState.cafes = []
+            uiState.cafesNextCursor = nil
+            uiState.canLoadMoreCafes = false
+            loadCafePage(cursor: nil, append: false)
+        } else {
+            uiState.maids = []
+            uiState.maidsNextCursor = nil
+            uiState.canLoadMoreMaids = false
+            loadMaidPage(cursor: nil, append: false)
+        }
+    }
+
+    private func loadCafePage(cursor: String?, append: Bool) {
+        tasks[.cafePage]?.cancel()
         let query = uiState.query.trimmingCharacters(in: .whitespacesAndNewlines)
         let queryOrNil = query.isEmpty ? nil : query
 
-        loadTask = Task {
+        tasks[.cafePage] = Task {
+            uiState.isLoadingMoreCafes = append
             do {
-                let result = try await getExploreFeedUseCase.invoke(
+                let result = try await getExploreCafePageUseCase.invoke(
                     query: queryOrNil,
                     regionKey: uiState.selectedRegion.rawValue,
                     sortKey: uiState.selectedSort.rawValue,
-                    pageSize: 50
+                    cursor: cursor,
+                    pageSize: 15
                 )
 
                 if let success = result as? AppResultSuccess<AnyObject>,
-                let feed = success.data as? Shared.ExploreFeed {
+                   let page = success.data as? Shared.PagedResult<Cafe> {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
-                    uiState.cafes = feed.cafes
-                    uiState.maids = feed.maids
-                } else if let failure = result as? AppResultFailure {
-                    uiState.isLoading = false
-                    uiState.errorMessage = "\(failure.error)"
-                    uiState.cafes = []
-                    uiState.maids = []
-                } else {
-                    uiState.isLoading = false
-                    uiState.errorMessage = "unknown"
-                    uiState.cafes = []
-                    uiState.maids = []
+                    uiState.cafes = append ? (uiState.cafes + (page.items as! [Cafe])) : (page.items as! [Cafe])
+                    uiState.cafesNextCursor = page.nextCursor
+                    uiState.canLoadMoreCafes = page.hasNext
                 }
+                uiState.isLoadingMoreCafes = false
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = error.localizedDescription
-                uiState.cafes = []
-                uiState.maids = []
+                uiState.isLoadingMoreCafes = false
             }
         }
+    }
+
+    private func loadMoreCafes() {
+        guard uiState.canLoadMoreCafes,
+              !uiState.isLoadingMoreCafes,
+              let cursor = uiState.cafesNextCursor else { return }
+        loadCafePage(cursor: cursor, append: true)
+    }
+
+    private func loadMaidPage(cursor: String?, append: Bool) {
+        tasks[.maidPage]?.cancel()
+        let query = uiState.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let queryOrNil = query.isEmpty ? nil : query
+
+        tasks[.maidPage] = Task {
+            uiState.isLoadingMoreMaids = append
+            do {
+                let result = try await getExploreCastPageUseCase.invoke(
+                    query: queryOrNil,
+                    regionKey: uiState.selectedRegion.rawValue,
+                    sortKey: uiState.selectedSort.rawValue,
+                    cursor: cursor,
+                    pageSize: 15
+                )
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? Shared.PagedResult<Cast> {
+                    uiState.isLoading = false
+                    uiState.errorMessage = nil
+                    uiState.maids = append ? (uiState.maids + (page.items as! [Cast])) : (page.items as! [Cast])
+                    uiState.maidsNextCursor = page.nextCursor
+                    uiState.canLoadMoreMaids = page.hasNext
+                }
+                uiState.isLoadingMoreMaids = false
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.isLoadingMoreMaids = false
+            }
+        }
+    }
+
+    private func loadMoreMaids() {
+        guard uiState.canLoadMoreMaids,
+              !uiState.isLoadingMoreMaids,
+              let cursor = uiState.maidsNextCursor else { return }
+        loadMaidPage(cursor: cursor, append: true)
     }
 
     private func observeCafeDetailEvent() {
@@ -155,42 +214,59 @@ class ExploreViewModel: ObservableObject {
         switch action {
         case .queryChanged(let query):
             uiState.query = query
-            loadExploreFeed()
+            refreshCurrentTab()
         case .regionChanged(let region):
             uiState.selectedRegion = region
-            loadExploreFeed()
+            refreshCurrentTab()
         case .sortChanged(let sort):
             uiState.selectedSort = sort
-            loadExploreFeed()
+            refreshCurrentTab()
         case .tabChanged(let tab):
             uiState.selectedTab = tab
+            if tab == .cafe, uiState.cafes.isEmpty {
+                refreshCurrentTab()
+            } else if tab == .maid, uiState.maids.isEmpty {
+                refreshCurrentTab()
+            }
         case .cafeTapped(let id):
             event.send(.navigateToCafe(id: id))
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
+        case .loadMoreCafes:
+            loadMoreCafes()
+        case .loadMoreMaids:
+            loadMoreMaids()
         case .refresh:
-            loadExploreFeed()
+            refreshCurrentTab()
         }
     }
 
     init(
-        getExploreFeedUseCase: GetExploreFeedUseCase = KoinInitializerKt.resolveGetExploreFeedUseCase(),
+        getExploreCafePageUseCase: GetExploreCafePageUseCase = KoinInitializerKt.resolveGetExploreCafePageUseCase(),
+        getExploreCastPageUseCase: GetExploreCastPageUseCase = KoinInitializerKt.resolveGetExploreCastPageUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
-        self.getExploreFeedUseCase = getExploreFeedUseCase
+        self.getExploreCafePageUseCase = getExploreCafePageUseCase
+        self.getExploreCastPageUseCase = getExploreCastPageUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
 
         observeCafeDetailEvent()
         observeCastEvent()
-        loadExploreFeed()
+        refreshCurrentTab()
     }
 
     deinit {
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
         watchHandles.values.forEach { $0.cancel() }
         watchHandles.removeAll()
+    }
+
+    private enum TaskKey {
+        case cafePage
+        case maidPage
     }
 
     private enum WatchKey {

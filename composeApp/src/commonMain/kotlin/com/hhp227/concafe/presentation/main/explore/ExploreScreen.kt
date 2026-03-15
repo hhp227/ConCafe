@@ -227,6 +227,56 @@ fun ExploreContentScreen(
                     }
                 }
             }
+            item {
+                ExplorePagingTrigger(uiState = uiState, onAction = onAction)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExplorePagingTrigger(
+    uiState: ExploreUiState,
+    onAction: (ExploreAction) -> Unit
+) {
+    val canLoadMore = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+        uiState.canLoadMoreCafes
+    } else {
+        uiState.canLoadMoreMaids
+    }
+    val isLoadingMore = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+        uiState.isLoadingMoreCafes
+    } else {
+        uiState.isLoadingMoreMaids
+    }
+
+    if (!canLoadMore && !isLoadingMore) return
+
+    if (canLoadMore && !isLoadingMore) {
+        LaunchedEffect(
+            uiState.selectedTab,
+            uiState.cafes.size,
+            uiState.maids.size,
+            canLoadMore,
+            isLoadingMore
+        ) {
+            if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+                onAction(ExploreAction.LoadMoreCafes)
+            } else {
+                onAction(ExploreAction.LoadMoreMaids)
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoadingMore) {
+            CircularProgressIndicator()
+        } else {
+            Spacer(modifier = Modifier.height(1.dp))
         }
     }
 }

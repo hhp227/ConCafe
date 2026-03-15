@@ -117,6 +117,7 @@ class CafeViewModel(
                     canLoadMoreReviews = result.data.canLoadMoreReviews,
                     isFavorite = result.data.isFavorite,
                     isLoggedIn = result.data.isLoggedIn,
+                    isVisitVerified = result.data.isVisitVerified,
                     shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn
                 )
                 refreshCastPage()
@@ -253,7 +254,11 @@ class CafeViewModel(
 
     private fun clickWriteReview() {
         viewModelScope.launch {
-            _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+            if (!_uiState.value.isLoggedIn) {
+                _event.emit(CafeEvent.NavigateToSignIn)
+            } else {
+                _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+            }
         }
     }
 

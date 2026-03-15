@@ -55,10 +55,6 @@ private struct HomeContentView: View {
     
     let onAction: (HomeAction) -> Void
     
-    private var cafeNameById: [String: String] {
-        Dictionary(uniqueKeysWithValues: uiState.nearbyCafes.map { ($0.id, $0.name) })
-    }
-    
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -113,13 +109,18 @@ private struct HomeContentView: View {
 
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "❤", title: "인기 메이드")
+            SectionTitle(
+                icon: "heart.fill",
+                title: "인기 캐스트",
+                actionTitle: uiState.canLoadMorePopularCasts ? "더보기" : nil,
+                onAction: { onAction(.loadMorePopularCasts) }
+            )
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(uiState.popularCasts, id: \.id) { maid in
                         ConCafeCastCard(
                             name: maid.name,
-                            subtitle: cafeNameById[maid.cafeId] ?? maid.cafeId,
+                            subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
                             metaText: "👥 \(maid.followerCount)",
                             onTap: { onAction(.maidTapped(id: maid.id)) }
                         )
@@ -138,7 +139,7 @@ private struct HomeContentView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
-                    icon: "📍",
+                    icon: "mappin.and.ellipse",
                     title: "근처 메이드카페",
                     actionTitle: uiState.canLoadMoreNearbyCafes ? "더보기" : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
@@ -180,7 +181,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "🎂", title: "생일인 메이드")
+            SectionTitle(icon: birthdaySectionIconName, title: "생일인 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
@@ -201,9 +202,16 @@ private struct HomeContentView: View {
         }
     }
 
+    private var birthdaySectionIconName: String {
+        if #available(iOS 16.0, *) {
+            return "birthday.cake.fill"
+        }
+        return "gift.fill"
+    }
+
     private var noticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "📢", title: "최근 카페 공지")
+            SectionTitle(icon: "megaphone.fill", title: "최근 카페 공지")
             VStack(spacing: 10) {
                 ForEach(uiState.notices, id: \.id) { notice in
                     HStack(alignment: .top, spacing: 8) {
@@ -244,7 +252,9 @@ private struct SectionTitle: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(icon)
+            Image(systemName: icon)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "EF6797"))
             Text(title)
                 .font(.headline)
             Spacer()

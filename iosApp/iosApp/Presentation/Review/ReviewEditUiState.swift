@@ -26,7 +26,7 @@ struct ReviewEditUiState {
     var cafeName = ""
     var cafeAddress = ""
     var isLoggedIn = false
-    var isVisitVerified = true
+    var isVisitVerified = false
     var atmosphereAnswer: Bool? = nil
     var isSubmitting = false
     var infoMessage: String? = nil

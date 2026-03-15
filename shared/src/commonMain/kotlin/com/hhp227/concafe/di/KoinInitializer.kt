@@ -28,6 +28,8 @@ import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
@@ -98,6 +100,20 @@ fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
 }
 
 fun resolveGetExploreFeedUseCase(): GetExploreFeedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetExploreCafePageUseCase(): GetExploreCafePageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetExploreCastPageUseCase(): GetExploreCastPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

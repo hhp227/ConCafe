@@ -43,7 +43,10 @@ class HomeViewModel(
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val result = getHomeFeedUseCase.invoke(nearbyCafeCursor = null)
+            val result = getHomeFeedUseCase.invoke(
+                popularCastCursor = null,
+                nearbyCafeCursor = null
+            )
 
             if (result is AppResult.Success) {
                 _uiState.value = HomeUiState(
@@ -51,6 +54,9 @@ class HomeViewModel(
                     errorMessage = null,
                     banners = result.data.banners,
                     popularCasts = result.data.popularCasts,
+                    popularCastCafeNames = result.data.popularCastCafeNames,
+                    popularCastCursor = result.data.popularCastsNextCursor,
+                    canLoadMorePopularCasts = result.data.hasMorePopularCasts,
                     nearbyCafes = result.data.nearbyCafes,
                     nearbyCafeCursor = result.data.nearbyCafesNextCursor,
                     canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
@@ -71,23 +77,69 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun loadMoreNearbyCafes() {
-        val cursor = _uiState.value.nearbyCafeCursor
-        val canLoadMoreNearbyCafes = _uiState.value.canLoadMoreNearbyCafes
+    private fun loadPopularCastPage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.POPULAR_CAST_PAGE]?.cancel()
+        jobs[TaskKey.POPULAR_CAST_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMorePopularCasts = append) }
 
-        if (cursor != null && canLoadMoreNearbyCafes) {
-            val result = getHomeFeedUseCase.invoke(nearbyCafeCursor = cursor)
-
-            if (result is AppResult.Success) {
-                _uiState.update {
-                    it.copy(
-                        nearbyCafes = it.nearbyCafes + result.data.nearbyCafes,
-                        nearbyCafeCursor = result.data.nearbyCafesNextCursor,
-                        canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes
-                    )
+            when (val result = getHomeFeedUseCase.invoke(popularCastCursor = cursor, nearbyCafeCursor = null)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            popularCasts = if (append) state.popularCasts + result.data.popularCasts else result.data.popularCasts,
+                            popularCastCafeNames = if (append) {
+                                state.popularCastCafeNames + result.data.popularCastCafeNames
+                            } else {
+                                result.data.popularCastCafeNames
+                            },
+                            popularCastCursor = result.data.popularCastsNextCursor,
+                            canLoadMorePopularCasts = result.data.hasMorePopularCasts,
+                            isLoadingMorePopularCasts = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoadingMorePopularCasts = false) }
                 }
             }
         }
+    }
+
+    private fun loadMorePopularCasts() {
+        val currentState = _uiState.value
+        val cursor = currentState.popularCastCursor
+        if (currentState.isLoadingMorePopularCasts || !currentState.canLoadMorePopularCasts || cursor == null) return
+        loadPopularCastPage(cursor = cursor, append = true)
+    }
+
+    private fun loadNearbyCafePage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.NEARBY_CAFE_PAGE]?.cancel()
+        jobs[TaskKey.NEARBY_CAFE_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreNearbyCafes = append) }
+
+            when (val result = getHomeFeedUseCase.invoke(popularCastCursor = null, nearbyCafeCursor = cursor)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            nearbyCafes = if (append) state.nearbyCafes + result.data.nearbyCafes else result.data.nearbyCafes,
+                            nearbyCafeCursor = result.data.nearbyCafesNextCursor,
+                            canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
+                            isLoadingMoreNearbyCafes = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isLoadingMoreNearbyCafes = false) }
+                }
+            }
+        }
+    }
+
+    private fun loadMoreNearbyCafes() {
+        val currentState = _uiState.value
+        val cursor = currentState.nearbyCafeCursor
+        if (currentState.isLoadingMoreNearbyCafes || !currentState.canLoadMoreNearbyCafes || cursor == null) return
+        loadNearbyCafePage(cursor = cursor, append = true)
     }
 
     private fun observeCafeDetailEvent() {
@@ -115,6 +167,7 @@ class HomeViewModel(
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
+                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
                 nearbyCafes = state.nearbyCafes.map { item ->
                     if (item.id == cafe.id) cafe else item
                 }
@@ -164,6 +217,7 @@ class HomeViewModel(
                 is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafe(action.id))
+                HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
             }
         }
@@ -208,6 +262,8 @@ class HomeViewModel(
     private enum class TaskKey {
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAST_EVENT
+        OBSERVE_CAST_EVENT,
+        POPULAR_CAST_PAGE,
+        NEARBY_CAFE_PAGE
     }
 }

@@ -27,8 +27,14 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,7 +114,6 @@ fun HomeContentScreen(
     onAction: (HomeAction) -> Unit
 ) {
     val screenBackgroundColor = Color(0xFFFFFBFD)
-    val cafeNameById = uiState.nearbyCafes.associate { it.id to it.name }
 
     LazyColumn(
         modifier = Modifier
@@ -182,7 +187,12 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("인기 메이드", "❤")
+            SectionTitle(
+                text = "인기 캐스트",
+                leading = Icons.Default.Favorite,
+                actionLabel = if (uiState.canLoadMorePopularCasts) "더보기" else null,
+                onAction = { onAction(HomeAction.LoadMorePopularCasts) }
+            )
             Spacer(Modifier.height(10.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -191,7 +201,7 @@ fun HomeContentScreen(
                 items(uiState.popularCasts) { maid ->
                     ConCafeCastCard(
                         name = maid.name,
-                        subtitle = cafeNameById[maid.cafeId] ?: maid.cafeId,
+                        subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
                         modifier = Modifier.width(132.dp),
                         metaText = "👥 ${maid.followerCount}",
                         onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
@@ -207,7 +217,7 @@ fun HomeContentScreen(
                 Column {
                     SectionTitle(
                         text = "근처 메이드카페",
-                        leading = "📍",
+                        leading = Icons.Default.Place,
                         actionLabel = if (uiState.canLoadMoreNearbyCafes) "더보기" else null,
                         onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
                     )
@@ -235,7 +245,7 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("생일인 메이드", "🎂")
+            SectionTitle("생일인 메이드", Icons.Default.Cake)
             Spacer(Modifier.height(10.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -258,7 +268,7 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("최근 카페 공지", "📢")
+            SectionTitle("최근 카페 공지", Icons.Default.Campaign)
             Spacer(Modifier.height(10.dp))
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -303,7 +313,7 @@ private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
 @Composable
 private fun SectionTitle(
     text: String,
-    leading: String,
+    leading: androidx.compose.ui.graphics.vector.ImageVector,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
@@ -318,7 +328,11 @@ private fun SectionTitle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(leading)
+        Icon(
+            imageVector = leading,
+            contentDescription = null,
+            tint = Color(0xFFEF6797)
+        )
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,

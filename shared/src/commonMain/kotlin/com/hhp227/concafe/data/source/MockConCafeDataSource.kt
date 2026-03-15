@@ -270,7 +270,8 @@ class MockConCafeDataSource : ConCafeDataSource {
             reviewCount = 109,
             approved = true,
             conceptType = "MAID"
-        )
+        ),
+        *additionalMockCafes.toTypedArray()
     )
     override val casts = mutableListOf(
         Cast("maid-1", "cafe-1", "사쿠라", "user-2", null, "메이드 하우스 대표 메이드", "2001-03-11", "maid", 1234, 4.9),
@@ -1031,6 +1032,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun rankingItemsFromCasts(): List<RankingItem> {
         return casts
             .sortedByDescending { it.followerCount }
+            .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cast ->
                 RankingItem(cast.id, cast.name, cast.followerCount, index + 1, cast.profileImage)
             }
@@ -1039,9 +1041,17 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun rankingItemsFromCafes(): List<RankingItem> {
         return cafes
             .sortedByDescending { it.ratingAvg }
+            .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cafe ->
                 RankingItem(cafe.id, cafe.name, (cafe.ratingAvg * 100).toInt(), index + 1, cafe.thumbnailImage)
             }
+    }
+
+    override fun homePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
+        val cappedCasts = casts
+            .sortedByDescending { it.followerCount }
+            .take(HOME_POPULAR_CAST_MAX_COUNT)
+        return toPaged(cappedCasts, cursor, pageSize)
     }
 
     override fun verifyVisitResult(cafeId: String, latitude: Double, longitude: Double): VisitVerificationResult {
@@ -1076,6 +1086,11 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     private fun Double.toRadians(): Double {
         return this * PI / 180.0
+    }
+
+    private companion object {
+        private const val HOME_POPULAR_CAST_MAX_COUNT = 50
+        private const val RANKING_MAX_COUNT = 50
     }
 }
 
@@ -1248,6 +1263,78 @@ private val maidHouseAdditionalCasts = maidHouseAdditionalCastNames.mapIndexed {
         conceptRole = maidHouseConceptRoleByIndex(index),
         followerCount = 960 - (index * 4),
         rating = 4.2 + ((index % 7) * 0.1)
+    )
+}
+
+private val additionalMockCafes = buildAdditionalMockCafes()
+
+private fun buildAdditionalMockCafes(): List<Cafe> {
+    val seoulDistricts = listOf(
+        "용산구 이태원로" to GeoPoint(37.534, 126.994),
+        "동작구 노량진로" to GeoPoint(37.513, 126.942),
+        "강동구 천호대로" to GeoPoint(37.538, 127.123),
+        "은평구 연서로" to GeoPoint(37.619, 126.921),
+        "영등포구 여의대로" to GeoPoint(37.526, 126.924)
+    )
+    val tokyoDistricts = listOf(
+        "Akihabara Chiyoda" to GeoPoint(35.698, 139.773),
+        "Ikebukuro Toshima" to GeoPoint(35.729, 139.710),
+        "Shibuya Center-gai" to GeoPoint(35.659, 139.700),
+        "Nakano Broadway" to GeoPoint(35.709, 139.665),
+        "Ueno Okachimachi" to GeoPoint(35.707, 139.774)
+    )
+    val osakaDistricts = listOf(
+        "Nipponbashi Naniwa" to GeoPoint(34.659, 135.506),
+        "Shinsaibashi Chuo" to GeoPoint(34.675, 135.501),
+        "Tennoji Abeno" to GeoPoint(34.646, 135.513),
+        "Umeda Kita" to GeoPoint(34.705, 135.498),
+        "Namba Sennichimae" to GeoPoint(34.665, 135.503)
+    )
+    val adjectives = listOf("로즈", "슈가", "드림", "미스티", "퓨어", "멜로디", "스텔라", "코코아", "플럼", "오팔")
+    val nouns = listOf("하우스", "라운지", "살롱", "스테이지", "가든", "팔레트", "테라스", "아틀리에")
+
+    return (12..50).map { idNumber ->
+        val zeroBasedIndex = idNumber - 12
+        val regionIndex = zeroBasedIndex % 3
+        val cycleIndex = zeroBasedIndex / 3
+        val region = when (regionIndex) {
+            0 -> {
+                val (address, point) = seoulDistricts[cycleIndex % seoulDistricts.size]
+                Region("KR", "Seoul", address, point.offsetBy(cycleIndex))
+            }
+            1 -> {
+                val (address, point) = tokyoDistricts[cycleIndex % tokyoDistricts.size]
+                Region("JP", "Tokyo", address, point.offsetBy(cycleIndex))
+            }
+            else -> {
+                val (address, point) = osakaDistricts[cycleIndex % osakaDistricts.size]
+                Region("JP", "Osaka", address, point.offsetBy(cycleIndex))
+            }
+        }
+
+        Cafe(
+            id = "cafe-$idNumber",
+            name = "${adjectives[zeroBasedIndex % adjectives.size]} ${nouns[cycleIndex % nouns.size]}",
+            desc = when (region.city) {
+                "Seoul" -> "서울 서브컬처 감성 메이드카페"
+                "Tokyo" -> "도쿄 중심가 정통 메이드카페"
+                else -> "오사카 투어 코스로 인기인 메이드카페"
+            },
+            region = region,
+            thumbnailImage = null,
+            ratingAvg = 4.2 + ((zeroBasedIndex % 8) * 0.1),
+            reviewCount = 52 + (zeroBasedIndex * 7),
+            approved = true,
+            conceptType = "MAID"
+        )
+    }
+}
+
+private fun GeoPoint.offsetBy(index: Int): GeoPoint {
+    val offset = (index % 5) * 0.002
+    return GeoPoint(
+        latitude = latitude + offset,
+        longitude = longitude + (offset / 2.0)
     )
 }
 

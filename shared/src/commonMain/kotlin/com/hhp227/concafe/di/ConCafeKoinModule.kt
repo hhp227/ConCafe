@@ -33,6 +33,8 @@ import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
+import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -150,6 +152,8 @@ val useCaseModule = module {
     factory { DeleteCastUseCase(get(), get(), get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
+    factory { GetExploreCafePageUseCase(get()) }
+    factory { GetExploreCastPageUseCase(get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetCafeNoticePageUseCase(get()) }
     factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }

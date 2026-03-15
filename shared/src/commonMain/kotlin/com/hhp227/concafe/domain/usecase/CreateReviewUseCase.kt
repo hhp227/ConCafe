@@ -31,29 +31,27 @@ class CreateReviewUseCase(
             } else if (content.isBlank()) {
                 AppResult.Failure(AppError.ValidationFailed("review content is required"))
             } else {
-                val visit = visitRepository.getVisits(
+                val visitId = visitRepository.getVisits(
                     userId = currentUser.id,
                     cursor = null,
                     pageSize = 50
                 ).items
-                    .filter { item -> item.cafeId == cafeId && item.verified }
+                    .filter { item -> item.cafeId == cafeId }
                     .maxByOrNull { item -> item.visitedAt }
+                    ?.id
+                    .orEmpty()
 
-                if (visit == null) {
-                    AppResult.Failure(AppError.PermissionDenied)
-                } else {
-                    AppResult.Success(
-                        reviewRepository.createReview(
-                            userId = currentUser.id,
-                            cafeId = cafeId,
-                            visitId = visit.id,
-                            rating = rating,
-                            content = content.trim(),
-                            imageUrls = imageUrls,
-                            taggedCastIds = taggedCastIds
-                        )
+                AppResult.Success(
+                    reviewRepository.createReview(
+                        userId = currentUser.id,
+                        cafeId = cafeId,
+                        visitId = visitId,
+                        rating = rating,
+                        content = content.trim(),
+                        imageUrls = imageUrls,
+                        taggedCastIds = taggedCastIds
                     )
-                }
+                )
             }
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)

@@ -16,7 +16,13 @@ struct ExploreUiState {
     var selectedRegion: RegionFilter
     var selectedSort: SortFilter
     var cafes: [Cafe]
+    var cafesNextCursor: String?
+    var canLoadMoreCafes: Bool
+    var isLoadingMoreCafes: Bool
     var maids: [Cast]
+    var maidsNextCursor: String?
+    var canLoadMoreMaids: Bool
+    var isLoadingMoreMaids: Bool
 
     static let empty = ExploreUiState(
         isLoading: false,
@@ -26,7 +32,13 @@ struct ExploreUiState {
         selectedRegion: .all,
         selectedSort: .popular,
         cafes: [],
-        maids: []
+        cafesNextCursor: nil,
+        canLoadMoreCafes: false,
+        isLoadingMoreCafes: false,
+        maids: [],
+        maidsNextCursor: nil,
+        canLoadMoreMaids: false,
+        isLoadingMoreMaids: false
     )
 
     enum TabType: String, CaseIterable {

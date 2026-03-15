@@ -96,6 +96,7 @@ final class CafeViewModel: ObservableObject {
                         reviews: feed.reviews,
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn,
+                        isVisitVerified: feed.isVisitVerified,
                         shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn
                     )
                     refreshCastPage()
@@ -247,7 +248,11 @@ final class CafeViewModel: ObservableObject {
     }
 
     private func writeReview() {
-        event.send(.navigateToReviewEdit(cafeId: cafeId))
+        if !uiState.isLoggedIn {
+            event.send(.navigateToSignIn)
+        } else {
+            event.send(.navigateToReviewEdit(cafeId: cafeId))
+        }
     }
 
     func onAction(_ action: CafeAction) {

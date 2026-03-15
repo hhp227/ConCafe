@@ -134,15 +134,46 @@ private struct ExploreContentView: View {
         } else {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 if uiState.selectedTab == .cafe {
-                    ForEach(uiState.cafes, id: \.id) { cafe in
+                    ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { index, cafe in
                         cafeCard(cafe)
+                            .onAppear {
+                                guard index == uiState.cafes.indices.last,
+                                      uiState.canLoadMoreCafes,
+                                      !uiState.isLoadingMoreCafes else { return }
+                                onAction(.loadMoreCafes)
+                            }
                     }
                 } else {
-                    ForEach(uiState.maids, id: \.id) { maid in
+                    ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { index, maid in
                         maidCard(maid)
+                            .onAppear {
+                                guard index == uiState.maids.indices.last,
+                                      uiState.canLoadMoreMaids,
+                                      !uiState.isLoadingMoreMaids else { return }
+                                onAction(.loadMoreMaids)
+                            }
                     }
                 }
             }
+            pagingFooter
+        }
+    }
+
+    @ViewBuilder
+    private var pagingFooter: some View {
+        let isLoadingMore = uiState.selectedTab == .cafe ? uiState.isLoadingMoreCafes : uiState.isLoadingMoreMaids
+        let canLoadMore = uiState.selectedTab == .cafe ? uiState.canLoadMoreCafes : uiState.canLoadMoreMaids
+
+        if isLoadingMore {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.top, 12)
+        } else if canLoadMore {
+            Text("스크롤 하단에서 다음 목록을 불러옵니다.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
         }
     }
 

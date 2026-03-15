@@ -121,6 +121,8 @@ interface ConCafeDataSource {
 
     fun rankingItemsFromCafes(): List<RankingItem>
 
+    fun homePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast>
+
     fun verifyVisitResult(cafeId: String, latitude: Double, longitude: Double): VisitVerificationResult
 
     fun <T> toPaged(items: List<T>, cursor: String?, pageSize: Int): PagedResult<T>

@@ -27,6 +27,7 @@ struct CafeUiState {
     var reviews: [CafeDetailReview]
     var isFavorite: Bool
     var isLoggedIn: Bool
+    var isVisitVerified: Bool
     var shouldScrollToTopOnReturn: Bool
 
     static let empty = CafeUiState(
@@ -48,6 +49,7 @@ struct CafeUiState {
         reviews: [],
         isFavorite: false,
         isLoggedIn: false,
+        isVisitVerified: false,
         shouldScrollToTopOnReturn: false
     )
 
