@@ -141,7 +141,7 @@ private struct AccountSettingsContentView: View {
 
     private var infoSummaryCard: some View {
         VStack(spacing: 10) {
-            infoRow(label: "권한", value: uiState.role.displayText)
+            infoRow(label: "권한", value: uiState.role?.displayText ?? "")
             infoRow(label: "가입일", value: (currentUser?.createdAt.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
             if uiState.role == .cafeOwner {
                 infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
@@ -250,7 +250,7 @@ private struct AccountSettingsContentView: View {
             Text(currentUser?.email.isEmpty == false ? (currentUser?.email ?? "") : "로그인 정보 없음")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
-            Text(uiState.role.roleSummary)
+            Text(uiState.role?.roleSummary ?? "")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
                 .padding(.top, 4)
@@ -366,7 +366,7 @@ private struct AccountSettingsContentView: View {
     }
 }
 
-private extension UserRole? {
+private extension UserRole {
     var displayText: String {
         switch self {
         case .admin:
