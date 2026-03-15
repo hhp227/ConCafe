@@ -12,8 +12,6 @@ struct CafeView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeViewModel
-    @State private var pendingScrollToTop = false
-    @State private var isViewVisible = false
 
     private let topAnchorId = "CAFE_TOP"
 
@@ -25,13 +23,6 @@ struct CafeView: View {
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                isViewVisible = true
-                performScrollToTopIfNeeded(with: proxy)
-            }
-            .onDisappear {
-                isViewVisible = false
-            }
             .onReceive(viewModel.event) { event in
                 switch event {
                 case .navigateBack:
@@ -46,31 +37,22 @@ struct CafeView: View {
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
                 guard shouldScroll else { return }
-                pendingScrollToTop = true
-                if isViewVisible {
-                    performScrollToTopIfNeeded(with: proxy)
+                viewModel.onAction(.consumeScrollToTopOnReturn)
+                DispatchQueue.main.async {
+                    withAnimation {
+                        proxy.scrollTo(topAnchorId, anchor: .top)
+                    }
                 }
             }
         }
     }
 
     init(
-        cafeId: String,
-        onNavigationAction: @escaping (NavigationAction) -> Void
+    cafeId: String,
+    onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
-    }
-
-    private func performScrollToTopIfNeeded(with proxy: ScrollViewProxy) {
-        guard pendingScrollToTop || viewModel.uiState.shouldScrollToTopOnReturn else { return }
-        DispatchQueue.main.async {
-            withAnimation {
-                proxy.scrollTo(topAnchorId, anchor: .top)
-            }
-            pendingScrollToTop = false
-            viewModel.onAction(.consumeScrollToTopOnReturn)
-        }
     }
 }
 
@@ -97,8 +79,8 @@ private struct CafeContentView: View {
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 24)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 24)
                 }
             }
             .toolbar {
@@ -122,7 +104,7 @@ private struct CafeContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
                 Text("리뷰 작성")
-                    .font(.subheadline.weight(.bold))
+                .font(.subheadline.weight(.bold))
             }
             .foregroundStyle(Color(hex: "2B2330"))
             .padding(.horizontal, 18)
@@ -137,11 +119,11 @@ private struct CafeContentView: View {
     private var offsetReader: some View {
         GeometryReader { proxy in
             Color.clear
-                .id(topAnchorId)
-                .preference(
-                    key: CafeScrollOffsetPreferenceKey.self,
-                    value: proxy.frame(in: .named("cafeScroll")).minY
-                )
+            .id(topAnchorId)
+            .preference(
+                key: CafeScrollOffsetPreferenceKey.self,
+                value: proxy.frame(in: .named("cafeScroll")).minY
+            )
         }
         .frame(height: 0)
     }
