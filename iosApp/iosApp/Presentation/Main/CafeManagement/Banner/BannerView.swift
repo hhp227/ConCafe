@@ -77,33 +77,35 @@ private struct BannerContentView: View {
     let onAction: (BannerAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                ConCafeTabBar(
-                    labels: BannerTab.allCases.map(\.rawValue),
-                    selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                    backgroundColor: Color(hex: "F8F5F6"),
-                    onSelect: { index in
-                        onAction(.selectTab(BannerTab.allCases[index]))
-                    }
-                )
-                headerRow
-                ForEach(uiState.filteredBanners) { banner in
-                    BannerCardView(
-                        banner: banner,
-                        onEdit: { onAction(.editBannerTapped(id: banner.id)) },
-                        onDelete: { onAction(.deleteBannerTapped(id: banner.id)) }
-                    )
+        VStack(spacing: 0) {
+            ConCafeTabBar(
+                labels: BannerTab.allCases.map(\.rawValue),
+                selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
+                backgroundColor: Color(hex: "F8F5F6"),
+                onSelect: { index in
+                    onAction(.selectTab(BannerTab.allCases[index]))
                 }
-                Text("최대 5개의 배너를 동시에 노출할 수 있습니다.")
-                    .font(.caption)
-                    .foregroundStyle(Color(hex: "9A8E97"))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+            )
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    headerRow
+                    ForEach(uiState.filteredBanners) { banner in
+                        BannerCardView(
+                            banner: banner,
+                            onEdit: { onAction(.editBannerTapped(id: banner.id)) },
+                            onDelete: { onAction(.deleteBannerTapped(id: banner.id)) }
+                        )
+                    }
+                    Text("최대 5개의 배너를 동시에 노출할 수 있습니다.")
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "9A8E97"))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 16)
         }
         .background(Color(hex: "F8F5F6"))
         .safeAreaInset(edge: .bottom) {
