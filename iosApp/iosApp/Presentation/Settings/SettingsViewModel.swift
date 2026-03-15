@@ -19,6 +19,23 @@ final class SettingsViewModel: ObservableObject {
 
     private var signOutTask: Task<Void, Never>?
 
+    private func clickAccountSettings() {
+        event.send(.navigateToAccountSettings)
+    }
+
+    private func clickNotificationSettings() {
+        event.send(.navigateToNotificationSettings)
+    }
+
+    private func clickPrivacyPolicy() {
+        event.send(
+            .navigateToExternalLink(
+                title: Self.privacyPolicyTitle,
+                url: Self.privacyPolicyUrl
+            )
+        )
+    }
+
     private func signOut() {
         uiState.isLoading = true
         uiState.errorMessage = nil
@@ -47,6 +64,12 @@ final class SettingsViewModel: ObservableObject {
         switch action {
         case .backTapped:
             event.send(.navigateBack)
+        case .accountSettingsTapped:
+            clickAccountSettings()
+        case .notificationSettingsTapped:
+            clickNotificationSettings()
+        case .privacyPolicyTapped:
+            clickPrivacyPolicy()
         case .signOutTapped:
             signOut()
         }
@@ -61,4 +84,7 @@ final class SettingsViewModel: ObservableObject {
     deinit {
         signOutTask?.cancel()
     }
+
+    private static let privacyPolicyTitle = "개인정보 처리방침"
+    private static let privacyPolicyUrl = "http://www.concafe.app"
 }

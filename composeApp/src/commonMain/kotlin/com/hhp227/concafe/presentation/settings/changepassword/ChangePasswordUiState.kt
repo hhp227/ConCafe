@@ -1,4 +1,11 @@
 package com.hhp227.concafe.presentation.settings.changepassword
 
-class ChangePasswordUiState {
+data class ChangePasswordUiState(
+    val currentPassword: String,
+    val newPassword: String,
+    val confirmPassword: String
+) {
+    companion object {
+        fun empty(): ChangePasswordUiState = ChangePasswordUiState("", "", "")
+    }
 }

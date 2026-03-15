@@ -66,6 +66,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -317,7 +318,7 @@ private fun BannerThumbnail(banner: BannerItem) {
             .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(banner.accentColor.toULong()), Color(0xFFFFE6ED))
+                    colors = listOf(colorFromHex(banner.accentColorHex), colorFromHex("FFE6ED"))
                 )
             ),
         contentAlignment = Alignment.Center

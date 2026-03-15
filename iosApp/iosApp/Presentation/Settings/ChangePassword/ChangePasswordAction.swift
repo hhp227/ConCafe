@@ -8,5 +8,9 @@
 import Foundation
 
 enum ChangePasswordAction {
-    
+    case backTapped
+    case currentPasswordChanged(String)
+    case newPasswordChanged(String)
+    case confirmPasswordChanged(String)
+    case submitTapped
 }

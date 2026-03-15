@@ -127,6 +127,7 @@
 		0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */; };
 		0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */; };
 		0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */; };
+		0A74A38B2F66EE810038EA4E /* NotificationQuietHoursOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */; };
 		0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C932F5A76B8004037A8 /* HomeAction.swift */; };
 		0A785C962F5A76D7004037A8 /* HomeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C952F5A76D7004037A8 /* HomeEvent.swift */; };
 		0A785C982F5A76FD004037A8 /* HomeUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C972F5A76FD004037A8 /* HomeUiState.swift */; };
@@ -311,6 +312,7 @@
 		0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditViewModel.swift; sourceTree = "<group>"; };
 		0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditAction.swift; sourceTree = "<group>"; };
 		0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditEvent.swift; sourceTree = "<group>"; };
+		0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationQuietHoursOption.swift; sourceTree = "<group>"; };
 		0A785C932F5A76B8004037A8 /* HomeAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeAction.swift; sourceTree = "<group>"; };
 		0A785C952F5A76D7004037A8 /* HomeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEvent.swift; sourceTree = "<group>"; };
 		0A785C972F5A76FD004037A8 /* HomeUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeUiState.swift; sourceTree = "<group>"; };
@@ -519,6 +521,7 @@
 		0A2C5B202F65616500D3004E /* Notification */ = {
 			isa = PBXGroup;
 			children = (
+				0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */,
 				0A2C5B212F65617B00D3004E /* NotificationSettingsUiState.swift */,
 				0A2C5B232F65619600D3004E /* NotificationSettingsAction.swift */,
 				0A2C5B252F6561AB00D3004E /* NotificationSettingsEvent.swift */,
@@ -1047,6 +1050,7 @@
 				0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */,
 				0A400E1F2F655EFF00BD41C7 /* InquiryView.swift in Sources */,
 				0A8ABA6F2F5C1CD800265D4F /* FanManagementEvent.swift in Sources */,
+				0A74A38B2F66EE810038EA4E /* NotificationQuietHoursOption.swift in Sources */,
 				0A0C66A22F5C0E6D00B0CDE4 /* SignInAction.swift in Sources */,
 				0A785CAD2F5A7C4D004037A8 /* CheckInViewModel.swift in Sources */,
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,

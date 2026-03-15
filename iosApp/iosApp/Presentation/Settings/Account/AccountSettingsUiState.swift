@@ -6,7 +6,30 @@
 //
 
 import Foundation
+import Shared
 
 struct AccountSettingsUiState {
-    
+    var isLoading: Bool
+    var errorMessage: String?
+    var myInfoFeed: Shared.MyInfoFeed?
+    var nicknameInput: String
+    var emailInput: String
+    var isDeleteDialogVisible: Bool
+    var deleteConfirmation: String
+    var isDeleteRequested: Bool
+
+    var role: UserRole? {
+        myInfoFeed?.user?.role
+    }
+
+    static let empty = AccountSettingsUiState(
+        isLoading: true,
+        errorMessage: nil,
+        myInfoFeed: nil,
+        nicknameInput: "",
+        emailInput: "",
+        isDeleteDialogVisible: false,
+        deleteConfirmation: "",
+        isDeleteRequested: false
+    )
 }

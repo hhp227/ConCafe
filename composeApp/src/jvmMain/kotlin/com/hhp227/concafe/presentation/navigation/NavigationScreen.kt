@@ -39,7 +39,10 @@ import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEve
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
+import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
+import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
+import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 
 private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 
@@ -254,6 +257,21 @@ private fun DetailRoutePane(
         }
         Route.Settings -> {
             SettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.NotificationSettings -> {
+            NotificationSettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.AccountSettings -> {
+            AccountSettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.ChangePassword -> {
+            ChangePasswordScreen(
                 onNavigationAction = onNavigationAction
             )
         }

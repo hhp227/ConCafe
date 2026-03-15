@@ -8,5 +8,6 @@
 import Foundation
 
 enum ChangePasswordEvent {
-    
+    case navigateBack
+    case showMessage(String)
 }

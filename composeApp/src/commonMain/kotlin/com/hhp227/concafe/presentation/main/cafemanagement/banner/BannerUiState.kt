@@ -31,7 +31,7 @@ data class BannerItem(
     val periodText: String,
     val statusLabel: String,
     val tab: BannerTab,
-    val accentColor: Long,
+    val accentColorHex: String,
     val imageIcon: String
 )
 
@@ -49,7 +49,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2023.12.01 ~ 2023.12.31",
         statusLabel = "진행 중",
         tab = BannerTab.ACTIVE,
-        accentColor = 0xFFF27CA6,
+        accentColorHex = "F27CA6",
         imageIcon = "local_cafe"
     ),
     BannerItem(
@@ -59,7 +59,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2023.11.15 ~ 2024.01.15",
         statusLabel = "진행 중",
         tab = BannerTab.ACTIVE,
-        accentColor = 0xFFCE6A8C,
+        accentColorHex = "CE6A8C",
         imageIcon = "card_giftcard"
     ),
     BannerItem(
@@ -69,7 +69,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2023.12.01 ~ 2023.12.31",
         statusLabel = "진행 중",
         tab = BannerTab.ACTIVE,
-        accentColor = 0xFF8A5B73,
+        accentColorHex = "8A5B73",
         imageIcon = "music_note"
     ),
     BannerItem(
@@ -79,7 +79,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2024.03.10 ~ 2024.03.17",
         statusLabel = "예약",
         tab = BannerTab.SCHEDULED,
-        accentColor = 0xFFF3AFC5,
+        accentColorHex = "F3AFC5",
         imageIcon = "cake"
     ),
     BannerItem(
@@ -89,7 +89,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2024.03.20 ~ 2024.04.20",
         statusLabel = "예약",
         tab = BannerTab.SCHEDULED,
-        accentColor = 0xFFD78EA9,
+        accentColorHex = "D78EA9",
         imageIcon = "restaurant"
     ),
     BannerItem(
@@ -99,7 +99,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2023.12.20 ~ 2024.01.05",
         statusLabel = "종료",
         tab = BannerTab.ENDED,
-        accentColor = 0xFFBDA3AE,
+        accentColorHex = "BDA3AE",
         imageIcon = "redeem"
     ),
     BannerItem(
@@ -109,7 +109,7 @@ internal fun sampleBannerItems(): List<BannerItem> = listOf(
         periodText = "2024.02.07 ~ 2024.02.12",
         statusLabel = "종료",
         tab = BannerTab.ENDED,
-        accentColor = 0xFF94808A,
+        accentColorHex = "94808A",
         imageIcon = "event_note"
     )
 )

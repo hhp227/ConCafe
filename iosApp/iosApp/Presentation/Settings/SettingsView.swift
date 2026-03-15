@@ -13,37 +13,68 @@ struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
 
     var body: some View {
+        SettingsContentView(
+            uiState: viewModel.uiState,
+            onAction: viewModel.onAction
+        )
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateBack:
+                onNavigationAction(.navigateBack)
+            case .navigateToAccountSettings:
+                onNavigationAction(.navigateToAccountSettings)
+            case .navigateToNotificationSettings:
+                onNavigationAction(.navigateToNotificationSettings)
+            case .navigateToExternalLink(let title, let url):
+                onNavigationAction(.navigateToExternalLink(title: title, url: url))
+            }
+        }
+        .navigationTitle("설정")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SettingsContentView: View {
+    let uiState: SettingsUiState
+
+    let onAction: (SettingsAction) -> Void
+
+    var body: some View {
         List {
             Section {
-                settingsRow(
-                    icon: "person.crop.circle",
-                    title: "계정 관리",
-                    description: "프로필과 로그인 정보를 관리합니다."
-                )
-                settingsRow(
-                    icon: "bell.badge",
-                    title: "알림 설정",
-                    description: "출근, 생일, 공지 알림 설정 영역입니다."
-                )
-                settingsRow(
-                    icon: "info.circle",
-                    title: "앱 정보",
-                    description: "버전 및 고객지원 안내를 제공합니다."
-                )
-                settingsRow(
-                    icon: "rectangle.portrait.and.arrow.right",
-                    title: "로그아웃",
-                    description: "현재 계정에서 로그아웃합니다.",
-                    foregroundColor: Color.red
+                SettingsRow(
+                    item: .account
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    viewModel.onAction(.signOutTapped)
+                    onAction(.accountSettingsTapped)
                 }
-            } header: {
-                Text("내정보 탭에서 진입한 설정")
+                SettingsRow(
+                    item: .notification
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onAction(.notificationSettingsTapped)
+                }
+                SettingsRow(
+                    item: .app
+                )
+                SettingsRow(
+                    item: .privacyPolicy
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onAction(.privacyPolicyTapped)
+                }
+                SettingsRow(
+                    item: .signOut
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onAction(.signOutTapped)
+                }
             }
-            if let errorMessage = viewModel.uiState.errorMessage {
+            if let errorMessage = uiState.errorMessage {
                 Section {
                     Text(errorMessage)
                         .font(.caption)
@@ -51,37 +82,70 @@ struct SettingsView: View {
                 }
             }
         }
-        .onReceive(viewModel.event) { event in
-            switch event {
-            case .navigateBack:
-                onNavigationAction(.navigateBack)
-            }
-        }
-        .navigationTitle("설정")
-        .navigationBarTitleDisplayMode(.inline)
     }
+}
 
-    private func settingsRow(
-        icon: String,
-        title: String,
-        description: String,
-        foregroundColor: Color = Color(hex: "EF6797")
-    ) -> some View {
+private struct SettingsRow: View {
+    let item: SettingsItem
+
+    var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(foregroundColor)
+            Image(systemName: item.icon)
+                .foregroundStyle(item.foregroundColor)
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
+                Text(item.title)
                     .font(.subheadline)
                     .bold()
-                Text(description)
+                Text(item.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)
     }
+}
+
+private struct SettingsItem {
+    let icon: String
+    let title: String
+    let description: String
+    let foregroundColor: Color
+
+    static let account = SettingsItem(
+        icon: "person.crop.circle",
+        title: "계정 관리",
+        description: "프로필과 로그인 정보를 관리합니다.",
+        foregroundColor: Color(hex: "EF6797")
+    )
+
+    static let notification = SettingsItem(
+        icon: "bell.badge",
+        title: "알림 설정",
+        description: "출근, 생일, 공지 알림 설정 영역입니다.",
+        foregroundColor: Color(hex: "EF6797")
+    )
+
+    static let app = SettingsItem(
+        icon: "info.circle",
+        title: "앱 정보",
+        description: "버전 및 고객지원 안내를 제공합니다.",
+        foregroundColor: Color(hex: "EF6797")
+    )
+
+    static let privacyPolicy = SettingsItem(
+        icon: "lock.doc",
+        title: "개인정보 처리방침",
+        description: "개인정보 처리방침 외부 링크를 확인합니다.",
+        foregroundColor: Color(hex: "EF6797")
+    )
+
+    static let signOut = SettingsItem(
+        icon: "rectangle.portrait.and.arrow.right",
+        title: "로그아웃",
+        description: "현재 계정에서 로그아웃합니다.",
+        foregroundColor: .red
+    )
 }
 
 struct SettingsView_Previews: PreviewProvider {
