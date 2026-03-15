@@ -147,7 +147,7 @@ private struct SettingsItem {
         title: "로그아웃",
         description: "현재 계정에서 로그아웃합니다.",
         foregroundColor: .red
-    }
+    )
 }
 
 struct SettingsView_Previews: PreviewProvider {

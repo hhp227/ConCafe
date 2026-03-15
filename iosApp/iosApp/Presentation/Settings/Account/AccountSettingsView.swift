@@ -12,6 +12,7 @@ struct AccountSettingsView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = AccountSettingsViewModel()
+    
     @State private var alertMessage: String?
 
     var body: some View {
@@ -308,7 +309,7 @@ private struct AccountSettingsContentView: View {
     }
 }
 
-private extension UserRole? {
+private extension UserRole {
     var displayText: String {
         switch self {
         case .admin:
