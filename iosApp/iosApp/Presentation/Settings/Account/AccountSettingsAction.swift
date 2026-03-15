@@ -8,5 +8,14 @@
 import Foundation
 
 enum AccountSettingsAction {
-    
+    case backTapped
+    case nicknameChanged(String)
+    case emailChanged(String)
+    case saveUserInfoTapped
+    case openCastEditTapped
+    case openChangePasswordTapped
+    case showDeleteDialogTapped
+    case dismissDeleteDialogTapped
+    case deleteConfirmationChanged(String)
+    case deleteAccountTapped
 }

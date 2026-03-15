@@ -39,6 +39,8 @@ import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEve
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
+import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
+import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 
@@ -260,6 +262,16 @@ private fun DetailRoutePane(
         }
         Route.NotificationSettings -> {
             NotificationSettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.AccountSettings -> {
+            AccountSettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.ChangePassword -> {
+            ChangePasswordScreen(
                 onNavigationAction = onNavigationAction
             )
         }

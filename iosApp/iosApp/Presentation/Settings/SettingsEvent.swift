@@ -9,6 +9,7 @@ import Foundation
 
 enum SettingsEvent {
     case navigateBack
+    case navigateToAccountSettings
     case navigateToNotificationSettings
     case navigateToExternalLink(title: String, url: String)
 }

@@ -60,6 +60,9 @@ fun SettingsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 SettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                SettingsEvent.NavigateToAccountSettings -> {
+                    onNavigationAction(NavigationAction.NavigateToAccountSettings)
+                }
                 SettingsEvent.NavigateToNotificationSettings -> {
                     onNavigationAction(NavigationAction.NavigateToNotificationSettings)
                 }
@@ -192,7 +195,7 @@ private val settingsItems = listOf(
         title = "계정 관리",
         description = "프로필과 로그인 정보를 관리합니다.",
         icon = Icons.Default.PersonOutline,
-        action = null
+        action = SettingsAction.ClickAccountSettings
     ),
     SettingsItem(
         id = "notification",

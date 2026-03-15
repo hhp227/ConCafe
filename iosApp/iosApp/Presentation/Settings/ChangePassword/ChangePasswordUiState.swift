@@ -8,5 +8,13 @@
 import Foundation
 
 struct ChangePasswordUiState {
-    
+    var currentPassword: String
+    var newPassword: String
+    var confirmPassword: String
+
+    static let empty = ChangePasswordUiState(
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+    )
 }

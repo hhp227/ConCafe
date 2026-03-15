@@ -19,6 +19,10 @@ final class SettingsViewModel: ObservableObject {
 
     private var signOutTask: Task<Void, Never>?
 
+    private func clickAccountSettings() {
+        event.send(.navigateToAccountSettings)
+    }
+
     private func clickNotificationSettings() {
         event.send(.navigateToNotificationSettings)
     }
@@ -60,6 +64,8 @@ final class SettingsViewModel: ObservableObject {
         switch action {
         case .backTapped:
             event.send(.navigateBack)
+        case .accountSettingsTapped:
+            clickAccountSettings()
         case .notificationSettingsTapped:
             clickNotificationSettings()
         case .privacyPolicyTapped:

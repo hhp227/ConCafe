@@ -21,6 +21,8 @@ struct SettingsView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToAccountSettings:
+                onNavigationAction(.navigateToAccountSettings)
             case .navigateToNotificationSettings:
                 onNavigationAction(.navigateToNotificationSettings)
             case .navigateToExternalLink(let title, let url):
@@ -43,6 +45,10 @@ private struct SettingsContentView: View {
                 SettingsRow(
                     item: .account
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onAction(.accountSettingsTapped)
+                }
                 SettingsRow(
                     item: .notification
                 )
