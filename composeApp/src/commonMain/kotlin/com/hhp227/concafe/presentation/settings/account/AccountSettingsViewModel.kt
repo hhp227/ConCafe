@@ -12,8 +12,6 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.di.resolveGetMyInfoUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.MyInfoFeed
-import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
@@ -41,7 +39,13 @@ class AccountSettingsViewModel(
         viewModelScope.launch {
             when (val result = getMyInfoUseCase.invoke()) {
                 is AppResult.Success -> {
-                    _uiState.value = result.data.toUiState()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = null,
+                        myInfoFeed = result.data,
+                        nicknameInput = result.data.user?.nickname.orEmpty(),
+                        emailInput = result.data.user?.email.orEmpty()
+                    )
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
@@ -64,23 +68,24 @@ class AccountSettingsViewModel(
     private fun clickSaveUserInfo() {
         val state = _uiState.value
         when {
-            state.nickname.isBlank() -> emitMessage("닉네임을 입력해 주세요.")
-            !state.email.contains("@") -> emitMessage("올바른 이메일 형식을 입력해 주세요.")
+            state.nicknameInput.isBlank() -> emitMessage("닉네임을 입력해 주세요.")
+            !state.emailInput.contains("@") -> emitMessage("올바른 이메일 형식을 입력해 주세요.")
             else -> emitMessage("계정 기본 정보를 저장했어요. 현재 단계에서는 로컬 상태에 반영됩니다.")
         }
     }
 
     private fun clickOpenCastEdit() {
         val state = _uiState.value
-        if (state.castId.isNullOrBlank()) {
+        val cast = state.myInfoFeed?.castDetail?.cast
+        if (cast?.id.isNullOrBlank()) {
             emitMessage("연결된 캐스트 프로필이 아직 없습니다.")
             return
         }
         viewModelScope.launch {
             _event.emit(
                 AccountSettingsEvent.NavigateToCastEdit(
-                    cafeId = state.castCafeId,
-                    castId = state.castId
+                    cafeId = cast?.cafeId,
+                    castId = cast?.id
                 )
             )
         }
@@ -135,8 +140,8 @@ class AccountSettingsViewModel(
     fun onAction(action: AccountSettingsAction) {
         when (action) {
             AccountSettingsAction.ClickBack -> clickBack()
-            is AccountSettingsAction.ChangeNickname -> _uiState.update { it.copy(nickname = action.value) }
-            is AccountSettingsAction.ChangeEmail -> _uiState.update { it.copy(email = action.value) }
+            is AccountSettingsAction.ChangeNickname -> _uiState.update { it.copy(nicknameInput = action.value) }
+            is AccountSettingsAction.ChangeEmail -> _uiState.update { it.copy(emailInput = action.value) }
             AccountSettingsAction.ClickSaveUserInfo -> clickSaveUserInfo()
             AccountSettingsAction.ClickOpenCastEdit -> clickOpenCastEdit()
             AccountSettingsAction.ClickOpenChangePassword -> clickOpenChangePassword()
@@ -157,34 +162,4 @@ class AccountSettingsViewModel(
     private companion object {
         private const val DELETE_CONFIRMATION_TEXT = "탈퇴"
     }
-}
-
-private fun MyInfoFeed.toUiState(): AccountSettingsUiState {
-    val currentUser = user
-    val currentCast = castDetail?.cast
-    return AccountSettingsUiState(
-        isLoading = false,
-        errorMessage = null,
-        nickname = currentUser?.nickname.orEmpty(),
-        email = currentUser?.email.orEmpty(),
-        role = currentUser?.role,
-        memberSince = currentUser?.createdAt.orEmpty(),
-        roleSummary = when (currentUser?.role) {
-            UserRole.CAST -> "캐스트 계정으로 팬과의 접점을 관리하고 있어요."
-            UserRole.CAFE_OWNER -> "운영 카페와 함께 계정 권한을 관리하고 있어요."
-            UserRole.ADMIN -> "운영 관리용 관리자 계정입니다."
-            UserRole.VISITOR -> "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
-            null -> "로그인이 필요한 화면입니다."
-        },
-        linkedCafeName = castDetail?.cafe?.name,
-        ownedCafeCount = ownedCafes.size,
-        castId = currentCast?.id,
-        castCafeId = currentCast?.cafeId,
-        castName = currentCast?.name.orEmpty(),
-        castConceptRole = currentCast?.conceptRole.orEmpty(),
-        castDescription = currentCast?.desc.orEmpty(),
-        isDeleteDialogVisible = false,
-        deleteConfirmation = "",
-        isDeleteRequested = false
-    )
 }

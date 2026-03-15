@@ -50,6 +50,11 @@ private struct AccountSettingsContentView: View {
     let onAction: (AccountSettingsAction) -> Void
 
     var body: some View {
+        let myInfoFeed = uiState.myInfoFeed
+        let currentUser = myInfoFeed?.user
+        let currentCast = myInfoFeed?.castDetail?.cast
+        let linkedCafeName = myInfoFeed?.castDetail?.cafe.name
+
         Group {
             if uiState.isLoading {
                 ProgressView()
@@ -69,7 +74,7 @@ private struct AccountSettingsContentView: View {
                             ConCafeFormField(
                                 label: "닉네임",
                                 text: Binding(
-                                    get: { uiState.nickname },
+                                    get: { uiState.nicknameInput },
                                     set: { onAction(.nicknameChanged($0)) }
                                 ),
                                 placeholder: "닉네임을 입력하세요"
@@ -77,16 +82,16 @@ private struct AccountSettingsContentView: View {
                             ConCafeFormField(
                                 label: "이메일",
                                 text: Binding(
-                                    get: { uiState.email },
+                                    get: { uiState.emailInput },
                                     set: { onAction(.emailChanged($0)) }
                                 ),
                                 placeholder: "이메일을 입력하세요"
                             )
                             VStack(spacing: 10) {
                                 infoRow(label: "권한", value: uiState.role.displayText)
-                                infoRow(label: "가입일", value: uiState.memberSince.isEmpty ? "연동 예정" : uiState.memberSince)
+                                infoRow(label: "가입일", value: (currentUser?.createdAt?.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
                                 if uiState.role == .cafeOwner {
-                                    infoRow(label: "운영 카페 수", value: "\(uiState.ownedCafeCount)곳")
+                                    infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -110,7 +115,7 @@ private struct AccountSettingsContentView: View {
                         if uiState.role == .cast {
                             settingsCard(title: "캐스트 연결 상태", symbol: "person.crop.rectangle.stack") {
                                 sectionEyebrow("현재 연결된 프로필 요약")
-                                Text(uiState.castDescription.isEmpty ? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다." : uiState.castDescription)
+                                Text((currentCast?.desc?.isEmpty == false ? currentCast?.desc : "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다.") ?? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다.")
                                     .font(.subheadline)
                                     .foregroundStyle(Color(hex: "6F6673"))
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,7 +124,7 @@ private struct AccountSettingsContentView: View {
                         if uiState.role == .cafeOwner || uiState.role == .admin {
                             settingsCard(title: "권한 연결 상태", symbol: "storefront") {
                                 sectionEyebrow("현재 계정에 연결된 운영 권한")
-                                Text(uiState.role == .admin ? "관리자 계정은 운영 승인과 검토 작업을 수행합니다." : "운영 카페 \(uiState.ownedCafeCount)곳이 현재 계정과 연결되어 있습니다.")
+                                Text(uiState.role == .admin ? "관리자 계정은 운영 승인과 검토 작업을 수행합니다." : "운영 카페 \(myInfoFeed?.ownedCafes.count ?? 0)곳이 현재 계정과 연결되어 있습니다.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -137,10 +142,10 @@ private struct AccountSettingsContentView: View {
                             if uiState.role == .cast {
                                 linkedDestinationCard(
                                     title: "캐스트 정보 수정",
-                                    description: [uiState.castName, uiState.castConceptRole]
+                                    description: [currentCast?.name ?? "", currentCast?.conceptRole ?? ""]
                                         .filter { !$0.isEmpty }
                                         .joined(separator: " · "),
-                                    supporting: uiState.linkedCafeName ?? "캐스트 프로필 전체 편집 화면으로 이동합니다.",
+                                    supporting: linkedCafeName ?? "캐스트 프로필 전체 편집 화면으로 이동합니다.",
                                     symbol: "person.text.rectangle",
                                     onTap: { onAction(.openCastEditTapped) }
                                 )
@@ -185,15 +190,16 @@ private struct AccountSettingsContentView: View {
     }
 
     private var heroCard: some View {
+        let currentUser = uiState.myInfoFeed?.user
         VStack(alignment: .leading, spacing: 8) {
-            Text(uiState.nickname.isEmpty ? "ConCafe User" : uiState.nickname)
+            Text(currentUser?.nickname?.isEmpty == false ? (currentUser?.nickname ?? "") : "ConCafe User")
                 .font(.title3)
                 .bold()
                 .foregroundStyle(.white)
-            Text(uiState.email.isEmpty ? "로그인 정보 없음" : uiState.email)
+            Text(currentUser?.email?.isEmpty == false ? (currentUser?.email ?? "") : "로그인 정보 없음")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
-            Text(uiState.roleSummary)
+            Text(uiState.role.roleSummary)
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
                 .padding(.top, 4)
@@ -309,7 +315,7 @@ private struct AccountSettingsContentView: View {
     }
 }
 
-private extension UserRole {
+private extension UserRole? {
     var displayText: String {
         switch self {
         case .admin:
@@ -322,6 +328,21 @@ private extension UserRole {
             return "일반 유저"
         default:
             return "게스트"
+        }
+    }
+
+    var roleSummary: String {
+        switch self {
+        case .cast:
+            return "캐스트 계정으로 팬과의 접점을 관리하고 있어요."
+        case .cafeOwner:
+            return "운영 카페와 함께 계정 권한을 관리하고 있어요."
+        case .admin:
+            return "운영 관리용 관리자 계정입니다."
+        case .visitor:
+            return "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
+        default:
+            return "로그인이 필요한 화면입니다."
         }
     }
 }

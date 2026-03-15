@@ -121,6 +121,12 @@ private fun AccountSettingsContentScreen(
     innerPadding: PaddingValues,
     onAction: (AccountSettingsAction) -> Unit
 ) {
+    val myInfoFeed = uiState.myInfoFeed
+    val currentUser = myInfoFeed?.user
+    val currentCast = myInfoFeed?.castDetail?.cast
+    val linkedCafeName = myInfoFeed?.castDetail?.cafe?.name
+    val role = currentUser?.role
+
     if (uiState.isLoading) {
         Box(
             modifier = Modifier
@@ -166,13 +172,13 @@ private fun AccountSettingsContentScreen(
                     SectionEyebrow("내 계정에서 바로 수정 가능한 정보")
                     ConCafeFormField(
                         label = "닉네임",
-                        value = uiState.nickname,
+                        value = uiState.nicknameInput,
                         onValueChange = { onAction(AccountSettingsAction.ChangeNickname(it)) },
                         placeholder = "닉네임을 입력하세요"
                     )
                     ConCafeFormField(
                         label = "이메일",
-                        value = uiState.email,
+                        value = uiState.emailInput,
                         onValueChange = { onAction(AccountSettingsAction.ChangeEmail(it)) },
                         placeholder = "이메일을 입력하세요"
                     )
@@ -184,14 +190,14 @@ private fun AccountSettingsContentScreen(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            AccountMetaRow("권한", uiState.role.toDisplayText())
-                            AccountMetaRow("가입일", uiState.memberSince.ifBlank { "연동 예정" })
-                            if (uiState.role == UserRole.CAFE_OWNER) {
-                                AccountMetaRow("운영 카페 수", "${uiState.ownedCafeCount}곳")
+                            AccountMetaRow("권한", role.toDisplayText())
+                            AccountMetaRow("가입일", currentUser?.createdAt.orEmpty().ifBlank { "연동 예정" })
+                            if (role == UserRole.CAFE_OWNER) {
+                                AccountMetaRow("운영 카페 수", "${myInfoFeed?.ownedCafes?.size ?: 0}곳")
                             }
                         }
                     }
-                    if (uiState.role == UserRole.CAFE_OWNER) {
+                    if (role == UserRole.CAFE_OWNER) {
                         Text(
                             text = "운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.",
                             style = MaterialTheme.typography.bodySmall,
@@ -222,7 +228,7 @@ private fun AccountSettingsContentScreen(
                 }
             }
         }
-        if (uiState.role == UserRole.CAST) {
+        if (role == UserRole.CAST) {
             item {
                 AccountSectionCard(
                     title = "캐스트 연결 상태",
@@ -230,7 +236,7 @@ private fun AccountSettingsContentScreen(
                 ) {
                     SectionEyebrow("현재 연결된 프로필 요약")
                     Text(
-                        text = uiState.castDescription.ifBlank {
+                        text = currentCast?.desc.orEmpty().ifBlank {
                             "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다."
                         },
                         style = MaterialTheme.typography.bodyMedium,
@@ -239,7 +245,7 @@ private fun AccountSettingsContentScreen(
                 }
             }
         }
-        if (uiState.role == UserRole.ADMIN || uiState.role == UserRole.CAFE_OWNER) {
+        if (role == UserRole.ADMIN || role == UserRole.CAFE_OWNER) {
             item {
                 AccountSectionCard(
                     title = "권한 연결 상태",
@@ -247,10 +253,10 @@ private fun AccountSettingsContentScreen(
                 ) {
                     SectionEyebrow("현재 계정에 연결된 운영 권한")
                     Text(
-                        text = if (uiState.role == UserRole.ADMIN) {
+                        text = if (role == UserRole.ADMIN) {
                             "관리자 계정은 운영 승인과 검토 작업을 수행합니다."
                         } else {
-                            "운영 카페 ${uiState.ownedCafeCount}곳이 현재 계정과 연결되어 있습니다."
+                            "운영 카페 ${myInfoFeed?.ownedCafes?.size ?: 0}곳이 현재 계정과 연결되어 있습니다."
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF6F6673)
@@ -270,17 +276,17 @@ private fun AccountSettingsContentScreen(
                     icon = Icons.Default.Lock,
                     onClick = { onAction(AccountSettingsAction.ClickOpenChangePassword) }
                 )
-                if (uiState.role == UserRole.CAST) {
+                if (role == UserRole.CAST) {
                     LinkedDestinationRow(
                         title = "캐스트 정보 수정",
                         description = buildString {
-                            append(uiState.castName.ifBlank { "연결된 캐스트 프로필" })
-                            if (uiState.castConceptRole.isNotBlank()) {
+                            append(currentCast?.name?.ifBlank { "연결된 캐스트 프로필" } ?: "연결된 캐스트 프로필")
+                            if (!currentCast?.conceptRole.isNullOrBlank()) {
                                 append(" · ")
-                                append(uiState.castConceptRole)
+                                append(currentCast?.conceptRole)
                             }
                         },
-                        supporting = uiState.linkedCafeName ?: "캐스트 프로필 전체 편집 화면으로 이동합니다.",
+                        supporting = linkedCafeName ?: "캐스트 프로필 전체 편집 화면으로 이동합니다.",
                         icon = Icons.Default.Badge,
                         onClick = { onAction(AccountSettingsAction.ClickOpenCastEdit) }
                     )
@@ -316,6 +322,7 @@ private fun SectionEyebrow(
 private fun AccountHeroCard(
     uiState: AccountSettingsUiState
 ) {
+    val currentUser = uiState.myInfoFeed?.user
     Card(colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
         Column(
             modifier = Modifier
@@ -329,19 +336,19 @@ private fun AccountHeroCard(
                 .padding(20.dp)
         ) {
             Text(
-                text = uiState.nickname.ifBlank { "ConCafe User" },
+                text = currentUser?.nickname?.ifBlank { "ConCafe User" } ?: "ConCafe User",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = uiState.email.ifBlank { "로그인 정보 없음" },
+                text = currentUser?.email?.ifBlank { "로그인 정보 없음" } ?: "로그인 정보 없음",
                 color = Color.White.copy(alpha = 0.92f),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 4.dp)
             )
             Text(
-                text = uiState.roleSummary,
+                text = currentUser?.role.toRoleSummary(),
                 color = Color.White.copy(alpha = 0.92f),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 14.dp)
@@ -497,5 +504,15 @@ private fun UserRole?.toDisplayText(): String {
         UserRole.CAST -> "캐스트"
         UserRole.VISITOR -> "일반 유저"
         null -> "게스트"
+    }
+}
+
+private fun UserRole?.toRoleSummary(): String {
+    return when (this) {
+        UserRole.CAST -> "캐스트 계정으로 팬과의 접점을 관리하고 있어요."
+        UserRole.CAFE_OWNER -> "운영 카페와 함께 계정 권한을 관리하고 있어요."
+        UserRole.ADMIN -> "운영 관리용 관리자 계정입니다."
+        UserRole.VISITOR -> "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
+        null -> "로그인이 필요한 화면입니다."
     }
 }
