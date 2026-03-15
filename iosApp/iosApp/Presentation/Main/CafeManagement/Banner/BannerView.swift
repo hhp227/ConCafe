@@ -9,9 +9,11 @@ import SwiftUI
 
 struct BannerView: View {
     let cafeId: String?
+    
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = BannerViewModel()
+    
     @State private var alertMessage: String?
 
     var body: some View {
@@ -51,6 +53,7 @@ struct BannerView: View {
 
 private struct BannerContentView: View {
     let uiState: BannerUiState
+    
     let onAction: (BannerAction) -> Void
 
     var body: some View {
@@ -249,7 +252,7 @@ private struct IconCircleButton: View {
 
 struct BannerView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        CompatNavigationContainer {
             BannerView(cafeId: nil, onNavigationAction: { _ in })
         }
     }
