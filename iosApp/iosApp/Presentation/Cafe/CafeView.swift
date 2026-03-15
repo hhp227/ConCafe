@@ -33,19 +33,15 @@ struct CafeView: View {
                     onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
-                case .scrollReviewsToTop:
-                    withAnimation {
-                        proxy.scrollTo(topAnchorId, anchor: .top)
-                    }
                 }
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
                 guard shouldScroll else { return }
+                viewModel.onAction(.consumeScrollToTopOnReturn)
                 DispatchQueue.main.async {
                     withAnimation {
                         proxy.scrollTo(topAnchorId, anchor: .top)
                     }
-                    viewModel.onAction(.consumeScrollToTopOnReturn)
                 }
             }
         }

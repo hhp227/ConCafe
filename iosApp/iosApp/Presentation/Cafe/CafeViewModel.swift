@@ -55,7 +55,6 @@ final class CafeViewModel: ObservableObject {
             if let created = event as? ReviewEvent.Created {
                 if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
                     self.uiState.shouldScrollToTopOnReturn = true
-                    self.event.send(.scrollReviewsToTop)
                     self.loadCafeDetail(refreshReviews: false)
                     self.refreshReviewPage()
                 }

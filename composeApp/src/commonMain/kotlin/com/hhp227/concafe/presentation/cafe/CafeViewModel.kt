@@ -67,7 +67,6 @@ class CafeViewModel(
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                             _uiState.update { it.copy(shouldScrollToTopOnReturn = true) }
-                            _event.emit(CafeEvent.ScrollReviewsToTop)
                             loadCafeDetail(refreshReviews = false)
                             refreshReviewPage()
                         }

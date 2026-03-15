@@ -87,7 +87,6 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
-                CafeEvent.ScrollReviewsToTop -> listState.animateScrollToItem(0)
             }
         }
     }
