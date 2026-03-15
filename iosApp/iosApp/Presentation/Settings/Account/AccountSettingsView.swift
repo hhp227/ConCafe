@@ -49,12 +49,12 @@ private struct AccountSettingsContentView: View {
     let uiState: AccountSettingsUiState
     let onAction: (AccountSettingsAction) -> Void
 
-    var body: some View {
-        let myInfoFeed = uiState.myInfoFeed
-        let currentUser = myInfoFeed?.user
-        let currentCast = myInfoFeed?.castDetail?.cast
-        let linkedCafeName = myInfoFeed?.castDetail?.cafe.name
+    private var myInfoFeed: Shared.MyInfoFeed? { uiState.myInfoFeed }
+    private var currentUser: User? { myInfoFeed?.user }
+    private var currentCast: Cast? { myInfoFeed?.castDetail?.cast }
+    private var linkedCafeName: String? { myInfoFeed?.castDetail?.cafe.name }
 
+    var body: some View {
         Group {
             if uiState.isLoading {
                 ProgressView()
@@ -63,103 +63,13 @@ private struct AccountSettingsContentView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         heroCard
-                        if let errorMessage = uiState.errorMessage {
-                            Text(errorMessage)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.red)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        settingsCard(title: "기본 정보", symbol: "person.crop.circle") {
-                            sectionEyebrow("내 계정에서 바로 수정 가능한 정보")
-                            ConCafeFormField(
-                                label: "닉네임",
-                                text: Binding(
-                                    get: { uiState.nicknameInput },
-                                    set: { onAction(.nicknameChanged($0)) }
-                                ),
-                                placeholder: "닉네임을 입력하세요"
-                            )
-                            ConCafeFormField(
-                                label: "이메일",
-                                text: Binding(
-                                    get: { uiState.emailInput },
-                                    set: { onAction(.emailChanged($0)) }
-                                ),
-                                placeholder: "이메일을 입력하세요"
-                            )
-                            VStack(spacing: 10) {
-                                infoRow(label: "권한", value: uiState.role.displayText)
-                                infoRow(label: "가입일", value: (currentUser?.createdAt?.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
-                                if uiState.role == .cafeOwner {
-                                    infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(hex: "F8F5F6"))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            if uiState.role == .cafeOwner {
-                                Text("운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        settingsCard(title: "저장", symbol: "square.and.arrow.down") {
-                            sectionEyebrow("닉네임과 이메일 변경 사항을 반영합니다")
-                            primaryButton(title: "사용자 정보 저장") {
-                                onAction(.saveUserInfoTapped)
-                            }
-                        }
-                        if uiState.role == .cast {
-                            settingsCard(title: "캐스트 연결 상태", symbol: "person.crop.rectangle.stack") {
-                                sectionEyebrow("현재 연결된 프로필 요약")
-                                Text((currentCast?.desc?.isEmpty == false ? currentCast?.desc : "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다.") ?? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(Color(hex: "6F6673"))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        if uiState.role == .cafeOwner || uiState.role == .admin {
-                            settingsCard(title: "권한 연결 상태", symbol: "storefront") {
-                                sectionEyebrow("현재 계정에 연결된 운영 권한")
-                                Text(uiState.role == .admin ? "관리자 계정은 운영 승인과 검토 작업을 수행합니다." : "운영 카페 \(myInfoFeed?.ownedCafes.count ?? 0)곳이 현재 계정과 연결되어 있습니다.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        settingsCard(title: "보안 및 연결", symbol: "lock.shield") {
-                            sectionEyebrow("전용 화면으로 이동해 안전하게 처리합니다")
-                            linkedDestinationCard(
-                                title: "비밀번호 변경",
-                                description: "현재 비밀번호 확인 후 새 비밀번호를 설정합니다.",
-                                supporting: "비밀번호는 전용 화면에서만 변경합니다.",
-                                symbol: "lock.shield",
-                                onTap: { onAction(.openChangePasswordTapped) }
-                            )
-                            if uiState.role == .cast {
-                                linkedDestinationCard(
-                                    title: "캐스트 정보 수정",
-                                    description: [currentCast?.name ?? "", currentCast?.conceptRole ?? ""]
-                                        .filter { !$0.isEmpty }
-                                        .joined(separator: " · "),
-                                    supporting: linkedCafeName ?? "캐스트 프로필 전체 편집 화면으로 이동합니다.",
-                                    symbol: "person.text.rectangle",
-                                    onTap: { onAction(.openCastEditTapped) }
-                                )
-                            }
-                        }
-                        Button {
-                            onAction(.showDeleteDialogTapped)
-                        } label: {
-                            Text(uiState.isDeleteRequested ? "회원탈퇴 요청 완료" : "회원탈퇴")
-                                .font(.footnote)
-                                .foregroundStyle(uiState.isDeleteRequested ? Color(hex: "B84473") : Color(hex: "8E8794"))
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.plain)
+                        errorMessageView
+                        basicInfoSection
+                        saveSection
+                        castStatusSection
+                        ownerStatusSection
+                        securitySection
+                        deleteButton
                     }
                     .padding(16)
                     .padding(.bottom, 24)
@@ -189,8 +99,148 @@ private struct AccountSettingsContentView: View {
         }
     }
 
+    @ViewBuilder
+    private var errorMessageView: some View {
+        if let errorMessage = uiState.errorMessage {
+            Text(errorMessage)
+                .font(.subheadline)
+                .foregroundStyle(Color.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var basicInfoSection: some View {
+        settingsCard(title: "기본 정보", symbol: "person.crop.circle") {
+            sectionEyebrow("내 계정에서 바로 수정 가능한 정보")
+            ConCafeFormField(
+                label: "닉네임",
+                text: Binding(
+                    get: { uiState.nicknameInput },
+                    set: { onAction(.nicknameChanged($0)) }
+                ),
+                placeholder: "닉네임을 입력하세요"
+            )
+            ConCafeFormField(
+                label: "이메일",
+                text: Binding(
+                    get: { uiState.emailInput },
+                    set: { onAction(.emailChanged($0)) }
+                ),
+                placeholder: "이메일을 입력하세요"
+            )
+            infoSummaryCard
+            if uiState.role == .cafeOwner {
+                Text("운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var infoSummaryCard: some View {
+        VStack(spacing: 10) {
+            infoRow(label: "권한", value: uiState.role.displayText)
+            infoRow(label: "가입일", value: (currentUser?.createdAt?.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
+            if uiState.role == .cafeOwner {
+                infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: "F8F5F6"))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var saveSection: some View {
+        settingsCard(title: "저장", symbol: "square.and.arrow.down") {
+            sectionEyebrow("닉네임과 이메일 변경 사항을 반영합니다")
+            primaryButton(title: "사용자 정보 저장") {
+                onAction(.saveUserInfoTapped)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var castStatusSection: some View {
+        if uiState.role == .cast {
+            settingsCard(title: "캐스트 연결 상태", symbol: "person.crop.rectangle.stack") {
+                sectionEyebrow("현재 연결된 프로필 요약")
+                Text(castDescriptionText)
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "6F6673"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var ownerStatusSection: some View {
+        if uiState.role == .cafeOwner || uiState.role == .admin {
+            settingsCard(title: "권한 연결 상태", symbol: "storefront") {
+                sectionEyebrow("현재 계정에 연결된 운영 권한")
+                Text(ownerStatusText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var securitySection: some View {
+        settingsCard(title: "보안 및 연결", symbol: "lock.shield") {
+            sectionEyebrow("전용 화면으로 이동해 안전하게 처리합니다")
+            linkedDestinationCard(
+                title: "비밀번호 변경",
+                description: "현재 비밀번호 확인 후 새 비밀번호를 설정합니다.",
+                supporting: "비밀번호는 전용 화면에서만 변경합니다.",
+                symbol: "lock.shield",
+                onTap: { onAction(.openChangePasswordTapped) }
+            )
+            if uiState.role == .cast {
+                linkedDestinationCard(
+                    title: "캐스트 정보 수정",
+                    description: castLinkDescription,
+                    supporting: linkedCafeName ?? "캐스트 프로필 전체 편집 화면으로 이동합니다.",
+                    symbol: "person.text.rectangle",
+                    onTap: { onAction(.openCastEditTapped) }
+                )
+            }
+        }
+    }
+
+    private var deleteButton: some View {
+        Button {
+            onAction(.showDeleteDialogTapped)
+        } label: {
+            Text(uiState.isDeleteRequested ? "회원탈퇴 요청 완료" : "회원탈퇴")
+                .font(.footnote)
+                .foregroundStyle(uiState.isDeleteRequested ? Color(hex: "B84473") : Color(hex: "8E8794"))
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var castDescriptionText: String {
+        (currentCast?.desc?.isEmpty == false ? currentCast?.desc : nil)
+        ?? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다."
+    }
+
+    private var ownerStatusText: String {
+        if uiState.role == .admin {
+            return "관리자 계정은 운영 승인과 검토 작업을 수행합니다."
+        }
+        return "운영 카페 \(myInfoFeed?.ownedCafes.count ?? 0)곳이 현재 계정과 연결되어 있습니다."
+    }
+
+    private var castLinkDescription: String {
+        [currentCast?.name ?? "", currentCast?.conceptRole ?? ""]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+
     private var heroCard: some View {
-        let currentUser = uiState.myInfoFeed?.user
         VStack(alignment: .leading, spacing: 8) {
             Text(currentUser?.nickname?.isEmpty == false ? (currentUser?.nickname ?? "") : "ConCafe User")
                 .font(.title3)
