@@ -157,7 +157,6 @@ class ReviewEditViewModel(
                             it.copy(
                                 isSubmitting = false,
                                 infoMessage = when (val error = result.error) {
-                                    is AppError.PermissionDenied -> "방문 인증된 사용자만 리뷰를 작성할 수 있습니다."
                                     is AppError.Unauthorized -> "리뷰 작성은 로그인 후 가능해요."
                                     is AppError.ValidationFailed -> error.reason.toReviewValidationMessage()
                                     else -> "리뷰 등록에 실패했습니다."

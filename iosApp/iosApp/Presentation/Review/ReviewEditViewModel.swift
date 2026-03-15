@@ -121,9 +121,7 @@ final class ReviewEditViewModel: ObservableObject {
                         event.send(.navigateBack)
                     } else if let failure = result as? AppResultFailure {
                         uiState.isSubmitting = false
-                        if failure.error is AppErrorPermissionDenied {
-                            uiState.infoMessage = "방문 인증된 사용자만 리뷰를 작성할 수 있습니다."
-                        } else if failure.error is AppErrorUnauthorized {
+                        if failure.error is AppErrorUnauthorized {
                             uiState.infoMessage = "리뷰 작성은 로그인 후 가능해요."
                         } else if let error = failure.error as? AppErrorValidationFailed {
                             uiState.infoMessage = Self.reviewValidationMessage(for: error.reason)
