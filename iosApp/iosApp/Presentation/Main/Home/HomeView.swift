@@ -180,7 +180,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "birthday.cake.fill", title: "생일인 메이드")
+            SectionTitle(icon: birthdaySectionIconName, title: "생일인 메이드")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
@@ -199,6 +199,13 @@ private struct HomeContentView: View {
                 .padding(.horizontal, 16)
             }
         }
+    }
+
+    private var birthdaySectionIconName: String {
+        if #available(iOS 16.0, *) {
+            return "birthday.cake.fill"
+        }
+        return "gift.fill"
     }
 
     private var noticeSection: some View {
