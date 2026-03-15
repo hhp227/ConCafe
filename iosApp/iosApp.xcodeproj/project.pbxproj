@@ -81,6 +81,11 @@
 		0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E222F655F3500BD41C7 /* InquiryEvent.swift */; };
 		0A400E252F655F4F00BD41C7 /* InquiryUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E242F655F4F00BD41C7 /* InquiryUiState.swift */; };
 		0A400E272F655F6900BD41C7 /* InquiryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */; };
+		0A48CF112F66A25E00ED21AA /* ChangePasswordUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */; };
+		0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */; };
+		0A48CF152F66A29D00ED21AA /* ChangePasswordEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF142F66A29D00ED21AA /* ChangePasswordEvent.swift */; };
+		0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF162F66A2B700ED21AA /* ChangePasswordViewModel.swift */; };
+		0A48CF192F66A2D300ED21AA /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF182F66A2D300ED21AA /* ChangePasswordView.swift */; };
 		0A491C892F669F5F005C106F /* BannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C882F669F5F005C106F /* BannerView.swift */; };
 		0A491C8B2F669F74005C106F /* BannerUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8A2F669F74005C106F /* BannerUiState.swift */; };
 		0A491C8D2F669F8F005C106F /* BannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8C2F669F8F005C106F /* BannerViewModel.swift */; };
@@ -260,6 +265,11 @@
 		0A400E222F655F3500BD41C7 /* InquiryEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryEvent.swift; sourceTree = "<group>"; };
 		0A400E242F655F4F00BD41C7 /* InquiryUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryUiState.swift; sourceTree = "<group>"; };
 		0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InquiryViewModel.swift; sourceTree = "<group>"; };
+		0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordUiState.swift; sourceTree = "<group>"; };
+		0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordAction.swift; sourceTree = "<group>"; };
+		0A48CF142F66A29D00ED21AA /* ChangePasswordEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordEvent.swift; sourceTree = "<group>"; };
+		0A48CF162F66A2B700ED21AA /* ChangePasswordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordViewModel.swift; sourceTree = "<group>"; };
+		0A48CF182F66A2D300ED21AA /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		0A491C882F669F5F005C106F /* BannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerView.swift; sourceTree = "<group>"; };
 		0A491C8A2F669F74005C106F /* BannerUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerUiState.swift; sourceTree = "<group>"; };
 		0A491C8C2F669F8F005C106F /* BannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerViewModel.swift; sourceTree = "<group>"; };
@@ -579,6 +589,18 @@
 			path = Inquiry;
 			sourceTree = "<group>";
 		};
+		0A48CF0F2F66A24C00ED21AA /* ChangePassword */ = {
+			isa = PBXGroup;
+			children = (
+				0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */,
+				0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */,
+				0A48CF142F66A29D00ED21AA /* ChangePasswordEvent.swift */,
+				0A48CF162F66A2B700ED21AA /* ChangePasswordViewModel.swift */,
+				0A48CF182F66A2D300ED21AA /* ChangePasswordView.swift */,
+			);
+			path = ChangePassword;
+			sourceTree = "<group>";
+		};
 		0A491C872F669F4B005C106F /* Banner */ = {
 			isa = PBXGroup;
 			children = (
@@ -789,6 +811,7 @@
 		0A8ABA702F5C1D0B00265D4F /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				0A48CF0F2F66A24C00ED21AA /* ChangePassword */,
 				0A400E1D2F655EC900BD41C7 /* Inquiry */,
 				0A2C5B202F65616500D3004E /* Notification */,
 				0A2C5B152F6560C800D3004E /* Account */,
@@ -998,6 +1021,7 @@
 				0A8ABA652F5C1C4D00265D4F /* CafeManagementAction.swift in Sources */,
 				0A341CAC2F6035CB00CC07CF /* CafeDashboardView.swift in Sources */,
 				0A580DB52F59710000390F67 /* RankingView.swift in Sources */,
+				0A48CF112F66A25E00ED21AA /* ChangePasswordUiState.swift in Sources */,
 				0A27F1EB2F5D6DF9003D4763 /* CafeInfoView.swift in Sources */,
 				0A491C8B2F669F74005C106F /* BannerUiState.swift in Sources */,
 				0A785CC12F5A7E28004037A8 /* CafeViewModel.swift in Sources */,
@@ -1045,6 +1069,7 @@
 				0A785CB12F5A7CF1004037A8 /* MyInfoAction.swift in Sources */,
 				0A785CBF2F5A7E11004037A8 /* CastViewModel.swift in Sources */,
 				0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */,
+				0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */,
 				0A8ABA722F5C1D2A00265D4F /* SettingsView.swift in Sources */,
 				0A8ABA692F5C1C8500265D4F /* FanManagementViewModel.swift in Sources */,
 				0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */,
@@ -1066,6 +1091,7 @@
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */,
 				0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */,
+				0A48CF192F66A2D300ED21AA /* ChangePasswordView.swift in Sources */,
 				0A27C8E32F614C9000573900 /* ScheduleViewModel.swift in Sources */,
 				0A27F1EF2F5D6E62003D4763 /* CafeMenuView.swift in Sources */,
 				0A580DB02F5968B200390F67 /* CastView.swift in Sources */,
@@ -1087,6 +1113,7 @@
 				0A2C5B1D2F65613400D3004E /* AccountSettingsAction.swift in Sources */,
 				0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */,
 				0A785CC52F5A7E9B004037A8 /* CastUiState.swift in Sources */,
+				0A48CF152F66A29D00ED21AA /* ChangePasswordEvent.swift in Sources */,
 				0A2C5B242F65619600D3004E /* NotificationSettingsAction.swift in Sources */,
 				0A3470822F611D46005F9A8C /* MenuGoodsEditAction.swift in Sources */,
 				0A2C5B172F6560E700D3004E /* AccountSettingsView.swift in Sources */,
@@ -1120,6 +1147,7 @@
 				0A2C5B1F2F65615000D3004E /* AccountSettingsEvent.swift in Sources */,
 				0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
+				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
