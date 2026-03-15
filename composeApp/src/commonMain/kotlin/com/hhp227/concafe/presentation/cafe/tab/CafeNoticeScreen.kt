@@ -25,60 +25,23 @@ fun CafeNoticeScreen(
     onLoadMore: () -> Unit
 ) {
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
-    val expandableNoticeIds = remember(notices) { mutableStateOf(setOf<String>()) }
 
     if (notices.isEmpty()) {
         EmptyContent(text = "등록된 공지가 없습니다.")
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            notices.forEachIndexed { index, notice ->
-                Card(
-                    onClick = {
-                        if (notice.id in expandableNoticeIds.value) {
-                            expandedNoticeIds = if (notice.id in expandedNoticeIds) {
-                                expandedNoticeIds - notice.id
-                            } else {
-                                expandedNoticeIds + notice.id
-                            }
+            notices.forEach { notice ->
+                NoticeCard(
+                    notice = notice,
+                    isExpanded = notice.id in expandedNoticeIds,
+                    onToggle = {
+                        expandedNoticeIds = if (notice.id in expandedNoticeIds) {
+                            expandedNoticeIds - notice.id
+                        } else {
+                            expandedNoticeIds + notice.id
                         }
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = notice.title,
-                                modifier = Modifier.weight(1f),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = notice.date,
-                                color = Color(0xFF999999),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Text(
-                            text = notice.content,
-                            color = Color(0xFF666666),
-                            maxLines = if (notice.id in expandedNoticeIds) Int.MAX_VALUE else 3,
-                            overflow = TextOverflow.Ellipsis,
-                            onTextLayout = { layoutResult ->
-                                if (layoutResult.hasVisualOverflow && notice.id !in expandableNoticeIds.value) {
-                                    expandableNoticeIds.value = expandableNoticeIds.value + notice.id
-                                }
-                            }
-                        )
                     }
-                }
+                )
             }
             if (canLoadMore || isLoadingMore) {
                 Box(
@@ -96,6 +59,75 @@ fun CafeNoticeScreen(
                         Spacer(modifier = Modifier.height(1.dp))
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NoticeCard(
+    notice: NoticeItem,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onToggle,
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = notice.title,
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = notice.date,
+                    color = Color(0xFF999999),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Text(
+                text = notice.content,
+                color = Color(0xFF666666),
+                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun NoticeLoadMoreFooter(
+    canLoadMore: Boolean,
+    isLoadingMore: Boolean
+) {
+    if (canLoadMore || isLoadingMore) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoadingMore) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color(0xFFEF6797)
+                )
+            } else if (canLoadMore) {
+                Spacer(modifier = Modifier.height(1.dp))
             }
         }
     }

@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Shared
-import UIKit
 
 struct CafeNoticeView: View {
     let notices: [NoticeItem]
@@ -26,7 +25,6 @@ struct CafeNoticeView: View {
         } else {
             LazyVStack(spacing: 12) {
                 ForEach(notices, id: \.id) { notice in
-                    let isExpandable = isNoticeExpandable(notice.content)
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
                             Text(notice.title)
@@ -48,7 +46,6 @@ struct CafeNoticeView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .onTapGesture {
-                        guard isExpandable else { return }
                         if expandedNoticeIds.contains(notice.id) {
                             expandedNoticeIds.remove(notice.id)
                         } else {
@@ -79,21 +76,6 @@ struct CafeNoticeView: View {
             .padding(.vertical, 28)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    }
-
-    private func isNoticeExpandable(_ content: String) -> Bool {
-        let availableWidth = UIScreen.main.bounds.width - 64
-        guard availableWidth > 0 else { return false }
-
-        let font = UIFont.preferredFont(forTextStyle: .subheadline)
-        let attributes: [NSAttributedString.Key: Any] = [.font: font]
-        let boundingRect = (content as NSString).boundingRect(
-            with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: attributes,
-            context: nil
-        )
-        return boundingRect.height > font.lineHeight * 3.05
     }
 }
 

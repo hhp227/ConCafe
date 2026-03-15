@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
@@ -257,17 +263,24 @@ fun CafeContentScreen(
                             }
                         )
                     }
-                    item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            CafeTabContent(
-                                uiState = uiState,
-                                onAction = onAction
-                            )
+                    if (uiState.selectedTab == CafeUiState.TabType.NOTICES) {
+                        cafeNoticeTabItems(
+                            uiState = uiState,
+                            onAction = onAction
+                        )
+                    } else {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                CafeTabContent(
+                                    uiState = uiState,
+                                    onAction = onAction
+                                )
+                            }
                         }
                     }
                 } else if (uiState.isLoading) {
@@ -482,4 +495,56 @@ private fun formatRating(rating: Double): String {
     val whole = scaled / 10
     val decimal = scaled % 10
     return "$whole.$decimal"
+}
+
+private fun LazyListScope.cafeNoticeTabItems(
+    uiState: CafeUiState,
+    onAction: (CafeAction) -> Unit
+) {
+    item {
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+    if (uiState.notices.isEmpty()) {
+        item {
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                CafeNoticeScreen(
+                    notices = emptyList(),
+                    canLoadMore = false,
+                    isLoadingMore = false,
+                    onLoadMore = {}
+                )
+            }
+        }
+    } else {
+        items(
+            items = uiState.notices,
+            key = NoticeItem::id
+        ) { notice ->
+            var isExpanded by rememberSaveable(notice.id) {
+                mutableStateOf(false)
+            }
+
+            Box(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+                NoticeCard(
+                    notice = notice,
+                    isExpanded = isExpanded,
+                    onToggle = { isExpanded = !isExpanded },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        item {
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                NoticeLoadMoreFooter(
+                    canLoadMore = uiState.canLoadMoreNotices,
+                    isLoadingMore = uiState.isLoadingMoreNotices
+                )
+            }
+        }
+    }
+    item {
+        Spacer(modifier = Modifier.height(20.dp))
+    }
 }
