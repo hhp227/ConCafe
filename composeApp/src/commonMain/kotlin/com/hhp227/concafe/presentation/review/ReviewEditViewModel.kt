@@ -49,6 +49,7 @@ class ReviewEditViewModel(
                                 cafeName = detail.cafe.name,
                                 cafeAddress = detail.cafe.region.address,
                                 isLoggedIn = result.data.isLoggedIn,
+                                isVisitVerified = result.data.isVisitVerified,
                                 availableCastTags = detail.casts.map { cast ->
                                     ReviewEditUiState.CastTag(
                                         id = cast.id,

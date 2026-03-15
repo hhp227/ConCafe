@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -77,6 +78,7 @@ fun CafeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -87,6 +89,7 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                is CafeEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -99,7 +102,8 @@ fun CafeScreen(
     CafeContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
-        listState = listState
+        listState = listState,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -108,7 +112,8 @@ fun CafeScreen(
 fun CafeContentScreen(
     uiState: CafeUiState,
     onAction: (CafeAction) -> Unit,
-    listState: LazyListState
+    listState: LazyListState,
+    snackbarHostState: SnackbarHostState
 ) {
     val isTopBarVisible = uiState.detail != null && (
             listState.firstVisibleItemIndex > 1 ||
@@ -168,6 +173,7 @@ fun CafeContentScreen(
     }
     Scaffold(
         containerColor = colorFromHex("FFF9FC"),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

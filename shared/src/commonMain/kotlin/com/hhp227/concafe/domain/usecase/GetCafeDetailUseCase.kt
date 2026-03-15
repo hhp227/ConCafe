@@ -45,11 +45,38 @@ class GetCafeDetailUseCase(
             } else {
                 false
             }
+            val visitItemsByUserId = buildMap {
+                currentUser?.id?.let { userId ->
+                    put(
+                        userId,
+                        visitRepository.getVisits(userId = userId, cursor = null, pageSize = 20).items
+                    )
+                }
+
+                reviewPage.items
+                    .map { it.userId }
+                    .distinct()
+                    .filterNot { containsKey(it) }
+                    .forEach { userId ->
+                        put(
+                            userId,
+                            visitRepository.getVisits(userId = userId, cursor = null, pageSize = 20).items
+                        )
+                    }
+            }
+            val isVisitVerified = if (currentUser != null) {
+                visitItemsByUserId[currentUser.id]
+                    .orEmpty()
+                    .any { it.cafeId == cafeId && it.verified }
+            } else {
+                false
+            }
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
             val reviewItems = reviewPage.items.map { review ->
                 val user = userRepository.getUser(review.userId)
-                val visits = visitRepository.getVisits(userId = review.userId, cursor = null, pageSize = 20).items
-                val verified = visits.any { it.cafeId == cafeId && it.verified }
+                val verified = visitItemsByUserId[review.userId]
+                    .orEmpty()
+                    .any { it.cafeId == cafeId && it.verified }
                 val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                 CafeDetailReview(
@@ -72,7 +99,8 @@ class GetCafeDetailUseCase(
                     reviewsNextCursor = reviewPage.nextCursor,
                     canLoadMoreReviews = reviewPage.hasNext,
                     isFavorite = isFavorite,
-                    isLoggedIn = currentUser != null
+                    isLoggedIn = currentUser != null,
+                    isVisitVerified = isVisitVerified
                 )
             )
         } catch (e: NoSuchElementException) {

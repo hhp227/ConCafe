@@ -117,6 +117,7 @@ class CafeViewModel(
                     canLoadMoreReviews = result.data.canLoadMoreReviews,
                     isFavorite = result.data.isFavorite,
                     isLoggedIn = result.data.isLoggedIn,
+                    isVisitVerified = result.data.isVisitVerified,
                     shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn
                 )
                 refreshCastPage()
@@ -253,7 +254,13 @@ class CafeViewModel(
 
     private fun clickWriteReview() {
         viewModelScope.launch {
-            _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+            if (!_uiState.value.isLoggedIn) {
+                _event.emit(CafeEvent.NavigateToSignIn)
+            } else if (!_uiState.value.isVisitVerified) {
+                _event.emit(CafeEvent.ShowMessage("방문 인증 후 리뷰를 작성할 수 있어요. 먼저 체크인으로 방문을 인증해 주세요."))
+            } else {
+                _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+            }
         }
     }
 

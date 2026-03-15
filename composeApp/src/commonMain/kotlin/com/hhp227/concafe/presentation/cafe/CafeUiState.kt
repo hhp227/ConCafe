@@ -24,6 +24,7 @@ data class CafeUiState(
     val reviews: List<CafeDetailReview> = emptyList(),
     val isFavorite: Boolean = false,
     val isLoggedIn: Boolean = false,
+    val isVisitVerified: Boolean = false,
     val shouldScrollToTopOnReturn: Boolean = false
 ) {
     enum class TabType(val label: String) {

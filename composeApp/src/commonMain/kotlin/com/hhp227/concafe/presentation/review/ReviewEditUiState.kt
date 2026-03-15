@@ -19,7 +19,7 @@ data class ReviewEditUiState(
     val cafeName: String = "",
     val cafeAddress: String = "",
     val isLoggedIn: Boolean = false,
-    val isVisitVerified: Boolean = true,
+    val isVisitVerified: Boolean = false,
     val atmosphereAnswer: Boolean? = null,
     val isSubmitting: Boolean = false,
     val infoMessage: String? = null
