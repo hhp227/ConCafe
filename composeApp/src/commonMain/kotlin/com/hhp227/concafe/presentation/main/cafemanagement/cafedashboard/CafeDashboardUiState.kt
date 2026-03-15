@@ -8,11 +8,24 @@ data class CafeDashboardUiState(
     val cafe: CafeDashboardData? = null,
     val castPreviews: List<CafeCastPreview> = emptyList(),
     val pendingCastClaims: List<PendingCastClaimPreview> = emptyList(),
+    val externalLinks: List<CafeDashboardExternalLink> = emptyList(),
     val selectedCastId: String? = null,
     val nextCastCursor: String? = null,
     val hasMoreCasts: Boolean = false,
     val isLoadingMoreCasts: Boolean = false,
     val isDeleteCastDialogVisible: Boolean = false,
+    val isExternalLinkSheetVisible: Boolean = false,
+    val externalLinkTitle: String = "",
+    val externalLinkUrl: String = "",
     val isLoading: Boolean = true,
     val infoMessage: String? = null
+) {
+    val isExternalLinkSubmitEnabled: Boolean
+        get() = externalLinkTitle.isNotBlank() && externalLinkUrl.isNotBlank()
+}
+
+data class CafeDashboardExternalLink(
+    val id: String,
+    val title: String,
+    val url: String
 )

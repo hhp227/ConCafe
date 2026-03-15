@@ -10,6 +10,12 @@ import Foundation
 enum CafeDashboardAction {
     case clickBack
     case clickShortcut(CafeDashboardShortcut)
+    case dismissExternalLinkSheet
+    case changeExternalLinkTitle(String)
+    case changeExternalLinkUrl(String)
+    case submitExternalLink
+    case clickExternalLinkItem(String)
+    case clickDeleteExternalLink(String)
     case clickCastSchedule(String)
     case clickDeleteCast
     case confirmDeleteCast

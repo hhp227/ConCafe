@@ -8,7 +8,7 @@ import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { HomeViewModel(get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }

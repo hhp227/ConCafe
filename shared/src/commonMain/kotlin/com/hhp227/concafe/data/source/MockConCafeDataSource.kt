@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AppNotification
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeManagementData
@@ -20,6 +21,8 @@ import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Goods
@@ -292,10 +295,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     )
 
-    override val banners = listOf(
-        HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E"),
-        HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A"),
-        HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF")
+    override val banners = mutableListOf(
+        HomeBanner("banner-1", "3월 특별 이벤트", "F8A3C5", "F76C9E", subtitle = "3월 한정 혜택을 확인해보세요", cafeId = "cafe-1", targetType = BannerLinkTargetType.EVENT_DETAIL, targetValue = "event-management-1", displayDays = 7),
+        HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A", subtitle = "핑크 캐슬 신규 캐스트 소식을 확인하세요", cafeId = "cafe-2", targetType = BannerLinkTargetType.NOTICE, targetValue = "notice-management-2", displayDays = 5),
+        HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF", subtitle = "주말 예약 일정을 미리 확인하세요", cafeId = "cafe-3", targetType = BannerLinkTargetType.CAFE_DETAIL, targetValue = "cafe-3", displayDays = 3)
     )
 
     override val notices = mutableListOf(
@@ -346,6 +349,13 @@ class MockConCafeDataSource : ConCafeDataSource {
             )
         }
     }
+    private val castScheduleStatusByCastId = castSchedulesByCastId
+        .mapValues { (_, schedules) ->
+            schedules.associate { schedule ->
+                schedule.date to CastScheduleStatus.WORK
+            }.toMutableMap()
+        }
+        .toMutableMap()
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라가 응대도 좋고 전체 분위기도 정말 만족스러웠어요. 재방문 의사 있습니다.", emptyList(), listOf("maid-1"), 12, "2026-03-09T19:00:00Z"),
@@ -820,6 +830,67 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
     }
 
+    override fun castSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
+        castDetail(castId) ?: throw NoSuchElementException("cast detail not found")
+        return castSchedulesByCastId[castId]
+            .orEmpty()
+            .filter { it.date >= fromDate && it.date <= toDate }
+            .sortedBy { it.date }
+    }
+
+    override fun castScheduleStatuses(
+        castId: String,
+        fromDate: String,
+        toDate: String
+    ): Map<String, CastScheduleStatus> {
+        castDetail(castId) ?: throw NoSuchElementException("cast detail not found")
+        return castScheduleStatusByCastId[castId]
+            .orEmpty()
+            .filterKeys { date -> date >= fromDate && date <= toDate }
+            .toMap()
+    }
+
+    override fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
+        val cast = casts.firstOrNull { it.id == update.castId }
+            ?: throw NoSuchElementException("cast detail not found")
+        val date = update.date
+        val existingSchedules = castSchedulesByCastId[update.castId].orEmpty()
+        val nextSchedules = existingSchedules.filterNot { it.date == date }.toMutableList()
+        val nextStatuses = castScheduleStatusByCastId
+            .getOrPut(update.castId) { mutableMapOf() }
+
+        val updatedSchedule = when (update.status) {
+            CastScheduleStatus.WORK -> {
+                val startTime = update.startTime?.takeIf { it.isNotBlank() }
+                    ?: throw IllegalArgumentException("start time is required")
+                val endTime = update.endTime?.takeIf { it.isNotBlank() }
+                    ?: throw IllegalArgumentException("end time is required")
+                require(startTime < endTime) { "end time must be after start time" }
+                CastSchedule(
+                    id = existingSchedules.firstOrNull { it.date == date }?.id
+                        ?: "schedule-${update.castId}-${date.replace("-", "")}",
+                    castId = update.castId,
+                    cafeId = cast.cafeId,
+                    date = date,
+                    startTime = startTime,
+                    endTime = endTime
+                ).also { nextSchedules += it }
+            }
+            CastScheduleStatus.OFF,
+            CastScheduleStatus.VACATION -> null
+        }
+
+        castSchedulesByCastId[update.castId] = nextSchedules.sortedBy { it.date }
+        nextStatuses[date] = update.status
+        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
+            this[cast.cafeId] = (this[cast.cafeId] ?: 0) + 1
+        }
+        castVersionState.value = castVersionState.value.toMutableMap().apply {
+            this[update.castId] = (this[update.castId] ?: 0) + 1
+        }
+        return updatedSchedule
+    }
+
     override fun upsertCast(update: CastUpsert): CastDetail {
         if (update.name.isBlank()) {
             throw IllegalArgumentException("cast name is required")
@@ -872,6 +943,10 @@ class MockConCafeDataSource : ConCafeDataSource {
             castImagesById[castId] = listOfNotNull(nextCast.profileImage)
         }
         castSchedulesByCastId[castId] = buildCastSchedules(castId, targetCafeId, update.workingDays)
+        castScheduleStatusByCastId[castId] = castSchedulesByCastId[castId]
+            .orEmpty()
+            .associate { schedule -> schedule.date to CastScheduleStatus.WORK }
+            .toMutableMap()
         cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
             this[targetCafeId] = (this[targetCafeId] ?: 0) + 1
         }
@@ -896,6 +971,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         val deletedCast = casts.removeAt(castIndex)
         castImagesById.remove(castId)
         castSchedulesByCastId.remove(castId)
+        castScheduleStatusByCastId.remove(castId)
         castClaims.removeAll { it.castId == castId }
         followedCastIdsByUser.values.forEach { it.remove(castId) }
         deletedCast.linkedUserId?.let { linkedUserId ->

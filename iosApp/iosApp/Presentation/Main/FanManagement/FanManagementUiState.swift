@@ -34,6 +34,9 @@ struct FanManagementUiState {
         let headline: String
         let body: String
         let requestableCasts: [ClaimCandidate]
+        let nextCursor: String?
+        let canLoadMore: Bool
+        let isLoadingMore: Bool
         let selectedCastId: String?
         let canSubmit: Bool
         let isSubmitting: Bool

@@ -2,6 +2,7 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
@@ -51,6 +52,11 @@ class GetScheduleManagementDataUseCase(
                 fromDate = weekStart.toString(),
                 toDate = weekEnd.toString()
             ).associateBy { it.date }
+            val scheduleStatusByDate = castRepository.getCastScheduleStatuses(
+                castId = resolvedCastId,
+                fromDate = weekStart.toString(),
+                toDate = weekEnd.toString()
+            )
             val weekDates = (0..6).map { weekStart.plus(DatePeriod(days = it)) }
 
             AppResult.Success(
@@ -59,23 +65,34 @@ class GetScheduleManagementDataUseCase(
                     weekRangeLabel = "${weekStart.year}년 ${weekStart.monthNumber}월 ${weekStart.dayOfMonth}일 - ${weekEnd.monthNumber}월 ${weekEnd.dayOfMonth}일",
                     selectedDayId = today.toString(),
                     weekDays = weekDates.map { date ->
+                        val status = scheduleStatusByDate[date.toString()]
+                            ?: if (scheduleByDate.containsKey(date.toString())) CastScheduleStatus.WORK else CastScheduleStatus.OFF
                         ScheduleManagementWeekDay(
                             id = date.toString(),
                             label = "${date.dayOfMonth}(${date.toKoreanDayLabel()})",
                             number = date.dayOfMonth.toString(),
-                            isWorking = scheduleByDate.containsKey(date.toString())
+                            isWorking = status == CastScheduleStatus.WORK
                         )
                     },
                     daySchedules = weekDates.map { date ->
                         val schedule = scheduleByDate[date.toString()]
+                        val status = scheduleStatusByDate[date.toString()]
+                            ?: if (schedule != null) CastScheduleStatus.WORK else CastScheduleStatus.OFF
                         ScheduleManagementDaySchedule(
                             id = date.toString(),
                             title = "${date.monthNumber}월 ${date.dayOfMonth}일 (${date.toKoreanDayLabel()})",
-                            timeLabel = schedule?.let {
-                                "${it.startTime} - ${it.endTime} (${calculateHourLabel(it.startTime, it.endTime)})"
-                            } ?: "일정이 없습니다",
-                            statusLabel = if (schedule != null) "근무 중" else "휴무",
-                            isWorking = schedule != null
+                            timeLabel = if (status == CastScheduleStatus.WORK && schedule != null) {
+                                "${schedule.startTime} - ${schedule.endTime} (${calculateHourLabel(schedule.startTime, schedule.endTime)})"
+                            } else {
+                                "일정이 없습니다"
+                            },
+                            statusLabel = when (status) {
+                                CastScheduleStatus.WORK -> "근무 중"
+                                CastScheduleStatus.OFF -> "휴무"
+                                CastScheduleStatus.VACATION -> "휴가"
+                            },
+                            isWorking = status == CastScheduleStatus.WORK,
+                            status = status
                         )
                     }
                 )

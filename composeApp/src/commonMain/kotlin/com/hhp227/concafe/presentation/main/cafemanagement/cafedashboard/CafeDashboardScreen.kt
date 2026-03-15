@@ -31,13 +31,16 @@ import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
 import com.hhp227.concafe.di.resolveDeleteCastUseCase
 import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
 import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
+import com.hhp227.concafe.di.resolveObserveBannerEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
 import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
+import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CafeDashboardScreen(
     cafeId: String,
@@ -54,6 +57,7 @@ fun CafeDashboardScreen(
                     approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
                     rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
                     deleteCastUseCase = resolveDeleteCastUseCase(),
+                    observeBannerEventUseCase = resolveObserveBannerEventUseCase(),
                     observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
                     observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
                     observeCastEventUseCase = resolveObserveCastEventUseCase()
@@ -63,11 +67,15 @@ fun CafeDashboardScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val externalLinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
                 CafeDashboardEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                CafeDashboardEvent.NavigateToBannerEdit -> {
+                    onNavigationAction(NavigationAction.NavigateToBannerEdit(cafeId))
+                }
                 is CafeDashboardEvent.NavigateToCafeInfoEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCafeInfoEdit(event.cafeId))
                 }
@@ -82,6 +90,14 @@ fun CafeDashboardScreen(
                 }
                 is CafeDashboardEvent.NavigateToSchedule -> {
                     onNavigationAction(NavigationAction.NavigateToSchedule(event.castId))
+                }
+                is CafeDashboardEvent.NavigateToExternalLink -> {
+                    onNavigationAction(
+                        NavigationAction.NavigateToExternalLink(
+                            title = event.title,
+                            url = event.url
+                        )
+                    )
                 }
             }
         }
@@ -102,6 +118,19 @@ fun CafeDashboardScreen(
                 }
             }
         )
+    }
+    if (uiState.isExternalLinkSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissExternalLinkSheet) },
+            containerColor = Color(0xFFFFFBFD),
+            sheetState = externalLinkSheetState
+        ) {
+            ExternalLinkSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction,
+                onSubmit = { viewModel.onAction(CafeDashboardAction.SubmitExternalLink) }
+            )
+        }
     }
     CafeDashboardContentScreen(
         uiState = uiState,
@@ -216,6 +245,22 @@ private fun CafeDashboardContentScreen(
                             }
                         )
                     }
+                    if (uiState.externalLinks.isNotEmpty()) {
+                        item {
+                            ExternalLinkSection(
+                                links = uiState.externalLinks,
+                                onAddClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
+                                },
+                                onItemClick = { linkId ->
+                                    onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
+                                },
+                                onDeleteClick = { linkId ->
+                                    onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                                }
+                            )
+                        }
+                    }
                     item {
                         HomeBannerSection(
                             banner = cafe.homeBannerPreview,
@@ -223,6 +268,185 @@ private fun CafeDashboardContentScreen(
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
                             }
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExternalLinkSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit,
+    onSubmit: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .navigationBarsPadding()
+            .imePadding(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "외부 링크 추가",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF7A707A)
+        )
+        ConCafeFormField(
+            label = "제목",
+            value = uiState.externalLinkTitle,
+            onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkTitle(it)) },
+            placeholder = "예: 공식 X 계정"
+        )
+        ConCafeFormField(
+            label = "링크 URL",
+            value = uiState.externalLinkUrl,
+            onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkUrl(it)) },
+            placeholder = "https://"
+        )
+        Button(
+            onClick = onSubmit,
+            enabled = uiState.isExternalLinkSubmitEnabled,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330),
+                disabledContainerColor = Color(0xFFF4D7DF),
+                disabledContentColor = Color(0xFF7F7078)
+            )
+        ) {
+            Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("닫기")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExternalLinkSection(
+    links: List<CafeDashboardExternalLink>,
+    onAddClick: () -> Unit,
+    onItemClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "외부 링크",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF8C7A83)
+                    )
+                    Text(
+                        text = "앱 외부로 연결할 링크를 관리합니다.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7E7480)
+                    )
+                }
+                TextButton(onClick = onAddClick) {
+                    Text("추가", color = Color(0xFFEF6797))
+                }
+            }
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xFFFFFBFD),
+                border = BorderStroke(1.dp, Color(0xFFF0E6EC))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    links.forEach { link ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBFD)),
+                                border = BorderStroke(1.dp, Color(0xFFF0E6EC)),
+                                onClick = { onItemClick(link.id) }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .background(
+                                                Brush.linearGradient(
+                                                    colors = listOf(Color(0xFFFFD1DC), Color(0xFFFFE4EC))
+                                                ),
+                                                RoundedCornerShape(16.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Link,
+                                            contentDescription = null,
+                                            tint = Color.White
+                                        )
+                                    }
+                                    Text(
+                                        text = link.title,
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2B2330)
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { onDeleteClick(link.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "외부 링크 삭제",
+                                    tint = Color(0xFF8F848F)
+                                )
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = onAddClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD1DC),
+                            contentColor = Color(0xFF2B2330)
+                        )
+                    ) {
+                        Text("외부 링크 추가", fontWeight = FontWeight.Bold)
                     }
                 }
             }

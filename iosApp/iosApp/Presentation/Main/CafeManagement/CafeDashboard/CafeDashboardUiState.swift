@@ -12,11 +12,26 @@ struct CafeDashboardUiState {
     var cafe: CafeDashboardData?
     var castPreviews: [CafeCastPreview] = []
     var pendingCastClaims: [PendingCastClaimPreview] = []
+    var externalLinks: [CafeDashboardExternalLink] = []
     var selectedCastId: String?
     var nextCastCursor: String?
     var hasMoreCasts = false
     var isLoadingMoreCasts = false
     var isDeleteCastDialogVisible = false
+    var isExternalLinkSheetVisible = false
+    var externalLinkTitle = ""
+    var externalLinkUrl = ""
     var isLoading = true
     var infoMessage: String?
+
+    var isExternalLinkSubmitEnabled: Bool {
+        !externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+struct CafeDashboardExternalLink: Identifiable {
+    let id: String
+    let title: String
+    let url: String
 }

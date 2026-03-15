@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import Shared
 
 enum HomeAction {
+    case bannerTapped(HomeBanner)
     case maidTapped(id: String)
     case cafeTapped(id: String)
     case birthdayMaidTapped(id: String)

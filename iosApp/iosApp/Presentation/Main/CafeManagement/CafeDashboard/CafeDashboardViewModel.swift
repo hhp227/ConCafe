@@ -25,6 +25,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let deleteCastUseCase: DeleteCastUseCase
 
+    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
@@ -134,6 +136,8 @@ final class CafeDashboardViewModel: ObservableObject {
         switch shortcut {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
+        case .homeBanner:
+            event.send(.navigateToBannerEdit)
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
@@ -146,9 +150,56 @@ final class CafeDashboardViewModel: ObservableObject {
             event.send(.navigateToSchedule(castId: selectedCastId))
         case .castManagement:
             event.send(.navigateToCastEdit(cafeId: cafeId, castId: nil))
-        default:
-            uiState.infoMessage = "\(shortcut.title) 연결은 다음 단계에서 이어집니다."
+        case .externalLinks:
+            uiState.isExternalLinkSheetVisible = true
+            uiState.infoMessage = nil
         }
+    }
+
+    private func dismissExternalLinkSheet() {
+        uiState.isExternalLinkSheetVisible = false
+        uiState.externalLinkTitle = ""
+        uiState.externalLinkUrl = ""
+    }
+
+    private func changeExternalLinkTitle(_ value: String) {
+        uiState.externalLinkTitle = value
+    }
+
+    private func changeExternalLinkUrl(_ value: String) {
+        uiState.externalLinkUrl = value
+    }
+
+    private func submitExternalLink() {
+        guard uiState.isExternalLinkSubmitEnabled else {
+            uiState.infoMessage = "제목과 링크 URL을 모두 입력해 주세요."
+            return
+        }
+
+        let title = uiState.externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let url = uiState.externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isExternalLinkSheetVisible = false
+        uiState.externalLinks.insert(
+            CafeDashboardExternalLink(
+                id: "external-link-\(UUID().uuidString)",
+                title: title,
+                url: url
+            ),
+            at: 0
+        )
+        uiState.externalLinkTitle = ""
+        uiState.externalLinkUrl = ""
+        uiState.infoMessage = "외부 링크를 추가했습니다."
+    }
+
+    private func clickExternalLinkItem(_ linkId: String) {
+        guard let link = uiState.externalLinks.first(where: { $0.id == linkId }) else { return }
+        event.send(.navigateToExternalLink(title: link.title, url: link.url))
+    }
+
+    private func clickDeleteExternalLink(_ linkId: String) {
+        uiState.externalLinks.removeAll { $0.id == linkId }
+        uiState.infoMessage = "외부 링크를 삭제했습니다."
     }
 
     private func dismissInfoMessage() {
@@ -277,6 +328,18 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func observeBannerEvent() {
+        watchHandles[.bannerEvent]?.cancel()
+        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let created = event as? Shared.BannerEvent.Created, created.banner.cafeId == self.cafeId {
+                    self.loadCafeDashboard()
+                }
+            }
+        }
+    }
+
     private func patchCafeInfo(_ cafe: Cafe) {
         guard let current = uiState.cafe else { return }
         uiState.cafe = CafeDashboardData(
@@ -356,6 +419,18 @@ final class CafeDashboardViewModel: ObservableObject {
             clickBack()
         case .clickShortcut(let shortcut):
             clickShortcut(shortcut)
+        case .dismissExternalLinkSheet:
+            dismissExternalLinkSheet()
+        case .changeExternalLinkTitle(let value):
+            changeExternalLinkTitle(value)
+        case .changeExternalLinkUrl(let value):
+            changeExternalLinkUrl(value)
+        case .submitExternalLink:
+            submitExternalLink()
+        case .clickExternalLinkItem(let linkId):
+            clickExternalLinkItem(linkId)
+        case .clickDeleteExternalLink(let linkId):
+            clickDeleteExternalLink(linkId)
         case .clickCastSchedule(let castId):
             clickCastSchedule(castId)
         case .clickDeleteCast:
@@ -383,6 +458,7 @@ final class CafeDashboardViewModel: ObservableObject {
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
+        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
@@ -394,10 +470,12 @@ final class CafeDashboardViewModel: ObservableObject {
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
         self.deleteCastUseCase = deleteCastUseCase
+        self.observeBannerEventUseCase = observeBannerEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
 
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
@@ -410,6 +488,7 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private enum WatchKey {
+        case bannerEvent
         case cafeDetailEvent
         case castClaimEvent
         case castEvent

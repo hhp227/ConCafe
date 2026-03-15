@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
@@ -20,6 +21,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
@@ -33,6 +35,7 @@ class CafeDashboardViewModel(
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
+    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
@@ -146,6 +149,9 @@ class CafeDashboardViewModel(
             CafeDashboardShortcut.CAFE_SETTINGS -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
             }
+            CafeDashboardShortcut.HOME_BANNER -> viewModelScope.launch {
+                _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
+            }
             CafeDashboardShortcut.EVENT_MANAGEMENT -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
             }
@@ -167,11 +173,74 @@ class CafeDashboardViewModel(
                     }
                 }
             }
-            else -> {
+            CafeDashboardShortcut.EXTERNAL_LINKS -> {
                 _uiState.update {
-                    it.copy(infoMessage = "${shortcut.title} 연결은 다음 단계에서 이어집니다.")
+                    it.copy(
+                        isExternalLinkSheetVisible = true,
+                        infoMessage = null
+                    )
                 }
             }
+        }
+    }
+
+    private fun dismissExternalLinkSheet() {
+        _uiState.update {
+            it.copy(
+                isExternalLinkSheetVisible = false,
+                externalLinkTitle = "",
+                externalLinkUrl = ""
+            )
+        }
+    }
+
+    private fun changeExternalLinkTitle(value: String) {
+        _uiState.update { it.copy(externalLinkTitle = value) }
+    }
+
+    private fun changeExternalLinkUrl(value: String) {
+        _uiState.update { it.copy(externalLinkUrl = value) }
+    }
+
+    private fun submitExternalLink() {
+        val currentState = _uiState.value
+        if (!currentState.isExternalLinkSubmitEnabled) {
+            _uiState.update { it.copy(infoMessage = "제목과 링크 URL을 모두 입력해 주세요.") }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                externalLinks = listOf(
+                    CafeDashboardExternalLink(
+                        id = "external-link-${System.currentTimeMillis()}",
+                        title = currentState.externalLinkTitle.trim(),
+                        url = currentState.externalLinkUrl.trim()
+                    )
+                ) + it.externalLinks,
+                isExternalLinkSheetVisible = false,
+                externalLinkTitle = "",
+                externalLinkUrl = "",
+                infoMessage = "외부 링크를 추가했습니다."
+            )
+        }
+    }
+
+    private fun clickExternalLinkItem(linkId: String) {
+        val link = _uiState.value.externalLinks.firstOrNull { it.id == linkId } ?: return
+        viewModelScope.launch {
+            _event.emit(CafeDashboardEvent.NavigateToExternalLink(link.title, link.url))
+        }
+    }
+
+    private fun clickDeleteExternalLink(linkId: String) {
+        val hasItem = _uiState.value.externalLinks.any { it.id == linkId }
+        if (!hasItem) return
+        _uiState.update {
+            it.copy(
+                externalLinks = it.externalLinks.filterNot { item -> item.id == linkId },
+                infoMessage = "외부 링크를 삭제했습니다."
+            )
         }
     }
 
@@ -303,6 +372,19 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun observeBannerEvent() {
+        jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
+            observeBannerEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
+                        loadCafeDashboard()
+                    }
+                }
+            }
+        }
+    }
+
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
@@ -371,6 +453,12 @@ class CafeDashboardViewModel(
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
+            CafeDashboardAction.DismissExternalLinkSheet -> dismissExternalLinkSheet()
+            is CafeDashboardAction.ChangeExternalLinkTitle -> changeExternalLinkTitle(action.value)
+            is CafeDashboardAction.ChangeExternalLinkUrl -> changeExternalLinkUrl(action.value)
+            CafeDashboardAction.SubmitExternalLink -> submitExternalLink()
+            is CafeDashboardAction.ClickExternalLinkItem -> clickExternalLinkItem(action.linkId)
+            is CafeDashboardAction.ClickDeleteExternalLink -> clickDeleteExternalLink(action.linkId)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
             CafeDashboardAction.ClickDeleteCast -> clickDeleteCast()
             CafeDashboardAction.ConfirmDeleteCast -> confirmDeleteCast()
@@ -383,6 +471,7 @@ class CafeDashboardViewModel(
     }
 
     init {
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
@@ -396,6 +485,7 @@ class CafeDashboardViewModel(
     }
 
     private enum class TaskKey {
+        OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_CAST_CLAIM_EVENT

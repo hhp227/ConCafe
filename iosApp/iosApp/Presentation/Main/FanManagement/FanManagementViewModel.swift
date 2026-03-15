@@ -12,11 +12,18 @@ import Shared
 @MainActor
 final class FanManagementViewModel: ObservableObject {
     private let getFanManagementDataUseCase: GetFanManagementDataUseCase
+
     private let createCastClaimUseCase: CreateCastClaimUseCase
+
     private let getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase
+
+    private let getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase
+
     private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
+
+    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -81,8 +88,26 @@ final class FanManagementViewModel: ObservableObject {
         }
     }
 
+    private func bindScheduleManagementEvent(_ castId: String) {
+        watchHandles[.scheduleEvent]?.cancel()
+        watchHandles[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let event as Shared.ScheduleManagementEvent.Updated:
+                    if event.castId == castId {
+                        self.loadFanManagement()
+                    }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
     private func unbindCastEvent() {
         watchHandles.removeValue(forKey: .castEvent)?.cancel()
+        watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
     }
 
     private func setInfoMessage(_ message: String) {
@@ -103,7 +128,19 @@ final class FanManagementViewModel: ObservableObject {
                 if let success = claimResult as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.MyCastClaimStatus {
                     claimStatus = Self.toStatusCard(data)
-                    claimSheet = Self.toSheet(data)
+                    let initialPage: PagedResult<Shared.CastClaimCandidate>?
+                    if Self.shouldLoadRequestableCastPage(data) {
+                        let pageResult = try await getMyRequestableCastPageUseCase.invoke(cursor: nil)
+                        if let pageSuccess = pageResult as? AppResultSuccess<AnyObject>,
+                           let page = pageSuccess.data as? PagedResult<Shared.CastClaimCandidate> {
+                            initialPage = page
+                        } else {
+                            initialPage = nil
+                        }
+                    } else {
+                        initialPage = nil
+                    }
+                    claimSheet = Self.toSheet(data, initialCandidatePage: initialPage)
                 } else {
                     claimStatus = nil
                     claimSheet = nil
@@ -114,6 +151,7 @@ final class FanManagementViewModel: ObservableObject {
                    let data = success.data as? Shared.FanManagementData {
                     let cast = data.detail.cast
                     bindCastEvent(cast.id)
+                    bindScheduleManagementEvent(cast.id)
                     uiState = FanManagementUiState(
                         isLoading: false,
                         errorMessage: nil,
@@ -194,6 +232,81 @@ final class FanManagementViewModel: ObservableObject {
         uiState.infoMessage = nil
     }
 
+    private func loadMoreClaimCandidates() {
+        guard let sheet = uiState.castClaimSheet,
+              sheet.canLoadMore,
+              !sheet.isLoadingMore,
+              let cursor = sheet.nextCursor else { return }
+        uiState.castClaimSheet = .init(
+            affiliatedCafeId: sheet.affiliatedCafeId,
+            affiliatedCafeName: sheet.affiliatedCafeName,
+            headline: sheet.headline,
+            body: sheet.body,
+            requestableCasts: sheet.requestableCasts,
+            nextCursor: sheet.nextCursor,
+            canLoadMore: sheet.canLoadMore,
+            isLoadingMore: true,
+            selectedCastId: sheet.selectedCastId,
+            canSubmit: sheet.canSubmit,
+            isSubmitting: sheet.isSubmitting
+        )
+        Task {
+            do {
+                let result = try await getMyRequestableCastPageUseCase.invoke(cursor: cursor)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<Shared.CastClaimCandidate>,
+                   let current = uiState.castClaimSheet {
+                    uiState.castClaimSheet = .init(
+                        affiliatedCafeId: current.affiliatedCafeId,
+                        affiliatedCafeName: current.affiliatedCafeName,
+                        headline: current.headline,
+                        body: current.body,
+                        requestableCasts: current.requestableCasts + ((page.items as? [Shared.CastClaimCandidate]) ?? []).map {
+                            FanManagementUiState.ClaimCandidate(id: $0.castId, name: $0.castName)
+                        },
+                        nextCursor: page.nextCursor,
+                        canLoadMore: page.hasNext,
+                        isLoadingMore: false,
+                        selectedCastId: current.selectedCastId,
+                        canSubmit: current.canSubmit,
+                        isSubmitting: current.isSubmitting
+                    )
+                } else if let current = uiState.castClaimSheet {
+                    uiState.castClaimSheet = .init(
+                        affiliatedCafeId: current.affiliatedCafeId,
+                        affiliatedCafeName: current.affiliatedCafeName,
+                        headline: current.headline,
+                        body: current.body,
+                        requestableCasts: current.requestableCasts,
+                        nextCursor: current.nextCursor,
+                        canLoadMore: current.canLoadMore,
+                        isLoadingMore: false,
+                        selectedCastId: current.selectedCastId,
+                        canSubmit: current.canSubmit,
+                        isSubmitting: current.isSubmitting
+                    )
+                }
+            } catch {
+                if Task.isCancelled { return }
+                if let current = uiState.castClaimSheet {
+                    uiState.castClaimSheet = .init(
+                        affiliatedCafeId: current.affiliatedCafeId,
+                        affiliatedCafeName: current.affiliatedCafeName,
+                        headline: current.headline,
+                        body: current.body,
+                        requestableCasts: current.requestableCasts,
+                        nextCursor: current.nextCursor,
+                        canLoadMore: current.canLoadMore,
+                        isLoadingMore: false,
+                        selectedCastId: current.selectedCastId,
+                        canSubmit: current.canSubmit,
+                        isSubmitting: current.isSubmitting
+                    )
+                }
+            }
+        }
+    }
+
     private func selectClaimCandidate(_ castId: String) {
         guard let sheet = uiState.castClaimSheet else { return }
         uiState.castClaimSheet = .init(
@@ -202,6 +315,9 @@ final class FanManagementViewModel: ObservableObject {
             headline: sheet.headline,
             body: sheet.body,
             requestableCasts: sheet.requestableCasts,
+            nextCursor: sheet.nextCursor,
+            canLoadMore: sheet.canLoadMore,
+            isLoadingMore: sheet.isLoadingMore,
             selectedCastId: castId,
             canSubmit: true,
             isSubmitting: sheet.isSubmitting
@@ -220,6 +336,9 @@ final class FanManagementViewModel: ObservableObject {
             headline: sheet.headline,
             body: sheet.body,
             requestableCasts: sheet.requestableCasts,
+            nextCursor: sheet.nextCursor,
+            canLoadMore: sheet.canLoadMore,
+            isLoadingMore: sheet.isLoadingMore,
             selectedCastId: sheet.selectedCastId,
             canSubmit: sheet.canSubmit,
             isSubmitting: true
@@ -240,6 +359,9 @@ final class FanManagementViewModel: ObservableObject {
                             headline: current.headline,
                             body: current.body,
                             requestableCasts: current.requestableCasts,
+                            nextCursor: current.nextCursor,
+                            canLoadMore: current.canLoadMore,
+                            isLoadingMore: current.isLoadingMore,
                             selectedCastId: current.selectedCastId,
                             canSubmit: current.canSubmit,
                             isSubmitting: false
@@ -267,6 +389,8 @@ final class FanManagementViewModel: ObservableObject {
         switch action {
         case .clickClaimProfile:
             clickClaimProfile()
+        case .loadMoreClaimCandidates:
+            loadMoreClaimCandidates()
         case .selectClaimCandidate(let castId):
             selectClaimCandidate(castId)
         case .submitCastClaim:
@@ -295,15 +419,19 @@ final class FanManagementViewModel: ObservableObject {
         getFanManagementDataUseCase: GetFanManagementDataUseCase = KoinInitializerKt.resolveGetFanManagementDataUseCase(),
         createCastClaimUseCase: CreateCastClaimUseCase = KoinInitializerKt.resolveCreateCastClaimUseCase(),
         getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = KoinInitializerKt.resolveGetMyCastClaimStatusUseCase(),
+        getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = KoinInitializerKt.resolveGetMyRequestableCastPageUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
+        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
         self.createCastClaimUseCase = createCastClaimUseCase
         self.getMyCastClaimStatusUseCase = getMyCastClaimStatusUseCase
+        self.getMyRequestableCastPageUseCase = getMyRequestableCastPageUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
+        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
@@ -320,6 +448,7 @@ final class FanManagementViewModel: ObservableObject {
         case session
         case castClaimEvent
         case castEvent
+        case scheduleEvent
     }
 
     private static func toStatusCard(_ status: Shared.MyCastClaimStatus) -> FanManagementUiState.CastClaimStatusCard? {
@@ -352,7 +481,7 @@ final class FanManagementViewModel: ObservableObject {
                 accent: .rejected
             )
         }
-        if !(status.requestableCasts as? [Shared.CastClaimCandidate] ?? []).isEmpty {
+        if status.hasRequestableCasts {
             return .init(
                 affiliatedCafeId: cafeId,
                 affiliatedCafeName: cafeName,
@@ -370,27 +499,37 @@ final class FanManagementViewModel: ObservableObject {
         )
     }
 
-    private static func toSheet(_ status: Shared.MyCastClaimStatus) -> FanManagementUiState.CastClaimSheet? {
+    private static func toSheet(
+        _ status: Shared.MyCastClaimStatus,
+        initialCandidatePage: PagedResult<Shared.CastClaimCandidate>?
+    ) -> FanManagementUiState.CastClaimSheet? {
         guard let cafeId = status.affiliatedCafeId, let cafeName = status.affiliatedCafeName else { return nil }
-        let candidates = ((status.requestableCasts as? [Shared.CastClaimCandidate]) ?? []).map {
+        let initialCandidates = ((initialCandidatePage?.items as? [Shared.CastClaimCandidate]) ?? []).map {
             FanManagementUiState.ClaimCandidate(id: $0.castId, name: $0.castName)
         }
-        let selectedId = candidates.first?.id
+        let selectedId = initialCandidates.first?.id
         if status.hasLinkedProfile {
-            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "캐스트 프로필 연결 완료", body: "\(status.linkedCastName ?? "내 프로필")이(가) 이미 연결되어 있습니다.", requestableCasts: [], selectedCastId: nil, canSubmit: false, isSubmitting: false)
+            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "캐스트 프로필 연결 완료", body: "\(status.linkedCastName ?? "내 프로필")이(가) 이미 연결되어 있습니다.", requestableCasts: [], nextCursor: nil, canLoadMore: false, isLoadingMore: false, selectedCastId: nil, canSubmit: false, isSubmitting: false)
         }
         if let pending = status.pendingClaim {
-            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "승인 대기 중", body: "카페 운영자가 \(pending.createdAtLabel)에 접수된 요청을 확인 중입니다.", requestableCasts: [], selectedCastId: nil, canSubmit: false, isSubmitting: false)
+            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "승인 대기 중", body: "카페 운영자가 \(pending.createdAtLabel)에 접수된 요청을 확인 중입니다.", requestableCasts: [], nextCursor: nil, canLoadMore: false, isLoadingMore: false, selectedCastId: nil, canSubmit: false, isSubmitting: false)
         }
         return .init(
             affiliatedCafeId: cafeId,
             affiliatedCafeName: cafeName,
             headline: status.latestRejectedClaim == nil ? "캐스트 프로필 연결" : "다시 연결 요청하기",
             body: status.latestRejectedClaim == nil ? "연결할 캐스트 프로필을 선택하고 신청을 보내세요." : "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요.",
-            requestableCasts: candidates,
+            requestableCasts: initialCandidates,
+            nextCursor: initialCandidatePage?.nextCursor,
+            canLoadMore: initialCandidatePage?.hasNext ?? false,
+            isLoadingMore: false,
             selectedCastId: selectedId,
             canSubmit: selectedId != nil,
             isSubmitting: false
         )
+    }
+
+    private static func shouldLoadRequestableCastPage(_ status: Shared.MyCastClaimStatus) -> Bool {
+        !status.hasLinkedProfile && status.pendingClaim == nil && status.hasRequestableCasts
     }
 }

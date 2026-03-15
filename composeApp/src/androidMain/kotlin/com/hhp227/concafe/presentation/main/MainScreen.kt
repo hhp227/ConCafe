@@ -166,7 +166,7 @@ fun MainScreen(
                 CafeManagementScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.ADMIN_OPERATIONS.route) {
-                AdminOperationsScreen()
+                AdminOperationsScreen(onNavigationAction = onNavigationAction)
             }
             composable(MainNavigationTab.RANKING.route) {
                 RankingScreen(onNavigate = onNavigationAction)

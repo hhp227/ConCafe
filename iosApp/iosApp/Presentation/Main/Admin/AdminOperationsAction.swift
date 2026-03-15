@@ -10,6 +10,7 @@ import Foundation
 enum AdminOperationsAction {
     case clickNotifications
     case clickSeeAllPending
+    case clickBannerRegister
     case selectPendingFilter(PendingFilter)
     case approvePending(String)
     case rejectPending(String)

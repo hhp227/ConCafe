@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
     castId: String? = null,
@@ -38,6 +39,7 @@ fun ScheduleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -47,11 +49,208 @@ fun ScheduleScreen(
             }
         }
     }
+    if (uiState.isEditSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(ScheduleAction.DismissEditSheet) },
+            sheetState = editSheetState,
+            containerColor = Color.White
+        ) {
+            ScheduleEditSheet(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
     ScheduleContentScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
+}
+
+@Composable
+private fun ScheduleEditSheet(
+    uiState: ScheduleUiState,
+    onAction: (ScheduleAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(48.dp)
+                .height(5.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color(0xFFE5DDE2))
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("근무 시간 수정", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(uiState.editingScheduleTitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF7A707A))
+        }
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = Color(0xFFF8F5F6)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ScheduleEditStatus.values().forEach { status ->
+                    val selected = uiState.editStatus == status
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onAction(ScheduleAction.ChangeEditStatus(status)) },
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (selected) Color.White else Color.Transparent,
+                        shadowElevation = if (selected) 2.dp else 0.dp
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                status.label,
+                                color = if (selected) Color(0xFF24161E) else Color(0xFF7A707A),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            TimeDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "시작 시간",
+                value = uiState.editStartTime,
+                enabled = uiState.isEditingWorking,
+                options = uiState.timeOptions,
+                onSelect = { onAction(ScheduleAction.ChangeEditStartTime(it)) }
+            )
+            TimeDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "종료 시간",
+                value = uiState.editEndTime,
+                enabled = uiState.isEditingWorking,
+                options = uiState.timeOptions,
+                onSelect = { onAction(ScheduleAction.ChangeEditEndTime(it)) }
+            )
+        }
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0x1AFFD1DC),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFD1DC))
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFEF6797), modifier = Modifier.size(16.dp))
+                Text(
+                    "휴게 시간 1시간(12:00 - 13:00)이 자동으로 포함되어 총 근무 시간에서 제외됩니다.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF6B5A63)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("실제 근무 합계", color = Color(0xFF7A707A), fontWeight = FontWeight.Medium)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+                Text("총", color = Color(0xFF7A707A), style = MaterialTheme.typography.bodySmall)
+                Text(uiState.totalWorkDurationLabel, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            }
+        }
+        Button(
+            onClick = { onAction(ScheduleAction.SubmitEditDay) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC), contentColor = Color(0xFF24161E)),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            Text("편집 내용 반영하기", fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimeDropdownField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    enabled: Boolean,
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF7A707A))
+        ExposedDropdownMenuBox(
+            expanded = expanded && enabled,
+            onExpandedChange = { if (enabled) expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                enabled = enabled,
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                leadingIcon = {
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = Color(0xFFEF6797))
+                },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled)
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFF8F5F6),
+                    unfocusedContainerColor = Color(0xFFF8F5F6),
+                    disabledContainerColor = Color(0xFFF2EDF0),
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = expanded && enabled,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,6 +294,7 @@ private fun ScheduleContentScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .navigationBarsPadding(),
+                    enabled = uiState.hasPendingChanges && !uiState.isSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC)),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
@@ -102,7 +302,7 @@ private fun ScheduleContentScreen(
                     Icon(Icons.Default.Save, contentDescription = null, tint = Color(0xFF24161E))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "주간 시간표 저장하기",
+                        text = if (uiState.isSaving) "저장 중..." else "주간 시간표 저장하기",
                         color = Color(0xFF24161E),
                         fontWeight = FontWeight.Bold
                     )

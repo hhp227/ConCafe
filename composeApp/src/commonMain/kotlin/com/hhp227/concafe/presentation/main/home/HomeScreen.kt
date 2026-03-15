@@ -72,6 +72,12 @@ fun HomeScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
+                is HomeEvent.NavigateToExternalLink -> onNavigate(
+                    NavigationAction.NavigateToExternalLink(
+                        title = event.title,
+                        url = event.url
+                    )
+                )
                 is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
             }
@@ -125,7 +131,9 @@ fun HomeContentScreen(
                         val banner = uiState.banners[page]
 
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onAction(HomeAction.ClickBanner(banner)) },
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Box(

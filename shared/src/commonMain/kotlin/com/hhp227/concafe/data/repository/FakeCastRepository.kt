@@ -10,9 +10,12 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.ScheduleManagementEvent
 import com.hhp227.concafe.domain.repository.CastRepository
 
 class FakeCastRepository(
@@ -22,9 +25,17 @@ class FakeCastRepository(
         replay = 0,
         extraBufferCapacity = 1
     )
+    private val scheduleManagementEvent = MutableSharedFlow<ScheduleManagementEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
 
     override fun observeCastEvent(): Flow<CastEvent> {
         return castEvent
+    }
+
+    override fun observeScheduleManagementEvent(): Flow<ScheduleManagementEvent> {
+        return scheduleManagementEvent
     }
 
     override suspend fun searchCasts(
@@ -126,12 +137,25 @@ class FakeCastRepository(
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
-        val castDetail = dataSource.castDetail(castId)
+        return dataSource.castSchedules(castId, fromDate, toDate)
+    }
 
-        return if (castDetail != null) {
-            castDetail.schedule.filter { it.date >= fromDate && it.date <= toDate }
-        } else {
-            throw NoSuchElementException("cast detail not found")
+    override suspend fun getCastScheduleStatuses(
+        castId: String,
+        fromDate: String,
+        toDate: String
+    ): Map<String, CastScheduleStatus> {
+        return dataSource.castScheduleStatuses(castId, fromDate, toDate)
+    }
+
+    override suspend fun updateCastSchedule(update: CastScheduleUpdate): ScheduleManagementEvent {
+        dataSource.updateCastSchedule(update)
+        return ScheduleManagementEvent.Updated(
+            castId = update.castId,
+            date = update.date,
+            status = update.status
+        ).also { event ->
+            scheduleManagementEvent.tryEmit(event)
         }
     }
 

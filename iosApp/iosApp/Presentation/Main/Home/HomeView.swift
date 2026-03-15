@@ -26,6 +26,8 @@ struct HomeView: View {
         )
         .onReceive(viewModel.event) { event in
             switch event {
+            case .navigateToExternalLink(let title, let url):
+                onNavigationAction(.navigateToExternalLink(title: title, url: url))
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToCafe(let id):
@@ -88,6 +90,10 @@ private struct HomeContentView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .padding(.horizontal, 16)
+                    .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .onTapGesture {
+                        onAction(.bannerTapped(banner))
+                    }
                     .tag(index)
                 }
             }

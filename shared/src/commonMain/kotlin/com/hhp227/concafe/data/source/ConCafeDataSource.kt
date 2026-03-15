@@ -15,6 +15,9 @@ import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
@@ -36,7 +39,7 @@ interface ConCafeDataSource {
 
     val castClaims: MutableList<CastClaim>
 
-    val banners: List<HomeBanner>
+    val banners: MutableList<HomeBanner>
 
     val notices: MutableList<Notice>
 
@@ -97,6 +100,16 @@ interface ConCafeDataSource {
     fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail
 
     fun castDetail(castId: String): CastDetail?
+
+    fun castSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
+
+    fun castScheduleStatuses(
+        castId: String,
+        fromDate: String,
+        toDate: String
+    ): Map<String, CastScheduleStatus>
+
+    fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule?
 
     fun upsertCast(update: CastUpsert): CastDetail
 

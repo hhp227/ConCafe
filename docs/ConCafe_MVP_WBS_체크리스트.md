@@ -115,6 +115,10 @@
 - [x] 근처 카페 섹션
 - [x] 생일 메이드 섹션
 - [x] 최신 공지 3개 섹션
+- [x] 홈 배너 등록/반영이 shared 데이터 기준으로 동작
+- [x] 활성 배너 최대 5개 / 초과 시 `SCHEDULED` 정책 반영
+- [x] 예약 배너가 빈 슬롯 발생 시 자동 승격
+- [x] 외부 링크 배너 클릭 시 인앱 `ExternalLink` WebView 화면으로 이동
 - [ ] 섹션별 fallback 규칙 확정 (데이터 부족 시 숨김/대체 카드)
 
 ### 5-3. 탐색 탭
@@ -162,7 +166,7 @@
 - [x] `CafeManagementRepository`가 `ConCafeDataSource`를 원천 데이터로 사용하도록 정리
 - [x] 기존 카페 검색 결과에서 `이 카페 운영자 신청` 진입 가능
 - [x] 운영자 Claim `PENDING/APPROVED/REJECTED` 상태 카드 노출
-- [ ] 카페 설정 내 외부 링크 관리 섹션 제공
+- [x] 카페 대시보드 외부 링크 섹션 UI 제공
 - [ ] 카페 외부 링크 CRUD(`cafes/{cafeId}/externalLinks`)
 - [ ] 캐스트 외부 링크 CRUD(`cafes/{cafeId}/casts/{castId}/externalLinks`)
 - [x] 카페 대시보드에서 `카페 정보 관리` 화면으로 진입 가능
@@ -184,8 +188,16 @@
 - [x] 팬관리에서 캐스트 프로필 연결 신청 UI 제공
 - [x] 카페 대시보드 캐스트 관리 섹션에서 캐스트 연결 요청 승인/반려 가능
 - [x] 카페 대시보드에서 선택된 캐스트 프로필 삭제 가능
+- [x] 카페 대시보드 외부 링크 추가/삭제/인앱 WebView 이동 UI 구현
 - [x] 새 카페 등록은 카페 정보 입력 폼 재사용 + `cafeRegistrationClaims` 생성
 - [x] Admin 운영관리에서 기존 카페 운영자 신청 / 신규 카페 등록 신청 승인·반려 가능
+
+### 5-6-2. 출근표 관리
+- [x] 출근표 수정 바텀시트/모달 UI
+- [x] `근무 / 휴무 / 휴가` 상태 수정
+- [x] 출근표 수정 저장이 shared KMP 데이터에 실제 반영
+- [x] `ScheduleManagementEvent` explicit event로 화면 재조회 갱신
+- [ ] 출근표 전체 주간 일괄 저장 플로우
 
 ### 5-7. 리뷰
 - [ ] 방문 인증 사용자만 작성 가능

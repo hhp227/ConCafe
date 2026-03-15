@@ -5,6 +5,8 @@ sealed interface NavigationAction {
     data class NavigateToCast(val id: String) : NavigationAction
     data class NavigateToCafe(val id: String) : NavigationAction
     data class NavigateToCafeDashboard(val id: String) : NavigationAction
+    data class NavigateToBannerEdit(val cafeId: String? = null) : NavigationAction
+    data class NavigateToExternalLink(val title: String, val url: String) : NavigationAction
     data class NavigateToCafeInfoEdit(
         val id: String? = null,
         val isRegistrationMode: Boolean = false

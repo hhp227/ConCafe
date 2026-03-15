@@ -8,7 +8,7 @@ data class MyCastClaimStatus(
     val linkedCastName: String?,
     val pendingClaim: CastClaim?,
     val latestRejectedClaim: CastClaim?,
-    val requestableCasts: List<CastClaimCandidate>
+    val hasRequestableCasts: Boolean
 ) {
     val hasLinkedProfile: Boolean
         get() = linkedCastId != null

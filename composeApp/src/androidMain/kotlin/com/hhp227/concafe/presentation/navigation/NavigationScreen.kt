@@ -11,12 +11,14 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
+import com.hhp227.concafe.presentation.banner.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
@@ -88,6 +90,23 @@ fun NavigationScreen(
 
             CafeDashboardScreen(
                 cafeId = cafeDashboardRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.BannerEdit> { backStackEntry ->
+            val bannerEditRoute = backStackEntry.toRoute<Route.BannerEdit>()
+
+            BannerEditScreen(
+                initialCafeId = bannerEditRoute.cafeId,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.ExternalLink> { backStackEntry ->
+            val externalLinkRoute = backStackEntry.toRoute<Route.ExternalLink>()
+
+            ExternalLinkScreen(
+                title = externalLinkRoute.title,
+                url = externalLinkRoute.url,
                 onNavigationAction = viewModel::onAction
             )
         }

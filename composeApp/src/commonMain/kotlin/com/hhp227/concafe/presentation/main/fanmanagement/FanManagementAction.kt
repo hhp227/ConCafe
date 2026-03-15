@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.main.fanmanagement
 
 sealed interface FanManagementAction {
     data object ClickClaimProfile : FanManagementAction
+    data object LoadMoreClaimCandidates : FanManagementAction
     data class SelectClaimCandidate(val castId: String) : FanManagementAction
     data object SubmitCastClaim : FanManagementAction
     data object DismissClaimSheet : FanManagementAction

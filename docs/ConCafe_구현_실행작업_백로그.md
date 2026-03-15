@@ -258,6 +258,54 @@
   5. 뒤로가기 시 `MyInfo`로 복귀 규칙 확인
 - 메모:
   - 현재 범위에서는 설정 데이터 저장/동기화 기능을 만들지 않는다.
+
+### C-05. 홈 배너 운영 연결 (P0)
+- 우선순위: P0
+- 상태: DONE
+- 산출물: 관리자/운영자 배너 등록 플로우 + 홈 반영 + 클릭 라우팅
+- 작업:
+  1. 관리자/운영자에서 `새 배너 등록` 화면 진입 라우트 연결
+  2. 배너 등록 저장을 shared `CreateHomeBannerUseCase`에 연결
+  3. 홈 배너 조회를 shared 데이터 기준으로 통일
+  4. 활성 배너 최대 5개 슬롯 / 초과 시 `SCHEDULED` 정책 반영
+  5. `BannerEvent` explicit event로 홈/대시보드 즉시 갱신
+  6. 외부 링크 배너 클릭 시 인앱 외부 링크 화면으로 이동
+- AC:
+  - 배너 등록 후 이전 화면으로 복귀하고 홈/대시보드에 반영된다.
+  - 활성 슬롯이 5개 초과되면 신규 배너가 `SCHEDULED`로 저장된다.
+  - 외부 링크 배너 클릭 시 외부 브라우저가 아니라 앱 내부 WebView 화면이 열린다.
+
+### C-06. 카페 대시보드 외부 링크 섹션 (P1)
+- 우선순위: P1
+- 상태: DONE
+- 산출물: 외부 링크 입력 시트 + 카드 리스트 섹션
+- 작업:
+  1. 카페 대시보드의 `외부 링크` 버튼에서 제목/URL 입력 시트 연결
+  2. 입력폼은 공용 입력 컴포넌트로 통일
+  3. `소속 캐스트 관리`와 `홈 배너 관리` 사이에 외부 링크 섹션 추가
+  4. 링크 카드 탭 시 인앱 외부 링크 화면으로 이동
+  5. 삭제 아이콘으로 개별 링크 삭제
+- AC:
+  - 외부 링크가 있을 때만 섹션이 노출된다.
+  - URL은 목록에 직접 노출되지 않고 제목만 표시된다.
+  - 추가/삭제/이동이 Compose/iOS에서 동일 UX로 동작한다.
+- 메모:
+  - 현재 구현은 대시보드 화면 상태 기준이며 shared 영속 저장은 아직 연결하지 않았다.
+
+### C-07. 출근표 수정 저장 및 explicit event 반영 (P0)
+- 우선순위: P0
+- 상태: DONE
+- 산출물: shared 출근표 수정 저장 경로 + UI explicit event 갱신
+- 작업:
+  1. `CastRepository`에 출근표 상태 조회/수정/이벤트 관찰 계약 추가
+  2. `UpdateCastScheduleUseCase`, `ObserveScheduleManagementEventUseCase` 추가
+  3. `MockConCafeDataSource`에서 날짜별 `WORK/OFF/VACATION` 및 시간 저장
+  4. Compose/iOS `ScheduleViewModel`에서 저장 시 shared use case 호출
+  5. 저장 성공 후 `ScheduleManagementEvent.Updated`를 구독해 재조회
+- AC:
+  - 출근표 수정은 화면 로컬 상태가 아니라 shared KMP 데이터에 저장된다.
+  - 저장 결과가 Compose/iOS 양쪽에서 explicit event로 다시 반영된다.
+  - `휴무`, `휴가` 상태도 재조회 후 유지된다.
   - 이번 단계는 화면 추가와 네비게이션 연결만 수행한다.
 - AC:
   - 마이 페이지에서 설정 화면으로 이동할 수 있다.

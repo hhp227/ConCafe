@@ -13,6 +13,8 @@ import Shared
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
@@ -94,6 +96,16 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func observeBannerEvent() {
+        watchHandles[.bannerEvent]?.cancel()
+        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                self.loadHomeFeed()
+            }
+        }
+    }
+
     private func observeCastEvent() {
         watchHandles[.castEvent]?.cancel()
         watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
@@ -151,6 +163,8 @@ final class HomeViewModel: ObservableObject {
 
     func onAction(_ action: HomeAction) {
         switch action {
+        case .bannerTapped(let banner):
+            handleBannerTap(banner)
         case .maidTapped(let id):
             event.send(.navigateToCast(id: id))
         case .birthdayMaidTapped(let id):
@@ -167,15 +181,34 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func handleBannerTap(_ banner: HomeBanner) {
+        switch banner.targetType {
+        case .externalLink:
+            if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                event.send(.navigateToExternalLink(title: banner.title, url: banner.targetValue))
+            }
+        case .cafeDetail, .eventDetail, .notice:
+            let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
+            if let cafeId, !cafeId.isEmpty {
+                event.send(.navigateToCafe(id: cafeId))
+            }
+        default:
+            break
+        }
+    }
+
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.observeBannerEventUseCase = observeBannerEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
         
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
@@ -188,6 +221,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private enum WatchKey {
+        case bannerEvent
         case cafeDetailEvent
         case castEvent
     }

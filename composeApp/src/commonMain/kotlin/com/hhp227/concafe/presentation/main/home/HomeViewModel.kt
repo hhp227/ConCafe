@@ -12,17 +12,22 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
     private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase
 ) : ViewModel() {
@@ -96,6 +101,17 @@ class HomeViewModel(
         }
     }
 
+    private fun observeBannerEvent() {
+        jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
+            observeBannerEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is BannerEvent.Created -> loadHomeFeed()
+                }
+            }
+        }
+    }
+
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
@@ -144,10 +160,34 @@ class HomeViewModel(
     fun onAction(action: HomeAction) {
         viewModelScope.launch {
             when (action) {
+                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
                 is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
                 is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafe(action.id))
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
+            }
+        }
+    }
+
+    private suspend fun handleBannerClick(banner: HomeBanner) {
+        when (banner.targetType) {
+            BannerLinkTargetType.EXTERNAL_LINK -> {
+                if (banner.targetValue.isNotBlank()) {
+                    _event.emit(
+                        HomeEvent.NavigateToExternalLink(
+                            title = banner.title,
+                            url = banner.targetValue
+                        )
+                    )
+                }
+            }
+            BannerLinkTargetType.CAFE_DETAIL,
+            BannerLinkTargetType.EVENT_DETAIL,
+            BannerLinkTargetType.NOTICE -> {
+                val cafeId = banner.cafeId ?: banner.targetValue.takeIf { banner.targetType == BannerLinkTargetType.CAFE_DETAIL }
+                if (!cafeId.isNullOrBlank()) {
+                    _event.emit(HomeEvent.NavigateToCafe(cafeId))
+                }
             }
         }
     }
@@ -159,12 +199,14 @@ class HomeViewModel(
     }
 
     init {
+        observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
     }
 
     private enum class TaskKey {
+        OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT
     }

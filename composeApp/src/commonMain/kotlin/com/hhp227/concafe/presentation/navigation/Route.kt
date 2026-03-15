@@ -20,6 +20,12 @@ sealed interface Route {
     data class CafeDashboard(val param: String) : Route
 
     @Serializable
+    data class BannerEdit(val cafeId: String? = null) : Route
+
+    @Serializable
+    data class ExternalLink(val title: String, val url: String) : Route
+
+    @Serializable
     data class CafeInfoEdit(
         val param: String? = null,
         val isRegistrationMode: Boolean = false

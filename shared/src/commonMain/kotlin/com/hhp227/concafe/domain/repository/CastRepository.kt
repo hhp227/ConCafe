@@ -8,12 +8,17 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastEvent
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.ScheduleManagementEvent
 
 interface CastRepository {
     fun observeCastEvent(): Flow<CastEvent>
+
+    fun observeScheduleManagementEvent(): Flow<ScheduleManagementEvent>
 
     suspend fun searchCasts(
         query: String?,
@@ -39,6 +44,14 @@ interface CastRepository {
     suspend fun deleteCast(castId: String): Cast
 
     suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule>
+
+    suspend fun getCastScheduleStatuses(
+        castId: String,
+        fromDate: String,
+        toDate: String
+    ): Map<String, CastScheduleStatus>
+
+    suspend fun updateCastSchedule(update: CastScheduleUpdate): ScheduleManagementEvent
 
     suspend fun isFollowing(userId: String, castId: String): Boolean
 

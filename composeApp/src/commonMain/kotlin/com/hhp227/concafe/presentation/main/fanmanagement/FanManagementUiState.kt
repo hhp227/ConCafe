@@ -28,6 +28,9 @@ data class FanManagementUiState(
         val headline: String,
         val body: String,
         val requestableCasts: List<ClaimCandidate> = emptyList(),
+        val nextCursor: String? = null,
+        val canLoadMore: Boolean = false,
+        val isLoadingMore: Boolean = false,
         val selectedCastId: String? = null,
         val canSubmit: Boolean = false,
         val isSubmitting: Boolean = false
