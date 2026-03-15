@@ -3,6 +3,8 @@ package com.hhp227.concafe.domain.model
 data class HomeFeed(
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
+    val popularCastsNextCursor: String?,
+    val hasMorePopularCasts: Boolean,
     val nearbyCafes: List<Cafe>,
     val nearbyCafesNextCursor: String?,
     val hasMoreNearbyCafes: Boolean,

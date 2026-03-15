@@ -17,6 +17,7 @@ class GetHomeFeedUseCase(
     private val noticeRepository: NoticeRepository
 ) {
     suspend operator fun invoke(
+        popularCastCursor: String? = null,
         nearbyCafeCursor: String? = null
     ): AppResult<HomeFeed> {
         return try {
@@ -28,14 +29,10 @@ class GetHomeFeedUseCase(
                 cursor = nearbyCafeCursor,
                 pageSize = NEARBY_CAFE_PAGE_SIZE
             )
-            val popularCasts = castRepository.searchCasts(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.POPULAR,
-                cursor = null,
-                pageSize = HOME_FEED_LIMIT
-            ).items
+            val popularCastPage = castRepository.getHomePopularCastPage(
+                cursor = popularCastCursor,
+                pageSize = POPULAR_CAST_PAGE_SIZE
+            )
             val birthdayCasts = castRepository.searchCasts(
                 query = null,
                 country = null,
@@ -51,7 +48,9 @@ class GetHomeFeedUseCase(
             AppResult.Success(
                 HomeFeed(
                     banners = bannerRepository.getHomeBanners(HOME_FEED_LIMIT),
-                    popularCasts = popularCasts,
+                    popularCasts = popularCastPage.items,
+                    popularCastsNextCursor = popularCastPage.nextCursor,
+                    hasMorePopularCasts = popularCastPage.hasNext,
                     nearbyCafes = nearbyCafePage.items,
                     nearbyCafesNextCursor = nearbyCafePage.nextCursor,
                     hasMoreNearbyCafes = nearbyCafePage.hasNext,
@@ -70,6 +69,7 @@ class GetHomeFeedUseCase(
 
     companion object {
         private const val HOME_FEED_LIMIT = 6
+        private const val POPULAR_CAST_PAGE_SIZE = 10
         private const val NEARBY_CAFE_PAGE_SIZE = 6
     }
 }

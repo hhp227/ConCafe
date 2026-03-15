@@ -10,9 +10,13 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
+    val popularCastCursor: String? = null,
+    val canLoadMorePopularCasts: Boolean,
+    val isLoadingMorePopularCasts: Boolean = false,
     val nearbyCafes: List<Cafe>,
     val nearbyCafeCursor: String? = null,
     val canLoadMoreNearbyCafes: Boolean,
+    val isLoadingMoreNearbyCafes: Boolean = false,
     val birthdayCasts: List<Cast>,
     val notices: List<Notice>
 ) {
@@ -20,9 +24,13 @@ data class HomeUiState(
         fun empty() = HomeUiState(
             banners = emptyList(),
             popularCasts = emptyList(),
+            popularCastCursor = null,
+            canLoadMorePopularCasts = false,
+            isLoadingMorePopularCasts = false,
             nearbyCafes = emptyList(),
             nearbyCafeCursor = null,
             canLoadMoreNearbyCafes = false,
+            isLoadingMoreNearbyCafes = false,
             birthdayCasts = emptyList(),
             notices = emptyList()
         )

@@ -31,16 +31,20 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
-                let result = try await getHomeFeedUseCase.invoke(nearbyCafeCursor: nil)
+                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
 
                 if let success = result as? AppResultSuccess<AnyObject> {
                     if let feed = success.data as? Shared.HomeFeed {
                         uiState = HomeUiState(
                             banners: feed.banners,
                             popularCasts: feed.popularCasts,
+                            popularCastCursor: feed.popularCastsNextCursor,
+                            canLoadMorePopularCasts: feed.hasMorePopularCasts,
+                            isLoadingMorePopularCasts: false,
                             nearbyCafes: feed.nearbyCafes,
                             nearbyCafeCursor: feed.nearbyCafesNextCursor,
                             canLoadMoreNearbyCafes: feed.hasMoreNearbyCafes,
+                            isLoadingMoreNearbyCafes: false,
                             birthdayCasts: feed.birthdayCasts,
                             notices: feed.notices
                         )
@@ -58,30 +62,156 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func loadMoreNearbyCafes() async {
-        let cursor = uiState.nearbyCafeCursor
-        let canLoadMoreNearbyCafes = uiState.canLoadMoreNearbyCafes
+    private func loadPopularCastPage(cursor: String?, append: Bool) {
+        loadTask?.cancel()
+        loadTask = Task {
+            uiState = HomeUiState(
+                banners: uiState.banners,
+                popularCasts: uiState.popularCasts,
+                popularCastCursor: uiState.popularCastCursor,
+                canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                isLoadingMorePopularCasts: append,
+                nearbyCafes: uiState.nearbyCafes,
+                nearbyCafeCursor: uiState.nearbyCafeCursor,
+                canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                birthdayCasts: uiState.birthdayCasts,
+                notices: uiState.notices
+            )
 
-        if let cursor, canLoadMoreNearbyCafes {
             do {
-                let result = try await getHomeFeedUseCase.invoke(nearbyCafeCursor: cursor)
+                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: cursor, nearbyCafeCursor: nil)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let feed = success.data as? Shared.HomeFeed {
                     uiState = HomeUiState(
                         banners: uiState.banners,
+                        popularCasts: append ? (uiState.popularCasts + feed.popularCasts) : feed.popularCasts,
+                        popularCastCursor: feed.popularCastsNextCursor,
+                        canLoadMorePopularCasts: feed.hasMorePopularCasts,
+                        isLoadingMorePopularCasts: false,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                } else {
+                    uiState = HomeUiState(
+                        banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
-                        nearbyCafes: uiState.nearbyCafes + feed.nearbyCafes,
-                        nearbyCafeCursor: feed.nearbyCafesNextCursor,
-                        canLoadMoreNearbyCafes: feed.hasMoreNearbyCafes,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: false,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices
                     )
                 }
             } catch {
                 if Task.isCancelled { return }
+                uiState = HomeUiState(
+                    banners: uiState.banners,
+                    popularCasts: uiState.popularCasts,
+                    popularCastCursor: uiState.popularCastCursor,
+                    canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                    isLoadingMorePopularCasts: false,
+                    nearbyCafes: uiState.nearbyCafes,
+                    nearbyCafeCursor: uiState.nearbyCafeCursor,
+                    canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                    isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                    birthdayCasts: uiState.birthdayCasts,
+                    notices: uiState.notices
+                )
             }
         }
+    }
+
+    private func loadMorePopularCasts() {
+        guard uiState.canLoadMorePopularCasts,
+              !uiState.isLoadingMorePopularCasts,
+              let cursor = uiState.popularCastCursor else { return }
+        loadPopularCastPage(cursor: cursor, append: true)
+    }
+
+    private func loadNearbyCafePage(cursor: String?, append: Bool) {
+        loadTask?.cancel()
+        loadTask = Task {
+            uiState = HomeUiState(
+                banners: uiState.banners,
+                popularCasts: uiState.popularCasts,
+                popularCastCursor: uiState.popularCastCursor,
+                canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                nearbyCafes: uiState.nearbyCafes,
+                nearbyCafeCursor: uiState.nearbyCafeCursor,
+                canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                isLoadingMoreNearbyCafes: append,
+                birthdayCasts: uiState.birthdayCasts,
+                notices: uiState.notices
+            )
+
+            do {
+                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: cursor)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? Shared.HomeFeed {
+                    uiState = HomeUiState(
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: append ? (uiState.nearbyCafes + feed.nearbyCafes) : feed.nearbyCafes,
+                        nearbyCafeCursor: feed.nearbyCafesNextCursor,
+                        canLoadMoreNearbyCafes: feed.hasMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: false,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                } else {
+                    uiState = HomeUiState(
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: false,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState = HomeUiState(
+                    banners: uiState.banners,
+                    popularCasts: uiState.popularCasts,
+                    popularCastCursor: uiState.popularCastCursor,
+                    canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                    isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                    nearbyCafes: uiState.nearbyCafes,
+                    nearbyCafeCursor: uiState.nearbyCafeCursor,
+                    canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                    isLoadingMoreNearbyCafes: false,
+                    birthdayCasts: uiState.birthdayCasts,
+                    notices: uiState.notices
+                )
+            }
+        }
+    }
+
+    private func loadMoreNearbyCafes() {
+        guard uiState.canLoadMoreNearbyCafes,
+              !uiState.isLoadingMoreNearbyCafes,
+              let cursor = uiState.nearbyCafeCursor else { return }
+        loadNearbyCafePage(cursor: cursor, append: true)
     }
 
     private func observeCafeDetailEvent() {
@@ -127,11 +257,15 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts,
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
             nearbyCafes: uiState.nearbyCafes.map { item in
                 item.id == cafe.id ? cafe : item
             },
             nearbyCafeCursor: uiState.nearbyCafeCursor,
             canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices
         )
@@ -141,9 +275,13 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.map { $0.id == cast.id ? cast : $0 },
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
             nearbyCafes: uiState.nearbyCafes,
             nearbyCafeCursor: uiState.nearbyCafeCursor,
             canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.map { $0.id == cast.id ? cast : $0 },
             notices: uiState.notices
         )
@@ -153,9 +291,13 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.filter { $0.id != castId },
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
             nearbyCafes: uiState.nearbyCafes,
             nearbyCafeCursor: uiState.nearbyCafeCursor,
             canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.filter { $0.id != castId },
             notices: uiState.notices
         )
@@ -171,13 +313,10 @@ final class HomeViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .cafeTapped(let id):
             event.send(.navigateToCafe(id: id))
+        case .loadMorePopularCasts:
+            loadMorePopularCasts()
         case .loadMoreNearbyCafes:
-            if uiState.canLoadMoreNearbyCafes {
-                loadTask?.cancel()
-                loadTask = Task {
-                    await loadMoreNearbyCafes()
-                }
-            }
+            loadMoreNearbyCafes()
         }
     }
 

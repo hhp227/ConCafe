@@ -29,6 +29,8 @@ interface CastRepository {
         pageSize: Int
     ): PagedResult<Cast>
 
+    suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast>
+
     suspend fun getCastDetail(castId: String): CastDetail
 
     suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview>

@@ -11,18 +11,26 @@ import Shared
 struct HomeUiState {
     let banners: [HomeBanner]
     let popularCasts: [Cast]
+    let popularCastCursor: String?
+    let canLoadMorePopularCasts: Bool
+    let isLoadingMorePopularCasts: Bool
     let nearbyCafes: [Cafe]
     let nearbyCafeCursor: String?
     let canLoadMoreNearbyCafes: Bool
+    let isLoadingMoreNearbyCafes: Bool
     let birthdayCasts: [Cast]
     let notices: [Notice]
 
     static let empty = HomeUiState(
         banners: [],
         popularCasts: [],
+        popularCastCursor: nil,
+        canLoadMorePopularCasts: false,
+        isLoadingMorePopularCasts: false,
         nearbyCafes: [],
         nearbyCafeCursor: nil,
         canLoadMoreNearbyCafes: false,
+        isLoadingMoreNearbyCafes: false,
         birthdayCasts: [],
         notices: []
     )

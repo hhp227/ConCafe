@@ -1044,6 +1044,13 @@ class MockConCafeDataSource : ConCafeDataSource {
             }
     }
 
+    override fun homePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
+        val cappedCasts = casts
+            .sortedByDescending { it.followerCount }
+            .take(HOME_POPULAR_CAST_MAX_COUNT)
+        return toPaged(cappedCasts, cursor, pageSize)
+    }
+
     override fun verifyVisitResult(cafeId: String, latitude: Double, longitude: Double): VisitVerificationResult {
         val cafe = cafes.firstOrNull { it.id == cafeId }
         val cafeLat = cafe?.region?.location?.latitude ?: latitude
@@ -1076,6 +1083,10 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     private fun Double.toRadians(): Double {
         return this * PI / 180.0
+    }
+
+    private companion object {
+        private const val HOME_POPULAR_CAST_MAX_COUNT = 50
     }
 }
 

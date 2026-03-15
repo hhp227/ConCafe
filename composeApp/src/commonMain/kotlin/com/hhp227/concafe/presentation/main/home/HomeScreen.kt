@@ -188,7 +188,12 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("인기 메이드", Icons.Default.Favorite)
+            SectionTitle(
+                text = "인기 캐스트",
+                leading = Icons.Default.Favorite,
+                actionLabel = if (uiState.canLoadMorePopularCasts) "더보기" else null,
+                onAction = { onAction(HomeAction.LoadMorePopularCasts) }
+            )
             Spacer(Modifier.height(10.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),

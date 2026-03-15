@@ -113,7 +113,12 @@ private struct HomeContentView: View {
 
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "heart.fill", title: "인기 메이드")
+            SectionTitle(
+                icon: "heart.fill",
+                title: "인기 캐스트",
+                actionTitle: uiState.canLoadMorePopularCasts ? "더보기" : nil,
+                onAction: { onAction(.loadMorePopularCasts) }
+            )
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(uiState.popularCasts, id: \.id) { maid in
