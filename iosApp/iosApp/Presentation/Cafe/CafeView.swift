@@ -119,10 +119,11 @@ private struct CafeContentView: View {
     private var offsetReader: some View {
         GeometryReader { proxy in
             Color.clear
-            .preference(
-                key: CafeScrollOffsetPreferenceKey.self,
-                value: proxy.frame(in: .named("cafeScroll")).minY
-            )
+                .id(topAnchorId)
+                .preference(
+                    key: CafeScrollOffsetPreferenceKey.self,
+                    value: proxy.frame(in: .named("cafeScroll")).minY
+                )
         }
         .frame(height: 0)
     }
@@ -131,9 +132,6 @@ private struct CafeContentView: View {
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Color.clear
-                    .frame(height: topSafeArea)
-                    .id(topAnchorId)
                 heroSection(detail: detail, topSafeArea: topSafeArea)
                 .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
