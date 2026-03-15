@@ -73,8 +73,6 @@ private struct SettingsContentView: View {
                 .onTapGesture {
                     onAction(.signOutTapped)
                 }
-            } header: {
-                Text("내정보 탭에서 진입한 설정")
             }
             if let errorMessage = uiState.errorMessage {
                 Section {

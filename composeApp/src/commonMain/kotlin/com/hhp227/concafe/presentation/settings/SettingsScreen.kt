@@ -113,13 +113,6 @@ private fun SettingsContentScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item {
-            Text(
-                text = "내정보 탭의 설정 바로가기에서 진입한 화면입니다.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7C7480)
-            )
-        }
         if (uiState.errorMessage != null) {
             item {
                 Text(
