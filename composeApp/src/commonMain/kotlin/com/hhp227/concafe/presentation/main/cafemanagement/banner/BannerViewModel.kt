@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.main.banner
+package com.hhp227.concafe.presentation.main.cafemanagement.banner
 
 import androidx.lifecycle.ViewModel
 
