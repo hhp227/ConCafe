@@ -12,7 +12,6 @@ struct CafeView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeViewModel
-    @State private var alertMessage: String?
 
     private let topAnchorId = "CAFE_TOP"
 
@@ -34,8 +33,6 @@ struct CafeView: View {
                     onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
-                case .showMessage(let message):
-                    alertMessage = message
                 }
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
@@ -46,16 +43,6 @@ struct CafeView: View {
                         proxy.scrollTo(topAnchorId, anchor: .top)
                     }
                 }
-            }
-            .alert("안내", isPresented: Binding(
-                get: { alertMessage != nil },
-                set: { if !$0 { alertMessage = nil } }
-            )) {
-                Button("확인", role: .cancel) {
-                    alertMessage = nil
-                }
-            } message: {
-                Text(alertMessage ?? "")
             }
         }
     }

@@ -250,8 +250,6 @@ final class CafeViewModel: ObservableObject {
     private func writeReview() {
         if !uiState.isLoggedIn {
             event.send(.navigateToSignIn)
-        } else if !uiState.isVisitVerified {
-            event.send(.showMessage("방문 인증 후 리뷰를 작성할 수 있어요. 먼저 체크인으로 방문을 인증해 주세요."))
         } else {
             event.send(.navigateToReviewEdit(cafeId: cafeId))
         }

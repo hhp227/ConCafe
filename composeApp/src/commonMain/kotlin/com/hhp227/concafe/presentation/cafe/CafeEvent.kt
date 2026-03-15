@@ -8,6 +8,4 @@ sealed interface CafeEvent {
     data class NavigateToReviewEdit(val cafeId: String) : CafeEvent
 
     data object NavigateToSignIn : CafeEvent
-
-    data class ShowMessage(val message: String) : CafeEvent
 }
