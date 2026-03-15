@@ -1208,13 +1208,34 @@ private fun buildCafeEventManagementItems(): List<CafeEventManagementItem> {
     return cafe1 + cafe2 + cafe3
 }
 
-private val maidHouseAdditionalCasts = listOf(
-    "아카리", "하즈키", "마리", "코코", "루루", "시온", "히나", "노아", "세이라", "유즈",
-    "린", "모모", "아오이", "하나", "이오리", "카논", "리리", "마호", "네네", "스즈",
-    "미나", "카에데", "치카", "에리", "미오", "세나", "우이", "호노카", "리코", "유나",
-    "사나", "코하루", "아야", "츠키", "루나", "미레", "키라", "토와", "미호", "유리",
-    "아린", "나기사", "시로", "아이", "유카", "리사", "미카", "하루"
-).mapIndexed { index, name ->
+private val maidHouseAdditionalCastNames = buildList {
+    addAll(
+        listOf(
+            "아카리", "하즈키", "마리", "코코", "루루", "시온", "히나", "노아", "세이라", "유즈",
+            "린", "모모", "아오이", "하나", "이오리", "카논", "리리", "마호", "네네", "스즈",
+            "미나", "카에데", "치카", "에리", "미오", "세나", "우이", "호노카", "리코", "유나",
+            "사나", "코하루", "아야", "츠키", "루나", "미레", "키라", "토와", "미호", "유리",
+            "아린", "나기사", "시로", "아이", "유카", "리사", "미카", "하루"
+        )
+    )
+
+    val firstParts = listOf("아", "유", "미", "리", "카", "하", "루", "세", "나", "코", "시", "마")
+    val secondParts = listOf("리", "나", "호", "유", "미", "라", "카", "하", "루", "아", "오", "에")
+
+    for (first in firstParts) {
+        for (second in secondParts) {
+            val name = first + second
+            if (name !in this) {
+                add(name)
+            }
+            if (size >= 144) {
+                return@buildList
+            }
+        }
+    }
+}
+
+private val maidHouseAdditionalCasts = maidHouseAdditionalCastNames.mapIndexed { index, name ->
     val number = index + 7
     Cast(
         id = "maid-$number",
@@ -1225,7 +1246,7 @@ private val maidHouseAdditionalCasts = listOf(
         desc = "메이드 하우스 인기 캐스트 $name",
         birthday = maidHouseBirthdayByIndex(index),
         conceptRole = maidHouseConceptRoleByIndex(index),
-        followerCount = 580 - (index * 7),
+        followerCount = 960 - (index * 4),
         rating = 4.2 + ((index % 7) * 0.1)
     )
 }
