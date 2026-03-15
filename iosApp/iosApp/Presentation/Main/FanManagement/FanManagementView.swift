@@ -471,57 +471,63 @@ private struct CastClaimSheetView: View {
 
     var body: some View {
         CompatNavigationContainer(title: "프로필 연결") {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(sheet.affiliatedCafeName)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
-                    Text(sheet.headline)
-                        .font(.title3.weight(.bold))
-                    Text(sheet.body)
-                        .font(.subheadline)
-                        .foregroundStyle(Color(hex: "6C6270"))
-                    if !sheet.requestableCasts.isEmpty {
-                        VStack(spacing: 10) {
-                            ForEach(sheet.requestableCasts) { candidate in
-                                Button {
-                                    onAction(.selectClaimCandidate(candidate.id))
-                                } label: {
-                                    Text(candidate.name)
-                                        .font(.body.weight(.semibold))
-                                        .foregroundStyle(Color(hex: "24161E"))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 14)
-                                        .background(sheet.selectedCastId == candidate.id ? Color(hex: "FFD1DC") : Color.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
-                                        )
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(sheet.affiliatedCafeName)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color(hex: "EF6797"))
+                        Text(sheet.headline)
+                            .font(.title3.weight(.bold))
+                        Text(sheet.body)
+                            .font(.subheadline)
+                            .foregroundStyle(Color(hex: "6C6270"))
+                        if !sheet.requestableCasts.isEmpty {
+                            VStack(spacing: 10) {
+                                ForEach(sheet.requestableCasts) { candidate in
+                                    Button {
+                                        onAction(.selectClaimCandidate(candidate.id))
+                                    } label: {
+                                        Text(candidate.name)
+                                            .font(.body.weight(.semibold))
+                                            .foregroundStyle(Color(hex: "24161E"))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 14)
+                                            .background(sheet.selectedCastId == candidate.id ? Color(hex: "FFD1DC") : Color.white)
+                                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
+                        Spacer(minLength: 8)
                     }
-                    if sheet.canSubmit {
-                        Button {
-                            onAction(.submitCastClaim)
-                        } label: {
-                            Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
-                                .font(.headline.weight(.bold))
-                                .foregroundStyle(Color(hex: "24161E"))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(hex: "FFD1DC"))
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(sheet.isSubmitting)
-                    }
-                    Spacer(minLength: 8)
+                    .padding(20)
                 }
-                .padding(20)
+                if sheet.canSubmit {
+                    Button {
+                        onAction(.submitCastClaim)
+                    } label: {
+                        Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(Color(hex: "24161E"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color(hex: "FFD1DC"))
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(sheet.isSubmitting)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 14)
+                    .background(Color.white)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

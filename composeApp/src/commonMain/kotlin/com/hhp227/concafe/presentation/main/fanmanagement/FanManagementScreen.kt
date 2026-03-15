@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -563,61 +565,75 @@ private fun CastClaimSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .navigationBarsPadding()
+            .imePadding()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("닫기")
+                }
             }
-            TextButton(onClick = onDismiss) {
-                Text("닫기")
-            }
-        }
-        Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
-        if (sheet.requestableCasts.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                sheet.requestableCasts.forEach { candidate ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(candidate.id) },
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
-                    ) {
-                        Text(
-                            text = candidate.name,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF24161E)
-                        )
+            Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
+            if (sheet.requestableCasts.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    sheet.requestableCasts.forEach { candidate ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(candidate.id) },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                        ) {
+                            Text(
+                                text = candidate.name,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF24161E)
+                            )
+                        }
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
         }
         if (sheet.canSubmit) {
-            ElevatedButton(
-                onClick = onSubmit,
-                enabled = !sheet.isSubmitting,
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 14.dp),
-                colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF24161E)
-                )
+            Surface(
+                color = Color.White,
+                shadowElevation = 10.dp
             ) {
-                Text(if (sheet.isSubmitting) "요청 보내는 중..." else "연결 요청 보내기", fontWeight = FontWeight.Bold)
+                ElevatedButton(
+                    onClick = onSubmit,
+                    enabled = !sheet.isSubmitting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    contentPadding = PaddingValues(vertical = 14.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
+                        containerColor = Color(0xFFFFD1DC),
+                        contentColor = Color(0xFF24161E)
+                    )
+                ) {
+                    Text(if (sheet.isSubmitting) "요청 보내는 중..." else "연결 요청 보내기", fontWeight = FontWeight.Bold)
+                }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
