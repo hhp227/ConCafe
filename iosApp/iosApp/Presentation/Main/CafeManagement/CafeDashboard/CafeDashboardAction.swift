@@ -10,6 +10,7 @@ import Foundation
 enum CafeDashboardAction {
     case clickBack
     case clickShortcut(CafeDashboardShortcut)
+    case clickCreateBanner
     case dismissExternalLinkSheet
     case changeExternalLinkTitle(String)
     case changeExternalLinkUrl(String)

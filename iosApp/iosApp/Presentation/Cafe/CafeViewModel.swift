@@ -54,7 +54,7 @@ final class CafeViewModel: ObservableObject {
             guard let self else { return }
             if let created = event as? ReviewEvent.Created {
                 if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.event.send(.scrollReviewsToTop)
+                    self.uiState.shouldScrollToTopOnReturn = true
                     self.loadCafeDetail(refreshReviews: false)
                     self.refreshReviewPage()
                 }
@@ -95,7 +95,8 @@ final class CafeViewModel: ObservableObject {
                         canLoadMoreReviews: feed.canLoadMoreReviews,
                         reviews: feed.reviews,
                         isFavorite: feed.isFavorite,
-                        isLoggedIn: feed.isLoggedIn
+                        isLoggedIn: feed.isLoggedIn,
+                        shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn
                     )
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
@@ -275,6 +276,8 @@ final class CafeViewModel: ObservableObject {
             loadMoreReviews()
         case .refresh:
             loadCafeDetail()
+        case .consumeScrollToTopOnReturn:
+            uiState.shouldScrollToTopOnReturn = false
         }
     }
 

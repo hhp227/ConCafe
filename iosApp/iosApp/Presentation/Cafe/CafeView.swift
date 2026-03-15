@@ -13,14 +13,14 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
-    private let reviewTopAnchorId = "CAFE_REVIEW_TOP"
+    private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
         ScrollViewReader { proxy in
             CafeContentView(
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction,
-                reviewTopAnchorId: reviewTopAnchorId
+                topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
             .onReceive(viewModel.event) { event in
@@ -33,9 +33,14 @@ struct CafeView: View {
                     onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
-                case .scrollReviewsToTop:
+                }
+            }
+            .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
+                guard shouldScroll else { return }
+                viewModel.onAction(.consumeScrollToTopOnReturn)
+                DispatchQueue.main.async {
                     withAnimation {
-                        proxy.scrollTo(reviewTopAnchorId, anchor: .top)
+                        proxy.scrollTo(topAnchorId, anchor: .top)
                     }
                 }
             }
@@ -56,7 +61,7 @@ private struct CafeContentView: View {
 
     let onAction: (CafeAction) -> Void
 
-    let reviewTopAnchorId: String
+    let topAnchorId: String
 
     @State private var scrollOffset: CGFloat = 0
 
@@ -74,8 +79,8 @@ private struct CafeContentView: View {
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 24)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 24)
                 }
             }
             .toolbar {
@@ -99,7 +104,7 @@ private struct CafeContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
                 Text("리뷰 작성")
-                    .font(.subheadline.weight(.bold))
+                .font(.subheadline.weight(.bold))
             }
             .foregroundStyle(Color(hex: "2B2330"))
             .padding(.horizontal, 18)
@@ -114,6 +119,7 @@ private struct CafeContentView: View {
     private var offsetReader: some View {
         GeometryReader { proxy in
             Color.clear
+            .id(topAnchorId)
             .preference(
                 key: CafeScrollOffsetPreferenceKey.self,
                 value: proxy.frame(in: .named("cafeScroll")).minY
@@ -266,8 +272,7 @@ private struct CafeContentView: View {
                 reviews: uiState.reviews,
                 canLoadMore: uiState.canLoadMoreReviews,
                 isLoadingMore: uiState.isLoadingMoreReviews,
-                onLoadMore: { onAction(.loadMoreReviews) },
-                topAnchorId: reviewTopAnchorId
+                onLoadMore: { onAction(.loadMoreReviews) }
             )
         case .notices:
             CafeNoticeView(

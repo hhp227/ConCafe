@@ -137,7 +137,7 @@ final class CafeDashboardViewModel: ObservableObject {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
         case .homeBanner:
-            event.send(.navigateToBannerEdit)
+            event.send(.navigateToBanner)
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
@@ -154,6 +154,10 @@ final class CafeDashboardViewModel: ObservableObject {
             uiState.isExternalLinkSheetVisible = true
             uiState.infoMessage = nil
         }
+    }
+
+    private func clickCreateBanner() {
+        event.send(.navigateToBannerEdit)
     }
 
     private func dismissExternalLinkSheet() {
@@ -419,6 +423,8 @@ final class CafeDashboardViewModel: ObservableObject {
             clickBack()
         case .clickShortcut(let shortcut):
             clickShortcut(shortcut)
+        case .clickCreateBanner:
+            clickCreateBanner()
         case .dismissExternalLinkSheet:
             dismissExternalLinkSheet()
         case .changeExternalLinkTitle(let value):

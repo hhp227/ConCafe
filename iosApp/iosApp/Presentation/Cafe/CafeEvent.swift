@@ -12,5 +12,4 @@ enum CafeEvent {
     case navigateToCast(id: String)
     case navigateToReviewEdit(cafeId: String)
     case navigateToSignIn
-    case scrollReviewsToTop
 }

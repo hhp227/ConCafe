@@ -150,7 +150,7 @@ class CafeDashboardViewModel(
                 _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
             }
             CafeDashboardShortcut.HOME_BANNER -> viewModelScope.launch {
-                _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
+                _event.emit(CafeDashboardEvent.NavigateToBanner)
             }
             CafeDashboardShortcut.EVENT_MANAGEMENT -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))
@@ -181,6 +181,12 @@ class CafeDashboardViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun clickCreateBanner() {
+        viewModelScope.launch {
+            _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
         }
     }
 
@@ -453,6 +459,7 @@ class CafeDashboardViewModel(
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
             is CafeDashboardAction.ClickShortcut -> clickShortcut(action.shortcut)
+            CafeDashboardAction.ClickCreateBanner -> clickCreateBanner()
             CafeDashboardAction.DismissExternalLinkSheet -> dismissExternalLinkSheet()
             is CafeDashboardAction.ChangeExternalLinkTitle -> changeExternalLinkTitle(action.value)
             is CafeDashboardAction.ChangeExternalLinkUrl -> changeExternalLinkUrl(action.value)

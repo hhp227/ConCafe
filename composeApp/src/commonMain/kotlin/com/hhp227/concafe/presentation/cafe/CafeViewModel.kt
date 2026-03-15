@@ -66,7 +66,7 @@ class CafeViewModel(
                 when (event) {
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
-                            _event.emit(CafeEvent.ScrollReviewsToTop)
+                            _uiState.update { it.copy(shouldScrollToTopOnReturn = true) }
                             loadCafeDetail(refreshReviews = false)
                             refreshReviewPage()
                         }
@@ -116,7 +116,8 @@ class CafeViewModel(
                     reviewsNextCursor = result.data.reviewsNextCursor,
                     canLoadMoreReviews = result.data.canLoadMoreReviews,
                     isFavorite = result.data.isFavorite,
-                    isLoggedIn = result.data.isLoggedIn
+                    isLoggedIn = result.data.isLoggedIn,
+                    shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn
                 )
                 refreshCastPage()
                 if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
@@ -291,6 +292,9 @@ class CafeViewModel(
                 }
                 CafeAction.Refresh -> {
                     loadCafeDetail()
+                }
+                CafeAction.ConsumeScrollToTopOnReturn -> {
+                    _uiState.update { it.copy(shouldScrollToTopOnReturn = false) }
                 }
             }
         }

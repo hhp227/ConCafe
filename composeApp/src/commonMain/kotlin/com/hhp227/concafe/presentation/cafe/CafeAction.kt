@@ -18,4 +18,6 @@ sealed interface CafeAction {
     data object LoadMoreReviews : CafeAction
 
     data object Refresh : CafeAction
+
+    data object ConsumeScrollToTopOnReturn : CafeAction
 }

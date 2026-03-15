@@ -9,6 +9,7 @@ import Foundation
 
 enum CafeDashboardEvent {
     case navigateBack
+    case navigateToBanner
     case navigateToBannerEdit
     case navigateToCafeInfoEdit(cafeId: String)
     case navigateToNoticeEvent(cafeId: String)

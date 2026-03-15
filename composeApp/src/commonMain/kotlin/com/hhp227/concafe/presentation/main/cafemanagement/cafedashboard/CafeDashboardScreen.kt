@@ -73,6 +73,9 @@ fun CafeDashboardScreen(
         viewModel.event.collect { event ->
             when (event) {
                 CafeDashboardEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                CafeDashboardEvent.NavigateToBanner -> {
+                    onNavigationAction(NavigationAction.NavigateToBanner(cafeId))
+                }
                 CafeDashboardEvent.NavigateToBannerEdit -> {
                     onNavigationAction(NavigationAction.NavigateToBannerEdit(cafeId))
                 }
@@ -266,6 +269,9 @@ private fun CafeDashboardContentScreen(
                             banner = cafe.homeBannerPreview,
                             onBannerClick = {
                                 onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
+                            },
+                            onCreateBannerClick = {
+                                onAction(CafeDashboardAction.ClickCreateBanner)
                             }
                         )
                     }
@@ -1030,7 +1036,8 @@ private fun AddCastItem(
 @Composable
 private fun HomeBannerSection(
     banner: CafeDashboardData.HomeBannerPreview,
-    onBannerClick: () -> Unit
+    onBannerClick: () -> Unit,
+    onCreateBannerClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -1116,7 +1123,7 @@ private fun HomeBannerSection(
                         }
                     }
                     Button(
-                        onClick = onBannerClick,
+                        onClick = onCreateBannerClick,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFFD1DC),

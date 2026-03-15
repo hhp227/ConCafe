@@ -12,6 +12,7 @@ enum NavigationAction {
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
     case navigateToCafeDashboard(id: String)
+    case navigateToBanner(cafeId: String? = nil)
     case navigateToBannerEdit(cafeId: String? = nil)
     case navigateToExternalLink(title: String, url: String)
     case navigateToCafeInfoEdit(id: String?, isRegistrationMode: Bool = false)
