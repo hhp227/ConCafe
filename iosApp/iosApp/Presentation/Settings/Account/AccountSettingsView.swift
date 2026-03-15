@@ -78,25 +78,18 @@ private struct AccountSettingsContentView: View {
             }
         }
         .background(Color(hex: "FFFBFD"))
-        .alert("회원탈퇴 확인", isPresented: Binding(
+        .sheet(isPresented: Binding(
             get: { uiState.isDeleteDialogVisible },
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
         )) {
-            TextField(
-                "탈퇴",
-                text: Binding(
+            AccountDeleteConfirmationSheet(
+                confirmationText: Binding(
                     get: { uiState.deleteConfirmation },
                     set: { onAction(.deleteConfirmationChanged($0)) }
-                )
+                ),
+                onDismiss: { onAction(.dismissDeleteDialogTapped) },
+                onDelete: { onAction(.deleteAccountTapped) }
             )
-            Button("취소", role: .cancel) {
-                onAction(.dismissDeleteDialogTapped)
-            }
-            Button("회원탈퇴", role: .destructive) {
-                onAction(.deleteAccountTapped)
-            }
-        } message: {
-            Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
         }
     }
 
@@ -394,6 +387,67 @@ private extension UserRole {
             return "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
         default:
             return "로그인이 필요한 화면입니다."
+        }
+    }
+}
+
+private struct AccountDeleteConfirmationSheet: View {
+    @Binding var confirmationText: String
+
+    let onDismiss: () -> Void
+
+    let onDelete: () -> Void
+
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("회원탈퇴")
+                        .font(.title3.bold())
+                    Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                ConCafeFormField(
+                    label: "확인 문구",
+                    text: $confirmationText,
+                    placeholder: "탈퇴"
+                )
+                .textInputAutocapitalization(.never)
+                HStack(spacing: 12) {
+                    Button(action: onDismiss) {
+                        Text("취소")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color(hex: "6F6673"))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(Color(hex: "F4EDF1"))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    Button(action: onDelete) {
+                        Text("회원탈퇴")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(Color(hex: "C9527E"))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+            .padding(20)
+            .background(Color(hex: "FFFBFD"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") {
+                        onDismiss()
+                    }
+                }
+            }
         }
     }
 }
