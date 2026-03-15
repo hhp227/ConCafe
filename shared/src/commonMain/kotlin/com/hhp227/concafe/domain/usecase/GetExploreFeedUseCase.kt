@@ -16,6 +16,8 @@ class GetExploreFeedUseCase(
         query: String?,
         regionKey: String,
         sortKey: String,
+        cafeCursor: String? = null,
+        maidCursor: String? = null,
         pageSize: Int
     ): AppResult<ExploreFeed> {
         return try {
@@ -28,22 +30,26 @@ class GetExploreFeedUseCase(
                 country = region.country,
                 city = region.city,
                 sort = sort.cafeSort,
-                cursor = null,
+                cursor = cafeCursor,
                 pageSize = cappedPageSize
-            ).items
+            )
             val maids = castRepository.searchCasts(
                 query = normalizedQuery,
                 country = region.country,
                 city = region.city,
                 sort = sort.castSort,
-                cursor = null,
+                cursor = maidCursor,
                 pageSize = cappedPageSize
-            ).items
+            )
 
             AppResult.Success(
                 ExploreFeed(
-                    cafes = cafes,
-                    maids = maids
+                    cafes = cafes.items,
+                    cafesNextCursor = cafes.nextCursor,
+                    hasMoreCafes = cafes.hasNext,
+                    maids = maids.items,
+                    maidsNextCursor = maids.nextCursor,
+                    hasMoreMaids = maids.hasNext
                 )
             )
         } catch (e: IllegalArgumentException) {

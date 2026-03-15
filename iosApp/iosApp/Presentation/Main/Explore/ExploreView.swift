@@ -143,6 +143,33 @@ private struct ExploreContentView: View {
                     }
                 }
             }
+            pagingTrigger
+        }
+    }
+
+    @ViewBuilder
+    private var pagingTrigger: some View {
+        let canLoadMore = uiState.selectedTab == .cafe ? uiState.canLoadMoreCafes : uiState.canLoadMoreMaids
+        let isLoadingMore = uiState.selectedTab == .cafe ? uiState.isLoadingMoreCafes : uiState.isLoadingMoreMaids
+
+        if canLoadMore || isLoadingMore {
+            VStack {
+                if isLoadingMore {
+                    ProgressView()
+                        .padding(.top, 12)
+                } else {
+                    Color.clear
+                        .frame(height: 1)
+                        .onAppear {
+                        if uiState.selectedTab == .cafe {
+                            onAction(.loadMoreCafes)
+                        } else {
+                            onAction(.loadMoreMaids)
+                        }
+                        }
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 
