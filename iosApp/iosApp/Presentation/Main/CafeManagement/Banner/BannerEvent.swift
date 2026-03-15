@@ -8,5 +8,6 @@
 import Foundation
 
 enum BannerEvent {
-    
+    case navigateBack
+    case showMessage(String)
 }

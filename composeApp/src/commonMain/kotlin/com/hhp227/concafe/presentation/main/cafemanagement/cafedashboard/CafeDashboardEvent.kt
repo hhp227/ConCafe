@@ -2,7 +2,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 sealed interface CafeDashboardEvent {
     data object NavigateBack : CafeDashboardEvent
-    data object NavigateToBannerEdit : CafeDashboardEvent
+    data object NavigateToBanner : CafeDashboardEvent
     data class NavigateToCafeInfoEdit(val cafeId: String) : CafeDashboardEvent
     data class NavigateToNoticeEvent(val cafeId: String) : CafeDashboardEvent
     data class NavigateToMenuGoods(val cafeId: String) : CafeDashboardEvent

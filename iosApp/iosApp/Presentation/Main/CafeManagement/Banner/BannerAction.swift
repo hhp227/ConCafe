@@ -8,5 +8,9 @@
 import Foundation
 
 enum BannerAction {
-    
+    case backTapped
+    case selectTab(BannerTab)
+    case createBannerTapped
+    case editBannerTapped(id: String)
+    case deleteBannerTapped(id: String)
 }

@@ -150,7 +150,7 @@ class CafeDashboardViewModel(
                 _event.emit(CafeDashboardEvent.NavigateToCafeInfoEdit(cafeId))
             }
             CafeDashboardShortcut.HOME_BANNER -> viewModelScope.launch {
-                _event.emit(CafeDashboardEvent.NavigateToBannerEdit)
+                _event.emit(CafeDashboardEvent.NavigateToBanner)
             }
             CafeDashboardShortcut.EVENT_MANAGEMENT -> viewModelScope.launch {
                 _event.emit(CafeDashboardEvent.NavigateToNoticeEvent(cafeId))

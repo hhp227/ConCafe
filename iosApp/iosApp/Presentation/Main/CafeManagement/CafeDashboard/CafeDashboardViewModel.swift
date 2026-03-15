@@ -137,7 +137,7 @@ final class CafeDashboardViewModel: ObservableObject {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
         case .homeBanner:
-            event.send(.navigateToBannerEdit)
+            event.send(.navigateToBanner)
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:

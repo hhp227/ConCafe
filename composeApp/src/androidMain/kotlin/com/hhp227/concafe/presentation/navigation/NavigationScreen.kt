@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
@@ -90,6 +91,14 @@ fun NavigationScreen(
 
             CafeDashboardScreen(
                 cafeId = cafeDashboardRoute.param,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.Banner> { backStackEntry ->
+            val bannerRoute = backStackEntry.toRoute<Route.Banner>()
+
+            BannerScreen(
+                cafeId = bannerRoute.cafeId,
                 onNavigationAction = viewModel::onAction
             )
         }

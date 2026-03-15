@@ -13,6 +13,7 @@ enum Route: Hashable {
     case cast(param: String)
     case cafe(param: String)
     case cafeDashboard(param: String)
+    case banner(cafeId: String?)
     case bannerEdit(cafeId: String?)
     case externalLink(title: String, url: String)
     case cafeInfoEdit(param: String?, isRegistrationMode: Bool)
