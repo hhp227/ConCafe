@@ -9,5 +9,6 @@ import Foundation
 
 enum SettingsAction {
     case backTapped
+    case privacyPolicyTapped
     case signOutTapped
 }

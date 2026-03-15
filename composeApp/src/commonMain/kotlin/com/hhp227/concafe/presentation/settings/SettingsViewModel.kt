@@ -21,6 +21,17 @@ class SettingsViewModel(
     private val _event = MutableSharedFlow<SettingsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
+    private fun clickPrivacyPolicy() {
+        viewModelScope.launch {
+            _event.emit(
+                SettingsEvent.NavigateToExternalLink(
+                    title = PRIVACY_POLICY_TITLE,
+                    url = PRIVACY_POLICY_URL
+                )
+            )
+        }
+    }
+
     private fun signOut() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
@@ -49,7 +60,13 @@ class SettingsViewModel(
                     _event.emit(SettingsEvent.NavigateBack)
                 }
             }
+            SettingsAction.ClickPrivacyPolicy -> clickPrivacyPolicy()
             SettingsAction.ClickSignOut -> signOut()
         }
+    }
+
+    private companion object {
+        private const val PRIVACY_POLICY_TITLE = "개인정보 처리방침"
+        private const val PRIVACY_POLICY_URL = "http://www.concafe.app"
     }
 }
