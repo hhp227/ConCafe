@@ -21,6 +21,12 @@ class SettingsViewModel(
     private val _event = MutableSharedFlow<SettingsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
+    private fun clickNotificationSettings() {
+        viewModelScope.launch {
+            _event.emit(SettingsEvent.NavigateToNotificationSettings)
+        }
+    }
+
     private fun clickPrivacyPolicy() {
         viewModelScope.launch {
             _event.emit(
@@ -60,6 +66,7 @@ class SettingsViewModel(
                     _event.emit(SettingsEvent.NavigateBack)
                 }
             }
+            SettingsAction.ClickNotificationSettings -> clickNotificationSettings()
             SettingsAction.ClickPrivacyPolicy -> clickPrivacyPolicy()
             SettingsAction.ClickSignOut -> signOut()
         }

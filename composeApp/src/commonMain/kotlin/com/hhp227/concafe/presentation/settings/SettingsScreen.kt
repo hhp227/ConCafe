@@ -60,6 +60,9 @@ fun SettingsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 SettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                SettingsEvent.NavigateToNotificationSettings -> {
+                    onNavigationAction(NavigationAction.NavigateToNotificationSettings)
+                }
                 is SettingsEvent.NavigateToExternalLink -> {
                     onNavigationAction(
                         NavigationAction.NavigateToExternalLink(event.title, event.url)
@@ -196,7 +199,7 @@ private val settingsItems = listOf(
         title = "알림 설정",
         description = "출근, 생일, 공지 알림 설정 영역입니다.",
         icon = Icons.Default.Notifications,
-        action = null
+        action = SettingsAction.ClickNotificationSettings
     ),
     SettingsItem(
         id = "app",

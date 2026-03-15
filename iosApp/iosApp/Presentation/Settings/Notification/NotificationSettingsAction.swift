@@ -8,5 +8,10 @@
 import Foundation
 
 enum NotificationSettingsAction {
-    
+    case backTapped
+    case pushNotificationsToggled(Bool)
+    case shiftNotificationsToggled(Bool)
+    case birthdayNotificationsToggled(Bool)
+    case noticeNotificationsToggled(Bool)
+    case quietHoursSelected(NotificationQuietHoursOption)
 }

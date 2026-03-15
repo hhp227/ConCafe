@@ -40,6 +40,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScre
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
+import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 
 private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 
@@ -254,6 +255,11 @@ private fun DetailRoutePane(
         }
         Route.Settings -> {
             SettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.NotificationSettings -> {
+            NotificationSettingsScreen(
                 onNavigationAction = onNavigationAction
             )
         }

@@ -8,5 +8,5 @@
 import Foundation
 
 enum NotificationSettingsEvent {
-    
+    case navigateBack
 }

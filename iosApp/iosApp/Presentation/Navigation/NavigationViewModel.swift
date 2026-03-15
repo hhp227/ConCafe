@@ -50,6 +50,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.notification))
         case .navigateToSettings:
             event.send(.navigateTo(.settings))
+        case .navigateToNotificationSettings:
+            event.send(.navigateTo(.notificationSettings))
         case .navigateBack:
             event.send(.navigateBack)
         }

@@ -8,5 +8,17 @@
 import Foundation
 
 struct NotificationSettingsUiState {
-    
+    var isPushNotificationsEnabled: Bool
+    var isShiftNotificationsEnabled: Bool
+    var isBirthdayNotificationsEnabled: Bool
+    var isNoticeNotificationsEnabled: Bool
+    var quietHoursOption: NotificationQuietHoursOption
+
+    static let initial = NotificationSettingsUiState(
+        isPushNotificationsEnabled: true,
+        isShiftNotificationsEnabled: true,
+        isBirthdayNotificationsEnabled: true,
+        isNoticeNotificationsEnabled: false,
+        quietHoursOption: .night
+    )
 }
