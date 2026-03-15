@@ -11,6 +11,7 @@ import Shared
 struct HomeUiState {
     let banners: [HomeBanner]
     let popularCasts: [Cast]
+    let popularCastCafeNames: [String: String]
     let popularCastCursor: String?
     let canLoadMorePopularCasts: Bool
     let isLoadingMorePopularCasts: Bool
@@ -24,6 +25,7 @@ struct HomeUiState {
     static let empty = HomeUiState(
         banners: [],
         popularCasts: [],
+        popularCastCafeNames: [:],
         popularCastCursor: nil,
         canLoadMorePopularCasts: false,
         isLoadingMorePopularCasts: false,

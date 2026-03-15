@@ -55,10 +55,6 @@ private struct HomeContentView: View {
     
     let onAction: (HomeAction) -> Void
     
-    private var cafeNameById: [String: String] {
-        Dictionary(uniqueKeysWithValues: uiState.nearbyCafes.map { ($0.id, $0.name) })
-    }
-    
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -124,7 +120,7 @@ private struct HomeContentView: View {
                     ForEach(uiState.popularCasts, id: \.id) { maid in
                         ConCafeCastCard(
                             name: maid.name,
-                            subtitle: cafeNameById[maid.cafeId] ?? maid.cafeId,
+                            subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
                             metaText: "👥 \(maid.followerCount)",
                             onTap: { onAction(.maidTapped(id: maid.id)) }
                         )

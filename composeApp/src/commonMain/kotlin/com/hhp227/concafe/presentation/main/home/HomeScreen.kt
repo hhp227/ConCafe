@@ -114,7 +114,6 @@ fun HomeContentScreen(
     onAction: (HomeAction) -> Unit
 ) {
     val screenBackgroundColor = Color(0xFFFFFBFD)
-    val cafeNameById = uiState.nearbyCafes.associate { it.id to it.name }
 
     LazyColumn(
         modifier = Modifier
@@ -202,7 +201,7 @@ fun HomeContentScreen(
                 items(uiState.popularCasts) { maid ->
                     ConCafeCastCard(
                         name = maid.name,
-                        subtitle = cafeNameById[maid.cafeId] ?: maid.cafeId,
+                        subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
                         modifier = Modifier.width(132.dp),
                         metaText = "👥 ${maid.followerCount}",
                         onClick = { onAction(HomeAction.ClickMaid(maid.id)) }

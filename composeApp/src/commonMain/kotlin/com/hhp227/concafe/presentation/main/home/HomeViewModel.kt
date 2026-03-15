@@ -54,6 +54,7 @@ class HomeViewModel(
                     errorMessage = null,
                     banners = result.data.banners,
                     popularCasts = result.data.popularCasts,
+                    popularCastCafeNames = result.data.popularCastCafeNames,
                     popularCastCursor = result.data.popularCastsNextCursor,
                     canLoadMorePopularCasts = result.data.hasMorePopularCasts,
                     nearbyCafes = result.data.nearbyCafes,
@@ -86,6 +87,11 @@ class HomeViewModel(
                     _uiState.update { state ->
                         state.copy(
                             popularCasts = if (append) state.popularCasts + result.data.popularCasts else result.data.popularCasts,
+                            popularCastCafeNames = if (append) {
+                                state.popularCastCafeNames + result.data.popularCastCafeNames
+                            } else {
+                                result.data.popularCastCafeNames
+                            },
                             popularCastCursor = result.data.popularCastsNextCursor,
                             canLoadMorePopularCasts = result.data.hasMorePopularCasts,
                             isLoadingMorePopularCasts = false
@@ -161,6 +167,7 @@ class HomeViewModel(
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
+                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
                 nearbyCafes = state.nearbyCafes.map { item ->
                     if (item.id == cafe.id) cafe else item
                 }

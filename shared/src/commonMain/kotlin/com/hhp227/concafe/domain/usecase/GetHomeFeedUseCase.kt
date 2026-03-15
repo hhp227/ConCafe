@@ -33,6 +33,12 @@ class GetHomeFeedUseCase(
                 cursor = popularCastCursor,
                 pageSize = POPULAR_CAST_PAGE_SIZE
             )
+            val popularCastCafeNames = popularCastPage.items
+                .map { it.cafeId }
+                .distinct()
+                .associateWith { cafeId ->
+                    cafeRepository.getCafeDetail(cafeId).cafe.name
+                }
             val birthdayCasts = castRepository.searchCasts(
                 query = null,
                 country = null,
@@ -49,6 +55,7 @@ class GetHomeFeedUseCase(
                 HomeFeed(
                     banners = bannerRepository.getHomeBanners(HOME_FEED_LIMIT),
                     popularCasts = popularCastPage.items,
+                    popularCastCafeNames = popularCastCafeNames,
                     popularCastsNextCursor = popularCastPage.nextCursor,
                     hasMorePopularCasts = popularCastPage.hasNext,
                     nearbyCafes = nearbyCafePage.items,

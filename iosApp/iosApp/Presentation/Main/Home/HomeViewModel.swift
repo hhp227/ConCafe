@@ -38,6 +38,7 @@ final class HomeViewModel: ObservableObject {
                         uiState = HomeUiState(
                             banners: feed.banners,
                             popularCasts: feed.popularCasts,
+                            popularCastCafeNames: Self.dictionary(from: feed.popularCastCafeNames),
                             popularCastCursor: feed.popularCastsNextCursor,
                             canLoadMorePopularCasts: feed.hasMorePopularCasts,
                             isLoadingMorePopularCasts: false,
@@ -68,6 +69,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
+                popularCastCafeNames: uiState.popularCastCafeNames,
                 popularCastCursor: uiState.popularCastCursor,
                 canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                 isLoadingMorePopularCasts: append,
@@ -87,6 +89,9 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         banners: uiState.banners,
                         popularCasts: append ? (uiState.popularCasts + feed.popularCasts) : feed.popularCasts,
+                        popularCastCafeNames: append
+                            ? uiState.popularCastCafeNames.merging(Self.dictionary(from: feed.popularCastCafeNames)) { _, new in new }
+                            : Self.dictionary(from: feed.popularCastCafeNames),
                         popularCastCursor: feed.popularCastsNextCursor,
                         canLoadMorePopularCasts: feed.hasMorePopularCasts,
                         isLoadingMorePopularCasts: false,
@@ -101,6 +106,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
                         popularCastCursor: uiState.popularCastCursor,
                         canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                         isLoadingMorePopularCasts: false,
@@ -117,6 +123,7 @@ final class HomeViewModel: ObservableObject {
                 uiState = HomeUiState(
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
+                    popularCastCafeNames: uiState.popularCastCafeNames,
                     popularCastCursor: uiState.popularCastCursor,
                     canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                     isLoadingMorePopularCasts: false,
@@ -144,6 +151,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
+                popularCastCafeNames: uiState.popularCastCafeNames,
                 popularCastCursor: uiState.popularCastCursor,
                 canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                 isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -163,6 +171,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
                         popularCastCursor: uiState.popularCastCursor,
                         canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                         isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -177,6 +186,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
                         popularCastCursor: uiState.popularCastCursor,
                         canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                         isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -193,6 +203,7 @@ final class HomeViewModel: ObservableObject {
                 uiState = HomeUiState(
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
+                    popularCastCafeNames: uiState.popularCastCafeNames,
                     popularCastCursor: uiState.popularCastCursor,
                     canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                     isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -257,6 +268,7 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts,
+            popularCastCafeNames: uiState.popularCastCafeNames.merging([cafe.id: cafe.name]) { _, new in new },
             popularCastCursor: uiState.popularCastCursor,
             canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
             isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -275,6 +287,7 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.map { $0.id == cast.id ? cast : $0 },
+            popularCastCafeNames: uiState.popularCastCafeNames,
             popularCastCursor: uiState.popularCastCursor,
             canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
             isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -291,6 +304,7 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.filter { $0.id != castId },
+            popularCastCafeNames: uiState.popularCastCafeNames,
             popularCastCursor: uiState.popularCastCursor,
             canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
             isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
@@ -357,6 +371,13 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         watchHandles.values.forEach { $0.cancel() }
         watchHandles.removeAll()
+    }
+
+    private static func dictionary(from source: [AnyHashable: Any]) -> [String: String] {
+        source.reduce(into: [:]) { partialResult, entry in
+            guard let key = entry.key as? String, let value = entry.value as? String else { return }
+            partialResult[key] = value
+        }
     }
 
     private enum WatchKey {

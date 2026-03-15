@@ -10,6 +10,7 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
+    val popularCastCafeNames: Map<String, String>,
     val popularCastCursor: String? = null,
     val canLoadMorePopularCasts: Boolean,
     val isLoadingMorePopularCasts: Boolean = false,
@@ -24,6 +25,7 @@ data class HomeUiState(
         fun empty() = HomeUiState(
             banners = emptyList(),
             popularCasts = emptyList(),
+            popularCastCafeNames = emptyMap(),
             popularCastCursor = null,
             canLoadMorePopularCasts = false,
             isLoadingMorePopularCasts = false,
