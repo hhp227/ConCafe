@@ -63,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,9 +123,14 @@ private fun BannerContentScreen(
                         }
                     }
                 )
-                BannerTabRow(
-                    selectedTab = uiState.selectedTab,
-                    onSelectTab = { onAction(BannerAction.SelectTab(it)) }
+                ScrollableConCafeTabBar(
+                    labels = BannerTab.values().map { it.label },
+                    selectedIndex = BannerTab.values().indexOf(uiState.selectedTab),
+                    backgroundColor = Color.White,
+                    modifier = Modifier.fillMaxWidth(),
+                    onTabSelected = { index ->
+                        onAction(BannerAction.SelectTab(BannerTab.values()[index]))
+                    }
                 )
             }
         },
@@ -200,42 +206,6 @@ private fun BannerContentScreen(
                         .padding(vertical = 12.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF9A8E97)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BannerTabRow(
-    selectedTab: BannerTab,
-    onSelectTab: (BannerTab) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-    ) {
-        BannerTab.values().forEach { tab ->
-            val selected = tab == selectedTab
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onSelectTab(tab) }
-                    .padding(top = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = tab.label,
-                    color = if (selected) Color(0xFF24161E) else Color(0xFF8F848F),
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(if (selected) Color(0xFFFFD1DC) else Color.Transparent)
                 )
             }
         }

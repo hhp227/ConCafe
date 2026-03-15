@@ -21,7 +21,16 @@ struct BannerView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationBarBackButtonHidden(true)
+        .navigationTitle(viewModel.uiState.screenTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+            }
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -58,27 +67,25 @@ private struct BannerContentView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                topBar
-                VStack(alignment: .leading, spacing: 16) {
-                    headerRow
-                    ForEach(uiState.filteredBanners) { banner in
-                        BannerCardView(
-                            banner: banner,
-                            onEdit: { onAction(.editBannerTapped(id: banner.id)) },
-                            onDelete: { onAction(.deleteBannerTapped(id: banner.id)) }
-                        )
-                    }
-                    Text("최대 5개의 배너를 동시에 노출할 수 있습니다.")
-                        .font(.caption)
-                        .foregroundStyle(Color(hex: "9A8E97"))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+            VStack(alignment: .leading, spacing: 16) {
+                tabBar
+                headerRow
+                ForEach(uiState.filteredBanners) { banner in
+                    BannerCardView(
+                        banner: banner,
+                        onEdit: { onAction(.editBannerTapped(id: banner.id)) },
+                        onDelete: { onAction(.deleteBannerTapped(id: banner.id)) }
+                    )
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 16)
+                Text("최대 5개의 배너를 동시에 노출할 수 있습니다.")
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "9A8E97"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 16)
         }
         .background(Color(hex: "F8F5F6"))
         .safeAreaInset(edge: .bottom) {
@@ -104,35 +111,8 @@ private struct BannerContentView: View {
         }
     }
 
-    private var topBar: some View {
+    private var tabBar: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button {
-                    onAction(.backTapped)
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.headline.weight(.semibold))
-                        .frame(width: 40, height: 40)
-                        .foregroundStyle(Color(hex: "24161E"))
-                        .background(Color.white.opacity(0.001))
-                        .clipShape(Circle())
-                }
-                Spacer()
-                Text(uiState.screenTitle)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
-                Spacer()
-                Button {
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.headline.weight(.semibold))
-                        .frame(width: 40, height: 40)
-                        .foregroundStyle(Color(hex: "24161E"))
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.top, 8)
-            .padding(.bottom, 6)
             HStack(spacing: 0) {
                 ForEach(BannerTab.allCases, id: \.rawValue) { tab in
                     let isSelected = tab == uiState.selectedTab
@@ -154,6 +134,7 @@ private struct BannerContentView: View {
             }
         }
         .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var headerRow: some View {
