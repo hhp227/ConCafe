@@ -17,6 +17,8 @@ final class CastViewModel: ObservableObject {
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
+    private let observeReviewEventUseCase: ObserveReviewEventUseCase
+
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
     @Published private(set) var uiState = CastUiState.empty
@@ -25,11 +27,11 @@ final class CastViewModel: ObservableObject {
 
     private var loadTask: Task<Void, Never>?
 
-    private var castEventWatchHandle: WatchHandle?
+    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func observeCastEvent() {
-        castEventWatchHandle?.cancel()
-        castEventWatchHandle = observeCastEventUseCase.watch { [weak self] event in
+        watchHandles[.castEvent]?.cancel()
+        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 switch event {
@@ -53,6 +55,19 @@ final class CastViewModel: ObservableObject {
                 default:
                     break
                 }
+            }
+        }
+    }
+
+    private func observeReviewEvent() {
+        watchHandles[.reviewEvent]?.cancel()
+        watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
+            if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
+                self.loadCastDetail()
+            } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
+                self.loadCastDetail()
             }
         }
     }
@@ -127,19 +142,28 @@ final class CastViewModel: ObservableObject {
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
+        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
+        self.observeReviewEventUseCase = observeReviewEventUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
 
         observeCastEvent()
+        observeReviewEvent()
         loadCastDetail()
     }
 
     deinit {
-        castEventWatchHandle?.cancel()
+        watchHandles.values.forEach { $0.cancel() }
+        watchHandles.removeAll()
         loadTask?.cancel()
+    }
+
+    private enum WatchKey {
+        case castEvent
+        case reviewEvent
     }
 }

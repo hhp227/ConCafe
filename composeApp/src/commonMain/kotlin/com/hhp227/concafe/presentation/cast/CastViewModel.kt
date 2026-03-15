@@ -13,14 +13,17 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.model.ReviewEvent
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
     private val observeCastEventUseCase: ObserveCastEventUseCase,
+    private val observeReviewEventUseCase: ObserveReviewEventUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastUiState.empty())
@@ -43,6 +46,22 @@ class CastViewModel(
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
                         _event.emit(CastEvent.NavigateBack)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeReviewEvent() {
+        viewModelScope.launch {
+            observeReviewEventUseCase.invoke().collectLatest { event ->
+                val currentCafeId = _uiState.value.detail?.cafe?.id ?: return@collectLatest
+                when (event) {
+                    is ReviewEvent.Created -> if (event.cafeId == currentCafeId) {
+                        loadCastDetail()
+                    }
+                    is ReviewEvent.Deleted -> if (event.cafeId == currentCafeId) {
+                        loadCastDetail()
                     }
                 }
             }
@@ -117,6 +136,7 @@ class CastViewModel(
 
     init {
         observeCastEvent()
+        observeReviewEvent()
         loadCastDetail()
     }
 }
