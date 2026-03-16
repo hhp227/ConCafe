@@ -176,12 +176,6 @@ private fun AccountSettingsContentScreen(
                         onValueChange = { onAction(AccountSettingsAction.ChangeNickname(it)) },
                         placeholder = "닉네임을 입력하세요"
                     )
-                    ConCafeFormField(
-                        label = "이메일",
-                        value = uiState.emailInput,
-                        onValueChange = { onAction(AccountSettingsAction.ChangeEmail(it)) },
-                        placeholder = "이메일을 입력하세요"
-                    )
                     Surface(
                         color = Color(0xFFF8F5F6),
                         shape = RoundedCornerShape(18.dp)
@@ -212,7 +206,7 @@ private fun AccountSettingsContentScreen(
                 title = "저장",
                 icon = Icons.Default.ManageAccounts
             ) {
-                SectionEyebrow("닉네임과 이메일 변경 사항을 반영합니다")
+                SectionEyebrow("닉네임 변경 사항을 반영합니다")
                 Button(
                     onClick = { onAction(AccountSettingsAction.ClickSaveUserInfo) },
                     modifier = Modifier

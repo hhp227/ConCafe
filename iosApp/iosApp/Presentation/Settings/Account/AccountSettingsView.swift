@@ -114,14 +114,6 @@ private struct AccountSettingsContentView: View {
                 ),
                 placeholder: "닉네임을 입력하세요"
             )
-            ConCafeFormField(
-                label: "이메일",
-                text: Binding(
-                    get: { uiState.emailInput },
-                    set: { onAction(.emailChanged($0)) }
-                ),
-                placeholder: "이메일을 입력하세요"
-            )
             infoSummaryCard
             if uiState.role == .cafeOwner {
                 Text("운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.")
@@ -149,7 +141,7 @@ private struct AccountSettingsContentView: View {
 
     private var saveSection: some View {
         settingsCard(title: "저장", symbol: "square.and.arrow.down") {
-            sectionEyebrow("닉네임과 이메일 변경 사항을 반영합니다")
+            sectionEyebrow("닉네임 변경 사항을 반영합니다")
             primaryButton(title: "사용자 정보 저장") {
                 onAction(.saveUserInfoTapped)
             }
