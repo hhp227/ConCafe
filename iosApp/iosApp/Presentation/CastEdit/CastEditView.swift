@@ -174,10 +174,9 @@ private struct CastEditContentView: View {
                                 Circle()
                                     .stroke(Color.white, lineWidth: 2)
                             )
+                            .offset(x: 2, y: 2)
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipShape(Circle())
-                    .clipped()
                 }
                 .frame(width: 128, height: 128)
             }
