@@ -23,6 +23,7 @@ struct CafeView: View {
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
+            .compatNavigationBarStyle(.transparentScrollEdge)
             .onReceive(viewModel.event) { event in
                 switch event {
                 case .navigateBack:
