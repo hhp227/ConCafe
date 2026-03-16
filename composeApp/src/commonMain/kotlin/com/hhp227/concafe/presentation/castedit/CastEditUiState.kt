@@ -11,9 +11,12 @@ data class CastEditUiState(
     val birthday: String = "",
     val introduction: String = "",
     val selectedWorkingDays: Set<WorkingDay> = emptySet(),
-    val galleryItems: List<GalleryItem> = emptyList(),
+    val galleryImages: List<String> = emptyList(),
     val infoMessage: String? = null
 ) {
+    val galleryLimitText: String
+        get() = "${galleryImages.size} / 6"
+
     enum class WorkingDay(val shortLabel: String) {
         MONDAY("Mon"),
         TUESDAY("Tue"),
@@ -23,10 +26,4 @@ data class CastEditUiState(
         SATURDAY("Sat"),
         SUNDAY("Sun")
     }
-
-    data class GalleryItem(
-        val id: String,
-        val label: String,
-        val overlayCount: Int? = null
-    )
 }

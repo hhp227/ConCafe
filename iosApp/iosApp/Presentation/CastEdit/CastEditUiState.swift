@@ -18,8 +18,12 @@ struct CastEditUiState {
     var birthday = ""
     var introduction = ""
     var selectedWorkingDays: Set<WorkingDay> = []
-    var galleryItems: [GalleryItem] = []
+    var galleryImages: [String] = []
     var infoMessage: String? = nil
+
+    var galleryLimitText: String {
+        "\(galleryImages.count) / 6"
+    }
 
     enum WorkingDay: String, CaseIterable, Identifiable, Hashable {
         case monday = "Mon"
@@ -34,9 +38,4 @@ struct CastEditUiState {
         var shortLabel: String { rawValue }
     }
 
-    struct GalleryItem: Identifiable, Hashable {
-        let id: String
-        let label: String
-        let overlayCount: Int?
-    }
 }

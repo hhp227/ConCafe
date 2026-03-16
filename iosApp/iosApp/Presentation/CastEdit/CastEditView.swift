@@ -19,12 +19,17 @@ struct CastEditView: View {
 
     @State private var isPhotoPickerPresented = false
 
+    @State private var isGalleryPhotoPickerPresented = false
+
     var body: some View {
         CastEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
             onPickProfileImage: {
                 isPhotoPickerPresented = true
+            },
+            onPickGalleryImage: {
+                isGalleryPhotoPickerPresented = true
             }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
@@ -48,6 +53,19 @@ struct CastEditView: View {
                 }
             )
         }
+        .sheet(isPresented: $isGalleryPhotoPickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isGalleryPhotoPickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        viewModel.onAction(.addGalleryImage(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isGalleryPhotoPickerPresented = false
+                }
+            )
+        }
     }
 
     init(
@@ -68,6 +86,8 @@ private struct CastEditContentView: View {
     let onAction: (CastEditAction) -> Void
 
     let onPickProfileImage: () -> Void
+
+    let onPickGalleryImage: () -> Void
 
     var body: some View {
         Group {
@@ -118,7 +138,6 @@ private struct CastEditContentView: View {
                                 set: { onAction(.changeIntroduction($0)) }
                             )
                         )
-                        workingDaysSection
                         gallerySection
                     }
                     .padding(16)
@@ -191,88 +210,117 @@ private struct CastEditContentView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private var workingDaysSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("근무 요일")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
-            FlexibleChipLayout(
-                items: CastEditUiState.WorkingDay.allCases,
-                spacing: 8
-            ) { day in
-                let isSelected = uiState.selectedWorkingDays.contains(day)
-                Button {
-                    onAction(.toggleWorkingDay(day))
-                } label: {
-                    Text(day.shortLabel)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(isSelected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.08))
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(
-                                    isSelected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3),
-                                    lineWidth: 1
-                                )
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private var gallerySection: some View {
-        let visibleItems = Array(uiState.galleryItems.prefix(3))
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("갤러리 사진")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 Spacer()
-                Text("사진 추가")
+                Text(uiState.galleryLimitText)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
-            GeometryReader { proxy in
-                let itemSize = (proxy.size.width - 36) / 4
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ],
+                spacing: 12
+            ) {
+                ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
+                    castGalleryItem(
+                        label: "이미지 \(index + 1)",
+                        imageUrl: imageUrl,
+                        index: index
+                    )
+                }
+                if uiState.galleryImages.count < 6 {
+                    addGalleryItem
+                }
+            }
+            Text("캐스트 갤러리에는 최대 6장까지 등록할 수 있습니다.")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A8088"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
 
-                HStack(spacing: 12) {
-                    Button {
-                        onAction(.clickAddGalleryPhoto)
-                    } label: {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color(hex: "FFD1DC").opacity(0.1))
-                            .frame(width: itemSize, height: itemSize)
-                            .overlay {
-                                Image(systemName: "camera.badge.plus")
-                                    .foregroundStyle(Color(hex: "EF6797"))
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    ForEach(visibleItems) { item in
-                        ZStack {
+    private func castGalleryItem(
+        label: String,
+        imageUrl: String,
+        index: Int
+    ) -> some View {
+        let gradients = [
+            ("FFE6EE", "F7C9D8"),
+            ("FFD8E6", "FFEFF5"),
+            ("FFD9CF", "FFF0EA")
+        ]
+        let colors = gradients[index % gradients.count]
+        return GeometryReader { proxy in
+            ZStack(alignment: .bottomLeading) {
+                if !imageUrl.isEmpty {
+                    CastEditImageView(
+                        imageUrl: imageUrl,
+                        placeholder: {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color(hex: "FFE6EE"), Color(hex: "F7C9D8")],
+                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .frame(width: itemSize, height: itemSize)
-                            Text(item.overlayCount.map { "+\($0)" } ?? item.label)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(Color(hex: "5E4C57"))
                         }
-                    }
+                    )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                } else {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
+                Text(label)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.32))
+                    .clipShape(Capsule())
+                    .padding(10)
             }
-            .frame(height: max(0, UIScreen.main.bounds.width - 68) / 4)
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
+        .aspectRatio(1, contentMode: .fit)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var addGalleryItem: some View {
+        Button {
+            onAction(.clickAddGalleryPhoto)
+            onPickGalleryImage()
+        } label: {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(hex: "FFD1DC").opacity(0.1))
+                .overlay {
+                    Circle()
+                        .stroke(Color(hex: "FFD1DC").opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        .overlay {
+                            Image(systemName: "plus")
+                                .foregroundStyle(Color(hex: "EF6797"))
+                        }
+                        .padding(22)
+                }
+                .aspectRatio(1, contentMode: .fit)
+        }
+        .buttonStyle(.plain)
     }
 
     private var bottomSaveBar: some View {
@@ -332,6 +380,26 @@ private struct CastEditProfileImageView: View {
     let imageUrl: String
 
     var body: some View {
+        CastEditImageView(imageUrl: imageUrl, placeholder: { placeholder })
+    }
+
+    private var placeholder: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+    }
+}
+
+private struct CastEditImageView<Placeholder: View>: View {
+    let imageUrl: String
+    let placeholder: () -> Placeholder
+
+    var body: some View {
         if let fileUrl = URL(string: imageUrl),
            fileUrl.isFileURL,
            let uiImage = UIImage(contentsOfFile: fileUrl.path) {
@@ -349,44 +417,13 @@ private struct CastEditProfileImageView: View {
                         .resizable()
                         .scaledToFill()
                 case .failure:
-                    placeholder
+                    placeholder()
                 @unknown default:
-                    placeholder
+                    placeholder()
                 }
             }
         } else {
-            placeholder
-        }
-    }
-
-    private var placeholder: some View {
-        Circle()
-            .fill(
-                LinearGradient(
-                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-    }
-}
-
-private struct FlexibleChipLayout<Item: Identifiable & Hashable, Content: View>: View {
-    let items: [Item]
-
-    let spacing: CGFloat
-
-    @ViewBuilder let content: (Item) -> Content
-
-    var body: some View {
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 64), spacing: spacing, alignment: .leading)],
-            alignment: .leading,
-            spacing: spacing
-        ) {
-            ForEach(items, id: \.self) { item in
-                content(item)
-            }
+            placeholder()
         }
     }
 }
