@@ -22,6 +22,7 @@ enum NoticeEventAction {
     case dismissFormSheet
     case changeFormTitle(String)
     case changeFormContent(String)
+    case changeFormImage(String)
     case clickFormImage
     case clickRemoveFormImage
     case changeFormPinned(Bool)

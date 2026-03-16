@@ -18,7 +18,9 @@ enum CafeInfoEditAction {
     case changeWeekendOpen(String)
     case changeWeekendClose(String)
     case clickRepresentativeImage
+    case selectRepresentativeImage(String)
     case clickAddGalleryImage
+    case addGalleryImage(String)
     case clickPinLocation
     case clickManageExceptionDates
     case clickSave

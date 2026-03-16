@@ -17,10 +17,22 @@ struct CafeInfoEditView: View {
 
     @StateObject private var viewModel: CafeInfoEditViewModel
 
+    @State private var isPhotoPickerPresented = false
+
+    @State private var imagePickTarget: CafeInfoImagePickTarget?
+
     var body: some View {
         CafeInfoEditContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onRepresentativeImagePick: {
+                imagePickTarget = .representative
+                isPhotoPickerPresented = true
+            },
+            onGalleryImagePick: {
+                imagePickTarget = .gallery
+                isPhotoPickerPresented = true
+            }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -31,6 +43,32 @@ struct CafeInfoEditView: View {
             case .showSaveSuccessAlert:
                 break
             }
+        }
+        .sheet(isPresented: $isPhotoPickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    let target = imagePickTarget
+                    isPhotoPickerPresented = false
+
+                    guard let target else { return }
+                    guard let imageUrl = saveImageToTemporaryFile(image) else {
+                        imagePickTarget = nil
+                        return
+                    }
+
+                    switch target {
+                    case .representative:
+                        viewModel.onAction(.selectRepresentativeImage(imageUrl))
+                    case .gallery:
+                        viewModel.onAction(.addGalleryImage(imageUrl))
+                    }
+
+                    imagePickTarget = nil
+                },
+                onDismiss: {
+                    isPhotoPickerPresented = false
+                }
+            )
         }
     }
 
@@ -55,6 +93,10 @@ private struct CafeInfoEditContentView: View {
     let uiState: CafeInfoEditUiState
 
     let onAction: (CafeInfoEditAction) -> Void
+
+    let onRepresentativeImagePick: () -> Void
+
+    let onGalleryImagePick: () -> Void
 
     var body: some View {
         ScrollView {
@@ -107,27 +149,56 @@ private struct CafeInfoEditContentView: View {
     private var representativeImageSection: some View {
         editSectionCard(title: "대표 이미지") {
             Button {
-                onAction(.clickRepresentativeImage)
+                onRepresentativeImagePick()
             } label: {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                GeometryReader { proxy in
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(height: 200)
-                    VStack(spacing: 8) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 32, weight: .semibold))
-                            .foregroundStyle(Color(hex: "8B5164"))
-                        Text(uiState.representativeImageTitle)
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "5A4954"))
+                        if let imageUrl = uiState.representativeImageUrl,
+                           !imageUrl.isEmpty {
+                            CafeInfoImageView(
+                                imageUrl: imageUrl,
+                                placeholder: {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "camera.fill")
+                                            .font(.system(size: 32, weight: .semibold))
+                                            .foregroundStyle(Color(hex: "8B5164"))
+                                        Text(uiState.representativeImageTitle)
+                                            .font(.subheadline.weight(.bold))
+                                            .foregroundStyle(Color(hex: "5A4954"))
+                                    }
+                                },
+                                loading: {
+                                    ProgressView()
+                                        .tint(Color(hex: "9C7A88"))
+                                }
+                            )
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                        } else {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 32, weight: .semibold))
+                                    .foregroundStyle(Color(hex: "8B5164"))
+                                Text(uiState.representativeImageTitle)
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Color(hex: "5A4954"))
+                            }
+                        }
                     }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
             }
             .buttonStyle(.plain)
             Text("검색 결과에 노출되는 대표 이미지입니다")
@@ -158,7 +229,9 @@ private struct CafeInfoEditContentView: View {
                         index: index
                     )
                 }
-                addGalleryItem
+                if uiState.galleryImages.count < uiState.galleryMaxCount {
+                    addGalleryItem
+                }
             }
         }
     }
@@ -256,33 +329,34 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var bottomSaveBar: some View {
-        Button {
-            onAction(.clickSave)
-        } label: {
-            HStack(spacing: 8) {
-                if uiState.isSaving {
-                    ProgressView()
-                        .tint(Color(hex: "2B2330"))
-                } else {
-                    Image(systemName: "square.and.arrow.down.fill")
-                }
-                Text(uiState.submitButtonText)
-                    .fontWeight(.bold)
-            }
-            .foregroundStyle(Color(hex: "2B2330"))
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(Color(hex: "FFD1DC"))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-        .disabled(uiState.isSaving)
-        .buttonStyle(.plain)
-        .padding(16)
-        .background(Color.white.opacity(0.92))
-        .overlay(alignment: .top) {
+        VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
+            Button {
+                onAction(.clickSave)
+            } label: {
+                HStack {
+                    Spacer()
+                    if uiState.isSaving {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    } else {
+                        Text(uiState.submitButtonText)
+                            .font(.headline.weight(.bold))
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
+            .disabled(uiState.isSaving)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 14)
+            .background(Color.white.opacity(0.92))
         }
     }
 
@@ -328,26 +402,57 @@ private struct CafeInfoEditContentView: View {
             ("FFD9CF", "FFF0EA")
         ]
         let colors = gradients[index % gradients.count]
-        return ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+        return GeometryReader { proxy in
+            ZStack(alignment: .bottomLeading) {
+                let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+                if !imageUrl.isEmpty {
+                    CafeInfoImageView(
+                        imageUrl: imageUrl,
+                        placeholder: {
+                            backgroundShape
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        },
+                        loading: {
+                            ProgressView()
+                        }
                     )
-                )
-            Text(imageUrl.isEmpty ? label : label)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "5A4954"))
-                .padding(10)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                } else {
+                    backgroundShape
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                Text(label)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.32))
+                    .clipShape(Capsule())
+                    .padding(10)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .aspectRatio(1, contentMode: .fit)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {
         Button {
-            onAction(.clickAddGalleryImage)
+            onGalleryImagePick()
         } label: {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(hex: "FFD1DC").opacity(0.1))
@@ -420,6 +525,60 @@ private struct CafeInfoEditContentView: View {
                 .stroke(Color(hex: "F1D88D"), lineWidth: 1)
         )
     }
+
+}
+
+private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
+    let imageUrl: String
+
+    let placeholder: () -> Placeholder
+
+    let loading: () -> Loading
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let url = URL(string: imageUrl) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    loading()
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder()
+                @unknown default:
+                    placeholder()
+                }
+            }
+        } else {
+            placeholder()
+        }
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+        guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+        let fileName = "\(UUID().uuidString).jpg"
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try data.write(to: fileURL, options: .atomic)
+            return fileURL.absoluteString
+        } catch {
+            return nil
+        }
+}
+
+private enum CafeInfoImagePickTarget {
+    case representative
+    case gallery
 }
 
 struct CafeInfoEditView_Previews: PreviewProvider {

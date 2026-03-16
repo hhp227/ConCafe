@@ -422,13 +422,11 @@ final class NoticeEventViewModel: ObservableObject {
             uiState.formTitle = value
         case .changeFormContent(let value):
             uiState.formContent = value
+        case .changeFormImage(let value):
+            uiState.formImageUrl = value
+            uiState.infoMessage = nil
         case .clickFormImage:
-            if uiState.formImageUrl.isEmpty {
-                uiState.formImageUrl = sampleEventImageUrl
-                uiState.infoMessage = nil
-            } else {
-                uiState.infoMessage = "이미지는 한 장만 첨부할 수 있습니다."
-            }
+            uiState.infoMessage = "이미지를 첨부하려면 이미지 선택 기능을 사용해 주세요."
         case .clickRemoveFormImage:
             uiState.formImageUrl = ""
             uiState.infoMessage = nil

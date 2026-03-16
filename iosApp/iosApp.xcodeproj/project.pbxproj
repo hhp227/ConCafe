@@ -127,6 +127,7 @@
 		0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */; };
 		0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */; };
 		0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */; };
+		0A707BC82F67EC63007F52D1 /* CafeEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A707BC72F67EC63007F52D1 /* CafeEventView.swift */; };
 		0A74A38B2F66EE810038EA4E /* NotificationQuietHoursOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */; };
 		0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C932F5A76B8004037A8 /* HomeAction.swift */; };
 		0A785C962F5A76D7004037A8 /* HomeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C952F5A76D7004037A8 /* HomeEvent.swift */; };
@@ -312,6 +313,7 @@
 		0A6B6AC32F60705500E395C2 /* CafeInfoEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditViewModel.swift; sourceTree = "<group>"; };
 		0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditAction.swift; sourceTree = "<group>"; };
 		0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditEvent.swift; sourceTree = "<group>"; };
+		0A707BC72F67EC63007F52D1 /* CafeEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventView.swift; sourceTree = "<group>"; };
 		0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationQuietHoursOption.swift; sourceTree = "<group>"; };
 		0A785C932F5A76B8004037A8 /* HomeAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeAction.swift; sourceTree = "<group>"; };
 		0A785C952F5A76D7004037A8 /* HomeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEvent.swift; sourceTree = "<group>"; };
@@ -502,6 +504,7 @@
 				0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */,
 				0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */,
 				0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */,
+				0A707BC72F67EC63007F52D1 /* CafeEventView.swift */,
 			);
 			path = Tab;
 			sourceTree = "<group>";
@@ -1156,6 +1159,7 @@
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,
+				0A707BC82F67EC63007F52D1 /* CafeEventView.swift in Sources */,
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
 				0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,

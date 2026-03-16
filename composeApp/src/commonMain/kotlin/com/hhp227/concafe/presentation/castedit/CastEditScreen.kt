@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -26,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.HowToReg
-import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,7 +49,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +56,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCastDetailUseCase
 import com.hhp227.concafe.di.resolveUpsertCastUseCase
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -185,9 +185,19 @@ private fun CastEditContentScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     item {
-                        ProfilePhotoSection(
-                            onClick = { onAction(CastEditAction.ClickProfilePhoto) }
-                        )
+                        CompatImagePicker(
+                            onImageSelected = { imageUrl ->
+                                onAction(CastEditAction.SelectProfilePhoto(imageUrl))
+                            }
+                        ) { launchImagePicker ->
+                            ProfilePhotoSection(
+                                imageUrl = uiState.profileImageUrl,
+                                onClick = {
+                                    onAction(CastEditAction.ClickProfilePhoto)
+                                    launchImagePicker()
+                                }
+                            )
+                        }
                     }
                     uiState.infoMessage?.let { message ->
                         item {
@@ -239,16 +249,21 @@ private fun CastEditContentScreen(
                         )
                     }
                     item {
-                        WorkingDaysSection(
-                            selectedDays = uiState.selectedWorkingDays,
-                            onToggle = { onAction(CastEditAction.ToggleWorkingDay(it)) }
-                        )
-                    }
-                    item {
-                        GallerySection(
-                            galleryItems = uiState.galleryItems,
-                            onAddClick = { onAction(CastEditAction.ClickAddGalleryPhoto) }
-                        )
+                        CompatImagePicker(
+                            onImageSelected = { imageUrl ->
+                                onAction(CastEditAction.AddGalleryImage(imageUrl))
+                            }
+                        ) { launchImagePicker ->
+                            GallerySection(
+                                galleryImages = uiState.galleryImages,
+                                galleryLimitText = uiState.galleryLimitText,
+                                galleryMaxCount = uiState.galleryMaxCount,
+                                onAddClick = {
+                                    onAction(CastEditAction.ClickAddGalleryPhoto)
+                                    launchImagePicker()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -258,6 +273,7 @@ private fun CastEditContentScreen(
 
 @Composable
 private fun ProfilePhotoSection(
+    imageUrl: String?,
     onClick: () -> Unit
 ) {
     Box(
@@ -281,7 +297,14 @@ private fun ProfilePhotoSection(
                                 colors = listOf(Color(0xFFFFE3EC), Color(0xFFF8C5D7))
                             )
                         )
-                )
+                ) {
+                    if (!imageUrl.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = imageUrl,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
                 Surface(
                     shape = CircleShape,
                     color = Color(0xFFFFD1DC),
@@ -302,47 +325,13 @@ private fun ProfilePhotoSection(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
-@Composable
-private fun WorkingDaysSection(
-    selectedDays: Set<CastEditUiState.WorkingDay>,
-    onToggle: (CastEditUiState.WorkingDay) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("근무 요일", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            CastEditUiState.WorkingDay.entries.forEach { day ->
-                val isSelected = day in selectedDays
-
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
-                    color = if (isSelected) Color(0xFFFFD1DC) else Color(0x14FFD1DC),
-                    border = BorderStroke(1.dp, if (isSelected) Color(0xFFFFD1DC) else Color(0x4DFFD1DC)),
-                    onClick = { onToggle(day) }
-                ) {
-                    Text(
-                        text = day.shortLabel,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        color = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
 private fun GallerySection(
-    galleryItems: List<CastEditUiState.GalleryItem>,
+    galleryImages: List<String>,
+    galleryLimitText: String,
+    galleryMaxCount: Int,
     onAddClick: () -> Unit
 ) {
-    val visibleItems = galleryItems.take(3)
-
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -350,47 +339,93 @@ private fun GallerySection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("갤러리 사진", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
-            Text("사진 추가", style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
+            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
         }
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val itemSize = (maxWidth - 36.dp) / 4
+        CastGalleryGrid(
+            galleryImages = galleryImages,
+            galleryMaxCount = galleryMaxCount,
+            onAddClick = onAddClick
+        )
+        Text(
+            text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF8A8088)
+        )
+    }
+}
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CastGalleryGrid(
+    galleryImages: List<String>,
+    galleryMaxCount: Int,
+    onAddClick: () -> Unit
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        maxItemsInEachRow = 3
+    ) {
+        galleryImages.forEachIndexed { index, imageUrl ->
+            CastGalleryImageTile(
+                label = "이미지 ${index + 1}",
+                imageUrl = imageUrl,
+                index = index
+            )
+        }
+        if (galleryImages.size < galleryMaxCount) {
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0x1AFFD1DC))
+                    .clickable(onClick = onAddClick),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(itemSize)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0x1AFFD1DC))
-                        .clickable(onClick = onAddClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.AddAPhoto, contentDescription = "사진 추가", tint = Color(0xFFEF6797))
-                }
-                visibleItems.forEach { item ->
-                    Box(
-                        modifier = Modifier
-                            .size(itemSize)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(Color(0xFFFFE6EE), Color(0xFFF7C9D8))
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = item.overlayCount?.let { "+$it" } ?: item.label,
-                            color = Color(0xFF5E4C57),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+                Icon(Icons.Default.Add, contentDescription = "사진 추가", tint = Color(0xFFEF6797))
             }
+        }
+    }
+}
+
+@Composable
+private fun CastGalleryImageTile(
+    label: String,
+    imageUrl: String,
+    index: Int
+) {
+    val gradients = listOf(
+        listOf(Color(0xFFFFE6EE), Color(0xFFF7C9D8)),
+        listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5)),
+        listOf(Color(0xFFFFD9CF), Color(0xFFFFF0EA))
+    )
+    val colors = gradients[index % gradients.size]
+
+    Box(
+        modifier = Modifier
+            .size(96.dp)
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.linearGradient(colors)),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        CompatImageDisplay(
+            imageUrl = imageUrl,
+            modifier = Modifier.fillMaxSize()
+        )
+        Surface(
+            modifier = Modifier.padding(10.dp),
+            shape = RoundedCornerShape(999.dp),
+            color = Color.Black.copy(alpha = 0.32f)
+        ) {
+            Text(
+                text = label,
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
         }
     }
 }

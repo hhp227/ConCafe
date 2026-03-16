@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct NoticeEventView: View {
     let cafeId: String
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: NoticeEventViewModel
@@ -317,6 +319,8 @@ private struct NoticeEventFormSheet: View {
 
     let onAction: (NoticeEventAction) -> Void
 
+    @State private var isImagePickerPresented = false
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Color.black.opacity(0.5)
@@ -466,6 +470,19 @@ private struct NoticeEventFormSheet: View {
             .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
             .ignoresSafeArea(edges: .bottom)
         }
+        .sheet(isPresented: $isImagePickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isImagePickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        onAction(.changeFormImage(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isImagePickerPresented = false
+                }
+            )
+        }
     }
 
     private var representativeImageSection: some View {
@@ -474,46 +491,111 @@ private struct NoticeEventFormSheet: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color(hex: "665A63"))
                 .padding(.leading, 4)
-            ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomTrailing) {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(height: 200)
-                VStack(spacing: 8) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 32, weight: .semibold))
-                        .foregroundStyle(Color(hex: "8B5164"))
-                    Text(uiState.formImageTitle)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "5A4954"))
-                }
-                if uiState.hasAttachedImage {
-                    Button("제거") {
-                        onAction(.clickRemoveFormImage)
+                    if uiState.hasAttachedImage {
+                        NoticeEventFormImageView(imageUrl: uiState.formImageUrl)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundStyle(Color(hex: "8B5164"))
+                            Text(uiState.formImageTitle)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Color(hex: "5A4954"))
+                        }
+                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "8B5164"))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.white)
-                    .clipShape(Capsule())
-                    .padding(12)
+                    if uiState.hasAttachedImage {
+                        Button("제거") {
+                            onAction(.clickRemoveFormImage)
+                        }
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "8B5164"))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                        .padding(12)
+                    }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .onTapGesture {
-                onAction(.clickFormImage)
+                isImagePickerPresented = true
             }
             Text(uiState.formImageDescription)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+private struct NoticeEventFormImageView: View {
+    let imageUrl: String
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteUrl = URL(string: imageUrl) {
+            AsyncImage(url: remoteUrl) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .tint(Color(hex: "9C7A88"))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder
+                @unknown default:
+                    placeholder
+                }
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+    let fileName = "\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+    do {
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }
 

@@ -388,11 +388,14 @@ class NoticeEventViewModel(
             NoticeEventAction.DismissFormSheet -> _uiState.update { it.copy(isFormSheetVisible = false, formEditingId = null) }
             is NoticeEventAction.ChangeFormTitle -> _uiState.update { it.copy(formTitle = action.value) }
             is NoticeEventAction.ChangeFormContent -> _uiState.update { it.copy(formContent = action.value) }
+            is NoticeEventAction.ChangeFormImageUrl -> _uiState.update {
+                it.copy(formImageUrl = action.imageUrl, infoMessage = null)
+            }
             NoticeEventAction.ClickFormImage -> _uiState.update {
                 if (it.formImageUrl.isNotBlank()) {
                     it.copy(infoMessage = "이미지는 한 장만 첨부할 수 있습니다.")
                 } else {
-                    it.copy(formImageUrl = SAMPLE_EVENT_IMAGE_URL, infoMessage = null)
+                    it.copy(infoMessage = "이미지를 첨부하려면 이미지 선택 기능을 사용해 주세요.")
                 }
             }
             NoticeEventAction.ClickRemoveFormImage -> _uiState.update { it.copy(formImageUrl = "", infoMessage = null) }

@@ -15,6 +15,7 @@ sealed interface NoticeEventAction {
     data object DismissFormSheet : NoticeEventAction
     data class ChangeFormTitle(val value: String) : NoticeEventAction
     data class ChangeFormContent(val value: String) : NoticeEventAction
+    data class ChangeFormImageUrl(val imageUrl: String) : NoticeEventAction
     data object ClickFormImage : NoticeEventAction
     data object ClickRemoveFormImage : NoticeEventAction
     data class ChangeFormPinned(val value: Boolean) : NoticeEventAction

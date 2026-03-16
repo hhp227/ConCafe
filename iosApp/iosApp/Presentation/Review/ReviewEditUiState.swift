@@ -14,7 +14,7 @@ struct ReviewEditUiState {
     var visitId = ""
     var rating = 0
     var content = ""
-    var images: [PhotoItem] = []
+    var photoImageUrl: String? = nil
     var taggedCastIds: [String] = []
     var availableCastTags: [CastTag] = []
     var likeCount = 0
@@ -44,7 +44,6 @@ struct ReviewEditUiState {
     }
 
     static let maximumRating = 5
-    static let maximumPhotoCount = 10
     static let minimumReviewLength = 10
 
     static func ratingMessage(for rating: Int) -> String {
@@ -62,14 +61,6 @@ struct ReviewEditUiState {
         default:
             return "평점을 선택해주세요"
         }
-    }
-
-    struct PhotoItem: Identifiable, Hashable {
-        let id: String
-        let label: String
-        let accentColorHex: String
-        let backgroundColorHex: String
-
     }
 
     struct CastTag: Identifiable, Hashable {

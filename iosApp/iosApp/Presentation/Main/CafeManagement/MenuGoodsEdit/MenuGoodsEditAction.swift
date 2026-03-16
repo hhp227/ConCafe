@@ -12,6 +12,7 @@ enum MenuGoodsEditAction {
     case clickPhotoUpload
     case changeName(String)
     case changePrice(String)
+    case selectPhoto(String)
     case selectCategory(MenuGoodsEditUiState.ItemCategory)
     case changeDescription(String)
     case toggleStock(Bool)

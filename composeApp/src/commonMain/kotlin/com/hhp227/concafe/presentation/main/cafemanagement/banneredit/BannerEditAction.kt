@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.banneredit
 sealed interface BannerEditAction {
     data object ClickBack : BannerEditAction
     data object ClickImagePicker : BannerEditAction
+    data class SelectImage(val imageUrl: String) : BannerEditAction
     data class ChangeTitle(val value: String) : BannerEditAction
     data class ChangeSubtitle(val value: String) : BannerEditAction
     data class SelectTarget(val target: BannerTargetType) : BannerEditAction

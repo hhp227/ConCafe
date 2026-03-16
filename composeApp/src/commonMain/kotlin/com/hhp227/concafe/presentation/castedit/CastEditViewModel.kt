@@ -35,7 +35,7 @@ class CastEditViewModel(
     }
 
     private fun clickProfilePhoto() {
-        _uiState.update { it.copy(infoMessage = "프로필 사진 업로드는 다음 단계에서 연결됩니다.") }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
     private fun toggleWorkingDay(day: CastEditUiState.WorkingDay) {
@@ -50,7 +50,7 @@ class CastEditViewModel(
     }
 
     private fun clickAddGalleryPhoto() {
-        _uiState.update { it.copy(infoMessage = "갤러리 사진 업로드는 다음 단계에서 연결됩니다.") }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
     private fun clickSave() {
@@ -119,12 +119,13 @@ class CastEditViewModel(
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
+                            profileImageUrl = detail.cast.profileImage,
                             castName = detail.cast.name,
                             conceptRole = detail.cast.conceptRole,
                             birthday = detail.cast.birthday.orEmpty(),
                             introduction = detail.cast.desc,
                             selectedWorkingDays = detail.schedule.toWorkingDays(),
-                            galleryItems = detail.toGalleryItems()
+                            galleryImages = detail.images.filter { it.isNotBlank() }.take(state.galleryMaxCount)
                         )
                     }
                 }
@@ -144,6 +145,18 @@ class CastEditViewModel(
         when (action) {
             CastEditAction.ClickBack -> clickBack()
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
+            is CastEditAction.SelectProfilePhoto -> _uiState.update { it.copy(profileImageUrl = action.imageUrl, infoMessage = null) }
+            is CastEditAction.AddGalleryImage -> {
+                val imageUrl = action.imageUrl
+                if (imageUrl.isBlank()) return
+                val galleryImages = _uiState.value.galleryImages
+                val galleryMaxCount = _uiState.value.galleryMaxCount
+                if (galleryImages.size >= galleryMaxCount) {
+                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
+                } else {
+                    _uiState.update { it.copy(galleryImages = galleryImages + imageUrl, infoMessage = null) }
+                }
+            }
             is CastEditAction.ChangeCastName -> _uiState.update { it.copy(castName = action.value) }
             is CastEditAction.ChangeConceptRole -> _uiState.update { it.copy(conceptRole = action.value) }
             is CastEditAction.ChangeBirthday -> _uiState.update { it.copy(birthday = action.value) }
@@ -182,22 +195,6 @@ private fun List<CastSchedule>.toWorkingDays(): Set<CastEditUiState.WorkingDay> 
 
 private fun Set<CastEditUiState.WorkingDay>.toWorkingDayKeys(): List<String> {
     return map { it.name }
-}
-
-private fun CastDetail.toGalleryItems(): List<CastEditUiState.GalleryItem> {
-    val images = images.filter { it.isNotBlank() }
-    if (images.isEmpty()) return emptyList()
-
-    val visibleImages = images.take(3)
-    val remainingCount = (images.size - visibleImages.size).coerceAtLeast(0)
-
-    return visibleImages.mapIndexed { index, imageUrl ->
-        CastEditUiState.GalleryItem(
-            id = imageUrl.ifBlank { "gallery-$index" },
-            label = "갤러리 ${index + 1}",
-            overlayCount = if (index == visibleImages.lastIndex && remainingCount > 0) remainingCount else null
-        )
-    }
 }
 
 private fun String.toWorkingDayOrNull(): CastEditUiState.WorkingDay? {

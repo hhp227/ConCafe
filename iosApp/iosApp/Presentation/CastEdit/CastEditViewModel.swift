@@ -26,7 +26,7 @@ final class CastEditViewModel: ObservableObject {
     private var requestTask: Task<Void, Never>?
 
     private func clickProfilePhoto() {
-        uiState.infoMessage = "프로필 사진 업로드는 다음 단계에서 연결됩니다."
+        uiState.infoMessage = nil
     }
 
     private func toggleWorkingDay(_ day: CastEditUiState.WorkingDay) {
@@ -38,7 +38,7 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func clickAddGalleryPhoto() {
-        uiState.infoMessage = "갤러리 사진 업로드는 다음 단계에서 연결됩니다."
+        uiState.infoMessage = nil
     }
 
     private func clickSave() {
@@ -98,12 +98,13 @@ final class CastEditViewModel: ObservableObject {
                     let detail = feed.detail
                     var nextState = uiState
                     nextState.isLoading = false
+                    nextState.profileImageUrl = detail.cast.profileImage
                     nextState.castName = detail.cast.name
                     nextState.conceptRole = detail.cast.conceptRole
                     nextState.birthday = detail.cast.birthday ?? ""
                     nextState.introduction = detail.cast.desc
                     nextState.selectedWorkingDays = workingDays(from: detail.schedule)
-                    nextState.galleryItems = galleryItems(from: detail)
+                    nextState.galleryImages = Array(detail.images.filter { !$0.isEmpty }.prefix(nextState.galleryMaxCount))
                     uiState = nextState
                 } else {
                     uiState.isLoading = false
@@ -123,6 +124,17 @@ final class CastEditViewModel: ObservableObject {
             event.send(.navigateBack)
         case .clickProfilePhoto:
             clickProfilePhoto()
+        case .selectProfilePhoto(let imageUrl):
+            uiState.profileImageUrl = imageUrl
+            uiState.infoMessage = nil
+        case .addGalleryImage(let imageUrl):
+            if uiState.galleryImages.count >= uiState.galleryMaxCount {
+                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
+                return
+            }
+            if imageUrl.isEmpty { return }
+            uiState.galleryImages.append(imageUrl)
+            uiState.infoMessage = nil
         case .changeCastName(let value):
             uiState.castName = value
         case .changeConceptRole(let value):
@@ -185,22 +197,6 @@ private extension Set where Element == CastEditUiState.WorkingDay {
             case .sunday: return "SUNDAY"
             }
         }
-    }
-}
-
-private func galleryItems(from detail: CastDetail) -> [CastEditUiState.GalleryItem] {
-    let images = detail.images.filter { !$0.isEmpty }
-    guard !images.isEmpty else { return [] }
-
-    let visibleImages = Array(images.prefix(3))
-    let remainingCount = max(images.count - visibleImages.count, 0)
-
-    return visibleImages.enumerated().map { index, image in
-        CastEditUiState.GalleryItem(
-            id: image.isEmpty ? "gallery-\(index)" : image,
-            label: "갤러리 \(index + 1)",
-            overlayCount: index == visibleImages.count - 1 && remainingCount > 0 ? remainingCount : nil
-        )
     }
 }
 

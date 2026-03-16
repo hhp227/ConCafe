@@ -7,7 +7,7 @@ data class ReviewEditUiState(
     val visitId: String = "",
     val rating: Int = 0,
     val content: String = "",
-    val images: List<PhotoItem> = emptyList(),
+    val photoImageUrl: String? = null,
     val taggedCastIds: List<String> = emptyList(),
     val availableCastTags: List<CastTag> = emptyList(),
     val likeCount: Int = 0,
@@ -33,13 +33,6 @@ data class ReviewEditUiState(
     val isSubmitEnabled: Boolean
         get() = rating > 0 && content.trim().length >= minimumReviewLength && !isSubmitting
 
-    data class PhotoItem(
-        val id: String,
-        val label: String,
-        val accentColorHex: Long,
-        val backgroundColorHex: Long
-    )
-
     data class CastTag(
         val id: String,
         val name: String
@@ -47,7 +40,6 @@ data class ReviewEditUiState(
 
     companion object {
         const val maximumRating = 5
-        const val maximumPhotoCount = 10
         const val minimumReviewLength = 10
 
         fun ratingToMessage(rating: Int): String {

@@ -45,8 +45,10 @@ final class BannerEditViewModel: ObservableObject {
         case .clickBack:
             event.send(.navigateBack)
         case .clickImagePicker:
-            uiState.selectedImageLabel = "banner_cover_mock.png"
-            uiState.infoMessage = "이미지 업로드 연결은 다음 단계에서 구현됩니다."
+            uiState.infoMessage = nil
+        case .selectImage(let imageUrl):
+            uiState.selectedImageLabel = imageUrl
+            uiState.infoMessage = nil
         case .changeTitle(let value):
             uiState.title = value
         case .changeSubtitle(let value):

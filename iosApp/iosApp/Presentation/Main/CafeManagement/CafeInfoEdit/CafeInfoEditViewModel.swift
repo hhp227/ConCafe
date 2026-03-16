@@ -41,13 +41,14 @@ final class CafeInfoEditViewModel: ObservableObject {
                    let feed = success.data as? CafeDetailFeed {
                     let detail = feed.detail
                     let parsedHours = parseBusinessHours(detail.businessHours)
+                    let cafeImages = detail.images.filter { !$0.isEmpty }
 
                     uiState.detail = detail
                     uiState.isLoading = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
-                    uiState.representativeImageUrl = detail.images.first(where: { !$0.isEmpty }) ?? detail.cafe.thumbnailImage
-                    uiState.galleryImages = detail.images.filter { !$0.isEmpty }
+                    uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
+                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
@@ -99,12 +100,14 @@ final class CafeInfoEditViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let detail = success.data as? CafeDetail {
                     let parsedHours = parseBusinessHours(detail.businessHours)
+                    let cafeImages = detail.images.filter { !$0.isEmpty }
+
                     uiState.detail = detail
                     uiState.isSaving = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
-                    uiState.representativeImageUrl = detail.images.first(where: { !$0.isEmpty }) ?? detail.cafe.thumbnailImage
-                    uiState.galleryImages = detail.images.filter { !$0.isEmpty }
+                    uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
+                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
@@ -204,10 +207,19 @@ final class CafeInfoEditViewModel: ObservableObject {
             uiState.weekendOpen = value
         case .changeWeekendClose(let value):
             uiState.weekendClose = value
+        case .selectRepresentativeImage(let imageUrl):
+            uiState.representativeImageUrl = imageUrl
+        case .addGalleryImage(let imageUrl):
+            if uiState.galleryImages.count >= uiState.galleryMaxCount {
+                showInfo("카페 갤러리는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+                return
+            }
+            if imageUrl.isEmpty { return }
+            uiState.galleryImages.append(imageUrl)
         case .clickRepresentativeImage:
-            showInfo("대표 이미지 업로드는 다음 단계에서 연결됩니다.")
+            break
         case .clickAddGalleryImage:
-            showInfo("갤러리 이미지 추가는 다음 단계에서 연결됩니다.")
+            break
         case .clickPinLocation:
             showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
         case .clickManageExceptionDates:

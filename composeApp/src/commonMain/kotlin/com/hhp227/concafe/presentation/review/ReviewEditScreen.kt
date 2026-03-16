@@ -25,8 +25,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveCreateReviewUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
-import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -299,23 +300,81 @@ private fun PhotoSection(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "사진 등록 ${uiState.images.size}/${ReviewEditUiState.maximumPhotoCount}",
+            text = "사진 등록 (선택)",
             style = MaterialTheme.typography.titleMedium,
             color = Color(0xFF2B2330),
             fontWeight = FontWeight.Bold
         )
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AddPhotoCard(onClick = { onAction(ReviewEditAction.ClickAddPhoto) })
-            uiState.images.forEach { item ->
-                PhotoCard(
-                    item = item,
-                    onRemove = { onAction(ReviewEditAction.RemovePhoto(item.id)) }
-                )
+        CompatImagePicker(
+            onImageSelected = { imageUrl ->
+                onAction(ReviewEditAction.SelectPhoto(imageUrl))
+            }
+        ) { launchImagePicker ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                        )
+                    )
+                    .clickable {
+                        onAction(ReviewEditAction.ClickAddPhoto)
+                        launchImagePicker()
+                    }
+            ) {
+                if (uiState.photoImageUrl.isNullOrBlank()) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = Color(0xFF8B5164),
+                            modifier = Modifier.size(34.dp)
+                        )
+                        Text(
+                            text = "리뷰 사진 추가",
+                            color = Color(0xFF5A4954),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    CompatImageDisplay(
+                        imageUrl = uiState.photoImageUrl,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                if (!uiState.photoImageUrl.isNullOrBlank()) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                            .clickable { onAction(ReviewEditAction.RemovePhoto) },
+                        shape = RoundedCornerShape(999.dp),
+                        color = Color.White
+                    ) {
+                        Text(
+                            text = "제거",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF8B5164),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
+        Text(
+            text = "리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF8A8088)
+        )
     }
 }
 
@@ -411,94 +470,6 @@ private fun CastTagSection(
             }
         }
     }
-}
-
-@Composable
-private fun AddPhotoCard(onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .size(96.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .border(
-                width = 2.dp,
-                color = Color(0x66FFD1DC),
-                shape = RoundedCornerShape(18.dp)
-            )
-            .background(Color(0x1AFFD1DC))
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.AddAPhoto,
-            contentDescription = "사진 추가",
-            tint = Color(0xFFEF6797),
-            modifier = Modifier.size(28.dp)
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = "사진 추가",
-            color = Color(0xFFEF6797),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun PhotoCard(
-    item: ReviewEditUiState.PhotoItem,
-    onRemove: () -> Unit
-) {
-    val backgroundColor = item.backgroundColorHex.toComposeColor()
-    val accentColor = item.accentColorHex.toComposeColor()
-
-    Box(
-        modifier = Modifier.size(96.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(18.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            backgroundColor,
-                            accentColor.copy(alpha = 0.35f)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = item.label,
-                color = accentColor,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(6.dp)
-                .size(22.dp)
-                .clip(CircleShape)
-                .background(Color.Black.copy(alpha = 0.7f))
-                .clickable(onClick = onRemove),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "사진 삭제",
-                tint = Color.White,
-                modifier = Modifier.size(14.dp)
-            )
-        }
-    }
-}
-
-private fun Long.toComposeColor(): Color {
-    return colorFromHex(toString(16).padStart(8, '0'))
 }
 
 @Composable
