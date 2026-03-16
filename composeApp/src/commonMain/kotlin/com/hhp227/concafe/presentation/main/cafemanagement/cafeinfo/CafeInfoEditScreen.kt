@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.LocationOn
@@ -141,33 +143,34 @@ private fun CafeInfoEditContent(
         bottomBar = {
             Surface(
                 color = Color.White.copy(alpha = 0.92f),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
+                shadowElevation = 8.dp,
                 border = BorderStroke(1.dp, Color(0x33FFD1DC))
             ) {
-                Button(
-                    onClick = { onAction(CafeInfoEditAction.ClickSave) },
-                    enabled = !uiState.isSaving,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330)
-                    )
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
-                    if (uiState.isSaving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = Color(0xFF2B2330)
+                    Button(
+                        onClick = { onAction(CafeInfoEditAction.ClickSave) },
+                        enabled = !uiState.isSaving,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD1DC),
+                            contentColor = Color(0xFF2B2330)
                         )
-                    } else {
-                        Icon(Icons.Default.Save, contentDescription = null)
+                    ) {
+                        Icon(Icons.Default.AddCircle, contentDescription = null)
+                        Text(
+                            text = uiState.submitButtonText,
+                            modifier = Modifier.padding(start = 8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Text(uiState.submitButtonText, modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
                 }
             }
         }

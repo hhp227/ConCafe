@@ -329,33 +329,34 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var bottomSaveBar: some View {
-        Button {
-            onAction(.clickSave)
-        } label: {
-            HStack(spacing: 8) {
-                if uiState.isSaving {
-                    ProgressView()
-                        .tint(Color(hex: "2B2330"))
-                } else {
-                    Image(systemName: "square.and.arrow.down.fill")
-                }
-                Text(uiState.submitButtonText)
-                    .fontWeight(.bold)
-            }
-            .foregroundStyle(Color(hex: "2B2330"))
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(Color(hex: "FFD1DC"))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-        .disabled(uiState.isSaving)
-        .buttonStyle(.plain)
-        .padding(16)
-        .background(Color.white.opacity(0.92))
-        .overlay(alignment: .top) {
+        VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
+            Button {
+                onAction(.clickSave)
+            } label: {
+                HStack {
+                    Spacer()
+                    if uiState.isSaving {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    } else {
+                        Text(uiState.submitButtonText)
+                            .font(.headline.weight(.bold))
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "FFD1DC"))
+            .foregroundStyle(Color(hex: "2B2330"))
+            .disabled(uiState.isSaving)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 14)
+            .background(Color.white.opacity(0.92))
         }
     }
 
