@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct MenuGoodsEditView: View {
     let cafeId: String
@@ -15,6 +16,8 @@ struct MenuGoodsEditView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: MenuGoodsEditViewModel
+
+    @State private var isPhotoPickerPresented = false
 
     var body: some View {
         ScrollView {
@@ -36,6 +39,7 @@ struct MenuGoodsEditView: View {
                         .background(Color(hex: "FFF6D7"))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
+                photoUploadSection
                 Group {
                     ConCafeFormField(
                         label: "항목명",
@@ -87,6 +91,16 @@ struct MenuGoodsEditView: View {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             }
+        }
+        .sheet(isPresented: $isPhotoPickerPresented) {
+            CompatImagePicker(onImageSelected: { image in
+                isPhotoPickerPresented = false
+                if let imageUrl = saveImageToTemporaryFile(image) {
+                    viewModel.onAction(.selectPhoto(imageUrl))
+                }
+            }, onDismiss: {
+                isPhotoPickerPresented = false
+            })
         }
     }
 
@@ -189,6 +203,87 @@ struct MenuGoodsEditView: View {
             return "birthday.cake.fill"
         case .goods:
             return "shippingbox.fill"
+        }
+    }
+
+    private var photoUploadSection: some View {
+        let imageUrl = viewModel.uiState.imageUrl
+        return Button {
+            isPhotoPickerPresented = true
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "FFD8E6"), Color(hex: "FFE5EE")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color(hex: "FFD1DC"), lineWidth: 1.5)
+                    )
+                    .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                if let imageUrl, let url = URL(string: imageUrl), !imageUrl.isEmpty {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            loadingPhotoPlaceholder
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity)
+                        case .failure:
+                            loadingPhotoPlaceholder
+                        @unknown default:
+                            loadingPhotoPlaceholder
+                        }
+                    }
+                    .clipped()
+                } else {
+                    photoUploadPlaceholder
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var loadingPhotoPlaceholder: some View {
+        VStack(spacing: 8) {
+            ProgressView()
+                .tint(Color(hex: "9C7A88"))
+            Text("이미지 로딩 중")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8F848F"))
+        }
+    }
+
+    private var photoUploadPlaceholder: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "photo.badge.plus")
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(Color(hex: "8B5164"))
+            Text("항목 사진 업로드")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Color(hex: "5A4954"))
+            Text("JPG, PNG 최대 5MB")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A8088"))
+        }
+    }
+
+    private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+        guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+        let fileName = "\(UUID().uuidString).jpg"
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try data.write(to: fileURL, options: .atomic)
+            return fileURL.absoluteString
+        } catch {
+            return nil
         }
     }
 }

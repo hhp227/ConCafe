@@ -168,6 +168,7 @@ class MenuGoodsEditViewModel(
             MenuGoodsEditAction.ClickPhotoUpload -> showInfo("이미지 업로드는 다음 단계에서 연결됩니다.")
             is MenuGoodsEditAction.ChangeName -> _uiState.update { it.copy(itemName = action.value) }
             is MenuGoodsEditAction.ChangePrice -> _uiState.update { it.copy(price = action.value.filter(Char::isDigit)) }
+            is MenuGoodsEditAction.SelectPhoto -> _uiState.update { it.copy(imageUrl = action.imageUrl) }
             is MenuGoodsEditAction.SelectCategory -> _uiState.update { it.copy(selectedCategory = action.category) }
             is MenuGoodsEditAction.ChangeDescription -> _uiState.update { it.copy(description = action.value) }
             is MenuGoodsEditAction.ToggleStock -> _uiState.update { it.copy(isInStock = action.isInStock) }

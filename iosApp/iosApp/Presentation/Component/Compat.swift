@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import PhotosUI
 
 enum CompatNavigationBarStyle {
     case opaque
@@ -256,5 +257,147 @@ func compatSystemImageName(iOS16: String, fallback: String) -> String {
         return iOS16
     } else {
         return fallback
+    }
+}
+
+struct CompatImagePicker: View {
+    let onImageSelected: (UIImage) -> Void
+
+    let onDismiss: () -> Void
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            PhotosUICompatImagePicker(
+                onImageSelected: onImageSelected,
+                onDismiss: onDismiss
+            )
+        } else {
+            PHPickerCompatImagePicker(
+                onImageSelected: onImageSelected,
+                onDismiss: onDismiss
+            )
+        }
+    }
+}
+
+private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
+    let onImageSelected: (UIImage) -> Void
+
+    let onDismiss: () -> Void
+
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
+        configuration.selectionLimit = 1
+        configuration.filter = .images
+
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        private let parent: PHPickerCompatImagePicker
+
+        func pickerDidCancel(_ picker: PHPickerViewController) {
+            picker.dismiss(animated: true)
+            parent.onDismiss()
+        }
+
+        func picker(
+            _ picker: PHPickerViewController,
+            didFinishPicking results: [PHPickerResult]
+        ) {
+            picker.dismiss(animated: true)
+            parent.onDismiss()
+
+            guard let provider = results.first?.itemProvider,
+                  provider.canLoadObject(ofClass: UIImage.self) else { return }
+
+            provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+                guard let image = object as? UIImage else { return }
+                DispatchQueue.main.async {
+                    self?.parent.onImageSelected(image)
+                }
+            }
+        }
+
+        init(parent: PHPickerCompatImagePicker) {
+            self.parent = parent
+        }
+    }
+}
+
+@available(iOS 16.0, *)
+private struct PhotosUICompatImagePicker: View {
+    let onImageSelected: (UIImage) -> Void
+
+    let onDismiss: () -> Void
+
+    @State private var selectedItem: PhotosPickerItem?
+
+    @State private var isLoading = false
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 18) {
+                Text("이미지 선택")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 20)
+                PhotosPicker(
+                    selection: $selectedItem,
+                    matching: .images
+                ) {
+                    Label("앨범에서 사진 선택", systemImage: "photo.on.rectangle.angled")
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 12)
+                        .background(.blue.opacity(0.18))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .disabled(isLoading)
+                if isLoading {
+                    ProgressView("이미지 로딩 중")
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
+            .navigationTitle("항목 이미지 선택")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소", action: onDismiss)
+                }
+            }
+        }
+        .onChange(of: selectedItem) { item in
+            guard let item else { return }
+
+            isLoading = true
+            Task {
+                defer {
+                    Task { @MainActor in
+                        isLoading = false
+                    }
+                }
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    await MainActor.run {
+                        onImageSelected(image)
+                        onDismiss()
+                    }
+                } else {
+                    await MainActor.run {
+                        onDismiss()
+                    }
+                }
+            }
+        }
     }
 }

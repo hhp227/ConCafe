@@ -154,6 +154,8 @@ final class MenuGoodsEditViewModel: ObservableObject {
             event.send(.navigateBack)
         case .clickPhotoUpload:
             uiState.infoMessage = "이미지 업로드는 다음 단계에서 연결됩니다."
+        case .selectPhoto(let imageUrl):
+            uiState.imageUrl = imageUrl
         case .changeName(let value):
             uiState.itemName = value
         case .changePrice(let value):
