@@ -302,12 +302,14 @@ private fun CafeInfoEditContent(
                                         index = index
                                     )
                                 }
-                                CompatImagePicker(
-                                    onImageSelected = { imageUrl ->
-                                        onAction(CafeInfoEditAction.AddGalleryImage(imageUrl))
+                                if (uiState.galleryImages.size < 6) {
+                                    CompatImagePicker(
+                                        onImageSelected = { imageUrl ->
+                                            onAction(CafeInfoEditAction.AddGalleryImage(imageUrl))
+                                        }
+                                    ) { launchImagePicker ->
+                                        AddGalleryTile(onClick = launchImagePicker)
                                     }
-                                ) { launchImagePicker ->
-                                    AddGalleryTile(onClick = launchImagePicker)
                                 }
                             }
                         }

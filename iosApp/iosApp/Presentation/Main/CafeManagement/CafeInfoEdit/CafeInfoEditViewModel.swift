@@ -48,7 +48,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
-                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(5))
+                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(6))
                     uiState.address = detail.cafe.region.address
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
@@ -107,7 +107,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
-                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(5))
+                    uiState.galleryImages = Array(cafeImages.dropFirst().prefix(6))
                     uiState.address = detail.cafe.region.address
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
@@ -210,8 +210,8 @@ final class CafeInfoEditViewModel: ObservableObject {
         case .selectRepresentativeImage(let imageUrl):
             uiState.representativeImageUrl = imageUrl
         case .addGalleryImage(let imageUrl):
-            if uiState.galleryImages.count >= 5 {
-                showInfo("카페 갤러리는 최대 5장까지 등록할 수 있습니다.")
+            if uiState.galleryImages.count >= 6 {
+                showInfo("카페 갤러리는 최대 6장까지 등록할 수 있습니다.")
                 return
             }
             if imageUrl.isEmpty { return }
