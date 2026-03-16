@@ -194,6 +194,36 @@ struct NavigationBarAppearanceConfigurator: UIViewControllerRepresentable {
     }
 }
 
+final class NavigationBarVisibilityHostingController: UIViewController {
+    var hideOnDisappear: Bool = false
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        guard hideOnDisappear else { return }
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+}
+
+struct NavigationBarVisibilityConfigurator: UIViewControllerRepresentable {
+    let hideOnDisappear: Bool
+
+    func makeUIViewController(context: Context) -> NavigationBarVisibilityHostingController {
+        let controller = NavigationBarVisibilityHostingController()
+        controller.view.isHidden = true
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: NavigationBarVisibilityHostingController, context: Context) {
+        uiViewController.hideOnDisappear = hideOnDisappear
+    }
+}
+
 extension View {
     func compatLargeSheetDetent() -> some View {
         modifier(CompatLargeSheetDetentModifier())
@@ -214,6 +244,10 @@ extension View {
         } else {
             navigationBarHidden(hidden)
         }
+    }
+
+    func compatNavigationBarTransition(hideOnDisappear: Bool) -> some View {
+        background(NavigationBarVisibilityConfigurator(hideOnDisappear: hideOnDisappear))
     }
 }
 
