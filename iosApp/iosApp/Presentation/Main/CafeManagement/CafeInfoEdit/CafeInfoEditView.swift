@@ -47,13 +47,15 @@ struct CafeInfoEditView: View {
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in
-                    guard let imagePickTarget else { return }
+                    guard let target = imagePickTarget else { return }
                     isPhotoPickerPresented = false
+
                     guard let imageUrl = saveImageToTemporaryFile(image) else {
                         imagePickTarget = nil
                         return
                     }
-                    switch imagePickTarget {
+
+                    switch target {
                     case .representative:
                         viewModel.onAction(.selectRepresentativeImage(imageUrl))
                     case .gallery:
