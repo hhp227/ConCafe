@@ -63,19 +63,11 @@ final class ReviewEditViewModel: ObservableObject {
     }
 
     private func clickAddPhoto() {
-        if uiState.images.count >= ReviewEditUiState.maximumPhotoCount {
-            uiState.infoMessage = "사진은 최대 10장까지 등록할 수 있습니다."
-        } else {
-            let nextIndex = uiState.images.count + 1
-            uiState.images.append(Self.placeholderPhotoItem(index: nextIndex))
-            uiState.infoMessage = "사진 업로드는 다음 단계에서 연결됩니다."
-        }
+        uiState.infoMessage = nil
     }
 
-    private func removePhoto(_ photoId: String) {
-        uiState.images.removeAll { item in
-            item.id == photoId
-        }
+    private func removePhoto() {
+        uiState.photoImageUrl = nil
     }
 
     private func toggleCastTag(_ castId: String) {
@@ -106,7 +98,7 @@ final class ReviewEditViewModel: ObservableObject {
                         cafeId: uiState.cafeId,
                         rating: Float(uiState.rating),
                         content: uiState.content,
-                        imageUrls: [],
+                        imageUrls: uiState.photoImageUrl.map { [$0] } ?? [],
                         taggedCastIds: uiState.taggedCastIds
                     )
 
@@ -149,8 +141,11 @@ final class ReviewEditViewModel: ObservableObject {
             uiState.rating = min(max(rating, 0), ReviewEditUiState.maximumRating)
         case .clickAddPhoto:
             clickAddPhoto()
-        case .removePhoto(let photoId):
-            removePhoto(photoId)
+        case .selectPhoto(let imageUrl):
+            uiState.photoImageUrl = imageUrl
+            uiState.infoMessage = nil
+        case .removePhoto:
+            removePhoto()
         case .changeReviewText(let value):
             uiState.content = value
         case .toggleCastTag(let castId):
@@ -162,18 +157,6 @@ final class ReviewEditViewModel: ObservableObject {
         case .dismissInfoMessage:
             uiState.infoMessage = nil
         }
-    }
-
-    private static func placeholderPhotoItem(index: Int) -> ReviewEditUiState.PhotoItem {
-        let accentColors = ["A65A74", "6D4C68", "7D5A4F", "8E5E78", "8A6557"]
-        let backgroundColors = ["FFE3EC", "F8E4EC", "FFEBDD", "FFF1F5", "F9ECE6"]
-        let colorIndex = (index - 1) % accentColors.count
-        return ReviewEditUiState.PhotoItem(
-            id: "photo-\(index)",
-            label: "사진 \(index)",
-            accentColorHex: accentColors[colorIndex],
-            backgroundColorHex: backgroundColors[colorIndex]
-        )
     }
 
     private static func reviewValidationMessage(for reason: String) -> String {

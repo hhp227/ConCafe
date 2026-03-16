@@ -161,12 +161,6 @@ private struct BannerEditContentView: View {
                 Text(uiState.imageGuideText)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "8F848F"))
-                if let selectedImageLabel = uiState.selectedImageLabel {
-                    Text(selectedImageLabel)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
-                        .padding(.top, 4)
-                }
             }
             Button {
                 onAction(.clickImagePicker)

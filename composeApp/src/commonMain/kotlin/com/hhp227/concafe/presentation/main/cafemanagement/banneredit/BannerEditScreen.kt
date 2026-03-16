@@ -420,15 +420,6 @@ private fun BannerImageCard(
                     color = Color(0xFF8F848F),
                     textAlign = TextAlign.Center
                 )
-                uiState.selectedImageLabel?.let { label ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(0xFFEF6797),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
             }
             Button(
                 onClick = onClick,

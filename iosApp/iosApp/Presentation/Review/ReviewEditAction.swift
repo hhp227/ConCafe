@@ -11,7 +11,8 @@ enum ReviewEditAction {
     case clickBack
     case selectRating(Int)
     case clickAddPhoto
-    case removePhoto(String)
+    case selectPhoto(String)
+    case removePhoto
     case changeReviewText(String)
     case toggleCastTag(String)
     case selectAtmosphereAnswer(Bool)

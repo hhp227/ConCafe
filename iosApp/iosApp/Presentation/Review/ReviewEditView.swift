@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ReviewEditView: View {
     let cafeId: String?
@@ -14,16 +15,34 @@ struct ReviewEditView: View {
 
     @StateObject private var viewModel: ReviewEditViewModel
 
+    @State private var isPhotoPickerPresented = false
+
     var body: some View {
         ReviewEditContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onPickPhoto: {
+                isPhotoPickerPresented = true
+            }
         )
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             }
+        }
+        .sheet(isPresented: $isPhotoPickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isPhotoPickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        viewModel.onAction(.selectPhoto(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isPhotoPickerPresented = false
+                }
+            )
         }
     }
 
@@ -41,6 +60,8 @@ private struct ReviewEditContentView: View {
     let uiState: ReviewEditUiState
 
     let onAction: (ReviewEditAction) -> Void
+
+    let onPickPhoto: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -149,71 +170,62 @@ private struct ReviewEditContentView: View {
 
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("사진 등록 \(uiState.images.count)/\(ReviewEditUiState.maximumPhotoCount)")
+            Text("사진 등록 (선택)")
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    Button {
-                        onAction(.clickAddPhoto)
-                    } label: {
-                        VStack(spacing: 6) {
-                            Image(systemName: "camera.badge.plus")
-                                .font(.title2)
-                            Text("사진 추가")
-                                .font(.caption.weight(.bold))
-                        }
-                        .foregroundStyle(Color(hex: "EF6797"))
-                        .frame(width: 96, height: 96)
-                        .background(Color(hex: "FFD1DC").opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                .foregroundStyle(Color(hex: "FFD1DC").opacity(0.7))
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomTrailing) {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    }
-                    .buttonStyle(.plain)
-                    ForEach(uiState.images) { item in
-                        ZStack(alignment: .topTrailing) {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(hex: item.backgroundColorHex),
-                                            Color(hex: item.accentColorHex).opacity(0.35)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 96, height: 96)
-                                .overlay {
-                                    Text(item.label)
-                                        .font(.caption.weight(.bold))
-                                        .foregroundStyle(Color(hex: item.accentColorHex))
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal, 8)
-                                }
-                            Button {
-                                onAction(.removePhoto(item.id))
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.white)
-                                    .frame(width: 22, height: 22)
-                                    .background(Color.black.opacity(0.72))
-                                    .clipShape(Circle())
-                            }
-                            .buttonStyle(.plain)
-                            .offset(x: 6, y: -6)
+                    if let photoImageUrl = uiState.photoImageUrl,
+                       !photoImageUrl.isEmpty {
+                        ReviewPhotoImageView(imageUrl: photoImageUrl)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundStyle(Color(hex: "8B5164"))
+                            Text("리뷰 사진 추가")
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Color(hex: "5A4954"))
                         }
-                        .padding(.top, 6)
-                        .padding(.trailing, 6)
+                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
+                    }
+                    if uiState.photoImageUrl != nil {
+                        Button("제거") {
+                            onAction(.removePhoto)
+                        }
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "8B5164"))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                        .padding(12)
                     }
                 }
-                .padding(.horizontal, 1)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .onTapGesture {
+                onAction(.clickAddPhoto)
+                onPickPhoto()
+            }
+            Text("리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다.")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A8088"))
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
@@ -387,6 +399,51 @@ private struct ReviewEditContentView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color(hex: "F1D88D"), lineWidth: 1)
         )
+    }
+}
+
+private struct ReviewPhotoImageView: View {
+    let imageUrl: String
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteUrl = URL(string: imageUrl) {
+            AsyncImage(url: remoteUrl) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .tint(Color(hex: "9C7A88"))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    Color(hex: "F4EFF2")
+                @unknown default:
+                    Color(hex: "F4EFF2")
+                }
+            }
+        } else {
+            Color(hex: "F4EFF2")
+        }
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+    let fileName = "\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+    do {
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }
 

@@ -80,27 +80,11 @@ class ReviewEditViewModel(
     }
 
     private fun clickAddPhoto() {
-        val currentState = _uiState.value
-        if (currentState.images.size >= ReviewEditUiState.maximumPhotoCount) {
-            _uiState.update { it.copy(infoMessage = "사진은 최대 10장까지 등록할 수 있습니다.") }
-        } else {
-            val nextIndex = currentState.images.size + 1
-            val nextPhoto = placeholderPhotoItem(nextIndex)
-            _uiState.update {
-                it.copy(
-                    images = it.images + nextPhoto,
-                    infoMessage = "사진 업로드는 다음 단계에서 연결됩니다."
-                )
-            }
-        }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
-    private fun removePhoto(photoId: String) {
-        _uiState.update { state ->
-            state.copy(
-                images = state.images.filterNot { it.id == photoId }
-            )
-        }
+    private fun removePhoto() {
+        _uiState.update { it.copy(photoImageUrl = null) }
     }
 
     private fun toggleCastTag(castId: String) {
@@ -136,7 +120,7 @@ class ReviewEditViewModel(
                         cafeId = currentState.cafeId,
                         rating = currentState.rating.toFloat(),
                         content = currentState.content,
-                        imageUrls = emptyList(),
+                        imageUrls = currentState.photoImageUrl?.let { listOf(it) } ?: emptyList(),
                         taggedCastIds = currentState.taggedCastIds
                     )
                 ) {
@@ -178,7 +162,8 @@ class ReviewEditViewModel(
                 )
             }
             ReviewEditAction.ClickAddPhoto -> clickAddPhoto()
-            is ReviewEditAction.RemovePhoto -> removePhoto(action.photoId)
+            is ReviewEditAction.SelectPhoto -> _uiState.update { it.copy(photoImageUrl = action.imageUrl, infoMessage = null) }
+            ReviewEditAction.RemovePhoto -> removePhoto()
             is ReviewEditAction.ChangeReviewText -> _uiState.update {
                 it.copy(content = action.value)
             }
@@ -194,19 +179,6 @@ class ReviewEditViewModel(
     init {
         loadCafeInfo()
     }
-}
-
-private fun placeholderPhotoItem(index: Int): ReviewEditUiState.PhotoItem {
-    val accentColors = listOf(0xFFA65A74, 0xFF6D4C68, 0xFF7D5A4F, 0xFF8E5E78, 0xFF8A6557)
-    val backgroundColors = listOf(0xFFFFE3EC, 0xFFF8E4EC, 0xFFFFEBDD, 0xFFFFF1F5, 0xFFF9ECE6)
-    val colorIndex = (index - 1) % accentColors.size
-
-    return ReviewEditUiState.PhotoItem(
-        id = "photo-$index",
-        label = "사진 $index",
-        accentColorHex = accentColors[colorIndex],
-        backgroundColorHex = backgroundColors[colorIndex]
-    )
 }
 
 private fun String.toReviewValidationMessage(): String {
