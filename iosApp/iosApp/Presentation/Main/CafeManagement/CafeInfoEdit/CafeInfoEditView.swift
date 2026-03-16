@@ -47,9 +47,10 @@ struct CafeInfoEditView: View {
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in
-                    guard let target = imagePickTarget else { return }
+                    let target = imagePickTarget
                     isPhotoPickerPresented = false
 
+                    guard let target else { return }
                     guard let imageUrl = saveImageToTemporaryFile(image) else {
                         imagePickTarget = nil
                         return
@@ -66,7 +67,6 @@ struct CafeInfoEditView: View {
                 },
                 onDismiss: {
                     isPhotoPickerPresented = false
-                    imagePickTarget = nil
                 }
             )
         }
