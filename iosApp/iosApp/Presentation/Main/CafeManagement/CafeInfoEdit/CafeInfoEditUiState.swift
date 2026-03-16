@@ -9,6 +9,8 @@ import Foundation
 import Shared
 
 struct CafeInfoEditUiState {
+    let galleryMaxCount = 3
+
     var detail: CafeDetail?
     var isRegistrationMode = false
     var isLoading = true
@@ -27,7 +29,7 @@ struct CafeInfoEditUiState {
     var infoMessage: String?
 
     var galleryLimitText: String {
-        "\(galleryImages.count) / 6"
+        "\(galleryImages.count) / \(galleryMaxCount)"
     }
 
     var screenTitle: String {

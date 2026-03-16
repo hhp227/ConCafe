@@ -229,7 +229,7 @@ private struct CafeInfoEditContentView: View {
                         index: index
                     )
                 }
-                if uiState.galleryImages.count < 6 {
+                if uiState.galleryImages.count < uiState.galleryMaxCount {
                     addGalleryItem
                 }
             }

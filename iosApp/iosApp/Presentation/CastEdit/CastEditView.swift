@@ -236,11 +236,11 @@ private struct CastEditContentView: View {
                         index: index
                     )
                 }
-                if uiState.galleryImages.count < 6 {
+                if uiState.galleryImages.count < uiState.galleryMaxCount {
                     addGalleryItem
                 }
             }
-            Text("캐스트 갤러리에는 최대 6장까지 등록할 수 있습니다.")
+            Text("캐스트 갤러리에는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)

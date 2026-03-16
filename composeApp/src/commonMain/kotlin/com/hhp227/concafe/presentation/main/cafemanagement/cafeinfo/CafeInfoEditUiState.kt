@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 import com.hhp227.concafe.domain.model.CafeDetail
 
 data class CafeInfoEditUiState(
+    val galleryMaxCount: Int = 3,
     val detail: CafeDetail? = null,
     val isRegistrationMode: Boolean = false,
     val isLoading: Boolean = true,
@@ -21,7 +22,7 @@ data class CafeInfoEditUiState(
     val infoMessage: String? = null
 ) {
     val galleryLimitText: String
-        get() = "${galleryImages.size} / 6"
+        get() = "${galleryImages.size} / $galleryMaxCount"
 
     val screenTitle: String
         get() = if (isRegistrationMode) "새 카페 등록" else "카페 정보 관리"

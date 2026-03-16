@@ -257,6 +257,7 @@ private fun CastEditContentScreen(
                             GallerySection(
                                 galleryImages = uiState.galleryImages,
                                 galleryLimitText = uiState.galleryLimitText,
+                                galleryMaxCount = uiState.galleryMaxCount,
                                 onAddClick = {
                                     onAction(CastEditAction.ClickAddGalleryPhoto)
                                     launchImagePicker()
@@ -328,6 +329,7 @@ private fun ProfilePhotoSection(
 private fun GallerySection(
     galleryImages: List<String>,
     galleryLimitText: String,
+    galleryMaxCount: Int,
     onAddClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -341,10 +343,11 @@ private fun GallerySection(
         }
         CastGalleryGrid(
             galleryImages = galleryImages,
+            galleryMaxCount = galleryMaxCount,
             onAddClick = onAddClick
         )
         Text(
-            text = "캐스트 갤러리에는 최대 6장까지 등록할 수 있습니다.",
+            text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF8A8088)
         )
@@ -355,6 +358,7 @@ private fun GallerySection(
 @Composable
 private fun CastGalleryGrid(
     galleryImages: List<String>,
+    galleryMaxCount: Int,
     onAddClick: () -> Unit
 ) {
     FlowRow(
@@ -369,7 +373,7 @@ private fun CastGalleryGrid(
                 index = index
             )
         }
-        if (galleryImages.size < 6) {
+        if (galleryImages.size < galleryMaxCount) {
             Box(
                 modifier = Modifier
                     .size(96.dp)

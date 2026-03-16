@@ -51,7 +51,7 @@ class CafeInfoEditViewModel(
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
-                            galleryImages = cafeImages.drop(1).take(6),
+                            galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
@@ -112,7 +112,7 @@ class CafeInfoEditViewModel(
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
-                            galleryImages = cafeImages.drop(1).take(6),
+                            galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
@@ -211,8 +211,9 @@ class CafeInfoEditViewModel(
                 if (action.imageUrl.isBlank()) {
                     return
                 }
-                if (_uiState.value.galleryImages.size >= 6) {
-                    showInfo("카페 갤러리는 최대 6장까지 등록할 수 있습니다.")
+                val maxCount = _uiState.value.galleryMaxCount
+                if (_uiState.value.galleryImages.size >= maxCount) {
+                    showInfo("카페 갤러리는 최대 ${maxCount}장까지 등록할 수 있습니다.")
                     return
                 }
                 _uiState.update { state ->

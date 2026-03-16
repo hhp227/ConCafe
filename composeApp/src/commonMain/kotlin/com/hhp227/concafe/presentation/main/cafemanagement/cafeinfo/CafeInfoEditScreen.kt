@@ -305,7 +305,7 @@ private fun CafeInfoEditContent(
                                         index = index
                                     )
                                 }
-                                if (uiState.galleryImages.size < 6) {
+                                if (uiState.galleryImages.size < uiState.galleryMaxCount) {
                                     CompatImagePicker(
                                         onImageSelected = { imageUrl ->
                                             onAction(CafeInfoEditAction.AddGalleryImage(imageUrl))

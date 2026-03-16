@@ -125,7 +125,7 @@ class CastEditViewModel(
                             birthday = detail.cast.birthday.orEmpty(),
                             introduction = detail.cast.desc,
                             selectedWorkingDays = detail.schedule.toWorkingDays(),
-                            galleryImages = detail.images.filter { it.isNotBlank() }.take(6)
+                            galleryImages = detail.images.filter { it.isNotBlank() }.take(state.galleryMaxCount)
                         )
                     }
                 }
@@ -150,8 +150,9 @@ class CastEditViewModel(
                 val imageUrl = action.imageUrl
                 if (imageUrl.isBlank()) return
                 val galleryImages = _uiState.value.galleryImages
-                if (galleryImages.size >= 6) {
-                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 6장까지 등록할 수 있습니다.") }
+                val galleryMaxCount = _uiState.value.galleryMaxCount
+                if (galleryImages.size >= galleryMaxCount) {
+                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
                 } else {
                     _uiState.update { it.copy(galleryImages = galleryImages + imageUrl, infoMessage = null) }
                 }

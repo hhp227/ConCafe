@@ -104,7 +104,7 @@ final class CastEditViewModel: ObservableObject {
                     nextState.birthday = detail.cast.birthday ?? ""
                     nextState.introduction = detail.cast.desc
                     nextState.selectedWorkingDays = workingDays(from: detail.schedule)
-                    nextState.galleryImages = Array(detail.images.filter { !$0.isEmpty }.prefix(6))
+                    nextState.galleryImages = Array(detail.images.filter { !$0.isEmpty }.prefix(nextState.galleryMaxCount))
                     uiState = nextState
                 } else {
                     uiState.isLoading = false
@@ -128,8 +128,8 @@ final class CastEditViewModel: ObservableObject {
             uiState.profileImageUrl = imageUrl
             uiState.infoMessage = nil
         case .addGalleryImage(let imageUrl):
-            if uiState.galleryImages.count >= 6 {
-                uiState.infoMessage = "갤러리 사진은 최대 6장까지 등록할 수 있습니다."
+            if uiState.galleryImages.count >= uiState.galleryMaxCount {
+                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
                 return
             }
             if imageUrl.isEmpty { return }

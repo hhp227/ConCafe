@@ -8,6 +8,8 @@
 import Foundation
 
 struct CastEditUiState {
+    let galleryMaxCount = 3
+
     var isLoading = false
     var isSaving = false
     var screenTitle = "캐스트 프로필 수정"
@@ -22,7 +24,7 @@ struct CastEditUiState {
     var infoMessage: String? = nil
 
     var galleryLimitText: String {
-        "\(galleryImages.count) / 6"
+        "\(galleryImages.count) / \(galleryMaxCount)"
     }
 
     enum WorkingDay: String, CaseIterable, Identifiable, Hashable {
