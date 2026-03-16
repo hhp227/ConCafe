@@ -8,7 +8,6 @@ data class AccountSettingsUiState(
     val errorMessage: String?,
     val myInfoFeed: MyInfoFeed?,
     val nicknameInput: String,
-    val emailInput: String,
     val isDeleteDialogVisible: Boolean,
     val deleteConfirmation: String,
     val isDeleteRequested: Boolean
@@ -23,7 +22,6 @@ data class AccountSettingsUiState(
                 errorMessage = null,
                 myInfoFeed = null,
                 nicknameInput = "",
-                emailInput = "",
                 isDeleteDialogVisible = false,
                 deleteConfirmation = "",
                 isDeleteRequested = false

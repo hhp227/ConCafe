@@ -74,5 +74,8 @@ sealed interface Route {
     data object AccountSettings : Route
 
     @Serializable
+    data object Inquiry : Route
+
+    @Serializable
     data object ChangePassword : Route
 }

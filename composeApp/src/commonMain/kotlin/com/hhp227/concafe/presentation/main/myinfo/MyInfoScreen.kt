@@ -60,6 +60,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.navigation.NavigationAction.*
 import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -371,34 +372,31 @@ private fun ProfileMyInfoScreen(
             }
         }
         item {
+            val favoriteItems = uiState.favorites.take(4)
+            val favoriteRows = favoriteItems.chunked(2)
+
             Text("즐겨찾기", fontWeight = FontWeight.Bold)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .height(190.dp)
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                userScrollEnabled = false
+            Column(
+                modifier = Modifier.padding(top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(uiState.favorites.take(4)) { cafe ->
-                    Card(
-                        modifier = Modifier.clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
-                        shape = RoundedCornerShape(16.dp)
+                favoriteRows.forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(90.dp)
-                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
-                            )
-                            Text(
-                                cafe.name,
-                                modifier = Modifier.padding(10.dp),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        rowItems.forEach { cafe ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                CafeSummaryCard(
+                                    name = cafe.name,
+                                    rating = "${cafe.ratingAvg}",
+                                    location = cafe.region.city,
+                                    onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
+                                )
+                            }
+                        }
+                        if (rowItems.size == 1) {
+                            Box(modifier = Modifier.weight(1f))
                         }
                     }
                 }

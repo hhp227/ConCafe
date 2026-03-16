@@ -33,6 +33,12 @@ class SettingsViewModel(
         }
     }
 
+    private fun clickInquiry() {
+        viewModelScope.launch {
+            _event.emit(SettingsEvent.NavigateToInquiryLink)
+        }
+    }
+
     private fun clickPrivacyPolicy() {
         viewModelScope.launch {
             _event.emit(
@@ -74,6 +80,8 @@ class SettingsViewModel(
             }
             SettingsAction.ClickAccountSettings -> clickAccountSettings()
             SettingsAction.ClickNotificationSettings -> clickNotificationSettings()
+            SettingsAction.ClickCustomerSupport -> clickInquiry()
+            SettingsAction.ClickInquiry -> clickInquiry()
             SettingsAction.ClickPrivacyPolicy -> clickPrivacyPolicy()
             SettingsAction.ClickSignOut -> signOut()
         }

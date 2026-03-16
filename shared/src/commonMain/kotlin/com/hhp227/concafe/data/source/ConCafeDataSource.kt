@@ -20,6 +20,7 @@ import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.RankingItem
@@ -40,6 +41,8 @@ interface ConCafeDataSource {
     val castClaims: MutableList<CastClaim>
 
     val banners: MutableList<HomeBanner>
+
+    val inquiries: MutableList<Inquiry>
 
     val notices: MutableList<Notice>
 

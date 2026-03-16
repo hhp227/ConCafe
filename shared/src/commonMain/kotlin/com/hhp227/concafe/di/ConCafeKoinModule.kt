@@ -9,6 +9,7 @@ import com.hhp227.concafe.data.repository.FakeCafeRegistrationClaimRepository
 import com.hhp227.concafe.data.repository.FakeCafeRepository
 import com.hhp227.concafe.data.repository.FakeCastRepository
 import com.hhp227.concafe.data.repository.FakeCastClaimRepository
+import com.hhp227.concafe.data.repository.FakeInquiryRepository
 import com.hhp227.concafe.data.repository.FakeNoticeRepository
 import com.hhp227.concafe.data.repository.FakeNotificationRepository
 import com.hhp227.concafe.data.repository.FakeRankingRepository
@@ -26,6 +27,7 @@ import com.hhp227.concafe.domain.repository.CafeRegistrationClaimRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.CastClaimRepository
+import com.hhp227.concafe.domain.repository.InquiryRepository
 import com.hhp227.concafe.domain.repository.NoticeRepository
 import com.hhp227.concafe.domain.repository.NotificationRepository
 import com.hhp227.concafe.domain.repository.RankingRepository
@@ -50,6 +52,7 @@ import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
+import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
@@ -120,6 +123,7 @@ val repositoryModule = module {
     single<CafeRepository> { FakeCafeRepository(get()) }
     single<CastRepository> { FakeCastRepository(get()) }
     single<CastClaimRepository> { FakeCastClaimRepository(get()) }
+    single<InquiryRepository> { FakeInquiryRepository(get()) }
     single<VisitRepository> { FakeVisitRepository(get()) }
     single<ReviewRepository> { FakeReviewRepository(get()) }
     single<NoticeRepository> { FakeNoticeRepository(get()) }
@@ -142,6 +146,7 @@ val useCaseModule = module {
     factory { CreateCafeEventUseCase(get()) }
     factory { CreateCafeNoticeUseCase(get()) }
     factory { CreateHomeBannerUseCase(get(), get()) }
+    factory { CreateInquiryUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get()) }

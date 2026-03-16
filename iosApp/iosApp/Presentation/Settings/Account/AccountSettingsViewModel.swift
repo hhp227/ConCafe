@@ -47,7 +47,6 @@ final class AccountSettingsViewModel: ObservableObject {
                     uiState.errorMessage = nil
                     uiState.myInfoFeed = feed
                     uiState.nicknameInput = feed.user?.nickname ?? ""
-                    uiState.emailInput = feed.user?.email ?? ""
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = "계정 정보를 불러오지 못했습니다."
@@ -67,8 +66,6 @@ final class AccountSettingsViewModel: ObservableObject {
     private func saveUserInfo() {
         if uiState.nicknameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             emitMessage("닉네임을 입력해 주세요.")
-        } else if !uiState.emailInput.contains("@") {
-            emitMessage("올바른 이메일 형식을 입력해 주세요.")
         } else {
             emitMessage("계정 기본 정보를 저장했어요. 현재 단계에서는 로컬 상태에 반영됩니다.")
         }
@@ -113,8 +110,6 @@ final class AccountSettingsViewModel: ObservableObject {
             event.send(.navigateBack)
         case .nicknameChanged(let value):
             uiState.nicknameInput = value
-        case .emailChanged(let value):
-            uiState.emailInput = value
         case .saveUserInfoTapped:
             saveUserInfo()
         case .openCastEditTapped:

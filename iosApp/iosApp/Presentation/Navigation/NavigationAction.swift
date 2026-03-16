@@ -28,6 +28,7 @@ enum NavigationAction {
     case navigateToSettings
     case navigateToNotificationSettings
     case navigateToAccountSettings
+    case navigateToInquiry
     case navigateToChangePassword
     case navigateBack
 }

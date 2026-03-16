@@ -13,7 +13,6 @@ struct AccountSettingsUiState {
     var errorMessage: String?
     var myInfoFeed: Shared.MyInfoFeed?
     var nicknameInput: String
-    var emailInput: String
     var isDeleteDialogVisible: Bool
     var deleteConfirmation: String
     var isDeleteRequested: Bool
@@ -27,7 +26,6 @@ struct AccountSettingsUiState {
         errorMessage: nil,
         myInfoFeed: nil,
         nicknameInput: "",
-        emailInput: "",
         isDeleteDialogVisible: false,
         deleteConfirmation: "",
         isDeleteRequested: false

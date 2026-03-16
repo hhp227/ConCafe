@@ -17,6 +17,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
+                .compatNavigationBarTransition(hideOnDisappear: shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
                         viewModel.onAction(.navigateToMain())
@@ -66,6 +67,8 @@ struct AppNavigationView: View {
                 NotificationSettingsView(onNavigationAction: viewModel.onAction)
             case .accountSettings:
                 AccountSettingsView(onNavigationAction: viewModel.onAction)
+            case .inquiry:
+                InquiryView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
             case .main:
@@ -119,6 +122,8 @@ struct AppNavigationView: View {
                     path.append(route)
                 case .accountSettings:
                     path.append(route)
+                case .inquiry:
+                    path.append(route)
                 case .changePassword:
                     path.append(route)
                 case .entry:
@@ -142,6 +147,17 @@ struct AppNavigationView: View {
         default:
             // Detail is pushed through NavigationStack path.
             MainView(onNavigationAction: viewModel.onAction)
+        }
+    }
+
+    private var shouldHideMainNavigationBar: Bool {
+        guard let lastRoute = path.last else { return false }
+
+        switch lastRoute {
+        case .cafe, .cast:
+            return true
+        default:
+            return false
         }
     }
 }

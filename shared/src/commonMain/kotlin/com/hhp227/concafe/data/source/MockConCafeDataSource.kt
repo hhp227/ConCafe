@@ -27,6 +27,7 @@ import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
@@ -301,6 +302,8 @@ class MockConCafeDataSource : ConCafeDataSource {
         HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A", subtitle = "핑크 캐슬 신규 캐스트 소식을 확인하세요", cafeId = "cafe-2", targetType = BannerLinkTargetType.NOTICE, targetValue = "notice-management-2", displayDays = 5),
         HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF", subtitle = "주말 예약 일정을 미리 확인하세요", cafeId = "cafe-3", targetType = BannerLinkTargetType.CAFE_DETAIL, targetValue = "cafe-3", displayDays = 3)
     )
+
+    override val inquiries = mutableListOf<Inquiry>()
 
     override val notices = mutableListOf(
         Notice("notice-1", "cafe-1", "메이드 하우스", "3월 특별 이벤트", "3월 특별 이벤트 진행 중!", "2026-03-05T07:00:00Z", "2시간 전"),

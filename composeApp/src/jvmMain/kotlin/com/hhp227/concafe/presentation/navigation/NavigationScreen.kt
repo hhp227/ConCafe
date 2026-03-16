@@ -41,6 +41,7 @@ import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
 import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
+import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 
@@ -267,6 +268,11 @@ private fun DetailRoutePane(
         }
         Route.AccountSettings -> {
             AccountSettingsScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        Route.Inquiry -> {
+            InquiryLinkScreen(
                 onNavigationAction = onNavigationAction
             )
         }

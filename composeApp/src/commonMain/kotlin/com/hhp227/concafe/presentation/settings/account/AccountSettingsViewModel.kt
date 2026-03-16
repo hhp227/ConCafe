@@ -43,8 +43,7 @@ class AccountSettingsViewModel(
                         isLoading = false,
                         errorMessage = null,
                         myInfoFeed = result.data,
-                        nicknameInput = result.data.user?.nickname.orEmpty(),
-                        emailInput = result.data.user?.email.orEmpty()
+                        nicknameInput = result.data.user?.nickname.orEmpty()
                     )
                 }
                 is AppResult.Failure -> {
@@ -69,7 +68,6 @@ class AccountSettingsViewModel(
         val state = _uiState.value
         when {
             state.nicknameInput.isBlank() -> emitMessage("닉네임을 입력해 주세요.")
-            !state.emailInput.contains("@") -> emitMessage("올바른 이메일 형식을 입력해 주세요.")
             else -> emitMessage("계정 기본 정보를 저장했어요. 현재 단계에서는 로컬 상태에 반영됩니다.")
         }
     }
@@ -141,7 +139,6 @@ class AccountSettingsViewModel(
         when (action) {
             AccountSettingsAction.ClickBack -> clickBack()
             is AccountSettingsAction.ChangeNickname -> _uiState.update { it.copy(nicknameInput = action.value) }
-            is AccountSettingsAction.ChangeEmail -> _uiState.update { it.copy(emailInput = action.value) }
             AccountSettingsAction.ClickSaveUserInfo -> clickSaveUserInfo()
             AccountSettingsAction.ClickOpenCastEdit -> clickOpenCastEdit()
             AccountSettingsAction.ClickOpenChangePassword -> clickOpenChangePassword()

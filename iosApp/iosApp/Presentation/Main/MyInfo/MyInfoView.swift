@@ -416,17 +416,14 @@ private struct ProfileMyInfoView: View {
             Text("즐겨찾기").font(.headline)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
-                    VStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
-                            .frame(height: 90)
-                        Text(cafe.name)
-                            .font(.caption)
-                            .padding(8)
-                    }
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }
+                    CafeSummaryCard(
+                        name: cafe.name,
+                        rating: String(format: "%.1f", cafe.ratingAvg),
+                        location: cafe.region.city,
+                        thumbnailImage: cafe.thumbnailImage,
+                        trailingLabel: nil,
+                        onTap: { onAction(.cafeTapped(id: cafe.id)) }
+                    )
                 }
             }
         }

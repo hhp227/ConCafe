@@ -22,6 +22,7 @@ struct CastView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
+        .compatNavigationBarStyle(.transparentScrollEdge)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
