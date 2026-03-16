@@ -1,0 +1,499 @@
+package com.hhp227.concafe.presentation.main.fanmanagement
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import com.hhp227.concafe.di.resolveGetFanManagementDataUseCase
+import com.hhp227.concafe.di.resolveCreateCastClaimUseCase
+import com.hhp227.concafe.di.resolveGetMyCastClaimStatusUseCase
+import com.hhp227.concafe.di.resolveGetMyRequestableCastPageUseCase
+import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
+import com.hhp227.concafe.di.resolveObserveCastEventUseCase
+import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveObserveScheduleManagementEventUseCase
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.MyCastClaimStatus
+import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
+import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.model.ScheduleManagementEvent as ScheduleManagementDomainEvent
+import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
+import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
+import com.hhp227.concafe.domain.usecase.GetMyRequestableCastPageUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
+
+class FanManagementViewModel(
+    private val getFanManagementDataUseCase: GetFanManagementDataUseCase = resolveGetFanManagementDataUseCase(),
+    private val createCastClaimUseCase: CreateCastClaimUseCase = resolveCreateCastClaimUseCase(),
+    private val getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = resolveGetMyCastClaimStatusUseCase(),
+    private val getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = resolveGetMyRequestableCastPageUseCase(),
+    private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
+    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
+    private val observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = resolveObserveScheduleManagementEventUseCase()
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(FanManagementUiState.empty())
+    val uiState = _uiState.asStateFlow()
+
+    private val _event = MutableSharedFlow<FanManagementEvent>(replay = 0)
+    val event = _event.asSharedFlow()
+
+    private val jobs = mutableMapOf<TaskKey, Job>()
+
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest {
+                unbindCastEvent()
+                loadFanManagement()
+            }
+        }
+    }
+
+    private fun observeCastClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
+            observeCastClaimEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastClaimDomainEvent.Created,
+                    is CastClaimDomainEvent.Updated -> loadFanManagement()
+                }
+            }
+        }
+    }
+
+    private fun bindCastEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
+            observeCastEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is CastDomainEvent.Created -> if (event.cast.id == castId) {
+                        loadFanManagement()
+                    }
+                    is CastDomainEvent.Updated -> if (event.cast.id == castId) {
+                        _uiState.update { state ->
+                            val currentData = state.fanManagementData ?: return@update state
+                            state.copy(
+                                fanManagementData = currentData.copy(
+                                    detail = currentData.detail.copy(cast = event.cast)
+                                ),
+                                stats = state.stats.map { card ->
+                                    if (card.label == "평점") {
+                                        card.copy(value = event.cast.rating.toOneDecimalString())
+                                    } else {
+                                        card
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    is CastDomainEvent.Deleted -> if (event.castId == castId) {
+                        loadFanManagement()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindScheduleManagementEvent(castId: String) {
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
+            observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
+                when (event) {
+                    is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
+                        loadFanManagement()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun unbindCastEvent() {
+        jobs.remove(TaskKey.OBSERVE_CAST_EVENT)?.cancel()
+        jobs.remove(TaskKey.OBSERVE_SCHEDULE_EVENT)?.cancel()
+    }
+
+    private fun setInfoMessage(message: String) {
+        _uiState.update { it.copy(infoMessage = message) }
+    }
+
+    private fun loadFanManagement() {
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+        viewModelScope.launch {
+            val claimStatusResult = getMyCastClaimStatusUseCase.invoke()
+            val claimStatus = when (claimStatusResult) {
+                is AppResult.Success -> claimStatusResult.data.toStatusCard()
+                is AppResult.Failure -> null
+            }
+            val claimSheet = when (claimStatusResult) {
+                is AppResult.Success -> {
+                    val status = claimStatusResult.data
+                    val initialCandidatePage = if (status.shouldLoadRequestableCastPage()) {
+                        when (val pageResult = getMyRequestableCastPageUseCase.invoke(cursor = null)) {
+                            is AppResult.Success -> pageResult.data
+                            is AppResult.Failure -> null
+                        }
+                    } else {
+                        null
+                    }
+                    status.toSheet(initialCandidatePage)
+                }
+                is AppResult.Failure -> null
+            }
+            when (val result = getFanManagementDataUseCase.invoke()) {
+                is AppResult.Success -> {
+                    val data = result.data
+                    val detail = data.detail
+                    val cast = detail.cast
+                    bindCastEvent(cast.id)
+                    bindScheduleManagementEvent(cast.id)
+                    _uiState.value = FanManagementUiState(
+                        isLoading = false,
+                        errorMessage = null,
+                        fanManagementData = data,
+                        castClaimStatus = claimStatus,
+                        castClaimSheet = claimSheet,
+                        stats = listOf(
+                            FanManagementUiState.StatCard(
+                                label = "전체 팔로워",
+                                value = data.followers.size.toString(),
+                                highlight = FanManagementUiState.Highlight.DEFAULT
+                            ),
+                            FanManagementUiState.StatCard(
+                                label = "근무 일정",
+                                value = detail.schedule.size.toString(),
+                                highlight = FanManagementUiState.Highlight.PRIMARY
+                            ),
+                            FanManagementUiState.StatCard(
+                                label = "평점",
+                                value = cast.rating.toOneDecimalString(),
+                                highlight = FanManagementUiState.Highlight.DEFAULT
+                            )
+                        ),
+                        recentFollowers = data.followers.take(10).mapIndexed { index, user ->
+                            FanManagementUiState.RecentFollower(
+                                id = user.id,
+                                name = user.nickname,
+                                joinedLabel = when (index) {
+                                    0 -> "방금 전"
+                                    1 -> "2시간 전"
+                                    2 -> "5시간 전"
+                                    else -> "최근"
+                                },
+                                accent = index == 0
+                            )
+                        },
+                        topFans = emptyList(),
+                        infoMessage = null
+                    )
+                }
+                is AppResult.Failure -> {
+                    unbindCastEvent()
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = if (claimStatus == null) "팬관리 데이터를 불러오지 못했습니다." else null,
+                            castClaimStatus = claimStatus,
+                            fanManagementData = null,
+                            stats = emptyList(),
+                            recentFollowers = emptyList(),
+                            topFans = emptyList(),
+                            castClaimSheet = claimSheet
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun clickQuickAction(quickAction: FanManagementUiState.QuickAction) {
+        when (quickAction) {
+            FanManagementUiState.QuickAction.WORK_SCHEDULE -> {
+                viewModelScope.launch {
+                    _event.emit(FanManagementEvent.NavigateToSchedule)
+                }
+            }
+            FanManagementUiState.QuickAction.CAFE_DASHBOARD -> clickClaimProfile()
+        }
+    }
+
+    private fun clickClaimProfile() {
+        if (_uiState.value.castClaimSheet != null) {
+            _uiState.update { it.copy(isClaimSheetVisible = true, infoMessage = null) }
+        }
+    }
+
+    private fun loadMoreClaimCandidates() {
+        val currentSheet = _uiState.value.castClaimSheet ?: return
+        val cursor = currentSheet.nextCursor ?: return
+        if (!currentSheet.canLoadMore || currentSheet.isLoadingMore) return
+        jobs[TaskKey.CLAIM_CANDIDATE_PAGE]?.cancel()
+        jobs[TaskKey.CLAIM_CANDIDATE_PAGE] = viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    castClaimSheet = state.castClaimSheet?.copy(isLoadingMore = true)
+                )
+            }
+            when (val result = getMyRequestableCastPageUseCase.invoke(cursor = cursor)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        val sheet = state.castClaimSheet ?: return@update state
+                        state.copy(
+                            castClaimSheet = sheet.copy(
+                                requestableCasts = sheet.requestableCasts + result.data.items.map { candidate ->
+                                    FanManagementUiState.ClaimCandidate(
+                                        id = candidate.castId,
+                                        name = candidate.castName
+                                    )
+                                },
+                                nextCursor = result.data.nextCursor,
+                                canLoadMore = result.data.hasNext,
+                                isLoadingMore = false
+                            )
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            castClaimSheet = state.castClaimSheet?.copy(isLoadingMore = false)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun selectClaimCandidate(castId: String) {
+        _uiState.update { state ->
+            val sheet = state.castClaimSheet ?: return@update state
+            state.copy(
+                castClaimSheet = sheet.copy(
+                    selectedCastId = castId,
+                    canSubmit = true
+                )
+            )
+        }
+    }
+
+    private fun dismissClaimSheet() {
+        _uiState.update { it.copy(isClaimSheetVisible = false) }
+    }
+
+    private fun submitCastClaim() {
+        val sheet = _uiState.value.castClaimSheet ?: return
+        val castId = sheet.selectedCastId ?: return
+        _uiState.update { state ->
+            state.copy(
+                castClaimSheet = sheet.copy(isSubmitting = true),
+                infoMessage = null
+            )
+        }
+        viewModelScope.launch {
+            when (val result = createCastClaimUseCase.invoke(sheet.affiliatedCafeId, castId, null)) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(isClaimSheetVisible = false, infoMessage = "캐스트 프로필 연결 요청을 보냈습니다.") }
+                    loadFanManagement()
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            castClaimSheet = state.castClaimSheet?.copy(isSubmitting = false),
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun clickRecentFollower(followerId: String) {
+        val follower = uiState.value.recentFollowers.firstOrNull { it.id == followerId } ?: return
+        setInfoMessage("${follower.name} 팬 상세 화면은 다음 단계에서 연결합니다.")
+    }
+
+    private fun clickTopFan(fanId: String) {
+        val fan = uiState.value.topFans.firstOrNull { it.id == fanId } ?: return
+        setInfoMessage("${fan.name} 활동 리포트는 다음 단계에서 제공합니다.")
+    }
+
+    fun onAction(action: FanManagementAction) {
+        when (action) {
+            FanManagementAction.ClickClaimProfile -> clickClaimProfile()
+            FanManagementAction.LoadMoreClaimCandidates -> loadMoreClaimCandidates()
+            is FanManagementAction.SelectClaimCandidate -> selectClaimCandidate(action.castId)
+            FanManagementAction.SubmitCastClaim -> submitCastClaim()
+            FanManagementAction.DismissClaimSheet -> dismissClaimSheet()
+            FanManagementAction.ClickEditProfile -> {
+                val detail = uiState.value.fanManagementData?.detail ?: return
+                viewModelScope.launch {
+                    _event.emit(
+                        FanManagementEvent.NavigateToCastEdit(
+                            cafeId = detail.cast.cafeId,
+                            castId = detail.cast.id
+                        )
+                    )
+                }
+            }
+            FanManagementAction.ClickPrimaryAnnouncement -> {
+                setInfoMessage("팬 공지 작성 흐름은 다음 단계에서 연결합니다.")
+            }
+            is FanManagementAction.ClickQuickAction -> clickQuickAction(action.quickAction)
+            FanManagementAction.ClickViewAllFollowers -> {
+                setInfoMessage("전체 팔로워 목록은 다음 단계에서 제공합니다.")
+            }
+            is FanManagementAction.ClickRecentFollower -> clickRecentFollower(action.followerId)
+            is FanManagementAction.ClickTopFan -> clickTopFan(action.fanId)
+            FanManagementAction.DismissInfoMessage -> {
+                _uiState.update { it.copy(infoMessage = null) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
+    init {
+        observeSession()
+        observeCastClaimEvent()
+    }
+}
+
+private fun com.hhp227.concafe.domain.model.MyCastClaimStatus.toStatusCard(): FanManagementUiState.CastClaimStatusCard? {
+    val cafeId = affiliatedCafeId ?: return null
+    val cafeName = affiliatedCafeName ?: "소속 카페"
+    val pendingClaim = pendingClaim
+    val latestRejectedClaim = latestRejectedClaim
+    return when {
+        hasLinkedProfile -> FanManagementUiState.CastClaimStatusCard(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "캐스트 프로필 연결 완료",
+            body = "${linkedCastName ?: "내 프로필"}이(가) 소속 카페와 연결되어 있습니다.",
+            accent = FanManagementUiState.Accent.LINKED
+        )
+        pendingClaim != null -> FanManagementUiState.CastClaimStatusCard(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "프로필 연결 승인 대기 중",
+            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
+            accent = FanManagementUiState.Accent.PENDING
+        )
+        latestRejectedClaim != null -> FanManagementUiState.CastClaimStatusCard(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "프로필 연결이 반려되었습니다",
+            body = "소속 카페 대시보드에서 다시 신청할 수 있습니다.",
+            accent = FanManagementUiState.Accent.REJECTED
+        )
+        hasRequestableCasts -> FanManagementUiState.CastClaimStatusCard(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "소속 카페 프로필 연결이 필요합니다",
+            body = "카페 대시보드에서 내 캐스트 프로필을 선택해 연결 요청을 보내세요.",
+            accent = FanManagementUiState.Accent.PENDING
+        )
+        else -> FanManagementUiState.CastClaimStatusCard(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "아직 연결 가능한 캐스트 프로필이 없습니다",
+            body = "운영자가 캐스트 프로필을 만든 뒤 다시 연결 요청을 진행할 수 있습니다.",
+            accent = FanManagementUiState.Accent.REJECTED
+        )
+    }
+}
+
+private fun com.hhp227.concafe.domain.model.MyCastClaimStatus.toSheet(
+    initialCandidatePage: com.hhp227.concafe.domain.common.PagedResult<com.hhp227.concafe.domain.model.CastClaimCandidate>?
+): FanManagementUiState.CastClaimSheet? {
+    val cafeId = affiliatedCafeId ?: return null
+    val cafeName = affiliatedCafeName ?: "소속 카페"
+    val pendingClaim = pendingClaim
+    val latestRejectedClaim = latestRejectedClaim
+    val initialCandidates = initialCandidatePage?.items?.map { candidate ->
+        FanManagementUiState.ClaimCandidate(
+            id = candidate.castId,
+            name = candidate.castName
+        )
+    }.orEmpty()
+    val selectedId = initialCandidates.firstOrNull()?.id
+    return when {
+        hasLinkedProfile -> FanManagementUiState.CastClaimSheet(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "캐스트 프로필 연결 완료",
+            body = "${linkedCastName ?: "내 프로필"}이(가) 이미 연결되어 있습니다.",
+            requestableCasts = emptyList(),
+            nextCursor = null,
+            canLoadMore = false,
+            isLoadingMore = false,
+            selectedCastId = null,
+            canSubmit = false
+        )
+        pendingClaim != null -> FanManagementUiState.CastClaimSheet(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = "승인 대기 중",
+            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
+            requestableCasts = emptyList(),
+            nextCursor = null,
+            canLoadMore = false,
+            isLoadingMore = false,
+            selectedCastId = null,
+            canSubmit = false
+        )
+        else -> FanManagementUiState.CastClaimSheet(
+            affiliatedCafeId = cafeId,
+            affiliatedCafeName = cafeName,
+            headline = if (latestRejectedClaim != null) "다시 연결 요청하기" else "캐스트 프로필 연결",
+            body = if (latestRejectedClaim != null) {
+                "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요."
+            } else {
+                "연결할 캐스트 프로필을 선택하고 신청을 보내세요."
+            },
+            requestableCasts = initialCandidates,
+            nextCursor = initialCandidatePage?.nextCursor,
+            canLoadMore = initialCandidatePage?.hasNext ?: false,
+            isLoadingMore = false,
+            selectedCastId = selectedId,
+            canSubmit = selectedId != null
+        )
+    }
+}
+
+private fun MyCastClaimStatus.shouldLoadRequestableCastPage(): Boolean {
+    return !hasLinkedProfile && pendingClaim == null && hasRequestableCasts
+}
+
+private fun Double.toOneDecimalString(): String {
+    val normalized = (this * 10).toInt() / 10.0
+    val text = normalized.toString()
+    return if (text.contains('.')) text else "$text.0"
+}
+
+private enum class TaskKey {
+    OBSERVE_SESSION,
+    OBSERVE_CAST_EVENT,
+    OBSERVE_SCHEDULE_EVENT,
+    OBSERVE_CAST_CLAIM_EVENT,
+    CLAIM_CANDIDATE_PAGE
+}

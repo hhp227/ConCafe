@@ -1,0 +1,388 @@
+package com.hhp227.concafe.presentation.main.ranking
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Redeem
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import com.hhp227.concafe.domain.model.RankingFeedEntry
+import com.hhp227.concafe.domain.model.RankingPeriod
+import com.hhp227.concafe.domain.model.RankingPromoAd
+import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.navigation.NavigationAction
+
+@Composable
+fun RankingScreen(
+    viewModel: RankingViewModel = viewModel(),
+    onNavigate: (NavigationAction) -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(viewModel) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is RankingEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
+                is RankingEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+            }
+        }
+    }
+    LaunchedEffect(uiState.ads.size, uiState.selectedAdIndex) {
+        if (uiState.ads.size <= 1) return@LaunchedEffect
+        delay(3500)
+        viewModel.onAction(
+            RankingAction.SelectAd((uiState.selectedAdIndex + 1) % uiState.ads.size)
+        )
+    }
+    RankingContent(uiState = uiState, onAction = viewModel::onAction)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RankingContent(
+    uiState: RankingUiState,
+    onAction: (RankingAction) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFFFBFD)),
+        contentPadding = PaddingValues(bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            RankingHeaderSection(
+                uiState = uiState,
+                onPeriodSelected = { onAction(RankingAction.ChangePeriod(it)) },
+                onRegionSelected = { onAction(RankingAction.ChangeRegion(it)) }
+            )
+        }
+        stickyHeader {
+            RankingTabBar(
+                selectedTab = uiState.selectedTab,
+                onTabSelected = { onAction(RankingAction.ChangeTab(it)) }
+            )
+        }
+        item {
+            RankingPromoBanner(
+                ad = uiState.currentAd,
+                selectedIndex = uiState.selectedAdIndex,
+                size = uiState.ads.size,
+                onSelect = { index -> onAction(RankingAction.SelectAd(index)) }
+            )
+        }
+        items(uiState.rankingEntries) { item ->
+            RankingEntryCard(
+                item = item,
+                isMaid = uiState.selectedTab == RankingUiState.TabType.MAIDS,
+                onClick = {
+                    if (uiState.selectedTab == RankingUiState.TabType.MAIDS) {
+                        onAction(RankingAction.ClickMaid(item.id))
+                    } else {
+                        onAction(RankingAction.ClickCafe(item.id))
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun RankingHeaderSection(
+    uiState: RankingUiState,
+    onPeriodSelected: (RankingPeriod) -> Unit,
+    onRegionSelected: (RankingUiState.RegionFilter) -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.EmojiEvents,
+                contentDescription = null,
+                tint = Color(0xFFEF6797)
+            )
+            Text(
+                text = "랭킹",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CapsuleDropdown(
+                selected = uiState.selectedPeriod.label,
+                options = listOf(RankingPeriod.WEEKLY, RankingPeriod.MONTHLY).map { it.label to it },
+                onSelected = onPeriodSelected
+            )
+            CapsuleDropdown(
+                selected = uiState.selectedRegion.label,
+                options = RankingUiState.RegionFilter.entries.map { it.label to it },
+                onSelected = onRegionSelected
+            )
+        }
+    }
+}
+
+private val RankingPeriod.label: String
+    get() = when (this) {
+        RankingPeriod.WEEKLY -> "주간"
+        RankingPeriod.MONTHLY -> "월간"
+    }
+
+@Composable
+fun RankingTabBar(
+    selectedTab: RankingUiState.TabType,
+    onTabSelected: (RankingUiState.TabType) -> Unit
+) {
+    ConCafeTabBar(
+        labels = RankingUiState.TabType.entries.map { it.label },
+        selectedIndex = RankingUiState.TabType.entries.indexOf(selectedTab),
+        modifier = Modifier.fillMaxWidth(),
+        onTabSelected = { index ->
+            onTabSelected(RankingUiState.TabType.entries[index])
+        }
+    )
+}
+
+@Composable
+fun RankingPromoBanner(
+    ad: RankingPromoAd,
+    selectedIndex: Int,
+    size: Int,
+    onSelect: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(
+                        listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(999.dp),
+                            color = Color.White.copy(alpha = 0.22f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = ad.icon(),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = ad.badge,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF262626)
+                        ),
+                        shape = RoundedCornerShape(999.dp)
+                    ) {
+                        Text("자세히", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(size) { index ->
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(if (index == selectedIndex) Color.White else Color.White.copy(alpha = 0.5f))
+                                .clickable { onSelect(index) }
+                                .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RankingEntryCard(
+    item: RankingFeedEntry,
+    isMaid: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier.width(36.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.rank <= 3) {
+                    Icon(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = null,
+                        tint = rankColor(item.rank),
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = item.rank.toString(),
+                        color = rankColor(item.rank),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .size(width = 64.dp, height = 64.dp)
+                    .clip(if (isMaid) CircleShape else RoundedCornerShape(18.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(colorFromHex(item.startColorHex), colorFromHex(item.endColorHex))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(item.symbol, style = MaterialTheme.typography.headlineSmall)
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(item.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7E7E7E), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "${item.score} pt",
+                        color = Color(0xFFEF6797),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    RankingChangeIndicator(item.change)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RankingChangeIndicator(change: String) {
+    val icon = when {
+        change.startsWith("+") -> Icons.Filled.ArrowUpward
+        change.startsWith("-") -> Icons.Filled.ArrowDownward
+        else -> null
+    }
+    val tint = when {
+        change.startsWith("+") -> Color(0xFF34A853)
+        change.startsWith("-") -> Color(0xFFE24B62)
+        else -> Color(0xFF8A8A8A)
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(14.dp)
+            )
+        } else {
+            Text("-", color = tint, style = MaterialTheme.typography.bodySmall)
+        }
+        Text(change, color = Color(0xFF8A8A8A), style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+private fun rankColor(rank: Int): Color {
+    return when (rank) {
+        1 -> Color(0xFFE2B11E)
+        2 -> Color(0xFFA2A7B1)
+        3 -> Color(0xFFB8753B)
+        else -> Color(0xFF8A8A8A)
+    }
+}
+
+private fun RankingPromoAd.icon(): ImageVector {
+    return when (symbol) {
+        "✨" -> Icons.Default.AutoAwesome
+        "🎁" -> Icons.Default.Redeem
+        else -> Icons.Default.LocalOffer
+    }
+}

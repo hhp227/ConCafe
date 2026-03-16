@@ -1,0 +1,13 @@
+//
+//  MenuGoodsEvent.swift
+//  ConCafe
+//
+//  Created by 홍희표 on 2026/03/11.
+//
+
+import Foundation
+
+enum MenuGoodsEvent {
+    case navigateBack
+    case navigateToEdit(cafeId: String, itemId: String?)
+}

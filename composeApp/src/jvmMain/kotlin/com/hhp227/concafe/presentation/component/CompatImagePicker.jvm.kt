@@ -1,0 +1,110 @@
+package com.hhp227.concafe.presentation.component
+
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.unit.dp
+import org.jetbrains.skia.Image
+import java.awt.GraphicsEnvironment
+import java.io.File
+import java.net.URL
+import javax.swing.JFileChooser
+import javax.swing.filechooser.FileNameExtensionFilter
+
+@Composable
+actual fun CompatImagePicker(
+    onImageSelected: (String) -> Unit,
+    content: @Composable (launchPicker: () -> Unit) -> Unit
+) {
+    val launchPicker = {
+        chooseImageFile()?.let(onImageSelected)
+    }
+
+    content(launchPicker)
+}
+
+@Composable
+actual fun CompatImageDisplay(
+    imageUrl: String?,
+    modifier: Modifier
+) {
+    val imageBitmap = imageUrl?.let { decodeImageBitmap(it) }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageBitmap == null) {
+            Icon(
+                painter = rememberVectorPainter(Icons.Default.Image),
+                contentDescription = null,
+                tint = Color(0xFF8C7A85),
+                modifier = Modifier.fillMaxSize(0.36f)
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Color(0x1A8B6F7A),
+                        RoundedCornerShape(20.dp)
+                    )
+            )
+        } else {
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+}
+
+private fun chooseImageFile(): String? {
+    if (GraphicsEnvironment.isHeadless()) {
+        return null
+    }
+
+    val chooser = JFileChooser().apply {
+        dialogTitle = "이미지 선택"
+        fileSelectionMode = JFileChooser.FILES_ONLY
+        isAcceptAllFileFilterUsed = false
+        fileFilter = FileNameExtensionFilter(
+            "이미지 파일 (JPG, JPEG, PNG, WEBP)",
+            "jpg",
+            "jpeg",
+            "png",
+            "webp"
+        )
+    }
+    return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+        chooser.selectedFile?.let { File(it.absolutePath).absolutePath }
+    } else {
+        null
+    }
+}
+
+private fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
+    return runCatching {
+        val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            URL(imageUrl).readBytes()
+        } else {
+            File(imageUrl).readBytes()
+        }
+
+        Image.makeFromEncoded(bytes).asImageBitmap()
+    }.getOrNull()
+}

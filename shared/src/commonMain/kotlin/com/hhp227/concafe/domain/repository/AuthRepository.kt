@@ -1,0 +1,25 @@
+package com.hhp227.concafe.domain.repository
+
+import kotlinx.coroutines.flow.Flow
+import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserRole
+
+interface AuthRepository {
+    suspend fun signIn(email: String, password: String): User
+
+    suspend fun signUp(
+        email: String,
+        password: String,
+        nickname: String,
+        role: UserRole,
+        affiliatedCafeId: String? = null
+    ): User
+
+    suspend fun signOut()
+
+    suspend fun restoreSession(): User?
+
+    suspend fun getCurrentUser(): User?
+
+    fun observeCurrentUser(): Flow<User?>
+}
