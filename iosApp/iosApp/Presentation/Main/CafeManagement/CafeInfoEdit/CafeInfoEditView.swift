@@ -162,20 +162,10 @@ private struct CafeInfoEditContentView: View {
                                 )
                             )
                         if let imageUrl = uiState.representativeImageUrl,
-                           let url = URL(string: imageUrl),
                            !imageUrl.isEmpty {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                        .tint(Color(hex: "9C7A88"))
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: proxy.size.width, height: proxy.size.height)
-                                        .clipped()
-                                case .failure:
+                            CafeInfoImageView(
+                                imageUrl: imageUrl,
+                                placeholder: {
                                     VStack(spacing: 8) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 32, weight: .semibold))
@@ -184,11 +174,14 @@ private struct CafeInfoEditContentView: View {
                                             .font(.subheadline.weight(.bold))
                                             .foregroundStyle(Color(hex: "5A4954"))
                                     }
-                                @unknown default:
+                                },
+                                loading: {
                                     ProgressView()
                                         .tint(Color(hex: "9C7A88"))
                                 }
-                            }
+                            )
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
                         } else {
                             VStack(spacing: 8) {
                                 Image(systemName: "camera.fill")
@@ -409,58 +402,51 @@ private struct CafeInfoEditContentView: View {
             ("FFD9CF", "FFF0EA")
         ]
         let colors = gradients[index % gradients.count]
-        return ZStack(alignment: .bottomLeading) {
-            let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
-            if let imageURL = URL(string: imageUrl), !imageUrl.isEmpty {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .clipped()
-                    case .failure:
-                        backgroundShape
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+        return GeometryReader { proxy in
+            ZStack(alignment: .bottomLeading) {
+                let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+                if !imageUrl.isEmpty {
+                    CafeInfoImageView(
+                        imageUrl: imageUrl,
+                        placeholder: {
+                            backgroundShape
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                    @unknown default:
-                        backgroundShape
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                    }
-                }
-            } else {
-                backgroundShape
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        },
+                        loading: {
+                            ProgressView()
+                        }
                     )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                } else {
+                    backgroundShape
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                Text(label)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.32))
+                    .clipShape(Capsule())
+                    .padding(10)
             }
-            Text(label)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "5A4954"))
-                .background(.black.opacity(0.22))
-                .clipShape(Capsule())
-                .padding(10)
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .aspectRatio(1, contentMode: .fit)
+        .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
@@ -540,6 +526,41 @@ private struct CafeInfoEditContentView: View {
         )
     }
 
+}
+
+private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
+    let imageUrl: String
+
+    let placeholder: () -> Placeholder
+
+    let loading: () -> Loading
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let url = URL(string: imageUrl) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    loading()
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder()
+                @unknown default:
+                    placeholder()
+                }
+            }
+        } else {
+            placeholder()
+        }
+    }
 }
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
