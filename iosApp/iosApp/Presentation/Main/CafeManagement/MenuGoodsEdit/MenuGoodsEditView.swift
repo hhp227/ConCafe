@@ -211,41 +211,46 @@ struct MenuGoodsEditView: View {
         return Button {
             isPhotoPickerPresented = true
         } label: {
-            ZStack {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD8E6"), Color(hex: "FFE5EE")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            GeometryReader { proxy in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFE5EE")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color(hex: "FFD1DC"), lineWidth: 1.5)
-                    )
-                    .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                if let imageUrl, let url = URL(string: imageUrl), !imageUrl.isEmpty {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            loadingPhotoPlaceholder
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                        case .failure:
-                            loadingPhotoPlaceholder
-                        @unknown default:
-                            loadingPhotoPlaceholder
+                    if let imageUrl, let url = URL(string: imageUrl), !imageUrl.isEmpty {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                loadingPhotoPlaceholder
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: proxy.size.width, height: proxy.size.height)
+                                    .clipped()
+                            case .failure:
+                                loadingPhotoPlaceholder
+                            @unknown default:
+                                loadingPhotoPlaceholder
+                            }
                         }
+                    } else {
+                        photoUploadPlaceholder
                     }
-                    .clipped()
-                } else {
-                    photoUploadPlaceholder
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC"), lineWidth: 1.5)
+                )
             }
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
         }
         .buttonStyle(.plain)
     }

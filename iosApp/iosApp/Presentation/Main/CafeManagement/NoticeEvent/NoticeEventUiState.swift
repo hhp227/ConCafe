@@ -131,4 +131,3 @@ enum NoticeStatusAccent {
     case ended
 }
 
-let sampleEventImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuA2f4YforgbxHgDTUjuv_2-RNCTUL3Nre_9UOtgIPd1ugt6LYUiIx76nm7_LgA5CEqxoInyz5vaG6_Y96e9PU_B8AU5MlUWUmBHksD3K88DkEvW6pvdLEL20-1X4le2RT-qXGt5K36xGWrhrbrf9JixW_R24QHx0M1qwPSCPasTk8ptf-Qy5TT7nHf9zj-2Jm-AZmrXB0Q9DGhfGb0fn-6Rw2jBi0LSh_21SpOScyRYwxqn5c1F4mp1uK7J7kJV3ktNxj8oaAp6bA"

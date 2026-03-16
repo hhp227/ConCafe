@@ -79,6 +79,8 @@ import com.hhp227.concafe.di.resolveObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.di.resolveUpdateCafeEventUseCase
 import com.hhp227.concafe.di.resolveUpdateCafeNoticeUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -361,7 +363,15 @@ private fun NoticeEventFormSheetContent(
             }
             if (uiState.showsImageSection) {
                 item {
-                    NoticeEventImageSection(uiState = uiState, onAction = onAction)
+                    NoticeEventImageSection(
+                        uiState = uiState,
+                        onImageSelected = { imageUrl ->
+                            onAction(NoticeEventAction.ChangeFormImageUrl(imageUrl))
+                        },
+                        onRemoveImage = {
+                            onAction(NoticeEventAction.ClickRemoveFormImage)
+                        }
+                    )
                 }
             }
             if (uiState.showsPinnedSection) {
@@ -452,7 +462,8 @@ private fun NoticeEventFormSheetContent(
 @Composable
 private fun NoticeEventImageSection(
     uiState: NoticeEventUiState,
-    onAction: (NoticeEventAction) -> Unit
+    onImageSelected: (String) -> Unit,
+    onRemoveImage: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -461,49 +472,62 @@ private fun NoticeEventImageSection(
             color = Color(0xFF665A63),
             modifier = Modifier.padding(start = 4.dp)
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+        CompatImagePicker(
+            onImageSelected = onImageSelected
+        ) { launchImagePicker ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                        )
                     )
-                )
-                .clickable { onAction(NoticeEventAction.ClickFormImage) }
-        ) {
-            Column(
-                modifier = Modifier.align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .clickable { launchImagePicker() }
             ) {
-                Icon(
-                    Icons.Default.PhotoCamera,
-                    contentDescription = null,
-                    tint = Color(0xFF8B5164),
-                    modifier = Modifier.size(34.dp)
-                )
-                Text(
-                    text = uiState.formImageTitle,
-                    color = Color(0xFF5A4954),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (uiState.hasAttachedImage) {
-                Button(
-                    onClick = { onAction(NoticeEventAction.ClickRemoveFormImage) },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF8B5164)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text("제거", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                if (uiState.hasAttachedImage) {
+                    CompatImageDisplay(
+                        imageUrl = uiState.formImageUrl,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = Color(0xFF8B5164),
+                            modifier = Modifier.size(34.dp)
+                        )
+                        Text(
+                            text = uiState.formImageTitle,
+                            color = Color(0xFF5A4954),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                if (uiState.hasAttachedImage) {
+                    Button(
+                        onClick = {
+                            onRemoveImage()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF8B5164)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Text("제거", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

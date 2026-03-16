@@ -151,56 +151,61 @@ private struct CafeInfoEditContentView: View {
             Button {
                 onRepresentativeImagePick()
             } label: {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                GeometryReader { proxy in
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(height: 200)
-                    if let imageUrl = uiState.representativeImageUrl,
-                       let url = URL(string: imageUrl),
-                       !imageUrl.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                ProgressView()
-                                    .tint(Color(hex: "9C7A88"))
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .clipped()
-                            case .failure:
-                                VStack(spacing: 8) {
-                                    Image(systemName: "camera.fill")
-                                        .font(.system(size: 32, weight: .semibold))
-                                        .foregroundStyle(Color(hex: "8B5164"))
-                                    Text(uiState.representativeImageTitle)
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Color(hex: "5A4954"))
+                        if let imageUrl = uiState.representativeImageUrl,
+                           let url = URL(string: imageUrl),
+                           !imageUrl.isEmpty {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .tint(Color(hex: "9C7A88"))
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: proxy.size.width, height: proxy.size.height)
+                                        .clipped()
+                                case .failure:
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "camera.fill")
+                                            .font(.system(size: 32, weight: .semibold))
+                                            .foregroundStyle(Color(hex: "8B5164"))
+                                        Text(uiState.representativeImageTitle)
+                                            .font(.subheadline.weight(.bold))
+                                            .foregroundStyle(Color(hex: "5A4954"))
+                                    }
+                                @unknown default:
+                                    ProgressView()
+                                        .tint(Color(hex: "9C7A88"))
                                 }
-                            @unknown default:
-                                ProgressView()
-                                    .tint(Color(hex: "9C7A88"))
+                            }
+                        } else {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 32, weight: .semibold))
+                                    .foregroundStyle(Color(hex: "8B5164"))
+                                Text(uiState.representativeImageTitle)
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Color(hex: "5A4954"))
                             }
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    } else {
-                        VStack(spacing: 8) {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 32, weight: .semibold))
-                                .foregroundStyle(Color(hex: "8B5164"))
-                            Text(uiState.representativeImageTitle)
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "5A4954"))
-                        }
                     }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
             }
             .buttonStyle(.plain)
             Text("검색 결과에 노출되는 대표 이미지입니다")

@@ -6,17 +6,24 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct NoticeEventView: View {
     let cafeId: String
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: NoticeEventViewModel
 
+    @State private var isFormImagePickerPresented = false
+
     var body: some View {
         NoticeEventContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onPickFormImage: {
+                isFormImagePickerPresented = true
+            }
         )
         .navigationTitle("공지 및 이벤트 관리")
         .navigationBarTitleDisplayMode(.inline)
@@ -40,9 +47,25 @@ struct NoticeEventView: View {
         ) {
             NoticeEventFormSheet(
                 uiState: viewModel.uiState,
-                onAction: viewModel.onAction
+                onAction: viewModel.onAction,
+                onPickFormImage: {
+                    isFormImagePickerPresented = true
+                }
             )
             .compatLargeSheetDetent()
+        }
+        .sheet(isPresented: $isFormImagePickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isFormImagePickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        viewModel.onAction(.changeFormImage(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isFormImagePickerPresented = false
+                }
+            )
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -66,6 +89,8 @@ private struct NoticeEventContentView: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
+
+    let onPickFormImage: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -316,6 +341,7 @@ private struct NoticeEventFormSheet: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
+    let onPickFormImage: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -378,7 +404,7 @@ private struct NoticeEventFormSheet: View {
                             )
                         }
                         if uiState.showsImageSection {
-                            representativeImageSection
+                            representativeImageSection(onPickFormImage: onPickFormImage)
                         }
                         if uiState.showsPinnedSection {
                             HStack {
@@ -468,7 +494,7 @@ private struct NoticeEventFormSheet: View {
         }
     }
 
-    private var representativeImageSection: some View {
+    private func representativeImageSection(onPickFormImage: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("대표 이미지")
                 .font(.subheadline.weight(.bold))
@@ -484,13 +510,27 @@ private struct NoticeEventFormSheet: View {
                         )
                     )
                     .frame(height: 200)
-                VStack(spacing: 8) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 32, weight: .semibold))
-                        .foregroundStyle(Color(hex: "8B5164"))
-                    Text(uiState.formImageTitle)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "5A4954"))
+                if let imageURL = URL(string: uiState.formImageUrl), uiState.hasAttachedImage {
+                    AsyncImage(url: imageURL) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ProgressView()
+                            .tint(Color(hex: "9C7A88"))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 32, weight: .semibold))
+                            .foregroundStyle(Color(hex: "8B5164"))
+                        Text(uiState.formImageTitle)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "5A4954"))
+                    }
                 }
                 if uiState.hasAttachedImage {
                     Button("제거") {
@@ -507,13 +547,26 @@ private struct NoticeEventFormSheet: View {
             }
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .onTapGesture {
-                onAction(.clickFormImage)
+                onPickFormImage()
             }
             Text(uiState.formImageDescription)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+    let fileName = "\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+    do {
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }
 
