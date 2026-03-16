@@ -15,15 +15,10 @@ struct NoticeEventView: View {
 
     @StateObject private var viewModel: NoticeEventViewModel
 
-    @State private var isFormImagePickerPresented = false
-
     var body: some View {
         NoticeEventContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction,
-            onPickFormImage: {
-                isFormImagePickerPresented = true
-            }
+            onAction: viewModel.onAction
         )
         .navigationTitle("공지 및 이벤트 관리")
         .navigationBarTitleDisplayMode(.inline)
@@ -47,25 +42,9 @@ struct NoticeEventView: View {
         ) {
             NoticeEventFormSheet(
                 uiState: viewModel.uiState,
-                onAction: viewModel.onAction,
-                onPickFormImage: {
-                    isFormImagePickerPresented = true
-                }
+                onAction: viewModel.onAction
             )
             .compatLargeSheetDetent()
-        }
-        .sheet(isPresented: $isFormImagePickerPresented) {
-            CompatImagePicker(
-                onImageSelected: { image in
-                    isFormImagePickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.changeFormImage(imageUrl))
-                    }
-                },
-                onDismiss: {
-                    isFormImagePickerPresented = false
-                }
-            )
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -89,8 +68,6 @@ private struct NoticeEventContentView: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
-
-    let onPickFormImage: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -341,7 +318,8 @@ private struct NoticeEventFormSheet: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
-    let onPickFormImage: () -> Void
+
+    @State private var isImagePickerPresented = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -404,7 +382,7 @@ private struct NoticeEventFormSheet: View {
                             )
                         }
                         if uiState.showsImageSection {
-                            representativeImageSection(onPickFormImage: onPickFormImage)
+                            representativeImageSection
                         }
                         if uiState.showsPinnedSection {
                             HStack {
@@ -492,9 +470,22 @@ private struct NoticeEventFormSheet: View {
             .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
             .ignoresSafeArea(edges: .bottom)
         }
+        .sheet(isPresented: $isImagePickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isImagePickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        onAction(.changeFormImage(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isImagePickerPresented = false
+                }
+            )
+        }
     }
 
-    private func representativeImageSection(onPickFormImage: @escaping () -> Void) -> some View {
+    private var representativeImageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("대표 이미지")
                 .font(.subheadline.weight(.bold))
@@ -510,15 +501,8 @@ private struct NoticeEventFormSheet: View {
                         )
                     )
                     .frame(height: 200)
-                if let imageURL = URL(string: uiState.formImageUrl), uiState.hasAttachedImage {
-                    AsyncImage(url: imageURL) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        ProgressView()
-                            .tint(Color(hex: "9C7A88"))
-                    }
+                if uiState.hasAttachedImage {
+                    NoticeEventFormImageView(imageUrl: uiState.formImageUrl)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -531,6 +515,7 @@ private struct NoticeEventFormSheet: View {
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: "5A4954"))
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
                 if uiState.hasAttachedImage {
                     Button("제거") {
@@ -547,13 +532,53 @@ private struct NoticeEventFormSheet: View {
             }
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .onTapGesture {
-                onPickFormImage()
+                isImagePickerPresented = true
             }
             Text(uiState.formImageDescription)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+private struct NoticeEventFormImageView: View {
+    let imageUrl: String
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteUrl = URL(string: imageUrl) {
+            AsyncImage(url: remoteUrl) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .tint(Color(hex: "9C7A88"))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder
+                @unknown default:
+                    placeholder
+                }
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }
 
