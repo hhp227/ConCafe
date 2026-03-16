@@ -17,6 +17,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
+                .toolbar(shouldHideMainNavigationBar ? .hidden : .visible, for: .navigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
                         viewModel.onAction(.navigateToMain())
@@ -146,6 +147,17 @@ struct AppNavigationView: View {
         default:
             // Detail is pushed through NavigationStack path.
             MainView(onNavigationAction: viewModel.onAction)
+        }
+    }
+
+    private var shouldHideMainNavigationBar: Bool {
+        guard let lastRoute = path.last else { return false }
+
+        switch lastRoute {
+        case .cafe, .cast:
+            return true
+        default:
+            return false
         }
     }
 }
