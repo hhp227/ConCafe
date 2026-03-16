@@ -491,45 +491,49 @@ private struct NoticeEventFormSheet: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color(hex: "665A63"))
                 .padding(.leading, 4)
-            ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomTrailing) {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(height: 200)
-                if uiState.hasAttachedImage {
-                    NoticeEventFormImageView(imageUrl: uiState.formImageUrl)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 32, weight: .semibold))
-                            .foregroundStyle(Color(hex: "8B5164"))
-                        Text(uiState.formImageTitle)
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "5A4954"))
+                    if uiState.hasAttachedImage {
+                        NoticeEventFormImageView(imageUrl: uiState.formImageUrl)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundStyle(Color(hex: "8B5164"))
+                            Text(uiState.formImageTitle)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Color(hex: "5A4954"))
+                        }
+                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }
-                if uiState.hasAttachedImage {
-                    Button("제거") {
-                        onAction(.clickRemoveFormImage)
+                    if uiState.hasAttachedImage {
+                        Button("제거") {
+                            onAction(.clickRemoveFormImage)
+                        }
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "8B5164"))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                        .padding(12)
                     }
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "8B5164"))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.white)
-                    .clipShape(Capsule())
-                    .padding(12)
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .onTapGesture {
                 isImagePickerPresented = true
