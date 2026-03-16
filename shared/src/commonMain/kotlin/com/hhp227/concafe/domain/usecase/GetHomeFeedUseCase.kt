@@ -9,6 +9,9 @@ import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.NoticeRepository
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CastSort
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class GetHomeFeedUseCase(
     private val bannerRepository: BannerRepository,
@@ -21,6 +24,7 @@ class GetHomeFeedUseCase(
         nearbyCafeCursor: String? = null
     ): AppResult<HomeFeed> {
         return try {
+            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val nearbyCafePage = cafeRepository.searchCafes(
                 query = null,
                 country = null,
@@ -47,7 +51,17 @@ class GetHomeFeedUseCase(
                 cursor = null,
                 pageSize = HOME_FEED_LIMIT * 3
             ).items
-                .filter { !it.birthday.isNullOrBlank() }
+                .filter { cast ->
+                    cast.birthday
+                        ?.split("-")
+                        ?.takeIf { it.size == 3 }
+                        ?.let { parts ->
+                            val birthMonth = parts[1].toIntOrNull()
+                            val birthDay = parts[2].toIntOrNull()
+
+                            birthMonth == today.monthNumber && birthDay == today.dayOfMonth
+                        } == true
+                }
                 .take(HOME_FEED_LIMIT)
             val notices = noticeRepository.getRecentNotices(HOME_FEED_LIMIT)
 

@@ -61,7 +61,9 @@ private struct HomeContentView: View {
                 bannerSection
                 popularCastSection
                 nearbyCafeSection
-                birthdaySection
+                if !uiState.birthdayCasts.isEmpty {
+                    birthdaySection
+                }
                 noticeSection
             }
             .padding(.vertical, 16)
@@ -140,7 +142,7 @@ private struct HomeContentView: View {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
                     icon: "mappin.and.ellipse",
-                    title: "근처 메이드카페",
+                    title: "근처 컨셉카페",
                     actionTitle: uiState.canLoadMoreNearbyCafes ? "더보기" : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
                 )
@@ -181,7 +183,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: birthdaySectionIconName, title: "생일인 메이드")
+            SectionTitle(icon: birthdaySectionIconName, title: "생일인 캐스트")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in

@@ -216,7 +216,7 @@ fun HomeContentScreen(
 
                 Column {
                     SectionTitle(
-                        text = "근처 메이드카페",
+                        text = "근처 컨셉카페",
                         leading = Icons.Default.Place,
                         actionLabel = if (uiState.canLoadMoreNearbyCafes) "더보기" else null,
                         onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
@@ -244,25 +244,27 @@ fun HomeContentScreen(
                 }
             }
         }
-        item {
-            SectionTitle("생일인 메이드", Icons.Default.Cake)
-            Spacer(Modifier.height(10.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(uiState.birthdayCasts) { maid ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(74.dp)
-                                .clip(CircleShape)
-                                .background(Brush.verticalGradient(listOf(Color(0xFFFFD3E2), Color(0xFFFFB6D0))))
-                        )
-                        Text(maid.name, modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
+        if (uiState.birthdayCasts.isNotEmpty()) {
+            item {
+                SectionTitle("생일인 캐스트", Icons.Default.Cake)
+                Spacer(Modifier.height(10.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(uiState.birthdayCasts) { maid ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(74.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFD3E2), Color(0xFFFFB6D0))))
+                            )
+                            Text(maid.name, modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
