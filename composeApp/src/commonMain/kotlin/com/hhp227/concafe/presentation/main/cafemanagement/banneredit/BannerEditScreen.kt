@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +28,8 @@ import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
 import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.di.resolveCreateHomeBannerUseCase
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -168,10 +171,19 @@ private fun BannerEditContentScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    BannerImageCard(
-                        uiState = uiState,
-                        onClick = { onAction(BannerEditAction.ClickImagePicker) }
-                    )
+                    CompatImagePicker(
+                        onImageSelected = { imageUrl ->
+                            onAction(BannerEditAction.SelectImage(imageUrl))
+                        }
+                    ) { launchImagePicker ->
+                        BannerImageCard(
+                            uiState = uiState,
+                            onClick = {
+                                onAction(BannerEditAction.ClickImagePicker)
+                                launchImagePicker()
+                            }
+                        )
+                    }
                 }
                 item {
                     BannerSectionCard(title = "배너 기본 정보") {
@@ -360,16 +372,39 @@ private fun BannerImageCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .background(Color(0x14EF6797), CircleShape),
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))),
+                        RoundedCornerShape(20.dp)
+                    )
+                    .clip(RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.AddPhotoAlternate,
-                    contentDescription = null,
-                    tint = Color(0xFFEF6797),
-                    modifier = Modifier.size(34.dp)
-                )
+                if (uiState.selectedImageLabel.isNullOrBlank()) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddPhotoAlternate,
+                            contentDescription = null,
+                            tint = Color(0xFFEF6797),
+                            modifier = Modifier.size(34.dp)
+                        )
+                        Text(
+                            text = "배너 이미지 선택",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF5A4954),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    CompatImageDisplay(
+                        imageUrl = uiState.selectedImageLabel,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(

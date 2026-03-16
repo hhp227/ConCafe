@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct BannerEditView: View {
     let initialCafeId: String?
@@ -14,10 +15,15 @@ struct BannerEditView: View {
 
     @StateObject private var viewModel: BannerEditViewModel
 
+    @State private var isImagePickerPresented = false
+
     var body: some View {
         BannerEditContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onPickImage: {
+                isImagePickerPresented = true
+            }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -54,6 +60,19 @@ struct BannerEditView: View {
                 break
             }
         }
+        .sheet(isPresented: $isImagePickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isImagePickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        viewModel.onAction(.selectImage(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isImagePickerPresented = false
+                }
+            )
+        }
     }
 
     init(
@@ -70,6 +89,8 @@ private struct BannerEditContentView: View {
     let uiState: BannerEditUiState
 
     let onAction: (BannerEditAction) -> Void
+
+    let onPickImage: () -> Void
 
     var body: some View {
         ScrollView {
@@ -99,13 +120,39 @@ private struct BannerEditContentView: View {
 
     private var bannerImageCard: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "EF6797").opacity(0.08))
-                    .frame(width: 72, height: 72)
-                Image(systemName: "photo.badge.plus")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+            GeometryReader { proxy in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    if let imageUrl = uiState.selectedImageLabel,
+                       !imageUrl.isEmpty {
+                        BannerEditImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                bannerPlaceholder
+                            }
+                        )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        bannerPlaceholder
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .onTapGesture {
+                onAction(.clickImagePicker)
+                onPickImage()
             }
             VStack(spacing: 4) {
                 Text(uiState.imageSectionTitle)
@@ -123,6 +170,7 @@ private struct BannerEditContentView: View {
             }
             Button {
                 onAction(.clickImagePicker)
+                onPickImage()
             } label: {
                 Text(uiState.imageButtonText)
                     .font(.subheadline.weight(.bold))
@@ -144,8 +192,16 @@ private struct BannerEditContentView: View {
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
                 .foregroundStyle(Color(hex: "FFD1DC").opacity(0.45))
         )
-        .onTapGesture {
-            onAction(.clickImagePicker)
+    }
+
+    private var bannerPlaceholder: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "photo.badge.plus")
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(Color(hex: "EF6797"))
+            Text("배너 이미지 선택")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Color(hex: "5A4954"))
         }
     }
 
@@ -404,6 +460,52 @@ private struct BannerEditContentView: View {
         .padding(.vertical, 14)
         .background(Color(hex: "FFD1DC").opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct BannerEditImageView<Placeholder: View>: View {
+    let imageUrl: String
+    let placeholder: () -> Placeholder
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteUrl = URL(string: imageUrl) {
+            AsyncImage(url: remoteUrl) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .tint(Color(hex: "9C7A88"))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder()
+                @unknown default:
+                    placeholder()
+                }
+            }
+        } else {
+            placeholder()
+        }
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+    let fileName = "\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+    do {
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }
 

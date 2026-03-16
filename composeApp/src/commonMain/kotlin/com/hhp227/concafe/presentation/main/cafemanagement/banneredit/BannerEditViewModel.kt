@@ -41,6 +41,7 @@ class BannerEditViewModel(
         when (action) {
             BannerEditAction.ClickBack -> clickBack()
             BannerEditAction.ClickImagePicker -> clickImagePicker()
+            is BannerEditAction.SelectImage -> _uiState.update { it.copy(selectedImageLabel = action.imageUrl, infoMessage = null) }
             is BannerEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value) }
             is BannerEditAction.ChangeSubtitle -> _uiState.update { it.copy(subtitle = action.value) }
             is BannerEditAction.SelectTarget -> selectTarget(action.target)
@@ -122,12 +123,7 @@ class BannerEditViewModel(
     }
 
     private fun clickImagePicker() {
-        _uiState.update {
-            it.copy(
-                selectedImageLabel = "banner_cover_mock.png",
-                infoMessage = "이미지 업로드 연결은 다음 단계에서 구현됩니다."
-            )
-        }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
     private fun selectTarget(target: BannerTargetType) {

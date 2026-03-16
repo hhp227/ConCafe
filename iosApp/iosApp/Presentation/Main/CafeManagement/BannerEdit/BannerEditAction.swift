@@ -10,6 +10,7 @@ import Foundation
 enum BannerEditAction {
     case clickBack
     case clickImagePicker
+    case selectImage(String)
     case changeTitle(String)
     case changeSubtitle(String)
     case selectTarget(BannerTargetType)
