@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -69,6 +70,8 @@ import com.hhp227.concafe.di.resolveCreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.di.resolveUpdateCafeInfoUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
 @Composable
@@ -225,35 +228,49 @@ private fun CafeInfoEditContent(
                 item {
                     EditSectionCard(title = "대표 이미지") {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
-                                        ),
-                                        RoundedCornerShape(20.dp)
-                                    )
-                                    .clickable { onAction(CafeInfoEditAction.ClickRepresentativeImage) }
-                            ) {
-                                Column(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                            CompatImagePicker(
+                                onImageSelected = { imageUrl ->
+                                    onAction(CafeInfoEditAction.SelectRepresentativeImage(imageUrl))
+                                }
+                            ) { launchImagePicker ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                                            ),
+                                            RoundedCornerShape(20.dp)
+                                        )
+                                        .clickable { launchImagePicker() }
                                 ) {
-                                    Icon(
-                                        Icons.Default.PhotoCamera,
-                                        contentDescription = null,
-                                        tint = Color(0xFF8B5164),
-                                        modifier = Modifier.size(34.dp)
-                                    )
-                                    Text(
-                                        text = uiState.representativeImageTitle,
-                                        color = Color(0xFF5A4954),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    if (uiState.representativeImageUrl.isNullOrBlank()) {
+                                        Column(
+                                            modifier = Modifier.align(Alignment.Center),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.PhotoCamera,
+                                                contentDescription = null,
+                                                tint = Color(0xFF8B5164),
+                                                modifier = Modifier.size(34.dp)
+                                            )
+                                            Text(
+                                                text = uiState.representativeImageTitle,
+                                                color = Color(0xFF5A4954),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    } else {
+                                        CompatImageDisplay(
+                                            imageUrl = uiState.representativeImageUrl,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
                                 }
                             }
                             Text(
@@ -285,7 +302,13 @@ private fun CafeInfoEditContent(
                                         index = index
                                     )
                                 }
-                                AddGalleryTile(onClick = { onAction(CafeInfoEditAction.ClickAddGalleryImage) })
+                                CompatImagePicker(
+                                    onImageSelected = { imageUrl ->
+                                        onAction(CafeInfoEditAction.AddGalleryImage(imageUrl))
+                                    }
+                                ) { launchImagePicker ->
+                                    AddGalleryTile(onClick = launchImagePicker)
+                                }
                             }
                         }
                     }
@@ -444,8 +467,14 @@ private fun GalleryImageTile(
                 RoundedCornerShape(16.dp)
             )
     ) {
+        if (imageUrl.isNotBlank()) {
+            CompatImageDisplay(
+                imageUrl = imageUrl,
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+            )
+        }
         Text(
-            text = if (imageUrl.isBlank()) label else label,
+            text = label,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(10.dp),

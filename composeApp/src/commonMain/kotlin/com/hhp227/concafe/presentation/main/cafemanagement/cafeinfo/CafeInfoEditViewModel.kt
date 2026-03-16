@@ -43,15 +43,15 @@ class CafeInfoEditViewModel(
                 is AppResult.Success -> {
                     val detail = result.data.detail
                     val parsedHours = parseBusinessHours(detail.businessHours)
+                    val cafeImages = detail.images.filter { image -> image.isNotBlank() }
                     _uiState.update {
                         it.copy(
                             detail = detail,
                             isLoading = false,
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
-                            representativeImageUrl = detail.images.firstOrNull()?.takeIf { image -> image.isNotBlank() }
-                                ?: detail.cafe.thumbnailImage,
-                            galleryImages = detail.images.filter { image -> image.isNotBlank() },
+                            representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
+                            galleryImages = cafeImages.drop(1).take(5),
                             address = detail.cafe.region.address,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
@@ -104,15 +104,15 @@ class CafeInfoEditViewModel(
                 is AppResult.Success -> {
                     val detail = result.data
                     val parsedHours = parseBusinessHours(detail.businessHours)
+                    val cafeImages = detail.images.filter { image -> image.isNotBlank() }
                     _uiState.update {
                         it.copy(
                             detail = detail,
                             isSaving = false,
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
-                            representativeImageUrl = detail.images.firstOrNull()?.takeIf { image -> image.isNotBlank() }
-                                ?: detail.cafe.thumbnailImage,
-                            galleryImages = detail.images.filter { image -> image.isNotBlank() },
+                            representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
+                            galleryImages = cafeImages.drop(1).take(5),
                             address = detail.cafe.region.address,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
@@ -204,6 +204,21 @@ class CafeInfoEditViewModel(
             is CafeInfoEditAction.ChangeWeekdayClose -> _uiState.update { it.copy(weekdayClose = action.value) }
             is CafeInfoEditAction.ChangeWeekendOpen -> _uiState.update { it.copy(weekendOpen = action.value) }
             is CafeInfoEditAction.ChangeWeekendClose -> _uiState.update { it.copy(weekendClose = action.value) }
+            is CafeInfoEditAction.SelectRepresentativeImage -> {
+                _uiState.update { it.copy(representativeImageUrl = action.imageUrl) }
+            }
+            is CafeInfoEditAction.AddGalleryImage -> {
+                if (action.imageUrl.isBlank()) {
+                    return
+                }
+                if (_uiState.value.galleryImages.size >= 5) {
+                    showInfo("카페 갤러리는 최대 5장까지 등록할 수 있습니다.")
+                    return
+                }
+                _uiState.update { state ->
+                    state.copy(galleryImages = state.galleryImages + action.imageUrl)
+                }
+            }
             CafeInfoEditAction.ClickRepresentativeImage -> showInfo("대표 이미지 업로드는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickAddGalleryImage -> showInfo("갤러리 이미지 추가는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickPinLocation -> showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")

@@ -27,7 +27,7 @@ struct CafeInfoEditUiState {
     var infoMessage: String?
 
     var galleryLimitText: String {
-        "\(galleryImages.count) / 10"
+        "\(galleryImages.count) / 5"
     }
 
     var screenTitle: String {

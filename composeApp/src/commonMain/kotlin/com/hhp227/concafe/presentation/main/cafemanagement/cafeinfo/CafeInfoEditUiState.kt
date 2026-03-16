@@ -21,7 +21,7 @@ data class CafeInfoEditUiState(
     val infoMessage: String? = null
 ) {
     val galleryLimitText: String
-        get() = "${galleryImages.size} / 10"
+        get() = "${galleryImages.size} / 5"
 
     val screenTitle: String
         get() = if (isRegistrationMode) "새 카페 등록" else "카페 정보 관리"
