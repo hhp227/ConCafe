@@ -17,7 +17,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
-                .toolbar(shouldHideMainNavigationBar ? .hidden : .visible, for: .navigationBar)
+                .compatNavigationBarHidden(shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
                         viewModel.onAction(.navigateToMain())

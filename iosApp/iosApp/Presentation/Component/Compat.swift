@@ -206,6 +206,15 @@ extension View {
     func compatNavigationBarStyle(_ style: CompatNavigationBarStyle) -> some View {
         background(NavigationBarAppearanceConfigurator(style: style))
     }
+
+    @ViewBuilder
+    func compatNavigationBarHidden(_ hidden: Bool) -> some View {
+        if #available(iOS 16.0, *) {
+            toolbar(hidden ? .hidden : .visible, for: .navigationBar)
+        } else {
+            navigationBarHidden(hidden)
+        }
+    }
 }
 
 func compatSystemImageName(iOS16: String, fallback: String) -> String {
