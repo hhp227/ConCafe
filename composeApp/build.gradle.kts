@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
 }
 
+compose.resources {
+    publicResClass = true
+}
+
 kotlin {
     androidTarget {
         compilations.all {

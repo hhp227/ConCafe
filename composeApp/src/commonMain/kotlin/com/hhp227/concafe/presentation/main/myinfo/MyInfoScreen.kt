@@ -138,7 +138,7 @@ private fun GuestMyInfoScreen(
                 ) {
                     Text("💗", style = MaterialTheme.typography.headlineLarge)
                     Text("ConCafe에 오신 것을\n환영합니다!", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text("로그인하고 메이드카페의 모든 것을 즐겨보세요", color = Color.White.copy(alpha = 0.9f))
+                    Text("로그인하고 컨셉카페의 모든 것을 즐겨보세요", color = Color.White.copy(alpha = 0.9f))
                     Button(
                         onClick = { onAction(MyInfoAction.ClickSignIn) },
                         modifier = Modifier

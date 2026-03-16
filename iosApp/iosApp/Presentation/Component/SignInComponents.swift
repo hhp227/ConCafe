@@ -27,7 +27,7 @@ struct SignInLogoSection: View {
             Text("ConCafe")
                 .font(.largeTitle.weight(.bold))
                 .foregroundStyle(Color(hex: "DA4E84"))
-            Text("메이드카페의 모든 것")
+            Text("컨셉카페의 모든 것")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

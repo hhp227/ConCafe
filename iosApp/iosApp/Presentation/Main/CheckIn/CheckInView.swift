@@ -111,7 +111,7 @@ private struct CheckInGuestContentView: View {
                 )
                 .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
-                CheckInSectionTitle(title: "🔥 인기 메이드 카페", trailing: nil)
+                CheckInSectionTitle(title: "🔥 인기 컨셉 카페", trailing: nil)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
                         ForEach(uiState.popularCafes, id: \.id) { cafe in
@@ -204,7 +204,7 @@ private struct CheckInMapSection: View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("주변 메이드카페 지도")
+                    Text("주변 컨셉카페 지도")
                         .font(.headline)
                         .fontWeight(.bold)
                     HStack(spacing: 4) {

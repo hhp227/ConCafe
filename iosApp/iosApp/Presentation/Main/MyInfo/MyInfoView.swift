@@ -68,7 +68,7 @@ private struct GuestMyInfoView: View {
                         .bold()
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
-                    Text("로그인하고 메이드카페의 모든 것을 즐겨보세요")
+                    Text("로그인하고 컨셉카페의 모든 것을 즐겨보세요")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
                     Button {
