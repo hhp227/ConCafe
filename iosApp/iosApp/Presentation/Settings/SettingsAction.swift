@@ -11,6 +11,8 @@ enum SettingsAction {
     case backTapped
     case accountSettingsTapped
     case notificationSettingsTapped
+    case customerSupportTapped
+    case inquiryTapped
     case privacyPolicyTapped
     case signOutTapped
 }

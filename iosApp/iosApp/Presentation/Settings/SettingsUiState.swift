@@ -10,6 +10,7 @@ import Foundation
 struct SettingsUiState {
     var isLoading: Bool = false
     var errorMessage: String?
+    var appVersion: String = "1.0.0"
 
     static let empty = SettingsUiState()
 }

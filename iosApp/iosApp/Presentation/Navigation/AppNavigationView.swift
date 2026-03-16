@@ -66,6 +66,8 @@ struct AppNavigationView: View {
                 NotificationSettingsView(onNavigationAction: viewModel.onAction)
             case .accountSettings:
                 AccountSettingsView(onNavigationAction: viewModel.onAction)
+            case .inquiry:
+                InquiryView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
             case .main:
@@ -118,6 +120,8 @@ struct AppNavigationView: View {
                 case .notificationSettings:
                     path.append(route)
                 case .accountSettings:
+                    path.append(route)
+                case .inquiry:
                     path.append(route)
                 case .changePassword:
                     path.append(route)

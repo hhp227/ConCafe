@@ -28,6 +28,7 @@ import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
 import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
+import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 
@@ -206,6 +207,11 @@ fun NavigationScreen(
         }
         composable<Route.AccountSettings> {
             AccountSettingsScreen(
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.Inquiry> {
+            InquiryLinkScreen(
                 onNavigationAction = viewModel::onAction
             )
         }

@@ -29,5 +29,6 @@ enum Route: Hashable {
     case settings
     case notificationSettings
     case accountSettings
+    case inquiry
     case changePassword
 }

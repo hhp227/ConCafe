@@ -27,6 +27,10 @@ final class SettingsViewModel: ObservableObject {
         event.send(.navigateToNotificationSettings)
     }
 
+    private func clickInquiry() {
+        event.send(.navigateToInquiry)
+    }
+
     private func clickPrivacyPolicy() {
         event.send(
             .navigateToExternalLink(
@@ -68,6 +72,10 @@ final class SettingsViewModel: ObservableObject {
             clickAccountSettings()
         case .notificationSettingsTapped:
             clickNotificationSettings()
+        case .customerSupportTapped:
+            clickInquiry()
+        case .inquiryTapped:
+            clickInquiry()
         case .privacyPolicyTapped:
             clickPrivacyPolicy()
         case .signOutTapped:

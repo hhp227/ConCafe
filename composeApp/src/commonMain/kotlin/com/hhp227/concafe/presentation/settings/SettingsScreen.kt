@@ -12,11 +12,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,6 +68,9 @@ fun SettingsScreen(
                 SettingsEvent.NavigateToNotificationSettings -> {
                     onNavigationAction(NavigationAction.NavigateToNotificationSettings)
                 }
+                SettingsEvent.NavigateToInquiryLink -> {
+                    onNavigationAction(NavigationAction.NavigateToInquiry)
+                }
                 is SettingsEvent.NavigateToExternalLink -> {
                     onNavigationAction(
                         NavigationAction.NavigateToExternalLink(event.title, event.url)
@@ -103,6 +108,8 @@ private fun SettingsContentScreen(
     innerPadding: PaddingValues,
     onAction: (SettingsAction) -> Unit
 ) {
+    val settingsItems = settingsItems(uiState.appVersion)
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -116,7 +123,7 @@ private fun SettingsContentScreen(
         if (uiState.errorMessage != null) {
             item {
                 Text(
-                    text = uiState.errorMessage!!,
+                    text = uiState.errorMessage,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFD1436F)
                 )
@@ -171,18 +178,27 @@ private fun SettingsItemCard(
                     color = Color(0xFF7C7480)
                 )
             }
-            if (item.action != null) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = Color(0xFFB3ACB7)
-                )
+            when {
+                item.trailingLabel != null -> {
+                    Text(
+                        text = item.trailingLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7C7480)
+                    )
+                }
+                item.action != null -> {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = Color(0xFFB3ACB7)
+                    )
+                }
             }
         }
     }
 }
 
-private val settingsItems = listOf(
+private fun settingsItems(appVersion: String): List<SettingsItem> = listOf(
     SettingsItem(
         id = "account",
         title = "계정 관리",
@@ -198,11 +214,18 @@ private val settingsItems = listOf(
         action = SettingsAction.ClickNotificationSettings
     ),
     SettingsItem(
-        id = "app",
-        title = "앱 정보",
-        description = "버전 및 고객지원 안내를 제공합니다.",
-        icon = Icons.Default.Info,
-        action = null
+        id = "customerSupport",
+        title = "고객지원",
+        description = "서비스 이용 관련 문의를 남길 수 있습니다.",
+        icon = Icons.Default.HeadsetMic,
+        action = SettingsAction.ClickCustomerSupport
+    ),
+    SettingsItem(
+        id = "inquiry",
+        title = "문의하기",
+        description = "불편사항이나 제안을 입력 폼으로 전달합니다.",
+        icon = Icons.Default.QuestionAnswer,
+        action = SettingsAction.ClickInquiry
     ),
     SettingsItem(
         id = "privacyPolicy",
@@ -210,6 +233,14 @@ private val settingsItems = listOf(
         description = "개인정보 처리방침 외부 링크를 확인합니다.",
         icon = Icons.Default.Policy,
         action = SettingsAction.ClickPrivacyPolicy
+    ),
+    SettingsItem(
+        id = "appInfo",
+        title = "앱 정보",
+        description = "현재 설치된 앱 버전을 확인합니다.",
+        icon = Icons.Default.Info,
+        action = null,
+        trailingLabel = "v$appVersion"
     ),
     SettingsItem(
         id = "signout",
@@ -225,5 +256,6 @@ private data class SettingsItem(
     val title: String,
     val description: String,
     val icon: ImageVector,
-    val action: SettingsAction?
+    val action: SettingsAction?,
+    val trailingLabel: String? = null
 )

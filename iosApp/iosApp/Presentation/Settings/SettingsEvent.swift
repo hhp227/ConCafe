@@ -11,5 +11,6 @@ enum SettingsEvent {
     case navigateBack
     case navigateToAccountSettings
     case navigateToNotificationSettings
+    case navigateToInquiry
     case navigateToExternalLink(title: String, url: String)
 }

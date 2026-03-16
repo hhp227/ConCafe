@@ -24,6 +24,7 @@ sealed interface NavigationAction {
     data object NavigateToSettings : NavigationAction
     data object NavigateToNotificationSettings : NavigationAction
     data object NavigateToAccountSettings : NavigationAction
+    data object NavigateToInquiry : NavigationAction
     data object NavigateToChangePassword : NavigationAction
     data object NavigateBack : NavigationAction
 }
