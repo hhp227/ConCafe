@@ -115,7 +115,7 @@ struct CompatFractionSheetDetentModifier: ViewModifier {
     }
 }
 
-private final class NavigationBarAppearanceHostingController: UIViewController {
+final class NavigationBarAppearanceHostingController: UIViewController {
     var style: CompatNavigationBarStyle = .opaque
 
     override func viewWillAppear(_ animated: Bool) {
