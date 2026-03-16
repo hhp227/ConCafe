@@ -35,7 +35,7 @@ class CastEditViewModel(
     }
 
     private fun clickProfilePhoto() {
-        _uiState.update { it.copy(infoMessage = "프로필 사진 업로드는 다음 단계에서 연결됩니다.") }
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
     private fun toggleWorkingDay(day: CastEditUiState.WorkingDay) {
@@ -119,6 +119,7 @@ class CastEditViewModel(
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
+                            profileImageUrl = detail.cast.profileImage,
                             castName = detail.cast.name,
                             conceptRole = detail.cast.conceptRole,
                             birthday = detail.cast.birthday.orEmpty(),
@@ -144,6 +145,7 @@ class CastEditViewModel(
         when (action) {
             CastEditAction.ClickBack -> clickBack()
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
+            is CastEditAction.SelectProfilePhoto -> _uiState.update { it.copy(profileImageUrl = action.imageUrl, infoMessage = null) }
             is CastEditAction.ChangeCastName -> _uiState.update { it.copy(castName = action.value) }
             is CastEditAction.ChangeConceptRole -> _uiState.update { it.copy(conceptRole = action.value) }
             is CastEditAction.ChangeBirthday -> _uiState.update { it.copy(birthday = action.value) }

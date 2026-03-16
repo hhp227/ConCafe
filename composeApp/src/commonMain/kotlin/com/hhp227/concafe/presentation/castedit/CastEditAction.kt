@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.castedit
 sealed interface CastEditAction {
     data object ClickBack : CastEditAction
     data object ClickProfilePhoto : CastEditAction
+    data class SelectProfilePhoto(val imageUrl: String) : CastEditAction
     data class ChangeCastName(val value: String) : CastEditAction
     data class ChangeConceptRole(val value: String) : CastEditAction
     data class ChangeBirthday(val value: String) : CastEditAction

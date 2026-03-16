@@ -26,7 +26,7 @@ final class CastEditViewModel: ObservableObject {
     private var requestTask: Task<Void, Never>?
 
     private func clickProfilePhoto() {
-        uiState.infoMessage = "프로필 사진 업로드는 다음 단계에서 연결됩니다."
+        uiState.infoMessage = nil
     }
 
     private func toggleWorkingDay(_ day: CastEditUiState.WorkingDay) {
@@ -98,6 +98,7 @@ final class CastEditViewModel: ObservableObject {
                     let detail = feed.detail
                     var nextState = uiState
                     nextState.isLoading = false
+                    nextState.profileImageUrl = detail.cast.profileImage
                     nextState.castName = detail.cast.name
                     nextState.conceptRole = detail.cast.conceptRole
                     nextState.birthday = detail.cast.birthday ?? ""
@@ -123,6 +124,9 @@ final class CastEditViewModel: ObservableObject {
             event.send(.navigateBack)
         case .clickProfilePhoto:
             clickProfilePhoto()
+        case .selectProfilePhoto(let imageUrl):
+            uiState.profileImageUrl = imageUrl
+            uiState.infoMessage = nil
         case .changeCastName(let value):
             uiState.castName = value
         case .changeConceptRole(let value):

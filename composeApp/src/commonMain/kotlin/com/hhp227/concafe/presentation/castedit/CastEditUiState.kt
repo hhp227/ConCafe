@@ -5,6 +5,7 @@ data class CastEditUiState(
     val isSaving: Boolean = false,
     val screenTitle: String = "캐스트 프로필 수정",
     val saveButtonLabel: String = "프로필 저장",
+    val profileImageUrl: String? = null,
     val castName: String = "",
     val conceptRole: String = "",
     val birthday: String = "",

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct CastEditView: View {
     let cafeId: String?
@@ -16,10 +17,15 @@ struct CastEditView: View {
 
     @StateObject private var viewModel: CastEditViewModel
 
+    @State private var isPhotoPickerPresented = false
+
     var body: some View {
         CastEditContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onPickProfileImage: {
+                isPhotoPickerPresented = true
+            }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -28,6 +34,19 @@ struct CastEditView: View {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             }
+        }
+        .sheet(isPresented: $isPhotoPickerPresented) {
+            CompatImagePicker(
+                onImageSelected: { image in
+                    isPhotoPickerPresented = false
+                    if let imageUrl = saveImageToTemporaryFile(image) {
+                        viewModel.onAction(.selectProfilePhoto(imageUrl))
+                    }
+                },
+                onDismiss: {
+                    isPhotoPickerPresented = false
+                }
+            )
         }
     }
 
@@ -47,6 +66,8 @@ private struct CastEditContentView: View {
     let uiState: CastEditUiState
 
     let onAction: (CastEditAction) -> Void
+
+    let onPickProfileImage: () -> Void
 
     var body: some View {
         Group {
@@ -122,30 +143,43 @@ private struct CastEditContentView: View {
         VStack(spacing: 12) {
             Button {
                 onAction(.clickProfilePhoto)
+                onPickProfileImage()
             } label: {
-                ZStack(alignment: .bottomTrailing) {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                GeometryReader { proxy in
+                    ZStack(alignment: .bottomTrailing) {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(width: 128, height: 128)
-                    Circle()
-                        .fill(Color(hex: "FFD1DC"))
-                        .frame(width: 34, height: 34)
-                        .overlay {
-                            Image(systemName: "camera.fill")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(Color(hex: "2B2330"))
+                        if let profileImageUrl = uiState.profileImageUrl,
+                           !profileImageUrl.isEmpty {
+                            CastEditProfileImageView(imageUrl: profileImageUrl)
+                                .frame(width: proxy.size.width, height: proxy.size.height)
+                                .clipShape(Circle())
+                                .clipped()
                         }
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                        )
+                        Circle()
+                            .fill(Color(hex: "FFD1DC"))
+                            .frame(width: 34, height: 34)
+                            .overlay {
+                                Image(systemName: "camera.fill")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(Color(hex: "2B2330"))
+                            }
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white, lineWidth: 2)
+                            )
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipShape(Circle())
+                    .clipped()
                 }
+                .frame(width: 128, height: 128)
             }
             .buttonStyle(.plain)
             Text("캐스트 프로필 사진")
@@ -295,6 +329,49 @@ private struct CastEditContentView: View {
     }
 }
 
+private struct CastEditProfileImageView: View {
+    let imageUrl: String
+
+    var body: some View {
+        if let fileUrl = URL(string: imageUrl),
+           fileUrl.isFileURL,
+           let uiImage = UIImage(contentsOfFile: fileUrl.path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteUrl = URL(string: imageUrl) {
+            AsyncImage(url: remoteUrl) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .tint(Color(hex: "9C7A88"))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    placeholder
+                @unknown default:
+                    placeholder
+                }
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+    }
+}
+
 private struct FlexibleChipLayout<Item: Identifiable & Hashable, Content: View>: View {
     let items: [Item]
 
@@ -312,6 +389,19 @@ private struct FlexibleChipLayout<Item: Identifiable & Hashable, Content: View>:
                 content(item)
             }
         }
+    }
+}
+
+private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
+    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
+    let fileName = "\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+    do {
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }
 

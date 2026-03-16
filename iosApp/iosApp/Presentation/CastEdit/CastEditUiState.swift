@@ -12,6 +12,7 @@ struct CastEditUiState {
     var isSaving = false
     var screenTitle = "캐스트 프로필 수정"
     var saveButtonLabel = "프로필 저장"
+    var profileImageUrl: String? = nil
     var castName = ""
     var conceptRole = ""
     var birthday = ""

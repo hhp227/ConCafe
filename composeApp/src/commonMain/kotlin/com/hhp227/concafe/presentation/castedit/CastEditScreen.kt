@@ -58,6 +58,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetCastDetailUseCase
 import com.hhp227.concafe.di.resolveUpsertCastUseCase
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 
@@ -185,9 +187,19 @@ private fun CastEditContentScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     item {
-                        ProfilePhotoSection(
-                            onClick = { onAction(CastEditAction.ClickProfilePhoto) }
-                        )
+                        CompatImagePicker(
+                            onImageSelected = { imageUrl ->
+                                onAction(CastEditAction.SelectProfilePhoto(imageUrl))
+                            }
+                        ) { launchImagePicker ->
+                            ProfilePhotoSection(
+                                imageUrl = uiState.profileImageUrl,
+                                onClick = {
+                                    onAction(CastEditAction.ClickProfilePhoto)
+                                    launchImagePicker()
+                                }
+                            )
+                        }
                     }
                     uiState.infoMessage?.let { message ->
                         item {
@@ -258,6 +270,7 @@ private fun CastEditContentScreen(
 
 @Composable
 private fun ProfilePhotoSection(
+    imageUrl: String?,
     onClick: () -> Unit
 ) {
     Box(
@@ -281,7 +294,14 @@ private fun ProfilePhotoSection(
                                 colors = listOf(Color(0xFFFFE3EC), Color(0xFFF8C5D7))
                             )
                         )
-                )
+                ) {
+                    if (!imageUrl.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = imageUrl,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
                 Surface(
                     shape = CircleShape,
                     color = Color(0xFFFFD1DC),
