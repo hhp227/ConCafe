@@ -47,27 +47,19 @@ private struct SettingsContentView: View {
                 SettingsRow(item: .account)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.accountSettingsTapped) }
-
                 SettingsRow(item: .notification)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.notificationSettingsTapped) }
-
-                SettingsRow(item: .appInfo(version: uiState.appVersion))
-
                 SettingsRow(item: .customerSupport)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.customerSupportTapped) }
-
                 SettingsRow(item: .inquiry)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.inquiryTapped) }
-
                 SettingsRow(item: .privacyPolicy)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.privacyPolicyTapped) }
-
                 SettingsRow(item: .appInfo(version: uiState.appVersion))
-
                 SettingsRow(item: .signOut)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.signOutTapped) }

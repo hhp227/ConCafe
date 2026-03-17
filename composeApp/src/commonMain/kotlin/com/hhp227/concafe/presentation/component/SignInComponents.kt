@@ -1,36 +1,26 @@
 package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.maid_logo
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun SignInLogoSection() {
@@ -38,7 +28,7 @@ fun SignInLogoSection() {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
+        /*Box(
             modifier = Modifier
                 .size(96.dp)
                 .background(
@@ -53,17 +43,20 @@ fun SignInLogoSection() {
                 tint = Color.White,
                 modifier = Modifier.size(42.dp)
             )
-        }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "ConCafe",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFDA4E84)
+        }*/
+        Image(
+            painter = painterResource(Res.drawable.maid_logo),
+            contentDescription = "Cafe Logo",
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
         )
+        Spacer(Modifier.height(16.dp))
+        ConCafeLogo(color = Color(0xFFDA4E84))
         Spacer(Modifier.height(6.dp))
         Text(
-            text = "메이드카페의 모든 것",
+            text = "컨셉카페의 모든 것",
             color = Color(0xFF7C7180)
         )
     }
@@ -88,7 +81,7 @@ fun SignInDivider() {
 @Composable
 fun SignInSocialButton(
     label: String,
-    emoji: String,
+    icon: Painter,
     containerColor: Color,
     contentColor: Color,
     outlined: Boolean = false,
@@ -110,9 +103,16 @@ fun SignInSocialButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = emoji)
-            Spacer(Modifier.width(8.dp))
-            Text(text = label, textAlign = TextAlign.Center)
+            Image(
+                painter = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = label,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

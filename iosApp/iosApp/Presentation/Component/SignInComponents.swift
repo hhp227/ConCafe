@@ -10,24 +10,13 @@ import SwiftUI
 struct SignInLogoSection: View {
     var body: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "EF6797"), Color(hex: "F7A8C8")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 96, height: 96)
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 38))
-                    .foregroundStyle(.white)
-            }
-            Text("ConCafe")
-                .font(.largeTitle.weight(.bold))
-                .foregroundStyle(Color(hex: "DA4E84"))
-            Text("메이드카페의 모든 것")
+            Image("maid_logo")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 96, height: 96)
+                .clipShape(Circle())
+            ConCafeLogo(color: Color(hex: "DA4E84"))
+            Text("컨셉카페의 모든 것")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -61,20 +50,31 @@ struct SignInSocialButton: View {
     
     let foreground: Color
     
-    let action: () -> Void
+    let outlined: Bool
     
+    let action: () -> Void
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Text(icon)
+            HStack(spacing: 10) {
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .medium))
             }
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(background)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(outlined ? Color(hex: "E4DDE5") : Color.clear, lineWidth: 1)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 }
+

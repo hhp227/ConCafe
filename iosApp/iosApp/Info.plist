@@ -4,5 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+    <key>UIAppFonts</key>
+    <array>
+        <string>goyangdeogyang_bold.ttf</string>
+        <string>goyangdeogyang_extrabold.ttf</string>
+    </array>
 </dict>
 </plist>

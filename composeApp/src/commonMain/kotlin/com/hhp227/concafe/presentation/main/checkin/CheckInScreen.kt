@@ -281,7 +281,7 @@ private fun CheckInGuestScreen(
                 )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                CheckInGuestSectionTitle("🔥 인기 메이드 카페")
+                CheckInGuestSectionTitle("🔥 인기 컨셉 카페")
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 PopularCafeSection(
@@ -375,7 +375,7 @@ private fun CafeMapSection(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "주변 메이드카페 지도",
+                        text = "주변 컨셉카페 지도",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -597,7 +597,7 @@ private fun LoginPromotionSection(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = "로그인하고 메이드카페 방문을 기록해보세요!",
+                text = "로그인하고 컨셉카페 방문을 기록해보세요!",
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold

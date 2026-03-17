@@ -32,7 +32,7 @@ struct ScheduleView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: Binding(
+        .sheet(isPresented: Binding(
             get: { viewModel.uiState.isEditSheetVisible },
             set: { isPresented in
                 if !isPresented {
@@ -44,6 +44,7 @@ struct ScheduleView: View {
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction
             )
+            .background(Color.clear)
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -108,6 +109,7 @@ struct ScheduleView: View {
 
 private struct ScheduleEditModal: View {
     let uiState: ScheduleUiState
+    
     let onAction: (ScheduleAction) -> Void
 
     var body: some View {
@@ -221,9 +223,13 @@ private struct ScheduleEditModal: View {
 
 private struct TimePickerField: View {
     let title: String
+    
     let value: String
+    
     let isEnabled: Bool
+    
     let options: [String]
+    
     let onSelect: (String) -> Void
 
     var body: some View {

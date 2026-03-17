@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.MainNavigationTab
+import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
@@ -53,7 +54,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("ConCafe") },
+                title = { ConCafeLogo() },
                 actions = {
                     IconButton(
                         onClick = {

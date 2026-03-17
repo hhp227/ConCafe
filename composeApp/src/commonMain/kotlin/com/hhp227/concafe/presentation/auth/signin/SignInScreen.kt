@@ -53,6 +53,11 @@ import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.apple_icon
+import concafe.composeapp.generated.resources.google_logo
+import concafe.composeapp.generated.resources.kakao_icon
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun SignInScreen(
@@ -174,14 +179,14 @@ private fun SignInContentScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         SignInSocialButton(
                             label = "카카오로 시작하기",
-                            emoji = "💬",
+                            icon = painterResource(Res.drawable.kakao_icon),
                             containerColor = Color(0xFFFEE500),
                             contentColor = Color.Black,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.KAKAO)) }
                         )
                         SignInSocialButton(
                             label = "구글로 시작하기",
-                            emoji = "🔍",
+                            icon = painterResource(Res.drawable.google_logo),
                             containerColor = Color.White,
                             contentColor = Color(0xFF222222),
                             outlined = true,
@@ -189,7 +194,7 @@ private fun SignInContentScreen(
                         )
                         SignInSocialButton(
                             label = "애플로 시작하기",
-                            emoji = "🍎",
+                            icon = painterResource(Res.drawable.apple_icon),
                             containerColor = Color(0xFF111111),
                             contentColor = Color.White,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.APPLE)) }

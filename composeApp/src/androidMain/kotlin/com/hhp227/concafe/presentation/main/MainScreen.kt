@@ -41,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.MainNavigationTab
+import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
@@ -91,12 +92,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "ConCafe",
-                        textAlign = TextAlign.Center
-                    )
-                },
+                title = { ConCafeLogo() },
                 actions = {
                     IconButton(
                         onClick = {

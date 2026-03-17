@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import Shared
+import AuthenticationServices
 
 struct SignUpView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -440,31 +441,33 @@ private struct SignUpContentView: View {
         VStack(spacing: 12) {
             SignInSocialButton(
                 title: "카카오로 시작하기",
-                icon: "💬",
+                icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
                 foreground: .black,
+                outlined: false,
                 action: {
                     onAction(.socialSignUpTapped(provider: .kakao))
                 }
             )
             SignInSocialButton(
                 title: "구글로 시작하기",
-                icon: "🔍",
+                icon: "google_logo",
                 background: .white,
                 foreground: Color(hex: "222222"),
+                outlined: true,
                 action: {
                     onAction(.socialSignUpTapped(provider: .google))
                 }
             )
-            SignInSocialButton(
-                title: "애플로 시작하기",
-                icon: "🍎",
-                background: Color(hex: "111111"),
-                foreground: .white,
-                action: {
-                    onAction(.socialSignUpTapped(provider: .apple))
-                }
+            SignInWithAppleButton(
+                .signUp,
+                onRequest: { request in },
+                onCompletion: { result in }
             )
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 52)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 0)
         }
     }
 
