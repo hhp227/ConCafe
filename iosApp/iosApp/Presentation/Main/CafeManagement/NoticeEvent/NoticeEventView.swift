@@ -438,6 +438,7 @@ private struct NoticeEventFormSheet: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
+                    .padding(.bottom, 60)
                 }
                 LinearGradient(
                     colors: [Color.clear, Color(hex: "F8F5F6"), Color(hex: "F8F5F6")],
@@ -467,7 +468,6 @@ private struct NoticeEventFormSheet: View {
             .frame(maxWidth: .infinity)
             .frame(maxHeight: 720)
             .background(Color(hex: "F8F5F6"))
-            .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
             .ignoresSafeArea(edges: .bottom)
         }
         .sheet(isPresented: $isImagePickerPresented) {

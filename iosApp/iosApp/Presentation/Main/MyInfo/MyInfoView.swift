@@ -52,7 +52,7 @@ private struct GuestMyInfoView: View {
 
     let features = [
         ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
-        ("heart.fill", "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", "9C6ADE", "B388EB"),
+        ("heart.fill", "즐겨찾기", "좋아하는 카페와 캐스트를\n저장하세요", "9C6ADE", "B388EB"),
         ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
         ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
     ]
@@ -63,7 +63,7 @@ private struct GuestMyInfoView: View {
                 VStack(spacing: 8) {
                     Text("💗")
                         .font(.system(size: 42))
-                    Text("ConCafe에 오신 것을\n환영합니다!")
+                    Text("콘카에 오신 것을\n환영합니다!")
                         .font(.headline)
                         .bold()
                         .multilineTextAlignment(.center)
@@ -170,7 +170,7 @@ private struct GuestMyInfoView: View {
                     Text("지금 바로 시작하세요!")
                         .font(.headline)
                         .bold()
-                    Text("ConCafe 회원만의 특별한 혜택을 누려보세요")
+                    Text("콘카 회원만의 특별한 혜택을 누려보세요")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button {
@@ -431,7 +431,7 @@ private struct ProfileMyInfoView: View {
 
     private var followedMaidsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("팔로우한 메이드").font(.headline)
+            Text("팔로우한 캐스트").font(.headline)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(uiState.followedMaids.prefix(6), id: \.id) { maid in

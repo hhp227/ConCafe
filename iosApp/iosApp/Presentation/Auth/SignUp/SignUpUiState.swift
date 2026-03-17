@@ -33,11 +33,11 @@ struct SignUpUiState {
         var subtitle: String {
             switch self {
             case .visitor:
-                return "메이드카페를 방문하고 즐기는 팬"
+                return "컨셉카페를 방문하고 즐기는 팬"
             case .cast:
-                return "카페에서 근무하는 메이드/캐스트"
+                return "카페에서 근무하는 캐스트/메이드"
             case .cafeOwner:
-                return "메이드카페를 운영하는 사업자"
+                return "컨셉카페를 운영하는 사업자"
             }
         }
 

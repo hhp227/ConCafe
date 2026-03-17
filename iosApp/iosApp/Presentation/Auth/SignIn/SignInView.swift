@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct SignInView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -118,27 +119,35 @@ private struct SignInContentView: View {
     
     private var socialButtons: some View {
         VStack(spacing: 12) {
-            socialButton(
+            SignInSocialButton(
                 title: "카카오로 시작하기",
-                icon: "💬",
+                icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
                 foreground: .black,
-                provider: .kakao
+                outlined: false,
+                action: {
+                    onAction(.socialSignInTapped(provider: .kakao))
+                }
             )
-            socialButton(
+            SignInSocialButton(
                 title: "구글로 시작하기",
-                icon: "🔍",
+                icon: "google_logo",
                 background: .white,
                 foreground: Color(hex: "222222"),
-                provider: .google
+                outlined: true,
+                action: {
+                    onAction(.socialSignInTapped(provider: .google))
+                }
             )
-            socialButton(
-                title: "애플로 시작하기",
-                icon: "🍎",
-                background: Color(hex: "111111"),
-                foreground: .white,
-                provider: .apple
+            SignInWithAppleButton(
+                .signIn,
+                onRequest: { request in },
+                onCompletion: { result in }
             )
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 52)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 0)
         }
     }
     
@@ -154,24 +163,6 @@ private struct SignInContentView: View {
         .font(.footnote)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity)
-    }
-    
-    private func socialButton(
-        title: String,
-        icon: String,
-        background: Color,
-        foreground: Color,
-        provider: SignInProvider
-    ) -> some View {
-        SignInSocialButton(
-            title: title,
-            icon: icon,
-            background: background,
-            foreground: foreground,
-            action: {
-                onAction(.socialSignInTapped(provider: provider))
-            }
-        )
     }
 }
 

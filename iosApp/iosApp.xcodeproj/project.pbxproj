@@ -179,6 +179,9 @@
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
 		0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */; };
+		0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB6092D2F69011000591FEE /* ConCafeLogo.swift */; };
+		0AB609342F69031C00591FEE /* goyangdeogyang_extrabold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */; };
+		0AB609352F69031C00591FEE /* goyangdeogyang_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */; };
 		0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */; };
@@ -365,6 +368,9 @@
 		0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUiState.swift; sourceTree = "<group>"; };
 		0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreAction.swift; sourceTree = "<group>"; };
+		0AB6092D2F69011000591FEE /* ConCafeLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConCafeLogo.swift; sourceTree = "<group>"; };
+		0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_extrabold.ttf; sourceTree = "<group>"; };
+		0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_bold.ttf; sourceTree = "<group>"; };
 		0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInComponents.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditViewModel.swift; sourceTree = "<group>"; };
@@ -830,6 +836,15 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		0AB6092F2F69027900591FEE /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */,
+				0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		0ADC46E92F5B33A5003484E4 /* Component */ = {
 			isa = PBXGroup;
 			children = (
@@ -842,6 +857,7 @@
 				0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */,
 				0A0C66942F5C05FF00B0CDE4 /* Color.swift */,
 				0A27F1E72F5D6CCD003D4763 /* Compat.swift */,
+				0AB6092D2F69011000591FEE /* ConCafeLogo.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -861,6 +877,7 @@
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				0AB6092F2F69027900591FEE /* Fonts */,
 				0A580D9B2F59658900390F67 /* Presentation */,
 				A1011001AABBCCDDEEFF0001 /* ContentView.swift */,
 				A1011002AABBCCDDEEFF0002 /* iOSApp.swift */,
@@ -965,7 +982,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0AB609342F69031C00591FEE /* goyangdeogyang_extrabold.ttf in Resources */,
 				A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */,
+				0AB609352F69031C00591FEE /* goyangdeogyang_bold.ttf in Resources */,
 				A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1153,6 +1172,7 @@
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
 				0A2C5B1F2F65615000D3004E /* AccountSettingsEvent.swift in Sources */,
 				0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */,
+				0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
 				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,

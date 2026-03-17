@@ -36,6 +36,9 @@ struct MainView: View {
         .navigationTitle("ConCafe")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                ConCafeLogo()
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     if selectedTab == "myinfo" && viewModel.uiState.currentUser != nil {
@@ -99,21 +102,17 @@ struct MainView: View {
 
     private static func configureBarAppearance() {
         let backgroundColor = UIColor.systemBackground
-
         let navigationBarAppearance = UINavigationBarAppearance()
         navigationBarAppearance.configureWithOpaqueBackground()
         navigationBarAppearance.backgroundColor = backgroundColor
         navigationBarAppearance.shadowColor = UIColor.separator
-
         UINavigationBar.appearance().standardAppearance = navigationBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
         UINavigationBar.appearance().compactAppearance = navigationBarAppearance
-
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithOpaqueBackground()
         tabBarAppearance.backgroundColor = backgroundColor
         tabBarAppearance.shadowColor = UIColor.separator
-
         UITabBar.appearance().standardAppearance = tabBarAppearance
         if #available(iOS 15.0, *) {
             UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance

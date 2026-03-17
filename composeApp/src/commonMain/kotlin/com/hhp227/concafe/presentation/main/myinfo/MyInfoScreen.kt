@@ -112,7 +112,7 @@ private fun GuestMyInfoScreen(
 ) {
     val features = listOf(
         GuestFeatureItem(Icons.Filled.Place, "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", Color(0xFFEF6797), Color(0xFFF57AA8)),
-        GuestFeatureItem(Icons.Filled.Favorite, "즐겨찾기", "좋아하는 카페와 메이드를\n저장하세요", Color(0xFF9C6ADE), Color(0xFFB388EB)),
+        GuestFeatureItem(Icons.Filled.Favorite, "즐겨찾기", "좋아하는 카페와 캐스트를\n저장하세요", Color(0xFF9C6ADE), Color(0xFFB388EB)),
         GuestFeatureItem(Icons.Filled.Star, "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", Color(0xFFF0B429), Color(0xFFF5C857)),
         GuestFeatureItem(Icons.Filled.CardGiftcard, "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", Color(0xFF4C8BF5), Color(0xFF71A7FF))
     )
@@ -137,7 +137,7 @@ private fun GuestMyInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("💗", style = MaterialTheme.typography.headlineLarge)
-                    Text("ConCafe에 오신 것을\n환영합니다!", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("콘카에 오신 것을\n환영합니다!", color = Color.White, fontWeight = FontWeight.Bold)
                     Text("로그인하고 컨셉카페의 모든 것을 즐겨보세요", color = Color.White.copy(alpha = 0.9f))
                     Button(
                         onClick = { onAction(MyInfoAction.ClickSignIn) },
@@ -267,7 +267,7 @@ private fun GuestMyInfoScreen(
                     Text("✨", style = MaterialTheme.typography.headlineMedium)
                     Text("지금 바로 시작하세요!", fontWeight = FontWeight.Bold)
                     Text(
-                        "ConCafe 회원만의 특별한 혜택을 누려보세요",
+                        "콘카 회원만의 특별한 혜택을 누려보세요",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7E7E7E)
                     )
@@ -404,7 +404,7 @@ private fun ProfileMyInfoScreen(
         }
         item {
             if (uiState.user?.role != UserRole.CAST) {
-                Text("팔로우한 메이드", fontWeight = FontWeight.Bold)
+                Text("팔로우한 캐스트", fontWeight = FontWeight.Bold)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
                     items(uiState.followedMaids.take(6)) { maid ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
