@@ -31,8 +31,8 @@ class GetMyInfoUseCase(
                 cursor = null,
                 pageSize = 3
             ).items
-
             val currentUser = authRepository.getCurrentUser()
+
             if (currentUser == null) {
                 AppResult.Success(
                     MyInfoFeed(
@@ -95,7 +95,6 @@ class GetMyInfoUseCase(
                     cursor = null,
                     pageSize = summary.followedCastsCount.coerceAtLeast(3)
                 ).items
-
                 val unlockedBadges = summary.badgesCount.coerceAtLeast(0)
                 val badges = listOf(
                     ProfileBadge("badge-1", "첫 방문", "🎉", unlockedBadges >= 1),

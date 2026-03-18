@@ -3,11 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Review
-import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.repository.ReviewRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeReviewRepository(
     private val dataSource: ConCafeDataSource
@@ -47,7 +43,6 @@ class FakeReviewRepository(
             cafeId = cafeId,
             taggedCastIds = taggedCastIds
         )
-        //reviewEvent.tryEmit(ReviewEvent.Created(cafeId))
         return review
     }
 

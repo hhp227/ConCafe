@@ -9,6 +9,7 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.BannerRepository
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.event.BannerEvent
+import com.hhp227.concafe.domain.model.BannerLinkTargetType
 
 class CreateHomeBannerUseCase(
     private val authRepository: AuthRepository,
@@ -21,22 +22,17 @@ class CreateHomeBannerUseCase(
                 ?: return AppResult.Failure(AppError.Unauthorized)
 
             if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.CAFE_OWNER) {
-                return AppResult.Failure(AppError.PermissionDenied)
-            }
+                AppResult.Failure(AppError.PermissionDenied)
+            } else if (currentUser.role == UserRole.CAFE_OWNER && input.cafeId.isNullOrBlank()) {
+                AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
+            } else if (input.targetType != BannerLinkTargetType.EXTERNAL_LINK && input.cafeId.isNullOrBlank()) {
+                AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
+            } else {
+                val banner = bannerRepository.createHomeBanner(input)
 
-            if (currentUser.role == UserRole.CAFE_OWNER && input.cafeId.isNullOrBlank()) {
-                return AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
+                bannerEventPublisher.publish(BannerEvent.Created(banner))
+                AppResult.Success(banner)
             }
-
-            if (input.targetType != com.hhp227.concafe.domain.model.BannerLinkTargetType.EXTERNAL_LINK &&
-                input.cafeId.isNullOrBlank()
-            ) {
-                return AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
-            }
-            val banner = bannerRepository.createHomeBanner(input)
-
-            bannerEventPublisher.publish(BannerEvent.Created(banner))
-            AppResult.Success(banner)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

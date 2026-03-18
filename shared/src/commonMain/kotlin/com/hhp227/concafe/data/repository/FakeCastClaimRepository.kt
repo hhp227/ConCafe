@@ -105,7 +105,6 @@ class FakeCastClaimRepository(
         )
         dataSource.castClaims.add(0, claim)
         dataSource.affiliatedCafeIdByUser[userId] = cafeId
-        //castClaimEvent.tryEmit(CastClaimEvent.Created(claim))
         return claim
     }
 
@@ -142,8 +141,6 @@ class FakeCastClaimRepository(
                 casts[castIndex] = cast.copy(linkedUserId = current.userId)
             }
         }
-
-        //castClaimEvent.tryEmit(CastClaimEvent.Updated(updated))
         return updated
     }
 }

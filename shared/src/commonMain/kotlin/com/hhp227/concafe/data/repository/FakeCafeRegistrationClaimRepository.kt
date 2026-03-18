@@ -37,8 +37,6 @@ class FakeCafeRegistrationClaimRepository(
             message = "관리자 승인 후 새 카페가 생성되고 운영 카페에 자동 연결됩니다."
         )
         claims.add(0, claim)
-        //event.tryEmit(CafeRegistrationClaimEvent.Created(requesterUserId = userId, claimId = claim.claimId))
-
         return PendingCafeRegistrationClaimPreview(
             claimId = claim.claimId,
             requesterUserId = userId,
@@ -112,14 +110,6 @@ class FakeCafeRegistrationClaimRepository(
             period = "승인 완료",
             statusLabel = "노출 준비"
         )
-        /*event.tryEmit(
-            CafeRegistrationClaimEvent.Approved(
-                requesterUserId = resolved.requesterUserId,
-                claimId = claimId,
-                cafeId = newCafeId
-            )
-        )*/
-
         return resolved.preview
     }
 
@@ -133,7 +123,6 @@ class FakeCafeRegistrationClaimRepository(
         }
         val current = claims[claimIndex]
         claims[claimIndex] = current.copy(status = REJECTED_STATUS)
-        //event.tryEmit(CafeRegistrationClaimEvent.Rejected(requesterUserId = resolved.requesterUserId, claimId = claimId))
         return resolved.preview
     }
 

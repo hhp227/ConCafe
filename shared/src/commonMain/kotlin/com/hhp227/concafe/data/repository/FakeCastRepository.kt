@@ -98,21 +98,11 @@ class FakeCastRepository(
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        val isCreate = update.castId.isNullOrBlank()
-        return dataSource.upsertCast(update).also { detail ->
-            val event = if (isCreate) {
-                CastEvent.Created(detail.cast.cafeId, detail.cast)
-            } else {
-                CastEvent.Updated(detail.cast.cafeId, detail.cast)
-            }
-            //castEvent.tryEmit(event)
-        }
+        return dataSource.upsertCast(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
-        return dataSource.deleteCast(castId).also { deletedCast ->
-            //castEvent.tryEmit(CastEvent.Deleted(deletedCast.cafeId, deletedCast.id))
-        }
+        return dataSource.deleteCast(castId)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
@@ -127,15 +117,8 @@ class FakeCastRepository(
         return dataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
-    override suspend fun updateCastSchedule(update: CastScheduleUpdate): ScheduleManagementEvent {
-        dataSource.updateCastSchedule(update)
-        return ScheduleManagementEvent.Updated(
-            castId = update.castId,
-            date = update.date,
-            status = update.status
-        ).also { event ->
-            //scheduleManagementEvent.tryEmit(event)
-        }
+    override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
+        return dataSource.updateCastSchedule(update)
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {

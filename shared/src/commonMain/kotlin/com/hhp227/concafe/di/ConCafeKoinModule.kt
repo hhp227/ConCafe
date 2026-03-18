@@ -158,20 +158,20 @@ val useCaseModule = module {
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { CreateVisitUseCase(get(), get()) }
-    factory { CreateReviewUseCase(get(), get(), get()) }
-    factory { CreateCastClaimUseCase(get(), get()) }
-    factory { CreateCafeEventUseCase(get()) }
-    factory { CreateCafeNoticeUseCase(get()) }
+    factory { CreateReviewUseCase(get(), get(), get(), get()) }
+    factory { CreateCastClaimUseCase(get(), get(), get()) }
+    factory { CreateCafeEventUseCase(get(), get()) }
+    factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get()) }
-    factory { CreateCafeRegistrationClaimUseCase(get(), get()) }
+    factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get()) }
-    factory { ApproveCafeRegistrationClaimUseCase(get(), get()) }
-    factory { DeleteCafeEventUseCase(get()) }
-    factory { DeleteCafeNoticeUseCase(get()) }
-    factory { DeleteCafeMenuGoodsUseCase(get()) }
-    factory { DeleteCastUseCase(get(), get(), get()) }
+    factory { ApproveCafeRegistrationClaimUseCase(get(), get(), get()) }
+    factory { DeleteCafeEventUseCase(get(), get()) }
+    factory { DeleteCafeNoticeUseCase(get(), get()) }
+    factory { DeleteCafeMenuGoodsUseCase(get(), get()) }
+    factory { DeleteCastUseCase(get(), get(), get(), get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }
@@ -200,16 +200,16 @@ val useCaseModule = module {
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
-    factory { UpdateCafeInfoUseCase(get()) }
-    factory { UpdateCafeEventUseCase(get()) }
-    factory { UpdateCafeNoticeUseCase(get()) }
-    factory { UpdateCastScheduleUseCase(get(), get()) }
-    factory { ApproveCastClaimUseCase(get(), get()) }
-    factory { RejectCastClaimUseCase(get(), get()) }
+    factory { UpdateCafeInfoUseCase(get(), get()) }
+    factory { UpdateCafeEventUseCase(get(), get()) }
+    factory { UpdateCafeNoticeUseCase(get(), get()) }
+    factory { UpdateCastScheduleUseCase(get(), get(), get()) }
+    factory { ApproveCastClaimUseCase(get(), get(), get()) }
+    factory { RejectCastClaimUseCase(get(), get(), get()) }
     factory { RejectCafeOwnerClaimUseCase(get(), get()) }
-    factory { RejectCafeRegistrationClaimUseCase(get(), get()) }
-    factory { UpsertCastUseCase(get(), get(), get()) }
-    factory { UpsertCafeMenuGoodsUseCase(get()) }
+    factory { RejectCafeRegistrationClaimUseCase(get(), get(), get()) }
+    factory { UpsertCastUseCase(get(), get(), get(), get()) }
+    factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

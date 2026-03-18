@@ -1,7 +1,6 @@
 package com.hhp227.concafe.domain.repository
 
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.event.ScheduleManagementEvent
 import com.hhp227.concafe.domain.model.*
 
 interface CastRepository {
@@ -34,7 +33,7 @@ interface CastRepository {
         toDate: String
     ): Map<String, CastScheduleStatus>
 
-    suspend fun updateCastSchedule(update: CastScheduleUpdate): ScheduleManagementEvent
+    suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule?
 
     suspend fun isFollowing(userId: String, castId: String): Boolean
 

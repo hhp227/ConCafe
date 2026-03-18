@@ -15,10 +15,12 @@ class GetMyCastClaimStatusUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
+
             if (currentUser.role != UserRole.CAST) {
                 return AppResult.Failure(AppError.PermissionDenied)
+            } else {
+                AppResult.Success(castClaimRepository.getMyCastClaimStatus(currentUser.id))
             }
-            AppResult.Success(castClaimRepository.getMyCastClaimStatus(currentUser.id))
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

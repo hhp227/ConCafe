@@ -19,6 +19,7 @@ class GetSignUpCafeListUseCase(
                 cursor = null,
                 pageSize = 50
             )
+
             AppResult.Success(result.items.filter { it.approved })
         } catch (e: IllegalArgumentException) {
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))

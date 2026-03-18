@@ -96,7 +96,6 @@ class FakeNoticeRepository(
                 relativeTime = "방금 전"
             )
         )
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeCreated(input.cafeId))
         return item
     }
 
@@ -122,7 +121,6 @@ class FakeNoticeRepository(
             isDimmed = false
         )
         dataSource.cafeEventManagementItems.add(0, item)
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.EventCreated(input.cafeId))
         return item
     }
 
@@ -155,8 +153,6 @@ class FakeNoticeRepository(
                 content = updated.content
             )
         }
-
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeUpdated(input.cafeId, updated))
         return updated
     }
 
@@ -185,8 +181,6 @@ class FakeNoticeRepository(
             statusLabel = if (input.periodText.isNullOrBlank()) original.statusLabel else "진행 중"
         )
         dataSource.cafeEventManagementItems[eventIndex] = updated
-
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.EventUpdated(input.cafeId, updated))
         return updated
     }
 
@@ -204,7 +198,6 @@ class FakeNoticeRepository(
         if (recentNoticeIndex != -1) {
             dataSource.notices.removeAt(recentNoticeIndex)
         }
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeDeleted(cafeId, noticeId))
         return noticeId
     }
 
@@ -217,8 +210,6 @@ class FakeNoticeRepository(
         }
         if (eventIndex == -1) throw NoSuchElementException()
         dataSource.cafeEventManagementItems.removeAt(eventIndex)
-
-        //noticeManagementEvent.tryEmit(NoticeManagementEvent.EventDeleted(cafeId, eventId))
         return eventId
     }
 }

@@ -15,10 +15,12 @@ class GetPendingCafeRegistrationClaimsUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
+
             if (currentUser.role != UserRole.ADMIN) {
-                return AppResult.Failure(AppError.PermissionDenied)
+                AppResult.Failure(AppError.PermissionDenied)
+            } else {
+                AppResult.Success(cafeRegistrationClaimRepository.getPendingCafeRegistrationClaims())
             }
-            AppResult.Success(cafeRegistrationClaimRepository.getPendingCafeRegistrationClaims())
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }

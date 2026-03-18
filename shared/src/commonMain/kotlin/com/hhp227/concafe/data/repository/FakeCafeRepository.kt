@@ -2,7 +2,6 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.*
 import com.hhp227.concafe.domain.repository.CafeRepository
 
@@ -46,41 +45,15 @@ class FakeCafeRepository(
     }
 
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
-        return dataSource.updateCafeInfo(update).also {
-            //cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId, it.cafe))
-        }
+        return dataSource.updateCafeInfo(update)
     }
 
     override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
-        val existingItemId = update.itemId
-        val isCreate = existingItemId.isNullOrBlank()
-        val updatedDetail = dataSource.upsertCafeMenuGoods(update)
-        val updatedMenu = updatedDetail.menus.firstOrNull { it.id == existingItemId }
-            ?: updatedDetail.menus.lastOrNull()?.takeIf { update.category.lowercase() != "goods" }
-        val updatedGoods = updatedDetail.goods.firstOrNull { it.id == existingItemId }
-            ?: updatedDetail.goods.lastOrNull()?.takeIf { update.category.lowercase() == "goods" }
-
-        val event = when {
-            updatedMenu != null && isCreate -> CafeDetailEvent.MenuCreated(update.cafeId, updatedMenu)
-            updatedMenu != null -> CafeDetailEvent.MenuUpdated(update.cafeId, updatedMenu)
-            updatedGoods != null && isCreate -> CafeDetailEvent.GoodsCreated(update.cafeId, updatedGoods)
-            updatedGoods != null -> CafeDetailEvent.GoodsUpdated(update.cafeId, updatedGoods)
-            else -> throw NoSuchElementException("menu goods item not found")
-        }
-        //cafeDetailEvent.tryEmit(event)
-        return updatedDetail
+        return dataSource.upsertCafeMenuGoods(update)
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
-        return dataSource.deleteCafeMenuGoods(cafeId, itemId).also {
-            /*cafeDetailEvent.tryEmit(
-                if (itemId.startsWith("goods")) {
-                    CafeDetailEvent.GoodsDeleted(cafeId, itemId)
-                } else {
-                    CafeDetailEvent.MenuDeleted(cafeId, itemId)
-                }
-            )*/
-        }
+        return dataSource.deleteCafeMenuGoods(cafeId, itemId)
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
