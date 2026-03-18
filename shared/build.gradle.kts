@@ -41,6 +41,13 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+    targets.all {
+        compilations.all {
+            compilerOptions.configure {
+                freeCompilerArgs.add("-opt-in=kotlin.experimental.ExperimentalObjCName")
+            }
+        }
+    }
 }
 
 android {
@@ -57,4 +64,9 @@ android {
 
 dependencies {
     add("kspCommonMainMetadata", libs.kmp.nativecoroutines.ksp)
+
+    add("kspAndroid", libs.kmp.nativecoroutines.ksp)
+    add("kspIosX64", libs.kmp.nativecoroutines.ksp)
+    add("kspIosArm64", libs.kmp.nativecoroutines.ksp)
+    add("kspIosSimulatorArm64", libs.kmp.nativecoroutines.ksp)
 }
