@@ -15,11 +15,11 @@ final class CafeManagementViewModel: ObservableObject {
 
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase
 
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
-    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = CafeManagementUiState()
 
@@ -193,15 +193,15 @@ final class CafeManagementViewModel: ObservableObject {
     init(
         createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase = KoinInitializerKt.resolveObserveCafeRegistrationClaimEventUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase()
     ) {
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.observeCafeRegistrationClaimEventUseCase = observeCafeRegistrationClaimEventUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
         observeCafeDetailEvent()

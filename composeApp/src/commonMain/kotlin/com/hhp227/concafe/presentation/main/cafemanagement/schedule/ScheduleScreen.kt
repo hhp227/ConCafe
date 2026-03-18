@@ -22,6 +22,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,9 +33,7 @@ fun ScheduleScreen(
     viewModel: ScheduleViewModel = viewModel(
         key = "schedule-${castId ?: "self"}",
         factory = viewModelFactory {
-            initializer {
-                ScheduleViewModel(castId = castId)
-            }
+            initializer { GlobalContext.get().get<ScheduleViewModel> { parametersOf(castId) } }
         }
     )
 ) {

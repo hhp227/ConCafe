@@ -19,13 +19,13 @@ final class FanManagementViewModel: ObservableObject {
 
     private let getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
-
-    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = FanManagementUiState.empty
 
@@ -420,19 +420,19 @@ final class FanManagementViewModel: ObservableObject {
         createCastClaimUseCase: CreateCastClaimUseCase = KoinInitializerKt.resolveCreateCastClaimUseCase(),
         getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = KoinInitializerKt.resolveGetMyCastClaimStatusUseCase(),
         getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = KoinInitializerKt.resolveGetMyRequestableCastPageUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase()
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
         self.createCastClaimUseCase = createCastClaimUseCase
         self.getMyCastClaimStatusUseCase = getMyCastClaimStatusUseCase
         self.getMyRequestableCastPageUseCase = getMyRequestableCastPageUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
         self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
-        self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
         observeCastClaimEvent()

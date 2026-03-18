@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kmp.nativecoroutines)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -33,6 +35,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.jetbrains.lifecycle.viewmodel)
             implementation(libs.koin.core)
+            implementation(libs.kmp.nativecoroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -50,4 +53,8 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", libs.kmp.nativecoroutines.ksp)
 }

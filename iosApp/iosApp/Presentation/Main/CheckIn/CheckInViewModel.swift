@@ -17,15 +17,15 @@ final class CheckInViewModel: ObservableObject {
 
     private let createVisitUseCase: CreateVisitUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
-    private let observeCastEventUseCase: ObserveCastEventUseCase
-
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase
 
     private let dismissReviewPromptUseCase: DismissReviewPromptUseCase
+
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
 
     @Published private(set) var uiState = CheckInUiState.empty
 
@@ -321,20 +321,20 @@ final class CheckInViewModel: ObservableObject {
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
-        dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase()
+        dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
 
         observeSession()
         observeCafeDetailEvent()

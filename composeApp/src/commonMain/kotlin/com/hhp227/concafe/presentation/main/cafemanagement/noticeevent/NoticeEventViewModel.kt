@@ -10,7 +10,8 @@ import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
-import com.hhp227.concafe.domain.model.NoticeManagementEvent
+import com.hhp227.concafe.domain.event.NoticeManagementEvent
+import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.model.NoticeStatusAccent as DomainNoticeStatusAccent
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
@@ -18,7 +19,6 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
-import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import kotlinx.coroutines.Job
@@ -40,7 +40,7 @@ class NoticeEventViewModel(
     private val updateCafeEventUseCase: UpdateCafeEventUseCase,
     private val deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase,
     private val deleteCafeEventUseCase: DeleteCafeEventUseCase,
-    private val observeNoticeManagementEventUseCase: ObserveNoticeManagementEventUseCase
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NoticeEventUiState())
     val uiState = _uiState.asStateFlow()
@@ -348,7 +348,7 @@ class NoticeEventViewModel(
     private fun observeNoticeManagementEvent() {
         jobs[JobKey.OBSERVE_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
-            observeNoticeManagementEventUseCase.invoke().collectLatest { event ->
+            noticeManagementEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is NoticeManagementEvent.NoticeCreated -> if (event.cafeId == cafeId) loadNoticePage(cursor = null, append = false)
                     is NoticeManagementEvent.NoticeUpdated -> if (event.cafeId == cafeId) patchNotice(event.notice)

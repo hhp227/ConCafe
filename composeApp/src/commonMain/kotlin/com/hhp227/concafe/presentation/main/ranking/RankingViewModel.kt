@@ -2,30 +2,22 @@ package com.hhp227.concafe.presentation.main.ranking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveGetRankingFeedUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class RankingViewModel(
-    private val getRankingFeedUseCase: GetRankingFeedUseCase = resolveGetRankingFeedUseCase(),
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase()
+    private val getRankingFeedUseCase: GetRankingFeedUseCase,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RankingUiState.empty)
     val uiState = _uiState.asStateFlow()
@@ -72,7 +64,7 @@ class RankingViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.observe().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeRanking(event.cafe)
                 }
@@ -83,7 +75,7 @@ class RankingViewModel(
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCastRanking(event.cast)
@@ -152,16 +144,16 @@ class RankingViewModel(
         }
     }
 
-    init {
-        observeCafeDetailEvent()
-        observeCastEvent()
-        loadRankingFeed()
-    }
-
     override fun onCleared() {
         jobs.values.forEach(Job::cancel)
         jobs.clear()
         super.onCleared()
+    }
+
+    init {
+        observeCafeDetailEvent()
+        observeCastEvent()
+        loadRankingFeed()
     }
 
     private enum class TaskKey {

@@ -1,4 +1,6 @@
-package com.hhp227.concafe.domain.model
+package com.hhp227.concafe.domain.event
+
+import com.hhp227.concafe.domain.model.Cast
 
 sealed class CastEvent {
     data class Created(val cafeId: String, val cast: Cast) : CastEvent()

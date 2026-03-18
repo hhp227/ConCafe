@@ -2,28 +2,23 @@ package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.model.CafeDetail
-import com.hhp227.concafe.domain.model.CafeDetailEvent
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class MenuGoodsViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
+    private val deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MenuGoodsUiState())
     val uiState = _uiState.asStateFlow()
@@ -49,7 +44,7 @@ class MenuGoodsViewModel(
     private fun observeCafeDetailEvent() {
         jobs[JobKey.OBSERVE_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collect { event ->
+            cafeDetailEventPublisher.observe().collect { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()

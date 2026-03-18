@@ -18,6 +18,22 @@ import com.hhp227.concafe.data.repository.FakeUserRepository
 import com.hhp227.concafe.data.repository.FakeVisitRepository
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.data.source.MockConCafeDataSource
+import com.hhp227.concafe.dataevent.publisher.BannerEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.CafeDetailEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.CafeRegistrationClaimEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.CastClaimEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.CastEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.NoticeManagementEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.ReviewEventPublisherImpl
+import com.hhp227.concafe.dataevent.publisher.ScheduleManagementEventPublisherImpl
+import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.BannerRepository
 import com.hhp227.concafe.domain.repository.CafeDashboardRepository
@@ -78,16 +94,6 @@ import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeCastVersionUseCase
-import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveNoticeManagementEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastVersionUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
@@ -100,13 +106,13 @@ import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeRegistrationClaimEventUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.dsl.module
+import kotlin.math.sin
 
 val dataSourceModule = module {
     single<ConCafeDataSource> { MockConCafeDataSource() }
@@ -131,6 +137,17 @@ val repositoryModule = module {
     single<NotificationRepository> { FakeNotificationRepository(get()) }
 }
 
+val eventModule = module {
+    single<BannerEventPublisher> { BannerEventPublisherImpl() }
+    single<CafeDetailEventPublisher> { CafeDetailEventPublisherImpl() }
+    single<CafeRegistrationClaimEventPublisher> { CafeRegistrationClaimEventPublisherImpl() }
+    single<CastClaimEventPublisher> { CastClaimEventPublisherImpl() }
+    single<CastEventPublisher> { CastEventPublisherImpl() }
+    single<NoticeManagementEventPublisher> { NoticeManagementEventPublisherImpl() }
+    single<ReviewEventPublisher> { ReviewEventPublisherImpl() }
+    single<ScheduleManagementEventPublisher> { ScheduleManagementEventPublisherImpl() }
+}
+
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
@@ -145,7 +162,7 @@ val useCaseModule = module {
     factory { CreateCastClaimUseCase(get(), get()) }
     factory { CreateCafeEventUseCase(get()) }
     factory { CreateCafeNoticeUseCase(get()) }
-    factory { CreateHomeBannerUseCase(get(), get()) }
+    factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get()) }
@@ -176,17 +193,6 @@ val useCaseModule = module {
     factory { GetPendingCafeOwnerClaimsUseCase(get(), get()) }
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
-    factory { ObserveCafeDetailEventUseCase(get()) }
-    factory { ObserveBannerEventUseCase(get()) }
-    factory { ObserveCafeRegistrationClaimEventUseCase(get()) }
-    factory { ObserveCafeDetailUseCase(get()) }
-    factory { ObserveCafeCastVersionUseCase(get()) }
-    factory { ObserveCastClaimEventUseCase(get()) }
-    factory { ObserveCastEventUseCase(get()) }
-    factory { ObserveScheduleManagementEventUseCase(get()) }
-    factory { ObserveNoticeManagementEventUseCase(get()) }
-    factory { ObserveReviewEventUseCase(get()) }
-    factory { ObserveCastVersionUseCase(get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignUpUseCase(get()) }
@@ -209,5 +215,6 @@ val useCaseModule = module {
 val concafeModules = listOf(
     dataSourceModule,
     repositoryModule,
+    eventModule,
     useCaseModule
 )

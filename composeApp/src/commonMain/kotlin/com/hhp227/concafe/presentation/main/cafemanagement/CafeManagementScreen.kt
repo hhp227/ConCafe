@@ -53,28 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveCreateCafeOwnerClaimUseCase
-import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
-import com.hhp227.concafe.di.resolveObserveCafeRegistrationClaimEventUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @Composable
 fun CafeManagementScreen(
     onNavigate: (NavigationAction) -> Unit,
     viewModel: CafeManagementViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                CafeManagementViewModel(
-                    createCafeOwnerClaimUseCase = resolveCreateCafeOwnerClaimUseCase(),
-                    getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
-                    observeCafeRegistrationClaimEventUseCase = resolveObserveCafeRegistrationClaimEventUseCase(),
-                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CafeManagementViewModel>() }
         }
     )
 ) {

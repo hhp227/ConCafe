@@ -15,13 +15,13 @@ final class ScheduleViewModel: ObservableObject {
 
     private let getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
-
-    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
-
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let updateCastScheduleUseCase: UpdateCastScheduleUseCase
+
+    private let observeCastEventUseCase: ObserveCastEventUseCase
+
+    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
 
     @Published private(set) var uiState = ScheduleUiState(isLoading: true)
 
@@ -264,17 +264,17 @@ final class ScheduleViewModel: ObservableObject {
     init(
         castId: String? = nil,
         getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = KoinInitializerKt.resolveGetScheduleManagementDataUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        updateCastScheduleUseCase: UpdateCastScheduleUseCase = KoinInitializerKt.resolveUpdateCastScheduleUseCase()
+        updateCastScheduleUseCase: UpdateCastScheduleUseCase = KoinInitializerKt.resolveUpdateCastScheduleUseCase(),
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
+        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase()
     ) {
         self.castId = castId
         self.getScheduleManagementDataUseCase = getScheduleManagementDataUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
-        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.updateCastScheduleUseCase = updateCastScheduleUseCase
+        self.observeCastEventUseCase = observeCastEventUseCase
+        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
 
         observeSession()
     }

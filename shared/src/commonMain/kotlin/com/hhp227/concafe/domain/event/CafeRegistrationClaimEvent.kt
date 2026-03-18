@@ -1,4 +1,4 @@
-package com.hhp227.concafe.domain.model
+package com.hhp227.concafe.domain.event
 
 sealed class CafeRegistrationClaimEvent {
     data class Created(val requesterUserId: String, val claimId: String) : CafeRegistrationClaimEvent()

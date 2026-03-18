@@ -13,23 +13,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
-import com.hhp227.concafe.domain.model.BannerEvent
+import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
-import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
-    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase
+    private val bannerEventPublisher: BannerEventPublisher,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -145,7 +145,7 @@ class HomeViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.observe().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeInfo(event.cafe)
                 }
@@ -156,7 +156,7 @@ class HomeViewModel(
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
-            observeBannerEventUseCase.invoke().collectLatest { event ->
+            bannerEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> loadHomeFeed()
                 }
@@ -178,7 +178,7 @@ class HomeViewModel(
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCast(event.cast)

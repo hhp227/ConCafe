@@ -1,4 +1,8 @@
-package com.hhp227.concafe.domain.model
+package com.hhp227.concafe.domain.event
+
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.Goods
 
 sealed class CafeDetailEvent {
     data class CafeInfoUpdated(val cafeId: String, val cafe: Cafe) : CafeDetailEvent()

@@ -15,9 +15,9 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
+
+    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     @Published private(set) var uiState = MenuGoodsUiState()
 
@@ -390,13 +390,13 @@ final class MenuGoodsViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase()
+        deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase(),
+        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
+        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
 
         observeCafeDetailEvent()
         loadMenuGoods()

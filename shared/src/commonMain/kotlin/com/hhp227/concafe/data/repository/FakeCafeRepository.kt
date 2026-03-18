@@ -1,31 +1,14 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetail
-import com.hhp227.concafe.domain.model.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CafeInfoUpdate
-import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import com.hhp227.concafe.domain.model.CafeSort
-import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.model.*
 import com.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(
     private val dataSource: ConCafeDataSource
 ) : CafeRepository {
-    private val cafeDetailEvent = MutableSharedFlow<CafeDetailEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeCafeDetailEvent(): Flow<CafeDetailEvent> {
-        return cafeDetailEvent
-    }
-
     override suspend fun searchCafes(
         query: String?,
         country: String?,
@@ -62,13 +45,9 @@ class FakeCafeRepository(
             ?: throw NoSuchElementException("cafe detail not found")
     }
 
-    override fun observeCafeDetail(cafeId: String): Flow<CafeDetail> {
-        return dataSource.observeCafeDetail(cafeId).filterNotNull()
-    }
-
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         return dataSource.updateCafeInfo(update).also {
-            cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId, it.cafe))
+            //cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId, it.cafe))
         }
     }
 
@@ -88,19 +67,19 @@ class FakeCafeRepository(
             updatedGoods != null -> CafeDetailEvent.GoodsUpdated(update.cafeId, updatedGoods)
             else -> throw NoSuchElementException("menu goods item not found")
         }
-        cafeDetailEvent.tryEmit(event)
+        //cafeDetailEvent.tryEmit(event)
         return updatedDetail
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
         return dataSource.deleteCafeMenuGoods(cafeId, itemId).also {
-            cafeDetailEvent.tryEmit(
+            /*cafeDetailEvent.tryEmit(
                 if (itemId.startsWith("goods")) {
                     CafeDetailEvent.GoodsDeleted(cafeId, itemId)
                 } else {
                     CafeDetailEvent.MenuDeleted(cafeId, itemId)
                 }
-            )
+            )*/
         }
     }
 

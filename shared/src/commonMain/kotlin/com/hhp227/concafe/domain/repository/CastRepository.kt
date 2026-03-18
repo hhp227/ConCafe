@@ -1,25 +1,10 @@
 package com.hhp227.concafe.domain.repository
 
-import kotlinx.coroutines.flow.Flow
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.CafeCastPreview
-import com.hhp227.concafe.domain.model.CafeDetailCast
-import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
-import com.hhp227.concafe.domain.model.CastDetail
-import com.hhp227.concafe.domain.model.CastSchedule
-import com.hhp227.concafe.domain.model.CastScheduleStatus
-import com.hhp227.concafe.domain.model.CastScheduleUpdate
-import com.hhp227.concafe.domain.model.CastSort
-import com.hhp227.concafe.domain.model.CastUpsert
-import com.hhp227.concafe.domain.model.CheckInCastSummary
-import com.hhp227.concafe.domain.model.ScheduleManagementEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent
+import com.hhp227.concafe.domain.model.*
 
 interface CastRepository {
-    fun observeCastEvent(): Flow<CastEvent>
-
-    fun observeScheduleManagementEvent(): Flow<ScheduleManagementEvent>
-
     suspend fun searchCasts(
         query: String?,
         country: String?,
@@ -36,10 +21,6 @@ interface CastRepository {
     suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview>
 
     suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast>
-
-    fun observeCafeCastVersion(cafeId: String): Flow<Int>
-
-    fun observeCastVersion(castId: String): Flow<Int>
 
     suspend fun upsertCast(update: CastUpsert): CastDetail
 

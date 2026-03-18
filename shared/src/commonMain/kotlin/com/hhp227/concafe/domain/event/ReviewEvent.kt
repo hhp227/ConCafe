@@ -1,4 +1,4 @@
-package com.hhp227.concafe.domain.model
+package com.hhp227.concafe.domain.event
 
 sealed class ReviewEvent {
     data class Created(val cafeId: String) : ReviewEvent()

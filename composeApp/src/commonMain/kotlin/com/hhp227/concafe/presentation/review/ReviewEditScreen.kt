@@ -23,12 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveCreateReviewUseCase
-import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ReviewEditScreen(
@@ -37,13 +37,7 @@ fun ReviewEditScreen(
     viewModel: ReviewEditViewModel = viewModel(
         key = "review-edit-${cafeId ?: "unknown"}",
         factory = viewModelFactory {
-            initializer {
-                ReviewEditViewModel(
-                    cafeId = cafeId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
-                    createReviewUseCase = resolveCreateReviewUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<ReviewEditViewModel> { parametersOf(cafeId) } }
         }
     )
 ) {

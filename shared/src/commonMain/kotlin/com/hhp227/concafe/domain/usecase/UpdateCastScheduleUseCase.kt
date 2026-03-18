@@ -4,7 +4,7 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
-import com.hhp227.concafe.domain.model.ScheduleManagementEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository

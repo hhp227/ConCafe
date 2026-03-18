@@ -13,19 +13,19 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
-import com.hhp227.concafe.domain.model.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CafeRegistrationClaimEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeRegistrationClaimEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class CafeManagementViewModel(
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
-    private val observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeManagementUiState())
     val uiState = _uiState.asStateFlow()
@@ -135,7 +135,7 @@ class CafeManagementViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.observe().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeInfo(event.cafe)
                 }
@@ -146,7 +146,7 @@ class CafeManagementViewModel(
     private fun observeCafeRegistrationClaimEvent() {
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
-            observeCafeRegistrationClaimEventUseCase.invoke().collectLatest { claimEvent ->
+            cafeRegistrationClaimEventPublisher.observe().collectLatest { claimEvent ->
                 val userId = currentUserId ?: return@collectLatest
                 val shouldRefresh = when (claimEvent) {
                     is CafeRegistrationClaimEvent.Created -> claimEvent.requesterUserId == userId

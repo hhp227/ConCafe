@@ -11,20 +11,20 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.BannerEvent
+import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
-import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.CastClaimEvent as CastClaimDomainEvent
+import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
-import com.hhp227.concafe.domain.usecase.ObserveBannerEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 
 class CafeDashboardViewModel(
@@ -35,10 +35,10 @@ class CafeDashboardViewModel(
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
-    private val observeBannerEventUseCase: ObserveBannerEventUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase
+    private val bannerEventPublisher: BannerEventPublisher,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castClaimEventPublisher: CastClaimEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -362,7 +362,7 @@ class CafeDashboardViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         patchCafeInfo(event.cafe)
@@ -381,7 +381,7 @@ class CafeDashboardViewModel(
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
-            observeBannerEventUseCase.invoke().collectLatest { event ->
+            bannerEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
                         loadCafeDashboard()
@@ -406,7 +406,7 @@ class CafeDashboardViewModel(
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cafeId == cafeId) {
                         refreshCastPreviews()
@@ -442,7 +442,7 @@ class CafeDashboardViewModel(
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
-            observeCastClaimEventUseCase.invoke().collectLatest { event ->
+            castClaimEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastClaimDomainEvent.Created -> if (event.claim.cafeId == cafeId) {
                         refreshClaimData()

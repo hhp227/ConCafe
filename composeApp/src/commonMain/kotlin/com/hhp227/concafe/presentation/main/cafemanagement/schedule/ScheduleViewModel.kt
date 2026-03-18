@@ -2,39 +2,29 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hhp227.concafe.di.resolveGetScheduleManagementDataUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveObserveScheduleManagementEventUseCase
-import com.hhp227.concafe.di.resolveUpdateCastScheduleUseCase
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CastScheduleUpdate
-import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.model.CastScheduleStatus
-import com.hhp227.concafe.domain.model.ScheduleManagementEvent as ScheduleManagementDomainEvent
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
-import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent as ScheduleManagementDomainEvent
 
 class ScheduleViewModel(
     private val castId: String? = null,
-    private val getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase = resolveGetScheduleManagementDataUseCase(),
-    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
-    private val updateCastScheduleUseCase: UpdateCastScheduleUseCase = resolveUpdateCastScheduleUseCase(),
-    private val observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = resolveObserveScheduleManagementEventUseCase()
+    private val getScheduleManagementDataUseCase: GetScheduleManagementDataUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val updateCastScheduleUseCase: UpdateCastScheduleUseCase,
+    private val castEventPublisher: CastEventPublisher,
+    private val scheduleManagementEventPublisher: ScheduleManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
@@ -43,10 +33,6 @@ class ScheduleViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()
-
-    init {
-        observeSession()
-    }
 
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
@@ -61,7 +47,7 @@ class ScheduleViewModel(
     private fun bindCastEvent(castId: String) {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadSchedule()
@@ -89,7 +75,7 @@ class ScheduleViewModel(
     private fun bindScheduleManagementEvent(castId: String) {
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
-            observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
+            scheduleManagementEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
                         if (_uiState.value.isSaving) {
@@ -292,6 +278,10 @@ class ScheduleViewModel(
         jobs.values.forEach(Job::cancel)
         jobs.clear()
         super.onCleared()
+    }
+
+    init {
+        observeSession()
     }
 }
 

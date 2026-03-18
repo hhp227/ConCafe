@@ -1,6 +1,5 @@
 package com.hhp227.concafe.presentation.settings.inquiry
 
-import com.hhp227.concafe.di.resolveCreateInquiryUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.InquiryCreate
 import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
@@ -13,9 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class InquiryLinkViewModel : ViewModel() {
-    private val createInquiryUseCase: CreateInquiryUseCase = resolveCreateInquiryUseCase()
-
+class InquiryLinkViewModel(
+    private val createInquiryUseCase: CreateInquiryUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow(InquiryLinkUiState.empty())
     val uiState = _uiState.asStateFlow()
 

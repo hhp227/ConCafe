@@ -60,15 +60,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FanManagementScreen(
     onNavigationAction: (NavigationAction) -> Unit,
-    viewModel: FanManagementViewModel = viewModel()
+    viewModel: FanManagementViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GlobalContext.get().get<FanManagementViewModel>() }
+        }
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val claimSheet = uiState.castClaimSheet

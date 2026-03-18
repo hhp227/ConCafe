@@ -21,11 +21,11 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
 
+    private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
+
     private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
 
     private let observeReviewEventUseCase: ObserveReviewEventUseCase
-    
-    private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
     
     @Published private(set) var uiState = CafeUiState.empty
     
@@ -292,18 +292,18 @@ final class CafeViewModel: ObservableObject {
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
+        toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
         observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
-        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
-        toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
+        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
+        self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
         self.observeCafeDetailUseCase = observeCafeDetailUseCase
         self.observeReviewEventUseCase = observeReviewEventUseCase
-        self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
 
         bindCafeDetail()
         observeReviewEvent()

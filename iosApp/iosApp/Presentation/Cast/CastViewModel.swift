@@ -15,11 +15,11 @@ final class CastViewModel: ObservableObject {
 
     private let getCastDetailUseCase: GetCastDetailUseCase
 
+    private let toggleFollowCastUseCase: ToggleFollowCastUseCase
+
     private let observeCastEventUseCase: ObserveCastEventUseCase
 
     private let observeReviewEventUseCase: ObserveReviewEventUseCase
-
-    private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
     @Published private(set) var uiState = CastUiState.empty
 
@@ -141,15 +141,15 @@ final class CastViewModel: ObservableObject {
     init(
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
+        toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase(),
         observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
-        toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase()
+        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
+        self.toggleFollowCastUseCase = toggleFollowCastUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
         self.observeReviewEventUseCase = observeReviewEventUseCase
-        self.toggleFollowCastUseCase = toggleFollowCastUseCase
 
         observeCastEvent()
         observeReviewEvent()

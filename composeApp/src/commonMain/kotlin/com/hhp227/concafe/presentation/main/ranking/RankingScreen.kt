@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.delay
 import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
@@ -37,11 +39,17 @@ import com.hhp227.concafe.domain.model.RankingPromoAd
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.main.checkin.CheckInViewModel
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @Composable
 fun RankingScreen(
-    viewModel: RankingViewModel = viewModel(),
+    viewModel: RankingViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GlobalContext.get().get<RankingViewModel>() }
+        }
+    ),
     onNavigate: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()

@@ -12,15 +12,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 
@@ -28,11 +28,11 @@ class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
     private val createVisitUseCase: CreateVisitUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase,
-    private val dismissReviewPromptUseCase: DismissReviewPromptUseCase
+    private val dismissReviewPromptUseCase: DismissReviewPromptUseCase,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
 
@@ -205,7 +205,7 @@ class CheckInViewModel(
     private fun observeCafeDetailEvent() {
         observeCafeDetailEventJob?.cancel()
         observeCafeDetailEventJob = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.observe().collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafe(event.cafe)
                 }
@@ -216,7 +216,7 @@ class CheckInViewModel(
     private fun observeCastEvent() {
         observeCastEventJob?.cancel()
         observeCastEventJob = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.observe().collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCast(event.cast)

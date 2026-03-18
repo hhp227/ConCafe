@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastClaimCandidate
-import com.hhp227.concafe.domain.model.CastClaimEvent
+import com.hhp227.concafe.domain.event.CastClaimEvent
 import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.MyCastClaimStatus
@@ -16,13 +16,6 @@ import com.hhp227.concafe.domain.repository.CastClaimRepository
 class FakeCastClaimRepository(
     private val dataSource: ConCafeDataSource
 ) : CastClaimRepository {
-    private val castClaimEvent = MutableSharedFlow<CastClaimEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeCastClaimEvent(): Flow<CastClaimEvent> = castClaimEvent
-
     override suspend fun getAffiliatedCafeId(userId: String): String? {
         return dataSource.affiliatedCafeIdByUser[userId]
             ?: dataSource.casts.firstOrNull { it.linkedUserId == userId }?.cafeId
@@ -112,7 +105,7 @@ class FakeCastClaimRepository(
         )
         dataSource.castClaims.add(0, claim)
         dataSource.affiliatedCafeIdByUser[userId] = cafeId
-        castClaimEvent.tryEmit(CastClaimEvent.Created(claim))
+        //castClaimEvent.tryEmit(CastClaimEvent.Created(claim))
         return claim
     }
 
@@ -150,7 +143,7 @@ class FakeCastClaimRepository(
             }
         }
 
-        castClaimEvent.tryEmit(CastClaimEvent.Updated(updated))
+        //castClaimEvent.tryEmit(CastClaimEvent.Updated(updated))
         return updated
     }
 }

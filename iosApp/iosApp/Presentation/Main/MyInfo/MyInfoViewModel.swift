@@ -13,11 +13,11 @@ import Shared
 final class MyInfoViewModel: ObservableObject {
     private let getMyInfoUseCase: GetMyInfoUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
 
     private let observeCastEventUseCase: ObserveCastEventUseCase
-
-    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = MyInfoUiState.empty
 
@@ -170,14 +170,14 @@ final class MyInfoViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCastEventUseCase = observeCastEventUseCase
-        self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
         observeSession()
         observeCafeDetailEvent()

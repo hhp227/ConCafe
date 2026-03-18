@@ -65,9 +65,7 @@ import org.koin.core.context.GlobalContext
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                GlobalContext.get().get<HomeViewModel>()
-            }
+            initializer { GlobalContext.get().get<HomeViewModel>() }
         }
     ),
     onNavigate: (NavigationAction) -> Unit

@@ -9,18 +9,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveGetNotificationFeedUseCase
-import com.hhp227.concafe.di.resolveMarkNotificationReadUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class NotificationViewModel(
-    private val getNotificationFeedUseCase: GetNotificationFeedUseCase = resolveGetNotificationFeedUseCase(),
-    private val markNotificationReadUseCase: MarkNotificationReadUseCase = resolveMarkNotificationReadUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+    private val getNotificationFeedUseCase: GetNotificationFeedUseCase,
+    private val markNotificationReadUseCase: MarkNotificationReadUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationUiState.empty())
     val uiState = _uiState.asStateFlow()

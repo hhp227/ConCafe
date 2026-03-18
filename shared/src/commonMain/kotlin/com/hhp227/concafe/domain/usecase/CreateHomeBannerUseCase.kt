@@ -7,10 +7,13 @@ import com.hhp227.concafe.domain.model.HomeBannerCreate
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.BannerRepository
+import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.BannerEvent
 
 class CreateHomeBannerUseCase(
     private val authRepository: AuthRepository,
-    private val bannerRepository: BannerRepository
+    private val bannerRepository: BannerRepository,
+    private val bannerEventPublisher: BannerEventPublisher
 ) {
     suspend operator fun invoke(input: HomeBannerCreate): AppResult<HomeBanner> {
         return try {
@@ -30,8 +33,10 @@ class CreateHomeBannerUseCase(
             ) {
                 return AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
             }
+            val banner = bannerRepository.createHomeBanner(input)
 
-            AppResult.Success(bannerRepository.createHomeBanner(input))
+            bannerEventPublisher.publish(BannerEvent.Created(banner))
+            AppResult.Success(banner)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

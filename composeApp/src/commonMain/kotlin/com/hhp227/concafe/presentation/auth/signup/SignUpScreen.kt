@@ -27,9 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetSignUpCafeListUseCase
-import com.hhp227.concafe.di.resolveSignInUseCase
-import com.hhp227.concafe.di.resolveSignUpUseCase
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
@@ -40,18 +37,13 @@ import concafe.composeapp.generated.resources.apple_icon
 import concafe.composeapp.generated.resources.google_logo
 import concafe.composeapp.generated.resources.kakao_icon
 import org.jetbrains.compose.resources.painterResource
+import org.koin.core.context.GlobalContext
 
 @Composable
 fun SignUpScreen(
     viewModel: SignUpViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                SignUpViewModel(
-                    getSignUpCafeListUseCase = resolveGetSignUpCafeListUseCase(),
-                    signUpUseCase = resolveSignUpUseCase(),
-                    signInUseCase = resolveSignInUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<SignUpViewModel>() }
         }
     ),
     onNavigate: (NavigationAction) -> Unit

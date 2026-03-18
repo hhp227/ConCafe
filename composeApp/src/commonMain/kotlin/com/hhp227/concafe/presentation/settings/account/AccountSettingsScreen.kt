@@ -52,14 +52,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountSettingsScreen(
-    viewModel: AccountSettingsViewModel = viewModel(),
+    viewModel: AccountSettingsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GlobalContext.get().get<AccountSettingsViewModel>() }
+        }
+    ),
     onNavigationAction: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
