@@ -17,21 +17,22 @@ final class CastViewModel: ObservableObject {
 
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
-    private let observeReviewEventUseCase: ObserveReviewEventUseCase
+    private let reviewEventPublisher: ReviewEventPublisher
 
     @Published private(set) var uiState = CastUiState.empty
 
     let event = PassthroughSubject<CastEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            
+        }
+        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 switch event {
@@ -56,12 +57,15 @@ final class CastViewModel: ObservableObject {
                     break
                 }
             }
-        }
+        }*/
     }
 
     private func observeReviewEvent() {
-        watchHandles[.reviewEvent]?.cancel()
-        watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
+        tasks[.reviewEvent]?.cancel()
+        tasks[.reviewEvent] = Task {
+            
+        }
+        /*tasks[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
             guard let self else { return }
             guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
             if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
@@ -69,15 +73,14 @@ final class CastViewModel: ObservableObject {
             } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
                 self.loadCastDetail()
             }
-        }
+        }*/
     }
 
     private func loadCastDetail() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getCastDetailUseCase.invoke(castId: castId)
 
@@ -104,8 +107,7 @@ final class CastViewModel: ObservableObject {
     }
 
     private func toggleFollow() {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await toggleFollowCastUseCase.invoke(castId: castId)
 
@@ -142,14 +144,14 @@ final class CastViewModel: ObservableObject {
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
-        self.observeReviewEventUseCase = observeReviewEventUseCase
+        self.castEventPublisher = castEventPublisher
+        self.reviewEventPublisher = reviewEventPublisher
 
         observeCastEvent()
         observeReviewEvent()
@@ -157,12 +159,11 @@ final class CastViewModel: ObservableObject {
     }
 
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case castEvent
         case reviewEvent
     }

@@ -15,64 +15,35 @@ final class MyInfoViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
     @Published private(set) var uiState = MyInfoUiState.empty
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeSession() {
-        watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            
+        }
+        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
 
             Task { @MainActor in
                 self.loadMyInfo()
             }
-        }
+        }*/
     }
-
-    private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafe(updated.cafe)
-                }
-            }
-        }
-    }
-
-    private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCast(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.removeCast(deleted.castId)
-                default:
-                    break
-                }
-            }
-        }
-    }
-
+    
     private func loadMyInfo() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getMyInfoUseCase.invoke()
 
@@ -104,6 +75,41 @@ final class MyInfoViewModel: ObservableObject {
                 uiState.errorMessage = error.localizedDescription
             }
         }
+    }
+
+    private func observeCafeDetailEvent() {
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            
+        }
+        /*tasks[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                    self.patchCafe(updated.cafe)
+                }
+            }
+        }*/
+    }
+
+    private func observeCastEvent() {
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            
+        }
+        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case let updated as Shared.CastEvent.Updated:
+                    self.patchCast(updated.cast)
+                case let deleted as Shared.CastEvent.Deleted:
+                    self.removeCast(deleted.castId)
+                default:
+                    break
+                }
+            }
+        }*/
     }
 
     private func patchCafe(_ cafe: Cafe) {
@@ -171,13 +177,13 @@ final class MyInfoViewModel: ObservableObject {
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
@@ -185,12 +191,11 @@ final class MyInfoViewModel: ObservableObject {
     }
 
     deinit {
-        loadTask?.cancel()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case session
         case cafeDetailEvent
         case castEvent

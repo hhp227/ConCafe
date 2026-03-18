@@ -21,34 +21,56 @@ final class FanManagementViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
-    private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
+    private let castClaimEventPublisher: CastClaimEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
-    private let observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase
+    private let scheduleManagementEventPublisher: ScheduleManagementEventPublisher
 
     @Published private(set) var uiState = FanManagementUiState.empty
 
     let event = PassthroughSubject<FanManagementEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeSession() {
-        watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            
+        }
+        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 self.unbindCastEvent()
                 self.loadFanManagement()
             }
+        }*/
+    }
+    
+    private func observeCastClaimEvent() {
+        tasks[.castClaimEvent]?.cancel()
+        tasks[.castClaimEvent] = Task {
+            
         }
+        /*tasks[.castClaimEvent] = observeCastClaimEventUseCase.watch { [weak self] event in
+            guard let self else { return }
+            Task { @MainActor in
+                switch event {
+                case is Shared.CastClaimEvent.Created, is Shared.CastClaimEvent.Updated:
+                    self.loadFanManagement()
+                default:
+                    break
+                }
+            }
+        }*/
     }
 
     private func bindCastEvent(_ castId: String) {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            
+        }
+        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 switch event {
@@ -85,12 +107,15 @@ final class FanManagementViewModel: ObservableObject {
                     break
                 }
             }
-        }
+        }*/
     }
 
     private func bindScheduleManagementEvent(_ castId: String) {
-        watchHandles[.scheduleEvent]?.cancel()
-        watchHandles[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
+        tasks[.scheduleEvent]?.cancel()
+        tasks[.scheduleEvent] = Task {
+            
+        }
+        /*tasks[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 switch event {
@@ -102,12 +127,12 @@ final class FanManagementViewModel: ObservableObject {
                     break
                 }
             }
-        }
+        }*/
     }
 
     private func unbindCastEvent() {
-        watchHandles.removeValue(forKey: .castEvent)?.cancel()
-        watchHandles.removeValue(forKey: .scheduleEvent)?.cancel()
+        tasks.removeValue(forKey: .castEvent)?.cancel()
+        tasks.removeValue(forKey: .scheduleEvent)?.cancel()
     }
 
     private func setInfoMessage(_ message: String) {
@@ -115,12 +140,11 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private func loadFanManagement() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
         uiState.infoMessage = nil
 
-        loadTask = Task {
+        Task {
             var claimStatus: FanManagementUiState.CastClaimStatusCard?
             var claimSheet: FanManagementUiState.CastClaimSheet?
             do {
@@ -198,21 +222,6 @@ final class FanManagementViewModel: ObservableObject {
                 uiState.errorMessage = claimStatus == nil ? "팬관리 데이터를 불러오지 못했습니다." : nil
                 uiState.castClaimStatus = claimStatus
                 uiState.castClaimSheet = claimSheet
-            }
-        }
-    }
-
-    private func observeCastClaimEvent() {
-        watchHandles[.castClaimEvent]?.cancel()
-        watchHandles[.castClaimEvent] = observeCastClaimEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case is Shared.CastClaimEvent.Created, is Shared.CastClaimEvent.Updated:
-                    self.loadFanManagement()
-                default:
-                    break
-                }
             }
         }
     }
@@ -421,30 +430,29 @@ final class FanManagementViewModel: ObservableObject {
         getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = KoinInitializerKt.resolveGetMyCastClaimStatusUseCase(),
         getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = KoinInitializerKt.resolveGetMyRequestableCastPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = KoinInitializerKt.resolveObserveScheduleManagementEventUseCase()
+        castClaimEventPublisher: CastClaimEventPublisher = KoinInitializerKt.resolveCastClaimEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        scheduleManagementEventPublisher: ScheduleManagementEventPublisher = KoinInitializerKt.resolveScheduleManagementEventPublisher()
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
         self.createCastClaimUseCase = createCastClaimUseCase
         self.getMyCastClaimStatusUseCase = getMyCastClaimStatusUseCase
         self.getMyRequestableCastPageUseCase = getMyRequestableCastPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
-        self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
-        self.observeScheduleManagementEventUseCase = observeScheduleManagementEventUseCase
+        self.castClaimEventPublisher = castClaimEventPublisher
+        self.castEventPublisher = castEventPublisher
+        self.scheduleManagementEventPublisher = scheduleManagementEventPublisher
 
         observeSession()
         observeCastClaimEvent()
     }
 
     deinit {
-        loadTask?.cancel()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case session
         case castClaimEvent
         case castEvent

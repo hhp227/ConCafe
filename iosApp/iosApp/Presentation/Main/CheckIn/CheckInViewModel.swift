@@ -23,17 +23,15 @@ final class CheckInViewModel: ObservableObject {
 
     private let dismissReviewPromptUseCase: DismissReviewPromptUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
     @Published private(set) var uiState = CheckInUiState.empty
 
     let event = PassthroughSubject<CheckInEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadGuestFeed() {
         uiState.isLoading = true
@@ -94,8 +92,11 @@ final class CheckInViewModel: ObservableObject {
     }
 
     private func observeSession() {
-        watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] user in
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            
+        }
+        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] user in
             guard let self else { return }
 
             Task { @MainActor in
@@ -113,7 +114,7 @@ final class CheckInViewModel: ObservableObject {
                     self.loadUserFeed()
                 }
             }
-        }
+        }*/
     }
 
     func onAction(_ action: CheckInAction) {
@@ -215,20 +216,26 @@ final class CheckInViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            
+        }
+        /*tasks[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                     self.patchCafe(updated.cafe)
                 }
             }
-        }
+        }*/
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            
+        }
+        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
             guard let self else { return }
             Task { @MainActor in
                 switch event {
@@ -240,7 +247,7 @@ final class CheckInViewModel: ObservableObject {
                     break
                 }
             }
-        }
+        }*/
     }
 
     private func patchCafe(_ cafe: Cafe) {
@@ -324,8 +331,8 @@ final class CheckInViewModel: ObservableObject {
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
         dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
@@ -333,8 +340,8 @@ final class CheckInViewModel: ObservableObject {
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
@@ -345,17 +352,12 @@ final class CheckInViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
     }
 
     private enum TaskKey {
         case guestFeed
         case userFeed
         case submitVisit
-    }
-
-    private enum WatchKey {
         case session
         case cafeDetailEvent
         case castEvent

@@ -29,15 +29,16 @@ final class BannerEditViewModel: ObservableObject {
 
     private var selectorTask: Task<Void, Never>?
 
-    private var sessionWatchHandle: WatchHandle?
-
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] user in
+        Task {
+            
+        }
+        /*observeCurrentUserUseCase.watch { [weak self] user in
             guard let self else { return }
             Task { @MainActor in
                 self.uiState.isAdmin = user?.role == .admin
             }
-        }
+        }*/
     }
 
     func onAction(_ action: BannerEditAction) {
@@ -322,7 +323,6 @@ final class BannerEditViewModel: ObservableObject {
 
     deinit {
         selectorTask?.cancel()
-        sessionWatchHandle?.cancel()
     }
 }
 

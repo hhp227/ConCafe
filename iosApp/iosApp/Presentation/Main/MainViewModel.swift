@@ -19,7 +19,7 @@ final class MainViewModel: ObservableObject {
 
     let event = PassthroughSubject<MainEvent, Never>()
     
-    private var sessionWatchHandle: WatchHandle?
+    private var sessionTask: Task<Void, Never>?
 
     private func refreshNavigation(preferredRoute: String?) {
         Task {
@@ -49,13 +49,16 @@ final class MainViewModel: ObservableObject {
     }
     
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
+        sessionTask = Task {
+            
+        }
+        /*sessionTask = observeCurrentUserUseCase.watch { [weak self] _ in
             guard let self else { return }
             
             Task { @MainActor in
                 self.refreshNavigation(preferredRoute: self.uiState.selectedTab)
             }
-        }
+        }*/
     }
 
     func onAction(_ action: MainAction) {
@@ -81,6 +84,6 @@ final class MainViewModel: ObservableObject {
     }
     
     deinit {
-        sessionWatchHandle?.cancel()
+        sessionTask?.cancel()
     }
 }

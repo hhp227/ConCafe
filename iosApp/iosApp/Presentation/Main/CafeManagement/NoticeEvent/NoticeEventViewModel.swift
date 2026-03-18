@@ -29,7 +29,7 @@ final class NoticeEventViewModel: ObservableObject {
 
     private let deleteCafeEventUseCase: DeleteCafeEventUseCase
 
-    private let observeNoticeManagementEventUseCase: ObserveNoticeManagementEventUseCase
+    private let noticeManagementEventPublisher: NoticeManagementEventPublisher
 
     @Published private(set) var uiState = NoticeEventUiState()
 
@@ -37,8 +37,54 @@ final class NoticeEventViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private func openCreateForm() {
+        uiState.isFormSheetVisible = true
+        uiState.isSubmittingForm = false
+        uiState.formEditingId = nil
+        uiState.formTitle = ""
+        uiState.formContent = ""
+        uiState.formImageUrl = ""
+        uiState.formPinned = false
+        uiState.formReservedAt = ""
+        uiState.infoMessage = nil
+    }
+    
+    private func openEditNoticeForm(_ id: String) {
+        guard let target = uiState.notices.first(where: { $0.id == id }) else {
+            uiState.infoMessage = "수정할 공지사항을 찾지 못했습니다."
+            return
+        }
 
+        uiState.selectedTab = .notice
+        uiState.isFormSheetVisible = true
+        uiState.isSubmittingForm = false
+        uiState.formEditingId = target.id
+        uiState.formTitle = target.title
+        uiState.formContent = target.content
+        uiState.formImageUrl = ""
+        uiState.formPinned = target.isPinned
+        uiState.formReservedAt = target.statusAccent == .draft ? target.date : ""
+        uiState.infoMessage = nil
+    }
+
+    private func openEditEventForm(_ id: String) {
+        guard let target = uiState.events.first(where: { $0.id == id }) else {
+            uiState.infoMessage = "수정할 이벤트를 찾지 못했습니다."
+            return
+        }
+
+        uiState.selectedTab = .event
+        uiState.isFormSheetVisible = true
+        uiState.isSubmittingForm = false
+        uiState.formEditingId = target.id
+        uiState.formTitle = target.title
+        uiState.formContent = target.content
+        uiState.formImageUrl = target.imageUrl
+        uiState.formPinned = false
+        uiState.formReservedAt = target.period
+        uiState.infoMessage = nil
+    }
+    
     private func loadNoticePage(cursor: String?, append: Bool) {
         tasks[.noticePage]?.cancel()
         uiState.isLoadingNotices = !append
@@ -150,54 +196,6 @@ final class NoticeEventViewModel: ObservableObject {
               uiState.canLoadMoreEvents,
               let cursor = uiState.eventNextCursor else { return }
         loadEventPage(cursor: cursor, append: true)
-    }
-
-    private func openCreateForm() {
-        uiState.isFormSheetVisible = true
-        uiState.isSubmittingForm = false
-        uiState.formEditingId = nil
-        uiState.formTitle = ""
-        uiState.formContent = ""
-        uiState.formImageUrl = ""
-        uiState.formPinned = false
-        uiState.formReservedAt = ""
-        uiState.infoMessage = nil
-    }
-
-    private func openEditNoticeForm(_ id: String) {
-        guard let target = uiState.notices.first(where: { $0.id == id }) else {
-            uiState.infoMessage = "수정할 공지사항을 찾지 못했습니다."
-            return
-        }
-
-        uiState.selectedTab = .notice
-        uiState.isFormSheetVisible = true
-        uiState.isSubmittingForm = false
-        uiState.formEditingId = target.id
-        uiState.formTitle = target.title
-        uiState.formContent = target.content
-        uiState.formImageUrl = ""
-        uiState.formPinned = target.isPinned
-        uiState.formReservedAt = target.statusAccent == .draft ? target.date : ""
-        uiState.infoMessage = nil
-    }
-
-    private func openEditEventForm(_ id: String) {
-        guard let target = uiState.events.first(where: { $0.id == id }) else {
-            uiState.infoMessage = "수정할 이벤트를 찾지 못했습니다."
-            return
-        }
-
-        uiState.selectedTab = .event
-        uiState.isFormSheetVisible = true
-        uiState.isSubmittingForm = false
-        uiState.formEditingId = target.id
-        uiState.formTitle = target.title
-        uiState.formContent = target.content
-        uiState.formImageUrl = target.imageUrl
-        uiState.formPinned = false
-        uiState.formReservedAt = target.period
-        uiState.infoMessage = nil
     }
 
     private func submitForm() {
@@ -351,8 +349,11 @@ final class NoticeEventViewModel: ObservableObject {
     }
 
     private func observeNoticeManagementEvent() {
-        watchHandles[.noticeManagementEvent]?.cancel()
-        watchHandles[.noticeManagementEvent] = observeNoticeManagementEventUseCase.watch { [weak self] event in
+        tasks[.noticeManagementEvent]?.cancel()
+        tasks[.noticeManagementEvent] = Task {
+            
+        }
+        /*tasks[.noticeManagementEvent] = observeNoticeManagementEventUseCase.watch { [weak self] event in
             guard let self else { return }
 
             Task { @MainActor in
@@ -382,7 +383,7 @@ final class NoticeEventViewModel: ObservableObject {
                     }
                 }
             }
-        }
+        }*/
     }
 
     func onAction(_ action: NoticeEventAction) {
@@ -487,7 +488,7 @@ final class NoticeEventViewModel: ObservableObject {
         updateCafeEventUseCase: UpdateCafeEventUseCase = KoinInitializerKt.resolveUpdateCafeEventUseCase(),
         deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase = KoinInitializerKt.resolveDeleteCafeNoticeUseCase(),
         deleteCafeEventUseCase: DeleteCafeEventUseCase = KoinInitializerKt.resolveDeleteCafeEventUseCase(),
-        observeNoticeManagementEventUseCase: ObserveNoticeManagementEventUseCase = KoinInitializerKt.resolveObserveNoticeManagementEventUseCase()
+        noticeManagementEventPublisher: NoticeManagementEventPublisher = KoinInitializerKt.resolveNoticeManagementEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
@@ -498,15 +499,13 @@ final class NoticeEventViewModel: ObservableObject {
         self.updateCafeEventUseCase = updateCafeEventUseCase
         self.deleteCafeNoticeUseCase = deleteCafeNoticeUseCase
         self.deleteCafeEventUseCase = deleteCafeEventUseCase
-        self.observeNoticeManagementEventUseCase = observeNoticeManagementEventUseCase
+        self.noticeManagementEventPublisher = noticeManagementEventPublisher
 
         observeNoticeManagementEvent()
         loadNoticePage(cursor: nil, append: false)
     }
 
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
@@ -516,9 +515,6 @@ final class NoticeEventViewModel: ObservableObject {
         case eventPage
         case submit
         case delete
-    }
-
-    private enum WatchKey {
         case noticeManagementEvent
     }
 }

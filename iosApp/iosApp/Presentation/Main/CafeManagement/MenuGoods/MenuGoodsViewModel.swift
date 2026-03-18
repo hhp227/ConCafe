@@ -17,15 +17,13 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     @Published private(set) var uiState = MenuGoodsUiState()
 
     let event = PassthroughSubject<MenuGoodsEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadMenuGoods() {
         tasks[.load]?.cancel()
@@ -53,8 +51,11 @@ final class MenuGoodsViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.detailEvent]?.cancel()
-        watchHandles[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
+        tasks[.detailEvent]?.cancel()
+        tasks[.detailEvent] = Task {
+            
+        }
+        /*tasks[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
             guard let self else { return }
 
             Task { @MainActor in
@@ -91,7 +92,7 @@ final class MenuGoodsViewModel: ObservableObject {
                     break
                 }
             }
-        }
+        }*/
     }
 
     private func applyDetail(_ detail: CafeDetail) {
@@ -235,8 +236,7 @@ final class MenuGoodsViewModel: ObservableObject {
     private func confirmDeleteItem(_ itemId: String) {
         uiState.infoMessage = nil
         uiState.pendingDeleteItem = nil
-        tasks[.delete]?.cancel()
-        tasks[.delete] = Task { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
 
             do {
@@ -391,12 +391,12 @@ final class MenuGoodsViewModel: ObservableObject {
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeCafeDetailEvent()
         loadMenuGoods()
@@ -405,16 +405,10 @@ final class MenuGoodsViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
     }
 
     private enum TaskKey {
         case load
-        case delete
-    }
-
-    private enum WatchKey {
         case detailEvent
     }
 }
