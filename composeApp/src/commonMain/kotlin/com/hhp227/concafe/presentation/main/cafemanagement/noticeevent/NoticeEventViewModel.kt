@@ -348,7 +348,7 @@ class NoticeEventViewModel(
     private fun observeNoticeManagementEvent() {
         jobs[JobKey.OBSERVE_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
-            noticeManagementEventPublisher.observe().collectLatest { event ->
+            noticeManagementEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is NoticeManagementEvent.NoticeCreated -> if (event.cafeId == cafeId) loadNoticePage(cursor = null, append = false)
                     is NoticeManagementEvent.NoticeUpdated -> if (event.cafeId == cafeId) patchNotice(event.notice)

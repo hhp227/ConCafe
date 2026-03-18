@@ -2,11 +2,19 @@ package com.hhp227.concafe.domain.event.publisher
 
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
-interface CafeDetailEventPublisher {
-    fun publish(event: CafeDetailEvent)
+class CafeDetailEventPublisher {
+    private val _events = MutableSharedFlow<CafeDetailEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
 
     @NativeCoroutines
-    fun observe(): Flow<CafeDetailEvent>
+    val events = _events.asSharedFlow()
+
+    fun publish(event: CafeDetailEvent) {
+        _events.tryEmit(event)
+    }
 }

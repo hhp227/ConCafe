@@ -205,7 +205,7 @@ class CheckInViewModel(
     private fun observeCafeDetailEvent() {
         observeCafeDetailEventJob?.cancel()
         observeCafeDetailEventJob = viewModelScope.launch {
-            cafeDetailEventPublisher.observe().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafe(event.cafe)
                 }
@@ -216,7 +216,7 @@ class CheckInViewModel(
     private fun observeCastEvent() {
         observeCastEventJob?.cancel()
         observeCastEventJob = viewModelScope.launch {
-            castEventPublisher.observe().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCast(event.cast)

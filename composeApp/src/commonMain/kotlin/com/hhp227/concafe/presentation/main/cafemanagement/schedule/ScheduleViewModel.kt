@@ -47,7 +47,7 @@ class ScheduleViewModel(
     private fun bindCastEvent(castId: String) {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            castEventPublisher.observe().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadSchedule()
@@ -75,7 +75,7 @@ class ScheduleViewModel(
     private fun bindScheduleManagementEvent(castId: String) {
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
-            scheduleManagementEventPublisher.observe().collectLatest { event ->
+            scheduleManagementEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
                         if (_uiState.value.isSaving) {

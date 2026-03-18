@@ -40,6 +40,9 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        iosMain.dependencies {
+            implementation(libs.kmp.nativecoroutines.core)
+        }
     }
     targets.all {
         compilations.all {

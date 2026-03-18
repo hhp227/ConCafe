@@ -44,7 +44,7 @@ class MenuGoodsViewModel(
     private fun observeCafeDetailEvent() {
         jobs[JobKey.OBSERVE_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.observe().collect { event ->
+            cafeDetailEventPublisher.events.collect { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()

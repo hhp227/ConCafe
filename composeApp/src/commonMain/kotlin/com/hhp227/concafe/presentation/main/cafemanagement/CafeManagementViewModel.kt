@@ -135,7 +135,7 @@ class CafeManagementViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.observe().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafeInfo(event.cafe)
                 }
@@ -146,7 +146,7 @@ class CafeManagementViewModel(
     private fun observeCafeRegistrationClaimEvent() {
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
-            cafeRegistrationClaimEventPublisher.observe().collectLatest { claimEvent ->
+            cafeRegistrationClaimEventPublisher.events.collectLatest { claimEvent ->
                 val userId = currentUserId ?: return@collectLatest
                 val shouldRefresh = when (claimEvent) {
                     is CafeRegistrationClaimEvent.Created -> claimEvent.requesterUserId == userId

@@ -362,7 +362,7 @@ class CafeDashboardViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.observe().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         patchCafeInfo(event.cafe)
@@ -381,7 +381,7 @@ class CafeDashboardViewModel(
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
-            bannerEventPublisher.observe().collectLatest { event ->
+            bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
                         loadCafeDashboard()
@@ -406,7 +406,7 @@ class CafeDashboardViewModel(
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            castEventPublisher.observe().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cafeId == cafeId) {
                         refreshCastPreviews()
@@ -442,7 +442,7 @@ class CafeDashboardViewModel(
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
-            castClaimEventPublisher.observe().collectLatest { event ->
+            castClaimEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastClaimDomainEvent.Created -> if (event.claim.cafeId == cafeId) {
                         refreshClaimData()

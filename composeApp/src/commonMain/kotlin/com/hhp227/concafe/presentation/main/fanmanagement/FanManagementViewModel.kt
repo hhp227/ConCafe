@@ -47,7 +47,7 @@ class FanManagementViewModel(
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
-            castClaimEventPublisher.observe().collectLatest { event ->
+            castClaimEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastClaimDomainEvent.Created,
                     is CastClaimDomainEvent.Updated -> loadFanManagement()
@@ -59,7 +59,7 @@ class FanManagementViewModel(
     private fun bindCastEvent(castId: String) {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            castEventPublisher.observe().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadFanManagement()
@@ -92,7 +92,7 @@ class FanManagementViewModel(
     private fun bindScheduleManagementEvent(castId: String) {
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
-            scheduleManagementEventPublisher.observe().collectLatest { event ->
+            scheduleManagementEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
                         loadFanManagement()

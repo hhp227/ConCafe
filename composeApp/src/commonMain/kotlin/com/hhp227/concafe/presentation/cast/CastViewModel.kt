@@ -34,7 +34,7 @@ class CastViewModel(
 
     private fun observeCastEvent() {
         viewModelScope.launch {
-            castEventPublisher.observe().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadCastDetail()
@@ -54,7 +54,7 @@ class CastViewModel(
 
     private fun observeReviewEvent() {
         viewModelScope.launch {
-            reviewEventPublisher.observe().collectLatest { event ->
+            reviewEventPublisher.events.collectLatest { event ->
                 val currentCafeId = _uiState.value.detail?.cafe?.id ?: return@collectLatest
                 when (event) {
                     is ReviewEvent.Created -> if (event.cafeId == currentCafeId) {

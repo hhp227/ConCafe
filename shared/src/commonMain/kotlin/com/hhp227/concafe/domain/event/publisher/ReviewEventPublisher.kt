@@ -2,11 +2,19 @@ package com.hhp227.concafe.domain.event.publisher
 
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
-interface ReviewEventPublisher {
-    fun publish(event: ReviewEvent)
+class ReviewEventPublisher {
+    private val _events = MutableSharedFlow<ReviewEvent>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
 
     @NativeCoroutines
-    fun observe(): Flow<ReviewEvent>
+    val events = _events.asSharedFlow()
+
+    fun publish(event: ReviewEvent) {
+        _events.tryEmit(event)
+    }
 }

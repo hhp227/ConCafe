@@ -49,7 +49,7 @@ class CafeViewModel(
     private fun observeCafeDetailEvent() {
         jobs[JobKey.OBSERVE_DETAIL_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_DETAIL_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.observe().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> loadCafeDetail()
                     is CafeDetailEvent.GoodsCreated,
@@ -66,7 +66,7 @@ class CafeViewModel(
     private fun observeReviewEvent() {
         jobs[JobKey.OBSERVE_REVIEW_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_REVIEW_EVENT] = viewModelScope.launch {
-            reviewEventPublisher.observe().collect { event ->
+            reviewEventPublisher.events.collect { event ->
                 when (event) {
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
