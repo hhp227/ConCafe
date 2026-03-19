@@ -17,6 +17,8 @@
 - 적용 화면: 배너 편집, 캐스트 편집, 카페 정보 편집, 메뉴/굿즈 편집, 공지/이벤트(이벤트 이미지), 리뷰 작성.
 - iOS 공통 유틸(`Core/Util/ImageCompressionUtils.swift`)로 임시파일 저장 시 동일 압축 정책을 적용했다.
 - `StorageRepository` + mock 업로드 경로를 통해 이미지 바이트 업로드까지 shared에서 처리하도록 연결했다.
+- 세션 복원(`RestoreSessionUseCase`)을 Main 진입 초기 로직에 연결해 앱 재실행 시 자동 로그인 상태를 복구하도록 반영했다.
+- Compose/iOS MainViewModel 모두 `observeCurrentUser` 스트림 + 초기 `restoreSession()` 호출 조합으로 동일한 세션 복원 흐름을 사용한다.
 
 ## A. 사전 확정 작업 (P0)
 
