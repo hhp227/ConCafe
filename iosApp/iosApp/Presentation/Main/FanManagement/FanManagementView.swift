@@ -241,7 +241,7 @@ private struct FanManagementContentView: View {
 
     private var recentFollowersSection: some View {
         let followers = Array((uiState.fanManagementData?.followers ?? []).prefix(10))
-        sectionContainer(title: "최근 팔로워") {
+        return sectionContainer(title: "최근 팔로워") {
             if followers.isEmpty {
                 emptySectionCard(message: "최근 팔로워 데이터가 아직 없습니다.")
             } else {

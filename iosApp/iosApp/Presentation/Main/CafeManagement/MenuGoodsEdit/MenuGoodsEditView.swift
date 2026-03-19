@@ -149,7 +149,7 @@ struct MenuGoodsEditView: View {
 
     private var categorySection: some View {
         let categoryIds = ["drink", "food", "dessert", "goods"]
-        VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 10) {
             Text("카테고리")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: "665A63"))

@@ -103,7 +103,7 @@ private struct NoticeEventContentView: View {
                             emptyStateCard(message: "등록된 이벤트가 없습니다.")
                                 .padding(.horizontal, 16)
                         } else if uiState.selectedTab == .notice {
-                            ForEach(uiState.notices) { item in
+                            ForEach(uiState.notices, id: \.id) { item in
                                 noticeCard(item)
                                     .padding(.horizontal, 16)
                                     .onAppear {
@@ -113,7 +113,7 @@ private struct NoticeEventContentView: View {
                                     }
                             }
                         } else {
-                            ForEach(uiState.events) { item in
+                            ForEach(uiState.events, id: \.id) { item in
                                 eventCard(item)
                                     .padding(.horizontal, 16)
                                     .onAppear {
@@ -168,6 +168,8 @@ private struct NoticeEventContentView: View {
                         statusChip(item.statusLabel, container: Color(hex: "F2F0F3"), content: Color(hex: "7A707A"))
                     case .ended:
                         statusChip(item.statusLabel, container: Color(hex: "F3E8E8"), content: Color(hex: "8C5A5A"))
+                    default:
+                        EmptyView()
                     }
                 }
                 Spacer()

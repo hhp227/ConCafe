@@ -368,7 +368,7 @@ private struct ScheduleContentView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(uiState.weekDays) { day in
+                    ForEach(uiState.weekDays, id: \.id) { day in
                         let isSelected = day.id == uiState.selectedDayId
                         Button {
                             onAction(.selectDay(id: day.id))
@@ -422,7 +422,7 @@ private struct ScheduleContentView: View {
 
     private var scheduleListSection: some View {
         VStack(spacing: 12) {
-            ForEach(uiState.schedules) { schedule in
+            ForEach(uiState.schedules, id: \.id) { schedule in
                 HStack(spacing: 14) {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(schedule.isWorking ? Color(hex: "FFD1DC").opacity(0.14) : Color(hex: "F2EDF0"))

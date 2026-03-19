@@ -317,7 +317,7 @@ private struct MenuGoodsContentView: View {
     private func menuItemCard(item: CafeMenu) -> some View {
         let isAvailable = uiState.isMenuAvailable(item)
         let categoryLabel = uiState.menuCategoryLabel(item)
-        HStack(alignment: .top, spacing: 14) {
+        return HStack(alignment: .top, spacing: 14) {
             itemThumbnail(
                 name: item.name,
                 isAvailable: isAvailable,
@@ -393,7 +393,7 @@ private struct MenuGoodsContentView: View {
     private func goodsItemCard(item: Goods) -> some View {
         let isAvailable = uiState.isGoodsAvailable(item)
         let categoryLabel = uiState.goodsCategoryLabel(item)
-        HStack(alignment: .top, spacing: 14) {
+        return HStack(alignment: .top, spacing: 14) {
             itemThumbnail(
                 name: item.name,
                 isAvailable: isAvailable,
