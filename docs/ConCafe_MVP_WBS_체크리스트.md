@@ -37,7 +37,7 @@
 - [x] `conceptType` enum 확정: `MAID | BUTLER | IDOL`
 - [x] `events` 저장 위치 확정: `cafes/{cafeId}/events/{eventId}`
 - [x] `favorites`/`visitHistory` 저장 방식 확정: `users/{userId}/favorites`, `users/{userId}/visits` 서브컬렉션
-- [ ] 참고 문서 정합성 반영: `events` 컬렉션 위치/집계 필드(`stats.*`) 표기 통일
+- [x] 참고 문서 정합성 반영: `events` 컬렉션 위치/집계 필드(`stats.*`) 표기 통일
 - [ ] 랭킹 점수식 확정 (팔로우/리뷰 언급/인증 방문 가중치)
 - [ ] 홈 섹션 우선순위 데이터 기준 확정 (인기/근처/생일/최신 공지)
 - [x] 리뷰/프로필 이미지 업로드 용량·해상도 정책 확정
@@ -61,8 +61,8 @@
 - [ ] 딥링크/외부 진입 시 로그인 가드 + pendingRoute 복귀 규칙 통일
 
 ## 3. 데이터/백엔드 WBS
-- [ ] Firestore 컬렉션 생성 기준 문서 확정
-- [ ] 핵심 컬렉션 책임 분리 확정: 루트 컬렉션 vs `users/*`, `cafes/*` 서브컬렉션
+- [x] Firestore 컬렉션 생성 기준 문서 확정
+- [x] 핵심 컬렉션 책임 분리 확정: 루트 컬렉션 vs `users/*`, `cafes/*` 서브컬렉션
 - [ ] `users.stats`, `cafes.stats` 집계 필드 소유자/갱신 주체 확정
 - [ ] 핵심 인덱스 생성
 - [ ] 인증/권한 룰 초안 작성
