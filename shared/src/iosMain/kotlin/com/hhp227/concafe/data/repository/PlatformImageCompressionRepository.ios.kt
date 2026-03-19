@@ -1,6 +1,7 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.domain.repository.CompressedImageData
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.usePinned
@@ -25,6 +26,7 @@ private fun resolveLocalPath(path: String): String {
     return path
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {
     val size = length.toInt()
     if (size == 0) return ByteArray(0)
