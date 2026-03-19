@@ -82,7 +82,9 @@ class FakeAuthRepository(
     }
 
     override suspend fun restoreSession(): User? {
-        return dataSource.users.firstOrNull { it.id == dataSource.currentUserId }
+        val restored = dataSource.users.firstOrNull { it.id == dataSource.currentUserId }
+        currentUserFlow.value = restored
+        return restored
     }
 
     override suspend fun getCurrentUser(): User? {

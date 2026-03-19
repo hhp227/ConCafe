@@ -13,10 +13,12 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
 
 class MainViewModel(
     private val getMainNavigationUseCase: GetMainNavigationUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val restoreSessionUseCase: RestoreSessionUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MainUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -64,6 +66,15 @@ class MainViewModel(
         }
     }
 
+    private fun restoreSession() {
+        viewModelScope.launch {
+            when (restoreSessionUseCase.invoke()) {
+                is AppResult.Success -> refreshNavigation(_uiState.value.selectedTab)
+                is AppResult.Failure -> refreshNavigation(_uiState.value.selectedTab)
+            }
+        }
+    }
+
     fun onAction(action: MainAction) {
         when (action) {
             is MainAction.Enter -> refreshNavigation(action.preferredRoute)
@@ -74,6 +85,6 @@ class MainViewModel(
 
     init {
         observeSession()
-        onAction(MainAction.Enter())
+        restoreSession()
     }
 }

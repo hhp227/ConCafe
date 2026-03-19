@@ -91,6 +91,7 @@ val useCaseModule = module {
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
+    factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { SignUpUseCase(get()) }
