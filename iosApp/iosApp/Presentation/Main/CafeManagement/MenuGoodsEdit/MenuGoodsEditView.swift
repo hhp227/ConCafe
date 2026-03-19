@@ -148,6 +148,7 @@ struct MenuGoodsEditView: View {
     }
 
     private var categorySection: some View {
+        let categoryIds = ["drink", "food", "dessert", "goods"]
         VStack(alignment: .leading, spacing: 10) {
             Text("카테고리")
                 .font(.subheadline.weight(.medium))
@@ -159,22 +160,22 @@ struct MenuGoodsEditView: View {
                 ],
                 spacing: 12
             ) {
-                ForEach(MenuGoodsEditUiState.ItemCategory.allCases) { category in
-                    categoryButton(category)
+                ForEach(categoryIds, id: \.self) { categoryId in
+                    categoryButton(categoryId: categoryId)
                 }
             }
         }
     }
 
-    private func categoryButton(_ category: MenuGoodsEditUiState.ItemCategory) -> some View {
-        let isSelected = viewModel.uiState.selectedCategory == category
+    private func categoryButton(categoryId: String) -> some View {
+        let isSelected = viewModel.uiState.selectedCategoryId == categoryId
         return Button {
-            viewModel.onAction(.selectCategory(category))
+            viewModel.onAction(.selectCategory(categoryId))
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: categorySymbolName(category))
+                Image(systemName: categorySymbolName(categoryId: categoryId))
                     .font(.subheadline.weight(.semibold))
-                Text(category.label)
+                Text(categoryLabel(categoryId: categoryId))
                     .font(.subheadline.weight(.medium))
             }
             .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
@@ -193,16 +194,31 @@ struct MenuGoodsEditView: View {
         .buttonStyle(.plain)
     }
 
-    private func categorySymbolName(_ category: MenuGoodsEditUiState.ItemCategory) -> String {
-        switch category {
-        case .drink:
+    private func categoryLabel(categoryId: String) -> String {
+        switch categoryId {
+        case "food":
+            return "음식"
+        case "dessert":
+            return "디저트"
+        case "goods":
+            return "굿즈"
+        default:
+            return "음료"
+        }
+    }
+
+    private func categorySymbolName(categoryId: String) -> String {
+        switch categoryId {
+        case "drink":
             return "cup.and.saucer.fill"
-        case .food:
+        case "food":
             return "fork.knife"
-        case .dessert:
+        case "dessert":
             return "birthday.cake.fill"
-        case .goods:
+        case "goods":
             return "shippingbox.fill"
+        default:
+            return "cup.and.saucer.fill"
         }
     }
 

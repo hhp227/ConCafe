@@ -79,7 +79,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
             itemId: itemId,
             name: uiState.itemName,
             price: price,
-            category: uiState.selectedCategory.categoryId,
+            category: uiState.selectedCategoryId,
             description: uiState.description,
             isInStock: uiState.isInStock,
             imageUrl: uiState.imageUrl
@@ -117,7 +117,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = menu.name
         uiState.price = String(menu.price)
-        uiState.selectedCategory = MenuGoodsEditUiState.ItemCategory(menuCategory: menu.category)
+        uiState.selectedCategoryId = normalizeCategoryId(menu.category)
         uiState.description = menu.desc
         uiState.isInStock = menu.isAvailable
         uiState.imageUrl = menu.image
@@ -131,7 +131,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = goods.name
         uiState.price = String(goods.price)
-        uiState.selectedCategory = .goods
+        uiState.selectedCategoryId = "goods"
         uiState.description = "카페 굿즈 판매 항목"
         uiState.isInStock = goods.stock > 0
         uiState.imageUrl = goods.image
@@ -156,7 +156,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         case .changePrice(let value):
             uiState.price = String(value.filter(\.isNumber))
         case .selectCategory(let category):
-            uiState.selectedCategory = category
+            uiState.selectedCategoryId = normalizeCategoryId(category)
         case .changeDescription(let value):
             uiState.description = value
         case .toggleStock(let isInStock):
@@ -181,19 +181,14 @@ final class MenuGoodsEditViewModel: ObservableObject {
 
         loadInitialValue()
     }
-}
 
-private extension MenuGoodsEditUiState.ItemCategory {
-    init(menuCategory: String) {
-        switch menuCategory.lowercased() {
-        case "food":
-            self = .food
-        case "dessert":
-            self = .dessert
-        case "goods":
-            self = .goods
+    private func normalizeCategoryId(_ categoryId: String) -> String {
+        let normalized = categoryId.lowercased()
+        switch normalized {
+        case "drink", "food", "dessert", "goods":
+            return normalized
         default:
-            self = .drink
+            return "drink"
         }
     }
 }

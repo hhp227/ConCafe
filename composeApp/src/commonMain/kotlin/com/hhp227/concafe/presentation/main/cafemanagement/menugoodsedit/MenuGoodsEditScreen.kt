@@ -179,7 +179,7 @@ private fun MenuGoodsEditContentScreen(
                             label = "카테고리"
                         ) {
                             CategoryGrid(
-                                selectedCategory = uiState.selectedCategory,
+                                selectedCategoryId = uiState.selectedCategoryId,
                                 onSelect = { onAction(MenuGoodsEditAction.SelectCategory(it)) }
                             )
                         }
@@ -333,23 +333,24 @@ private fun PriceField(
 
 @Composable
 private fun CategoryGrid(
-    selectedCategory: MenuGoodsEditUiState.ItemCategory,
-    onSelect: (MenuGoodsEditUiState.ItemCategory) -> Unit
+    selectedCategoryId: String,
+    onSelect: (String) -> Unit
 ) {
+    val categoryIds = listOf("drink", "food", "dessert", "goods")
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        val categories = MenuGoodsEditUiState.ItemCategory.entries.chunked(2)
+        val categories = categoryIds.chunked(2)
         categories.forEach { rowCategories ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                rowCategories.forEach { category ->
-                    val isSelected = category == selectedCategory
+                rowCategories.forEach { categoryId ->
+                    val isSelected = categoryId == selectedCategoryId
                     CategoryButton(
                         modifier = Modifier.weight(1f),
-                        category = category,
+                        categoryId = categoryId,
                         isSelected = isSelected,
-                        onClick = { onSelect(category) }
+                        onClick = { onSelect(categoryId) }
                     )
                 }
                 if (rowCategories.size == 1) {
@@ -369,7 +370,7 @@ private fun SpacerCell(modifier: Modifier = Modifier) {
 @Composable
 private fun CategoryButton(
     modifier: Modifier = Modifier,
-    category: MenuGoodsEditUiState.ItemCategory,
+    categoryId: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -391,17 +392,35 @@ private fun CategoryButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = category.icon(),
+                imageVector = categoryIcon(categoryId),
                 contentDescription = null,
                 tint = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169)
             )
             Text(
-                text = category.label,
+                text = categoryLabel(categoryId),
                 modifier = Modifier.padding(start = 8.dp),
                 color = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169),
                 fontWeight = FontWeight.Medium
             )
         }
+    }
+}
+
+private fun categoryLabel(categoryId: String): String {
+    return when (categoryId) {
+        "food" -> "Food"
+        "dessert" -> "Dessert"
+        "goods" -> "Goods"
+        else -> "Drink"
+    }
+}
+
+private fun categoryIcon(categoryId: String): ImageVector {
+    return when (categoryId) {
+        "food" -> Icons.Default.Restaurant
+        "dessert" -> Icons.Default.Icecream
+        "goods" -> Icons.Default.FeaturedPlayList
+        else -> Icons.Default.LocalCafe
     }
 }
 
@@ -529,11 +548,3 @@ private fun LoadingCard() {
     }
 }
 
-private fun MenuGoodsEditUiState.ItemCategory.icon(): ImageVector {
-    return when (this) {
-        MenuGoodsEditUiState.ItemCategory.DRINK -> Icons.Default.LocalCafe
-        MenuGoodsEditUiState.ItemCategory.FOOD -> Icons.Default.Restaurant
-        MenuGoodsEditUiState.ItemCategory.DESSERT -> Icons.Default.Icecream
-        MenuGoodsEditUiState.ItemCategory.GOODS -> Icons.Default.FeaturedPlayList
-    }
-}

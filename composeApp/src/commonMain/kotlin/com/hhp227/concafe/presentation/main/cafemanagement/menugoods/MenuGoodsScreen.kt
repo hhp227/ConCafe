@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -65,13 +67,13 @@ fun MenuGoodsScreen(
         uiState = uiState,
         onAction = viewModel::onAction
     )
-    uiState.pendingDeleteItem?.let { item ->
+    uiState.pendingDeleteItemId?.let { itemId ->
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) },
             title = { Text("항목 삭제") },
             text = { Text("항목을 삭제 하시겠습니까?") },
             confirmButton = {
-                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(item.id)) }) {
+                TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(itemId)) }) {
                     Text("삭제", color = Color(0xFFD96B7A))
                 }
             },
@@ -184,19 +186,43 @@ private fun MenuGoodsContentScreen(
                     item {
                         LoadingCard()
                     }
-                } else if (uiState.filteredVisibleItems.isEmpty()) {
+                } else if (
+                    uiState.selectedCollection == MenuGoodsUiState.CollectionTab.MENU &&
+                    uiState.filteredMenuItems.isEmpty()
+                ) {
+                    item {
+                        EmptyStateCard(isSearchMode = uiState.searchQuery.isNotBlank())
+                    }
+                } else if (
+                    uiState.selectedCollection == MenuGoodsUiState.CollectionTab.GOODS &&
+                    uiState.filteredGoodsItems.isEmpty()
+                ) {
                     item {
                         EmptyStateCard(isSearchMode = uiState.searchQuery.isNotBlank())
                     }
                 } else {
-                    items(uiState.filteredVisibleItems, key = { it.id }) { item ->
-                        ManageItemCard(
-                            item = item,
-                            isMenu = uiState.selectedCollection == MenuGoodsUiState.CollectionTab.MENU,
-                            onEdit = { onAction(MenuGoodsAction.ClickEditItem(item.id)) },
-                            onDelete = { onAction(MenuGoodsAction.ClickDeleteItem(item.id)) },
-                            onToggleAvailability = { onAction(MenuGoodsAction.ToggleItemAvailability(item.id)) }
-                        )
+                    if (uiState.selectedCollection == MenuGoodsUiState.CollectionTab.MENU) {
+                        items(uiState.filteredMenuItems, key = { it.id }) { item ->
+                            MenuItemCard(
+                                item = item,
+                                isAvailable = uiState.isMenuAvailable(item),
+                                categoryLabel = uiState.menuCategoryLabel(item),
+                                onEdit = { onAction(MenuGoodsAction.ClickEditItem(item.id)) },
+                                onDelete = { onAction(MenuGoodsAction.ClickDeleteItem(item.id)) },
+                                onToggleAvailability = { onAction(MenuGoodsAction.ToggleItemAvailability(item.id)) }
+                            )
+                        }
+                    } else {
+                        items(uiState.filteredGoodsItems, key = { it.id }) { item ->
+                            GoodsItemCard(
+                                item = item,
+                                isAvailable = uiState.isGoodsAvailable(item),
+                                categoryLabel = uiState.goodsCategoryLabel(item),
+                                onEdit = { onAction(MenuGoodsAction.ClickEditItem(item.id)) },
+                                onDelete = { onAction(MenuGoodsAction.ClickDeleteItem(item.id)) },
+                                onToggleAvailability = { onAction(MenuGoodsAction.ToggleItemAvailability(item.id)) }
+                            )
+                        }
                     }
                 }
             }
@@ -480,9 +506,10 @@ private fun EmptyStateCard(
 }
 
 @Composable
-private fun ManageItemCard(
-    item: MenuGoodsUiState.ManageItem,
-    isMenu: Boolean,
+private fun MenuItemCard(
+    item: CafeMenu,
+    isAvailable: Boolean,
+    categoryLabel: String,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onToggleAvailability: () -> Unit
@@ -498,8 +525,8 @@ private fun ManageItemCard(
         ) {
             ItemThumbnail(
                 label = item.name,
-                isMenu = isMenu,
-                isAvailable = item.isAvailable
+                isMenu = true,
+                isAvailable = isAvailable
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -523,7 +550,7 @@ private fun ManageItemCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = item.priceText,
+                            text = formatPrice(item.price),
                             color = Color(0xFFEF6797),
                             fontWeight = FontWeight.Bold
                         )
@@ -542,7 +569,7 @@ private fun ManageItemCard(
                     color = Color(0xFFFCE7EF)
                 ) {
                     Text(
-                        text = item.badgeLabel,
+                        text = categoryLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFFB64A79),
@@ -550,20 +577,12 @@ private fun ManageItemCard(
                     )
                 }
                 Text(
-                    text = item.description,
+                    text = item.desc,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF7B6B75),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                item.inventoryLabel?.let { stockLabel ->
-                    Text(
-                        text = stockLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF8B7A84),
-                        fontWeight = FontWeight.Medium
-                    )
-                }
                 Divider(color = Color(0xFFF4E7EE))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -571,13 +590,119 @@ private fun ManageItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = item.availabilityLabel,
+                        text = if (isAvailable) "판매 중" else "품절",
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (item.isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
+                        color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
                         fontWeight = FontWeight.SemiBold
                     )
                     Switch(
-                        checked = item.isAvailable,
+                        checked = isAvailable,
+                        onCheckedChange = { onToggleAvailability() }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoodsItemCard(
+    item: Goods,
+    isAvailable: Boolean,
+    categoryLabel: String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onToggleAvailability: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFF0E2E9))
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            ItemThumbnail(
+                label = item.name,
+                isMenu = false,
+                isAvailable = isAvailable
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2B2330),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = formatPrice(item.price),
+                            color = Color(0xFFEF6797),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "편집", tint = Color(0xFF7A6671))
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "삭제", tint = Color(0xFFD96B7A))
+                        }
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(999.dp),
+                    color = Color(0xFFFCE7EF)
+                ) {
+                    Text(
+                        text = categoryLabel,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFFB64A79),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = "카페 굿즈 판매 항목",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF7B6B75),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "재고 ${item.stock}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF8B7A84),
+                    fontWeight = FontWeight.Medium
+                )
+                Divider(color = Color(0xFFF4E7EE))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isAvailable) "판매 중" else "품절",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Switch(
+                        checked = isAvailable,
                         onCheckedChange = { onToggleAvailability() }
                     )
                 }
@@ -633,5 +758,12 @@ private fun ItemThumbnail(
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+private fun formatPrice(price: Int): String {
+    return buildString {
+        append("KRW ")
+        append(price.toString().reversed().chunked(3).joinToString(",").reversed())
     }
 }

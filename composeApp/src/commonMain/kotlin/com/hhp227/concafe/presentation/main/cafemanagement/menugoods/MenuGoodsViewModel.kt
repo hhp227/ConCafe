@@ -73,27 +73,24 @@ class MenuGoodsViewModel(
     }
 
     private fun applyDetail(detail: CafeDetail) {
-        val menuItems = detail.menus.mapIndexed { index, menu ->
-            menu.toManageItem(index)
-        }
-        val goodsItems = detail.goods.mapIndexed { index, goods ->
-            goods.toManageItem(index)
-        }
         _uiState.update {
             it.copy(
                 cafeName = detail.cafe.name,
                 isLoading = false,
-                menuCategories = buildMenuCategories(menuItems),
-                goodsCategories = buildGoodsCategories(goodsItems),
-                menuItems = menuItems,
-                goodsItems = goodsItems
+                menuCategories = buildMenuCategories(detail.menus),
+                goodsCategories = buildGoodsCategories(detail.goods),
+                menuItems = detail.menus,
+                goodsItems = detail.goods,
+                menuAvailabilityOverrides = emptyMap(),
+                goodsAvailabilityOverrides = emptyMap(),
+                infoMessage = null
             )
         }
     }
 
     private fun upsertLocalMenu(menu: CafeMenu) {
         _uiState.update { state ->
-            val nextMenuItems = state.menuItems.filterNot { it.id == menu.id } + menu.toManageItem(state.menuItems.size)
+            val nextMenuItems = state.menuItems.filterNot { it.id == menu.id } + menu
             val nextGoodsItems = state.goodsItems.filterNot { it.id == menu.id }
             state.copy(
                 isLoading = false,
@@ -101,7 +98,9 @@ class MenuGoodsViewModel(
                 goodsCategories = buildGoodsCategories(nextGoodsItems),
                 menuItems = nextMenuItems,
                 goodsItems = nextGoodsItems,
-                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == menu.id }
+                menuAvailabilityOverrides = state.menuAvailabilityOverrides - menu.id,
+                goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - menu.id,
+                pendingDeleteItemId = state.pendingDeleteItemId.takeUnless { it == menu.id }
             )
         }
     }
@@ -109,14 +108,16 @@ class MenuGoodsViewModel(
     private fun upsertLocalGoods(goods: Goods) {
         _uiState.update { state ->
             val nextMenuItems = state.menuItems.filterNot { it.id == goods.id }
-            val nextGoodsItems = state.goodsItems.filterNot { it.id == goods.id } + goods.toManageItem(state.goodsItems.size)
+            val nextGoodsItems = state.goodsItems.filterNot { it.id == goods.id } + goods
             state.copy(
                 isLoading = false,
                 menuCategories = buildMenuCategories(nextMenuItems),
                 goodsCategories = buildGoodsCategories(nextGoodsItems),
                 menuItems = nextMenuItems,
                 goodsItems = nextGoodsItems,
-                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == goods.id }
+                menuAvailabilityOverrides = state.menuAvailabilityOverrides - goods.id,
+                goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - goods.id,
+                pendingDeleteItemId = state.pendingDeleteItemId.takeUnless { it == goods.id }
             )
         }
     }
@@ -130,7 +131,9 @@ class MenuGoodsViewModel(
                 goodsCategories = buildGoodsCategories(state.goodsItems),
                 menuItems = nextMenuItems,
                 goodsItems = state.goodsItems,
-                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == itemId }
+                menuAvailabilityOverrides = state.menuAvailabilityOverrides - itemId,
+                goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - itemId,
+                pendingDeleteItemId = state.pendingDeleteItemId.takeUnless { it == itemId }
             )
         }
     }
@@ -144,7 +147,9 @@ class MenuGoodsViewModel(
                 goodsCategories = buildGoodsCategories(nextGoodsItems),
                 menuItems = state.menuItems,
                 goodsItems = nextGoodsItems,
-                pendingDeleteItem = state.pendingDeleteItem?.takeUnless { it.id == itemId }
+                menuAvailabilityOverrides = state.menuAvailabilityOverrides - itemId,
+                goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - itemId,
+                pendingDeleteItemId = state.pendingDeleteItemId.takeUnless { it == itemId }
             )
         }
     }
@@ -184,24 +189,27 @@ class MenuGoodsViewModel(
     private fun toggleItemAvailability(itemId: String) {
         _uiState.update { state ->
             when (state.selectedCollection) {
-                MenuGoodsUiState.CollectionTab.MENU -> state.copy(
-                    menuItems = state.menuItems.toggleAvailability(itemId)
-                )
-                MenuGoodsUiState.CollectionTab.GOODS -> state.copy(
-                    goodsItems = state.goodsItems.toggleAvailability(itemId)
-                )
+                MenuGoodsUiState.CollectionTab.MENU -> {
+                    val target = state.menuItems.firstOrNull { it.id == itemId } ?: return@update state
+                    val nextAvailability = !state.isMenuAvailable(target)
+                    state.copy(menuAvailabilityOverrides = state.menuAvailabilityOverrides + (itemId to nextAvailability))
+                }
+                MenuGoodsUiState.CollectionTab.GOODS -> {
+                    val target = state.goodsItems.firstOrNull { it.id == itemId } ?: return@update state
+                    val nextAvailability = !state.isGoodsAvailable(target)
+                    state.copy(goodsAvailabilityOverrides = state.goodsAvailabilityOverrides + (itemId to nextAvailability))
+                }
             }
         }
     }
 
     private fun clickDeleteItem(itemId: String) {
-        val targetItem = _uiState.value.visibleItems.firstOrNull { it.id == itemId } ?: return
-        _uiState.update { it.copy(pendingDeleteItem = targetItem) }
+        _uiState.update { it.copy(pendingDeleteItemId = itemId) }
     }
 
     private fun confirmDeleteItem(itemId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(infoMessage = null, pendingDeleteItem = null) }
+            _uiState.update { it.copy(infoMessage = null, pendingDeleteItemId = null) }
             when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = itemId)) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(infoMessage = "항목이 삭제되었습니다.") }
@@ -214,7 +222,7 @@ class MenuGoodsViewModel(
     }
 
     private fun cancelDeleteItem() {
-        _uiState.update { it.copy(pendingDeleteItem = null) }
+        _uiState.update { it.copy(pendingDeleteItemId = null) }
     }
 
     private fun dismissInfoMessage() {
@@ -234,7 +242,7 @@ class MenuGoodsViewModel(
     }
 
     private fun buildMenuCategories(
-        items: List<MenuGoodsUiState.ManageItem>
+        items: List<CafeMenu>
     ): List<MenuGoodsUiState.CategoryChip> {
         val preferredOrder = listOf(
             "food" to MenuGoodsUiState.CategoryChip("food", "Food", "food"),
@@ -243,96 +251,32 @@ class MenuGoodsViewModel(
         )
         return listOf(MenuGoodsUiState.CategoryChip(null, "All", "all")) +
             preferredOrder.mapNotNull { (id, chip) ->
-                chip.takeIf { category -> items.any { it.categoryId == id } }
+                chip.takeIf { items.any { menu -> menu.category.lowercase() == id } }
             }
     }
 
     private fun buildGoodsCategories(
-        items: List<MenuGoodsUiState.ManageItem>
+        items: List<Goods>
     ): List<MenuGoodsUiState.CategoryChip> {
         val dynamic = items
-            .mapNotNull { item ->
-                val categoryId = item.categoryId ?: return@mapNotNull null
+            .map { item ->
+                val categoryId = when {
+                    item.name.contains("포토", ignoreCase = true) -> "collectible"
+                    item.name.contains("의상", ignoreCase = true) -> "apparel"
+                    else -> "goods"
+                }
                 MenuGoodsUiState.CategoryChip(
                     id = categoryId,
-                    label = item.categoryLabel,
+                    label = when (categoryId) {
+                        "collectible" -> "Collectible"
+                        "apparel" -> "Apparel"
+                        else -> "Goods"
+                    },
                     iconKey = "goods"
                 )
             }
             .distinctBy { it.id }
         return listOf(MenuGoodsUiState.CategoryChip(null, "All", "all")) + dynamic
-    }
-
-    private fun List<MenuGoodsUiState.ManageItem>.toggleAvailability(
-        itemId: String
-    ): List<MenuGoodsUiState.ManageItem> {
-        return map { item ->
-            if (item.id != itemId) {
-                item
-            } else {
-                val nextAvailability = !item.isAvailable
-                item.copy(
-                    isAvailable = nextAvailability,
-                    availabilityLabel = if (nextAvailability) "판매 중" else "품절"
-                )
-            }
-        }
-    }
-
-    private fun CafeMenu.toManageItem(index: Int): MenuGoodsUiState.ManageItem {
-        val normalizedCategoryId = category.lowercase()
-        val categoryLabel = when (normalizedCategoryId) {
-            "food" -> "Food"
-            "drink" -> "Drinks"
-            "dessert" -> "Dessert"
-            else -> category.replaceFirstChar { it.uppercase() }
-        }
-        return MenuGoodsUiState.ManageItem(
-            id = id,
-            name = name,
-            priceText = formatPrice(price),
-            description = desc,
-            imageUrl = image,
-            badgeLabel = categoryLabel,
-            categoryId = normalizedCategoryId,
-            categoryLabel = categoryLabel,
-            isAvailable = isAvailable,
-            availabilityLabel = if (isAvailable) "판매 중" else "품절"
-        )
-    }
-
-    private fun Goods.toManageItem(index: Int): MenuGoodsUiState.ManageItem {
-        val category = when {
-            name.contains("포토", ignoreCase = true) -> "collectible"
-            name.contains("의상", ignoreCase = true) -> "apparel"
-            else -> "goods"
-        }
-        val categoryLabel = when (category) {
-            "collectible" -> "Collectible"
-            "apparel" -> "Apparel"
-            else -> "Goods"
-        }
-        val isAvailable = stock > 0
-        return MenuGoodsUiState.ManageItem(
-            id = id,
-            name = name,
-            priceText = formatPrice(price),
-            description = "카페 굿즈 판매 항목",
-            imageUrl = image,
-            badgeLabel = categoryLabel,
-            categoryId = category,
-            categoryLabel = categoryLabel,
-            isAvailable = isAvailable,
-            availabilityLabel = if (isAvailable) "판매 중" else "품절",
-            inventoryLabel = "재고 $stock"
-        )
-    }
-
-    private fun formatPrice(price: Int): String {
-        return buildString {
-            append("KRW ")
-            append(price.toString().reversed().chunked(3).joinToString(",").reversed())
-        }
     }
 
     fun onAction(action: MenuGoodsAction) {

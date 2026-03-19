@@ -80,7 +80,7 @@ class MenuGoodsEditViewModel(
                                 itemId = itemId,
                                 name = currentState.itemName.trim(),
                                 price = currentState.price.toInt(),
-                                category = currentState.selectedCategory.toCategoryId(),
+                                category = currentState.selectedCategoryId,
                                 description = currentState.description.trim(),
                                 isInStock = currentState.isInStock,
                                 imageUrl = currentState.imageUrl
@@ -110,7 +110,10 @@ class MenuGoodsEditViewModel(
                 saveButtonLabel = "항목 저장",
                 itemName = menu.name,
                 price = menu.price.toString(),
-                selectedCategory = menu.category.toItemCategory(),
+                selectedCategoryId = when (menu.category.lowercase()) {
+                    "food", "dessert", "goods", "drink" -> menu.category.lowercase()
+                    else -> "drink"
+                },
                 description = menu.desc,
                 isInStock = menu.isAvailable,
                 imageUrl = menu.image
@@ -127,7 +130,7 @@ class MenuGoodsEditViewModel(
                 saveButtonLabel = "항목 저장",
                 itemName = goods.name,
                 price = goods.price.toString(),
-                selectedCategory = MenuGoodsEditUiState.ItemCategory.GOODS,
+                selectedCategoryId = "goods",
                 description = "카페 굿즈 판매 항목",
                 isInStock = goods.stock > 0,
                 imageUrl = goods.image
@@ -144,24 +147,6 @@ class MenuGoodsEditViewModel(
         }
     }
 
-    private fun String.toItemCategory(): MenuGoodsEditUiState.ItemCategory {
-        return when (lowercase()) {
-            "food" -> MenuGoodsEditUiState.ItemCategory.FOOD
-            "dessert" -> MenuGoodsEditUiState.ItemCategory.DESSERT
-            "goods" -> MenuGoodsEditUiState.ItemCategory.GOODS
-            else -> MenuGoodsEditUiState.ItemCategory.DRINK
-        }
-    }
-
-    private fun MenuGoodsEditUiState.ItemCategory.toCategoryId(): String {
-        return when (this) {
-            MenuGoodsEditUiState.ItemCategory.DRINK -> "drink"
-            MenuGoodsEditUiState.ItemCategory.FOOD -> "food"
-            MenuGoodsEditUiState.ItemCategory.DESSERT -> "dessert"
-            MenuGoodsEditUiState.ItemCategory.GOODS -> "goods"
-        }
-    }
-
     fun onAction(action: MenuGoodsEditAction) {
         when (action) {
             MenuGoodsEditAction.ClickBack -> clickBack()
@@ -169,7 +154,7 @@ class MenuGoodsEditViewModel(
             is MenuGoodsEditAction.ChangeName -> _uiState.update { it.copy(itemName = action.value) }
             is MenuGoodsEditAction.ChangePrice -> _uiState.update { it.copy(price = action.value.filter(Char::isDigit)) }
             is MenuGoodsEditAction.SelectPhoto -> _uiState.update { it.copy(imageUrl = action.imageUrl) }
-            is MenuGoodsEditAction.SelectCategory -> _uiState.update { it.copy(selectedCategory = action.category) }
+            is MenuGoodsEditAction.SelectCategory -> _uiState.update { it.copy(selectedCategoryId = action.categoryId) }
             is MenuGoodsEditAction.ChangeDescription -> _uiState.update { it.copy(description = action.value) }
             is MenuGoodsEditAction.ToggleStock -> _uiState.update { it.copy(isInStock = action.isInStock) }
             MenuGoodsEditAction.ClickSave -> clickSave()
