@@ -7,19 +7,9 @@ data class MenuGoodsEditUiState(
     val saveButtonLabel: String = "항목 생성",
     val itemName: String = "",
     val price: String = "",
-    val selectedCategory: ItemCategory = ItemCategory.DRINK,
+    val selectedCategoryId: String = "drink",
     val description: String = "",
     val isInStock: Boolean = true,
     val imageUrl: String? = null,
     val infoMessage: String? = null
-) {
-    enum class ItemCategory(
-        val label: String,
-        val iconKey: String
-    ) {
-        DRINK("Drink", "drink"),
-        FOOD("Food", "food"),
-        DESSERT("Dessert", "dessert"),
-        GOODS("Goods", "goods")
-    }
-}
+)

@@ -23,6 +23,7 @@ enum CafeInfoEditAction {
     case addGalleryImage(String)
     case clickPinLocation
     case clickManageExceptionDates
+    case dismissImageRequiredAlert
     case clickSave
     case dismissInfoMessage
 }

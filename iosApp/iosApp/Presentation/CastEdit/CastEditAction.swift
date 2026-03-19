@@ -18,6 +18,7 @@ enum CastEditAction {
     case changeIntroduction(String)
     case toggleWorkingDay(CastEditUiState.WorkingDay)
     case clickAddGalleryPhoto
+    case dismissImageRequiredAlert
     case clickSave
     case dismissInfoMessage
 }

@@ -6,6 +6,8 @@ import com.hhp227.concafe.domain.model.RankingPromoAd
 
 data class RankingUiState(
     val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val isLoginPromptVisible: Boolean = false,
     val errorMessage: String? = null,
     val selectedTab: TabType = TabType.MAIDS,
     val selectedPeriod: RankingPeriod = RankingPeriod.WEEKLY,

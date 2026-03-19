@@ -73,6 +73,23 @@ struct BannerEditView: View {
                 }
             )
         }
+        .alert(
+            "이미지를 등록해주세요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("배너 저장을 위해 대표 이미지는 필수입니다.")
+        }
     }
 
     init(
@@ -247,7 +264,8 @@ private struct BannerEditContentView: View {
                 if uiState.isAdmin {
                     selectionField(
                         label: "운영 카페",
-                        selectedItem: uiState.selectedCafeOption,
+                        selectedTitle: uiState.selectedCafeOption?.name,
+                        selectedSubtitle: uiState.selectedCafeOption?.city,
                         placeholder: "운영 카페를 선택해주세요"
                     ) {
                         onAction(.clickCafeSelector)
@@ -255,7 +273,8 @@ private struct BannerEditContentView: View {
                 } else {
                     fixedSelectionField(
                         label: "적용 카페",
-                        selectedItem: uiState.selectedCafeOption,
+                        selectedTitle: uiState.selectedCafeOption?.name,
+                        selectedSubtitle: uiState.selectedCafeOption?.city,
                         placeholder: "연결할 운영 카페가 없습니다."
                     )
                 }
@@ -263,7 +282,8 @@ private struct BannerEditContentView: View {
                 if uiState.isAdmin {
                     selectionField(
                         label: "운영 카페",
-                        selectedItem: uiState.selectedCafeOption,
+                        selectedTitle: uiState.selectedCafeOption?.name,
+                        selectedSubtitle: uiState.selectedCafeOption?.city,
                         placeholder: "운영 카페를 선택해주세요"
                     ) {
                         onAction(.clickCafeSelector)
@@ -271,13 +291,15 @@ private struct BannerEditContentView: View {
                 } else {
                     fixedSelectionField(
                         label: "적용 카페",
-                        selectedItem: uiState.selectedCafeOption,
+                        selectedTitle: uiState.selectedCafeOption?.name,
+                        selectedSubtitle: uiState.selectedCafeOption?.city,
                         placeholder: "연결할 운영 카페가 없습니다."
                     )
                 }
                 selectionField(
                     label: uiState.targetSelectionLabel,
-                    selectedItem: uiState.selectedContentOption,
+                    selectedTitle: uiState.selectedContentTitle,
+                    selectedSubtitle: uiState.selectedContentSubtitle,
                     placeholder: uiState.targetSelectionPlaceholder
                 ) {
                     onAction(.clickTargetSelector)
@@ -356,7 +378,8 @@ private struct BannerEditContentView: View {
 
     private func selectionField(
         label: String,
-        selectedItem: BannerSelectableItem?,
+        selectedTitle: String?,
+        selectedSubtitle: String?,
         placeholder: String,
         onTap: @escaping () -> Void
     ) -> some View {
@@ -367,10 +390,10 @@ private struct BannerEditContentView: View {
             Button(action: onTap) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(selectedItem?.title ?? placeholder)
-                            .font(.subheadline.weight(selectedItem == nil ? .regular : .semibold))
-                            .foregroundStyle(selectedItem == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
-                        if let subtitle = selectedItem?.subtitle, !subtitle.isEmpty {
+                        Text(selectedTitle ?? placeholder)
+                            .font(.subheadline.weight(selectedTitle == nil ? .regular : .semibold))
+                            .foregroundStyle(selectedTitle == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                        if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                             Text(subtitle)
                                 .font(.caption)
                                 .foregroundStyle(Color(hex: "8F848F"))
@@ -395,7 +418,8 @@ private struct BannerEditContentView: View {
 
     private func fixedSelectionField(
         label: String,
-        selectedItem: BannerSelectableItem?,
+        selectedTitle: String?,
+        selectedSubtitle: String?,
         placeholder: String
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -403,10 +427,10 @@ private struct BannerEditContentView: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: "665A63"))
             VStack(alignment: .leading, spacing: 4) {
-                Text(selectedItem?.title ?? placeholder)
-                    .font(.subheadline.weight(selectedItem == nil ? .regular : .semibold))
-                    .foregroundStyle(selectedItem == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
-                if let subtitle = selectedItem?.subtitle, !subtitle.isEmpty {
+                Text(selectedTitle ?? placeholder)
+                    .font(.subheadline.weight(selectedTitle == nil ? .regular : .semibold))
+                    .foregroundStyle(selectedTitle == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.caption)
                         .foregroundStyle(Color(hex: "8F848F"))
@@ -491,16 +515,7 @@ private struct BannerEditImageView<Placeholder: View>: View {
 }
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
-    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
-    let fileName = "\(UUID().uuidString).jpg"
-    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-    do {
-        try data.write(to: fileURL, options: .atomic)
-        return fileURL.absoluteString
-    } catch {
-        return nil
-    }
+    saveCompressedImageToTemporaryFile(image)
 }
 
 private struct BannerSelectorSheet: View {
@@ -524,7 +539,7 @@ private struct BannerSelectorSheet: View {
                     .tint(Color(hex: "EF6797"))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
-            } else if uiState.selectorOptions.isEmpty {
+            } else if uiState.activeSelectorItemCount == 0 {
                 Text("선택 가능한 항목이 없습니다.")
                     .font(.subheadline)
                     .foregroundStyle(Color(hex: "8F848F"))
@@ -533,25 +548,33 @@ private struct BannerSelectorSheet: View {
             } else {
                 ScrollView {
                     VStack(spacing: 10) {
-                        ForEach(uiState.selectorOptions) { item in
-                            Button {
-                                onAction(.selectSelectorItem(item.id))
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.title)
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Color(hex: "23161C"))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text(item.subtitle)
-                                        .font(.caption)
-                                        .foregroundStyle(Color(hex: "8F848F"))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .padding(16)
-                                .background(Color.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        if uiState.selectorType == .cafe {
+                            ForEach(uiState.filteredCafeSelectorOptions, id: \.id) { item in
+                                selectorOptionButton(
+                                    id: item.id,
+                                    title: item.name,
+                                    subtitle: item.city,
+                                    onAction: onAction
+                                )
                             }
-                            .buttonStyle(.plain)
+                        } else if uiState.selectorType == .notice {
+                            ForEach(uiState.noticeSelectorOptions, id: \.id) { item in
+                                selectorOptionButton(
+                                    id: item.id,
+                                    title: item.title,
+                                    subtitle: item.displayDate,
+                                    onAction: onAction
+                                )
+                            }
+                        } else if uiState.selectorType == .event {
+                            ForEach(uiState.eventSelectorOptions, id: \.id) { item in
+                                selectorOptionButton(
+                                    id: item.id,
+                                    title: item.title,
+                                    subtitle: item.periodText,
+                                    onAction: onAction
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal, 24)
@@ -561,6 +584,32 @@ private struct BannerSelectorSheet: View {
         }
         .padding(.top, 16)
         .background(Color(hex: "F8F5F6"))
+    }
+
+    private func selectorOptionButton(
+        id: String,
+        title: String,
+        subtitle: String,
+        onAction: @escaping (BannerEditAction) -> Void
+    ) -> some View {
+        Button {
+            onAction(.selectSelectorItem(id))
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color(hex: "23161C"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "8F848F"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -91,7 +91,6 @@ private struct FanManagementContentView: View {
                 quickActionGrid
                 weeklyScheduleSection
                 recentFollowersSection
-                topFansSection
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -241,13 +240,23 @@ private struct FanManagementContentView: View {
     }
 
     private var recentFollowersSection: some View {
-        sectionContainer(title: "최근 팔로워") {
-            if uiState.recentFollowers.isEmpty {
+        let followers = Array((uiState.fanManagementData?.followers ?? []).prefix(10))
+        return sectionContainer(title: "최근 팔로워") {
+            if followers.isEmpty {
                 emptySectionCard(message: "최근 팔로워 데이터가 아직 없습니다.")
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
-                        ForEach(uiState.recentFollowers) { follower in
+                        ForEach(Array(followers.enumerated()), id: \.element.id) { index, follower in
+                            let accent = index == 0
+                            let joinedLabel: String = {
+                                switch index {
+                                case 0: return "방금 전"
+                                case 1: return "2시간 전"
+                                case 2: return "5시간 전"
+                                default: return "최근"
+                                }
+                            }()
                             Button {
                                 onAction(.clickRecentFollower(id: follower.id))
                             } label: {
@@ -255,24 +264,24 @@ private struct FanManagementContentView: View {
                                     Circle()
                                         .fill(
                                             LinearGradient(
-                                                colors: follower.accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
+                                                colors: accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             )
                                         )
                                         .frame(width: 58, height: 58)
                                         .overlay {
-                                            Text(follower.initial)
+                                            Text(String(follower.nickname.prefix(1)).uppercased())
                                                 .font(.headline.weight(.bold))
                                                 .foregroundStyle(Color(hex: "6E5566"))
                                         }
                                         .overlay(
-                                            Circle().stroke(follower.accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
+                                            Circle().stroke(accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
                                         )
-                                    Text(follower.name)
+                                    Text(follower.nickname)
                                         .font(.caption.weight(.medium))
                                         .foregroundStyle(Color(hex: "24161E"))
-                                    Text(follower.joinedLabel)
+                                    Text(joinedLabel)
                                         .font(.caption2)
                                         .foregroundStyle(Color(hex: "9C8C98"))
                                 }
@@ -344,67 +353,6 @@ private struct FanManagementContentView: View {
         )
     }
 
-    private var topFansSection: some View {
-        sectionContainer(title: "이달의 TOP 팬") {
-            if uiState.topFans.isEmpty {
-                emptySectionCard(message: "TOP 팬 집계 데이터가 아직 없습니다.")
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(uiState.topFans) { fan in
-                        Button {
-                            onAction(.clickTopFan(id: fan.id))
-                        } label: {
-                            HStack(spacing: 12) {
-                                Text("\(fan.rank)")
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(rankColor(fan.rank))
-                                Circle()
-                                    .fill(Color(hex: "F6E3EC"))
-                                    .frame(width: 42, height: 42)
-                                    .overlay {
-                                        Text(String(fan.name.prefix(1)))
-                                            .font(.headline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "7C3F67"))
-                                    }
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(fan.name)
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Color(hex: "24161E"))
-                                    Text("포인트: \(fan.pointsLabel)")
-                                        .font(.caption)
-                                        .foregroundStyle(Color(hex: "7A707A"))
-                                }
-                                Spacer()
-                                if fan.isBest {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "heart.fill")
-                                            .font(.caption)
-                                        Text("BEST")
-                                            .font(.caption2.weight(.bold))
-                                    }
-                                    .foregroundStyle(Color(hex: "D94A82"))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Color(hex: "FFD1DC").opacity(0.12))
-                                    .clipShape(Capsule())
-                                }
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 14)
-                            .background(Color.white.opacity(0.92))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
     private var loadingState: some View {
         emptySectionCard(message: "팬관리 정보를 불러오는 중입니다.")
     }
@@ -452,16 +400,6 @@ private struct FanManagementContentView: View {
         }
     }
 
-    private func rankColor(_ rank: Int) -> Color {
-        switch rank {
-        case 1:
-            return Color(hex: "D99A00")
-        case 2:
-            return Color(hex: "8E8896")
-        default:
-            return Color(hex: "DC8346")
-        }
-    }
 }
 
 private struct CastClaimSheetView: View {
@@ -484,17 +422,17 @@ private struct CastClaimSheetView: View {
                             .foregroundStyle(Color(hex: "6C6270"))
                         if !sheet.requestableCasts.isEmpty {
                             VStack(spacing: 10) {
-                                ForEach(sheet.requestableCasts) { candidate in
+                                ForEach(sheet.requestableCasts, id: \.castId) { candidate in
                                     Button {
-                                        onAction(.selectClaimCandidate(candidate.id))
+                                        onAction(.selectClaimCandidate(candidate.castId))
                                     } label: {
-                                        Text(candidate.name)
+                                        Text(candidate.castName)
                                             .font(.body.weight(.semibold))
                                             .foregroundStyle(Color(hex: "24161E"))
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(.horizontal, 16)
                                             .padding(.vertical, 14)
-                                            .background(sheet.selectedCastId == candidate.id ? Color(hex: "FFD1DC") : Color.white)
+                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color.white)
                                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -503,7 +441,7 @@ private struct CastClaimSheetView: View {
                                     }
                                     .buttonStyle(.plain)
                                     .onAppear {
-                                        if candidate.id == sheet.requestableCasts.last?.id, sheet.canLoadMore, !sheet.isLoadingMore {
+                                        if candidate.castId == sheet.requestableCasts.last?.castId, sheet.canLoadMore, !sheet.isLoadingMore {
                                             onAction(.loadMoreClaimCandidates)
                                         }
                                     }
@@ -562,45 +500,8 @@ private struct WeeklyScheduleItem {
 }
 
 private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleItem] {
-    let workingDays = Set(schedules.compactMap { weekdayLabel(from: $0.date) })
-
+    let workingDays = Set(schedules.compactMap { TimeUtils.weekdayLabel(fromIsoDate: $0.date) })
     return ["월", "화", "수", "목", "금", "토", "일"].map { dayLabel in
         WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
-    }
-}
-
-private func weekdayLabel(from date: String) -> String? {
-    let parts = date.split(separator: "-")
-    guard parts.count == 3,
-          let year = Int(parts[0]),
-          let month = Int(parts[1]),
-          let day = Int(parts[2]) else {
-        return nil
-    }
-
-    let labels = ["월", "화", "수", "목", "금", "토", "일"]
-    let index = dayOfWeekIndex(year: year, month: month, day: day)
-    guard labels.indices.contains(index) else { return nil }
-    return labels[index]
-}
-
-private func dayOfWeekIndex(year: Int, month: Int, day: Int) -> Int {
-    var adjustedYear = year
-    var adjustedMonth = month
-    if adjustedMonth < 3 {
-        adjustedMonth += 12
-        adjustedYear -= 1
-    }
-    let k = adjustedYear % 100
-    let j = adjustedYear / 100
-    let h = (day + (13 * (adjustedMonth + 1)) / 5 + k + (k / 4) + (j / 4) + (5 * j)) % 7
-    switch h {
-    case 2: return 0
-    case 3: return 1
-    case 4: return 2
-    case 5: return 3
-    case 6: return 4
-    case 0: return 5
-    default: return 6
     }
 }

@@ -12,6 +12,8 @@ import Shared
 @MainActor
 class SignInViewModel: ObservableObject {
     private let signInUseCase: SignInUseCase
+
+    private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
     
     @Published private(set) var uiState = SignInUiState.empty
     
@@ -57,7 +59,25 @@ class SignInViewModel: ObservableObject {
         case .signInTapped:
             signIn(email: uiState.email, password: uiState.password)
         case .socialSignInTapped(let provider):
-            signIn(email: "\(provider.rawValue)@mock.concafe", password: "social-sign-in")
+            uiState.isLoading = true
+            uiState.errorMessage = nil
+            signInTask?.cancel()
+            signInTask = Task {
+                do {
+                    let result = try await signInWithSocialProviderUseCase.invoke(provider: provider.rawValue)
+                    if result is AppResultSuccess<AnyObject> {
+                        uiState.isLoading = false
+                        event.send(.signedIn)
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = "소셜 로그인에 실패했습니다. 입력값을 확인해주세요."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.isLoading = false
+                    uiState.errorMessage = error.localizedDescription
+                }
+            }
         }
     }
     
@@ -65,6 +85,7 @@ class SignInViewModel: ObservableObject {
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase()
     ) {
         self.signInUseCase = signInUseCase
+        self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
     }
     
     deinit {

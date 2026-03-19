@@ -435,16 +435,7 @@ private struct ReviewPhotoImageView: View {
 }
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
-    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
-    let fileName = "\(UUID().uuidString).jpg"
-    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-    do {
-        try data.write(to: fileURL, options: .atomic)
-        return fileURL.absoluteString
-    } catch {
-        return nil
-    }
+    saveCompressedImageToTemporaryFile(image)
 }
 
 struct ReviewEditView_Previews: PreviewProvider {

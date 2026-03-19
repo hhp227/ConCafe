@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 class ReviewEditViewModel(
     private val cafeId: String? = null,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
-    private val createReviewUseCase: CreateReviewUseCase
+    private val createReviewUseCase: CreateReviewUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ReviewEditUiState(
@@ -115,12 +117,16 @@ class ReviewEditViewModel(
                 )
             }
             viewModelScope.launch {
+                val uploadedPhoto = uploadImage(currentState.photoImageUrl, "reviews")
+                if (!currentState.photoImageUrl.isNullOrBlank() && uploadedPhoto == null) {
+                    return@launch
+                }
                 when (
                     val result = createReviewUseCase.invoke(
                         cafeId = currentState.cafeId,
                         rating = currentState.rating.toFloat(),
                         content = currentState.content,
-                        imageUrls = currentState.photoImageUrl?.let { listOf(it) } ?: emptyList(),
+                        imageUrls = uploadedPhoto?.let { listOf(it) } ?: emptyList(),
                         taggedCastIds = currentState.taggedCastIds
                     )
                 ) {
@@ -173,6 +179,22 @@ class ReviewEditViewModel(
             }
             ReviewEditAction.ClickSubmit -> clickSubmit()
             ReviewEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
+        }
+    }
+
+    private suspend fun uploadImage(imageUrl: String?, folder: String): String? {
+        if (imageUrl.isNullOrBlank()) return null
+        return when (val result = uploadImageUseCase.invoke(imageUrl, folder)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        infoMessage = "이미지를 업로드하지 못했습니다."
+                    )
+                }
+                null
+            }
         }
     }
 

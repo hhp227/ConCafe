@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +28,8 @@ class BannerEditViewModel(
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeEventPageUseCase: GetCafeEventPageUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BannerEditUiState())
     val uiState = _uiState.asStateFlow()
@@ -41,18 +43,12 @@ class BannerEditViewModel(
         viewModelScope.launch {
             when (val result = getCafeManagementUseCase.invoke()) {
                 is AppResult.Success -> {
-                    val options = result.data.ownedCafes.map { cafe ->
-                        BannerSelectableItem(
-                            id = cafe.id,
-                            title = cafe.name,
-                            subtitle = cafe.city
-                        )
-                    }
+                    val options = result.data.ownedCafes
                     _uiState.update { state ->
                         val selectedCafe = initialCafeId?.let { targetCafeId ->
                             options.firstOrNull { it.id == targetCafeId }
-                        } ?: state.selectedCafeOption?.let { current ->
-                            options.firstOrNull { it.id == current.id }
+                        } ?: state.selectedCafeId?.let { selectedCafeId ->
+                            options.firstOrNull { it.id == selectedCafeId }
                         } ?: if (state.isAdmin) {
                             state.selectedCafeOption
                         } else {
@@ -60,16 +56,21 @@ class BannerEditViewModel(
                         }
                         state.copy(
                             ownedCafeOptions = options,
-                            selectedCafeOption = selectedCafe,
-                            selectedContentOption = if (selectedCafe?.id == state.selectedCafeOption?.id) {
-                                state.selectedContentOption
+                            selectedCafeId = selectedCafe?.id,
+                            selectedNoticeId = if (selectedCafe?.id == state.selectedCafeId) {
+                                state.selectedNoticeId
+                            } else {
+                                null
+                            },
+                            selectedEventId = if (selectedCafe?.id == state.selectedCafeId) {
+                                state.selectedEventId
                             } else {
                                 null
                             },
                             targetValue = when (state.selectedTarget) {
                                 BannerTargetType.CAFE_DETAIL -> selectedCafe?.id.orEmpty()
                                 BannerTargetType.EXTERNAL_LINK -> state.targetValue
-                                else -> if (selectedCafe?.id == state.selectedCafeOption?.id) state.targetValue else ""
+                                else -> if (selectedCafe?.id == state.selectedCafeId) state.targetValue else ""
                             }
                         )
                     }
@@ -108,13 +109,13 @@ class BannerEditViewModel(
         _uiState.update { state ->
             state.copy(
                 selectedTarget = target,
-                selectedCafeOption = when (target) {
+                selectedCafeId = when (target) {
                     BannerTargetType.CAFE_DETAIL -> when {
                         state.isAdmin -> state.selectedCafeOption
                         initialCafeId != null -> state.ownedCafeOptions.firstOrNull { it.id == initialCafeId }
                         else -> state.selectedCafeOption ?: state.ownedCafeOptions.firstOrNull()
-                    }
-                    else -> state.selectedCafeOption
+                    }?.id
+                    else -> state.selectedCafeId
                 },
                 targetValue = when (target) {
                     BannerTargetType.CAFE_DETAIL -> when {
@@ -125,10 +126,12 @@ class BannerEditViewModel(
                     BannerTargetType.EXTERNAL_LINK -> ""
                     else -> ""
                 },
-                selectedContentOption = null,
+                selectedNoticeId = null,
+                selectedEventId = null,
                 selectorType = null,
                 selectorQuery = "",
-                selectorOptions = emptyList(),
+                noticeSelectorOptions = emptyList(),
+                eventSelectorOptions = emptyList(),
                 isSelectorLoading = false
             )
         }
@@ -139,7 +142,6 @@ class BannerEditViewModel(
             state.copy(
                 selectorType = BannerSelectorType.CAFE,
                 selectorQuery = "",
-                selectorOptions = state.ownedCafeOptions,
                 isSelectorLoading = false
             )
         }
@@ -160,7 +162,7 @@ class BannerEditViewModel(
                     it.copy(
                         selectorType = BannerSelectorType.NOTICE,
                         selectorQuery = "",
-                        selectorOptions = emptyList(),
+                        noticeSelectorOptions = emptyList(),
                         isSelectorLoading = true
                     )
                 }
@@ -171,7 +173,7 @@ class BannerEditViewModel(
                     it.copy(
                         selectorType = BannerSelectorType.EVENT,
                         selectorQuery = "",
-                        selectorOptions = emptyList(),
+                        eventSelectorOptions = emptyList(),
                         isSelectorLoading = true
                     )
                 }
@@ -184,14 +186,7 @@ class BannerEditViewModel(
     private fun changeSelectorQuery(value: String) {
         _uiState.update { it.copy(selectorQuery = value) }
         when (_uiState.value.selectorType) {
-            BannerSelectorType.CAFE -> {
-                _uiState.update { state ->
-                    state.copy(selectorOptions = state.ownedCafeOptions.filter {
-                        it.title.contains(value, ignoreCase = true) ||
-                            it.subtitle.contains(value, ignoreCase = true)
-                    })
-                }
-            }
+            BannerSelectorType.CAFE -> Unit
             BannerSelectorType.NOTICE -> {
                 _uiState.value.selectedCafeOption?.id?.let { loadNoticeOptions(it, value) }
             }
@@ -210,13 +205,7 @@ class BannerEditViewModel(
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            selectorOptions = result.data.items.map { item ->
-                                BannerSelectableItem(
-                                    id = item.id,
-                                    title = item.title,
-                                    subtitle = item.displayDate
-                                )
-                            },
+                            noticeSelectorOptions = result.data.items,
                             isSelectorLoading = false
                         )
                     }
@@ -224,7 +213,7 @@ class BannerEditViewModel(
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            selectorOptions = emptyList(),
+                            noticeSelectorOptions = emptyList(),
                             isSelectorLoading = false,
                             infoMessage = "공지사항 목록을 불러오지 못했습니다."
                         )
@@ -242,13 +231,7 @@ class BannerEditViewModel(
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            selectorOptions = result.data.items.map { item ->
-                                BannerSelectableItem(
-                                    id = item.id,
-                                    title = item.title,
-                                    subtitle = item.periodText
-                                )
-                            },
+                            eventSelectorOptions = result.data.items,
                             isSelectorLoading = false
                         )
                     }
@@ -256,7 +239,7 @@ class BannerEditViewModel(
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            selectorOptions = emptyList(),
+                            eventSelectorOptions = emptyList(),
                             isSelectorLoading = false,
                             infoMessage = "이벤트 목록을 불러오지 못했습니다."
                         )
@@ -271,11 +254,12 @@ class BannerEditViewModel(
         when (currentState.selectorType) {
             BannerSelectorType.CAFE -> {
                 val selectedCafe = currentState.ownedCafeOptions.firstOrNull { it.id == id } ?: return
-                val isSameCafe = currentState.selectedCafeOption?.id == selectedCafe.id
+                val isSameCafe = currentState.selectedCafeId == selectedCafe.id
                 _uiState.update {
                     it.copy(
-                        selectedCafeOption = selectedCafe,
-                        selectedContentOption = if (isSameCafe) it.selectedContentOption else null,
+                        selectedCafeId = selectedCafe.id,
+                        selectedNoticeId = if (isSameCafe) it.selectedNoticeId else null,
+                        selectedEventId = if (isSameCafe) it.selectedEventId else null,
                         targetValue = when (it.selectedTarget) {
                             BannerTargetType.CAFE_DETAIL -> selectedCafe.id
                             BannerTargetType.EXTERNAL_LINK -> it.targetValue
@@ -283,21 +267,32 @@ class BannerEditViewModel(
                         },
                         selectorType = null,
                         selectorQuery = "",
-                        selectorOptions = emptyList(),
                         isSelectorLoading = false
                     )
                 }
             }
-            BannerSelectorType.NOTICE,
-            BannerSelectorType.EVENT -> {
-                val selectedTargetItem = currentState.selectorOptions.firstOrNull { it.id == id } ?: return
+            BannerSelectorType.NOTICE -> {
+                val selectedNotice = currentState.noticeSelectorOptions.firstOrNull { it.id == id } ?: return
                 _uiState.update {
                     it.copy(
-                        selectedContentOption = selectedTargetItem,
-                        targetValue = selectedTargetItem.id,
+                        selectedNoticeId = selectedNotice.id,
+                        selectedEventId = null,
+                        targetValue = selectedNotice.id,
                         selectorType = null,
                         selectorQuery = "",
-                        selectorOptions = emptyList(),
+                        isSelectorLoading = false
+                    )
+                }
+            }
+            BannerSelectorType.EVENT -> {
+                val selectedEvent = currentState.eventSelectorOptions.firstOrNull { it.id == id } ?: return
+                _uiState.update {
+                    it.copy(
+                        selectedEventId = selectedEvent.id,
+                        selectedNoticeId = null,
+                        targetValue = selectedEvent.id,
+                        selectorType = null,
+                        selectorQuery = "",
                         isSelectorLoading = false
                     )
                 }
@@ -312,7 +307,6 @@ class BannerEditViewModel(
             it.copy(
                 selectorType = null,
                 selectorQuery = "",
-                selectorOptions = emptyList(),
                 isSelectorLoading = false
             )
         }
@@ -322,6 +316,7 @@ class BannerEditViewModel(
         val currentState = _uiState.value
 
         val validationMessage = when {
+            currentState.selectedImageLabel.isNullOrBlank() -> "배너 이미지를 등록해주세요."
             currentState.title.isBlank() -> "배너 제목을 입력해주세요."
             currentState.subtitle.isBlank() -> "서브 문구를 입력해주세요."
             currentState.selectedTarget == BannerTargetType.EXTERNAL_LINK &&
@@ -332,22 +327,65 @@ class BannerEditViewModel(
         }
 
         if (validationMessage != null) {
-            _uiState.update { it.copy(infoMessage = validationMessage) }
+            if (currentState.selectedImageLabel.isNullOrBlank()) {
+                _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
+            } else {
+                _uiState.update { it.copy(infoMessage = validationMessage) }
+            }
             return
         }
 
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
         viewModelScope.launch {
-            when (val result = createHomeBannerUseCase.invoke(currentState.toCreateInput())) {
+            val uploadedImageUrl = when (
+                val uploadResult = uploadImageUseCase.invoke(
+                    localPath = currentState.selectedImageLabel.orEmpty(),
+                    folder = "banners"
+                )
+            ) {
+                is AppResult.Success -> uploadResult.data
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                        )
+                    }
+                    return@launch
+                }
+            }
+            val createInput = HomeBannerCreate(
+                cafeId = currentState.selectedCafeId,
+                title = currentState.title.trim(),
+                subtitle = currentState.subtitle.trim(),
+                imageUrl = uploadedImageUrl,
+                targetType = when (currentState.selectedTarget) {
+                    BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
+                    BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
+                    BannerTargetType.NOTICE -> BannerLinkTargetType.NOTICE
+                    BannerTargetType.EXTERNAL_LINK -> BannerLinkTargetType.EXTERNAL_LINK
+                },
+                targetValue = currentState.targetValue.trim(),
+                displayDays = currentState.displayDays
+            )
+            when (val result = createHomeBannerUseCase.invoke(createInput)) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isSaving = false, infoMessage = null) }
                     _event.emit(BannerEditEvent.NavigateBack)
                 }
                 is AppResult.Failure -> {
+                    val userMessage = when (val error = result.error) {
+                        AppError.Unauthorized -> "로그인 후 배너를 등록해주세요."
+                        AppError.PermissionDenied -> "배너 등록 권한이 없습니다."
+                        AppError.NotFound -> "연결 대상을 찾을 수 없습니다."
+                        is AppError.ValidationFailed -> error.reason
+                        is AppError.NetworkError -> "배너를 등록하지 못했습니다."
+                        is AppError.Unknown -> "배너 등록 중 오류가 발생했습니다."
+                    }
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            infoMessage = result.error.toUserMessage()
+                            infoMessage = userMessage
                         )
                     }
                 }
@@ -359,7 +397,13 @@ class BannerEditViewModel(
         when (action) {
             BannerEditAction.ClickBack -> clickBack()
             BannerEditAction.ClickImagePicker -> clickImagePicker()
-            is BannerEditAction.SelectImage -> _uiState.update { it.copy(selectedImageLabel = action.imageUrl, infoMessage = null) }
+            is BannerEditAction.SelectImage -> _uiState.update {
+                it.copy(
+                    selectedImageLabel = action.imageUrl,
+                    infoMessage = null,
+                    isImageRequiredAlertVisible = false
+                )
+            }
             is BannerEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value) }
             is BannerEditAction.ChangeSubtitle -> _uiState.update { it.copy(subtitle = action.value) }
             is BannerEditAction.SelectTarget -> selectTarget(action.target)
@@ -372,6 +416,7 @@ class BannerEditViewModel(
             is BannerEditAction.ChangeSelectorQuery -> changeSelectorQuery(action.value)
             is BannerEditAction.SelectSelectorItem -> selectSelectorItem(action.id)
             BannerEditAction.DismissSelector -> dismissSelector()
+            BannerEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             BannerEditAction.ClickSave -> clickSave()
             BannerEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
@@ -380,37 +425,5 @@ class BannerEditViewModel(
     init {
         observeSession()
         loadOwnedCafeOptions()
-    }
-}
-
-private fun BannerEditUiState.toCreateInput(): HomeBannerCreate {
-    return HomeBannerCreate(
-        cafeId = selectedCafeOption?.id,
-        title = title.trim(),
-        subtitle = subtitle.trim(),
-        imageUrl = selectedImageLabel,
-        targetType = selectedTarget.toDomainType(),
-        targetValue = targetValue.trim(),
-        displayDays = displayDays
-    )
-}
-
-private fun BannerTargetType.toDomainType(): BannerLinkTargetType {
-    return when (this) {
-        BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
-        BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
-        BannerTargetType.NOTICE -> BannerLinkTargetType.NOTICE
-        BannerTargetType.EXTERNAL_LINK -> BannerLinkTargetType.EXTERNAL_LINK
-    }
-}
-
-private fun AppError.toUserMessage(): String {
-    return when (this) {
-        AppError.Unauthorized -> "로그인 후 배너를 등록해주세요."
-        AppError.PermissionDenied -> "배너 등록 권한이 없습니다."
-        AppError.NotFound -> "연결 대상을 찾을 수 없습니다."
-        is AppError.ValidationFailed -> reason
-        is AppError.NetworkError -> "배너를 등록하지 못했습니다."
-        is AppError.Unknown -> "배너 등록 중 오류가 발생했습니다."
     }
 }

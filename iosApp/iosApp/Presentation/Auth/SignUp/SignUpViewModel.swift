@@ -17,6 +17,12 @@ class SignUpViewModel: ObservableObject {
 
     private let signInUseCase: SignInUseCase
 
+    private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
+
+    private let verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase
+
+    private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
+
     @Published private(set) var uiState = SignUpUiState.empty
 
     let event = PassthroughSubject<SignUpEvent, Never>()
@@ -101,12 +107,21 @@ class SignUpViewModel: ObservableObject {
         }
 
         uiState.errorMessage = nil
-        uiState.hasRequestedVerification = true
-        uiState.infoMessage = "인증번호가 \(trimmedPhone) 로 전송되었습니다. 테스트 코드는 1234입니다."
+        let result = requestPhoneVerificationCodeUseCase.invoke(phone: trimmedPhone)
+        if let success = result as? AppResultSuccess<AnyObject>,
+           let message = success.data as? String {
+            uiState.hasRequestedVerification = true
+            uiState.infoMessage = message
+        } else {
+            uiState.hasRequestedVerification = false
+            uiState.errorMessage = "휴대폰 번호를 다시 확인해주세요."
+            uiState.infoMessage = nil
+        }
     }
 
     private func verifyCode() {
-        if uiState.verificationCode.trimmingCharacters(in: .whitespacesAndNewlines) == Self.verificationCode {
+        let result = verifyPhoneVerificationCodeUseCase.invoke(code: uiState.verificationCode)
+        if result is AppResultSuccess<AnyObject> {
             uiState.hasRequestedVerification = true
             uiState.isPhoneVerified = true
             uiState.errorMessage = nil
@@ -162,17 +177,13 @@ class SignUpViewModel: ObservableObject {
         requestTask?.cancel()
         requestTask = Task {
             do {
-                let result = try await signInUseCase.invoke(
-                    email: "\(provider.rawValue)@mock.concafe",
-                    password: "social-sign-in"
-                )
-
+                let result = try await signInWithSocialProviderUseCase.invoke(provider: provider.rawValue)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isLoading = false
                     event.send(.signedUp)
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "소셜 회원가입에 실패했습니다. 잠시 후 다시 시도해주세요."
+                    uiState.errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요."
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -323,6 +334,9 @@ class SignUpViewModel: ObservableObject {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
         self.signInUseCase = signInUseCase
+        self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
+        self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
+        self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         loadCafeOptions()
     }
 
@@ -332,5 +346,4 @@ class SignUpViewModel: ObservableObject {
 
     private static let minimumPasswordLength = 8
 
-    private static let verificationCode = "1234"
 }

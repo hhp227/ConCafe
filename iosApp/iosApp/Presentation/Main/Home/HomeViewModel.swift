@@ -14,6 +14,8 @@ import KMPNativeCoroutinesAsync
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let bannerEventPublisher: BannerEventPublisher
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
@@ -26,6 +28,34 @@ final class HomeViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState = HomeUiState(
+                        isLoggedIn: user != nil,
+                        isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func loadHomeFeed() {
         Task {
             do {
@@ -34,6 +64,8 @@ final class HomeViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject> {
                     if let feed = success.data as? Shared.HomeFeed {
                         uiState = HomeUiState(
+                            isLoggedIn: uiState.isLoggedIn,
+                            isLoginPromptVisible: uiState.isLoginPromptVisible,
                             banners: feed.banners,
                             popularCasts: feed.popularCasts,
                             popularCastCafeNames: Self.dictionary(from: feed.popularCastCafeNames),
@@ -65,6 +97,8 @@ final class HomeViewModel: ObservableObject {
         tasks[.popularCastPage]?.cancel()
         tasks[.popularCastPage] = Task {
             uiState = HomeUiState(
+                isLoggedIn: uiState.isLoggedIn,
+                isLoginPromptVisible: uiState.isLoginPromptVisible,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -85,6 +119,8 @@ final class HomeViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let feed = success.data as? Shared.HomeFeed {
                     uiState = HomeUiState(
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
                         banners: uiState.banners,
                         popularCasts: append ? (uiState.popularCasts + feed.popularCasts) : feed.popularCasts,
                         popularCastCafeNames: append
@@ -102,6 +138,8 @@ final class HomeViewModel: ObservableObject {
                     )
                 } else {
                     uiState = HomeUiState(
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -119,6 +157,8 @@ final class HomeViewModel: ObservableObject {
             } catch {
                 if Task.isCancelled { return }
                 uiState = HomeUiState(
+                    isLoggedIn: uiState.isLoggedIn,
+                    isLoginPromptVisible: uiState.isLoginPromptVisible,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -147,6 +187,8 @@ final class HomeViewModel: ObservableObject {
         tasks[.nearbyCafePage]?.cancel()
         tasks[.nearbyCafePage] = Task {
             uiState = HomeUiState(
+                isLoggedIn: uiState.isLoggedIn,
+                isLoginPromptVisible: uiState.isLoginPromptVisible,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -167,6 +209,8 @@ final class HomeViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let feed = success.data as? Shared.HomeFeed {
                     uiState = HomeUiState(
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -182,6 +226,8 @@ final class HomeViewModel: ObservableObject {
                     )
                 } else {
                     uiState = HomeUiState(
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -199,6 +245,8 @@ final class HomeViewModel: ObservableObject {
             } catch {
                 if Task.isCancelled { return }
                 uiState = HomeUiState(
+                    isLoggedIn: uiState.isLoggedIn,
+                    isLoginPromptVisible: uiState.isLoginPromptVisible,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -273,6 +321,8 @@ final class HomeViewModel: ObservableObject {
 
     private func patchCafeInfo(_ cafe: Cafe) {
         uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
             banners: uiState.banners,
             popularCasts: uiState.popularCasts,
             popularCastCafeNames: uiState.popularCastCafeNames.merging([cafe.id: cafe.name]) { _, new in new },
@@ -292,6 +342,8 @@ final class HomeViewModel: ObservableObject {
 
     private func patchCast(_ cast: Cast) {
         uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.map { $0.id == cast.id ? cast : $0 },
             popularCastCafeNames: uiState.popularCastCafeNames,
@@ -309,6 +361,8 @@ final class HomeViewModel: ObservableObject {
 
     private func removeCast(_ castId: String) {
         uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
             banners: uiState.banners,
             popularCasts: uiState.popularCasts.filter { $0.id != castId },
             popularCastCafeNames: uiState.popularCastCafeNames,
@@ -324,16 +378,80 @@ final class HomeViewModel: ObservableObject {
         )
     }
 
+    private func requireSignedIn(onAuthenticated: @escaping () -> Void) {
+        if uiState.isLoggedIn {
+            onAuthenticated()
+        } else {
+            uiState = HomeUiState(
+                isLoggedIn: uiState.isLoggedIn,
+                isLoginPromptVisible: true,
+                banners: uiState.banners,
+                popularCasts: uiState.popularCasts,
+                popularCastCafeNames: uiState.popularCastCafeNames,
+                popularCastCursor: uiState.popularCastCursor,
+                canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                nearbyCafes: uiState.nearbyCafes,
+                nearbyCafeCursor: uiState.nearbyCafeCursor,
+                canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                birthdayCasts: uiState.birthdayCasts,
+                notices: uiState.notices
+            )
+        }
+    }
+
     func onAction(_ action: HomeAction) {
         switch action {
         case .bannerTapped(let banner):
             handleBannerTap(banner)
         case .maidTapped(let id):
-            event.send(.navigateToCast(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCast(id: id))
+            }
         case .birthdayMaidTapped(let id):
-            event.send(.navigateToCast(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCast(id: id))
+            }
         case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCafe(id: id))
+            }
+        case .loginPromptSignInTapped:
+            uiState = HomeUiState(
+                isLoggedIn: uiState.isLoggedIn,
+                isLoginPromptVisible: false,
+                banners: uiState.banners,
+                popularCasts: uiState.popularCasts,
+                popularCastCafeNames: uiState.popularCastCafeNames,
+                popularCastCursor: uiState.popularCastCursor,
+                canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                nearbyCafes: uiState.nearbyCafes,
+                nearbyCafeCursor: uiState.nearbyCafeCursor,
+                canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                birthdayCasts: uiState.birthdayCasts,
+                notices: uiState.notices
+            )
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState = HomeUiState(
+                isLoggedIn: uiState.isLoggedIn,
+                isLoginPromptVisible: false,
+                banners: uiState.banners,
+                popularCasts: uiState.popularCasts,
+                popularCastCafeNames: uiState.popularCastCafeNames,
+                popularCastCursor: uiState.popularCastCursor,
+                canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                nearbyCafes: uiState.nearbyCafes,
+                nearbyCafeCursor: uiState.nearbyCafeCursor,
+                canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                birthdayCasts: uiState.birthdayCasts,
+                notices: uiState.notices
+            )
         case .loadMorePopularCasts:
             loadMorePopularCasts()
         case .loadMoreNearbyCafes:
@@ -350,7 +468,9 @@ final class HomeViewModel: ObservableObject {
         case .cafeDetail, .eventDetail, .notice:
             let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
             if let cafeId, !cafeId.isEmpty {
-                event.send(.navigateToCafe(id: cafeId))
+                requireSignedIn { [weak self] in
+                    self?.event.send(.navigateToCafe(id: cafeId))
+                }
             }
         default:
             break
@@ -359,15 +479,18 @@ final class HomeViewModel: ObservableObject {
 
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
+        observeSession()
         observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
@@ -387,6 +510,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case session
         case bannerEvent
         case cafeDetailEvent
         case castEvent

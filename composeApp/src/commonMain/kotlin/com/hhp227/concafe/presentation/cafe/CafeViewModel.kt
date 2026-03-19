@@ -18,12 +18,9 @@ import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
-import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
-import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
-import com.hhp227.concafe.domain.model.NoticeStatusAccent as DomainNoticeStatusAccent
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
@@ -183,7 +180,7 @@ class CafeViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            notices = if (append) state.notices + result.data.items.map(::mapNotice) else result.data.items.map(::mapNotice),
+                            notices = if (append) state.notices + result.data.items else result.data.items,
                             noticesNextCursor = result.data.nextCursor,
                             canLoadMoreNotices = result.data.hasNext,
                             isLoadingMoreNotices = false
@@ -319,22 +316,6 @@ class CafeViewModel(
         observeCafeDetailEvent()
         observeReviewEvent()
         loadCafeDetail()
-    }
-
-    private fun mapNotice(item: CafeNoticeManagementItem): NoticeItem {
-        return NoticeItem(
-            id = item.id,
-            title = item.title,
-            content = item.content,
-            date = item.displayDate,
-            isPinned = item.isPinned,
-            statusLabel = item.statusLabel,
-            statusAccent = when (item.statusAccent) {
-                DomainNoticeStatusAccent.PUBLISHED -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.PUBLISHED
-                DomainNoticeStatusAccent.DRAFT -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.DRAFT
-                DomainNoticeStatusAccent.ENDED -> com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeStatusAccent.ENDED
-            }
-        )
     }
 
     private enum class JobKey {

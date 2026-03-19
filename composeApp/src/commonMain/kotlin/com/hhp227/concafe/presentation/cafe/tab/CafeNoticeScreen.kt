@@ -14,12 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CafeNoticeScreen(
-    notices: List<NoticeItem>,
+    notices: List<CafeNoticeManagementItem>,
     canLoadMore: Boolean,
     isLoadingMore: Boolean,
     onLoadMore: () -> Unit
@@ -67,7 +67,7 @@ fun CafeNoticeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeCard(
-    notice: NoticeItem,
+    notice: CafeNoticeManagementItem,
     isExpanded: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier
@@ -94,7 +94,7 @@ fun NoticeCard(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = notice.date,
+                    text = notice.displayDate,
                     color = Color(0xFF999999),
                     style = MaterialTheme.typography.bodySmall
                 )

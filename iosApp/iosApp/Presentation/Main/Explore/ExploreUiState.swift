@@ -10,6 +10,8 @@ import Shared
 
 struct ExploreUiState {
     var isLoading: Bool
+    var isLoggedIn: Bool
+    var isLoginPromptVisible: Bool
     var errorMessage: String?
     var query: String
     var selectedTab: TabType
@@ -26,6 +28,8 @@ struct ExploreUiState {
 
     static let empty = ExploreUiState(
         isLoading: false,
+        isLoggedIn: false,
+        isLoginPromptVisible: false,
         errorMessage: nil,
         query: "",
         selectedTab: .cafe,

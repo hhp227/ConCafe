@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.FileInputStream
 import java.net.URL
 
@@ -39,11 +40,12 @@ actual fun CompatImagePicker(
     onImageSelected: (String) -> Unit,
     content: @Composable (launchPicker: () -> Unit) -> Unit
 ) {
+    val context = LocalContext.current
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
             uri?.let {
-                onImageSelected(it.toString())
+                saveToCacheFile(context, it)?.let(onImageSelected)
             }
         }
     )
@@ -51,6 +53,19 @@ actual fun CompatImagePicker(
     content {
         imagePicker.launch("image/*")
     }
+}
+
+private fun saveToCacheFile(context: Context, uri: Uri): String? {
+    return runCatching {
+        val fileName = "img-${System.currentTimeMillis()}.jpg"
+        val outputFile = File(context.cacheDir, fileName)
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            outputFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        } ?: return null
+        outputFile.absolutePath
+    }.getOrNull()
 }
 
 @Composable

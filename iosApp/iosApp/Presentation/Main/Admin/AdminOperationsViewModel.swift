@@ -36,24 +36,26 @@ final class AdminOperationsViewModel: ObservableObject {
                    let registrationClaims = registrationSuccess.data as? [PendingCafeRegistrationClaimPreview],
                    let roleClaimSuccess = roleClaimsResult as? AppResultSuccess<AnyObject>,
                    let roleClaims = roleClaimSuccess.data as? [PendingCafeOwnerClaimPreview] {
-                    let mergedRequests = (
-                        registrationClaims.map { Self.toAdminPendingRequest($0) } +
-                        roleClaims.map { Self.toAdminPendingRequest($0) }
-                    ).sorted { $0.requestedAt > $1.requestedAt }
-                    uiState.pendingRequests = mergedRequests
-                    uiState.metrics = buildAdminMetrics(pendingCount: mergedRequests.count)
+                    let sortedRegistrations = registrationClaims.sorted { $0.requestedAt > $1.requestedAt }
+                    let sortedOwnerClaims = roleClaims.sorted { $0.requestedAt > $1.requestedAt }
+                    uiState.pendingCafeRegistrationClaims = sortedRegistrations
+                    uiState.pendingCafeOwnerClaims = sortedOwnerClaims
+                    uiState.metrics = buildAdminMetrics(pendingCount: sortedRegistrations.count + sortedOwnerClaims.count)
                     uiState.infoMessage = nil
                 } else if let failure = registration as? AppResultFailure {
-                    uiState.pendingRequests = []
+                    uiState.pendingCafeRegistrationClaims = []
+                    uiState.pendingCafeOwnerClaims = []
                     uiState.metrics = buildAdminMetrics(pendingCount: 0)
                     uiState.infoMessage = "\(failure.error)"
                 } else if let failure = roleClaimsResult as? AppResultFailure {
-                    uiState.pendingRequests = []
+                    uiState.pendingCafeRegistrationClaims = []
+                    uiState.pendingCafeOwnerClaims = []
                     uiState.metrics = buildAdminMetrics(pendingCount: 0)
                     uiState.infoMessage = "\(failure.error)"
                 }
             } catch {
-                uiState.pendingRequests = []
+                uiState.pendingCafeRegistrationClaims = []
+                uiState.pendingCafeOwnerClaims = []
                 uiState.metrics = buildAdminMetrics(pendingCount: 0)
                 uiState.infoMessage = error.localizedDescription
             }
@@ -61,12 +63,20 @@ final class AdminOperationsViewModel: ObservableObject {
     }
 
     private func handlePendingResult(id: String, approved: Bool) {
-        guard let request = uiState.pendingRequests.first(where: { $0.id == id }) else { return }
+        let selectedFilter = uiState.selectedPendingFilter
+        let requestTitle: String
+        if selectedFilter == .cafeRegistration {
+            guard let claim = uiState.pendingCafeRegistrationClaims.first(where: { $0.claimId == id }) else { return }
+            requestTitle = claim.cafeName
+        } else {
+            guard let claim = uiState.pendingCafeOwnerClaims.first(where: { $0.claimId == id }) else { return }
+            requestTitle = "점장 권한 신청 - \(claim.requesterNickname)"
+        }
 
         Task { @MainActor in
             do {
                 let result: AppResult
-                switch request.type {
+                switch selectedFilter {
                 case .cafeRegistration:
                     result = approved
                         ? try await approveCafeRegistrationClaimUseCase.invoke(claimId: id)
@@ -80,8 +90,8 @@ final class AdminOperationsViewModel: ObservableObject {
                 if result is AppResultSuccess<AnyObject> {
                     loadPendingRequests()
                     uiState.infoMessage = approved
-                        ? "\(request.title) 요청을 승인했습니다."
-                        : "\(request.title) 요청을 반려했습니다."
+                        ? "\(requestTitle) 요청을 승인했습니다."
+                        : "\(requestTitle) 요청을 반려했습니다."
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
                 }
@@ -138,27 +148,3 @@ final class AdminOperationsViewModel: ObservableObject {
 }
 
 private let adminBannerMenuId = "banner"
-
-private extension AdminOperationsViewModel {
-    static func toAdminPendingRequest(_ claim: PendingCafeOwnerClaimPreview) -> AdminPendingRequest {
-        AdminPendingRequest(
-            id: claim.claimId,
-            type: .roleClaim,
-            title: "점장 권한 신청 - \(claim.requesterNickname)",
-            subtitle: claim.location,
-            requestedAt: claim.requestedAt,
-            imageUrl: claim.imageUrl ?? ""
-        )
-    }
-
-    static func toAdminPendingRequest(_ claim: PendingCafeRegistrationClaimPreview) -> AdminPendingRequest {
-        AdminPendingRequest(
-            id: claim.claimId,
-            type: .cafeRegistration,
-            title: claim.cafeName,
-            subtitle: claim.location,
-            requestedAt: claim.requestedAt,
-            imageUrl: claim.imageUrl ?? ""
-        )
-    }
-}

@@ -96,27 +96,22 @@ final class MenuGoodsViewModel: ObservableObject {
     }
 
     private func applyDetail(_ detail: CafeDetail) {
-        let menuItems = detail.menus.enumerated().map { index, menu in
-            self.mapMenuToManageItem(menu, index: index)
-        }
-        let goodsItems = detail.goods.enumerated().map { index, goods in
-            self.mapGoodsToManageItem(goods, index: index)
-        }
-
         var nextState = self.uiState
         nextState.cafeName = detail.cafe.name
         nextState.isLoading = false
-        nextState.menuCategories = self.buildMenuCategories(items: menuItems)
-        nextState.goodsCategories = self.buildGoodsCategories(items: goodsItems)
-        nextState.menuItems = menuItems
-        nextState.goodsItems = goodsItems
+        nextState.menuCategories = self.buildMenuCategories(items: detail.menus)
+        nextState.goodsCategories = self.buildGoodsCategories(items: detail.goods)
+        nextState.menuItems = detail.menus
+        nextState.goodsItems = detail.goods
+        nextState.menuAvailabilityOverrides = [:]
+        nextState.goodsAvailabilityOverrides = [:]
         nextState.infoMessage = nil
         self.uiState = nextState
     }
 
     private func upsertLocalMenu(_ menu: CafeMenu) {
         var nextState = uiState
-        let nextMenuItems = nextState.menuItems.filter { $0.id != menu.id } + [mapMenuToManageItem(menu, index: nextState.menuItems.count)]
+        let nextMenuItems = nextState.menuItems.filter { $0.id != menu.id } + [menu]
         let nextGoodsItems = nextState.goodsItems.filter { $0.id != menu.id }
 
         nextState.isLoading = false
@@ -124,24 +119,24 @@ final class MenuGoodsViewModel: ObservableObject {
         nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
         nextState.menuItems = nextMenuItems
         nextState.goodsItems = nextGoodsItems
-        if nextState.pendingDeleteItem?.id == menu.id {
-            nextState.pendingDeleteItem = nil
-        }
+        nextState.menuAvailabilityOverrides.removeValue(forKey: menu.id)
+        nextState.goodsAvailabilityOverrides.removeValue(forKey: menu.id)
+        if nextState.pendingDeleteItemId == menu.id { nextState.pendingDeleteItemId = nil }
         uiState = nextState
     }
 
     private func upsertLocalGoods(_ goods: Goods) {
         var nextState = uiState
         let nextMenuItems = nextState.menuItems.filter { $0.id != goods.id }
-        let nextGoodsItems = nextState.goodsItems.filter { $0.id != goods.id } + [mapGoodsToManageItem(goods, index: nextState.goodsItems.count)]
+        let nextGoodsItems = nextState.goodsItems.filter { $0.id != goods.id } + [goods]
         nextState.isLoading = false
         nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
         nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
         nextState.menuItems = nextMenuItems
         nextState.goodsItems = nextGoodsItems
-        if nextState.pendingDeleteItem?.id == goods.id {
-            nextState.pendingDeleteItem = nil
-        }
+        nextState.menuAvailabilityOverrides.removeValue(forKey: goods.id)
+        nextState.goodsAvailabilityOverrides.removeValue(forKey: goods.id)
+        if nextState.pendingDeleteItemId == goods.id { nextState.pendingDeleteItemId = nil }
         uiState = nextState
     }
 
@@ -152,9 +147,9 @@ final class MenuGoodsViewModel: ObservableObject {
         nextState.menuCategories = buildMenuCategories(items: nextMenuItems)
         nextState.goodsCategories = buildGoodsCategories(items: nextState.goodsItems)
         nextState.menuItems = nextMenuItems
-        if nextState.pendingDeleteItem?.id == itemId {
-            nextState.pendingDeleteItem = nil
-        }
+        nextState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+        nextState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+        if nextState.pendingDeleteItemId == itemId { nextState.pendingDeleteItemId = nil }
         uiState = nextState
     }
 
@@ -165,9 +160,9 @@ final class MenuGoodsViewModel: ObservableObject {
         nextState.menuCategories = buildMenuCategories(items: nextState.menuItems)
         nextState.goodsCategories = buildGoodsCategories(items: nextGoodsItems)
         nextState.goodsItems = nextGoodsItems
-        if nextState.pendingDeleteItem?.id == itemId {
-            nextState.pendingDeleteItem = nil
-        }
+        nextState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+        nextState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+        if nextState.pendingDeleteItemId == itemId { nextState.pendingDeleteItemId = nil }
         uiState = nextState
     }
 
@@ -190,52 +185,23 @@ final class MenuGoodsViewModel: ObservableObject {
     private func toggleItemAvailability(_ itemId: String) {
         switch uiState.selectedCollection {
         case .menu:
-            uiState.menuItems = uiState.menuItems.map { item in
-                guard item.id == itemId else { return item }
-                let nextAvailability = !item.isAvailable
-                return MenuGoodsUiState.ManageItem(
-                    id: item.id,
-                    name: item.name,
-                    priceText: item.priceText,
-                    description: item.description,
-                    imageUrl: item.imageUrl,
-                    badgeLabel: item.badgeLabel,
-                    categoryId: item.categoryId,
-                    categoryLabel: item.categoryLabel,
-                    isAvailable: nextAvailability,
-                    availabilityLabel: nextAvailability ? "판매 중" : "품절",
-                    inventoryLabel: item.inventoryLabel
-                )
-            }
+            guard let item = uiState.menuItems.first(where: { $0.id == itemId }) else { return }
+            let nextAvailability = !uiState.isMenuAvailable(item)
+            uiState.menuAvailabilityOverrides[itemId] = nextAvailability
         case .goods:
-            uiState.goodsItems = uiState.goodsItems.map { item in
-                guard item.id == itemId else { return item }
-                let nextAvailability = !item.isAvailable
-                return MenuGoodsUiState.ManageItem(
-                    id: item.id,
-                    name: item.name,
-                    priceText: item.priceText,
-                    description: item.description,
-                    imageUrl: item.imageUrl,
-                    badgeLabel: item.badgeLabel,
-                    categoryId: item.categoryId,
-                    categoryLabel: item.categoryLabel,
-                    isAvailable: nextAvailability,
-                    availabilityLabel: nextAvailability ? "판매 중" : "품절",
-                    inventoryLabel: item.inventoryLabel
-                )
-            }
+            guard let item = uiState.goodsItems.first(where: { $0.id == itemId }) else { return }
+            let nextAvailability = !uiState.isGoodsAvailable(item)
+            uiState.goodsAvailabilityOverrides[itemId] = nextAvailability
         }
     }
 
     private func deleteItem(_ itemId: String) {
-        guard let targetItem = uiState.visibleItems.first(where: { $0.id == itemId }) else { return }
-        uiState.pendingDeleteItem = targetItem
+        uiState.pendingDeleteItemId = itemId
     }
 
     private func confirmDeleteItem(_ itemId: String) {
         uiState.infoMessage = nil
-        uiState.pendingDeleteItem = nil
+        uiState.pendingDeleteItemId = nil
         Task { [weak self] in
             guard let self else { return }
 
@@ -254,108 +220,43 @@ final class MenuGoodsViewModel: ObservableObject {
     }
 
     private func cancelDeleteItem() {
-        uiState.pendingDeleteItem = nil
+        uiState.pendingDeleteItemId = nil
     }
 
-    private func buildMenuCategories(items: [MenuGoodsUiState.ManageItem]) -> [MenuGoodsUiState.CategoryChip] {
+    private func buildMenuCategories(items: [CafeMenu]) -> [MenuGoodsUiState.CategoryChip] {
         let preferredOrder: [(String, MenuGoodsUiState.CategoryChip)] = [
             ("food", .init(id: "food", label: "Food", iconKey: "food")),
             ("drink", .init(id: "drink", label: "Drinks", iconKey: "drink")),
             ("dessert", .init(id: "dessert", label: "Dessert", iconKey: "dessert"))
         ]
         return [.init(id: nil, label: "All", iconKey: "all")] + preferredOrder.compactMap { id, chip in
-            items.contains(where: { $0.categoryId == id }) ? chip : nil
+            items.contains(where: { $0.category.lowercased() == id }) ? chip : nil
         }
     }
 
-    private func buildGoodsCategories(items: [MenuGoodsUiState.ManageItem]) -> [MenuGoodsUiState.CategoryChip] {
+    private func buildGoodsCategories(items: [Goods]) -> [MenuGoodsUiState.CategoryChip] {
         var seen = Set<String>()
         let dynamic = items.compactMap { item -> MenuGoodsUiState.CategoryChip? in
-            guard let categoryId = item.categoryId, !seen.contains(categoryId) else {
+            let categoryId: String
+            if item.name.localizedCaseInsensitiveContains("포토") {
+                categoryId = "collectible"
+            } else if item.name.localizedCaseInsensitiveContains("의상") {
+                categoryId = "apparel"
+            } else {
+                categoryId = "goods"
+            }
+            guard !seen.contains(categoryId) else {
                 return nil
             }
             seen.insert(categoryId)
             return MenuGoodsUiState.CategoryChip(
                 id: categoryId,
-                label: item.categoryLabel,
+                label: categoryId == "collectible" ? "Collectible" : (categoryId == "apparel" ? "Apparel" : "Goods"),
                 iconKey: "goods"
             )
         }
 
         return [.init(id: nil, label: "All", iconKey: "all")] + dynamic
-    }
-
-    private func mapMenuToManageItem(_ menu: CafeMenu, index: Int) -> MenuGoodsUiState.ManageItem {
-        let normalizedCategoryId = menu.category.lowercased()
-        let categoryLabel: String
-        switch normalizedCategoryId {
-        case "food":
-            categoryLabel = "Food"
-        case "drink":
-            categoryLabel = "Drinks"
-        case "dessert":
-            categoryLabel = "Dessert"
-        default:
-            categoryLabel = menu.category.capitalized
-        }
-        let isAvailable = menu.isAvailable
-        return MenuGoodsUiState.ManageItem(
-            id: menu.id,
-            name: menu.name,
-            priceText: formatPrice(menu.price),
-            description: menu.desc,
-            imageUrl: menu.image,
-            badgeLabel: categoryLabel,
-            categoryId: normalizedCategoryId,
-            categoryLabel: categoryLabel,
-            isAvailable: isAvailable,
-            availabilityLabel: isAvailable ? "판매 중" : "품절",
-            inventoryLabel: nil
-        )
-    }
-
-    private func mapGoodsToManageItem(_ goods: Goods, index: Int) -> MenuGoodsUiState.ManageItem {
-        let category: String
-        if goods.name.localizedCaseInsensitiveContains("포토") {
-            category = "collectible"
-        } else if goods.name.localizedCaseInsensitiveContains("의상") {
-            category = "apparel"
-        } else {
-            category = "goods"
-        }
-
-        let categoryLabel: String
-        switch category {
-        case "collectible":
-            categoryLabel = "Collectible"
-        case "apparel":
-            categoryLabel = "Apparel"
-        default:
-            categoryLabel = "Goods"
-        }
-
-        let isAvailable = goods.stock > 0
-        return MenuGoodsUiState.ManageItem(
-            id: goods.id,
-            name: goods.name,
-            priceText: formatPrice(goods.price),
-            description: "카페 굿즈 판매 항목",
-            imageUrl: goods.image,
-            badgeLabel: categoryLabel,
-            categoryId: category,
-            categoryLabel: categoryLabel,
-            isAvailable: isAvailable,
-            availabilityLabel: isAvailable ? "판매 중" : "품절",
-            inventoryLabel: "재고 \(goods.stock)"
-        )
-    }
-
-    private func formatPrice(_ price: Int32) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        let number = NSNumber(value: price)
-        let formatted = formatter.string(from: number) ?? "\(price)"
-        return "KRW \(formatted)"
     }
 
     func onAction(_ action: MenuGoodsAction) {

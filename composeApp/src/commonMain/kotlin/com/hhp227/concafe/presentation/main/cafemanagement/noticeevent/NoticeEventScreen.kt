@@ -69,6 +69,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
+import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
@@ -522,7 +525,7 @@ private fun NoticeEventImageSection(
 
 @Composable
 private fun NoticeCard(
-    item: NoticeItem,
+    item: CafeNoticeManagementItem,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -574,7 +577,7 @@ private fun NoticeCard(
                 color = Color(0xFF23161C)
             )
             Text(
-                text = item.date,
+                text = item.displayDate,
                 style = MaterialTheme.typography.labelMedium,
                 color = Color(0xFF8F848F)
             )
@@ -617,7 +620,7 @@ private fun EmptyStateCard(message: String) {
 
 @Composable
 private fun EventCard(
-    item: EventItem,
+    item: CafeEventManagementItem,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -682,7 +685,7 @@ private fun EventCard(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color(0xFF8F848F), modifier = Modifier.size(14.dp))
-                    Text(text = item.period, style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
                 }
             }
         }

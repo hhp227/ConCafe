@@ -32,6 +32,8 @@ final class NoticeEventViewModel: ObservableObject {
 
     private let noticeManagementEventPublisher: NoticeManagementEventPublisher
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     @Published private(set) var uiState = NoticeEventUiState()
 
     let event = PassthroughSubject<NoticeEventEvent, Never>()
@@ -64,7 +66,7 @@ final class NoticeEventViewModel: ObservableObject {
         uiState.formContent = target.content
         uiState.formImageUrl = ""
         uiState.formPinned = target.isPinned
-        uiState.formReservedAt = target.statusAccent == .draft ? target.date : ""
+        uiState.formReservedAt = target.statusAccent == .draft ? target.displayDate : ""
         uiState.infoMessage = nil
     }
 
@@ -82,7 +84,7 @@ final class NoticeEventViewModel: ObservableObject {
         uiState.formContent = target.content
         uiState.formImageUrl = target.imageUrl
         uiState.formPinned = false
-        uiState.formReservedAt = target.period
+        uiState.formReservedAt = target.periodText
         uiState.infoMessage = nil
     }
     
@@ -110,8 +112,7 @@ final class NoticeEventViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeNoticeManagementItem> {
                     let items = page.items as! [CafeNoticeManagementItem]
-                    let mapped = items.map(mapNotice)
-                    uiState.notices = append ? (uiState.notices + mapped) : mapped
+                    uiState.notices = append ? (uiState.notices + items) : items
                     uiState.noticeNextCursor = page.nextCursor
                     uiState.canLoadMoreNotices = page.hasNext
                     uiState.isLoadingNotices = false
@@ -154,8 +155,7 @@ final class NoticeEventViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeEventManagementItem> {
                     let items = page.items as! [CafeEventManagementItem]
-                    let mapped = items.map(mapEvent)
-                    uiState.events = append ? (uiState.events + mapped) : mapped
+                    uiState.events = append ? (uiState.events + items) : items
                     uiState.eventNextCursor = page.nextCursor
                     uiState.canLoadMoreEvents = page.hasNext
                     uiState.isLoadingEvents = false
@@ -236,6 +236,7 @@ final class NoticeEventViewModel: ObservableObject {
                         )
                     }
                 } else {
+                    let uploadedImageUrl = try await uploadEventImageIfNeeded(uiState.formImageUrl)
                     if let editingId = uiState.formEditingId {
                         result = try await updateCafeEventUseCase.invoke(
                             input: CafeEventUpdate(
@@ -243,7 +244,7 @@ final class NoticeEventViewModel: ObservableObject {
                                 eventId: editingId,
                                 title: uiState.formTitle,
                                 content: uiState.formContent,
-                                imageUrl: uiState.formImageUrl,
+                                imageUrl: uploadedImageUrl,
                                 periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt
                             )
                         )
@@ -253,7 +254,7 @@ final class NoticeEventViewModel: ObservableObject {
                                 cafeId: cafeId,
                                 title: uiState.formTitle,
                                 content: uiState.formContent,
-                                imageUrl: uiState.formImageUrl,
+                                imageUrl: uploadedImageUrl,
                                 periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt
                             )
                         )
@@ -332,13 +333,11 @@ final class NoticeEventViewModel: ObservableObject {
     }
 
     private func patchNotice(_ item: CafeNoticeManagementItem) {
-        let mapped = mapNotice(item)
-        uiState.notices = uiState.notices.map { $0.id == mapped.id ? mapped : $0 }
+        uiState.notices = uiState.notices.map { $0.id == item.id ? item : $0 }
     }
 
     private func patchEvent(_ item: CafeEventManagementItem) {
-        let mapped = mapEvent(item)
-        uiState.events = uiState.events.map { $0.id == mapped.id ? mapped : $0 }
+        uiState.events = uiState.events.map { $0.id == item.id ? item : $0 }
     }
 
     private func removeNotice(_ id: String) {
@@ -442,42 +441,6 @@ final class NoticeEventViewModel: ObservableObject {
         }
     }
 
-    private func mapNotice(_ item: CafeNoticeManagementItem) -> NoticeItem {
-        let accent: NoticeStatusAccent
-        switch item.statusAccent {
-        case .published:
-            accent = .published
-        case .draft:
-            accent = .draft
-        case .ended:
-            accent = .ended
-        default:
-            accent = .published
-        }
-
-        return NoticeItem(
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            date: item.displayDate,
-            isPinned: item.isPinned,
-            statusLabel: item.statusLabel,
-            statusAccent: accent
-        )
-    }
-
-    private func mapEvent(_ item: CafeEventManagementItem) -> EventItem {
-        EventItem(
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            period: item.periodText,
-            statusLabel: item.statusLabel,
-            imageUrl: item.imageUrl,
-            isDimmed: item.isDimmed
-        )
-    }
-
     init(
         cafeId: String,
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
@@ -488,7 +451,8 @@ final class NoticeEventViewModel: ObservableObject {
         updateCafeEventUseCase: UpdateCafeEventUseCase = KoinInitializerKt.resolveUpdateCafeEventUseCase(),
         deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase = KoinInitializerKt.resolveDeleteCafeNoticeUseCase(),
         deleteCafeEventUseCase: DeleteCafeEventUseCase = KoinInitializerKt.resolveDeleteCafeEventUseCase(),
-        noticeManagementEventPublisher: NoticeManagementEventPublisher = KoinInitializerKt.resolveNoticeManagementEventPublisher()
+        noticeManagementEventPublisher: NoticeManagementEventPublisher = KoinInitializerKt.resolveNoticeManagementEventPublisher(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
@@ -500,9 +464,25 @@ final class NoticeEventViewModel: ObservableObject {
         self.deleteCafeNoticeUseCase = deleteCafeNoticeUseCase
         self.deleteCafeEventUseCase = deleteCafeEventUseCase
         self.noticeManagementEventPublisher = noticeManagementEventPublisher
+        self.uploadImageUseCase = uploadImageUseCase
 
         observeNoticeManagementEvent()
         loadNoticePage(cursor: nil, append: false)
+    }
+
+    private func uploadEventImageIfNeeded(_ imageUrl: String) async throws -> String {
+        let trimmed = imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return trimmed
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: trimmed, folder: "events")
+        if let success = result as? AppResultSuccess<AnyObject>, let data = success.data as? String {
+            return data
+        }
+        if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
+            throw NSError(domain: "NoticeEvent", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
+        }
+        throw NSError(domain: "NoticeEvent", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
     }
 
     deinit {

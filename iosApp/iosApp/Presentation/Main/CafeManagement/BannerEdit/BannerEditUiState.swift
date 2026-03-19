@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 struct BannerEditUiState {
     var screenTitle = "새 배너 등록"
@@ -19,14 +20,17 @@ struct BannerEditUiState {
     var selectedTarget: BannerTargetType = .cafeDetail
     var targetValue = ""
     var displayDays = 5
-    var ownedCafeOptions: [BannerSelectableItem] = []
-    var selectedCafeOption: BannerSelectableItem? = nil
-    var selectedContentOption: BannerSelectableItem? = nil
+    var ownedCafeOptions: [CafeManagementData.OwnedCafeSummary] = []
+    var selectedCafeId: String? = nil
+    var selectedNoticeId: String? = nil
+    var selectedEventId: String? = nil
     var selectorType: BannerSelectorType? = nil
     var selectorQuery = ""
-    var selectorOptions: [BannerSelectableItem] = []
+    var noticeSelectorOptions: [CafeNoticeManagementItem] = []
+    var eventSelectorOptions: [CafeEventManagementItem] = []
     var isSelectorLoading = false
     var isAdmin = false
+    var isImageRequiredAlertVisible = false
     var isSaving = false
     var infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
 
@@ -44,6 +48,60 @@ struct BannerEditUiState {
 
     var selectorSearchPlaceholder: String {
         selectorType?.searchPlaceholder ?? ""
+    }
+
+    var selectedCafeOption: CafeManagementData.OwnedCafeSummary? {
+        guard let selectedCafeId else { return nil }
+        return ownedCafeOptions.first(where: { $0.id == selectedCafeId })
+    }
+
+    var selectedContentTitle: String? {
+        switch selectedTarget {
+        case .notice:
+            guard let selectedNoticeId else { return nil }
+            return noticeSelectorOptions.first(where: { $0.id == selectedNoticeId })?.title
+        case .eventDetail:
+            guard let selectedEventId else { return nil }
+            return eventSelectorOptions.first(where: { $0.id == selectedEventId })?.title
+        default:
+            return nil
+        }
+    }
+
+    var selectedContentSubtitle: String? {
+        switch selectedTarget {
+        case .notice:
+            guard let selectedNoticeId else { return nil }
+            return noticeSelectorOptions.first(where: { $0.id == selectedNoticeId })?.displayDate
+        case .eventDetail:
+            guard let selectedEventId else { return nil }
+            return eventSelectorOptions.first(where: { $0.id == selectedEventId })?.periodText
+        default:
+            return nil
+        }
+    }
+
+    var filteredCafeSelectorOptions: [CafeManagementData.OwnedCafeSummary] {
+        if selectorQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return ownedCafeOptions
+        }
+        return ownedCafeOptions.filter { option in
+            option.name.localizedCaseInsensitiveContains(selectorQuery) ||
+            option.city.localizedCaseInsensitiveContains(selectorQuery)
+        }
+    }
+
+    var activeSelectorItemCount: Int {
+        switch selectorType {
+        case .cafe:
+            return filteredCafeSelectorOptions.count
+        case .notice:
+            return noticeSelectorOptions.count
+        case .event:
+            return eventSelectorOptions.count
+        case .none:
+            return 0
+        }
     }
 
     var targetSelectionLabel: String {
@@ -69,17 +127,12 @@ struct BannerEditUiState {
     }
 
     var isSaveEnabled: Bool {
+        !(selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) &&
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !isSaving
     }
-}
-
-struct BannerSelectableItem: Identifiable, Equatable {
-    let id: String
-    let title: String
-    let subtitle: String
 }
 
 enum BannerTargetType: String, CaseIterable, Identifiable {

@@ -11,6 +11,7 @@ sealed interface CastEditAction {
     data class ChangeIntroduction(val value: String) : CastEditAction
     data class ToggleWorkingDay(val day: CastEditUiState.WorkingDay) : CastEditAction
     data object ClickAddGalleryPhoto : CastEditAction
+    data object DismissImageRequiredAlert : CastEditAction
     data object ClickSave : CastEditAction
     data object DismissInfoMessage : CastEditAction
 }

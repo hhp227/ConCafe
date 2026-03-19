@@ -21,6 +21,8 @@ final class ReviewEditViewModel: ObservableObject {
 
     private let createReviewUseCase: CreateReviewUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     private var loadTask: Task<Void, Never>?
 
     private func loadCafeInfo() {
@@ -94,11 +96,12 @@ final class ReviewEditViewModel: ObservableObject {
             loadTask?.cancel()
             loadTask = Task {
                 do {
+                    let uploadedPhoto = try await uploadImageIfNeeded(uiState.photoImageUrl, folder: "reviews")
                     let result = try await createReviewUseCase.invoke(
                         cafeId: uiState.cafeId,
                         rating: Float(uiState.rating),
                         content: uiState.content,
-                        imageUrls: uiState.photoImageUrl.map { [$0] } ?? [],
+                        imageUrls: uploadedPhoto.map { [$0] } ?? [],
                         taggedCastIds: uiState.taggedCastIds
                     )
 
@@ -175,11 +178,13 @@ final class ReviewEditViewModel: ObservableObject {
     init(
         cafeId: String? = nil,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        createReviewUseCase: CreateReviewUseCase = KoinInitializerKt.resolveCreateReviewUseCase()
+        createReviewUseCase: CreateReviewUseCase = KoinInitializerKt.resolveCreateReviewUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.createReviewUseCase = createReviewUseCase
+        self.uploadImageUseCase = uploadImageUseCase
         uiState.cafeId = cafeId ?? ""
 
         loadCafeInfo()
@@ -187,5 +192,19 @@ final class ReviewEditViewModel: ObservableObject {
 
     deinit {
         loadTask?.cancel()
+    }
+
+    private func uploadImageIfNeeded(_ imageUrl: String?, folder: String) async throws -> String? {
+        guard let imageUrl, !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
+        if let success = result as? AppResultSuccess<AnyObject>, let data = success.data as? String {
+            return data
+        }
+        if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
+            throw NSError(domain: "ReviewEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
+        }
+        throw NSError(domain: "ReviewEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
     }
 }

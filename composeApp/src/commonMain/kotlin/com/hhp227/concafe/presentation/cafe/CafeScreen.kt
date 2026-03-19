@@ -32,7 +32,6 @@ import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.core.context.GlobalContext
@@ -497,7 +496,7 @@ private fun LazyListScope.cafeNoticeTabItems(
     } else {
         items(
             items = uiState.notices,
-            key = NoticeItem::id
+            key = { notice -> notice.id }
         ) { notice ->
             var isExpanded by rememberSaveable(notice.id) {
                 mutableStateOf(false)

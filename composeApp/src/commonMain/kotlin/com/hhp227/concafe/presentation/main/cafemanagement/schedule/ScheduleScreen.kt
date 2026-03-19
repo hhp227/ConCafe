@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
+import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -68,6 +71,14 @@ fun ScheduleScreen(
     )
 }
 
+private fun statusLabel(status: CastScheduleStatus): String {
+    return when (status) {
+        CastScheduleStatus.WORK -> "근무"
+        CastScheduleStatus.OFF -> "휴무"
+        CastScheduleStatus.VACATION -> "휴가"
+    }
+}
+
 @Composable
 private fun ScheduleEditSheet(
     uiState: ScheduleUiState,
@@ -107,7 +118,7 @@ private fun ScheduleEditSheet(
                     .padding(6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ScheduleEditStatus.values().forEach { status ->
+                CastScheduleStatus.entries.forEach { status ->
                     val selected = uiState.editStatus == status
                     Surface(
                         modifier = Modifier
@@ -122,7 +133,7 @@ private fun ScheduleEditSheet(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                status.label,
+                                statusLabel(status),
                                 color = if (selected) Color(0xFF24161E) else Color(0xFF7A707A),
                                 fontWeight = FontWeight.Medium
                             )
@@ -454,6 +465,7 @@ private fun WeekSelectorSection(
             uiState.weekDays.forEach { day ->
                 WeekDayChip(
                     day = day,
+                    isSelected = day.id == uiState.selectedDayId,
                     onClick = { onAction(ScheduleAction.SelectDay(day.id)) }
                 )
             }
@@ -463,15 +475,16 @@ private fun WeekSelectorSection(
 
 @Composable
 private fun WeekDayChip(
-    day: ScheduleUiState.WeekDay,
+    day: ScheduleManagementWeekDay,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (day.isSelected) Color(0xFFFFD1DC) else Color.White.copy(alpha = 0.92f),
-        shadowElevation = if (day.isSelected) 4.dp else 0.dp,
-        border = if (day.isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+        color = if (isSelected) Color(0xFFFFD1DC) else Color.White.copy(alpha = 0.92f),
+        shadowElevation = if (isSelected) 4.dp else 0.dp,
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
     ) {
         Column(
             modifier = Modifier
@@ -484,7 +497,7 @@ private fun WeekDayChip(
                 text = day.label,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (day.isSelected) Color(0x9924161E) else Color(0xFF9C8C98)
+                color = if (isSelected) Color(0x9924161E) else Color(0xFF9C8C98)
             )
             Text(
                 text = day.number,
@@ -532,7 +545,7 @@ private fun ScheduleInfoBanner(
 
 @Composable
 private fun ScheduleDayList(
-    schedules: List<ScheduleUiState.DaySchedule>,
+    schedules: List<ScheduleManagementDaySchedule>,
     onAction: (ScheduleAction) -> Unit
 ) {
     Column(
@@ -549,7 +562,7 @@ private fun ScheduleDayList(
 
 @Composable
 private fun DayScheduleCard(
-    schedule: ScheduleUiState.DaySchedule,
+    schedule: ScheduleManagementDaySchedule,
     onEditClick: () -> Unit
 ) {
     Surface(

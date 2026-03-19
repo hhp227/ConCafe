@@ -19,6 +19,8 @@ final class MenuGoodsEditViewModel: ObservableObject {
 
     private let upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     @Published private(set) var uiState = MenuGoodsEditUiState()
 
     let event = PassthroughSubject<MenuGoodsEditEvent, Never>()
@@ -74,19 +76,19 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.isSaving = true
         uiState.infoMessage = nil
 
-        let update = CafeMenuGoodsUpsert(
-            cafeId: cafeId,
-            itemId: itemId,
-            name: uiState.itemName,
-            price: price,
-            category: uiState.selectedCategory.categoryId,
-            description: uiState.description,
-            isInStock: uiState.isInStock,
-            imageUrl: uiState.imageUrl
-        )
-
         Task {
             do {
+                let uploadedImageUrl = try await uploadImageIfNeeded(uiState.imageUrl, folder: "cafe-items")
+                let update = CafeMenuGoodsUpsert(
+                    cafeId: cafeId,
+                    itemId: itemId,
+                    name: uiState.itemName,
+                    price: price,
+                    category: uiState.selectedCategoryId,
+                    description: uiState.description,
+                    isInStock: uiState.isInStock,
+                    imageUrl: uploadedImageUrl
+                )
                 let result = try await upsertCafeMenuGoodsUseCase.invoke(update: update)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -117,7 +119,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = menu.name
         uiState.price = String(menu.price)
-        uiState.selectedCategory = MenuGoodsEditUiState.ItemCategory(menuCategory: menu.category)
+        uiState.selectedCategoryId = normalizeCategoryId(menu.category)
         uiState.description = menu.desc
         uiState.isInStock = menu.isAvailable
         uiState.imageUrl = menu.image
@@ -131,7 +133,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = goods.name
         uiState.price = String(goods.price)
-        uiState.selectedCategory = .goods
+        uiState.selectedCategoryId = "goods"
         uiState.description = "카페 굿즈 판매 항목"
         uiState.isInStock = goods.stock > 0
         uiState.imageUrl = goods.image
@@ -156,7 +158,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         case .changePrice(let value):
             uiState.price = String(value.filter(\.isNumber))
         case .selectCategory(let category):
-            uiState.selectedCategory = category
+            uiState.selectedCategoryId = normalizeCategoryId(category)
         case .changeDescription(let value):
             uiState.description = value
         case .toggleStock(let isInStock):
@@ -172,28 +174,39 @@ final class MenuGoodsEditViewModel: ObservableObject {
         cafeId: String,
         itemId: String? = nil,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase()
+        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.itemId = itemId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.upsertCafeMenuGoodsUseCase = upsertCafeMenuGoodsUseCase
+        self.uploadImageUseCase = uploadImageUseCase
 
         loadInitialValue()
     }
-}
 
-private extension MenuGoodsEditUiState.ItemCategory {
-    init(menuCategory: String) {
-        switch menuCategory.lowercased() {
-        case "food":
-            self = .food
-        case "dessert":
-            self = .dessert
-        case "goods":
-            self = .goods
+    private func normalizeCategoryId(_ categoryId: String) -> String {
+        let normalized = categoryId.lowercased()
+        switch normalized {
+        case "drink", "food", "dessert", "goods":
+            return normalized
         default:
-            self = .drink
+            return "drink"
         }
+    }
+
+    private func uploadImageIfNeeded(_ imageUrl: String?, folder: String) async throws -> String? {
+        guard let imageUrl, !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
+        if let success = result as? AppResultSuccess<AnyObject>, let data = success.data as? String {
+            return data
+        }
+        if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
+            throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
+        }
+        throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
     }
 }

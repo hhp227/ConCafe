@@ -23,6 +23,8 @@ final class CastEditViewModel: ObservableObject {
 
     private let upsertCastUseCase: UpsertCastUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     private func clickProfilePhoto() {
         uiState.infoMessage = nil
     }
@@ -48,12 +50,25 @@ final class CastEditViewModel: ObservableObject {
             uiState.infoMessage = "컨셉 역할을 입력해주세요."
             return
         }
+        guard !(uiState.profileImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) ||
+            uiState.galleryImages.contains(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            uiState.isImageRequiredAlertVisible = true
+            return
+        }
 
         uiState.isSaving = true
         uiState.infoMessage = nil
 
         Task {
             do {
+                let uploadedProfileImage = try await uploadImageIfNeeded(
+                    uiState.profileImageUrl,
+                    folder: "casts/profile"
+                )
+                let uploadedGalleryImages = try await uploadImagesIfNeeded(
+                    uiState.galleryImages,
+                    folder: "casts/gallery"
+                )
                 let result = try await upsertCastUseCase.invoke(
                     update: CastUpsert(
                         castId: castId,
@@ -62,6 +77,8 @@ final class CastEditViewModel: ObservableObject {
                         conceptRole: uiState.conceptRole,
                         birthday: uiState.birthday.isEmpty ? nil : uiState.birthday,
                         introduction: uiState.introduction,
+                        profileImage: uploadedProfileImage,
+                        galleryImages: uploadedGalleryImages,
                         workingDays: uiState.selectedWorkingDays.toWorkingDayKeys()
                     )
                 )
@@ -123,6 +140,7 @@ final class CastEditViewModel: ObservableObject {
         case .selectProfilePhoto(let imageUrl):
             uiState.profileImageUrl = imageUrl
             uiState.infoMessage = nil
+            uiState.isImageRequiredAlertVisible = false
         case .addGalleryImage(let imageUrl):
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
                 uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
@@ -131,6 +149,7 @@ final class CastEditViewModel: ObservableObject {
             if imageUrl.isEmpty { return }
             uiState.galleryImages.append(imageUrl)
             uiState.infoMessage = nil
+            uiState.isImageRequiredAlertVisible = false
         case .changeCastName(let value):
             uiState.castName = value
         case .changeConceptRole(let value):
@@ -143,6 +162,8 @@ final class CastEditViewModel: ObservableObject {
             toggleWorkingDay(day)
         case .clickAddGalleryPhoto:
             clickAddGalleryPhoto()
+        case .dismissImageRequiredAlert:
+            uiState.isImageRequiredAlertVisible = false
         case .clickSave:
             clickSave()
         case .dismissInfoMessage:
@@ -154,12 +175,14 @@ final class CastEditViewModel: ObservableObject {
         cafeId: String? = nil,
         castId: String? = nil,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
-        upsertCastUseCase: UpsertCastUseCase = KoinInitializerKt.resolveUpsertCastUseCase()
+        upsertCastUseCase: UpsertCastUseCase = KoinInitializerKt.resolveUpsertCastUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.upsertCastUseCase = upsertCastUseCase
+        self.uploadImageUseCase = uploadImageUseCase
 
         if let castId, !castId.isEmpty {
             uiState.screenTitle = "캐스트 프로필 수정"
@@ -169,6 +192,30 @@ final class CastEditViewModel: ObservableObject {
             uiState.screenTitle = "캐스트 프로필 추가"
             uiState.saveButtonLabel = "프로필 추가"
         }
+    }
+}
+
+private extension CastEditViewModel {
+    func uploadImageIfNeeded(_ imageUrl: String?, folder: String) async throws -> String? {
+        guard let imageUrl, !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
+        guard let success = result as? AppResultSuccess<AnyObject>,
+              let uploaded = success.data as? String else {
+            throw NSError(domain: "CastEditUpload", code: 1)
+        }
+        return uploaded
+    }
+
+    func uploadImagesIfNeeded(_ imageUrls: [String], folder: String) async throws -> [String] {
+        var results: [String] = []
+        for imageUrl in imageUrls where !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let uploaded = try await uploadImageIfNeeded(imageUrl, folder: folder) {
+                results.append(uploaded)
+            }
+        }
+        return results
     }
 }
 

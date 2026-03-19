@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
+import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -221,20 +223,62 @@ private fun PendingSection(
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            uiState.filteredPendingRequests.forEach { request ->
-                PendingRequestCard(
-                    request = request,
-                    onApprove = { onAction(AdminOperationsAction.ApprovePending(request.id)) },
-                    onReject = { onAction(AdminOperationsAction.RejectPending(request.id)) }
-                )
+            if (uiState.selectedPendingFilter == PendingFilter.CAFE_REGISTRATION) {
+                uiState.pendingCafeRegistrationClaims.forEach { claim ->
+                    PendingCafeRegistrationClaimCard(
+                        claim = claim,
+                        onApprove = { onAction(AdminOperationsAction.ApprovePending(claim.claimId)) },
+                        onReject = { onAction(AdminOperationsAction.RejectPending(claim.claimId)) }
+                    )
+                }
+            } else {
+                uiState.pendingCafeOwnerClaims.forEach { claim ->
+                    PendingCafeOwnerClaimCard(
+                        claim = claim,
+                        onApprove = { onAction(AdminOperationsAction.ApprovePending(claim.claimId)) },
+                        onReject = { onAction(AdminOperationsAction.RejectPending(claim.claimId)) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PendingRequestCard(
-    request: AdminPendingRequest,
+private fun PendingCafeRegistrationClaimCard(
+    claim: PendingCafeRegistrationClaimPreview,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    PendingClaimCard(
+        title = claim.cafeName,
+        subtitle = claim.location,
+        requestedAt = claim.requestedAt,
+        onApprove = onApprove,
+        onReject = onReject
+    )
+}
+
+@Composable
+private fun PendingCafeOwnerClaimCard(
+    claim: PendingCafeOwnerClaimPreview,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    PendingClaimCard(
+        title = "점장 권한 신청 - ${claim.requesterNickname}",
+        subtitle = claim.location,
+        requestedAt = claim.requestedAt,
+        onApprove = onApprove,
+        onReject = onReject
+    )
+}
+
+@Composable
+private fun PendingClaimCard(
+    title: String,
+    subtitle: String,
+    requestedAt: String,
     onApprove: () -> Unit,
     onReject: () -> Unit
 ) {
@@ -261,17 +305,17 @@ private fun PendingRequestCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                    Text(request.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Surface(shape = RoundedCornerShape(999.dp), color = Color(0xFFF5F2F4)) {
                         Text(
-                            text = request.requestedAt,
+                            text = requestedAt,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF7A707A)
                         )
                     }
                 }
-                Text(request.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7A707A))
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7A707A))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onApprove,

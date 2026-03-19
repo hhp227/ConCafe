@@ -16,6 +16,8 @@ class ExploreViewModel: ObservableObject {
 
     private let getExploreCastPageUseCase: GetExploreCastPageUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
@@ -25,6 +27,22 @@ class ExploreViewModel: ObservableObject {
     let event = PassthroughSubject<ExploreEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
+
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.isLoggedIn = user != nil
+                    if user != nil {
+                        uiState.isLoginPromptVisible = false
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
 
     private func refreshCurrentTab() {
         tasks[.cafePage]?.cancel()
@@ -215,6 +233,14 @@ class ExploreViewModel: ObservableObject {
         return matchesQuery && matchesRegion
     }
 
+    private func requireSignedIn(onAuthenticated: @escaping () -> Void) {
+        if uiState.isLoggedIn {
+            onAuthenticated()
+        } else {
+            uiState.isLoginPromptVisible = true
+        }
+    }
+
     func onAction(_ action: ExploreAction) {
         switch action {
         case .queryChanged(let query):
@@ -234,9 +260,18 @@ class ExploreViewModel: ObservableObject {
                 refreshCurrentTab()
             }
         case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCafe(id: id))
+            }
         case .maidTapped(let id):
-            event.send(.navigateToCast(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCast(id: id))
+            }
+        case .loginPromptSignInTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
         case .loadMoreCafes:
             loadMoreCafes()
         case .loadMoreMaids:
@@ -249,14 +284,17 @@ class ExploreViewModel: ObservableObject {
     init(
         getExploreCafePageUseCase: GetExploreCafePageUseCase = KoinInitializerKt.resolveGetExploreCafePageUseCase(),
         getExploreCastPageUseCase: GetExploreCastPageUseCase = KoinInitializerKt.resolveGetExploreCastPageUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getExploreCafePageUseCase = getExploreCafePageUseCase
         self.getExploreCastPageUseCase = getExploreCastPageUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
 
+        observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -268,6 +306,7 @@ class ExploreViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case session
         case cafeDetailEvent
         case castEvent
         case cafePage

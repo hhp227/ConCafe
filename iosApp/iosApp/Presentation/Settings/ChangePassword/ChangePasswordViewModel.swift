@@ -14,21 +14,6 @@ final class ChangePasswordViewModel: ObservableObject {
 
     let event = PassthroughSubject<ChangePasswordEvent, Never>()
 
-    func onAction(_ action: ChangePasswordAction) {
-        switch action {
-        case .backTapped:
-            event.send(.navigateBack)
-        case .currentPasswordChanged(let value):
-            uiState.currentPassword = value
-        case .newPasswordChanged(let value):
-            uiState.newPassword = value
-        case .confirmPasswordChanged(let value):
-            uiState.confirmPassword = value
-        case .submitTapped:
-            submit()
-        }
-    }
-
     private func submit() {
         let message: String
         if uiState.currentPassword.isEmpty {
@@ -45,4 +30,19 @@ final class ChangePasswordViewModel: ObservableObject {
     }
 
     private let minimumPasswordLength = 8
+
+    func onAction(_ action: ChangePasswordAction) {
+        switch action {
+        case .backTapped:
+            event.send(.navigateBack)
+        case .currentPasswordChanged(let value):
+            uiState.currentPassword = value
+        case .newPasswordChanged(let value):
+            uiState.newPassword = value
+        case .confirmPasswordChanged(let value):
+            uiState.confirmPassword = value
+        case .submitTapped:
+            submit()
+        }
+    }
 }

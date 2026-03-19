@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Foundation
+import Shared
 
 struct MenuGoodsView: View {
     let cafeId: String
@@ -41,22 +43,23 @@ struct MenuGoodsView: View {
         .alert(
             "항목 삭제",
             isPresented: Binding(
-                get: { viewModel.uiState.pendingDeleteItem != nil },
+                get: { viewModel.uiState.pendingDeleteItemId != nil },
                 set: { isPresented in
                     if !isPresented {
                         viewModel.onAction(.cancelDeleteItem)
                     }
                 }
-            ),
-            presenting: viewModel.uiState.pendingDeleteItem
-        ) { item in
+            )
+        ) {
             Button("취소", role: .cancel) {
                 viewModel.onAction(.cancelDeleteItem)
             }
             Button("삭제", role: .destructive) {
-                viewModel.onAction(.confirmDeleteItem(item.id))
+                if let itemId = viewModel.uiState.pendingDeleteItemId {
+                    viewModel.onAction(.confirmDeleteItem(itemId))
+                }
             }
-        } message: { _ in
+        } message: {
             Text("항목을 삭제 하시겠습니까?")
         }
     }
@@ -90,12 +93,20 @@ private struct MenuGoodsContentView: View {
                 }
                 if uiState.isLoading {
                     loadingCard
-                } else if uiState.filteredVisibleItems.isEmpty {
+                } else if uiState.selectedCollection == .menu && uiState.filteredMenuItems.isEmpty {
+                    emptyStateCard
+                } else if uiState.selectedCollection == .goods && uiState.filteredGoodsItems.isEmpty {
                     emptyStateCard
                 } else {
                     VStack(spacing: 14) {
-                        ForEach(uiState.filteredVisibleItems, id: \.id) { item in
-                            manageItemCard(item: item)
+                        if uiState.selectedCollection == .menu {
+                            ForEach(uiState.filteredMenuItems, id: \.id) { item in
+                                menuItemCard(item: item)
+                            }
+                        } else {
+                            ForEach(uiState.filteredGoodsItems, id: \.id) { item in
+                                goodsItemCard(item: item)
+                            }
                         }
                     }
                 }
@@ -303,9 +314,15 @@ private struct MenuGoodsContentView: View {
         )
     }
 
-    private func manageItemCard(item: MenuGoodsUiState.ManageItem) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            itemThumbnail(item: item)
+    private func menuItemCard(item: CafeMenu) -> some View {
+        let isAvailable = uiState.isMenuAvailable(item)
+        let categoryLabel = uiState.menuCategoryLabel(item)
+        return HStack(alignment: .top, spacing: 14) {
+            itemThumbnail(
+                name: item.name,
+                isAvailable: isAvailable,
+                isMenu: true
+            )
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -313,7 +330,7 @@ private struct MenuGoodsContentView: View {
                             .font(.headline.weight(.bold))
                             .foregroundStyle(Color(hex: "2B2330"))
                             .lineLimit(1)
-                        Text(item.priceText)
+                        Text(formatPrice(item.price))
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: "EF6797"))
                     }
@@ -337,31 +354,26 @@ private struct MenuGoodsContentView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                Text(item.badgeLabel)
+                Text(categoryLabel)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "B64A79"))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(Color(hex: "FCE7EF"))
                     .clipShape(Capsule())
-                Text(item.description)
+                Text(item.desc)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7B6B75"))
                     .lineLimit(2)
-                if let inventoryLabel = item.inventoryLabel {
-                    Text(inventoryLabel)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(Color(hex: "8B7A84"))
-                }
                 Divider()
                     .overlay(Color(hex: "F4E7EE"))
                 HStack {
-                    Text(item.availabilityLabel)
+                    Text(isAvailable ? "판매 중" : "품절")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(item.isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
+                        .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
                     Spacer()
                     Toggle("", isOn: Binding(
-                        get: { item.isAvailable },
+                        get: { isAvailable },
                         set: { _ in onAction(.toggleItemAvailability(item.id)) }
                     ))
                     .labelsHidden()
@@ -378,16 +390,94 @@ private struct MenuGoodsContentView: View {
         )
     }
 
-    private func itemThumbnail(item: MenuGoodsUiState.ManageItem) -> some View {
-        let isMenu = uiState.selectedCollection == .menu
+    private func goodsItemCard(item: Goods) -> some View {
+        let isAvailable = uiState.isGoodsAvailable(item)
+        let categoryLabel = uiState.goodsCategoryLabel(item)
+        return HStack(alignment: .top, spacing: 14) {
+            itemThumbnail(
+                name: item.name,
+                isAvailable: isAvailable,
+                isMenu: false
+            )
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(item.name)
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(Color(hex: "2B2330"))
+                            .lineLimit(1)
+                        Text(formatPrice(item.price))
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "EF6797"))
+                    }
+                    Spacer(minLength: 8)
+                    HStack(spacing: 0) {
+                        Button {
+                            onAction(.clickEditItem(item.id))
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                                .foregroundStyle(Color(hex: "7A6671"))
+                                .frame(width: 36, height: 36)
+                        }
+                        .buttonStyle(.plain)
+                        Button {
+                            onAction(.clickDeleteItem(item.id))
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(Color(hex: "D96B7A"))
+                                .frame(width: 36, height: 36)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                Text(categoryLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "B64A79"))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color(hex: "FCE7EF"))
+                    .clipShape(Capsule())
+                Text("카페 굿즈 판매 항목")
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7B6B75"))
+                    .lineLimit(2)
+                Text("재고 \(item.stock)")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color(hex: "8B7A84"))
+                Divider()
+                    .overlay(Color(hex: "F4E7EE"))
+                HStack {
+                    Text(isAvailable ? "판매 중" : "품절")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { isAvailable },
+                        set: { _ in onAction(.toggleItemAvailability(item.id)) }
+                    ))
+                    .labelsHidden()
+                    .tint(Color(hex: "FFD1DC"))
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color(hex: "F0E2E9"), lineWidth: 1)
+        )
+    }
+
+    private func itemThumbnail(name: String, isAvailable: Bool, isMenu: Bool) -> some View {
         let colors: [Color]
 
         if isMenu {
-            colors = item.isAvailable
+            colors = isAvailable
                 ? [Color(hex: "FFE0EA"), Color(hex: "FAB6D0")]
                 : [Color(hex: "F1E2EA"), Color(hex: "D7C1CE")]
         } else {
-            colors = item.isAvailable
+            colors = isAvailable
                 ? [Color(hex: "FFEBCB"), Color(hex: "FFD7A1")]
                 : [Color(hex: "E7E1DA"), Color(hex: "CBC0B2")]
         }
@@ -400,13 +490,21 @@ private struct MenuGoodsContentView: View {
             VStack(spacing: 6) {
                 Image(systemName: isMenu ? "storefront" : "shippingbox")
                     .foregroundStyle(Color(hex: "704A5F"))
-                Text(String(item.name.prefix(1)))
+                Text(String(name.prefix(1)))
                     .font(.title.weight(.bold))
                     .foregroundStyle(Color(hex: "704A5F"))
             }
         }
         .frame(width: 96, height: 108)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func formatPrice(_ price: Int32) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        let number = NSNumber(value: price)
+        let formatted = formatter.string(from: number) ?? "\(price)"
+        return "KRW \(formatted)"
     }
 
     private func categorySymbolName(_ iconKey: String) -> String {

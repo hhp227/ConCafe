@@ -14,6 +14,8 @@ import KMPNativeCoroutinesAsync
 final class RankingViewModel: ObservableObject {
     private let getRankingFeedUseCase: GetRankingFeedUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
@@ -23,6 +25,22 @@ final class RankingViewModel: ObservableObject {
     let event = PassthroughSubject<RankingEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
+
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.isLoggedIn = user != nil
+                    if user != nil {
+                        uiState.isLoginPromptVisible = false
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
 
     private func loadRankingFeed() {
         let period = uiState.selectedPeriod
@@ -127,6 +145,14 @@ final class RankingViewModel: ObservableObject {
         }
     }
 
+    private func requireSignedIn(onAuthenticated: @escaping () -> Void) {
+        if uiState.isLoggedIn {
+            onAuthenticated()
+        } else {
+            uiState.isLoginPromptVisible = true
+        }
+    }
+
     func onAction(_ action: RankingAction) {
         switch action {
         case .changeTab(let tab):
@@ -141,21 +167,33 @@ final class RankingViewModel: ObservableObject {
             let lastIndex = max(uiState.ads.count - 1, 0)
             uiState.selectedAdIndex = min(max(index, 0), lastIndex)
         case .tapMaid(let id):
-            event.send(.navigateToCast(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCast(id: id))
+            }
         case .tapCafe(let id):
-            event.send(.navigateToCafe(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCafe(id: id))
+            }
+        case .loginPromptSignInTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
         }
     }
 
     init(
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
+        observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
@@ -167,6 +205,7 @@ final class RankingViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case session
         case cafeDetailEvent
         case castEvent
     }

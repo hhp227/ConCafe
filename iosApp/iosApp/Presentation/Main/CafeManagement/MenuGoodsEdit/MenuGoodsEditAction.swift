@@ -13,7 +13,7 @@ enum MenuGoodsEditAction {
     case changeName(String)
     case changePrice(String)
     case selectPhoto(String)
-    case selectCategory(MenuGoodsEditUiState.ItemCategory)
+    case selectCategory(String)
     case changeDescription(String)
     case toggleStock(Bool)
     case clickSave

@@ -57,11 +57,22 @@ final class ScheduleViewModel: ObservableObject {
                     case let event as Shared.CastEvent.Updated:
                         if event.cast.id == castId {
                             let cafeName = self.uiState.castSummary.subtitle.components(separatedBy: " / ").last ?? ""
+                            let conceptRole: String
+                            switch event.cast.conceptRole.lowercased() {
+                            case "maid":
+                                conceptRole = "메이드"
+                            case "butler":
+                                conceptRole = "버틀러"
+                            case "idol":
+                                conceptRole = "아이돌"
+                            default:
+                                conceptRole = event.cast.conceptRole.prefix(1).uppercased() + event.cast.conceptRole.dropFirst()
+                            }
                             self.uiState.castSummary = ScheduleUiState.CastSummary(
                                 title: event.cast.name,
-                                subtitle: "\(event.cast.conceptRole.toDisplayConceptRole()) / \(cafeName)",
+                                subtitle: "\(conceptRole) / \(cafeName)",
                                 badge: self.uiState.castSummary.badge,
-                                initials: event.cast.name.toInitials()
+                                initials: String(event.cast.name.prefix(2)).uppercased()
                             )
                         }
                     case let event as Shared.CastEvent.Deleted:
@@ -132,7 +143,34 @@ final class ScheduleViewModel: ObservableObject {
                    let data = success.data as? Shared.ScheduleManagementData {
                     bindCastEvent(data.detail.cast.id)
                     bindScheduleManagementEvent(data.detail.cast.id)
-                    uiState = data.toUiState()
+                    let conceptRole: String
+                    switch data.detail.cast.conceptRole.lowercased() {
+                    case "maid":
+                        conceptRole = "메이드"
+                    case "butler":
+                        conceptRole = "버틀러"
+                    case "idol":
+                        conceptRole = "아이돌"
+                    default:
+                        conceptRole = data.detail.cast.conceptRole.prefix(1).uppercased() + data.detail.cast.conceptRole.dropFirst()
+                    }
+                    uiState = ScheduleUiState(
+                        managedCastId: data.detail.cast.id,
+                        isLoading: false,
+                        isSaving: false,
+                        errorMessage: nil,
+                        castSummary: .init(
+                            title: data.detail.cast.name,
+                            subtitle: "\(conceptRole) / \(data.detail.cafe.name)",
+                            badge: "Cast Member",
+                            initials: String(data.detail.cast.name.prefix(2)).uppercased()
+                        ),
+                        weekRangeLabel: data.weekRangeLabel,
+                        weekDays: data.weekDays,
+                        schedules: data.daySchedules,
+                        selectedDayId: data.selectedDayId,
+                        infoMessage: nil
+                    )
                 } else {
                     unbindCastEvent()
                     tasks.removeValue(forKey: .scheduleEvent)?.cancel()
@@ -165,11 +203,6 @@ final class ScheduleViewModel: ObservableObject {
             uiState.infoMessage = "달력 보기 연결은 다음 단계에서 제공합니다."
         case .selectDay(let id):
             uiState.selectedDayId = id
-            uiState.weekDays = uiState.weekDays.map { day in
-                var nextDay = day
-                nextDay.isSelected = day.id == id
-                return nextDay
-            }
         case .clickEditDay(let id):
             guard let selected = uiState.schedules.first(where: { $0.id == id }) else { return }
             uiState.isEditSheetVisible = true
@@ -206,14 +239,41 @@ final class ScheduleViewModel: ObservableObject {
             uiState.infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요."
             uiState.schedules = uiState.schedules.map { schedule in
                 guard schedule.id == editingId else { return schedule }
-                return pendingUpdate.toDaySchedule(title: schedule.title)
+                let timeLabel: String
+                switch pendingUpdate.status {
+                case .work:
+                    timeLabel = "\(pendingUpdate.startTime ?? "10:00") - \(pendingUpdate.endTime ?? "19:00")"
+                case .off:
+                    timeLabel = "휴무"
+                default:
+                    timeLabel = "휴가"
+                }
+                let statusLabel: String
+                switch pendingUpdate.status {
+                case .work:
+                    statusLabel = "근무"
+                case .off:
+                    statusLabel = "휴무"
+                default:
+                    statusLabel = "휴가"
+                }
+                return ScheduleManagementDaySchedule(
+                    id: pendingUpdate.date,
+                    title: schedule.title,
+                    timeLabel: timeLabel,
+                    statusLabel: statusLabel,
+                    isWorking: pendingUpdate.status == .work,
+                    status: pendingUpdate.status
+                )
             }
             uiState.weekDays = uiState.weekDays.map { day in
-                var nextDay = day
-                if day.id == editingId {
-                    nextDay.isWorking = pendingUpdate.status == .work
-                }
-                return nextDay
+                guard day.id == editingId else { return day }
+                return ScheduleManagementWeekDay(
+                    id: day.id,
+                    label: day.label,
+                    number: day.number,
+                    isWorking: pendingUpdate.status == .work
+                )
             }
             uiState.pendingUpdates.removeAll { $0.date == editingId }
             uiState.pendingUpdates.append(pendingUpdate)
@@ -239,7 +299,7 @@ final class ScheduleViewModel: ObservableObject {
                             input: CastScheduleUpdate(
                                 castId: managedCastId,
                                 date: pendingUpdate.date,
-                                status: pendingUpdate.status.toDomainStatus(),
+                                status: pendingUpdate.status,
                                 startTime: pendingUpdate.startTime,
                                 endTime: pendingUpdate.endTime
                             )
@@ -247,7 +307,16 @@ final class ScheduleViewModel: ObservableObject {
                         if Task.isCancelled { return }
                         if let failure = result as? AppResultFailure {
                             if let validation = failure.error as? AppErrorValidationFailed {
-                                uiState.errorMessage = validation.reason.toScheduleValidationMessage()
+                                switch validation.reason {
+                                case "start time is required":
+                                    uiState.errorMessage = "시작 시간을 선택해주세요."
+                                case "end time is required":
+                                    uiState.errorMessage = "종료 시간을 선택해주세요."
+                                case "end time must be after start time":
+                                    uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+                                default:
+                                    uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                                }
                             } else {
                                 uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
                             }
@@ -298,125 +367,5 @@ final class ScheduleViewModel: ObservableObject {
         case scheduleEvent
         case load
         case submit
-    }
-}
-
-private extension Shared.ScheduleManagementData {
-    func toUiState() -> ScheduleUiState {
-        ScheduleUiState(
-            managedCastId: detail.cast.id,
-            isLoading: false,
-            isSaving: false,
-            errorMessage: nil,
-            castSummary: .init(
-                title: detail.cast.name,
-                subtitle: "\(detail.cast.conceptRole.toDisplayConceptRole()) / \(detail.cafe.name)",
-                badge: "Cast Member",
-                initials: detail.cast.name.toInitials()
-            ),
-            weekRangeLabel: weekRangeLabel,
-            weekDays: weekDays.map { day in
-                ScheduleUiState.WeekDay(
-                    id: day.id,
-                    label: day.label,
-                    number: day.number,
-                    isSelected: day.id == selectedDayId,
-                    isWorking: day.isWorking
-                )
-            },
-            schedules: daySchedules.map { schedule in
-                ScheduleUiState.DaySchedule(
-                    id: schedule.id,
-                    title: schedule.title,
-                    timeLabel: schedule.timeLabel,
-                    statusLabel: schedule.statusLabel,
-                    isWorking: schedule.isWorking,
-                    status: schedule.status.toUiStatus()
-                )
-            },
-            selectedDayId: selectedDayId,
-            infoMessage: nil
-        )
-    }
-}
-
-private extension String {
-    func toScheduleValidationMessage() -> String {
-        switch self {
-        case "start time is required":
-            return "시작 시간을 선택해주세요."
-        case "end time is required":
-            return "종료 시간을 선택해주세요."
-        case "end time must be after start time":
-            return "종료 시간은 시작 시간보다 늦어야 합니다."
-        default:
-            return "근무 시간 저장에 실패했습니다."
-        }
-    }
-
-    func toDisplayConceptRole() -> String {
-        switch lowercased() {
-        case "maid":
-            return "메이드"
-        case "butler":
-            return "버틀러"
-        case "idol":
-            return "아이돌"
-        default:
-            return prefix(1).uppercased() + dropFirst()
-        }
-    }
-
-    func toInitials() -> String {
-        String(prefix(2)).uppercased()
-    }
-}
-
-private extension ScheduleEditStatus {
-    func toDomainStatus() -> CastScheduleStatus {
-        switch self {
-        case .work:
-            return .work
-        case .off:
-            return .off
-        case .vacation:
-            return .vacation
-        }
-    }
-}
-
-private extension CastScheduleStatus {
-    func toUiStatus() -> ScheduleEditStatus {
-        switch self {
-        case .work:
-            return .work
-        case .off:
-            return .off
-        default:
-            return .vacation
-        }
-    }
-}
-
-private extension ScheduleUiState.PendingScheduleUpdate {
-    func toDaySchedule(title: String) -> ScheduleUiState.DaySchedule {
-        let isWorking = status == .work
-        return ScheduleUiState.DaySchedule(
-            id: date,
-            title: title,
-            timeLabel: {
-                switch status {
-                case .work:
-                    return "\(startTime ?? "10:00") - \(endTime ?? "19:00")"
-                case .off:
-                    return "휴무"
-                case .vacation:
-                    return "휴가"
-                }
-            }(),
-            statusLabel: status.label,
-            isWorking: isWorking,
-            status: status
-        )
     }
 }

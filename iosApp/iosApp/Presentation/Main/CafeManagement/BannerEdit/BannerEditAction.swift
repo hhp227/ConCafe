@@ -21,6 +21,7 @@ enum BannerEditAction {
     case changeSelectorQuery(String)
     case selectSelectorItem(String)
     case dismissSelector
+    case dismissImageRequiredAlert
     case clickSave
     case dismissInfoMessage
 }

@@ -4,6 +4,8 @@ data class CafeInfoUpdate(
     val cafeId: String,
     val name: String,
     val description: String,
+    val representativeImageUrl: String? = null,
+    val galleryImages: List<String> = emptyList(),
     val address: String,
     val contactNumber: String,
     val weekdayOpen: String,

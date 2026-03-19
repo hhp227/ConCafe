@@ -14,13 +14,15 @@ import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 
 class CastEditViewModel(
     private val cafeId: String? = null,
     private val castId: String? = null,
     private val getCastDetailUseCase: GetCastDetailUseCase,
-    private val upsertCastUseCase: UpsertCastUseCase
+    private val upsertCastUseCase: UpsertCastUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastEditUiState())
     val uiState = _uiState.asStateFlow()
@@ -63,6 +65,10 @@ class CastEditViewModel(
             _uiState.update { it.copy(infoMessage = "컨셉 역할을 입력해주세요.") }
             return
         }
+        if (currentState.profileImageUrl.isNullOrBlank() && currentState.galleryImages.none { it.isNotBlank() }) {
+            _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
+            return
+        }
 
         _uiState.update {
             it.copy(
@@ -72,6 +78,14 @@ class CastEditViewModel(
         }
 
         viewModelScope.launch {
+            val uploadedProfileImage = uploadImage(currentState.profileImageUrl, folder = "casts/profile")
+                ?: return@launch
+            val uploadedGalleryImages = buildList {
+                for (image in currentState.galleryImages) {
+                    val uploaded = uploadImage(image, folder = "casts/gallery") ?: return@launch
+                    add(uploaded)
+                }
+            }
             when (
                 val result = upsertCastUseCase.invoke(
                     CastUpsert(
@@ -81,6 +95,8 @@ class CastEditViewModel(
                         conceptRole = currentState.conceptRole,
                         birthday = currentState.birthday,
                         introduction = currentState.introduction,
+                        profileImage = uploadedProfileImage,
+                        galleryImages = uploadedGalleryImages,
                         workingDays = currentState.selectedWorkingDays.toWorkingDayKeys()
                     )
                 )
@@ -145,7 +161,13 @@ class CastEditViewModel(
         when (action) {
             CastEditAction.ClickBack -> clickBack()
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
-            is CastEditAction.SelectProfilePhoto -> _uiState.update { it.copy(profileImageUrl = action.imageUrl, infoMessage = null) }
+            is CastEditAction.SelectProfilePhoto -> _uiState.update {
+                it.copy(
+                    profileImageUrl = action.imageUrl,
+                    infoMessage = null,
+                    isImageRequiredAlertVisible = false
+                )
+            }
             is CastEditAction.AddGalleryImage -> {
                 val imageUrl = action.imageUrl
                 if (imageUrl.isBlank()) return
@@ -154,7 +176,13 @@ class CastEditViewModel(
                 if (galleryImages.size >= galleryMaxCount) {
                     _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
                 } else {
-                    _uiState.update { it.copy(galleryImages = galleryImages + imageUrl, infoMessage = null) }
+                    _uiState.update {
+                        it.copy(
+                            galleryImages = galleryImages + imageUrl,
+                            infoMessage = null,
+                            isImageRequiredAlertVisible = false
+                        )
+                    }
                 }
             }
             is CastEditAction.ChangeCastName -> _uiState.update { it.copy(castName = action.value) }
@@ -163,8 +191,25 @@ class CastEditViewModel(
             is CastEditAction.ChangeIntroduction -> _uiState.update { it.copy(introduction = action.value) }
             is CastEditAction.ToggleWorkingDay -> toggleWorkingDay(action.day)
             CastEditAction.ClickAddGalleryPhoto -> clickAddGalleryPhoto()
+            CastEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             CastEditAction.ClickSave -> clickSave()
             CastEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
+        }
+    }
+
+    private suspend fun uploadImage(imageUrl: String?, folder: String): String? {
+        if (imageUrl.isNullOrBlank()) return null
+        return when (val result = uploadImageUseCase.invoke(imageUrl, folder)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        infoMessage = "이미지를 업로드하지 못했습니다."
+                    )
+                }
+                null
+            }
         }
     }
 

@@ -29,6 +29,8 @@ val repositoryModule = module {
     single<NoticeRepository> { FakeNoticeRepository(get()) }
     single<RankingRepository> { FakeRankingRepository(get()) }
     single<NotificationRepository> { FakeNotificationRepository(get()) }
+    single<StorageRepository> { FakeStorageRepository() }
+    single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
 }
 
 val eventModule = module {
@@ -44,6 +46,7 @@ val eventModule = module {
 
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }
     factory { GetCafeCastPageUseCase(get(), get()) }
@@ -89,8 +92,11 @@ val useCaseModule = module {
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { SignInUseCase(get()) }
+    factory { SignInWithSocialProviderUseCase(get()) }
     factory { SignUpUseCase(get()) }
     factory { SignOutUseCase(get()) }
+    factory { RequestPhoneVerificationCodeUseCase() }
+    factory { VerifyPhoneVerificationCodeUseCase() }
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
     factory { ToggleFollowCastUseCase(get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
@@ -104,6 +110,7 @@ val useCaseModule = module {
     factory { RejectCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
+    factory { UploadImageUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

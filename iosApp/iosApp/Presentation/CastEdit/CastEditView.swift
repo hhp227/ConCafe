@@ -66,6 +66,23 @@ struct CastEditView: View {
                 }
             )
         }
+        .alert(
+            "이미지를 등록해주세요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.")
+        }
     }
 
     init(
@@ -429,16 +446,7 @@ private struct CastEditImageView<Placeholder: View>: View {
 }
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
-    guard let data = image.jpegData(compressionQuality: 0.88) else { return nil }
-    let fileName = "\(UUID().uuidString).jpg"
-    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-    do {
-        try data.write(to: fileURL, options: .atomic)
-        return fileURL.absoluteString
-    } catch {
-        return nil
-    }
+    saveCompressedImageToTemporaryFile(image)
 }
 
 struct CastEditView_Previews: PreviewProvider {

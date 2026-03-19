@@ -296,9 +296,19 @@ final class CheckInViewModel: ObservableObject {
     func onAction(_ action: CheckInAction) {
         switch action {
         case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
+            if uiState.currentUser == nil {
+                uiState.isLoginPromptVisible = true
+                uiState.isNewVisitSheetVisible = false
+            } else {
+                event.send(.navigateToCafe(id: id))
+            }
         case .castTapped(let id):
-            event.send(.navigateToCast(id: id))
+            if uiState.currentUser == nil {
+                uiState.isLoginPromptVisible = true
+                uiState.isNewVisitSheetVisible = false
+            } else {
+                event.send(.navigateToCast(id: id))
+            }
         case .checkInTapped:
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true

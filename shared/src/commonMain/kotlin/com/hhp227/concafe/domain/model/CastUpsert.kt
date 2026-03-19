@@ -7,5 +7,7 @@ data class CastUpsert(
     val conceptRole: String,
     val birthday: String? = null,
     val introduction: String,
+    val profileImage: String? = null,
+    val galleryImages: List<String> = emptyList(),
     val workingDays: List<String> = emptyList()
 )

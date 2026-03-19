@@ -37,6 +37,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,6 +86,7 @@ fun HomeScreen(
                 )
                 is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+                HomeEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
             }
         }
     }
@@ -102,6 +105,23 @@ fun HomeScreen(
         }
     }
     HomeContentScreen(uiState, pagerState, viewModel::onAction)
+    if (uiState.isLoginPromptVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(HomeAction.DismissLoginPrompt) },
+            title = { Text("로그인이 필요합니다") },
+            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(HomeAction.ClickLoginPromptSignIn) }) {
+                    Text("로그인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(HomeAction.DismissLoginPrompt) }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -30,32 +30,32 @@ import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { SignInViewModel(get()) }
-    factory { SignUpViewModel(get(), get(), get()) }
-    factory { HomeViewModel(get(), get(), get(), get()) }
-    factory { ExploreViewModel(get(), get(), get(), get()) }
+    factory { SignInViewModel(get(), get()) }
+    factory { SignUpViewModel(get(), get(), get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get(), get()) }
+    factory { ExploreViewModel(get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { RankingViewModel(get(), get(), get()) }
+    factory { RankingViewModel(get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { SettingsViewModel(get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
-    factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get()) }
+    factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String) -> BannerViewModel(cafeId) }
-    factory { (initialCafeId: String) -> BannerEditViewModel(initialCafeId, get(), get(), get(), get(), get()) }
+    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get()) }
+    factory { (initialCafeId: String) -> BannerEditViewModel(initialCafeId, get(), get(), get(), get(), get(), get()) }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String, isRegistrationMode: Boolean) -> CafeInfoEditViewModel(cafeId, isRegistrationMode, get(), get(), get()) }
+    factory { (cafeId: String, isRegistrationMode: Boolean) -> CafeInfoEditViewModel(cafeId, isRegistrationMode, get(), get(), get(), get()) }
     factory { (title: String, url: String) -> ExternalLinkViewModel(title, url) }
     factory { (cafeId: String) -> MenuGoodsViewModel(cafeId, get(), get(), get()) }
-    factory { (cafeId: String, itemId: String) -> MenuGoodsEditViewModel(cafeId, itemId, get(), get()) }
-    factory { (cafeId: String) -> NoticeEventViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { (cafeId: String, itemId: String) -> MenuGoodsEditViewModel(cafeId, itemId, get(), get(), get()) }
+    factory { (cafeId: String) -> NoticeEventViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> ScheduleViewModel(castId, get(), get(), get(), get(), get()) }
     factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
-    factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get()) }
+    factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get(), get()) }
     factory { AccountSettingsViewModel(get(), get()) }
     factory { InquiryLinkViewModel(get()) }
 }

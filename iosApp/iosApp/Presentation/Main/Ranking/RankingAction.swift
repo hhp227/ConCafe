@@ -15,4 +15,6 @@ enum RankingAction {
     case selectAd(Int)
     case tapMaid(String)
     case tapCafe(String)
+    case loginPromptSignInTapped
+    case dismissLoginPrompt
 }

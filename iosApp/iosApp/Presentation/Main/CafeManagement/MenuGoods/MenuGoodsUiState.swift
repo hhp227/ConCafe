@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 struct MenuGoodsUiState {
     var cafeName: String = ""
@@ -17,10 +18,12 @@ struct MenuGoodsUiState {
     var goodsCategories: [CategoryChip] = []
     var selectedMenuCategoryId: String? = nil
     var selectedGoodsCategoryId: String? = nil
-    var menuItems: [ManageItem] = []
-    var goodsItems: [ManageItem] = []
+    var menuItems: [CafeMenu] = []
+    var goodsItems: [Goods] = []
+    var menuAvailabilityOverrides: [String: Bool] = [:]
+    var goodsAvailabilityOverrides: [String: Bool] = [:]
     var infoMessage: String? = nil
-    var pendingDeleteItem: ManageItem? = nil
+    var pendingDeleteItemId: String? = nil
 
     enum CollectionTab {
         case menu
@@ -31,20 +34,6 @@ struct MenuGoodsUiState {
         let id: String?
         let label: String
         let iconKey: String
-    }
-
-    struct ManageItem: Identifiable, Hashable {
-        let id: String
-        let name: String
-        let priceText: String
-        let description: String
-        let imageUrl: String?
-        let badgeLabel: String
-        let categoryId: String?
-        let categoryLabel: String
-        let isAvailable: Bool
-        let availabilityLabel: String
-        let inventoryLabel: String?
     }
 
     var visibleCategories: [CategoryChip] {
@@ -65,24 +54,73 @@ struct MenuGoodsUiState {
         }
     }
 
-    var visibleItems: [ManageItem] {
-        switch selectedCollection {
-        case .menu:
-            return menuItems
-        case .goods:
-            return goodsItems
+    func isMenuAvailable(_ menu: CafeMenu) -> Bool {
+        menuAvailabilityOverrides[menu.id] ?? menu.isAvailable
+    }
+
+    func isGoodsAvailable(_ goods: Goods) -> Bool {
+        goodsAvailabilityOverrides[goods.id] ?? (goods.stock > 0)
+    }
+
+    func menuCategoryId(_ menu: CafeMenu) -> String {
+        menu.category.lowercased()
+    }
+
+    func menuCategoryLabel(_ menu: CafeMenu) -> String {
+        switch menuCategoryId(menu) {
+        case "food":
+            return "Food"
+        case "drink":
+            return "Drinks"
+        case "dessert":
+            return "Dessert"
+        default:
+            return menu.category.capitalized
         }
     }
 
-    var filteredVisibleItems: [ManageItem] {
-        visibleItems.filter { item in
-            let matchesCategory = selectedCategoryId == nil || item.categoryId == selectedCategoryId
-            let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    func goodsCategoryId(_ goods: Goods) -> String {
+        if goods.name.localizedCaseInsensitiveContains("포토") {
+            return "collectible"
+        } else if goods.name.localizedCaseInsensitiveContains("의상") {
+            return "apparel"
+        }
+        return "goods"
+    }
+
+    func goodsCategoryLabel(_ goods: Goods) -> String {
+        switch goodsCategoryId(goods) {
+        case "collectible":
+            return "Collectible"
+        case "apparel":
+            return "Apparel"
+        default:
+            return "Goods"
+        }
+    }
+
+    var filteredMenuItems: [CafeMenu] {
+        let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        return menuItems.filter { item in
+            let matchesCategory = selectedMenuCategoryId == nil || menuCategoryId(item) == selectedMenuCategoryId
             let matchesQuery =
                 normalizedQuery.isEmpty ||
                 item.name.localizedCaseInsensitiveContains(normalizedQuery) ||
-                item.description.localizedCaseInsensitiveContains(normalizedQuery) ||
-                item.categoryLabel.localizedCaseInsensitiveContains(normalizedQuery)
+                item.desc.localizedCaseInsensitiveContains(normalizedQuery) ||
+                menuCategoryLabel(item).localizedCaseInsensitiveContains(normalizedQuery)
+            return matchesCategory && matchesQuery
+        }
+    }
+
+    var filteredGoodsItems: [Goods] {
+        let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        return goodsItems.filter { item in
+            let matchesCategory = selectedGoodsCategoryId == nil || goodsCategoryId(item) == selectedGoodsCategoryId
+            let matchesQuery =
+                normalizedQuery.isEmpty ||
+                item.name.localizedCaseInsensitiveContains(normalizedQuery) ||
+                "카페 굿즈 판매 항목".localizedCaseInsensitiveContains(normalizedQuery) ||
+                goodsCategoryLabel(item).localizedCaseInsensitiveContains(normalizedQuery)
             return matchesCategory && matchesQuery
         }
     }

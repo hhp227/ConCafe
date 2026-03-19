@@ -9,4 +9,6 @@ sealed interface RankingAction {
     data class SelectAd(val index: Int) : RankingAction
     data class ClickMaid(val id: String) : RankingAction
     data class ClickCafe(val id: String) : RankingAction
+    data object ClickLoginPromptSignIn : RankingAction
+    data object DismissLoginPrompt : RankingAction
 }

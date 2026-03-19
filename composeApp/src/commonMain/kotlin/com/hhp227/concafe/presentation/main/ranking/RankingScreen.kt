@@ -59,6 +59,7 @@ fun RankingScreen(
             when (event) {
                 is RankingEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is RankingEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+                RankingEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
             }
         }
     }
@@ -70,6 +71,23 @@ fun RankingScreen(
         )
     }
     RankingContent(uiState = uiState, onAction = viewModel::onAction)
+    if (uiState.isLoginPromptVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(RankingAction.DismissLoginPrompt) },
+            title = { Text("로그인이 필요합니다") },
+            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(RankingAction.ClickLoginPromptSignIn) }) {
+                    Text("로그인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(RankingAction.DismissLoginPrompt) }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

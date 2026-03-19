@@ -14,7 +14,6 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
@@ -63,7 +62,8 @@ class MyInfoViewModel(
                         popularCafes = result.data.popularCafes,
                         recentVisits = result.data.recentVisits,
                         favorites = result.data.favorites,
-                        followedMaids = result.data.followedMaids
+                        followedMaids = result.data.followedMaids,
+                        isLoginPromptVisible = false
                     )
                 }
                 is AppResult.Failure -> {
@@ -121,7 +121,7 @@ class MyInfoViewModel(
     private fun patchCast(cast: Cast) {
         _uiState.update { state ->
             state.copy(
-                castDetail = state.castDetail?.takeIf { it.cast.id == cast.id }?.updatedCast(cast) ?: state.castDetail,
+                castDetail = state.castDetail?.takeIf { it.cast.id == cast.id }?.copy(cast = cast) ?: state.castDetail,
                 followedMaids = state.followedMaids.map { item -> if (item.id == cast.id) cast else item }
             )
         }
@@ -139,10 +139,25 @@ class MyInfoViewModel(
     fun onAction(action: MyInfoAction) {
         when (action) {
             is MyInfoAction.ClickCafe -> viewModelScope.launch {
-                _event.emit(NavigateToCafe(action.id))
+                if (_uiState.value.isLoggedIn) {
+                    _event.emit(NavigateToCafe(action.id))
+                } else {
+                    _uiState.update { it.copy(isLoginPromptVisible = true) }
+                }
             }
             is MyInfoAction.ClickMaid -> viewModelScope.launch {
-                _event.emit(NavigateToCast(action.id))
+                if (_uiState.value.isLoggedIn) {
+                    _event.emit(NavigateToCast(action.id))
+                } else {
+                    _uiState.update { it.copy(isLoginPromptVisible = true) }
+                }
+            }
+            MyInfoAction.ClickLoginPromptSignIn -> viewModelScope.launch {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
+                _event.emit(NavigateToSignIn)
+            }
+            MyInfoAction.DismissLoginPrompt -> {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
             }
             MyInfoAction.ClickSignIn -> viewModelScope.launch {
                 _event.emit(NavigateToSignIn)
@@ -168,5 +183,3 @@ class MyInfoViewModel(
         OBSERVE_CAST_EVENT
     }
 }
-
-private fun CastDetail.updatedCast(cast: Cast): CastDetail = copy(cast = cast)

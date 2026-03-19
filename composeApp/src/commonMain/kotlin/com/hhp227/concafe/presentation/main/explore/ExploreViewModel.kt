@@ -19,11 +19,13 @@ import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState.Companion.empty
 
 class ExploreViewModel(
     private val getExploreCafePageUseCase: GetExploreCafePageUseCase,
     private val getExploreCastPageUseCase: GetExploreCastPageUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -173,6 +175,20 @@ class ExploreViewModel(
         }
     }
 
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
     private fun patchCafe(cafe: Cafe) {
         _uiState.update { state ->
             val cafeMatches = matchesCafeFilters(state, cafe)
@@ -247,22 +263,32 @@ class ExploreViewModel(
                 }
             }
             is ExploreAction.ClickCafe -> {
-                viewModelScope.launch {
-                    _event.emit(ExploreEvent.NavigateToCafe(action.id))
-                }
+                viewModelScope.launch { requireSignedIn { _event.emit(ExploreEvent.NavigateToCafe(action.id)) } }
             }
             is ExploreAction.ClickMaid -> {
-                viewModelScope.launch {
-                    _event.emit(ExploreEvent.NavigateToCast(action.id))
-                }
+                viewModelScope.launch { requireSignedIn { _event.emit(ExploreEvent.NavigateToCast(action.id)) } }
             }
+            ExploreAction.ClickLoginPromptSignIn -> viewModelScope.launch {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
+                _event.emit(ExploreEvent.NavigateToSignIn)
+            }
+            ExploreAction.DismissLoginPrompt -> _uiState.update { it.copy(isLoginPromptVisible = false) }
             ExploreAction.LoadMoreCafes -> loadMoreCafes()
             ExploreAction.LoadMoreMaids -> loadMoreMaids()
             is ExploreAction.Refresh -> refreshCurrentTab()
         }
     }
 
+    private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
+        if (_uiState.value.isLoggedIn) {
+            onAuthenticated()
+        } else {
+            _uiState.update { it.copy(isLoginPromptVisible = true) }
+        }
+    }
+
     init {
+        observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -277,6 +303,7 @@ class ExploreViewModel(
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
+        OBSERVE_SESSION,
         CAFE_PAGE,
         MAID_PAGE
     }

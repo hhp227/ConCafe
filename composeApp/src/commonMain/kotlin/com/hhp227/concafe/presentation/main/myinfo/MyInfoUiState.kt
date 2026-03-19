@@ -20,7 +20,8 @@ data class MyInfoUiState(
     val popularCafes: List<Cafe> = emptyList(),
     val recentVisits: List<Cafe> = emptyList(),
     val favorites: List<Cafe> = emptyList(),
-    val followedMaids: List<Cast> = emptyList()
+    val followedMaids: List<Cast> = emptyList(),
+    val isLoginPromptVisible: Boolean = false
 ) {
     companion object {
         fun empty() = MyInfoUiState()

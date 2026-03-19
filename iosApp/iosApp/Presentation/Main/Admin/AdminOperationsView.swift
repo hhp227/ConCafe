@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Shared
 
 struct AdminOperationsView: View {
     @StateObject private var viewModel = AdminOperationsViewModel()
@@ -108,16 +109,48 @@ struct AdminOperationsView: View {
                 }
             }
             VStack(spacing: 12) {
-                ForEach(viewModel.uiState.filteredPendingRequests) { request in
-                    pendingCard(request)
+                if viewModel.uiState.selectedPendingFilter == .cafeRegistration {
+                    ForEach(viewModel.uiState.pendingCafeRegistrationClaims, id: \.claimId) { claim in
+                        pendingRegistrationCard(claim)
+                    }
+                } else {
+                    ForEach(viewModel.uiState.pendingCafeOwnerClaims, id: \.claimId) { claim in
+                        pendingOwnerClaimCard(claim)
+                    }
                 }
             }
         }
     }
 
-    private func pendingCard(_ request: AdminPendingRequest) -> some View {
+    private func pendingRegistrationCard(_ claim: PendingCafeRegistrationClaimPreview) -> some View {
+        pendingCard(
+            claimId: claim.claimId,
+            title: claim.cafeName,
+            subtitle: claim.location,
+            requestedAt: claim.requestedAt,
+            imageUrl: claim.imageUrl ?? ""
+        )
+    }
+
+    private func pendingOwnerClaimCard(_ claim: PendingCafeOwnerClaimPreview) -> some View {
+        pendingCard(
+            claimId: claim.claimId,
+            title: "점장 권한 신청 - \(claim.requesterNickname)",
+            subtitle: claim.location,
+            requestedAt: claim.requestedAt,
+            imageUrl: claim.imageUrl ?? ""
+        )
+    }
+
+    private func pendingCard(
+        claimId: String,
+        title: String,
+        subtitle: String,
+        requestedAt: String,
+        imageUrl: String
+    ) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            AsyncImage(url: URL(string: request.imageUrl)) { image in
+            AsyncImage(url: URL(string: imageUrl)) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
                 LinearGradient(
@@ -130,11 +163,11 @@ struct AdminOperationsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
-                    Text(request.title)
+                    Text(title)
                         .font(.subheadline.weight(.bold))
                         .lineLimit(1)
                     Spacer()
-                    Text(request.requestedAt)
+                    Text(requestedAt)
                         .font(.caption2)
                         .foregroundStyle(Color(hex: "7A707A"))
                         .padding(.horizontal, 8)
@@ -142,12 +175,12 @@ struct AdminOperationsView: View {
                         .background(Color(hex: "F5F2F4"))
                         .clipShape(Capsule())
                 }
-                Text(request.subtitle)
+                Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7A707A"))
                 HStack(spacing: 8) {
                     Button {
-                        viewModel.onAction(.approvePending(request.id))
+                        viewModel.onAction(.approvePending(claimId))
                     } label: {
                         Text("승인")
                             .font(.caption.weight(.bold))
@@ -158,7 +191,7 @@ struct AdminOperationsView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     Button {
-                        viewModel.onAction(.rejectPending(request.id))
+                        viewModel.onAction(.rejectPending(claimId))
                     } label: {
                         Text("반려")
                             .font(.caption.weight(.bold))

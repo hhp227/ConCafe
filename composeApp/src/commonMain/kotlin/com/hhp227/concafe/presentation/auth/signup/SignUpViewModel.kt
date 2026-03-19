@@ -12,13 +12,17 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
-import com.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
+import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 
 class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
     private val signUpUseCase: SignUpUseCase,
-    private val signInUseCase: SignInUseCase
+    private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
+    private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
+    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -150,33 +154,48 @@ class SignUpViewModel(
             _uiState.update { it.copy(errorMessage = "휴대폰 번호를 입력해주세요.", infoMessage = null) }
             return
         }
-
-        _uiState.update {
-            it.copy(
-                hasRequestedVerification = true,
-                errorMessage = null,
-                infoMessage = "인증번호가 $phone 로 전송되었습니다. 테스트 코드는 1234입니다."
-            )
+        when (val result = requestPhoneVerificationCodeUseCase.invoke(phone)) {
+            is AppResult.Success -> {
+                _uiState.update {
+                    it.copy(
+                        hasRequestedVerification = true,
+                        errorMessage = null,
+                        infoMessage = result.data
+                    )
+                }
+            }
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        hasRequestedVerification = false,
+                        errorMessage = "휴대폰 번호를 다시 확인해주세요.",
+                        infoMessage = null
+                    )
+                }
+            }
         }
     }
 
     private fun verifyCode() {
-        if (uiState.value.verificationCode.trim() == VERIFICATION_CODE) {
-            _uiState.update {
-                it.copy(
-                    isPhoneVerified = true,
-                    hasRequestedVerification = true,
-                    errorMessage = null,
-                    infoMessage = "휴대폰 인증이 완료되었습니다."
-                )
+        when (verifyPhoneVerificationCodeUseCase.invoke(uiState.value.verificationCode)) {
+            is AppResult.Success -> {
+                _uiState.update {
+                    it.copy(
+                        isPhoneVerified = true,
+                        hasRequestedVerification = true,
+                        errorMessage = null,
+                        infoMessage = "휴대폰 인증이 완료되었습니다."
+                    )
+                }
             }
-        } else {
-            _uiState.update {
-                it.copy(
-                    isPhoneVerified = false,
-                    errorMessage = "인증번호가 일치하지 않습니다.",
-                    infoMessage = null
-                )
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isPhoneVerified = false,
+                        errorMessage = "인증번호가 일치하지 않습니다.",
+                        infoMessage = null
+                    )
+                }
             }
         }
     }
@@ -220,23 +239,18 @@ class SignUpViewModel(
 
     private fun socialSignUp(provider: SignUpProvider) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
-
         viewModelScope.launch {
-            when (
-                signInUseCase.invoke(
-                    email = "${provider.name.lowercase()}@mock.concafe",
-                    password = "social-sign-in"
-                )
-            ) {
+            when (signInWithSocialProviderUseCase.invoke(provider.name.lowercase())) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
                     _event.emit(SignUpEvent.SignedUp)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "소셜 회원가입에 실패했습니다. 잠시 후 다시 시도해주세요."
+                            errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요.",
+                            infoMessage = null
                         )
                     }
                 }
@@ -330,6 +344,5 @@ class SignUpViewModel(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private const val VERIFICATION_CODE = "1234"
     }
 }

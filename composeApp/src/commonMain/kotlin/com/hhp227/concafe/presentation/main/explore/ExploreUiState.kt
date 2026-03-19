@@ -5,6 +5,8 @@ import com.hhp227.concafe.domain.model.Cast
 
 data class ExploreUiState(
     val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val isLoginPromptVisible: Boolean = false,
     val errorMessage: String? = null,
     val query: String = "",
     val selectedTab: TabType = TabType.CAFE,

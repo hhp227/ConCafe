@@ -186,6 +186,7 @@
 		0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
+		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
 		0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */; };
 		0AFECA4F2F62CDEF00C2C099 /* ReviewEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */; };
 		0AFECA512F62CE0D00C2C099 /* ReviewEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */; };
@@ -376,6 +377,7 @@
 		0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInComponents.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
+		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
 		0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditViewModel.swift; sourceTree = "<group>"; };
 		0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditUiState.swift; sourceTree = "<group>"; };
 		0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditAction.swift; sourceTree = "<group>"; };
@@ -877,6 +879,7 @@
 		0AE309CA2F6A8CDA006C40A3 /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */,
 				0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */,
 			);
 			path = Util;
@@ -1199,6 +1202,7 @@
 				0A2C5B1F2F65615000D3004E /* AccountSettingsEvent.swift in Sources */,
 				0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */,
 				0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */,
+				0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
 				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,

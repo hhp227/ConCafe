@@ -846,72 +846,21 @@ private struct CheckInNewVisitSheet: View {
     }
 
     private func makeVisitedAtString(date: Date, time: Date) -> String {
-        let calendar = Calendar.current
-        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
-        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
-
-        guard let year = dateComponents.year,
-              let month = dateComponents.month,
-              let day = dateComponents.day,
-              let hour = timeComponents.hour,
-              let minute = timeComponents.minute else {
-            return "2026-03-09T15:00:00Z"
-        }
-
-        return String(format: "%04d-%02d-%02dT%02d:%02d:00Z", year, month, day, hour, minute)
+        return TimeUtils.makeVisitedAtString(date: date, time: time)
     }
 
     private func formatVisitTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar.current
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: date)
+        return TimeUtils.formatHourMinute(date)
     }
 }
 
 private extension CheckInVisitEntry {
     var relativeVisitedLabel: String {
-        guard
-            let referenceEpochDay = Self.toEpochDay("2026-03-09"),
-            let visitedEpochDay = Self.toEpochDay(String(visitedAt.prefix(10)))
-        else {
-            return visitedLabel
-        }
-
-        let daysAgo = referenceEpochDay - visitedEpochDay
-
-        switch daysAgo {
-        case ..<0:
-            return visitedLabel
-        case 0:
-            return "오늘"
-        case 1:
-            return "어제"
-        default:
-            return "\(daysAgo)일 전"
-        }
-    }
-
-    private static func toEpochDay(_ value: String) -> Int? {
-        let parts = value.split(separator: "-")
-        guard parts.count == 3,
-              let year = Int(parts[0]),
-              let month = Int(parts[1]),
-              let day = Int(parts[2]),
-              (1...12).contains(month),
-              (1...31).contains(day) else {
-            return nil
-        }
-
-        let adjustedYear = year - (month <= 2 ? 1 : 0)
-        let era = adjustedYear >= 0 ? adjustedYear / 400 : (adjustedYear - 399) / 400
-        let yearOfEra = adjustedYear - era * 400
-        let adjustedMonth = month + (month > 2 ? -3 : 9)
-        let dayOfYear = (153 * adjustedMonth + 2) / 5 + day - 1
-        let dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
-
-        return era * 146097 + dayOfEra - 719468
+        return TimeUtils.relativeVisitedLabel(
+            visitedAt: visitedAt,
+            visitedLabel: visitedLabel,
+            referenceDate: "2026-03-09"
+        )
     }
 }
 

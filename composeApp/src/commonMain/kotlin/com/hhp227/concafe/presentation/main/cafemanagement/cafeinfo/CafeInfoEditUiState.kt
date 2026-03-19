@@ -19,6 +19,7 @@ data class CafeInfoEditUiState(
     val weekdayClose: String = "",
     val weekendOpen: String = "",
     val weekendClose: String = "",
+    val isImageRequiredAlertVisible: Boolean = false,
     val infoMessage: String? = null
 ) {
     val galleryLimitText: String

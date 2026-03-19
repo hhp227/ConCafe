@@ -556,13 +556,27 @@ class MockConCafeDataSource : ConCafeDataSource {
         }
         val currentCafe = cafes[cafeIndex]
         val currentDetail = cafeDetailsById[update.cafeId] ?: buildCafeDetail(currentCafe)
+        val representativeImage = update.representativeImageUrl
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: currentDetail.images.firstOrNull()
+            ?: currentCafe.thumbnailImage
+        val galleryImages = update.galleryImages
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        val nextImages = buildList {
+            representativeImage?.let { add(it) }
+            addAll(galleryImages.filterNot { it == representativeImage })
+        }
         val updatedCafe = currentCafe.copy(
             name = update.name,
             desc = update.description,
+            thumbnailImage = representativeImage,
             region = currentCafe.region.copy(address = update.address)
         )
         val updatedDetail = currentDetail.copy(
             cafe = updatedCafe,
+            images = if (nextImages.isNotEmpty()) nextImages else currentDetail.images,
             businessHours = formatBusinessHours(update),
             phoneNumber = update.contactNumber
         )
@@ -880,13 +894,17 @@ class MockConCafeDataSource : ConCafeDataSource {
         val targetCafe = cafes.firstOrNull { it.id == targetCafeId }
             ?: throw NoSuchElementException("cafe not found")
         val normalizedBirthday = update.birthday?.takeIf { it.isNotBlank() }
+        val normalizedProfileImage = update.profileImage?.trim()?.takeIf { it.isNotEmpty() } ?: existingCast?.profileImage
+        val normalizedGalleryImages = update.galleryImages
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
         val castId = existingCast?.id ?: nextId("maid", casts.map { it.id })
         val nextCast = Cast(
             id = castId,
             cafeId = targetCafeId,
             name = update.name.trim(),
             linkedUserId = existingCast?.linkedUserId ?: currentUserId,
-            profileImage = existingCast?.profileImage,
+            profileImage = normalizedProfileImage,
             desc = update.introduction.trim(),
             birthday = normalizedBirthday,
             conceptRole = update.conceptRole.trim(),
@@ -911,7 +929,13 @@ class MockConCafeDataSource : ConCafeDataSource {
             }
         }
 
-        if (castImagesById[castId] == null) {
+        val nextCastImages = buildList {
+            normalizedProfileImage?.let { add(it) }
+            addAll(normalizedGalleryImages.filterNot { it == normalizedProfileImage })
+        }
+        if (nextCastImages.isNotEmpty()) {
+            castImagesById[castId] = nextCastImages
+        } else if (castImagesById[castId] == null) {
             castImagesById[castId] = listOfNotNull(nextCast.profileImage)
         }
         castSchedulesByCastId[castId] = buildCastSchedules(castId, targetCafeId, update.workingDays)

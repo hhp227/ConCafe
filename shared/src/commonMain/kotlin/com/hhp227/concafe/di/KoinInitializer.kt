@@ -60,6 +60,7 @@ import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
@@ -512,6 +513,13 @@ fun resolveToggleFollowCastUseCase(): ToggleFollowCastUseCase {
 }
 
 fun resolveObserveCurrentUserUseCase(): ObserveCurrentUserUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUploadImageUseCase(): UploadImageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

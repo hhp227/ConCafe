@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.usecase.CreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
 
 class CafeInfoEditViewModel(
@@ -22,7 +23,8 @@ class CafeInfoEditViewModel(
     private val isRegistrationMode: Boolean,
     private val createCafeRegistrationClaimUseCase: CreateCafeRegistrationClaimUseCase,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
-    private val updateCafeInfoUseCase: UpdateCafeInfoUseCase
+    private val updateCafeInfoUseCase: UpdateCafeInfoUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeInfoEditUiState(isRegistrationMode = isRegistrationMode))
     val uiState = _uiState.asStateFlow()
@@ -76,22 +78,37 @@ class CafeInfoEditViewModel(
     }
 
     private fun saveCafeInfo() {
+        val currentState = _uiState.value
+        if (currentState.representativeImageUrl.isNullOrBlank() && currentState.galleryImages.none { it.isNotBlank() }) {
+            _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
+            return
+        }
+
         if (isRegistrationMode) {
             submitCafeRegistration()
             return
         }
 
         val targetCafeId = cafeId ?: return
-        val currentState = _uiState.value
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
 
         viewModelScope.launch {
+            val uploadedRepresentativeImage = uploadImage(currentState.representativeImageUrl, "cafes/representative")
+                ?: return@launch
+            val uploadedGalleryImages = buildList {
+                for (image in currentState.galleryImages) {
+                    val uploaded = uploadImage(image, "cafes/gallery") ?: return@launch
+                    add(uploaded)
+                }
+            }
             when (
                 val result = updateCafeInfoUseCase.invoke(
                     CafeInfoUpdate(
                         cafeId = targetCafeId,
                         name = currentState.cafeName,
                         description = currentState.cafeDescription,
+                        representativeImageUrl = uploadedRepresentativeImage,
+                        galleryImages = uploadedGalleryImages,
                         address = currentState.address,
                         contactNumber = currentState.contactNumber,
                         weekdayOpen = currentState.weekdayOpen,
@@ -141,6 +158,8 @@ class CafeInfoEditViewModel(
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
 
         viewModelScope.launch {
+            val uploadedRepresentativeImage = uploadImage(currentState.representativeImageUrl, "cafes/representative")
+                ?: return@launch
             when (
                 val result = createCafeRegistrationClaimUseCase.invoke(
                     CafeRegistrationDraft(
@@ -152,7 +171,7 @@ class CafeInfoEditViewModel(
                             address = currentState.address.trim(),
                             location = GeoPoint(37.5665, 126.9780)
                         ),
-                        thumbnailImage = currentState.representativeImageUrl,
+                        thumbnailImage = uploadedRepresentativeImage,
                         conceptType = "MAID",
                         businessHours = formatBusinessHours(currentState),
                         phoneNumber = currentState.contactNumber.trim()
@@ -205,7 +224,7 @@ class CafeInfoEditViewModel(
             is CafeInfoEditAction.ChangeWeekendOpen -> _uiState.update { it.copy(weekendOpen = action.value) }
             is CafeInfoEditAction.ChangeWeekendClose -> _uiState.update { it.copy(weekendClose = action.value) }
             is CafeInfoEditAction.SelectRepresentativeImage -> {
-                _uiState.update { it.copy(representativeImageUrl = action.imageUrl) }
+                _uiState.update { it.copy(representativeImageUrl = action.imageUrl, isImageRequiredAlertVisible = false) }
             }
             is CafeInfoEditAction.AddGalleryImage -> {
                 if (action.imageUrl.isBlank()) {
@@ -217,15 +236,35 @@ class CafeInfoEditViewModel(
                     return
                 }
                 _uiState.update { state ->
-                    state.copy(galleryImages = state.galleryImages + action.imageUrl)
+                    state.copy(
+                        galleryImages = state.galleryImages + action.imageUrl,
+                        isImageRequiredAlertVisible = false
+                    )
                 }
             }
             CafeInfoEditAction.ClickRepresentativeImage -> showInfo("대표 이미지 업로드는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickAddGalleryImage -> showInfo("갤러리 이미지 추가는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickPinLocation -> showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickManageExceptionDates -> showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
+            CafeInfoEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             CafeInfoEditAction.ClickSave -> saveCafeInfo()
             CafeInfoEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
+        }
+    }
+
+    private suspend fun uploadImage(imageUrl: String?, folder: String): String? {
+        if (imageUrl.isNullOrBlank()) return null
+        return when (val result = uploadImageUseCase.invoke(imageUrl, folder)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        infoMessage = "이미지를 업로드하지 못했습니다."
+                    )
+                }
+                null
+            }
         }
     }
 

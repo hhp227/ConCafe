@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import Shared
 
 struct NoticeEventUiState {
     var selectedTab: NoticeEventTab = .notice
     var query: String = ""
-    var notices: [NoticeItem] = []
-    var events: [EventItem] = []
+    var notices: [CafeNoticeManagementItem] = []
+    var events: [CafeEventManagementItem] = []
     var isLoadingNotices: Bool = false
     var isLoadingMoreNotices: Bool = false
     var noticeNextCursor: String? = nil
@@ -103,31 +104,5 @@ struct NoticeEventUiState {
 enum NoticeEventTab: String, CaseIterable {
     case notice = "공지사항"
     case event = "이벤트"
-}
-
-struct NoticeItem: Identifiable, Equatable {
-    let id: String
-    let title: String
-    let content: String
-    let date: String
-    let isPinned: Bool
-    let statusLabel: String
-    let statusAccent: NoticeStatusAccent
-}
-
-struct EventItem: Identifiable, Equatable {
-    let id: String
-    let title: String
-    let content: String
-    let period: String
-    let statusLabel: String
-    let imageUrl: String
-    let isDimmed: Bool
-}
-
-enum NoticeStatusAccent {
-    case published
-    case draft
-    case ended
 }
 
