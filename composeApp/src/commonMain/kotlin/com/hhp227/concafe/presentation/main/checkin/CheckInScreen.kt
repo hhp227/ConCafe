@@ -25,6 +25,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
@@ -657,10 +658,10 @@ private fun NewVisitCheckInBottomSheet(
     val now = remember { System.currentTimeMillis() }
     var visitDateMillis by remember { mutableLongStateOf(now) }
     var visitHour by remember {
-        mutableIntStateOf(extractHourFromMillis(now))
+        mutableIntStateOf(TimeUtils.extractHourFromEpochMillis(now))
     }
     var visitMinute by remember {
-        mutableIntStateOf(extractMinuteFromMillis(now))
+        mutableIntStateOf(TimeUtils.extractMinuteFromEpochMillis(now))
     }
     var isTimePickerVisible by remember { mutableStateOf(false) }
     var memo by remember { mutableStateOf("") }
@@ -826,7 +827,11 @@ private fun NewVisitCheckInBottomSheet(
             onClick = {
                 val normalizedCafeId = selectedCafeId.trim()
                 val normalizedMemo = memo.trim().ifEmpty { null }
-                val normalizedVisitedAt = "${formatVisitDate(visitDateMillis)}T${formatVisitTime(visitHour, visitMinute)}:00Z"
+                val normalizedVisitedAt = TimeUtils.buildVisitedAtUtcString(
+                    dateMillis = visitDateMillis,
+                    hour = visitHour,
+                    minute = visitMinute
+                )
 
                 onSubmit(normalizedCafeId, normalizedVisitedAt, normalizedMemo)
             },
@@ -844,54 +849,8 @@ private fun NewVisitCheckInBottomSheet(
     }
 }
 
-private fun extractHourFromMillis(millis: Long): Int {
-    val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
-    return (normalized / MILLIS_PER_HOUR).toInt()
-}
-
-private fun extractMinuteFromMillis(millis: Long): Int {
-    val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
-    return ((normalized % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE).toInt()
-}
-
-private fun formatVisitDate(dateMillis: Long): String {
-    val (year, month, day) = dateFromEpochMillis(dateMillis)
-    return "${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
-}
-
 private fun formatVisitTime(hour: Int, minute: Int): String {
-    return "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
-}
-
-private data class DateParts(
-    val year: Int,
-    val month: Int,
-    val day: Int
-)
-
-private const val MILLIS_PER_SECOND = 1000L
-private const val MILLIS_PER_MINUTE = 60L * MILLIS_PER_SECOND
-private const val MILLIS_PER_HOUR = 60L * MILLIS_PER_MINUTE
-private const val MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR
-
-private fun dateFromEpochMillis(millis: Long): DateParts {
-    val epochDays = millis / MILLIS_PER_DAY
-    val z = epochDays + 719468L
-    val era = z / 146097L
-    val doe = z - era * 146097L
-    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
-    val y = yoe + era * 400
-    val doy = doe - (365L * yoe + yoe / 4 - yoe / 100)
-    val mp = (5L * doy + 2L) / 153
-    val day = (doy - (153L * mp + 2L) / 5 + 1L).toInt()
-    val month = (mp + if (mp < 10L) 3L else -9L).toInt()
-    val year = (y + if (month <= 2) 1L else 0L).toInt()
-
-    return DateParts(
-        year = year,
-        month = month,
-        day = day
-    )
+    return TimeUtils.formatHourMinute(hour, minute)
 }
 
 @Composable
@@ -1176,34 +1135,11 @@ fun TimelineItem(visit: CheckInVisitEntry) {
 }
 
 private fun CheckInVisitEntry.relativeVisitedLabel(): String {
-    val visitedDate = visitedAt.take(10)
-    val referenceEpochDay = REFERENCE_DATE.toEpochDayOrNull() ?: return visitedLabel
-    val visitedEpochDay = visitedDate.toEpochDayOrNull() ?: return visitedLabel
-    val daysAgo = referenceEpochDay - visitedEpochDay
-    return when {
-        daysAgo < 0 -> visitedLabel
-        daysAgo.toInt() == 0 -> "오늘"
-        daysAgo.toInt() == 1 -> "어제"
-        else -> "${daysAgo}일 전"
-    }
-}
-
-private fun String.toEpochDayOrNull(): Long? {
-    if (length != 10 || this[4] != '-' || this[7] != '-') return null
-
-    val year = substring(0, 4).toIntOrNull() ?: return null
-    val month = substring(5, 7).toIntOrNull() ?: return null
-    val day = substring(8, 10).toIntOrNull() ?: return null
-
-    if (month !in 1..12 || day !in 1..31) return null
-
-    val adjustedYear = year - if (month <= 2) 1 else 0
-    val era = if (adjustedYear >= 0) adjustedYear / 400 else (adjustedYear - 399) / 400
-    val yearOfEra = adjustedYear - era * 400
-    val adjustedMonth = month + if (month > 2) -3 else 9
-    val dayOfYear = (153 * adjustedMonth + 2) / 5 + day - 1
-    val dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
-    return era * 146097L + dayOfEra - 719468L
+    return TimeUtils.relativeVisitedLabel(
+        visitedAt = visitedAt,
+        visitedLabel = visitedLabel,
+        referenceDate = REFERENCE_DATE
+    )
 }
 
 private const val REFERENCE_DATE = "2026-03-09"

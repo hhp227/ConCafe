@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
@@ -33,7 +34,7 @@ data class ScheduleUiState(
     val totalWorkDurationLabel: String
         get() {
             if (!isEditingWorking) return "0시간"
-            val durationMinutes = computeDurationMinutes(editStartTime, editEndTime)
+            val durationMinutes = TimeUtils.computeDurationMinutes(editStartTime, editEndTime)
             val actualMinutes = (durationMinutes - 60).coerceAtLeast(0)
             val hours = actualMinutes / 60
             val minutes = actualMinutes % 60
@@ -55,28 +56,6 @@ data class ScheduleUiState(
     )
 
     companion object {
-        private fun defaultTimeOptions(): List<String> {
-            val options = mutableListOf<String>()
-            for (hour in 8..23) {
-                options += "%02d:00".format(hour)
-                if (hour != 23) {
-                    options += "%02d:30".format(hour)
-                }
-            }
-            return options
-        }
-
-        private fun computeDurationMinutes(start: String, end: String): Int {
-            fun parse(time: String): Int {
-                val parts = time.split(":")
-                val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
-                val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-                return hour * 60 + minute
-            }
-
-            val startMinutes = parse(start)
-            val endMinutes = parse(end)
-            return (endMinutes - startMinutes).coerceAtLeast(0)
-        }
+        private fun defaultTimeOptions(): List<String> = TimeUtils.defaultHalfHourTimeOptions()
     }
 }

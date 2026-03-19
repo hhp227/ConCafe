@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.domain.model.User
@@ -831,44 +832,13 @@ private data class WeeklyScheduleStatus(
 )
 
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleStatus> {
-    val workingDays = schedule.mapNotNull { it.date.toWeekdayLabelOrNull() }.toSet()
+    val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
 
     return listOf("월", "화", "수", "목", "금", "토", "일").map { dayLabel ->
         WeeklyScheduleStatus(
             dayLabel = dayLabel,
             isWorking = workingDays.contains(dayLabel)
         )
-    }
-}
-
-private fun String.toWeekdayLabelOrNull(): String? {
-    val parts = split("-")
-    if (parts.size != 3) return null
-    val year = parts[0].toIntOrNull() ?: return null
-    val month = parts[1].toIntOrNull() ?: return null
-    val day = parts[2].toIntOrNull() ?: return null
-
-    return listOf("월", "화", "수", "목", "금", "토", "일").getOrNull(dayOfWeekIndex(year, month, day))
-}
-
-private fun dayOfWeekIndex(year: Int, month: Int, day: Int): Int {
-    var adjustedYear = year
-    var adjustedMonth = month
-    if (adjustedMonth < 3) {
-        adjustedMonth += 12
-        adjustedYear -= 1
-    }
-    val k = adjustedYear % 100
-    val j = adjustedYear / 100
-    val h = (day + (13 * (adjustedMonth + 1)) / 5 + k + (k / 4) + (j / 4) + (5 * j)) % 7
-    return when (h) {
-        2 -> 0
-        3 -> 1
-        4 -> 2
-        5 -> 3
-        6 -> 4
-        0 -> 5
-        else -> 6
     }
 }
 

@@ -500,45 +500,8 @@ private struct WeeklyScheduleItem {
 }
 
 private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleItem] {
-    let workingDays = Set(schedules.compactMap { weekdayLabel(from: $0.date) })
-
+    let workingDays = Set(schedules.compactMap { TimeUtils.weekdayLabel(fromIsoDate: $0.date) })
     return ["월", "화", "수", "목", "금", "토", "일"].map { dayLabel in
         WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
-    }
-}
-
-private func weekdayLabel(from date: String) -> String? {
-    let parts = date.split(separator: "-")
-    guard parts.count == 3,
-          let year = Int(parts[0]),
-          let month = Int(parts[1]),
-          let day = Int(parts[2]) else {
-        return nil
-    }
-
-    let labels = ["월", "화", "수", "목", "금", "토", "일"]
-    let index = dayOfWeekIndex(year: year, month: month, day: day)
-    guard labels.indices.contains(index) else { return nil }
-    return labels[index]
-}
-
-private func dayOfWeekIndex(year: Int, month: Int, day: Int) -> Int {
-    var adjustedYear = year
-    var adjustedMonth = month
-    if adjustedMonth < 3 {
-        adjustedMonth += 12
-        adjustedYear -= 1
-    }
-    let k = adjustedYear % 100
-    let j = adjustedYear / 100
-    let h = (day + (13 * (adjustedMonth + 1)) / 5 + k + (k / 4) + (j / 4) + (5 * j)) % 7
-    switch h {
-    case 2: return 0
-    case 3: return 1
-    case 4: return 2
-    case 5: return 3
-    case 6: return 4
-    case 0: return 5
-    default: return 6
     }
 }

@@ -38,7 +38,7 @@ struct ScheduleUiState {
 
     var totalWorkDurationLabel: String {
         guard isEditingWorking else { return "0시간" }
-        let duration = Self.computeDurationMinutes(start: editStartTime, end: editEndTime)
+        let duration = TimeUtils.computeDurationMinutes(start: editStartTime, end: editEndTime)
         let actual = max(duration - 60, 0)
         let hours = actual / 60
         let minutes = actual % 60
@@ -62,24 +62,10 @@ struct ScheduleUiState {
     }
 
     static func defaultTimeOptions() -> [String] {
-        var options: [String] = []
-        for hour in 8...23 {
-            options.append(String(format: "%02d:00", hour))
-            if hour != 23 {
-                options.append(String(format: "%02d:30", hour))
-            }
-        }
-        return options
+        TimeUtils.defaultHalfHourTimeOptions()
     }
 
     static func computeDurationMinutes(start: String, end: String) -> Int {
-        func parse(_ time: String) -> Int {
-            let parts = time.split(separator: ":")
-            let hour = Int(parts.first ?? "0") ?? 0
-            let minute = Int(parts.dropFirst().first ?? "0") ?? 0
-            return hour * 60 + minute
-        }
-
-        return max(parse(end) - parse(start), 0)
+        TimeUtils.computeDurationMinutes(start: start, end: end)
     }
 }
