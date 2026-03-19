@@ -5,6 +5,7 @@ import com.hhp227.concafe.domain.model.InquiryCreate
 import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.domain.common.AppError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -96,13 +97,13 @@ class InquiryLinkViewModel(
     }
 }
 
-private fun com.hhp227.concafe.domain.common.AppError.toUserMessage(): String {
+private fun AppError.toUserMessage(): String {
     return when (this) {
-        is com.hhp227.concafe.domain.common.AppError.ValidationFailed -> reason
-        com.hhp227.concafe.domain.common.AppError.Unauthorized -> "로그인 후 문의를 접수해 주세요."
-        com.hhp227.concafe.domain.common.AppError.PermissionDenied -> "문의 작성 권한이 없습니다."
-        com.hhp227.concafe.domain.common.AppError.NotFound -> "문의 저장 대상을 찾지 못했습니다."
-        is com.hhp227.concafe.domain.common.AppError.NetworkError -> message ?: "네트워크 오류가 발생했습니다."
-        is com.hhp227.concafe.domain.common.AppError.Unknown -> cause ?: "문의 접수에 실패했습니다."
+        is AppError.ValidationFailed -> reason
+        AppError.Unauthorized -> "로그인 후 문의를 접수해 주세요."
+        AppError.PermissionDenied -> "문의 작성 권한이 없습니다."
+        AppError.NotFound -> "문의 저장 대상을 찾지 못했습니다."
+        is AppError.NetworkError -> message ?: "네트워크 오류가 발생했습니다."
+        is AppError.Unknown -> cause ?: "문의 접수에 실패했습니다."
     }
 }

@@ -88,14 +88,6 @@ final class FanManagementViewModel: ObservableObject {
                                 ),
                                 followers: currentData.followers
                             )
-                            self.uiState.stats = self.uiState.stats.map { card in
-                                guard card.label == "평점" else { return card }
-                                return FanManagementUiState.StatCard(
-                                    label: card.label,
-                                    value: String(format: "%.1f", event.cast.rating),
-                                    highlight: card.highlight
-                                )
-                            }
                         }
                     case let event as Shared.CastEvent.Deleted:
                         if event.castId == castId {
@@ -184,27 +176,6 @@ final class FanManagementViewModel: ObservableObject {
                         castClaimStatus: claimStatus,
                         castClaimSheet: claimSheet,
                         isClaimSheetVisible: false,
-                        stats: [
-                            .init(label: "전체 팔로워", value: "\(data.followers.count)", highlight: .standard),
-                            .init(label: "근무 일정", value: "\(data.detail.schedule.count)", highlight: .primary),
-                            .init(label: "평점", value: String(format: "%.1f", cast.rating), highlight: .standard)
-                        ],
-                        recentFollowers: Array(data.followers.prefix(10)).enumerated().map { index, user in
-                            FanManagementUiState.RecentFollower(
-                                id: user.id,
-                                name: user.nickname,
-                                joinedLabel: {
-                                    switch index {
-                                    case 0: return "방금 전"
-                                    case 1: return "2시간 전"
-                                    case 2: return "5시간 전"
-                                    default: return "최근"
-                                    }
-                                }(),
-                                accent: index == 0
-                            )
-                        },
-                        topFans: [],
                         infoMessage: nil
                     )
                 } else {
@@ -384,13 +355,12 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private func clickRecentFollower(_ id: String) {
-        guard let follower = uiState.recentFollowers.first(where: { $0.id == id }) else { return }
-        setInfoMessage("\(follower.name) 팬 상세 화면은 다음 단계에서 연결합니다.")
+        guard let follower = uiState.fanManagementData?.followers.first(where: { $0.id == id }) else { return }
+        setInfoMessage("\(follower.nickname) 팬 상세 화면은 다음 단계에서 연결합니다.")
     }
 
     private func clickTopFan(_ id: String) {
-        guard let fan = uiState.topFans.first(where: { $0.id == id }) else { return }
-        setInfoMessage("\(fan.name) 활동 리포트는 다음 단계에서 제공합니다.")
+        setInfoMessage("TOP 팬 기능은 다음 단계에서 제공합니다.")
     }
 
     func onAction(_ action: FanManagementAction) {

@@ -15,9 +15,6 @@ struct FanManagementUiState {
     var castClaimStatus: CastClaimStatusCard? = nil
     var castClaimSheet: CastClaimSheet? = nil
     var isClaimSheetVisible: Bool = false
-    var stats: [StatCard] = []
-    var recentFollowers: [RecentFollower] = []
-    var topFans: [TopFan] = []
     var infoMessage: String? = nil
 
     struct CastClaimStatusCard: Hashable {
@@ -40,46 +37,6 @@ struct FanManagementUiState {
         let selectedCastId: String?
         let canSubmit: Bool
         let isSubmitting: Bool
-    }
-
-    struct StatCard: Hashable {
-        let label: String
-        let value: String
-        let highlight: Highlight
-    }
-
-    struct RecentFollower: Identifiable, Hashable {
-        let id: String
-        let name: String
-        let joinedLabel: String
-        let accent: Bool
-
-        init(id: String, name: String, joinedLabel: String, accent: Bool = false) {
-            self.id = id
-            self.name = name
-            self.joinedLabel = joinedLabel
-            self.accent = accent
-        }
-
-        var initial: String {
-            String(name.prefix(1)).uppercased()
-        }
-    }
-
-    struct TopFan: Identifiable, Hashable {
-        let id: String
-        let rank: Int
-        let name: String
-        let pointsLabel: String
-        let isBest: Bool
-
-        init(id: String, rank: Int, name: String, pointsLabel: String, isBest: Bool = false) {
-            self.id = id
-            self.rank = rank
-            self.name = name
-            self.pointsLabel = pointsLabel
-            self.isBest = isBest
-        }
     }
 
     enum QuickAction: CaseIterable, Hashable {
@@ -105,11 +62,6 @@ struct FanManagementUiState {
         }
     }
 
-    enum Highlight {
-        case standard
-        case primary
-    }
-
     enum Accent {
         case pending
         case linked
@@ -121,9 +73,6 @@ struct FanManagementUiState {
         errorMessage: nil,
         fanManagementData: nil,
         castClaimStatus: nil,
-        stats: [],
-        recentFollowers: [],
-        topFans: [],
         infoMessage: nil
     )
 }

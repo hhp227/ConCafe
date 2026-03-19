@@ -91,7 +91,6 @@ private struct FanManagementContentView: View {
                 quickActionGrid
                 weeklyScheduleSection
                 recentFollowersSection
-                topFansSection
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -241,13 +240,23 @@ private struct FanManagementContentView: View {
     }
 
     private var recentFollowersSection: some View {
+        let followers = Array((uiState.fanManagementData?.followers ?? []).prefix(10))
         sectionContainer(title: "최근 팔로워") {
-            if uiState.recentFollowers.isEmpty {
+            if followers.isEmpty {
                 emptySectionCard(message: "최근 팔로워 데이터가 아직 없습니다.")
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
-                        ForEach(uiState.recentFollowers) { follower in
+                        ForEach(Array(followers.enumerated()), id: \.element.id) { index, follower in
+                            let accent = index == 0
+                            let joinedLabel: String = {
+                                switch index {
+                                case 0: return "방금 전"
+                                case 1: return "2시간 전"
+                                case 2: return "5시간 전"
+                                default: return "최근"
+                                }
+                            }()
                             Button {
                                 onAction(.clickRecentFollower(id: follower.id))
                             } label: {
@@ -255,24 +264,24 @@ private struct FanManagementContentView: View {
                                     Circle()
                                         .fill(
                                             LinearGradient(
-                                                colors: follower.accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
+                                                colors: accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             )
                                         )
                                         .frame(width: 58, height: 58)
                                         .overlay {
-                                            Text(follower.initial)
+                                            Text(String(follower.nickname.prefix(1)).uppercased())
                                                 .font(.headline.weight(.bold))
                                                 .foregroundStyle(Color(hex: "6E5566"))
                                         }
                                         .overlay(
-                                            Circle().stroke(follower.accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
+                                            Circle().stroke(accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
                                         )
-                                    Text(follower.name)
+                                    Text(follower.nickname)
                                         .font(.caption.weight(.medium))
                                         .foregroundStyle(Color(hex: "24161E"))
-                                    Text(follower.joinedLabel)
+                                    Text(joinedLabel)
                                         .font(.caption2)
                                         .foregroundStyle(Color(hex: "9C8C98"))
                                 }
@@ -344,67 +353,6 @@ private struct FanManagementContentView: View {
         )
     }
 
-    private var topFansSection: some View {
-        sectionContainer(title: "이달의 TOP 팬") {
-            if uiState.topFans.isEmpty {
-                emptySectionCard(message: "TOP 팬 집계 데이터가 아직 없습니다.")
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(uiState.topFans) { fan in
-                        Button {
-                            onAction(.clickTopFan(id: fan.id))
-                        } label: {
-                            HStack(spacing: 12) {
-                                Text("\(fan.rank)")
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(rankColor(fan.rank))
-                                Circle()
-                                    .fill(Color(hex: "F6E3EC"))
-                                    .frame(width: 42, height: 42)
-                                    .overlay {
-                                        Text(String(fan.name.prefix(1)))
-                                            .font(.headline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "7C3F67"))
-                                    }
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(fan.name)
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Color(hex: "24161E"))
-                                    Text("포인트: \(fan.pointsLabel)")
-                                        .font(.caption)
-                                        .foregroundStyle(Color(hex: "7A707A"))
-                                }
-                                Spacer()
-                                if fan.isBest {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "heart.fill")
-                                            .font(.caption)
-                                        Text("BEST")
-                                            .font(.caption2.weight(.bold))
-                                    }
-                                    .foregroundStyle(Color(hex: "D94A82"))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Color(hex: "FFD1DC").opacity(0.12))
-                                    .clipShape(Capsule())
-                                }
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 14)
-                            .background(Color.white.opacity(0.92))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
     private var loadingState: some View {
         emptySectionCard(message: "팬관리 정보를 불러오는 중입니다.")
     }
@@ -452,16 +400,6 @@ private struct FanManagementContentView: View {
         }
     }
 
-    private func rankColor(_ rank: Int) -> Color {
-        switch rank {
-        case 1:
-            return Color(hex: "D99A00")
-        case 2:
-            return Color(hex: "8E8896")
-        default:
-            return Color(hex: "DC8346")
-        }
-    }
 }
 
 private struct CastClaimSheetView: View {

@@ -72,14 +72,7 @@ class FanManagementViewModel(
                             state.copy(
                                 fanManagementData = currentData.copy(
                                     detail = currentData.detail.copy(cast = event.cast)
-                                ),
-                                stats = state.stats.map { card ->
-                                    if (card.label == "평점") {
-                                        card.copy(value = event.cast.rating.toOneDecimalString())
-                                    } else {
-                                        card
-                                    }
-                                }
+                                )
                             )
                         }
                     }
@@ -145,8 +138,7 @@ class FanManagementViewModel(
             when (val result = getFanManagementDataUseCase.invoke()) {
                 is AppResult.Success -> {
                     val data = result.data
-                    val detail = data.detail
-                    val cast = detail.cast
+                    val cast = data.detail.cast
                     bindCastEvent(cast.id)
                     bindScheduleManagementEvent(cast.id)
                     _uiState.value = FanManagementUiState(
@@ -155,37 +147,6 @@ class FanManagementViewModel(
                         fanManagementData = data,
                         castClaimStatus = claimStatus,
                         castClaimSheet = claimSheet,
-                        stats = listOf(
-                            FanManagementUiState.StatCard(
-                                label = "전체 팔로워",
-                                value = data.followers.size.toString(),
-                                highlight = FanManagementUiState.Highlight.DEFAULT
-                            ),
-                            FanManagementUiState.StatCard(
-                                label = "근무 일정",
-                                value = detail.schedule.size.toString(),
-                                highlight = FanManagementUiState.Highlight.PRIMARY
-                            ),
-                            FanManagementUiState.StatCard(
-                                label = "평점",
-                                value = cast.rating.toOneDecimalString(),
-                                highlight = FanManagementUiState.Highlight.DEFAULT
-                            )
-                        ),
-                        recentFollowers = data.followers.take(10).mapIndexed { index, user ->
-                            FanManagementUiState.RecentFollower(
-                                id = user.id,
-                                name = user.nickname,
-                                joinedLabel = when (index) {
-                                    0 -> "방금 전"
-                                    1 -> "2시간 전"
-                                    2 -> "5시간 전"
-                                    else -> "최근"
-                                },
-                                accent = index == 0
-                            )
-                        },
-                        topFans = emptyList(),
                         infoMessage = null
                     )
                 }
@@ -197,9 +158,6 @@ class FanManagementViewModel(
                             errorMessage = if (claimStatus == null) "팬관리 데이터를 불러오지 못했습니다." else null,
                             castClaimStatus = claimStatus,
                             fanManagementData = null,
-                            stats = emptyList(),
-                            recentFollowers = emptyList(),
-                            topFans = emptyList(),
                             castClaimSheet = claimSheet
                         )
                     }
@@ -305,13 +263,12 @@ class FanManagementViewModel(
     }
 
     private fun clickRecentFollower(followerId: String) {
-        val follower = uiState.value.recentFollowers.firstOrNull { it.id == followerId } ?: return
-        setInfoMessage("${follower.name} 팬 상세 화면은 다음 단계에서 연결합니다.")
+        val follower = uiState.value.fanManagementData?.followers?.firstOrNull { it.id == followerId } ?: return
+        setInfoMessage("${follower.nickname} 팬 상세 화면은 다음 단계에서 연결합니다.")
     }
 
-    private fun clickTopFan(fanId: String) {
-        val fan = uiState.value.topFans.firstOrNull { it.id == fanId } ?: return
-        setInfoMessage("${fan.name} 활동 리포트는 다음 단계에서 제공합니다.")
+    private fun clickTopFan(@Suppress("UNUSED_PARAMETER") fanId: String) {
+        setInfoMessage("TOP 팬 기능은 다음 단계에서 제공합니다.")
     }
 
     fun onAction(action: FanManagementAction) {
@@ -458,12 +415,6 @@ private fun MyCastClaimStatus.toSheet(
 
 private fun MyCastClaimStatus.shouldLoadRequestableCastPage(): Boolean {
     return !hasLinkedProfile && pendingClaim == null && hasRequestableCasts
-}
-
-private fun Double.toOneDecimalString(): String {
-    val normalized = (this * 10).toInt() / 10.0
-    val text = normalized.toString()
-    return if (text.contains('.')) text else "$text.0"
 }
 
 private enum class TaskKey {

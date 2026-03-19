@@ -16,22 +16,6 @@ class ChangePasswordViewModel : ViewModel() {
     private val _event = MutableSharedFlow<ChangePasswordEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    fun onAction(action: ChangePasswordAction) {
-        when (action) {
-            ChangePasswordAction.ClickBack -> emitNavigateBack()
-            is ChangePasswordAction.ChangeCurrentPassword -> {
-                _uiState.update { it.copy(currentPassword = action.value) }
-            }
-            is ChangePasswordAction.ChangeNewPassword -> {
-                _uiState.update { it.copy(newPassword = action.value) }
-            }
-            is ChangePasswordAction.ChangeConfirmPassword -> {
-                _uiState.update { it.copy(confirmPassword = action.value) }
-            }
-            ChangePasswordAction.ClickSubmit -> submit()
-        }
-    }
-
     private fun emitNavigateBack() {
         viewModelScope.launch {
             _event.emit(ChangePasswordEvent.NavigateBack)
@@ -51,6 +35,22 @@ class ChangePasswordViewModel : ViewModel() {
         }
         viewModelScope.launch {
             _event.emit(ChangePasswordEvent.ShowMessage(message))
+        }
+    }
+
+    fun onAction(action: ChangePasswordAction) {
+        when (action) {
+            ChangePasswordAction.ClickBack -> emitNavigateBack()
+            is ChangePasswordAction.ChangeCurrentPassword -> {
+                _uiState.update { it.copy(currentPassword = action.value) }
+            }
+            is ChangePasswordAction.ChangeNewPassword -> {
+                _uiState.update { it.copy(newPassword = action.value) }
+            }
+            is ChangePasswordAction.ChangeConfirmPassword -> {
+                _uiState.update { it.copy(confirmPassword = action.value) }
+            }
+            ChangePasswordAction.ClickSubmit -> submit()
         }
     }
 
