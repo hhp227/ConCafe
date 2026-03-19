@@ -12,7 +12,7 @@ import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
 import com.hhp227.concafe.domain.event.NoticeManagementEvent
 import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
-import com.hhp227.concafe.domain.model.NoticeStatusAccent as DomainNoticeStatusAccent
+import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
@@ -85,7 +85,7 @@ class NoticeEventViewModel(
                 formContent = target.content,
                 formImageUrl = "",
                 formPinned = target.isPinned,
-                formReservedAt = if (target.statusAccent == NoticeStatusAccent.DRAFT) target.date else "",
+                formReservedAt = if (target.statusAccent == NoticeStatusAccent.DRAFT) target.displayDate else "",
                 infoMessage = null
             )
         }
@@ -106,7 +106,7 @@ class NoticeEventViewModel(
                 formContent = target.content,
                 formImageUrl = target.imageUrl,
                 formPinned = false,
-                formReservedAt = target.period,
+                formReservedAt = target.periodText,
                 infoMessage = null
             )
         }
@@ -127,7 +127,7 @@ class NoticeEventViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            notices = if (append) state.notices + result.data.items.map(::mapNotice) else result.data.items.map(::mapNotice),
+                            notices = if (append) state.notices + result.data.items else result.data.items,
                             noticeNextCursor = result.data.nextCursor,
                             canLoadMoreNotices = result.data.hasNext,
                             isLoadingNotices = false,
@@ -163,7 +163,7 @@ class NoticeEventViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            events = if (append) state.events + result.data.items.map(::mapEvent) else result.data.items.map(::mapEvent),
+                            events = if (append) state.events + result.data.items else result.data.items,
                             eventNextCursor = result.data.nextCursor,
                             canLoadMoreEvents = result.data.hasNext,
                             isLoadingEvents = false,
@@ -320,16 +320,14 @@ class NoticeEventViewModel(
     }
 
     private fun patchNotice(item: CafeNoticeManagementItem) {
-        val mapped = mapNotice(item)
         _uiState.update { state ->
-            state.copy(notices = state.notices.map { if (it.id == mapped.id) mapped else it })
+            state.copy(notices = state.notices.map { if (it.id == item.id) item else it })
         }
     }
 
     private fun patchEvent(item: CafeEventManagementItem) {
-        val mapped = mapEvent(item)
         _uiState.update { state ->
-            state.copy(events = state.events.map { if (it.id == mapped.id) mapped else it })
+            state.copy(events = state.events.map { if (it.id == item.id) item else it })
         }
     }
 
@@ -404,34 +402,6 @@ class NoticeEventViewModel(
             NoticeEventAction.ClickSubmitForm -> submitForm()
             NoticeEventAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
-    }
-
-    private fun mapNotice(item: CafeNoticeManagementItem): NoticeItem {
-        return NoticeItem(
-            id = item.id,
-            title = item.title,
-            content = item.content,
-            date = item.displayDate,
-            isPinned = item.isPinned,
-            statusLabel = item.statusLabel,
-            statusAccent = when (item.statusAccent) {
-                DomainNoticeStatusAccent.PUBLISHED -> NoticeStatusAccent.PUBLISHED
-                DomainNoticeStatusAccent.DRAFT -> NoticeStatusAccent.DRAFT
-                DomainNoticeStatusAccent.ENDED -> NoticeStatusAccent.ENDED
-            }
-        )
-    }
-
-    private fun mapEvent(item: CafeEventManagementItem): EventItem {
-        return EventItem(
-            id = item.id,
-            title = item.title,
-            content = item.content,
-            period = item.periodText,
-            statusLabel = item.statusLabel,
-            imageUrl = item.imageUrl,
-            isDimmed = item.isDimmed
-        )
     }
 
     override fun onCleared() {

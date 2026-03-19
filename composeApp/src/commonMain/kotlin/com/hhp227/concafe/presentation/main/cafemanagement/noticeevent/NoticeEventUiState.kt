@@ -1,10 +1,13 @@
 package com.hhp227.concafe.presentation.main.cafemanagement.noticeevent
 
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
+
 data class NoticeEventUiState(
     val selectedTab: NoticeEventTab = NoticeEventTab.NOTICE,
     val query: String = "",
-    val notices: List<NoticeItem> = emptyList(),
-    val events: List<EventItem> = emptyList(),
+    val notices: List<CafeNoticeManagementItem> = emptyList(),
+    val events: List<CafeEventManagementItem> = emptyList(),
     val isLoadingNotices: Boolean = false,
     val isLoadingMoreNotices: Boolean = false,
     val noticeNextCursor: String? = null,
@@ -82,31 +85,5 @@ data class NoticeEventUiState(
 enum class NoticeEventTab(val title: String) {
     NOTICE("공지사항"),
     EVENT("이벤트")
-}
-
-data class NoticeItem(
-    val id: String,
-    val title: String,
-    val content: String,
-    val date: String,
-    val isPinned: Boolean,
-    val statusLabel: String,
-    val statusAccent: NoticeStatusAccent
-)
-
-data class EventItem(
-    val id: String,
-    val title: String,
-    val content: String,
-    val period: String,
-    val statusLabel: String,
-    val imageUrl: String,
-    val isDimmed: Boolean = false
-)
-
-enum class NoticeStatusAccent {
-    PUBLISHED,
-    DRAFT,
-    ENDED
 }
 

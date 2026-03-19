@@ -20,7 +20,7 @@ struct CafeUiState {
     var isLoadingMoreNotices: Bool
     var noticesNextCursor: String?
     var canLoadMoreNotices: Bool
-    var notices: [NoticeItem]
+    var notices: [CafeNoticeManagementItem]
     var isLoadingMoreReviews: Bool
     var reviewsNextCursor: String?
     var canLoadMoreReviews: Bool

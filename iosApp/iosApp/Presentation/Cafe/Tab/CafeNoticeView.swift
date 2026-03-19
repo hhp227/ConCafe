@@ -9,7 +9,7 @@ import SwiftUI
 import Shared
 
 struct CafeNoticeView: View {
-    let notices: [NoticeItem]
+    let notices: [CafeNoticeManagementItem]
 
     let canLoadMore: Bool
 
@@ -18,7 +18,7 @@ struct CafeNoticeView: View {
     let onLoadMore: () -> Void
 
     @State private var expandedNoticeIds: Set<String> = []
-    
+
     var body: some View {
         if notices.isEmpty {
             emptyCard("등록된 공지가 없습니다.")
@@ -30,7 +30,7 @@ struct CafeNoticeView: View {
                             Text(notice.title)
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
-                            Text(notice.date)
+                            Text(notice.displayDate)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -67,7 +67,7 @@ struct CafeNoticeView: View {
             }
         }
     }
-    
+
     private func emptyCard(_ text: String) -> some View {
         Text(text)
             .font(.subheadline)

@@ -191,7 +191,7 @@ final class CafeViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeNoticeManagementItem> {
-                    let items = (page.items as! [CafeNoticeManagementItem]).map(mapNotice)
+                    let items = page.items as! [CafeNoticeManagementItem]
                     uiState.notices = append ? (uiState.notices + items) : items
                     uiState.noticesNextCursor = page.nextCursor
                     uiState.canLoadMoreNotices = page.hasNext
@@ -347,29 +347,5 @@ final class CafeViewModel: ObservableObject {
         case reviewPage
         case cafeDetail
         case reviewEvent
-    }
-
-    private func mapNotice(_ item: CafeNoticeManagementItem) -> NoticeItem {
-        let accent: NoticeStatusAccent
-        switch item.statusAccent {
-        case .published:
-            accent = .published
-        case .draft:
-            accent = .draft
-        case .ended:
-            accent = .ended
-        default:
-            accent = .published
-        }
-
-        return NoticeItem(
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            date: item.displayDate,
-            isPinned: item.isPinned,
-            statusLabel: item.statusLabel,
-            statusAccent: accent
-        )
     }
 }

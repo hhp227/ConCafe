@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Shared
 
 struct NoticeEventView: View {
     let cafeId: String
@@ -153,7 +154,7 @@ private struct NoticeEventContentView: View {
         }
     }
 
-    private func noticeCard(_ item: NoticeItem) -> some View {
+    private func noticeCard(_ item: CafeNoticeManagementItem) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 HStack(spacing: 6) {
@@ -178,7 +179,7 @@ private struct NoticeEventContentView: View {
             Text(item.title)
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "23161C"))
-            Text(item.date)
+            Text(item.displayDate)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8F848F"))
         }
@@ -188,7 +189,7 @@ private struct NoticeEventContentView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
 
-    private func eventCard(_ item: EventItem) -> some View {
+    private func eventCard(_ item: CafeEventManagementItem) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
                 AsyncImage(url: URL(string: item.imageUrl)) { image in
@@ -226,7 +227,7 @@ private struct NoticeEventContentView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
                         .font(.caption)
-                    Text(item.period)
+                    Text(item.periodText)
                         .font(.caption)
                 }
                 .foregroundStyle(Color(hex: "8F848F"))
