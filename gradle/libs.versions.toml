@@ -11,7 +11,7 @@ androidx-testExt = "1.1.5"
 jetbrains-lifecycle = "2.8.4"
 composeMultiplatform = "1.6.10"
 junit = "4.13.2"
-kotlin = "1.9.20"
+kotlin = "1.9.24"
 kotlinx-coroutines = "1.8.1"
 kotlinx-datetime = "0.6.1"
 kotlinx-serialization = "1.6.3"
@@ -19,6 +19,8 @@ material3 = "1.5.12"
 navigationComposeAndroid = "2.8.9"
 androidxComposeMaterial = "1.5.4"
 koin = "3.5.6"
+kmp-nativecoroutines = "1.0.0-ALPHA-30"
+ksp = "1.9.24-1.0.20"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -45,6 +47,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationComposeAndroid" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "androidxComposeMaterial" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
+kmp-nativecoroutines-ksp = { module = "com.rickclephas.kmp:kmp-nativecoroutines-ksp", version.ref = "kmp-nativecoroutines" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -52,3 +56,5 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kmp-nativecoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmp-nativecoroutines" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

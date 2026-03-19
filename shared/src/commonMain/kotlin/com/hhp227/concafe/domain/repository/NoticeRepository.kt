@@ -1,18 +1,9 @@
 package com.hhp227.concafe.domain.repository
 
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.CafeEventCreate
-import com.hhp227.concafe.domain.model.CafeEventManagementItem
-import com.hhp227.concafe.domain.model.CafeEventUpdate
-import com.hhp227.concafe.domain.model.CafeNoticeCreate
-import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
-import com.hhp227.concafe.domain.model.CafeNoticeUpdate
-import com.hhp227.concafe.domain.model.NoticeManagementEvent
-import com.hhp227.concafe.domain.model.Notice
-import kotlinx.coroutines.flow.Flow
+import com.hhp227.concafe.domain.model.*
 
 interface NoticeRepository {
-    fun observeNoticeManagementEvent(): Flow<NoticeManagementEvent>
     suspend fun getRecentNotices(limit: Int): List<Notice>
     suspend fun getCafeNoticePage(
         cafeId: String,

@@ -4,11 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,14 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,20 +28,15 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCafeCastListPageUseCase
-import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
-import com.hhp227.concafe.di.resolveGetCafeReviewPageUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailUseCase
-import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
-import com.hhp227.concafe.di.resolveToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
+import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.coroutines.flow.distinctUntilChanged
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun CafeScreen(
@@ -60,18 +45,7 @@ fun CafeScreen(
     viewModel: CafeViewModel = viewModel(
         key = "cafe-$cafeId",
         factory = viewModelFactory {
-            initializer {
-                CafeViewModel(
-                    cafeId = cafeId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
-                    getCafeCastListPageUseCase = resolveGetCafeCastListPageUseCase(),
-                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
-                    getCafeReviewPageUseCase = resolveGetCafeReviewPageUseCase(),
-                    observeCafeDetailUseCase = resolveObserveCafeDetailUseCase(),
-                    observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
-                    toggleFavoriteCafeUseCase = resolveToggleFavoriteCafeUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CafeViewModel> { parametersOf(cafeId) } }
         }
     )
 ) {

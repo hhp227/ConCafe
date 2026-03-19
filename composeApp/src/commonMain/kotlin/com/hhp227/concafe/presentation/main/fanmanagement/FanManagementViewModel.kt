@@ -2,45 +2,29 @@ package com.hhp227.concafe.presentation.main.fanmanagement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveGetFanManagementDataUseCase
-import com.hhp227.concafe.di.resolveCreateCastClaimUseCase
-import com.hhp227.concafe.di.resolveGetMyCastClaimStatusUseCase
-import com.hhp227.concafe.di.resolveGetMyRequestableCastPageUseCase
-import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveObserveScheduleManagementEventUseCase
+import com.hhp227.concafe.di.*
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.model.MyCastClaimStatus
-import com.hhp227.concafe.domain.model.CastClaimEvent as CastClaimDomainEvent
-import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
-import com.hhp227.concafe.domain.model.ScheduleManagementEvent as ScheduleManagementDomainEvent
-import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
-import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
-import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
-import com.hhp227.concafe.domain.usecase.GetMyRequestableCastPageUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastClaimEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
-import com.hhp227.concafe.domain.usecase.ObserveScheduleManagementEventUseCase
+import com.hhp227.concafe.domain.usecase.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import com.hhp227.concafe.domain.event.CastClaimEvent as CastClaimDomainEvent
+import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent as ScheduleManagementDomainEvent
 
 class FanManagementViewModel(
-    private val getFanManagementDataUseCase: GetFanManagementDataUseCase = resolveGetFanManagementDataUseCase(),
-    private val createCastClaimUseCase: CreateCastClaimUseCase = resolveCreateCastClaimUseCase(),
-    private val getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = resolveGetMyCastClaimStatusUseCase(),
-    private val getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = resolveGetMyRequestableCastPageUseCase(),
-    private val observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
-    private val observeCastEventUseCase: ObserveCastEventUseCase = resolveObserveCastEventUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
-    private val observeScheduleManagementEventUseCase: ObserveScheduleManagementEventUseCase = resolveObserveScheduleManagementEventUseCase()
+    private val getFanManagementDataUseCase: GetFanManagementDataUseCase,
+    private val createCastClaimUseCase: CreateCastClaimUseCase,
+    private val getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase,
+    private val getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val castClaimEventPublisher: CastClaimEventPublisher,
+    private val castEventPublisher: CastEventPublisher,
+    private val scheduleManagementEventPublisher: ScheduleManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FanManagementUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -63,7 +47,7 @@ class FanManagementViewModel(
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
-            observeCastClaimEventUseCase.invoke().collectLatest { event ->
+            castClaimEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastClaimDomainEvent.Created,
                     is CastClaimDomainEvent.Updated -> loadFanManagement()
@@ -75,7 +59,7 @@ class FanManagementViewModel(
     private fun bindCastEvent(castId: String) {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadFanManagement()
@@ -108,7 +92,7 @@ class FanManagementViewModel(
     private fun bindScheduleManagementEvent(castId: String) {
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
-            observeScheduleManagementEventUseCase.invoke().collectLatest { event ->
+            scheduleManagementEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is ScheduleManagementDomainEvent.Updated -> if (event.castId == castId) {
                         loadFanManagement()

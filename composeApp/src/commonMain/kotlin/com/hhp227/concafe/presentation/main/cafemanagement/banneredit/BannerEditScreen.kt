@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -23,15 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
-import com.hhp227.concafe.di.resolveGetCafeManagementUseCase
-import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveCreateHomeBannerUseCase
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,16 +37,7 @@ fun BannerEditScreen(
     viewModel: BannerEditViewModel = viewModel(
         key = "banner-edit-${initialCafeId.orEmpty()}",
         factory = viewModelFactory {
-            initializer {
-                BannerEditViewModel(
-                    initialCafeId = initialCafeId,
-                    createHomeBannerUseCase = resolveCreateHomeBannerUseCase(),
-                    getCafeManagementUseCase = resolveGetCafeManagementUseCase(),
-                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
-                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<BannerEditViewModel> { parametersOf(initialCafeId) } }
         }
     )
 ) {

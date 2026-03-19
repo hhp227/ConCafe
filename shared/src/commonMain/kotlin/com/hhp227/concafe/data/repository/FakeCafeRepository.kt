@@ -1,31 +1,13 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetail
-import com.hhp227.concafe.domain.model.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CafeInfoUpdate
-import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import com.hhp227.concafe.domain.model.CafeSort
-import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.model.*
 import com.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(
     private val dataSource: ConCafeDataSource
 ) : CafeRepository {
-    private val cafeDetailEvent = MutableSharedFlow<CafeDetailEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeCafeDetailEvent(): Flow<CafeDetailEvent> {
-        return cafeDetailEvent
-    }
-
     override suspend fun searchCafes(
         query: String?,
         country: String?,
@@ -62,46 +44,16 @@ class FakeCafeRepository(
             ?: throw NoSuchElementException("cafe detail not found")
     }
 
-    override fun observeCafeDetail(cafeId: String): Flow<CafeDetail> {
-        return dataSource.observeCafeDetail(cafeId).filterNotNull()
-    }
-
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
-        return dataSource.updateCafeInfo(update).also {
-            cafeDetailEvent.tryEmit(CafeDetailEvent.CafeInfoUpdated(update.cafeId, it.cafe))
-        }
+        return dataSource.updateCafeInfo(update)
     }
 
     override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
-        val existingItemId = update.itemId
-        val isCreate = existingItemId.isNullOrBlank()
-        val updatedDetail = dataSource.upsertCafeMenuGoods(update)
-        val updatedMenu = updatedDetail.menus.firstOrNull { it.id == existingItemId }
-            ?: updatedDetail.menus.lastOrNull()?.takeIf { update.category.lowercase() != "goods" }
-        val updatedGoods = updatedDetail.goods.firstOrNull { it.id == existingItemId }
-            ?: updatedDetail.goods.lastOrNull()?.takeIf { update.category.lowercase() == "goods" }
-
-        val event = when {
-            updatedMenu != null && isCreate -> CafeDetailEvent.MenuCreated(update.cafeId, updatedMenu)
-            updatedMenu != null -> CafeDetailEvent.MenuUpdated(update.cafeId, updatedMenu)
-            updatedGoods != null && isCreate -> CafeDetailEvent.GoodsCreated(update.cafeId, updatedGoods)
-            updatedGoods != null -> CafeDetailEvent.GoodsUpdated(update.cafeId, updatedGoods)
-            else -> throw NoSuchElementException("menu goods item not found")
-        }
-        cafeDetailEvent.tryEmit(event)
-        return updatedDetail
+        return dataSource.upsertCafeMenuGoods(update)
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
-        return dataSource.deleteCafeMenuGoods(cafeId, itemId).also {
-            cafeDetailEvent.tryEmit(
-                if (itemId.startsWith("goods")) {
-                    CafeDetailEvent.GoodsDeleted(cafeId, itemId)
-                } else {
-                    CafeDetailEvent.MenuDeleted(cafeId, itemId)
-                }
-            )
-        }
+        return dataSource.deleteCafeMenuGoods(cafeId, itemId)
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {

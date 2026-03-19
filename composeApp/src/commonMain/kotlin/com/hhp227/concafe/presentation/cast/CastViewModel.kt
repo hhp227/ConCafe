@@ -12,19 +12,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CastEvent as CastDomainEvent
-import com.hhp227.concafe.domain.model.ReviewEvent
+import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.ReviewEvent
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase,
-    private val observeReviewEventUseCase: ObserveReviewEventUseCase,
-    private val toggleFollowCastUseCase: ToggleFollowCastUseCase
+    private val toggleFollowCastUseCase: ToggleFollowCastUseCase,
+    private val castEventPublisher: CastEventPublisher,
+    private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastUiState.empty())
     val uiState: StateFlow<CastUiState> = _uiState.asStateFlow()
@@ -34,7 +34,7 @@ class CastViewModel(
 
     private fun observeCastEvent() {
         viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastDomainEvent.Created -> if (event.cast.id == castId) {
                         loadCastDetail()
@@ -54,7 +54,7 @@ class CastViewModel(
 
     private fun observeReviewEvent() {
         viewModelScope.launch {
-            observeReviewEventUseCase.invoke().collectLatest { event ->
+            reviewEventPublisher.events.collectLatest { event ->
                 val currentCafeId = _uiState.value.detail?.cafe?.id ?: return@collectLatest
                 when (event) {
                     is ReviewEvent.Created -> if (event.cafeId == currentCafeId) {

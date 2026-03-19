@@ -15,6 +15,7 @@ class CreateInquiryUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
+
             AppResult.Success(
                 inquiryRepository.createInquiry(
                     userId = currentUser.id,

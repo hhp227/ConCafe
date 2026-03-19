@@ -23,8 +23,6 @@ final class MenuGoodsEditViewModel: ObservableObject {
 
     let event = PassthroughSubject<MenuGoodsEditEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
     private func loadInitialValue() {
         guard let itemId else {
             uiState.isLoading = false
@@ -33,12 +31,10 @@ final class MenuGoodsEditViewModel: ObservableObject {
             uiState.saveButtonLabel = "항목 생성"
             return
         }
-
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.infoMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getCafeDetailUseCase.invoke(cafeId: cafeId)
 
@@ -77,7 +73,6 @@ final class MenuGoodsEditViewModel: ObservableObject {
 
         uiState.isSaving = true
         uiState.infoMessage = nil
-        loadTask?.cancel()
 
         let update = CafeMenuGoodsUpsert(
             cafeId: cafeId,
@@ -90,7 +85,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
             imageUrl: uiState.imageUrl
         )
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await upsertCafeMenuGoodsUseCase.invoke(update: update)
 
@@ -185,10 +180,6 @@ final class MenuGoodsEditViewModel: ObservableObject {
         self.upsertCafeMenuGoodsUseCase = upsertCafeMenuGoodsUseCase
 
         loadInitialValue()
-    }
-
-    deinit {
-        loadTask?.cancel()
     }
 }
 

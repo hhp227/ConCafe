@@ -62,9 +62,7 @@ import org.koin.core.context.GlobalContext
 fun NotificationScreen(
     viewModel: NotificationViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                GlobalContext.get().get<NotificationViewModel>()
-            }
+            initializer { GlobalContext.get().get<NotificationViewModel>() }
         }
     ),
     onNavigationAction: (NavigationAction) -> Unit

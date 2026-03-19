@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CastViewModel: ObservableObject {
@@ -15,69 +16,74 @@ final class CastViewModel: ObservableObject {
 
     private let getCastDetailUseCase: GetCastDetailUseCase
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
-
-    private let observeReviewEventUseCase: ObserveReviewEventUseCase
-
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
+
+    private let castEventPublisher: CastEventPublisher
+
+    private let reviewEventPublisher: ReviewEventPublisher
 
     @Published private(set) var uiState = CastUiState.empty
 
     let event = PassthroughSubject<CastEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.CastEvent.Created:
-                    if event.cast.id == self.castId {
-                        self.loadCastDetail()
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.CastEvent.Created:
+                        if event.cast.id == self.castId {
+                            self.loadCastDetail()
+                        }
+                    case let event as Shared.CastEvent.Updated:
+                        if event.cast.id == self.castId, let detail = self.uiState.detail {
+                            self.uiState.detail = CastDetail(
+                                cast: event.cast,
+                                cafe: detail.cafe,
+                                images: detail.images,
+                                schedule: detail.schedule
+                            )
+                        }
+                    case let event as Shared.CastEvent.Deleted:
+                        if event.castId == self.castId {
+                            self.event.send(.navigateBack)
+                        }
+                    default:
+                        break
                     }
-                case let event as Shared.CastEvent.Updated:
-                    if event.cast.id == self.castId, let detail = self.uiState.detail {
-                        self.uiState.detail = CastDetail(
-                            cast: event.cast,
-                            cafe: detail.cafe,
-                            images: detail.images,
-                            schedule: detail.schedule
-                        )
-                    }
-                case let event as Shared.CastEvent.Deleted:
-                    if event.castId == self.castId {
-                        self.event.send(.navigateBack)
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeReviewEvent() {
-        watchHandles[.reviewEvent]?.cancel()
-        watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
-            if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
-                self.loadCastDetail()
-            } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
-                self.loadCastDetail()
+        tasks[.reviewEvent]?.cancel()
+        tasks[.reviewEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: reviewEventPublisher.events) {
+                    guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
+                    if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
+                        self.loadCastDetail()
+                    } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
+                        self.loadCastDetail()
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func loadCastDetail() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getCastDetailUseCase.invoke(castId: castId)
 
@@ -104,8 +110,7 @@ final class CastViewModel: ObservableObject {
     }
 
     private func toggleFollow() {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await toggleFollowCastUseCase.invoke(castId: castId)
 
@@ -141,15 +146,15 @@ final class CastViewModel: ObservableObject {
     init(
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
-        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
-        toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase()
+        toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
-        self.observeReviewEventUseCase = observeReviewEventUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
+        self.castEventPublisher = castEventPublisher
+        self.reviewEventPublisher = reviewEventPublisher
 
         observeCastEvent()
         observeReviewEvent()
@@ -157,12 +162,11 @@ final class CastViewModel: ObservableObject {
     }
 
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
-        loadTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case castEvent
         case reviewEvent
     }

@@ -8,12 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,43 +25,24 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveGetCheckInGuestFeedUseCase
-import com.hhp227.concafe.di.resolveGetCheckInUserFeedUseCase
-import com.hhp227.concafe.di.resolveCreateVisitUseCase
-import com.hhp227.concafe.di.resolveDismissReviewPromptUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckInScreen(
     viewModel: CheckInViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                CheckInViewModel(
-                    getCheckInGuestFeedUseCase = resolveGetCheckInGuestFeedUseCase(),
-                    getCheckInUserFeedUseCase = resolveGetCheckInUserFeedUseCase(),
-                    createVisitUseCase = resolveCreateVisitUseCase(),
-                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
-                    observeCurrentUserUseCase = resolveObserveCurrentUserUseCase(),
-                    shouldShowReviewPromptUseCase = resolveShouldShowReviewPromptUseCase(),
-                    dismissReviewPromptUseCase = resolveDismissReviewPromptUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CheckInViewModel>() }
         }
     ),
     onNavigate: (NavigationAction) -> Unit
-    ) {
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(viewModel) {

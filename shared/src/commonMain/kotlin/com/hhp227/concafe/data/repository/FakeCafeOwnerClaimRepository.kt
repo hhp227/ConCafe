@@ -1,6 +1,7 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeOwnerClaimRepository
@@ -22,7 +23,7 @@ class FakeCafeOwnerClaimRepository(
             throw IllegalArgumentException("이미 승인 대기 중인 카페 신청입니다.")
         }
 
-        val claim = com.hhp227.concafe.domain.model.CafeManagementData.PendingClaimSummary(
+        val claim = CafeManagementData.PendingClaimSummary(
             claimId = "cafe-claim-${dataSource.pendingCafeClaimsByUser.values.sumOf { it.size } + 1}",
             cafeId = cafeId,
             cafeName = cafe.name,

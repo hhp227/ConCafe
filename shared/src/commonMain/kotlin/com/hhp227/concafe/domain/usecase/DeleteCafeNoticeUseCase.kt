@@ -2,14 +2,22 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.NoticeManagementEvent
+import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.repository.NoticeRepository
 
 class DeleteCafeNoticeUseCase(
-    private val noticeRepository: NoticeRepository
+    private val noticeRepository: NoticeRepository,
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
 ) {
     suspend operator fun invoke(cafeId: String, noticeId: String): AppResult<String> {
         return try {
-            AppResult.Success(noticeRepository.deleteCafeNotice(cafeId, noticeId))
+            val noticeId = noticeRepository.deleteCafeNotice(cafeId, noticeId)
+
+            noticeManagementEventPublisher.publish(
+                NoticeManagementEvent.NoticeDeleted(cafeId, noticeId)
+            )
+            AppResult.Success(noticeId)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

@@ -69,20 +69,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveCreateCafeEventUseCase
-import com.hhp227.concafe.di.resolveCreateCafeNoticeUseCase
-import com.hhp227.concafe.di.resolveDeleteCafeEventUseCase
-import com.hhp227.concafe.di.resolveDeleteCafeNoticeUseCase
-import com.hhp227.concafe.di.resolveGetCafeEventPageUseCase
-import com.hhp227.concafe.di.resolveGetCafeNoticePageUseCase
-import com.hhp227.concafe.di.resolveObserveNoticeManagementEventUseCase
-import com.hhp227.concafe.di.resolveUpdateCafeEventUseCase
-import com.hhp227.concafe.di.resolveUpdateCafeNoticeUseCase
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,20 +85,7 @@ fun NoticeEventScreen(
     viewModel: NoticeEventViewModel = viewModel(
         key = "notice-event-$cafeId",
         factory = viewModelFactory {
-            initializer {
-                NoticeEventViewModel(
-                    cafeId = cafeId,
-                    getCafeNoticePageUseCase = resolveGetCafeNoticePageUseCase(),
-                    getCafeEventPageUseCase = resolveGetCafeEventPageUseCase(),
-                    createCafeNoticeUseCase = resolveCreateCafeNoticeUseCase(),
-                    createCafeEventUseCase = resolveCreateCafeEventUseCase(),
-                    updateCafeNoticeUseCase = resolveUpdateCafeNoticeUseCase(),
-                    updateCafeEventUseCase = resolveUpdateCafeEventUseCase(),
-                    deleteCafeNoticeUseCase = resolveDeleteCafeNoticeUseCase(),
-                    deleteCafeEventUseCase = resolveDeleteCafeEventUseCase(),
-                    observeNoticeManagementEventUseCase = resolveObserveNoticeManagementEventUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<NoticeEventViewModel> { parametersOf(cafeId) } }
         }
     )
 ) {

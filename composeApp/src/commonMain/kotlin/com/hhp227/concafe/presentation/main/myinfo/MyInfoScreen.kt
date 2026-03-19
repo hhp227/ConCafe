@@ -67,9 +67,7 @@ import org.koin.core.context.GlobalContext
 fun MyInfoScreen(
     viewModel: MyInfoViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                GlobalContext.get().get<MyInfoViewModel>()
-            }
+            initializer { GlobalContext.get().get<MyInfoViewModel>() }
         }
     ),
     onNavigate: (NavigationAction) -> Unit

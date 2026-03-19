@@ -22,6 +22,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,12 +35,7 @@ fun ExternalLinkScreen(
     val viewModel = viewModel<ExternalLinkViewModel>(
         key = "external-link-$title-$url",
         factory = viewModelFactory {
-            initializer {
-                ExternalLinkViewModel(
-                    title = title,
-                    url = url
-                )
-            }
+            initializer { GlobalContext.get().get<ExternalLinkViewModel> { parametersOf(title, url) } }
         }
     )
     val uiState by viewModel.uiState.collectAsState()

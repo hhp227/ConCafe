@@ -28,12 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import com.hhp227.concafe.di.resolveUpsertCafeMenuGoodsUseCase
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun MenuGoodsEditScreen(
@@ -43,14 +43,7 @@ fun MenuGoodsEditScreen(
     viewModel: MenuGoodsEditViewModel = viewModel(
         key = "menu-goods-edit-$cafeId-${itemId ?: "new"}",
         factory = viewModelFactory {
-            initializer {
-                MenuGoodsEditViewModel(
-                    cafeId = cafeId,
-                    itemId = itemId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
-                    upsertCafeMenuGoodsUseCase = resolveUpsertCafeMenuGoodsUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<MenuGoodsEditViewModel> { parametersOf(cafeId, itemId) } }
         }
     )
 ) {

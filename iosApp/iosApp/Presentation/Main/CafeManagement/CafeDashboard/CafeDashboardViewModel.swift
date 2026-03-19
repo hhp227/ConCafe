@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CafeDashboardViewModel: ObservableObject {
@@ -25,19 +26,19 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let deleteCastUseCase: DeleteCastUseCase
 
-    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+    private let bannerEventPublisher: BannerEventPublisher
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastClaimEventUseCase: ObserveCastClaimEventUseCase
+    private let castClaimEventPublisher: CastClaimEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
     @Published private(set) var uiState = CafeDashboardUiState()
 
     let event = PassthroughSubject<CafeDashboardEvent, Never>()
 
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadCafeDashboard() {
         Task {
@@ -309,37 +310,43 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as CafeDetailEvent.CafeInfoUpdated:
-                    if updated.cafeId == self.cafeId {
-                        self.patchCafeInfo(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    switch event {
+                    case let updated as CafeDetailEvent.CafeInfoUpdated:
+                        if updated.cafeId == self.cafeId {
+                            self.patchCafeInfo(updated.cafe)
+                        }
+                    case is CafeDetailEvent.MenuCreated,
+                         is CafeDetailEvent.MenuUpdated,
+                         is CafeDetailEvent.MenuDeleted,
+                         is CafeDetailEvent.GoodsCreated,
+                         is CafeDetailEvent.GoodsUpdated,
+                         is CafeDetailEvent.GoodsDeleted:
+                        break
+                    default:
+                        break
                     }
-                case is CafeDetailEvent.MenuCreated,
-                     is CafeDetailEvent.MenuUpdated,
-                     is CafeDetailEvent.MenuDeleted,
-                     is CafeDetailEvent.GoodsCreated,
-                     is CafeDetailEvent.GoodsUpdated,
-                     is CafeDetailEvent.GoodsDeleted:
-                    break
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeBannerEvent() {
-        watchHandles[.bannerEvent]?.cancel()
-        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let created = event as? Shared.BannerEvent.Created, created.banner.cafeId == self.cafeId {
-                    self.loadCafeDashboard()
+        tasks[.bannerEvent]?.cancel()
+        tasks[.bannerEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: bannerEventPublisher.events) {
+                    if let created = event as? Shared.BannerEvent.Created, created.banner.cafeId == self.cafeId {
+                        self.loadCafeDashboard()
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -359,60 +366,65 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.CastEvent.Created:
-                    if event.cafeId == self.cafeId {
-                        self.refreshCastPreviews()
-                    }
-                case let event as Shared.CastEvent.Updated:
-                    if event.cafeId == self.cafeId {
-                        self.uiState.castPreviews = self.uiState.castPreviews.map { preview in
-                            guard preview.id == event.cast.id else { return preview }
-                            return CafeCastPreview(
-                                id: preview.id,
-                                name: event.cast.name,
-                                isOnShift: preview.isOnShift
-                            )
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.CastEvent.Created:
+                        if event.cafeId == self.cafeId {
+                            self.refreshCastPreviews()
                         }
-                    }
-                case let event as Shared.CastEvent.Deleted:
-                    if event.cafeId == self.cafeId {
-                        self.uiState.castPreviews.removeAll { $0.id == event.castId }
-                        if self.uiState.selectedCastId == event.castId {
-                            self.uiState.selectedCastId = nil
+                    case let event as Shared.CastEvent.Updated:
+                        if event.cafeId == self.cafeId {
+                            self.uiState.castPreviews = self.uiState.castPreviews.map { preview in
+                                guard preview.id == event.cast.id else { return preview }
+                                return CafeCastPreview(
+                                    id: preview.id,
+                                    name: event.cast.name,
+                                    isOnShift: preview.isOnShift
+                                )
+                            }
                         }
-                        self.uiState.isDeleteCastDialogVisible = false
-                        self.refreshClaimData(resetMessage: false)
+                    case let event as Shared.CastEvent.Deleted:
+                        if event.cafeId == self.cafeId {
+                            self.uiState.castPreviews.removeAll { $0.id == event.castId }
+                            if self.uiState.selectedCastId == event.castId {
+                                self.uiState.selectedCastId = nil
+                            }
+                            self.uiState.isDeleteCastDialogVisible = false
+                            self.refreshClaimData(resetMessage: false)
+                        }
+                    default:
+                        break
                     }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCastClaimEvent() {
-        watchHandles[.castClaimEvent]?.cancel()
-        watchHandles[.castClaimEvent] = observeCastClaimEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let created as Shared.CastClaimEvent.Created:
-                    if created.claim.cafeId == self.cafeId {
-                        self.refreshClaimData()
+        tasks[.castClaimEvent]?.cancel()
+        tasks[.castClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castClaimEventPublisher.events) {
+                    switch event {
+                    case let created as Shared.CastClaimEvent.Created:
+                        if created.claim.cafeId == self.cafeId {
+                            self.refreshClaimData()
+                        }
+                    case let updated as Shared.CastClaimEvent.Updated:
+                        if updated.claim.cafeId == self.cafeId {
+                            self.refreshClaimData()
+                        }
+                    default:
+                        break
                     }
-                case let updated as Shared.CastClaimEvent.Updated:
-                    if updated.claim.cafeId == self.cafeId {
-                        self.refreshClaimData()
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -464,10 +476,10 @@ final class CafeDashboardViewModel: ObservableObject {
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
-        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastClaimEventUseCase: ObserveCastClaimEventUseCase = KoinInitializerKt.resolveObserveCastClaimEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castClaimEventPublisher: CastClaimEventPublisher = KoinInitializerKt.resolveCastClaimEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeCastPageUseCase = getCafeCastPageUseCase
@@ -476,10 +488,10 @@ final class CafeDashboardViewModel: ObservableObject {
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
         self.deleteCastUseCase = deleteCastUseCase
-        self.observeBannerEventUseCase = observeBannerEventUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastClaimEventUseCase = observeCastClaimEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.bannerEventPublisher = bannerEventPublisher
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castClaimEventPublisher = castClaimEventPublisher
+        self.castEventPublisher = castEventPublisher
 
         observeBannerEvent()
         observeCafeDetailEvent()
@@ -489,11 +501,11 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case bannerEvent
         case cafeDetailEvent
         case castClaimEvent

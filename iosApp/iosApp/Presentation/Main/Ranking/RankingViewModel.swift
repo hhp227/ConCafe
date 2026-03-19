@@ -8,22 +8,21 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class RankingViewModel: ObservableObject {
     private let getRankingFeedUseCase: GetRankingFeedUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
     @Published private(set) var uiState = RankingUiState.empty
 
     let event = PassthroughSubject<RankingEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadRankingFeed() {
         let period = uiState.selectedPeriod
@@ -32,8 +31,7 @@ final class RankingViewModel: ObservableObject {
 
         uiState.isLoading = true
         uiState.errorMessage = nil
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getRankingFeedUseCase.invoke(period: period, country: country, city: city)
 
@@ -57,30 +55,36 @@ final class RankingViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeRanking(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeRanking(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCastRanking(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.uiState.maidRankings.removeAll { $0.id == deleted.castId }
-                default:
-                    break
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCastRanking(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.uiState.maidRankings.removeAll { $0.id == deleted.castId }
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -145,12 +149,12 @@ final class RankingViewModel: ObservableObject {
 
     init(
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
         
         observeCafeDetailEvent()
         observeCastEvent()
@@ -158,12 +162,11 @@ final class RankingViewModel: ObservableObject {
     }
 
     deinit {
-        loadTask?.cancel()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case cafeDetailEvent
         case castEvent
     }

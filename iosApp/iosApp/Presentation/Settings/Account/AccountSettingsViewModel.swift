@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class AccountSettingsViewModel: ObservableObject {
@@ -19,26 +20,23 @@ final class AccountSettingsViewModel: ObservableObject {
 
     let event = PassthroughSubject<AccountSettingsEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var sessionWatchHandle: WatchHandle?
-
     private func observeSession() {
-        sessionWatchHandle?.cancel()
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.loadAccountSettings()
+        Task {
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.loadAccountSettings()
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func loadAccountSettings() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getMyInfoUseCase.invoke()
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -136,11 +134,6 @@ final class AccountSettingsViewModel: ObservableObject {
 
         loadAccountSettings()
         observeSession()
-    }
-
-    deinit {
-        loadTask?.cancel()
-        sessionWatchHandle?.cancel()
     }
 
     private let deleteConfirmationText = "탈퇴"

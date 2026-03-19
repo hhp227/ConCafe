@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class MenuGoodsViewModel: ObservableObject {
@@ -15,17 +16,15 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
+
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     @Published private(set) var uiState = MenuGoodsUiState()
 
     let event = PassthroughSubject<MenuGoodsEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadMenuGoods() {
         tasks[.load]?.cancel()
@@ -53,43 +52,45 @@ final class MenuGoodsViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.detailEvent]?.cancel()
-        watchHandles[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-
-            Task { @MainActor in
-                switch event {
-                case let event as CafeDetailEvent.CafeInfoUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
+        tasks[.detailEvent]?.cancel()
+        tasks[.detailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    switch event {
+                    case let event as CafeDetailEvent.CafeInfoUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.MenuCreated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.MenuUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.upsertLocalMenu(event.menu)
+                        }
+                    case let event as CafeDetailEvent.MenuDeleted:
+                        if event.cafeId == self.cafeId {
+                            self.removeLocalMenu(itemId: event.itemId)
+                        }
+                    case let event as CafeDetailEvent.GoodsCreated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.GoodsUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.upsertLocalGoods(event.goods)
+                        }
+                    case let event as CafeDetailEvent.GoodsDeleted:
+                        if event.cafeId == self.cafeId {
+                            self.removeLocalGoods(itemId: event.itemId)
+                        }
+                    default:
+                        break
                     }
-                case let event as CafeDetailEvent.MenuCreated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
-                    }
-                case let event as CafeDetailEvent.MenuUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.upsertLocalMenu(event.menu)
-                    }
-                case let event as CafeDetailEvent.MenuDeleted:
-                    if event.cafeId == self.cafeId {
-                        self.removeLocalMenu(itemId: event.itemId)
-                    }
-                case let event as CafeDetailEvent.GoodsCreated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
-                    }
-                case let event as CafeDetailEvent.GoodsUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.upsertLocalGoods(event.goods)
-                    }
-                case let event as CafeDetailEvent.GoodsDeleted:
-                    if event.cafeId == self.cafeId {
-                        self.removeLocalGoods(itemId: event.itemId)
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -235,8 +236,7 @@ final class MenuGoodsViewModel: ObservableObject {
     private func confirmDeleteItem(_ itemId: String) {
         uiState.infoMessage = nil
         uiState.pendingDeleteItem = nil
-        tasks[.delete]?.cancel()
-        tasks[.delete] = Task { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
 
             do {
@@ -390,13 +390,13 @@ final class MenuGoodsViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase()
+        deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeCafeDetailEvent()
         loadMenuGoods()
@@ -405,16 +405,10 @@ final class MenuGoodsViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
     }
 
     private enum TaskKey {
         case load
-        case delete
-    }
-
-    private enum WatchKey {
         case detailEvent
     }
 }

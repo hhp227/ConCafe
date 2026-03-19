@@ -2,6 +2,8 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.UserRole
@@ -12,7 +14,8 @@ import com.hhp227.concafe.domain.repository.CastRepository
 class UpsertCastUseCase(
     private val authRepository: AuthRepository,
     private val cafeManagementRepository: CafeManagementRepository,
-    private val castRepository: CastRepository
+    private val castRepository: CastRepository,
+    private val castEventPublisher: CastEventPublisher
 ) {
     suspend operator fun invoke(update: CastUpsert): AppResult<CastDetail> {
         return try {
@@ -31,13 +34,22 @@ class UpsertCastUseCase(
             }
 
             if (update.castId.isNullOrBlank() && resolvedCafeId.isNullOrBlank()) {
-                return AppResult.Failure(AppError.ValidationFailed("등록할 카페를 찾을 수 없습니다."))
-            }
-            AppResult.Success(
-                castRepository.upsertCast(
+                AppResult.Failure(AppError.ValidationFailed("등록할 카페를 찾을 수 없습니다."))
+            } else {
+                val isCreate = update.castId.isNullOrBlank()
+                val detail = castRepository.upsertCast(
                     update.copy(cafeId = resolvedCafeId ?: update.cafeId)
                 )
-            )
+
+                castEventPublisher.publish(
+                    if (isCreate) {
+                        CastEvent.Created(detail.cast.cafeId, detail.cast)
+                    } else {
+                        CastEvent.Updated(detail.cast.cafeId, detail.cast)
+                    }
+                )
+                AppResult.Success(detail)
+            }
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

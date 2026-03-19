@@ -8,28 +8,26 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
-    private let observeBannerEventUseCase: ObserveBannerEventUseCase
+    private let bannerEventPublisher: BannerEventPublisher
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
     
     @Published private(set) var uiState = HomeUiState.empty
     
     let event = PassthroughSubject<HomeEvent, Never>()
-    
-    private var loadTask: Task<Void, Never>?
 
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadHomeFeed() {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
 
@@ -64,8 +62,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func loadPopularCastPage(cursor: String?, append: Bool) {
-        loadTask?.cancel()
-        loadTask = Task {
+        tasks[.popularCastPage]?.cancel()
+        tasks[.popularCastPage] = Task {
             uiState = HomeUiState(
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
@@ -146,8 +144,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func loadNearbyCafePage(cursor: String?, append: Bool) {
-        loadTask?.cancel()
-        loadTask = Task {
+        tasks[.nearbyCafePage]?.cancel()
+        tasks[.nearbyCafePage] = Task {
             uiState = HomeUiState(
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
@@ -226,40 +224,49 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeInfo(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeInfo(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeBannerEvent() {
-        watchHandles[.bannerEvent]?.cancel()
-        watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.loadHomeFeed()
+        tasks[.bannerEvent]?.cancel()
+        tasks[.bannerEvent] = Task {
+            do {
+                for try await _ in asyncSequence(for: bannerEventPublisher.events) {
+                    self.loadHomeFeed()
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCast(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.removeCast(deleted.castId)
-                default:
-                    break
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCast(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.removeCast(deleted.castId)
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -352,14 +359,14 @@ final class HomeViewModel: ObservableObject {
 
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
-        observeBannerEventUseCase: ObserveBannerEventUseCase = KoinInitializerKt.resolveObserveBannerEventUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
-        self.observeBannerEventUseCase = observeBannerEventUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.bannerEventPublisher = bannerEventPublisher
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
         
         observeBannerEvent()
         observeCafeDetailEvent()
@@ -368,9 +375,8 @@ final class HomeViewModel: ObservableObject {
     }
     
     deinit {
-        loadTask?.cancel()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
     private static func dictionary(from source: [AnyHashable: Any]) -> [String: String] {
@@ -380,9 +386,11 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case bannerEvent
         case cafeDetailEvent
         case castEvent
+        case popularCastPage
+        case nearbyCafePage
     }
 }

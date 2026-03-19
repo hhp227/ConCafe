@@ -20,7 +20,6 @@ class ToggleFollowCastUseCase(
             } else {
                 castRepository.followCast(currentUser.id, castId)
             }
-
             AppResult.Success(!isFollowing)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)

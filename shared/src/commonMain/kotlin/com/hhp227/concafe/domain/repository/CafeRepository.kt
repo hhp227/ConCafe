@@ -1,18 +1,10 @@
 package com.hhp227.concafe.domain.repository
 
-import kotlinx.coroutines.flow.Flow
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetail
-import com.hhp227.concafe.domain.model.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CafeInfoUpdate
-import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
-import com.hhp227.concafe.domain.model.CafeSort
-import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.model.*
+import kotlinx.coroutines.flow.Flow
 
 interface CafeRepository {
-    fun observeCafeDetailEvent(): Flow<CafeDetailEvent>
-
     suspend fun searchCafes(
         query: String?,
         country: String?,
@@ -23,8 +15,6 @@ interface CafeRepository {
     ): PagedResult<Cafe>
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
-
-    fun observeCafeDetail(cafeId: String): Flow<CafeDetail>
 
     suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 

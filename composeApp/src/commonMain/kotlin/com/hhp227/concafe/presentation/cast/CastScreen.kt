@@ -19,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -32,15 +31,37 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCastDetailUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
-import com.hhp227.concafe.di.resolveObserveReviewEventUseCase
-import com.hhp227.concafe.di.resolveToggleFollowCastUseCase
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
+import kotlin.collections.List
+import kotlin.collections.firstOrNull
+import kotlin.collections.forEach
+import kotlin.collections.getOrNull
+import kotlin.collections.isNotEmpty
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.toSet
+import kotlin.sequences.firstOrNull
+import kotlin.sequences.ifEmpty
+import kotlin.sequences.mapNotNull
+import kotlin.sequences.toSet
+import kotlin.text.contains
+import kotlin.text.firstOrNull
+import kotlin.text.format
+import kotlin.text.isNotEmpty
+import kotlin.text.mapNotNull
+import kotlin.text.orEmpty
+import kotlin.text.replaceFirstChar
+import kotlin.text.split
+import kotlin.text.toIntOrNull
+import kotlin.text.toSet
+import kotlin.text.uppercase
 
 private const val CURRENT_DATE = "2026-03-08"
 private val HeroHeight = 340.dp
@@ -53,15 +74,7 @@ fun CastScreen(
     viewModel: CastViewModel = viewModel(
         key = "cast-$castId",
         factory = viewModelFactory {
-            initializer {
-                CastViewModel(
-                    castId = castId,
-                    getCastDetailUseCase = resolveGetCastDetailUseCase(),
-                    observeCastEventUseCase = resolveObserveCastEventUseCase(),
-                    observeReviewEventUseCase = resolveObserveReviewEventUseCase(),
-                    toggleFollowCastUseCase = resolveToggleFollowCastUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CastViewModel> { parametersOf(castId) } }
         }
     )
 ) {

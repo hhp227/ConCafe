@@ -12,10 +12,6 @@ class GetMyRequestableCastPageUseCase(
     private val authRepository: AuthRepository,
     private val castClaimRepository: CastClaimRepository
 ) {
-    fun defaultPageSize(): Int {
-        return DEFAULT_PAGE_SIZE
-    }
-
     suspend operator fun invoke(
         cursor: String?
     ): AppResult<PagedResult<CastClaimCandidate>> {
@@ -29,10 +25,12 @@ class GetMyRequestableCastPageUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
+
             if (currentUser.role != UserRole.CAST) {
-                return AppResult.Failure(AppError.PermissionDenied)
+                AppResult.Failure(AppError.PermissionDenied)
+            } else {
+                AppResult.Success(castClaimRepository.getMyRequestableCastPage(currentUser.id, cursor, pageSize))
             }
-            AppResult.Success(castClaimRepository.getMyRequestableCastPage(currentUser.id, cursor, pageSize))
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
