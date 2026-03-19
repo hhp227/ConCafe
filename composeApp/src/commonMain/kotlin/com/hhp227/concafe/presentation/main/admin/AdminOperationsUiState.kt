@@ -1,9 +1,13 @@
 package com.hhp227.concafe.presentation.main.admin
 
+import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
+import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
+
 data class AdminOperationsUiState(
     val metrics: List<AdminMetricCard> = buildAdminMetrics(0),
     val selectedPendingFilter: PendingFilter = PendingFilter.CAFE_REGISTRATION,
-    val pendingRequests: List<AdminPendingRequest> = emptyList(),
+    val pendingCafeRegistrationClaims: List<PendingCafeRegistrationClaimPreview> = emptyList(),
+    val pendingCafeOwnerClaims: List<PendingCafeOwnerClaimPreview> = emptyList(),
     val quickMenus: List<AdminQuickMenu> = defaultQuickMenus,
     val hasUnreadNotifications: Boolean = true,
     val infoMessage: String? = null
@@ -13,13 +17,13 @@ data class AdminOperationsUiState(
             PendingFilterChip(
                 filter = filter,
                 label = filter.label,
-                count = pendingRequests.count { it.type == filter },
+                count = when (filter) {
+                    PendingFilter.CAFE_REGISTRATION -> pendingCafeRegistrationClaims.size
+                    PendingFilter.ROLE_CLAIM -> pendingCafeOwnerClaims.size
+                },
                 isSelected = selectedPendingFilter == filter
             )
         }
-
-    val filteredPendingRequests: List<AdminPendingRequest>
-        get() = pendingRequests.filter { it.type == selectedPendingFilter }
 }
 
 data class AdminMetricCard(
@@ -35,15 +39,6 @@ data class PendingFilterChip(
     val label: String,
     val count: Int,
     val isSelected: Boolean
-)
-
-data class AdminPendingRequest(
-    val id: String,
-    val type: PendingFilter,
-    val title: String,
-    val subtitle: String,
-    val requestedAt: String,
-    val imageUrl: String
 )
 
 data class AdminQuickMenu(

@@ -40,13 +40,14 @@ class AdminOperationsViewModel(
 
             when {
                 registrationResult is AppResult.Success && ownerClaimResult is AppResult.Success -> {
-                    val registrationClaims = registrationResult.data.map { it.toAdminPendingRequest() }
-                    val ownerClaims = ownerClaimResult.data.map { it.toAdminPendingRequest() }
-                    val mergedRequests = (registrationClaims + ownerClaims).sortedByDescending { it.requestedAt }
+                    val registrationClaims = registrationResult.data.sortedByDescending { it.requestedAt }
+                    val ownerClaims = ownerClaimResult.data.sortedByDescending { it.requestedAt }
+                    val pendingCount = registrationClaims.size + ownerClaims.size
                     _uiState.update { state ->
                         state.copy(
-                            pendingRequests = mergedRequests,
-                            metrics = buildAdminMetrics(mergedRequests.size),
+                            pendingCafeRegistrationClaims = registrationClaims,
+                            pendingCafeOwnerClaims = ownerClaims,
+                            metrics = buildAdminMetrics(pendingCount),
                             infoMessage = null
                         )
                     }
@@ -54,7 +55,8 @@ class AdminOperationsViewModel(
                 registrationResult is AppResult.Failure -> {
                     _uiState.update { state ->
                         state.copy(
-                            pendingRequests = emptyList(),
+                            pendingCafeRegistrationClaims = emptyList(),
+                            pendingCafeOwnerClaims = emptyList(),
                             metrics = buildAdminMetrics(0),
                             infoMessage = registrationResult.error.toString()
                         )
@@ -63,7 +65,8 @@ class AdminOperationsViewModel(
                 ownerClaimResult is AppResult.Failure -> {
                     _uiState.update { state ->
                         state.copy(
-                            pendingRequests = emptyList(),
+                            pendingCafeRegistrationClaims = emptyList(),
+                            pendingCafeOwnerClaims = emptyList(),
                             metrics = buildAdminMetrics(0),
                             infoMessage = ownerClaimResult.error.toString()
                         )
@@ -74,9 +77,21 @@ class AdminOperationsViewModel(
     }
 
     private fun handlePendingResult(id: String, approved: Boolean) {
-        val request = _uiState.value.pendingRequests.firstOrNull { it.id == id } ?: return
+        val state = _uiState.value
+        val selectedFilter = state.selectedPendingFilter
+        val requestTitle = when (selectedFilter) {
+            PendingFilter.CAFE_REGISTRATION -> {
+                state.pendingCafeRegistrationClaims.firstOrNull { it.claimId == id }?.cafeName
+            }
+            PendingFilter.ROLE_CLAIM -> {
+                state.pendingCafeOwnerClaims.firstOrNull { it.claimId == id }?.let { claim ->
+                    "점장 권한 신청 - ${claim.requesterNickname}"
+                }
+            }
+        } ?: return
+
         viewModelScope.launch {
-            val result = when (request.type) {
+            val result = when (selectedFilter) {
                 PendingFilter.CAFE_REGISTRATION -> {
                     if (approved) {
                         approveCafeRegistrationClaimUseCase.invoke(id)
@@ -98,9 +113,9 @@ class AdminOperationsViewModel(
                     _uiState.update { state ->
                         state.copy(
                             infoMessage = if (approved) {
-                                "${request.title} 요청을 승인했습니다."
+                                "$requestTitle 요청을 승인했습니다."
                             } else {
-                                "${request.title} 요청을 반려했습니다."
+                                "$requestTitle 요청을 반려했습니다."
                             }
                         )
                     }
@@ -158,25 +173,3 @@ class AdminOperationsViewModel(
 }
 
 private const val ADMIN_BANNER_MENU_ID = "banner"
-
-private fun PendingCafeOwnerClaimPreview.toAdminPendingRequest(): AdminPendingRequest {
-    return AdminPendingRequest(
-        id = claimId,
-        type = PendingFilter.ROLE_CLAIM,
-        title = "점장 권한 신청 - $requesterNickname",
-        subtitle = location,
-        requestedAt = requestedAt,
-        imageUrl = imageUrl.orEmpty()
-    )
-}
-
-private fun PendingCafeRegistrationClaimPreview.toAdminPendingRequest(): AdminPendingRequest {
-    return AdminPendingRequest(
-        id = claimId,
-        type = PendingFilter.CAFE_REGISTRATION,
-        title = cafeName,
-        subtitle = location,
-        requestedAt = requestedAt,
-        imageUrl = imageUrl.orEmpty()
-    )
-}

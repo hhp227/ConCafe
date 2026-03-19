@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import Shared
 
 struct AdminOperationsUiState {
     var metrics: [AdminMetricCard] = buildAdminMetrics(pendingCount: 0)
     var selectedPendingFilter: PendingFilter = .cafeRegistration
-    var pendingRequests: [AdminPendingRequest] = []
+    var pendingCafeRegistrationClaims: [PendingCafeRegistrationClaimPreview] = []
+    var pendingCafeOwnerClaims: [PendingCafeOwnerClaimPreview] = []
     var quickMenus: [AdminQuickMenu] = defaultQuickMenus
     var hasUnreadNotifications: Bool = true
     var infoMessage: String? = nil
@@ -20,14 +22,10 @@ struct AdminOperationsUiState {
             PendingFilterChip(
                 filter: filter,
                 label: filter.label,
-                count: pendingRequests.filter { $0.type == filter }.count,
+                count: filter == .cafeRegistration ? pendingCafeRegistrationClaims.count : pendingCafeOwnerClaims.count,
                 isSelected: selectedPendingFilter == filter
             )
         }
-    }
-
-    var filteredPendingRequests: [AdminPendingRequest] {
-        pendingRequests.filter { $0.type == selectedPendingFilter }
     }
 }
 
@@ -46,15 +44,6 @@ struct PendingFilterChip: Identifiable {
     let label: String
     let count: Int
     let isSelected: Bool
-}
-
-struct AdminPendingRequest: Identifiable {
-    let id: String
-    let type: PendingFilter
-    let title: String
-    let subtitle: String
-    let requestedAt: String
-    let imageUrl: String
 }
 
 struct AdminQuickMenu: Identifiable {
