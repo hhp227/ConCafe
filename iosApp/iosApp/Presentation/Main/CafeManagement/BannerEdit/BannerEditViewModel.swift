@@ -24,6 +24,8 @@ final class BannerEditViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     @Published private(set) var uiState = BannerEditUiState()
 
     let event = PassthroughSubject<BannerEditEvent, Never>()
@@ -223,6 +225,8 @@ final class BannerEditViewModel: ObservableObject {
 
         if uiState.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             validationMessage = "배너 제목을 입력해주세요."
+        } else if uiState.selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+            validationMessage = "배너 이미지를 등록해주세요."
         } else if uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             validationMessage = "서브 문구를 입력해주세요."
         } else if uiState.selectedTarget == .externalLink &&
@@ -236,7 +240,11 @@ final class BannerEditViewModel: ObservableObject {
         }
 
         if let validationMessage {
-            uiState.infoMessage = validationMessage
+            if uiState.selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+                uiState.isImageRequiredAlertVisible = true
+            } else {
+                uiState.infoMessage = validationMessage
+            }
             return
         }
 
@@ -252,20 +260,30 @@ final class BannerEditViewModel: ObservableObject {
             targetType = .externalLink
         }
 
-        let createInput = HomeBannerCreate(
-            cafeId: uiState.selectedCafeId,
-            title: uiState.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            subtitle: uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
-            imageUrl: uiState.selectedImageLabel,
-            targetType: targetType,
-            targetValue: uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
-            displayDays: Int32(uiState.displayDays)
-        )
-
         uiState.isSaving = true
         uiState.infoMessage = nil
         Task {
             do {
+                let uploadedImageResult = try await uploadImageUseCase.invoke(
+                    localPath: uiState.selectedImageLabel ?? "",
+                    folder: "banners"
+                )
+                guard let uploadSuccess = uploadedImageResult as? AppResultSuccess<AnyObject>,
+                      let uploadedImageUrl = uploadSuccess.data as? String else {
+                    uiState.isSaving = false
+                    uiState.infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                    return
+                }
+
+                let createInput = HomeBannerCreate(
+                    cafeId: uiState.selectedCafeId,
+                    title: uiState.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                    subtitle: uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
+                    imageUrl: uploadedImageUrl,
+                    targetType: targetType,
+                    targetValue: uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
+                    displayDays: Int32(uiState.displayDays)
+                )
                 let result = try await createHomeBannerUseCase.invoke(input: createInput)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isSaving = false
@@ -309,6 +327,7 @@ final class BannerEditViewModel: ObservableObject {
         case .selectImage(let imageUrl):
             uiState.selectedImageLabel = imageUrl
             uiState.infoMessage = nil
+            uiState.isImageRequiredAlertVisible = false
         case .changeTitle(let value):
             uiState.title = value
         case .changeSubtitle(let value):
@@ -331,6 +350,8 @@ final class BannerEditViewModel: ObservableObject {
             selectSelectorItem(id)
         case .dismissSelector:
             dismissSelector()
+        case .dismissImageRequiredAlert:
+            uiState.isImageRequiredAlertVisible = false
         case .clickSave:
             clickSave()
         case .dismissInfoMessage:
@@ -344,7 +365,8 @@ final class BannerEditViewModel: ObservableObject {
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.initialCafeId = initialCafeId
         self.createHomeBannerUseCase = createHomeBannerUseCase
@@ -352,6 +374,7 @@ final class BannerEditViewModel: ObservableObject {
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeEventPageUseCase = getCafeEventPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.uploadImageUseCase = uploadImageUseCase
         observeSession()
         loadOwnedCafeOptions()
     }

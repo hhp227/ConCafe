@@ -14,6 +14,7 @@ sealed interface BannerEditAction {
     data class ChangeSelectorQuery(val value: String) : BannerEditAction
     data class SelectSelectorItem(val id: String) : BannerEditAction
     data object DismissSelector : BannerEditAction
+    data object DismissImageRequiredAlert : BannerEditAction
     data object ClickSave : BannerEditAction
     data object DismissInfoMessage : BannerEditAction
 }

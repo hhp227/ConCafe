@@ -30,6 +30,7 @@ struct BannerEditUiState {
     var eventSelectorOptions: [CafeEventManagementItem] = []
     var isSelectorLoading = false
     var isAdmin = false
+    var isImageRequiredAlertVisible = false
     var isSaving = false
     var infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
 
@@ -126,6 +127,7 @@ struct BannerEditUiState {
     }
 
     var isSaveEnabled: Bool {
+        !(selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) &&
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&

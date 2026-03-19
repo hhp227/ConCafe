@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +28,8 @@ class BannerEditViewModel(
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeEventPageUseCase: GetCafeEventPageUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BannerEditUiState())
     val uiState = _uiState.asStateFlow()
@@ -314,6 +316,7 @@ class BannerEditViewModel(
         val currentState = _uiState.value
 
         val validationMessage = when {
+            currentState.selectedImageLabel.isNullOrBlank() -> "배너 이미지를 등록해주세요."
             currentState.title.isBlank() -> "배너 제목을 입력해주세요."
             currentState.subtitle.isBlank() -> "서브 문구를 입력해주세요."
             currentState.selectedTarget == BannerTargetType.EXTERNAL_LINK &&
@@ -324,27 +327,47 @@ class BannerEditViewModel(
         }
 
         if (validationMessage != null) {
-            _uiState.update { it.copy(infoMessage = validationMessage) }
+            if (currentState.selectedImageLabel.isNullOrBlank()) {
+                _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
+            } else {
+                _uiState.update { it.copy(infoMessage = validationMessage) }
+            }
             return
         }
 
-        val createInput = HomeBannerCreate(
-            cafeId = currentState.selectedCafeId,
-            title = currentState.title.trim(),
-            subtitle = currentState.subtitle.trim(),
-            imageUrl = currentState.selectedImageLabel,
-            targetType = when (currentState.selectedTarget) {
-                BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
-                BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
-                BannerTargetType.NOTICE -> BannerLinkTargetType.NOTICE
-                BannerTargetType.EXTERNAL_LINK -> BannerLinkTargetType.EXTERNAL_LINK
-            },
-            targetValue = currentState.targetValue.trim(),
-            displayDays = currentState.displayDays
-        )
-
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
         viewModelScope.launch {
+            val uploadedImageUrl = when (
+                val uploadResult = uploadImageUseCase.invoke(
+                    localPath = currentState.selectedImageLabel.orEmpty(),
+                    folder = "banners"
+                )
+            ) {
+                is AppResult.Success -> uploadResult.data
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                        )
+                    }
+                    return@launch
+                }
+            }
+            val createInput = HomeBannerCreate(
+                cafeId = currentState.selectedCafeId,
+                title = currentState.title.trim(),
+                subtitle = currentState.subtitle.trim(),
+                imageUrl = uploadedImageUrl,
+                targetType = when (currentState.selectedTarget) {
+                    BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
+                    BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
+                    BannerTargetType.NOTICE -> BannerLinkTargetType.NOTICE
+                    BannerTargetType.EXTERNAL_LINK -> BannerLinkTargetType.EXTERNAL_LINK
+                },
+                targetValue = currentState.targetValue.trim(),
+                displayDays = currentState.displayDays
+            )
             when (val result = createHomeBannerUseCase.invoke(createInput)) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isSaving = false, infoMessage = null) }
@@ -374,7 +397,13 @@ class BannerEditViewModel(
         when (action) {
             BannerEditAction.ClickBack -> clickBack()
             BannerEditAction.ClickImagePicker -> clickImagePicker()
-            is BannerEditAction.SelectImage -> _uiState.update { it.copy(selectedImageLabel = action.imageUrl, infoMessage = null) }
+            is BannerEditAction.SelectImage -> _uiState.update {
+                it.copy(
+                    selectedImageLabel = action.imageUrl,
+                    infoMessage = null,
+                    isImageRequiredAlertVisible = false
+                )
+            }
             is BannerEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value) }
             is BannerEditAction.ChangeSubtitle -> _uiState.update { it.copy(subtitle = action.value) }
             is BannerEditAction.SelectTarget -> selectTarget(action.target)
@@ -387,6 +416,7 @@ class BannerEditViewModel(
             is BannerEditAction.ChangeSelectorQuery -> changeSelectorQuery(action.value)
             is BannerEditAction.SelectSelectorItem -> selectSelectorItem(action.id)
             BannerEditAction.DismissSelector -> dismissSelector()
+            BannerEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             BannerEditAction.ClickSave -> clickSave()
             BannerEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }

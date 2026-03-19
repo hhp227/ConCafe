@@ -73,6 +73,23 @@ struct BannerEditView: View {
                 }
             )
         }
+        .alert(
+            "이미지를 등록해주세요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("배너 저장을 위해 대표 이미지는 필수입니다.")
+        }
     }
 
     init(

@@ -26,6 +26,7 @@ data class BannerEditUiState(
     val eventSelectorOptions: List<CafeEventManagementItem> = emptyList(),
     val isSelectorLoading: Boolean = false,
     val isAdmin: Boolean = false,
+    val isImageRequiredAlertVisible: Boolean = false,
     val isSaving: Boolean = false,
     val infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
 ) {
@@ -87,6 +88,7 @@ data class BannerEditUiState(
     val isSaveEnabled: Boolean
         get() = title.isNotBlank() &&
             subtitle.isNotBlank() &&
+            !selectedImageLabel.isNullOrBlank() &&
             targetValue.isNotBlank() &&
             !isSaving
 

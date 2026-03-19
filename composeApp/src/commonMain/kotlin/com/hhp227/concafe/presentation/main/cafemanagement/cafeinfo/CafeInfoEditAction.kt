@@ -16,6 +16,7 @@ sealed interface CafeInfoEditAction {
     data class AddGalleryImage(val imageUrl: String) : CafeInfoEditAction
     data object ClickPinLocation : CafeInfoEditAction
     data object ClickManageExceptionDates : CafeInfoEditAction
+    data object DismissImageRequiredAlert : CafeInfoEditAction
     data object ClickSave : CafeInfoEditAction
     data object DismissInfoMessage : CafeInfoEditAction
 }

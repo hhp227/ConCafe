@@ -74,6 +74,18 @@ fun BannerEditScreen(
             )
         }
     }
+    if (uiState.isImageRequiredAlertVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(BannerEditAction.DismissImageRequiredAlert) },
+            title = { Text("이미지를 등록해주세요") },
+            text = { Text("배너 저장을 위해 대표 이미지는 필수입니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(BannerEditAction.DismissImageRequiredAlert) }) {
+                    Text("확인")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

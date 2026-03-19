@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -86,6 +87,18 @@ fun CastEditScreen(
         uiState = uiState,
         onAction = viewModel::onAction
     )
+    if (uiState.isImageRequiredAlertVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) },
+            title = { Text("이미지를 등록해주세요") },
+            text = { Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) }) {
+                    Text("확인")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -29,6 +29,7 @@ val repositoryModule = module {
     single<NoticeRepository> { FakeNoticeRepository(get()) }
     single<RankingRepository> { FakeRankingRepository(get()) }
     single<NotificationRepository> { FakeNotificationRepository(get()) }
+    single<StorageRepository> { FakeStorageRepository() }
 }
 
 val eventModule = module {
@@ -108,6 +109,7 @@ val useCaseModule = module {
     factory { RejectCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
+    factory { UploadImageUseCase(get()) }
 }
 
 val concafeModules = listOf(

@@ -21,6 +21,7 @@ struct CastEditUiState {
     var introduction = ""
     var selectedWorkingDays: Set<WorkingDay> = []
     var galleryImages: [String] = []
+    var isImageRequiredAlertVisible = false
     var infoMessage: String? = nil
 
     var galleryLimitText: String {

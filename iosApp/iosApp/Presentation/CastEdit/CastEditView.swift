@@ -66,6 +66,23 @@ struct CastEditView: View {
                 }
             )
         }
+        .alert(
+            "이미지를 등록해주세요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.")
+        }
     }
 
     init(

@@ -13,6 +13,7 @@ data class CastEditUiState(
     val introduction: String = "",
     val selectedWorkingDays: Set<WorkingDay> = emptySet(),
     val galleryImages: List<String> = emptyList(),
+    val isImageRequiredAlertVisible: Boolean = false,
     val infoMessage: String? = null
 ) {
     val galleryLimitText: String

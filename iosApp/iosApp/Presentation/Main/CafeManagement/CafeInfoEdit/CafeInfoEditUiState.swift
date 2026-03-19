@@ -26,6 +26,7 @@ struct CafeInfoEditUiState {
     var weekdayClose = ""
     var weekendOpen = ""
     var weekendClose = ""
+    var isImageRequiredAlertVisible = false
     var infoMessage: String?
 
     var galleryLimitText: String {
