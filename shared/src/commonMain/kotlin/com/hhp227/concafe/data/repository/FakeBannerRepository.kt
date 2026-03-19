@@ -12,6 +12,11 @@ import kotlinx.datetime.*
 class FakeBannerRepository(
     private val dataSource: ConCafeDataSource
 ) : BannerRepository {
+    override suspend fun getAllHomeBanners(): List<HomeBanner> {
+        normalizeBannerSlots()
+        return dataSource.banners.toList()
+    }
+
     override suspend fun getHomeBanners(limit: Int): List<HomeBanner> {
         normalizeBannerSlots()
         return dataSource.banners

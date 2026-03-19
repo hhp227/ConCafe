@@ -30,8 +30,8 @@ import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { SignInViewModel(get()) }
-    factory { SignUpViewModel(get(), get(), get()) }
+    factory { SignInViewModel(get(), get()) }
+    factory { SignUpViewModel(get(), get(), get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -43,7 +43,7 @@ private val composeAppPresentationModule = module {
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String) -> BannerViewModel(cafeId) }
+    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get()) }
     factory { (initialCafeId: String) -> BannerEditViewModel(initialCafeId, get(), get(), get(), get(), get()) }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }

@@ -10,9 +10,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
 
 class SignInViewModel(
-    private val signInUseCase: SignInUseCase
+    private val signInUseCase: SignInUseCase,
+    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -54,10 +56,25 @@ class SignInViewModel(
             is SignInAction.ChangeEmail -> changeEmail(action.value)
             is SignInAction.ChangePassword -> changePassword(action.value)
             SignInAction.ClickEmailSignIn -> signIn(uiState.value.email, uiState.value.password)
-            is SignInAction.ClickSocialSignIn -> signIn(
-                email = "${action.provider.name.lowercase()}@mock.concafe",
-                password = "social-sign-in"
-            )
+            is SignInAction.ClickSocialSignIn -> {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                viewModelScope.launch {
+                    when (signInWithSocialProviderUseCase.invoke(action.provider.name.lowercase())) {
+                        is AppResult.Success -> {
+                            _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                            _event.emit(SignInEvent.SignedIn)
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = "소셜 로그인에 실패했습니다. 입력값을 확인해주세요."
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
