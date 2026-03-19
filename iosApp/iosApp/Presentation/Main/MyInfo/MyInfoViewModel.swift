@@ -61,7 +61,8 @@ final class MyInfoViewModel: ObservableObject {
                         popularCafes: feed.popularCafes,
                         recentVisits: feed.recentVisits,
                         favorites: feed.favorites,
-                        followedMaids: feed.followedMaids
+                        followedMaids: feed.followedMaids,
+                        isLoginPromptVisible: false
                     )
                 } else if let failure = result as? AppResultFailure {
                     uiState = .empty
@@ -164,9 +165,22 @@ final class MyInfoViewModel: ObservableObject {
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
+            if uiState.isLoggedIn {
+                event.send(.navigateToCafe(id: id))
+            } else {
+                uiState.isLoginPromptVisible = true
+            }
         case .maidTapped(let id):
-            event.send(.navigateToCast(id: id))
+            if uiState.isLoggedIn {
+                event.send(.navigateToCast(id: id))
+            } else {
+                uiState.isLoginPromptVisible = true
+            }
+        case .loginPromptSignInTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
         case .signInTapped:
             event.send(.navigateToSignIn)
         case .refresh:

@@ -10,4 +10,5 @@ import Foundation
 enum ExploreEvent {
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
+    case navigateToSignIn
 }

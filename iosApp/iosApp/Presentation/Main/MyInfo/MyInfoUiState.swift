@@ -21,6 +21,7 @@ struct MyInfoUiState {
     var recentVisits: [Cafe]
     var favorites: [Cafe]
     var followedMaids: [Cast]
+    var isLoginPromptVisible: Bool
 
     static let empty = MyInfoUiState(
         isLoading: false,
@@ -34,6 +35,7 @@ struct MyInfoUiState {
         popularCafes: [],
         recentVisits: [],
         favorites: [],
-        followedMaids: []
+        followedMaids: [],
+        isLoginPromptVisible: false
     )
 }

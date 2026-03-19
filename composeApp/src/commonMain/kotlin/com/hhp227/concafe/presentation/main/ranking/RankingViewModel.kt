@@ -10,12 +10,14 @@ import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class RankingViewModel(
     private val getRankingFeedUseCase: GetRankingFeedUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -85,6 +87,20 @@ class RankingViewModel(
         }
     }
 
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
     private fun patchCafeRanking(cafe: Cafe) {
         val subtitle = cafe.region.address.substringBefore("구").substringBefore("로").ifBlank { cafe.region.city }
         _uiState.update { state ->
@@ -136,11 +152,24 @@ class RankingViewModel(
                 it.copy(selectedAdIndex = action.index.coerceIn(0, lastIndex))
             }
             is RankingAction.ClickMaid -> viewModelScope.launch {
-                _event.emit(RankingEvent.NavigateToCast(action.id))
+                requireSignedIn { _event.emit(RankingEvent.NavigateToCast(action.id)) }
             }
             is RankingAction.ClickCafe -> viewModelScope.launch {
-                _event.emit(RankingEvent.NavigateToCafe(action.id))
+                requireSignedIn { _event.emit(RankingEvent.NavigateToCafe(action.id)) }
             }
+            RankingAction.ClickLoginPromptSignIn -> viewModelScope.launch {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
+                _event.emit(RankingEvent.NavigateToSignIn)
+            }
+            RankingAction.DismissLoginPrompt -> _uiState.update { it.copy(isLoginPromptVisible = false) }
+        }
+    }
+
+    private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
+        if (_uiState.value.isLoggedIn) {
+            onAuthenticated()
+        } else {
+            _uiState.update { it.copy(isLoginPromptVisible = true) }
         }
     }
 
@@ -151,6 +180,7 @@ class RankingViewModel(
     }
 
     init {
+        observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
@@ -158,6 +188,7 @@ class RankingViewModel(
 
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAST_EVENT
+        OBSERVE_CAST_EVENT,
+        OBSERVE_SESSION
     }
 }

@@ -7,6 +7,8 @@ import com.hhp227.concafe.domain.model.Notice
 
 data class HomeUiState(
     val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val isLoginPromptVisible: Boolean = false,
     val errorMessage: String? = null,
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
@@ -23,6 +25,8 @@ data class HomeUiState(
 ) {
     companion object {
         fun empty() = HomeUiState(
+            isLoggedIn = false,
+            isLoginPromptVisible = false,
             banners = emptyList(),
             popularCasts = emptyList(),
             popularCastCafeNames = emptyMap(),

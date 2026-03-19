@@ -46,6 +46,8 @@ struct RankingUiState {
     }
 
     var isLoading: Bool = false
+    var isLoggedIn: Bool = false
+    var isLoginPromptVisible: Bool = false
     var errorMessage: String? = nil
     var selectedTab: TabType = .maids
     var selectedPeriod: RankingPeriod = .weekly

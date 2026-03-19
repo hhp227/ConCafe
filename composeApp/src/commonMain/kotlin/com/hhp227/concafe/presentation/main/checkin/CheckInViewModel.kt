@@ -274,8 +274,30 @@ class CheckInViewModel(
     fun onAction(action: CheckInAction) {
         viewModelScope.launch {
             when (action) {
-                is CheckInAction.ClickCafe -> _event.emit(CheckInEvent.NavigateToCafe(action.id))
-                is CheckInAction.ClickCast -> _event.emit(CheckInEvent.NavigateToCast(action.id))
+                is CheckInAction.ClickCafe -> {
+                    if (_uiState.value.currentUser == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoginPromptVisible = true,
+                                isNewVisitSheetVisible = false
+                            )
+                        }
+                    } else {
+                        _event.emit(CheckInEvent.NavigateToCafe(action.id))
+                    }
+                }
+                is CheckInAction.ClickCast -> {
+                    if (_uiState.value.currentUser == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoginPromptVisible = true,
+                                isNewVisitSheetVisible = false
+                            )
+                        }
+                    } else {
+                        _event.emit(CheckInEvent.NavigateToCast(action.id))
+                    }
+                }
                 CheckInAction.ClickCheckIn -> {
                     val currentUser = _uiState.value.currentUser
 

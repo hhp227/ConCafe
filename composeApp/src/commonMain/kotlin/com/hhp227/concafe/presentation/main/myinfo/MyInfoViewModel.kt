@@ -62,7 +62,8 @@ class MyInfoViewModel(
                         popularCafes = result.data.popularCafes,
                         recentVisits = result.data.recentVisits,
                         favorites = result.data.favorites,
-                        followedMaids = result.data.followedMaids
+                        followedMaids = result.data.followedMaids,
+                        isLoginPromptVisible = false
                     )
                 }
                 is AppResult.Failure -> {
@@ -138,10 +139,25 @@ class MyInfoViewModel(
     fun onAction(action: MyInfoAction) {
         when (action) {
             is MyInfoAction.ClickCafe -> viewModelScope.launch {
-                _event.emit(NavigateToCafe(action.id))
+                if (_uiState.value.isLoggedIn) {
+                    _event.emit(NavigateToCafe(action.id))
+                } else {
+                    _uiState.update { it.copy(isLoginPromptVisible = true) }
+                }
             }
             is MyInfoAction.ClickMaid -> viewModelScope.launch {
-                _event.emit(NavigateToCast(action.id))
+                if (_uiState.value.isLoggedIn) {
+                    _event.emit(NavigateToCast(action.id))
+                } else {
+                    _uiState.update { it.copy(isLoginPromptVisible = true) }
+                }
+            }
+            MyInfoAction.ClickLoginPromptSignIn -> viewModelScope.launch {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
+                _event.emit(NavigateToSignIn)
+            }
+            MyInfoAction.DismissLoginPrompt -> {
+                _uiState.update { it.copy(isLoginPromptVisible = false) }
             }
             MyInfoAction.ClickSignIn -> viewModelScope.launch {
                 _event.emit(NavigateToSignIn)

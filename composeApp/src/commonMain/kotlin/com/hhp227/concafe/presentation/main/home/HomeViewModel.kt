@@ -23,10 +23,12 @@ import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
@@ -51,6 +53,8 @@ class HomeViewModel(
             if (result is AppResult.Success) {
                 _uiState.value = HomeUiState(
                     isLoading = false,
+                    isLoggedIn = _uiState.value.isLoggedIn,
+                    isLoginPromptVisible = _uiState.value.isLoginPromptVisible,
                     errorMessage = null,
                     banners = result.data.banners,
                     popularCasts = result.data.popularCasts,
@@ -153,6 +157,20 @@ class HomeViewModel(
         }
     }
 
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
@@ -214,12 +232,33 @@ class HomeViewModel(
         viewModelScope.launch {
             when (action) {
                 is HomeAction.ClickBanner -> handleBannerClick(action.banner)
-                is HomeAction.ClickMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
-                is HomeAction.ClickBirthdayMaid -> _event.emit(HomeEvent.NavigateToCast(action.id))
-                is HomeAction.ClickCafe -> _event.emit(HomeEvent.NavigateToCafe(action.id))
+                is HomeAction.ClickMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickBirthdayMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickCafe -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCafe(action.id))
+                }
+                HomeAction.ClickLoginPromptSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(HomeEvent.NavigateToSignIn)
+                }
+                HomeAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
                 HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
             }
+        }
+    }
+
+    private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
+        if (_uiState.value.isLoggedIn) {
+            onAuthenticated()
+        } else {
+            _uiState.update { it.copy(isLoginPromptVisible = true) }
         }
     }
 
@@ -240,7 +279,9 @@ class HomeViewModel(
             BannerLinkTargetType.NOTICE -> {
                 val cafeId = banner.cafeId ?: banner.targetValue.takeIf { banner.targetType == BannerLinkTargetType.CAFE_DETAIL }
                 if (!cafeId.isNullOrBlank()) {
-                    _event.emit(HomeEvent.NavigateToCafe(cafeId))
+                    requireSignedIn {
+                        _event.emit(HomeEvent.NavigateToCafe(cafeId))
+                    }
                 }
             }
         }
@@ -253,6 +294,7 @@ class HomeViewModel(
     }
 
     init {
+        observeSession()
         observeBannerEvent()
         observeCafeDetailEvent()
         observeCastEvent()
@@ -263,6 +305,7 @@ class HomeViewModel(
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
+        OBSERVE_SESSION,
         POPULAR_CAST_PAGE,
         NEARBY_CAFE_PAGE
     }

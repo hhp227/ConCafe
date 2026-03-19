@@ -41,6 +41,26 @@ struct MyInfoView: View {
                 onNavigationAction(.navigateToSignIn)
             }
         }
+        .alert(
+            "로그인이 필요합니다",
+            isPresented: Binding(
+                get: { viewModel.uiState.isLoginPromptVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissLoginPrompt)
+                    }
+                }
+            )
+        ) {
+            Button("취소", role: .cancel) {
+                viewModel.onAction(.dismissLoginPrompt)
+            }
+            Button("로그인") {
+                viewModel.onAction(.loginPromptSignInTapped)
+            }
+        } message: {
+            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+        }
     }
 }
 

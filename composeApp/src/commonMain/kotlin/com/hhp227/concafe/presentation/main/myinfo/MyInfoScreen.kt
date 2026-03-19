@@ -38,8 +38,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -100,6 +102,23 @@ fun MyInfoScreen(
                 onAction = viewModel::onAction
             )
         }
+    }
+    if (uiState.isLoginPromptVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MyInfoAction.DismissLoginPrompt) },
+            title = { Text("로그인이 필요합니다") },
+            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(MyInfoAction.ClickLoginPromptSignIn) }) {
+                    Text("로그인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(MyInfoAction.DismissLoginPrompt) }) {
+                    Text("취소")
+                }
+            }
+        )
     }
 }
 

@@ -9,6 +9,8 @@ import Foundation
 import Shared
 
 struct HomeUiState {
+    let isLoggedIn: Bool = false
+    let isLoginPromptVisible: Bool = false
     let banners: [HomeBanner]
     let popularCasts: [Cast]
     let popularCastCafeNames: [String: String]

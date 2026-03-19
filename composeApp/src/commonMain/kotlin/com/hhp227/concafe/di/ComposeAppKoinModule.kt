@@ -32,10 +32,10 @@ import org.koin.dsl.module
 private val composeAppPresentationModule = module {
     factory { SignInViewModel(get(), get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get()) }
-    factory { HomeViewModel(get(), get(), get(), get()) }
-    factory { ExploreViewModel(get(), get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get(), get()) }
+    factory { ExploreViewModel(get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { RankingViewModel(get(), get(), get()) }
+    factory { RankingViewModel(get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { SettingsViewModel(get()) }

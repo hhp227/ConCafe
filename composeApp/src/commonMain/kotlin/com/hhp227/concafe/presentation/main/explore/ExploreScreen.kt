@@ -31,6 +31,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -76,6 +78,7 @@ fun ExploreScreen(
             when (event) {
                 is ExploreEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is ExploreEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
+                ExploreEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
             }
         }
     }
@@ -85,6 +88,23 @@ fun ExploreScreen(
         }
     }
     ExploreContentScreen(uiState, listState, viewModel::onAction)
+    if (uiState.isLoginPromptVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(ExploreAction.DismissLoginPrompt) },
+            title = { Text("로그인이 필요합니다") },
+            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(ExploreAction.ClickLoginPromptSignIn) }) {
+                    Text("로그인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(ExploreAction.DismissLoginPrompt) }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

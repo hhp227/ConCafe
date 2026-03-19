@@ -14,6 +14,8 @@ enum ExploreAction {
     case tabChanged(ExploreUiState.TabType)
     case cafeTapped(id: String)
     case maidTapped(id: String)
+    case loginPromptSignInTapped
+    case dismissLoginPrompt
     case loadMoreCafes
     case loadMoreMaids
     case refresh
