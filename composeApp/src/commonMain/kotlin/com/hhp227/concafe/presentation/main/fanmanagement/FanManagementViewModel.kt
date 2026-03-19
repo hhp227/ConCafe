@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.di.*
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
+import com.hhp227.concafe.domain.model.CastClaimCandidate
 import com.hhp227.concafe.domain.model.MyCastClaimStatus
 import com.hhp227.concafe.domain.usecase.*
 import kotlinx.coroutines.Job
@@ -240,12 +242,7 @@ class FanManagementViewModel(
                         val sheet = state.castClaimSheet ?: return@update state
                         state.copy(
                             castClaimSheet = sheet.copy(
-                                requestableCasts = sheet.requestableCasts + result.data.items.map { candidate ->
-                                    FanManagementUiState.ClaimCandidate(
-                                        id = candidate.castId,
-                                        name = candidate.castName
-                                    )
-                                },
+                                requestableCasts = sheet.requestableCasts + result.data.items,
                                 nextCursor = result.data.nextCursor,
                                 canLoadMore = result.data.hasNext,
                                 isLoadingMore = false
@@ -362,7 +359,7 @@ class FanManagementViewModel(
     }
 }
 
-private fun com.hhp227.concafe.domain.model.MyCastClaimStatus.toStatusCard(): FanManagementUiState.CastClaimStatusCard? {
+private fun MyCastClaimStatus.toStatusCard(): FanManagementUiState.CastClaimStatusCard? {
     val cafeId = affiliatedCafeId ?: return null
     val cafeName = affiliatedCafeName ?: "소속 카페"
     val pendingClaim = pendingClaim
@@ -406,20 +403,15 @@ private fun com.hhp227.concafe.domain.model.MyCastClaimStatus.toStatusCard(): Fa
     }
 }
 
-private fun com.hhp227.concafe.domain.model.MyCastClaimStatus.toSheet(
-    initialCandidatePage: com.hhp227.concafe.domain.common.PagedResult<com.hhp227.concafe.domain.model.CastClaimCandidate>?
+private fun MyCastClaimStatus.toSheet(
+    initialCandidatePage: PagedResult<CastClaimCandidate>?
 ): FanManagementUiState.CastClaimSheet? {
     val cafeId = affiliatedCafeId ?: return null
     val cafeName = affiliatedCafeName ?: "소속 카페"
     val pendingClaim = pendingClaim
     val latestRejectedClaim = latestRejectedClaim
-    val initialCandidates = initialCandidatePage?.items?.map { candidate ->
-        FanManagementUiState.ClaimCandidate(
-            id = candidate.castId,
-            name = candidate.castName
-        )
-    }.orEmpty()
-    val selectedId = initialCandidates.firstOrNull()?.id
+    val initialCandidates = initialCandidatePage?.items.orEmpty()
+    val selectedId = initialCandidates.firstOrNull()?.castId
     return when {
         hasLinkedProfile -> FanManagementUiState.CastClaimSheet(
             affiliatedCafeId = cafeId,

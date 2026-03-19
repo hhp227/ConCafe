@@ -604,22 +604,22 @@ private fun CastClaimSheet(
                 Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
             }
             if (sheet.requestableCasts.isNotEmpty()) {
-                itemsIndexed(sheet.requestableCasts, key = { _, candidate -> candidate.id }) { index, candidate ->
+                itemsIndexed(sheet.requestableCasts, key = { _, candidate -> candidate.castId }) { index, candidate ->
                     if (index == sheet.requestableCasts.lastIndex && sheet.canLoadMore && !sheet.isLoadingMore) {
-                        LaunchedEffect(candidate.id, sheet.requestableCasts.size) {
+                        LaunchedEffect(candidate.castId, sheet.requestableCasts.size) {
                             onLoadMore()
                         }
                     }
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onSelect(candidate.id) },
+                            .clickable { onSelect(candidate.castId) },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (sheet.selectedCastId == candidate.id) Color(0xFFFFD1DC) else Color.White,
+                        color = if (sheet.selectedCastId == candidate.castId) Color(0xFFFFD1DC) else Color.White,
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
                     ) {
                         Text(
-                            text = candidate.name,
+                            text = candidate.castName,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,

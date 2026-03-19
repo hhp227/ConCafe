@@ -484,17 +484,17 @@ private struct CastClaimSheetView: View {
                             .foregroundStyle(Color(hex: "6C6270"))
                         if !sheet.requestableCasts.isEmpty {
                             VStack(spacing: 10) {
-                                ForEach(sheet.requestableCasts) { candidate in
+                                ForEach(sheet.requestableCasts, id: \.castId) { candidate in
                                     Button {
-                                        onAction(.selectClaimCandidate(candidate.id))
+                                        onAction(.selectClaimCandidate(candidate.castId))
                                     } label: {
-                                        Text(candidate.name)
+                                        Text(candidate.castName)
                                             .font(.body.weight(.semibold))
                                             .foregroundStyle(Color(hex: "24161E"))
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(.horizontal, 16)
                                             .padding(.vertical, 14)
-                                            .background(sheet.selectedCastId == candidate.id ? Color(hex: "FFD1DC") : Color.white)
+                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color.white)
                                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -503,7 +503,7 @@ private struct CastClaimSheetView: View {
                                     }
                                     .buttonStyle(.plain)
                                     .onAppear {
-                                        if candidate.id == sheet.requestableCasts.last?.id, sheet.canLoadMore, !sheet.isLoadingMore {
+                                        if candidate.castId == sheet.requestableCasts.last?.castId, sheet.canLoadMore, !sheet.isLoadingMore {
                                             onAction(.loadMoreClaimCandidates)
                                         }
                                     }

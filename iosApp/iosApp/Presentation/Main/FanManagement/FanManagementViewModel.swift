@@ -271,9 +271,7 @@ final class FanManagementViewModel: ObservableObject {
                         affiliatedCafeName: current.affiliatedCafeName,
                         headline: current.headline,
                         body: current.body,
-                        requestableCasts: current.requestableCasts + ((page.items as? [Shared.CastClaimCandidate]) ?? []).map {
-                            FanManagementUiState.ClaimCandidate(id: $0.castId, name: $0.castName)
-                        },
+                        requestableCasts: current.requestableCasts + ((page.items as? [Shared.CastClaimCandidate]) ?? []),
                         nextCursor: page.nextCursor,
                         canLoadMore: page.hasNext,
                         isLoadingMore: false,
@@ -513,10 +511,8 @@ final class FanManagementViewModel: ObservableObject {
         initialCandidatePage: PagedResult<Shared.CastClaimCandidate>?
     ) -> FanManagementUiState.CastClaimSheet? {
         guard let cafeId = status.affiliatedCafeId, let cafeName = status.affiliatedCafeName else { return nil }
-        let initialCandidates = ((initialCandidatePage?.items as? [Shared.CastClaimCandidate]) ?? []).map {
-            FanManagementUiState.ClaimCandidate(id: $0.castId, name: $0.castName)
-        }
-        let selectedId = initialCandidates.first?.id
+        let initialCandidates = (initialCandidatePage?.items as? [Shared.CastClaimCandidate]) ?? []
+        let selectedId = initialCandidates.first?.castId
         if status.hasLinkedProfile {
             return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "캐스트 프로필 연결 완료", body: "\(status.linkedCastName ?? "내 프로필")이(가) 이미 연결되어 있습니다.", requestableCasts: [], nextCursor: nil, canLoadMore: false, isLoadingMore: false, selectedCastId: nil, canSubmit: false, isSubmitting: false)
         }

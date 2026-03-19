@@ -1,6 +1,7 @@
 package com.hhp227.concafe.presentation.main.fanmanagement
 
 import com.hhp227.concafe.domain.model.FanManagementData
+import com.hhp227.concafe.domain.model.CastClaimCandidate
 
 data class FanManagementUiState(
     val isLoading: Boolean = true,
@@ -27,18 +28,13 @@ data class FanManagementUiState(
         val affiliatedCafeName: String,
         val headline: String,
         val body: String,
-        val requestableCasts: List<ClaimCandidate> = emptyList(),
+        val requestableCasts: List<CastClaimCandidate> = emptyList(),
         val nextCursor: String? = null,
         val canLoadMore: Boolean = false,
         val isLoadingMore: Boolean = false,
         val selectedCastId: String? = null,
         val canSubmit: Boolean = false,
         val isSubmitting: Boolean = false
-    )
-
-    data class ClaimCandidate(
-        val id: String,
-        val name: String
     )
 
     data class StatCard(

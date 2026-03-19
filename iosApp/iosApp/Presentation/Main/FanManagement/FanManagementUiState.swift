@@ -28,23 +28,18 @@ struct FanManagementUiState {
         let accent: Accent
     }
 
-    struct CastClaimSheet: Hashable {
+    struct CastClaimSheet {
         let affiliatedCafeId: String
         let affiliatedCafeName: String
         let headline: String
         let body: String
-        let requestableCasts: [ClaimCandidate]
+        let requestableCasts: [CastClaimCandidate]
         let nextCursor: String?
         let canLoadMore: Bool
         let isLoadingMore: Bool
         let selectedCastId: String?
         let canSubmit: Bool
         let isSubmitting: Bool
-    }
-
-    struct ClaimCandidate: Identifiable, Hashable {
-        let id: String
-        let name: String
     }
 
     struct StatCard: Hashable {
