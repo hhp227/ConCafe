@@ -8,7 +8,6 @@ import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
-import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -56,11 +55,17 @@ class ScheduleViewModel(
                     is CastDomainEvent.Updated -> if (event.cast.id == castId) {
                         _uiState.update { state ->
                             val cafeName = state.castSummary.subtitle.substringAfter(" / ", "")
+                            val conceptRole = when (event.cast.conceptRole.lowercase()) {
+                                "maid" -> "메이드"
+                                "butler" -> "버틀러"
+                                "idol" -> "아이돌"
+                                else -> event.cast.conceptRole.replaceFirstChar { char -> char.uppercase() }
+                            }
                             state.copy(
                                 castSummary = state.castSummary.copy(
                                     title = event.cast.name,
-                                    subtitle = "${event.cast.conceptRole.toDisplayConceptRole()} / $cafeName",
-                                    initials = event.cast.name.toInitials()
+                                    subtitle = "$conceptRole / $cafeName",
+                                    initials = event.cast.name.take(2).uppercase()
                                 )
                             )
                         }
@@ -118,7 +123,30 @@ class ScheduleViewModel(
                 is AppResult.Success -> {
                     bindCastEvent(result.data.detail.cast.id)
                     bindScheduleManagementEvent(result.data.detail.cast.id)
-                    _uiState.value = result.data.toUiState()
+                    val data = result.data
+                    val conceptRole = when (data.detail.cast.conceptRole.lowercase()) {
+                        "maid" -> "메이드"
+                        "butler" -> "버틀러"
+                        "idol" -> "아이돌"
+                        else -> data.detail.cast.conceptRole.replaceFirstChar { char -> char.uppercase() }
+                    }
+                    _uiState.value = ScheduleUiState(
+                        managedCastId = data.detail.cast.id,
+                        isLoading = false,
+                        isSaving = false,
+                        errorMessage = null,
+                        castSummary = ScheduleUiState.CastSummary(
+                            title = data.detail.cast.name,
+                            subtitle = "$conceptRole / ${data.detail.cafe.name}",
+                            badge = "Cast Member",
+                            initials = data.detail.cast.name.take(2).uppercase()
+                        ),
+                        weekRangeLabel = data.weekRangeLabel,
+                        weekDays = data.weekDays,
+                        schedules = data.daySchedules,
+                        selectedDayId = data.selectedDayId,
+                        infoMessage = null
+                    )
                 }
                 is AppResult.Failure -> {
                     unbindCastEvent()
@@ -202,7 +230,25 @@ class ScheduleViewModel(
                         infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요.",
                         schedules = state.schedules.map { schedule ->
                             if (schedule.id == editingId) {
-                                pendingUpdate.toDaySchedule(title = schedule.title)
+                                val isWorking = pendingUpdate.status == CastScheduleStatus.WORK
+                                val timeLabel = when (pendingUpdate.status) {
+                                    CastScheduleStatus.WORK -> "${pendingUpdate.startTime ?: "10:00"} - ${pendingUpdate.endTime ?: "19:00"}"
+                                    CastScheduleStatus.OFF -> "휴무"
+                                    CastScheduleStatus.VACATION -> "휴가"
+                                }
+                                val statusLabel = when (pendingUpdate.status) {
+                                    CastScheduleStatus.WORK -> "근무"
+                                    CastScheduleStatus.OFF -> "휴무"
+                                    CastScheduleStatus.VACATION -> "휴가"
+                                }
+                                ScheduleManagementDaySchedule(
+                                    id = pendingUpdate.date,
+                                    title = schedule.title,
+                                    timeLabel = timeLabel,
+                                    statusLabel = statusLabel,
+                                    isWorking = isWorking,
+                                    status = pendingUpdate.status
+                                )
                             } else {
                                 schedule
                             }
@@ -252,8 +298,12 @@ class ScheduleViewModel(
                                     it.copy(
                                         isSaving = false,
                                         errorMessage = when (error) {
-                                            is AppError.ValidationFailed ->
-                                                error.reason.toScheduleValidationMessage()
+                                            is AppError.ValidationFailed -> when (error.reason) {
+                                                "start time is required" -> "시작 시간을 선택해주세요."
+                                                "end time is required" -> "종료 시간을 선택해주세요."
+                                                "end time must be after start time" -> "종료 시간은 시작 시간보다 늦어야 합니다."
+                                                else -> "근무 시간 저장에 실패했습니다."
+                                            }
                                             else -> "주간 시간표 저장에 실패했습니다."
                                         }
                                     )
@@ -283,74 +333,9 @@ class ScheduleViewModel(
     }
 }
 
-private fun ScheduleManagementData.toUiState(): ScheduleUiState {
-    return ScheduleUiState(
-        managedCastId = detail.cast.id,
-        isLoading = false,
-        isSaving = false,
-        errorMessage = null,
-        castSummary = ScheduleUiState.CastSummary(
-            title = detail.cast.name,
-            subtitle = "${detail.cast.conceptRole.toDisplayConceptRole()} / ${detail.cafe.name}",
-            badge = "Cast Member",
-            initials = detail.cast.name.toInitials()
-        ),
-        weekRangeLabel = weekRangeLabel,
-        weekDays = weekDays,
-        schedules = daySchedules,
-        selectedDayId = selectedDayId,
-        infoMessage = null
-    )
-}
-
-private fun String.toDisplayConceptRole(): String {
-    return when (lowercase()) {
-        "maid" -> "메이드"
-        "butler" -> "버틀러"
-        "idol" -> "아이돌"
-        else -> replaceFirstChar { char -> char.uppercase() }
-    }
-}
-
-private fun ScheduleUiState.PendingScheduleUpdate.toDaySchedule(title: String): com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule {
-    val isWorking = status == CastScheduleStatus.WORK
-    return ScheduleManagementDaySchedule(
-        id = date,
-        title = title,
-        timeLabel = when (status) {
-            CastScheduleStatus.WORK -> "${startTime ?: "10:00"} - ${endTime ?: "19:00"}"
-            CastScheduleStatus.OFF -> "휴무"
-            CastScheduleStatus.VACATION -> "휴가"
-        },
-        statusLabel = status.label,
-        isWorking = isWorking,
-        status = status
-    )
-}
-
-private fun String.toInitials(): String {
-    return take(2).uppercase()
-}
-
 private enum class TaskKey {
     OBSERVE_SESSION,
     OBSERVE_CAST_EVENT,
     OBSERVE_SCHEDULE_EVENT,
     SUBMIT
 }
-
-private fun String.toScheduleValidationMessage(): String {
-    return when (this) {
-        "start time is required" -> "시작 시간을 선택해주세요."
-        "end time is required" -> "종료 시간을 선택해주세요."
-        "end time must be after start time" -> "종료 시간은 시작 시간보다 늦어야 합니다."
-        else -> "근무 시간 저장에 실패했습니다."
-    }
-}
-
-private val CastScheduleStatus.label: String
-    get() = when (this) {
-        CastScheduleStatus.WORK -> "근무"
-        CastScheduleStatus.OFF -> "휴무"
-        CastScheduleStatus.VACATION -> "휴가"
-    }

@@ -9,7 +9,6 @@ import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.model.CastClaimCandidate
-import com.hhp227.concafe.domain.model.MyCastClaimStatus
 import com.hhp227.concafe.domain.usecase.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -116,14 +115,58 @@ class FanManagementViewModel(
         }
         viewModelScope.launch {
             val claimStatusResult = getMyCastClaimStatusUseCase.invoke()
-            val claimStatus = when (claimStatusResult) {
-                is AppResult.Success -> claimStatusResult.data.toStatusCard()
-                is AppResult.Failure -> null
-            }
-            val claimSheet = when (claimStatusResult) {
-                is AppResult.Success -> {
-                    val status = claimStatusResult.data
-                    val initialCandidatePage = if (status.shouldLoadRequestableCastPage()) {
+            val claimStatus: FanManagementUiState.CastClaimStatusCard?
+            val claimSheet: FanManagementUiState.CastClaimSheet?
+            if (claimStatusResult is AppResult.Success) {
+                val status = claimStatusResult.data
+                val cafeId = status.affiliatedCafeId
+                val cafeName = status.affiliatedCafeName ?: "소속 카페"
+                if (cafeId == null) {
+                    claimStatus = null
+                    claimSheet = null
+                } else {
+                    val pendingClaim = status.pendingClaim
+                    val latestRejectedClaim = status.latestRejectedClaim
+                    claimStatus = when {
+                        status.hasLinkedProfile -> FanManagementUiState.CastClaimStatusCard(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "캐스트 프로필 연결 완료",
+                            body = "${status.linkedCastName ?: "내 프로필"}이(가) 소속 카페와 연결되어 있습니다.",
+                            accent = FanManagementUiState.Accent.LINKED
+                        )
+                        pendingClaim != null -> FanManagementUiState.CastClaimStatusCard(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "프로필 연결 승인 대기 중",
+                            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
+                            accent = FanManagementUiState.Accent.PENDING
+                        )
+                        latestRejectedClaim != null -> FanManagementUiState.CastClaimStatusCard(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "프로필 연결이 반려되었습니다",
+                            body = "소속 카페 대시보드에서 다시 신청할 수 있습니다.",
+                            accent = FanManagementUiState.Accent.REJECTED
+                        )
+                        status.hasRequestableCasts -> FanManagementUiState.CastClaimStatusCard(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "소속 카페 프로필 연결이 필요합니다",
+                            body = "카페 대시보드에서 내 캐스트 프로필을 선택해 연결 요청을 보내세요.",
+                            accent = FanManagementUiState.Accent.PENDING
+                        )
+                        else -> FanManagementUiState.CastClaimStatusCard(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "아직 연결 가능한 캐스트 프로필이 없습니다",
+                            body = "운영자가 캐스트 프로필을 만든 뒤 다시 연결 요청을 진행할 수 있습니다.",
+                            accent = FanManagementUiState.Accent.REJECTED
+                        )
+                    }
+
+                    val shouldLoadPage = !status.hasLinkedProfile && pendingClaim == null && status.hasRequestableCasts
+                    val initialCandidatePage: PagedResult<CastClaimCandidate>? = if (shouldLoadPage) {
                         when (val pageResult = getMyRequestableCastPageUseCase.invoke(cursor = null)) {
                             is AppResult.Success -> pageResult.data
                             is AppResult.Failure -> null
@@ -131,9 +174,54 @@ class FanManagementViewModel(
                     } else {
                         null
                     }
-                    status.toSheet(initialCandidatePage)
+                    val initialCandidates = initialCandidatePage?.items.orEmpty()
+                    val selectedId = initialCandidates.firstOrNull()?.castId
+                    claimSheet = when {
+                        status.hasLinkedProfile -> FanManagementUiState.CastClaimSheet(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "캐스트 프로필 연결 완료",
+                            body = "${status.linkedCastName ?: "내 프로필"}이(가) 이미 연결되어 있습니다.",
+                            requestableCasts = emptyList(),
+                            nextCursor = null,
+                            canLoadMore = false,
+                            isLoadingMore = false,
+                            selectedCastId = null,
+                            canSubmit = false
+                        )
+                        pendingClaim != null -> FanManagementUiState.CastClaimSheet(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = "승인 대기 중",
+                            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
+                            requestableCasts = emptyList(),
+                            nextCursor = null,
+                            canLoadMore = false,
+                            isLoadingMore = false,
+                            selectedCastId = null,
+                            canSubmit = false
+                        )
+                        else -> FanManagementUiState.CastClaimSheet(
+                            affiliatedCafeId = cafeId,
+                            affiliatedCafeName = cafeName,
+                            headline = if (latestRejectedClaim != null) "다시 연결 요청하기" else "캐스트 프로필 연결",
+                            body = if (latestRejectedClaim != null) {
+                                "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요."
+                            } else {
+                                "연결할 캐스트 프로필을 선택하고 신청을 보내세요."
+                            },
+                            requestableCasts = initialCandidates,
+                            nextCursor = initialCandidatePage?.nextCursor,
+                            canLoadMore = initialCandidatePage?.hasNext ?: false,
+                            isLoadingMore = false,
+                            selectedCastId = selectedId,
+                            canSubmit = selectedId != null
+                        )
+                    }
                 }
-                is AppResult.Failure -> null
+            } else {
+                claimStatus = null
+                claimSheet = null
             }
             when (val result = getFanManagementDataUseCase.invoke()) {
                 is AppResult.Success -> {
@@ -314,107 +402,6 @@ class FanManagementViewModel(
         observeSession()
         observeCastClaimEvent()
     }
-}
-
-private fun MyCastClaimStatus.toStatusCard(): FanManagementUiState.CastClaimStatusCard? {
-    val cafeId = affiliatedCafeId ?: return null
-    val cafeName = affiliatedCafeName ?: "소속 카페"
-    val pendingClaim = pendingClaim
-    val latestRejectedClaim = latestRejectedClaim
-    return when {
-        hasLinkedProfile -> FanManagementUiState.CastClaimStatusCard(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "캐스트 프로필 연결 완료",
-            body = "${linkedCastName ?: "내 프로필"}이(가) 소속 카페와 연결되어 있습니다.",
-            accent = FanManagementUiState.Accent.LINKED
-        )
-        pendingClaim != null -> FanManagementUiState.CastClaimStatusCard(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "프로필 연결 승인 대기 중",
-            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
-            accent = FanManagementUiState.Accent.PENDING
-        )
-        latestRejectedClaim != null -> FanManagementUiState.CastClaimStatusCard(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "프로필 연결이 반려되었습니다",
-            body = "소속 카페 대시보드에서 다시 신청할 수 있습니다.",
-            accent = FanManagementUiState.Accent.REJECTED
-        )
-        hasRequestableCasts -> FanManagementUiState.CastClaimStatusCard(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "소속 카페 프로필 연결이 필요합니다",
-            body = "카페 대시보드에서 내 캐스트 프로필을 선택해 연결 요청을 보내세요.",
-            accent = FanManagementUiState.Accent.PENDING
-        )
-        else -> FanManagementUiState.CastClaimStatusCard(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "아직 연결 가능한 캐스트 프로필이 없습니다",
-            body = "운영자가 캐스트 프로필을 만든 뒤 다시 연결 요청을 진행할 수 있습니다.",
-            accent = FanManagementUiState.Accent.REJECTED
-        )
-    }
-}
-
-private fun MyCastClaimStatus.toSheet(
-    initialCandidatePage: PagedResult<CastClaimCandidate>?
-): FanManagementUiState.CastClaimSheet? {
-    val cafeId = affiliatedCafeId ?: return null
-    val cafeName = affiliatedCafeName ?: "소속 카페"
-    val pendingClaim = pendingClaim
-    val latestRejectedClaim = latestRejectedClaim
-    val initialCandidates = initialCandidatePage?.items.orEmpty()
-    val selectedId = initialCandidates.firstOrNull()?.castId
-    return when {
-        hasLinkedProfile -> FanManagementUiState.CastClaimSheet(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "캐스트 프로필 연결 완료",
-            body = "${linkedCastName ?: "내 프로필"}이(가) 이미 연결되어 있습니다.",
-            requestableCasts = emptyList(),
-            nextCursor = null,
-            canLoadMore = false,
-            isLoadingMore = false,
-            selectedCastId = null,
-            canSubmit = false
-        )
-        pendingClaim != null -> FanManagementUiState.CastClaimSheet(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = "승인 대기 중",
-            body = "카페 운영자가 ${pendingClaim.createdAtLabel}에 접수된 요청을 확인 중입니다.",
-            requestableCasts = emptyList(),
-            nextCursor = null,
-            canLoadMore = false,
-            isLoadingMore = false,
-            selectedCastId = null,
-            canSubmit = false
-        )
-        else -> FanManagementUiState.CastClaimSheet(
-            affiliatedCafeId = cafeId,
-            affiliatedCafeName = cafeName,
-            headline = if (latestRejectedClaim != null) "다시 연결 요청하기" else "캐스트 프로필 연결",
-            body = if (latestRejectedClaim != null) {
-                "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요."
-            } else {
-                "연결할 캐스트 프로필을 선택하고 신청을 보내세요."
-            },
-            requestableCasts = initialCandidates,
-            nextCursor = initialCandidatePage?.nextCursor,
-            canLoadMore = initialCandidatePage?.hasNext ?: false,
-            isLoadingMore = false,
-            selectedCastId = selectedId,
-            canSubmit = selectedId != null
-        )
-    }
-}
-
-private fun MyCastClaimStatus.shouldLoadRequestableCastPage(): Boolean {
-    return !hasLinkedProfile && pendingClaim == null && hasRequestableCasts
 }
 
 private enum class TaskKey {

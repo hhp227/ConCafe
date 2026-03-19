@@ -58,9 +58,17 @@ class InquiryLinkViewModel(
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
+                        val errorMessage = when (val error = result.error) {
+                            is AppError.ValidationFailed -> error.reason
+                            AppError.Unauthorized -> "로그인 후 문의를 접수해 주세요."
+                            AppError.PermissionDenied -> "문의 작성 권한이 없습니다."
+                            AppError.NotFound -> "문의 저장 대상을 찾지 못했습니다."
+                            is AppError.NetworkError -> error.message ?: "네트워크 오류가 발생했습니다."
+                            is AppError.Unknown -> error.cause ?: "문의 접수에 실패했습니다."
+                        }
                         it.copy(
                             isSubmitting = false,
-                            errorMessage = result.error.toUserMessage()
+                            errorMessage = errorMessage
                         )
                     }
                 }
@@ -94,16 +102,5 @@ class InquiryLinkViewModel(
 
     private companion object {
         const val SUBMIT_SUCCESS_MESSAGE = "문의가 접수되었습니다. 검토 후 안내드릴게요."
-    }
-}
-
-private fun AppError.toUserMessage(): String {
-    return when (this) {
-        is AppError.ValidationFailed -> reason
-        AppError.Unauthorized -> "로그인 후 문의를 접수해 주세요."
-        AppError.PermissionDenied -> "문의 작성 권한이 없습니다."
-        AppError.NotFound -> "문의 저장 대상을 찾지 못했습니다."
-        is AppError.NetworkError -> message ?: "네트워크 오류가 발생했습니다."
-        is AppError.Unknown -> cause ?: "문의 접수에 실패했습니다."
     }
 }

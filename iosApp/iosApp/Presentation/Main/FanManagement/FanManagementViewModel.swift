@@ -144,9 +144,54 @@ final class FanManagementViewModel: ObservableObject {
                 let claimResult = try await getMyCastClaimStatusUseCase.invoke()
                 if let success = claimResult as? AppResultSuccess<AnyObject>,
                    let data = success.data as? Shared.MyCastClaimStatus {
-                    claimStatus = Self.toStatusCard(data)
+                    if let cafeId = data.affiliatedCafeId {
+                        let cafeName = data.affiliatedCafeName ?? "소속 카페"
+                        let pendingClaim = data.pendingClaim
+                        let latestRejectedClaim = data.latestRejectedClaim
+                        if data.hasLinkedProfile {
+                            claimStatus = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "캐스트 프로필 연결 완료",
+                                body: "\(data.linkedCastName ?? "내 프로필")이(가) 소속 카페와 연결되어 있습니다.",
+                                accent: .linked
+                            )
+                        } else if let pendingClaim {
+                            claimStatus = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "프로필 연결 승인 대기 중",
+                                body: "카페 운영자가 \(pendingClaim.createdAtLabel)에 접수된 요청을 확인 중입니다.",
+                                accent: .pending
+                            )
+                        } else if latestRejectedClaim != nil {
+                            claimStatus = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "프로필 연결이 반려되었습니다",
+                                body: "소속 카페 대시보드에서 다시 신청할 수 있습니다.",
+                                accent: .rejected
+                            )
+                        } else if data.hasRequestableCasts {
+                            claimStatus = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "소속 카페 프로필 연결이 필요합니다",
+                                body: "카페 대시보드에서 내 캐스트 프로필을 선택해 연결 요청을 보내세요.",
+                                accent: .pending
+                            )
+                        } else {
+                            claimStatus = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "아직 연결 가능한 캐스트 프로필이 없습니다",
+                                body: "운영자가 캐스트 프로필을 만든 뒤 다시 연결 요청을 진행할 수 있습니다.",
+                                accent: .rejected
+                            )
+                        }
+
                     let initialPage: PagedResult<Shared.CastClaimCandidate>?
-                    if Self.shouldLoadRequestableCastPage(data) {
+                        if !data.hasLinkedProfile && pendingClaim == nil && data.hasRequestableCasts {
                         let pageResult = try await getMyRequestableCastPageUseCase.invoke(cursor: nil)
                         if let pageSuccess = pageResult as? AppResultSuccess<AnyObject>,
                            let page = pageSuccess.data as? PagedResult<Shared.CastClaimCandidate> {
@@ -157,7 +202,55 @@ final class FanManagementViewModel: ObservableObject {
                     } else {
                         initialPage = nil
                     }
-                    claimSheet = Self.toSheet(data, initialCandidatePage: initialPage)
+                        let initialCandidates = (initialPage?.items as? [Shared.CastClaimCandidate]) ?? []
+                        let selectedId = initialCandidates.first?.castId
+                        if data.hasLinkedProfile {
+                            claimSheet = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "캐스트 프로필 연결 완료",
+                                body: "\(data.linkedCastName ?? "내 프로필")이(가) 이미 연결되어 있습니다.",
+                                requestableCasts: [],
+                                nextCursor: nil,
+                                canLoadMore: false,
+                                isLoadingMore: false,
+                                selectedCastId: nil,
+                                canSubmit: false,
+                                isSubmitting: false
+                            )
+                        } else if let pendingClaim {
+                            claimSheet = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: "승인 대기 중",
+                                body: "카페 운영자가 \(pendingClaim.createdAtLabel)에 접수된 요청을 확인 중입니다.",
+                                requestableCasts: [],
+                                nextCursor: nil,
+                                canLoadMore: false,
+                                isLoadingMore: false,
+                                selectedCastId: nil,
+                                canSubmit: false,
+                                isSubmitting: false
+                            )
+                        } else {
+                            claimSheet = .init(
+                                affiliatedCafeId: cafeId,
+                                affiliatedCafeName: cafeName,
+                                headline: latestRejectedClaim == nil ? "캐스트 프로필 연결" : "다시 연결 요청하기",
+                                body: latestRejectedClaim == nil ? "연결할 캐스트 프로필을 선택하고 신청을 보내세요." : "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요.",
+                                requestableCasts: initialCandidates,
+                                nextCursor: initialPage?.nextCursor,
+                                canLoadMore: initialPage?.hasNext ?? false,
+                                isLoadingMore: false,
+                                selectedCastId: selectedId,
+                                canSubmit: selectedId != nil,
+                                isSubmitting: false
+                            )
+                        }
+                    } else {
+                        claimStatus = nil
+                        claimSheet = nil
+                    }
                 } else {
                     claimStatus = nil
                     claimSheet = nil
@@ -426,85 +519,5 @@ final class FanManagementViewModel: ObservableObject {
         case castClaimEvent
         case castEvent
         case scheduleEvent
-    }
-
-    private static func toStatusCard(_ status: Shared.MyCastClaimStatus) -> FanManagementUiState.CastClaimStatusCard? {
-        guard let cafeId = status.affiliatedCafeId,
-              let cafeName = status.affiliatedCafeName else { return nil }
-        if status.hasLinkedProfile {
-            return .init(
-                affiliatedCafeId: cafeId,
-                affiliatedCafeName: cafeName,
-                headline: "캐스트 프로필 연결 완료",
-                body: "\(status.linkedCastName ?? "내 프로필")이(가) 소속 카페와 연결되어 있습니다.",
-                accent: .linked
-            )
-        }
-        if let pending = status.pendingClaim {
-            return .init(
-                affiliatedCafeId: cafeId,
-                affiliatedCafeName: cafeName,
-                headline: "프로필 연결 승인 대기 중",
-                body: "카페 운영자가 \(pending.createdAtLabel)에 접수된 요청을 확인 중입니다.",
-                accent: .pending
-            )
-        }
-        if status.latestRejectedClaim != nil {
-            return .init(
-                affiliatedCafeId: cafeId,
-                affiliatedCafeName: cafeName,
-                headline: "프로필 연결이 반려되었습니다",
-                body: "팬관리에서 다시 신청할 수 있습니다.",
-                accent: .rejected
-            )
-        }
-        if status.hasRequestableCasts {
-            return .init(
-                affiliatedCafeId: cafeId,
-                affiliatedCafeName: cafeName,
-                headline: "소속 카페 프로필 연결이 필요합니다",
-                body: "팬관리에서 내 캐스트 프로필을 선택해 연결 요청을 보내세요.",
-                accent: .pending
-            )
-        }
-        return .init(
-            affiliatedCafeId: cafeId,
-            affiliatedCafeName: cafeName,
-            headline: "아직 연결 가능한 캐스트 프로필이 없습니다",
-            body: "운영자가 캐스트 프로필을 만든 뒤 다시 연결 요청을 진행할 수 있습니다.",
-            accent: .rejected
-        )
-    }
-
-    private static func toSheet(
-        _ status: Shared.MyCastClaimStatus,
-        initialCandidatePage: PagedResult<Shared.CastClaimCandidate>?
-    ) -> FanManagementUiState.CastClaimSheet? {
-        guard let cafeId = status.affiliatedCafeId, let cafeName = status.affiliatedCafeName else { return nil }
-        let initialCandidates = (initialCandidatePage?.items as? [Shared.CastClaimCandidate]) ?? []
-        let selectedId = initialCandidates.first?.castId
-        if status.hasLinkedProfile {
-            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "캐스트 프로필 연결 완료", body: "\(status.linkedCastName ?? "내 프로필")이(가) 이미 연결되어 있습니다.", requestableCasts: [], nextCursor: nil, canLoadMore: false, isLoadingMore: false, selectedCastId: nil, canSubmit: false, isSubmitting: false)
-        }
-        if let pending = status.pendingClaim {
-            return .init(affiliatedCafeId: cafeId, affiliatedCafeName: cafeName, headline: "승인 대기 중", body: "카페 운영자가 \(pending.createdAtLabel)에 접수된 요청을 확인 중입니다.", requestableCasts: [], nextCursor: nil, canLoadMore: false, isLoadingMore: false, selectedCastId: nil, canSubmit: false, isSubmitting: false)
-        }
-        return .init(
-            affiliatedCafeId: cafeId,
-            affiliatedCafeName: cafeName,
-            headline: status.latestRejectedClaim == nil ? "캐스트 프로필 연결" : "다시 연결 요청하기",
-            body: status.latestRejectedClaim == nil ? "연결할 캐스트 프로필을 선택하고 신청을 보내세요." : "반려된 이후 다시 신청할 수 있습니다. 연결할 프로필을 선택해 주세요.",
-            requestableCasts: initialCandidates,
-            nextCursor: initialCandidatePage?.nextCursor,
-            canLoadMore: initialCandidatePage?.hasNext ?? false,
-            isLoadingMore: false,
-            selectedCastId: selectedId,
-            canSubmit: selectedId != nil,
-            isSubmitting: false
-        )
-    }
-
-    private static func shouldLoadRequestableCastPage(_ status: Shared.MyCastClaimStatus) -> Bool {
-        !status.hasLinkedProfile && status.pendingClaim == nil && status.hasRequestableCasts
     }
 }

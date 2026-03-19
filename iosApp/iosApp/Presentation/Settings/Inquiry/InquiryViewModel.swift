@@ -45,7 +45,21 @@ final class InquiryViewModel: ObservableObject {
 
                 if let failure = result as? AppResultFailure {
                     uiState.isSubmitting = false
-                    uiState.errorMessage = failure.error.toUserMessage()
+                    if let error = failure.error as? AppErrorValidationFailed {
+                        uiState.errorMessage = error.reason
+                    } else if failure.error is AppErrorUnauthorized {
+                        uiState.errorMessage = "로그인 후 문의를 접수해 주세요."
+                    } else if failure.error is AppErrorPermissionDenied {
+                        uiState.errorMessage = "문의 작성 권한이 없습니다."
+                    } else if failure.error is AppErrorNotFound {
+                        uiState.errorMessage = "문의 저장 대상을 찾지 못했습니다."
+                    } else if let error = failure.error as? AppErrorNetworkError {
+                        uiState.errorMessage = error.message ?? "네트워크 오류가 발생했습니다."
+                    } else if let error = failure.error as? AppErrorUnknown {
+                        uiState.errorMessage = error.cause ?? "문의 접수에 실패했습니다."
+                    } else {
+                        uiState.errorMessage = "문의 접수에 실패했습니다."
+                    }
                     return
                 }
 
@@ -80,26 +94,5 @@ final class InquiryViewModel: ObservableObject {
         createInquiryUseCase: CreateInquiryUseCase = KoinInitializerKt.resolveCreateInquiryUseCase()
     ) {
         self.createInquiryUseCase = createInquiryUseCase
-    }
-}
-
-private extension AppError {
-    func toUserMessage() -> String {
-        switch self {
-        case let error as AppErrorValidationFailed:
-            return error.reason
-        case is AppErrorUnauthorized:
-            return "로그인 후 문의를 접수해 주세요."
-        case is AppErrorPermissionDenied:
-            return "문의 작성 권한이 없습니다."
-        case is AppErrorNotFound:
-            return "문의 저장 대상을 찾지 못했습니다."
-        case let error as AppErrorNetworkError:
-            return error.message ?? "네트워크 오류가 발생했습니다."
-        case let error as AppErrorUnknown:
-            return error.cause ?? "문의 접수에 실패했습니다."
-        default:
-            return "문의 접수에 실패했습니다."
-        }
     }
 }
