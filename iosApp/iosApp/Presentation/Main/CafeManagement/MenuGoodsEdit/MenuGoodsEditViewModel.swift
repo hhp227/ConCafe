@@ -19,6 +19,8 @@ final class MenuGoodsEditViewModel: ObservableObject {
 
     private let upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     @Published private(set) var uiState = MenuGoodsEditUiState()
 
     let event = PassthroughSubject<MenuGoodsEditEvent, Never>()
@@ -74,19 +76,19 @@ final class MenuGoodsEditViewModel: ObservableObject {
         uiState.isSaving = true
         uiState.infoMessage = nil
 
-        let update = CafeMenuGoodsUpsert(
-            cafeId: cafeId,
-            itemId: itemId,
-            name: uiState.itemName,
-            price: price,
-            category: uiState.selectedCategoryId,
-            description: uiState.description,
-            isInStock: uiState.isInStock,
-            imageUrl: uiState.imageUrl
-        )
-
         Task {
             do {
+                let uploadedImageUrl = try await uploadImageIfNeeded(uiState.imageUrl, folder: "cafe-items")
+                let update = CafeMenuGoodsUpsert(
+                    cafeId: cafeId,
+                    itemId: itemId,
+                    name: uiState.itemName,
+                    price: price,
+                    category: uiState.selectedCategoryId,
+                    description: uiState.description,
+                    isInStock: uiState.isInStock,
+                    imageUrl: uploadedImageUrl
+                )
                 let result = try await upsertCafeMenuGoodsUseCase.invoke(update: update)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -172,12 +174,14 @@ final class MenuGoodsEditViewModel: ObservableObject {
         cafeId: String,
         itemId: String? = nil,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase()
+        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.itemId = itemId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.upsertCafeMenuGoodsUseCase = upsertCafeMenuGoodsUseCase
+        self.uploadImageUseCase = uploadImageUseCase
 
         loadInitialValue()
     }
@@ -190,5 +194,19 @@ final class MenuGoodsEditViewModel: ObservableObject {
         default:
             return "drink"
         }
+    }
+
+    private func uploadImageIfNeeded(_ imageUrl: String?, folder: String) async throws -> String? {
+        guard let imageUrl, !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
+        if let success = result as? AppResultSuccess<AnyObject>, let data = success.data as? String {
+            return data
+        }
+        if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
+            throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
+        }
+        throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
     }
 }

@@ -13,13 +13,15 @@ import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 
 class MenuGoodsEditViewModel(
     private val cafeId: String,
     private val itemId: String?,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
-    private val upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase
+    private val upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MenuGoodsEditUiState())
     val uiState = _uiState.asStateFlow()
@@ -73,6 +75,10 @@ class MenuGoodsEditViewModel(
             else -> {
                 _uiState.update { it.copy(infoMessage = null) }
                 viewModelScope.launch {
+                    val uploadedImageUrl = uploadImage(currentState.imageUrl, "cafe-items")
+                    if (!currentState.imageUrl.isNullOrBlank() && uploadedImageUrl == null) {
+                        return@launch
+                    }
                     when (
                         val result = upsertCafeMenuGoodsUseCase.invoke(
                             CafeMenuGoodsUpsert(
@@ -83,7 +89,7 @@ class MenuGoodsEditViewModel(
                                 category = currentState.selectedCategoryId,
                                 description = currentState.description.trim(),
                                 isInStock = currentState.isInStock,
-                                imageUrl = currentState.imageUrl
+                                imageUrl = uploadedImageUrl
                             )
                         )
                     ) {
@@ -99,6 +105,21 @@ class MenuGoodsEditViewModel(
 
     private fun showInfo(message: String) {
         _uiState.update { it.copy(infoMessage = message) }
+    }
+
+    private suspend fun uploadImage(imageUrl: String?, folder: String): String? {
+        if (imageUrl.isNullOrBlank()) return null
+        return when (val result = uploadImageUseCase.invoke(imageUrl, folder)) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        infoMessage = "이미지를 업로드하지 못했습니다."
+                    )
+                }
+                null
+            }
+        }
     }
 
     private fun applyMenu(menu: CafeMenu) {

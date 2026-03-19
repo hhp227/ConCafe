@@ -21,6 +21,8 @@ final class CafeInfoEditViewModel: ObservableObject {
 
     private let updateCafeInfoUseCase: UpdateCafeInfoUseCase
 
+    private let uploadImageUseCase: UploadImageUseCase
+
     @Published private(set) var uiState = CafeInfoEditUiState()
 
     let event = PassthroughSubject<CafeInfoEditEvent, Never>()
@@ -83,11 +85,21 @@ final class CafeInfoEditViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
+                let uploadedRepresentativeImage = try await uploadImageIfNeeded(
+                    uiState.representativeImageUrl,
+                    folder: "cafes/representative"
+                )
+                let uploadedGalleryImages = try await uploadImagesIfNeeded(
+                    uiState.galleryImages,
+                    folder: "cafes/gallery"
+                )
                 let result = try await updateCafeInfoUseCase.invoke(
                     update: CafeInfoUpdate(
                         cafeId: cafeId,
                         name: uiState.cafeName,
                         description: uiState.cafeDescription,
+                        representativeImageUrl: uploadedRepresentativeImage,
+                        galleryImages: uploadedGalleryImages,
                         address: uiState.address,
                         contactNumber: uiState.contactNumber,
                         weekdayOpen: uiState.weekdayOpen,
@@ -135,6 +147,10 @@ final class CafeInfoEditViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             do {
+                let uploadedRepresentativeImage = try await uploadImageIfNeeded(
+                    uiState.representativeImageUrl,
+                    folder: "cafes/representative"
+                )
                 let result = try await createCafeRegistrationClaimUseCase.invoke(
                     draft: CafeRegistrationDraft(
                         name: uiState.cafeName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -145,7 +161,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                             address: uiState.address.trimmingCharacters(in: .whitespacesAndNewlines),
                             location: GeoPoint(latitude: 37.5665, longitude: 126.9780)
                         ),
-                        thumbnailImage: uiState.representativeImageUrl,
+                        thumbnailImage: uploadedRepresentativeImage,
                         conceptType: "MAID",
                         businessHours: formatBusinessHours(),
                         phoneNumber: uiState.contactNumber.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -258,13 +274,15 @@ final class CafeInfoEditViewModel: ObservableObject {
         isRegistrationMode: Bool = false,
         createCafeRegistrationClaimUseCase: CreateCafeRegistrationClaimUseCase = KoinInitializerKt.resolveCreateCafeRegistrationClaimUseCase(),
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
-        updateCafeInfoUseCase: UpdateCafeInfoUseCase = KoinInitializerKt.resolveUpdateCafeInfoUseCase()
+        updateCafeInfoUseCase: UpdateCafeInfoUseCase = KoinInitializerKt.resolveUpdateCafeInfoUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
         self.isRegistrationMode = isRegistrationMode
         self.createCafeRegistrationClaimUseCase = createCafeRegistrationClaimUseCase
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.updateCafeInfoUseCase = updateCafeInfoUseCase
+        self.uploadImageUseCase = uploadImageUseCase
         self.uiState.isRegistrationMode = isRegistrationMode
 
         if isRegistrationMode {
@@ -276,5 +294,29 @@ final class CafeInfoEditViewModel: ObservableObject {
 
     deinit {
         loadTask?.cancel()
+    }
+
+    private func uploadImageIfNeeded(_ imageUrl: String?, folder: String) async throws -> String? {
+        guard let imageUrl, !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
+        if let success = result as? AppResultSuccess<AnyObject>, let data = success.data as? String {
+            return data
+        }
+        if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
+            throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
+        }
+        throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
+    }
+
+    private func uploadImagesIfNeeded(_ imageUrls: [String], folder: String) async throws -> [String] {
+        var uploaded: [String] = []
+        for imageUrl in imageUrls where !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let result = try await uploadImageIfNeeded(imageUrl, folder: folder) {
+                uploaded.append(result)
+            }
+        }
+        return uploaded
     }
 }

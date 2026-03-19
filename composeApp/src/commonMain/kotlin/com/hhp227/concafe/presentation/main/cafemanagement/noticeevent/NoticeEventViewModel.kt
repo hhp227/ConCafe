@@ -19,6 +19,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
+import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import kotlinx.coroutines.Job
@@ -40,7 +41,8 @@ class NoticeEventViewModel(
     private val updateCafeEventUseCase: UpdateCafeEventUseCase,
     private val deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase,
     private val deleteCafeEventUseCase: DeleteCafeEventUseCase,
-    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NoticeEventUiState())
     val uiState = _uiState.asStateFlow()
@@ -236,13 +238,14 @@ class NoticeEventViewModel(
                     )
                 }
             } else {
+                val uploadedImageUrl = uploadEventImage(state.formImageUrl) ?: return@launch
                 if (state.formEditingId == null) {
                     createCafeEventUseCase.invoke(
                         CafeEventCreate(
                             cafeId = cafeId,
                             title = state.formTitle,
                             content = state.formContent,
-                            imageUrl = state.formImageUrl,
+                            imageUrl = uploadedImageUrl,
                             periodText = state.formReservedAt.ifBlank { null }
                         )
                     )
@@ -253,7 +256,7 @@ class NoticeEventViewModel(
                             eventId = state.formEditingId,
                             title = state.formTitle,
                             content = state.formContent,
-                            imageUrl = state.formImageUrl,
+                            imageUrl = uploadedImageUrl,
                             periodText = state.formReservedAt.ifBlank { null }
                         )
                     )
@@ -340,6 +343,22 @@ class NoticeEventViewModel(
     private fun removeEvent(id: String) {
         _uiState.update { state ->
             state.copy(events = state.events.filterNot { it.id == id })
+        }
+    }
+
+    private suspend fun uploadEventImage(imageUrl: String): String? {
+        if (imageUrl.isBlank()) return imageUrl
+        return when (val result = uploadImageUseCase.invoke(imageUrl, "events")) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isSubmittingForm = false,
+                        infoMessage = "이미지를 업로드하지 못했습니다."
+                    )
+                }
+                null
+            }
         }
     }
 
