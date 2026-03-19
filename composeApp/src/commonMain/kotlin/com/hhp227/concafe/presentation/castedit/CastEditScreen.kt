@@ -54,12 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCastDetailUseCase
-import com.hhp227.concafe.di.resolveUpsertCastUseCase
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun CastEditScreen(
@@ -69,14 +69,7 @@ fun CastEditScreen(
     viewModel: CastEditViewModel = viewModel(
         key = "cast-edit-${cafeId ?: "none"}-${castId ?: "new"}",
         factory = viewModelFactory {
-            initializer {
-                CastEditViewModel(
-                    cafeId = cafeId,
-                    castId = castId,
-                    getCastDetailUseCase = resolveGetCastDetailUseCase(),
-                    upsertCastUseCase = resolveUpsertCastUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CastEditViewModel> { parametersOf(cafeId, castId) } }
         }
     )
 ) {

@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CheckInViewModel: ObservableObject {
@@ -17,23 +18,21 @@ final class CheckInViewModel: ObservableObject {
 
     private let createVisitUseCase: CreateVisitUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
-    private let observeCastEventUseCase: ObserveCastEventUseCase
-
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase
 
     private let dismissReviewPromptUseCase: DismissReviewPromptUseCase
 
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
+
+    private let castEventPublisher: CastEventPublisher
+
     @Published private(set) var uiState = CheckInUiState.empty
 
     let event = PassthroughSubject<CheckInEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func loadGuestFeed() {
         uiState.isLoading = true
@@ -94,54 +93,25 @@ final class CheckInViewModel: ObservableObject {
     }
 
     private func observeSession() {
-        watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] user in
-            guard let self else { return }
-
-            Task { @MainActor in
-                self.uiState.currentUser = user
-                self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
-                self.uiState.isNewVisitSheetVisible = false
-                if user == nil {
-                    self.uiState.reviewPrompt = nil
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.uiState.currentUser = user
+                    self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
+                    self.uiState.isNewVisitSheetVisible = false
+                    
+                    if user == nil {
+                        self.uiState.reviewPrompt = nil
+                        self.uiState.todayVisits = []
+                        self.uiState.recentVisits = []
+                    } else {
+                        self.loadUserFeed()
+                    }
                 }
-
-                if user == nil {
-                    self.uiState.todayVisits = []
-                    self.uiState.recentVisits = []
-                } else {
-                    self.loadUserFeed()
-                }
+            } catch {
+                print("Error: \(error)")
             }
-        }
-    }
-
-    func onAction(_ action: CheckInAction) {
-        switch action {
-        case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
-        case .castTapped(let id):
-            event.send(.navigateToCast(id: id))
-        case .checkInTapped:
-            if uiState.currentUser == nil {
-                uiState.isLoginPromptVisible = true
-                uiState.isNewVisitSheetVisible = false
-            } else {
-                uiState.isNewVisitSheetVisible = true
-            }
-        case .signInTapped, .signUpTapped:
-            uiState.isLoginPromptVisible = false
-            event.send(.navigateToSignIn)
-        case .dismissLoginPrompt:
-            uiState.isLoginPromptVisible = false
-        case .dismissNewVisitSheet:
-            uiState.isNewVisitSheetVisible = false
-        case .dismissReviewPrompt:
-            dismissReviewPrompt()
-        case .writeReviewPromptTapped:
-            writeReviewPrompt()
-        case .submitNewVisit(let cafeId, let visitedAt, let memo):
-            submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
         }
     }
 
@@ -215,30 +185,36 @@ final class CheckInViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafe(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafe(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCast(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.uiState.popularCasts.removeAll { $0.id == deleted.castId }
-                default:
-                    break
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCast(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.uiState.popularCasts.removeAll { $0.id == deleted.castId }
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -316,25 +292,54 @@ final class CheckInViewModel: ObservableObject {
             event.send(.navigateToReviewEdit(cafeId: prompt.cafeId))
         }
     }
+    
+    func onAction(_ action: CheckInAction) {
+        switch action {
+        case .cafeTapped(let id):
+            event.send(.navigateToCafe(id: id))
+        case .castTapped(let id):
+            event.send(.navigateToCast(id: id))
+        case .checkInTapped:
+            if uiState.currentUser == nil {
+                uiState.isLoginPromptVisible = true
+                uiState.isNewVisitSheetVisible = false
+            } else {
+                uiState.isNewVisitSheetVisible = true
+            }
+        case .signInTapped, .signUpTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
+        case .dismissNewVisitSheet:
+            uiState.isNewVisitSheetVisible = false
+        case .dismissReviewPrompt:
+            dismissReviewPrompt()
+        case .writeReviewPromptTapped:
+            writeReviewPrompt()
+        case .submitNewVisit(let cafeId, let visitedAt, let memo):
+            submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
+        }
+    }
 
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
-        dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase()
+        dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
@@ -345,17 +350,12 @@ final class CheckInViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
     }
 
     private enum TaskKey {
         case guestFeed
         case userFeed
         case submitVisit
-    }
-
-    private enum WatchKey {
         case session
         case cafeDetailEvent
         case castEvent

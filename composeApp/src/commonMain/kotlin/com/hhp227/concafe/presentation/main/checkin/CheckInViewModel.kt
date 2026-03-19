@@ -12,15 +12,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 
@@ -28,11 +28,11 @@ class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
     private val createVisitUseCase: CreateVisitUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase,
-    private val dismissReviewPromptUseCase: DismissReviewPromptUseCase
+    private val dismissReviewPromptUseCase: DismissReviewPromptUseCase,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
 
@@ -125,52 +125,6 @@ class CheckInViewModel(
         }
     }
 
-    fun onAction(action: CheckInAction) {
-        viewModelScope.launch {
-            when (action) {
-                is CheckInAction.ClickCafe -> _event.emit(CheckInEvent.NavigateToCafe(action.id))
-                is CheckInAction.ClickCast -> _event.emit(CheckInEvent.NavigateToCast(action.id))
-                CheckInAction.ClickCheckIn -> {
-                    val currentUser = _uiState.value.currentUser
-
-                    if (currentUser == null) {
-                        _uiState.update {
-                            it.copy(
-                                isLoginPromptVisible = true,
-                                isNewVisitSheetVisible = false
-                            )
-                        }
-                    } else {
-                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
-                    }
-                }
-                CheckInAction.ClickSignIn -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(CheckInEvent.NavigateToSignIn)
-                }
-                CheckInAction.ClickSignUp -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(CheckInEvent.NavigateToSignIn)
-                }
-                CheckInAction.DismissLoginPrompt -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                }
-                CheckInAction.DismissNewVisitSheet -> {
-                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
-                }
-                CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
-                CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
-                is CheckInAction.SubmitNewVisit -> {
-                    submitNewVisit(
-                        cafeId = action.cafeId,
-                        visitedAt = action.visitedAt,
-                        memo = action.memo
-                    )
-                }
-            }
-        }
-    }
-
     private fun submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if (cafeId.isBlank()) {
             _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
@@ -205,7 +159,7 @@ class CheckInViewModel(
     private fun observeCafeDetailEvent() {
         observeCafeDetailEventJob?.cancel()
         observeCafeDetailEventJob = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafe(event.cafe)
                 }
@@ -216,7 +170,7 @@ class CheckInViewModel(
     private fun observeCastEvent() {
         observeCastEventJob?.cancel()
         observeCastEventJob = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCast(event.cast)
@@ -314,6 +268,52 @@ class CheckInViewModel(
             dismissReviewPromptUseCase.invoke(prompt.visitId)
             _uiState.update { it.copy(reviewPrompt = null) }
             _event.emit(CheckInEvent.NavigateToReviewEdit(prompt.cafeId))
+        }
+    }
+    
+    fun onAction(action: CheckInAction) {
+        viewModelScope.launch {
+            when (action) {
+                is CheckInAction.ClickCafe -> _event.emit(CheckInEvent.NavigateToCafe(action.id))
+                is CheckInAction.ClickCast -> _event.emit(CheckInEvent.NavigateToCast(action.id))
+                CheckInAction.ClickCheckIn -> {
+                    val currentUser = _uiState.value.currentUser
+
+                    if (currentUser == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoginPromptVisible = true,
+                                isNewVisitSheetVisible = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
+                    }
+                }
+                CheckInAction.ClickSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(CheckInEvent.NavigateToSignIn)
+                }
+                CheckInAction.ClickSignUp -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(CheckInEvent.NavigateToSignIn)
+                }
+                CheckInAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                CheckInAction.DismissNewVisitSheet -> {
+                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
+                }
+                CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
+                CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
+                is CheckInAction.SubmitNewVisit -> {
+                    submitNewVisit(
+                        cafeId = action.cafeId,
+                        visitedAt = action.visitedAt,
+                        memo = action.memo
+                    )
+                }
+            }
         }
     }
 

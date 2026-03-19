@@ -49,9 +49,7 @@ import org.koin.core.context.GlobalContext
 fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                GlobalContext.get().get<SettingsViewModel>()
-            }
+            initializer { GlobalContext.get().get<SettingsViewModel>() }
         }
     ),
     onNavigationAction: (NavigationAction) -> Unit

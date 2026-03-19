@@ -29,10 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCafeDetailUseCase
-import com.hhp227.concafe.di.resolveDeleteCafeMenuGoodsUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun MenuGoodsScreen(
@@ -41,14 +40,7 @@ fun MenuGoodsScreen(
     viewModel: MenuGoodsViewModel = viewModel(
         key = "menu-goods-$cafeId",
         factory = viewModelFactory {
-            initializer {
-                MenuGoodsViewModel(
-                    cafeId = cafeId,
-                    getCafeDetailUseCase = resolveGetCafeDetailUseCase(),
-                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    deleteCafeMenuGoodsUseCase = resolveDeleteCafeMenuGoodsUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<MenuGoodsViewModel> { parametersOf(cafeId) } }
         }
     )
 ) {

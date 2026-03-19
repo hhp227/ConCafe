@@ -318,13 +318,6 @@ class MockConCafeDataSource : ConCafeDataSource {
     override val cafeDetailsById = cafes.associate { cafe ->
         cafe.id to buildCafeDetail(cafe)
     }.toMutableMap()
-    private val cafeDetailsState = MutableStateFlow(cafeDetailsById.toMap())
-    private val cafeCastVersionState = MutableStateFlow(
-        cafes.associate { it.id to 0 }
-    )
-    private val castVersionState = MutableStateFlow(
-        casts.associate { it.id to 0 }
-    )
     private val castImagesById = mutableMapOf(
         "maid-1" to listOf("", ""),
         "maid-2" to listOf("", ""),
@@ -556,22 +549,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         return cafeDetailsById[cafeId]
     }
 
-    override fun observeCafeDetail(cafeId: String): Flow<CafeDetail?> {
-        return cafeDetailsState.asStateFlow().map { detailsById -> detailsById[cafeId] }
-    }
-
-    override fun observeCafeCastVersion(cafeId: String): Flow<Int> {
-        return cafeCastVersionState.asStateFlow().map { it[cafeId] ?: 0 }
-    }
-
-    override fun observeCastVersion(castId: String): Flow<Int> {
-        return castVersionState.asStateFlow().map { it[castId] ?: 0 }
-    }
-
-    override fun publishCafeDetails() {
-        cafeDetailsState.value = cafeDetailsById.toMap()
-    }
-
     override fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         val cafeIndex = cafes.indexOfFirst { it.id == update.cafeId }
         if (cafeIndex == -1) {
@@ -591,7 +568,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
         cafes[cafeIndex] = updatedCafe
         cafeDetailsById[update.cafeId] = updatedDetail
-        publishCafeDetails()
         return updatedDetail
     }
 
@@ -655,7 +631,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             goods = updatedGoods
         )
         cafeDetailsById[update.cafeId] = updatedDetail
-        publishCafeDetails()
         return updatedDetail
     }
 
@@ -674,7 +649,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             goods = updatedGoods
         )
         cafeDetailsById[cafeId] = updatedDetail
-        publishCafeDetails()
         return updatedDetail
     }
 
@@ -886,12 +860,6 @@ class MockConCafeDataSource : ConCafeDataSource {
 
         castSchedulesByCastId[update.castId] = nextSchedules.sortedBy { it.date }
         nextStatuses[date] = update.status
-        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
-            this[cast.cafeId] = (this[cast.cafeId] ?: 0) + 1
-        }
-        castVersionState.value = castVersionState.value.toMutableMap().apply {
-            this[update.castId] = (this[update.castId] ?: 0) + 1
-        }
         return updatedSchedule
     }
 
@@ -951,13 +919,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             .orEmpty()
             .associate { schedule -> schedule.date to CastScheduleStatus.WORK }
             .toMutableMap()
-        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
-            this[targetCafeId] = (this[targetCafeId] ?: 0) + 1
-        }
-        castVersionState.value = castVersionState.value.toMutableMap().apply {
-            this[castId] = (this[castId] ?: 0) + 1
-        }
-
         return CastDetail(
             cast = nextCast,
             cafe = targetCafe,
@@ -987,13 +948,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             cafeDetailsById[deletedCast.cafeId] = currentDetail.copy(
                 casts = currentDetail.casts.filterNot { it.id == castId }
             )
-            publishCafeDetails()
-        }
-        cafeCastVersionState.value = cafeCastVersionState.value.toMutableMap().apply {
-            this[deletedCast.cafeId] = (this[deletedCast.cafeId] ?: 0) + 1
-        }
-        castVersionState.value = castVersionState.value.toMutableMap().apply {
-            this[castId] = (this[castId] ?: 0) + 1
         }
 
         return deletedCast
@@ -1020,16 +974,10 @@ class MockConCafeDataSource : ConCafeDataSource {
 
         val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(updatedCafe)
         cafeDetailsById[cafeId] = currentDetail.copy(cafe = updatedCafe)
-        publishCafeDetails()
 
         val castIdsToRefresh = linkedSetOf<String>()
         castIdsToRefresh.addAll(taggedCastIds)
         castIdsToRefresh.addAll(casts.filter { it.cafeId == cafeId }.map { it.id })
-        castVersionState.value = castVersionState.value.toMutableMap().apply {
-            castIdsToRefresh.forEach { castId ->
-                this[castId] = (this[castId] ?: 0) + 1
-            }
-        }
     }
 
     override fun rankingItemsFromCasts(): List<RankingItem> {

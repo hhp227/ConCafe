@@ -13,7 +13,7 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 
 class SettingsViewModel(
-    private val signOutUseCase: SignOutUseCase = resolveSignOutUseCase()
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState.empty())
     val uiState = _uiState.asStateFlow()

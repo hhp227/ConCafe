@@ -24,21 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetCafeCastPageUseCase
-import com.hhp227.concafe.di.resolveGetCafeDashboardUseCase
-import com.hhp227.concafe.di.resolveGetPendingCastClaimsForCafeUseCase
-import com.hhp227.concafe.di.resolveApproveCastClaimUseCase
-import com.hhp227.concafe.di.resolveDeleteCastUseCase
-import com.hhp227.concafe.di.resolveRejectCastClaimUseCase
-import com.hhp227.concafe.di.resolveObserveCafeDetailEventUseCase
-import com.hhp227.concafe.di.resolveObserveBannerEventUseCase
-import com.hhp227.concafe.di.resolveObserveCastClaimEventUseCase
-import com.hhp227.concafe.di.resolveObserveCastEventUseCase
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,21 +40,7 @@ fun CafeDashboardScreen(
     viewModel: CafeDashboardViewModel = viewModel(
         key = "cafe-dashboard-$cafeId",
         factory = viewModelFactory {
-            initializer {
-                CafeDashboardViewModel(
-                    cafeId = cafeId,
-                    getCafeCastPageUseCase = resolveGetCafeCastPageUseCase(),
-                    getCafeDashboardUseCase = resolveGetCafeDashboardUseCase(),
-                    getPendingCastClaimsForCafeUseCase = resolveGetPendingCastClaimsForCafeUseCase(),
-                    approveCastClaimUseCase = resolveApproveCastClaimUseCase(),
-                    rejectCastClaimUseCase = resolveRejectCastClaimUseCase(),
-                    deleteCastUseCase = resolveDeleteCastUseCase(),
-                    observeBannerEventUseCase = resolveObserveBannerEventUseCase(),
-                    observeCafeDetailEventUseCase = resolveObserveCafeDetailEventUseCase(),
-                    observeCastClaimEventUseCase = resolveObserveCastClaimEventUseCase(),
-                    observeCastEventUseCase = resolveObserveCastEventUseCase()
-                )
-            }
+            initializer { GlobalContext.get().get<CafeDashboardViewModel> { parametersOf(cafeId) } }
         }
     )
 ) {

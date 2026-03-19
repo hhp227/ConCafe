@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kmp.nativecoroutines)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -33,9 +35,20 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.jetbrains.lifecycle.viewmodel)
             implementation(libs.koin.core)
+            implementation(libs.kmp.nativecoroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        iosMain.dependencies {
+            implementation(libs.kmp.nativecoroutines.core)
+        }
+    }
+    targets.all {
+        compilations.all {
+            compilerOptions.configure {
+                freeCompilerArgs.add("-opt-in=kotlin.experimental.ExperimentalObjCName")
+            }
         }
     }
 }
@@ -50,4 +63,11 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", libs.kmp.nativecoroutines.ksp)
+    add("kspIosX64", libs.kmp.nativecoroutines.ksp)
+    add("kspIosArm64", libs.kmp.nativecoroutines.ksp)
+    add("kspIosSimulatorArm64", libs.kmp.nativecoroutines.ksp)
 }

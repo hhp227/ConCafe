@@ -7,7 +7,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
@@ -15,29 +15,12 @@ import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
-import com.hhp227.concafe.domain.model.ScheduleManagementEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent
 import com.hhp227.concafe.domain.repository.CastRepository
 
 class FakeCastRepository(
     private val dataSource: ConCafeDataSource
 ) : CastRepository {
-    private val castEvent = MutableSharedFlow<CastEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-    private val scheduleManagementEvent = MutableSharedFlow<ScheduleManagementEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeCastEvent(): Flow<CastEvent> {
-        return castEvent
-    }
-
-    override fun observeScheduleManagementEvent(): Flow<ScheduleManagementEvent> {
-        return scheduleManagementEvent
-    }
-
     override suspend fun searchCasts(
         query: String?,
         country: String?,
@@ -114,30 +97,12 @@ class FakeCastRepository(
         return dataSource.toPaged(sorted, cursor, pageSize)
     }
 
-    override fun observeCafeCastVersion(cafeId: String): Flow<Int> {
-        return dataSource.observeCafeCastVersion(cafeId)
-    }
-
-    override fun observeCastVersion(castId: String): Flow<Int> {
-        return dataSource.observeCastVersion(castId)
-    }
-
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        val isCreate = update.castId.isNullOrBlank()
-        return dataSource.upsertCast(update).also { detail ->
-            val event = if (isCreate) {
-                CastEvent.Created(detail.cast.cafeId, detail.cast)
-            } else {
-                CastEvent.Updated(detail.cast.cafeId, detail.cast)
-            }
-            castEvent.tryEmit(event)
-        }
+        return dataSource.upsertCast(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
-        return dataSource.deleteCast(castId).also { deletedCast ->
-            castEvent.tryEmit(CastEvent.Deleted(deletedCast.cafeId, deletedCast.id))
-        }
+        return dataSource.deleteCast(castId)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
@@ -152,15 +117,8 @@ class FakeCastRepository(
         return dataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
-    override suspend fun updateCastSchedule(update: CastScheduleUpdate): ScheduleManagementEvent {
-        dataSource.updateCastSchedule(update)
-        return ScheduleManagementEvent.Updated(
-            castId = update.castId,
-            date = update.date,
-            status = update.status
-        ).also { event ->
-            scheduleManagementEvent.tryEmit(event)
-        }
+    override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
+        return dataSource.updateCastSchedule(update)
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {

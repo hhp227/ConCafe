@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class MainViewModel: ObservableObject {
@@ -19,7 +20,7 @@ final class MainViewModel: ObservableObject {
 
     let event = PassthroughSubject<MainEvent, Never>()
     
-    private var sessionWatchHandle: WatchHandle?
+    private var sessionTask: Task<Void, Never>?
 
     private func refreshNavigation(preferredRoute: String?) {
         Task {
@@ -49,11 +50,13 @@ final class MainViewModel: ObservableObject {
     }
     
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            
-            Task { @MainActor in
-                self.refreshNavigation(preferredRoute: self.uiState.selectedTab)
+        sessionTask = Task {
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.refreshNavigation(preferredRoute: self.uiState.selectedTab)
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -81,6 +84,6 @@ final class MainViewModel: ObservableObject {
     }
     
     deinit {
-        sessionWatchHandle?.cancel()
+        sessionTask?.cancel()
     }
 }

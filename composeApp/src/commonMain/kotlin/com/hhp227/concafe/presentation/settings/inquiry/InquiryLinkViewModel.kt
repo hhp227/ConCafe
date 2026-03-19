@@ -1,6 +1,5 @@
 package com.hhp227.concafe.presentation.settings.inquiry
 
-import com.hhp227.concafe.di.resolveCreateInquiryUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.InquiryCreate
 import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
@@ -13,30 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class InquiryLinkViewModel : ViewModel() {
-    private val createInquiryUseCase: CreateInquiryUseCase = resolveCreateInquiryUseCase()
-
+class InquiryLinkViewModel(
+    private val createInquiryUseCase: CreateInquiryUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow(InquiryLinkUiState.empty())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<InquiryLinkEvent>(replay = 0)
     val event = _event.asSharedFlow()
-
-    fun onAction(action: InquiryLinkAction) {
-        when (action) {
-            InquiryLinkAction.ClickBack -> emitNavigateBack()
-            is InquiryLinkAction.ChangeInquiryType -> {
-                _uiState.update { it.copy(inquiryType = action.value, errorMessage = null) }
-            }
-            is InquiryLinkAction.ChangeTitle -> {
-                _uiState.update { it.copy(title = action.value, errorMessage = null) }
-            }
-            is InquiryLinkAction.ChangeMessage -> {
-                _uiState.update { it.copy(message = action.value, errorMessage = null) }
-            }
-            InquiryLinkAction.ClickSubmit -> submitInquiry()
-        }
-    }
 
     private fun emitNavigateBack() {
         viewModelScope.launch {
@@ -89,6 +72,22 @@ class InquiryLinkViewModel : ViewModel() {
             state.title.isBlank() -> "문의 제목을 입력해 주세요."
             state.message.isBlank() -> "문의 내용을 입력해 주세요."
             else -> null
+        }
+    }
+    
+    fun onAction(action: InquiryLinkAction) {
+        when (action) {
+            InquiryLinkAction.ClickBack -> emitNavigateBack()
+            is InquiryLinkAction.ChangeInquiryType -> {
+                _uiState.update { it.copy(inquiryType = action.value, errorMessage = null) }
+            }
+            is InquiryLinkAction.ChangeTitle -> {
+                _uiState.update { it.copy(title = action.value, errorMessage = null) }
+            }
+            is InquiryLinkAction.ChangeMessage -> {
+                _uiState.update { it.copy(message = action.value, errorMessage = null) }
+            }
+            InquiryLinkAction.ClickSubmit -> submitInquiry()
         }
     }
 

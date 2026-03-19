@@ -9,15 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveGetMyInfoUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class AccountSettingsViewModel(
-    private val getMyInfoUseCase: GetMyInfoUseCase = resolveGetMyInfoUseCase(),
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase = resolveObserveCurrentUserUseCase()
+    private val getMyInfoUseCase: GetMyInfoUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -82,8 +80,8 @@ class AccountSettingsViewModel(
         viewModelScope.launch {
             _event.emit(
                 AccountSettingsEvent.NavigateToCastEdit(
-                    cafeId = cast?.cafeId,
-                    castId = cast?.id
+                    cafeId = cast!!.cafeId,
+                    castId = cast.id
                 )
             )
         }

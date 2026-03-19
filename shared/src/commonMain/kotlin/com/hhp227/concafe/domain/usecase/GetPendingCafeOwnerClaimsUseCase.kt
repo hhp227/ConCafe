@@ -15,10 +15,12 @@ class GetPendingCafeOwnerClaimsUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
+
             if (currentUser.role != UserRole.ADMIN) {
-                return AppResult.Failure(AppError.PermissionDenied)
+                AppResult.Failure(AppError.PermissionDenied)
+            } else {
+                AppResult.Success(cafeOwnerClaimRepository.getPendingCafeOwnerClaims())
             }
-            AppResult.Success(cafeOwnerClaimRepository.getPendingCafeOwnerClaims())
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

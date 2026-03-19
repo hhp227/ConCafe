@@ -13,16 +13,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailUseCase
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeItem
-import com.hhp227.concafe.domain.model.ReviewEvent
+import com.hhp227.concafe.domain.event.ReviewEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.NoticeStatusAccent as DomainNoticeStatusAccent
-import com.hhp227.concafe.domain.usecase.ObserveReviewEventUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
@@ -31,9 +32,9 @@ class CafeViewModel(
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
-    private val observeCafeDetailUseCase: ObserveCafeDetailUseCase,
-    private val observeReviewEventUseCase: ObserveReviewEventUseCase,
-    private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
+    private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase,
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
 
@@ -45,16 +46,19 @@ class CafeViewModel(
 
     private val jobs = mutableMapOf<JobKey, Job>()
 
-    private fun bindCafeDetail() {
-        jobs[JobKey.OBSERVE_DETAIL]?.cancel()
-        jobs[JobKey.OBSERVE_DETAIL] = viewModelScope.launch {
-            var isInitialEmission = true
-            observeCafeDetailUseCase.invoke(cafeId).collectLatest {
-                if (isInitialEmission) {
-                    isInitialEmission = false
-                    return@collectLatest
+    private fun observeCafeDetailEvent() {
+        jobs[JobKey.OBSERVE_DETAIL_EVENT]?.cancel()
+        jobs[JobKey.OBSERVE_DETAIL_EVENT] = viewModelScope.launch {
+            cafeDetailEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is CafeDetailEvent.CafeInfoUpdated -> loadCafeDetail()
+                    is CafeDetailEvent.GoodsCreated,
+                    is CafeDetailEvent.GoodsDeleted,
+                    is CafeDetailEvent.GoodsUpdated,
+                    is CafeDetailEvent.MenuCreated,
+                    is CafeDetailEvent.MenuDeleted,
+                    is CafeDetailEvent.MenuUpdated -> Unit
                 }
-                loadCafeDetail()
             }
         }
     }
@@ -62,7 +66,7 @@ class CafeViewModel(
     private fun observeReviewEvent() {
         jobs[JobKey.OBSERVE_REVIEW_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_REVIEW_EVENT] = viewModelScope.launch {
-            observeReviewEventUseCase.invoke().collect { event ->
+            reviewEventPublisher.events.collect { event ->
                 when (event) {
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
@@ -312,7 +316,7 @@ class CafeViewModel(
     }
 
     init {
-        bindCafeDetail()
+        observeCafeDetailEvent()
         observeReviewEvent()
         loadCafeDetail()
     }
@@ -338,7 +342,7 @@ class CafeViewModel(
         CAST_PAGE,
         NOTICE_PAGE,
         REVIEW_PAGE,
-        OBSERVE_DETAIL,
+        OBSERVE_DETAIL_EVENT,
         OBSERVE_REVIEW_EVENT
     }
 }

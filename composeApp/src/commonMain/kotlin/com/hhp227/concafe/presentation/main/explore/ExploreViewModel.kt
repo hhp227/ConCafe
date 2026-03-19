@@ -12,20 +12,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.model.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastEvent
+import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCafeDetailEventUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCastEventUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState.Companion.empty
 
 class ExploreViewModel(
     private val getExploreCafePageUseCase: GetExploreCafePageUseCase,
     private val getExploreCastPageUseCase: GetExploreCastPageUseCase,
-    private val observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase,
-    private val observeCastEventUseCase: ObserveCastEventUseCase
+    private val cafeDetailEventPublisher: CafeDetailEventPublisher,
+    private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
@@ -152,7 +152,7 @@ class ExploreViewModel(
     private fun observeCafeDetailEvent() {
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            observeCafeDetailEventUseCase.invoke().collectLatest { event ->
+            cafeDetailEventPublisher.events.collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafe(event.cafe)
                 }
@@ -163,7 +163,7 @@ class ExploreViewModel(
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
-            observeCastEventUseCase.invoke().collectLatest { event ->
+            castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> addCastIfVisible(event.cast)
                     is CastEvent.Updated -> patchCast(event.cast)

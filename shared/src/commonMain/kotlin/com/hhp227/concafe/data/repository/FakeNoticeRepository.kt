@@ -8,7 +8,7 @@ import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
-import com.hhp227.concafe.domain.model.NoticeManagementEvent
+import com.hhp227.concafe.domain.event.NoticeManagementEvent
 import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.repository.NoticeRepository
@@ -19,15 +19,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeNoticeRepository(
     private val dataSource: ConCafeDataSource
 ) : NoticeRepository {
-    private val noticeManagementEvent = MutableSharedFlow<NoticeManagementEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeNoticeManagementEvent(): Flow<NoticeManagementEvent> {
-        return noticeManagementEvent.asSharedFlow()
-    }
-
     override suspend fun getRecentNotices(limit: Int): List<Notice> {
         return dataSource.notices.take(limit.coerceAtLeast(1))
     }
@@ -105,7 +96,6 @@ class FakeNoticeRepository(
                 relativeTime = "방금 전"
             )
         )
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeCreated(input.cafeId))
         return item
     }
 
@@ -131,7 +121,6 @@ class FakeNoticeRepository(
             isDimmed = false
         )
         dataSource.cafeEventManagementItems.add(0, item)
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.EventCreated(input.cafeId))
         return item
     }
 
@@ -164,8 +153,6 @@ class FakeNoticeRepository(
                 content = updated.content
             )
         }
-
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeUpdated(input.cafeId, updated))
         return updated
     }
 
@@ -194,8 +181,6 @@ class FakeNoticeRepository(
             statusLabel = if (input.periodText.isNullOrBlank()) original.statusLabel else "진행 중"
         )
         dataSource.cafeEventManagementItems[eventIndex] = updated
-
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.EventUpdated(input.cafeId, updated))
         return updated
     }
 
@@ -213,7 +198,6 @@ class FakeNoticeRepository(
         if (recentNoticeIndex != -1) {
             dataSource.notices.removeAt(recentNoticeIndex)
         }
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.NoticeDeleted(cafeId, noticeId))
         return noticeId
     }
 
@@ -226,8 +210,6 @@ class FakeNoticeRepository(
         }
         if (eventIndex == -1) throw NoSuchElementException()
         dataSource.cafeEventManagementItems.removeAt(eventIndex)
-
-        noticeManagementEvent.tryEmit(NoticeManagementEvent.EventDeleted(cafeId, eventId))
         return eventId
     }
 }

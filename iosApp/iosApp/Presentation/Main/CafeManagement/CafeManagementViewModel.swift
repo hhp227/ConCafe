@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CafeManagementViewModel: ObservableObject {
@@ -15,17 +16,17 @@ final class CafeManagementViewModel: ObservableObject {
 
     private let getCafeManagementUseCase: GetCafeManagementUseCase
 
-    private let observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase
-
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
-
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
+    private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     @Published private(set) var uiState = CafeManagementUiState()
 
     let event = PassthroughSubject<CafeManagementEvent, Never>()
 
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
     private var currentUserId: String?
 
     private func loadCafeManagement() {
@@ -97,49 +98,57 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private func observeSession() {
-        watchHandles[.session]?.cancel()
-        watchHandles[.session] = observeCurrentUserUseCase.watch { [weak self] user in
-            guard let self else { return }
-
-            Task { @MainActor in
-                self.currentUserId = user?.id
-                self.loadCafeManagement()
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.currentUserId = user?.id
+                    self.loadCafeManagement()
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeInfo(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeInfo(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCafeRegistrationClaimEvent() {
-        watchHandles[.cafeRegistrationClaimEvent]?.cancel()
-        watchHandles[.cafeRegistrationClaimEvent] = observeCafeRegistrationClaimEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                guard let currentUserId = self.currentUserId else { return }
-                let shouldRefresh: Bool
-                switch event {
-                case let created as CafeRegistrationClaimEvent.Created:
-                    shouldRefresh = created.requesterUserId == currentUserId
-                case let approved as CafeRegistrationClaimEvent.Approved:
-                    shouldRefresh = approved.requesterUserId == currentUserId
-                case let rejected as CafeRegistrationClaimEvent.Rejected:
-                    shouldRefresh = rejected.requesterUserId == currentUserId
-                default:
-                    shouldRefresh = false
+        tasks[.cafeRegistrationClaimEvent]?.cancel()
+        tasks[.cafeRegistrationClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    guard let currentUserId = self.currentUserId else { return }
+                    let shouldRefresh: Bool
+                    switch event {
+                    case let created as CafeRegistrationClaimEvent.Created:
+                        shouldRefresh = created.requesterUserId == currentUserId
+                    case let approved as CafeRegistrationClaimEvent.Approved:
+                        shouldRefresh = approved.requesterUserId == currentUserId
+                    case let rejected as CafeRegistrationClaimEvent.Rejected:
+                        shouldRefresh = rejected.requesterUserId == currentUserId
+                    default:
+                        shouldRefresh = false
+                    }
+                    if shouldRefresh {
+                        self.loadCafeManagement()
+                    }
                 }
-                if shouldRefresh {
-                    self.loadCafeManagement()
-                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -193,15 +202,15 @@ final class CafeManagementViewModel: ObservableObject {
     init(
         createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
-        observeCafeRegistrationClaimEventUseCase: ObserveCafeRegistrationClaimEventUseCase = KoinInitializerKt.resolveObserveCafeRegistrationClaimEventUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
-        self.observeCafeRegistrationClaimEventUseCase = observeCafeRegistrationClaimEventUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
@@ -210,11 +219,11 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
-    private enum WatchKey {
+    private enum TaskKey {
         case session
         case cafeDetailEvent
         case cafeRegistrationClaimEvent

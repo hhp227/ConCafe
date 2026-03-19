@@ -88,14 +88,6 @@ interface ConCafeDataSource {
 
     fun cafeDetail(cafeId: String): CafeDetail?
 
-    fun observeCafeDetail(cafeId: String): Flow<CafeDetail?>
-
-    fun observeCafeCastVersion(cafeId: String): Flow<Int>
-
-    fun observeCastVersion(castId: String): Flow<Int>
-
-    fun publishCafeDetails()
-
     fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail

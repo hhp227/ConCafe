@@ -37,28 +37,6 @@ class BannerEditViewModel(
 
     private var selectorJob: Job? = null
 
-    fun onAction(action: BannerEditAction) {
-        when (action) {
-            BannerEditAction.ClickBack -> clickBack()
-            BannerEditAction.ClickImagePicker -> clickImagePicker()
-            is BannerEditAction.SelectImage -> _uiState.update { it.copy(selectedImageLabel = action.imageUrl, infoMessage = null) }
-            is BannerEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value) }
-            is BannerEditAction.ChangeSubtitle -> _uiState.update { it.copy(subtitle = action.value) }
-            is BannerEditAction.SelectTarget -> selectTarget(action.target)
-            is BannerEditAction.ChangeTargetValue -> _uiState.update { it.copy(targetValue = action.value) }
-            is BannerEditAction.ChangeDisplayDays -> _uiState.update {
-                it.copy(displayDays = action.value.coerceIn(1, 10))
-            }
-            BannerEditAction.ClickCafeSelector -> openCafeSelector()
-            BannerEditAction.ClickTargetSelector -> openTargetSelector()
-            is BannerEditAction.ChangeSelectorQuery -> changeSelectorQuery(action.value)
-            is BannerEditAction.SelectSelectorItem -> selectSelectorItem(action.id)
-            BannerEditAction.DismissSelector -> dismissSelector()
-            BannerEditAction.ClickSave -> clickSave()
-            BannerEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
-        }
-    }
-
     private fun loadOwnedCafeOptions() {
         viewModelScope.launch {
             when (val result = getCafeManagementUseCase.invoke()) {
@@ -374,6 +352,28 @@ class BannerEditViewModel(
                     }
                 }
             }
+        }
+    }
+    
+    fun onAction(action: BannerEditAction) {
+        when (action) {
+            BannerEditAction.ClickBack -> clickBack()
+            BannerEditAction.ClickImagePicker -> clickImagePicker()
+            is BannerEditAction.SelectImage -> _uiState.update { it.copy(selectedImageLabel = action.imageUrl, infoMessage = null) }
+            is BannerEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value) }
+            is BannerEditAction.ChangeSubtitle -> _uiState.update { it.copy(subtitle = action.value) }
+            is BannerEditAction.SelectTarget -> selectTarget(action.target)
+            is BannerEditAction.ChangeTargetValue -> _uiState.update { it.copy(targetValue = action.value) }
+            is BannerEditAction.ChangeDisplayDays -> _uiState.update {
+                it.copy(displayDays = action.value.coerceIn(1, 10))
+            }
+            BannerEditAction.ClickCafeSelector -> openCafeSelector()
+            BannerEditAction.ClickTargetSelector -> openTargetSelector()
+            is BannerEditAction.ChangeSelectorQuery -> changeSelectorQuery(action.value)
+            is BannerEditAction.SelectSelectorItem -> selectSelectorItem(action.id)
+            BannerEditAction.DismissSelector -> dismissSelector()
+            BannerEditAction.ClickSave -> clickSave()
+            BannerEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
     }
 

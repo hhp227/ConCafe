@@ -2,6 +2,8 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.ReviewEvent
+import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
@@ -10,7 +12,8 @@ import com.hhp227.concafe.domain.repository.VisitRepository
 class CreateReviewUseCase(
     private val authRepository: AuthRepository,
     private val reviewRepository: ReviewRepository,
-    private val visitRepository: VisitRepository
+    private val visitRepository: VisitRepository,
+    private val reviewEventPublisher: ReviewEventPublisher
 ) {
     suspend operator fun invoke(
         cafeId: String,
@@ -41,6 +44,9 @@ class CreateReviewUseCase(
                     ?.id
                     .orEmpty()
 
+                reviewEventPublisher.publish(
+                    ReviewEvent.Created(cafeId)
+                )
                 AppResult.Success(
                     reviewRepository.createReview(
                         userId = currentUser.id,

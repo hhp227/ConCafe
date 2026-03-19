@@ -62,9 +62,7 @@ import kotlin.collections.map
 fun ExploreScreen(
     viewModel: ExploreViewModel = viewModel(
         factory = viewModelFactory {
-            initializer {
-                GlobalContext.get().get<ExploreViewModel>()
-            }
+            initializer { GlobalContext.get().get<ExploreViewModel>() }
         }
     ),
     onNavigate: (NavigationAction) -> Unit

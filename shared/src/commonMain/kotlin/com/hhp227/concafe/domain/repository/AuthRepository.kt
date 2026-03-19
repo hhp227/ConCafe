@@ -3,6 +3,7 @@ package com.hhp227.concafe.domain.repository
 import kotlinx.coroutines.flow.Flow
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
 
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
@@ -21,5 +22,6 @@ interface AuthRepository {
 
     suspend fun getCurrentUser(): User?
 
+    @NativeCoroutines
     fun observeCurrentUser(): Flow<User?>
 }

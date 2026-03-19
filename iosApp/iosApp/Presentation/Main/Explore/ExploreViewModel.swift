@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 class ExploreViewModel: ObservableObject {
@@ -15,17 +16,15 @@ class ExploreViewModel: ObservableObject {
 
     private let getExploreCastPageUseCase: GetExploreCastPageUseCase
 
-    private let observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let observeCastEventUseCase: ObserveCastEventUseCase
+    private let castEventPublisher: CastEventPublisher
 
     @Published private(set) var uiState = ExploreUiState.empty
 
     let event = PassthroughSubject<ExploreEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
 
     private func refreshCurrentTab() {
         tasks[.cafePage]?.cancel()
@@ -129,32 +128,38 @@ class ExploreViewModel: ObservableObject {
     }
 
     private func observeCafeDetailEvent() {
-        watchHandles[.cafeDetailEvent]?.cancel()
-        watchHandles[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafe(updated.cafe)
+        tasks[.cafeDetailEvent]?.cancel()
+        tasks[.cafeDetailEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafe(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func observeCastEvent() {
-        watchHandles[.castEvent]?.cancel()
-        watchHandles[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let created as Shared.CastEvent.Created:
-                    self.addCastIfVisible(created.cast)
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCast(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.uiState.maids.removeAll { $0.id == deleted.castId }
-                default:
-                    break
+        tasks[.castEvent]?.cancel()
+        tasks[.castEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let created as Shared.CastEvent.Created:
+                        self.addCastIfVisible(created.cast)
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCast(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.uiState.maids.removeAll { $0.id == deleted.castId }
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -244,13 +249,13 @@ class ExploreViewModel: ObservableObject {
     init(
         getExploreCafePageUseCase: GetExploreCafePageUseCase = KoinInitializerKt.resolveGetExploreCafePageUseCase(),
         getExploreCastPageUseCase: GetExploreCastPageUseCase = KoinInitializerKt.resolveGetExploreCastPageUseCase(),
-        observeCafeDetailEventUseCase: ObserveCafeDetailEventUseCase = KoinInitializerKt.resolveObserveCafeDetailEventUseCase(),
-        observeCastEventUseCase: ObserveCastEventUseCase = KoinInitializerKt.resolveObserveCastEventUseCase()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getExploreCafePageUseCase = getExploreCafePageUseCase
         self.getExploreCastPageUseCase = getExploreCastPageUseCase
-        self.observeCafeDetailEventUseCase = observeCafeDetailEventUseCase
-        self.observeCastEventUseCase = observeCastEventUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.castEventPublisher = castEventPublisher
 
         observeCafeDetailEvent()
         observeCastEvent()
@@ -260,18 +265,13 @@ class ExploreViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
     }
 
     private enum TaskKey {
-        case cafePage
-        case maidPage
-    }
-
-    private enum WatchKey {
         case cafeDetailEvent
         case castEvent
+        case cafePage
+        case maidPage
     }
 }
 

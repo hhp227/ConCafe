@@ -20,29 +20,29 @@ class GetFanManagementDataUseCase(
                 ?: return AppResult.Failure(AppError.Unauthorized)
 
             if (currentUser.role != UserRole.CAST) {
-                return AppResult.Failure(AppError.PermissionDenied)
-            }
+                AppResult.Failure(AppError.PermissionDenied)
+            } else {
+                val castId = castRepository.searchCasts(
+                    query = null,
+                    country = null,
+                    city = null,
+                    sort = CastSort.FOLLOWERS,
+                    cursor = null,
+                    pageSize = 100
+                ).items.firstOrNull { cast ->
+                    cast.linkedUserId == currentUser.id
+                }?.id ?: return AppResult.Failure(AppError.NotFound)
 
-            val castId = castRepository.searchCasts(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.FOLLOWERS,
-                cursor = null,
-                pageSize = 100
-            ).items.firstOrNull { cast ->
-                cast.linkedUserId == currentUser.id
-            }?.id ?: return AppResult.Failure(AppError.NotFound)
-
-            AppResult.Success(
-                FanManagementData(
-                    user = currentUser,
-                    detail = castRepository.getCastDetail(castId),
-                    followers = castRepository.getFollowerUserIds(castId).map { userId ->
-                        userRepository.getUser(userId)
-                    }
+                AppResult.Success(
+                    FanManagementData(
+                        user = currentUser,
+                        detail = castRepository.getCastDetail(castId),
+                        followers = castRepository.getFollowerUserIds(castId).map { userId ->
+                            userRepository.getUser(userId)
+                        }
+                    )
                 )
-            )
+            }
         } catch (e: IllegalArgumentException) {
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: NoSuchElementException) {

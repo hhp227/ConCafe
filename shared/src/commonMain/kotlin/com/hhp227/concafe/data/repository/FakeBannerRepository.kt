@@ -1,34 +1,17 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
-import com.hhp227.concafe.domain.model.BannerEvent
+import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeBannerCreate
-import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.repository.BannerRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 
 class FakeBannerRepository(
     private val dataSource: ConCafeDataSource
 ) : BannerRepository {
-    private val bannerEvent = MutableSharedFlow<BannerEvent>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
-
-    override fun observeBannerEvent(): Flow<BannerEvent> {
-        return bannerEvent.asSharedFlow()
-    }
-
     override suspend fun getHomeBanners(limit: Int): List<HomeBanner> {
         normalizeBannerSlots()
         return dataSource.banners
@@ -74,7 +57,6 @@ class FakeBannerRepository(
                 statusLabel = if (statusLabel == STATUS_ACTIVE) "노출 중" else "예약 중"
             )
         }
-        bannerEvent.tryEmit(BannerEvent.Created(created))
         return created
     }
 
@@ -147,7 +129,7 @@ private fun HomeBanner.isExpired(nowEpochMillis: Long): Boolean {
     return nowEpochMillis >= endInstant.toEpochMilliseconds()
 }
 
-private fun kotlinx.datetime.LocalDate.toPeriodText(): String {
+private fun LocalDate.toPeriodText(): String {
     val monthText = monthNumber.toString().padStart(2, '0')
     val dayText = dayOfMonth.toString().padStart(2, '0')
     return "$year.$monthText.$dayText"

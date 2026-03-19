@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CafeViewModel: ObservableObject {
@@ -21,11 +22,11 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
 
-    private let observeCafeDetailUseCase: ObserveCafeDetailUseCase
-
-    private let observeReviewEventUseCase: ObserveReviewEventUseCase
-    
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
+
+    private let cafeDetailEventPublisher: CafeDetailEventPublisher
+
+    private let reviewEventPublisher: ReviewEventPublisher
     
     @Published private(set) var uiState = CafeUiState.empty
     
@@ -33,35 +34,59 @@ final class CafeViewModel: ObservableObject {
     
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private var watchHandles: [WatchKey: WatchHandle] = [:]
-
-    private func bindCafeDetail() {
-        watchHandles[.cafeDetail]?.cancel()
-        var isInitialEmission = true
-        watchHandles[.cafeDetail] = observeCafeDetailUseCase.watch(cafeId: cafeId) { [weak self] _ in
-            guard let self else { return }
-            if isInitialEmission {
-                isInitialEmission = false
-                return
+    private func observeCafeDetailEvent() {
+        tasks[.cafeDetail]?.cancel()
+        tasks[.cafeDetail] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    switch event {
+                    case is CafeDetailEvent.CafeInfoUpdated:
+                        self.loadCafeDetail()
+                    case is CafeDetailEvent.GoodsCreated,
+                        is CafeDetailEvent.GoodsDeleted,
+                        is CafeDetailEvent.GoodsUpdated,
+                        is CafeDetailEvent.MenuCreated,
+                        is CafeDetailEvent.MenuDeleted,
+                        is CafeDetailEvent.MenuUpdated:
+                        break
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
             }
-            self.loadCafeDetail()
         }
     }
-
+    
     private func observeReviewEvent() {
-        watchHandles[.reviewEvent]?.cancel()
-        watchHandles[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            if let created = event as? ReviewEvent.Created {
-                if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.uiState.shouldScrollToTopOnReturn = true
-                    self.loadCafeDetail(refreshReviews: false)
-                    self.refreshReviewPage()
+        tasks[.reviewEvent]?.cancel()
+        tasks[.reviewEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: reviewEventPublisher.events) {
+                    switch event {
+                    case let created as ReviewEvent.Created:
+                        if created.cafeId == cafeId && self.uiState.selectedTab == .reviews {
+                            await MainActor.run {
+                                self.uiState.shouldScrollToTopOnReturn = true
+                            }
+                            self.loadCafeDetail(refreshReviews: false)
+                            self.refreshReviewPage()
+                        }
+                    case let deleted as ReviewEvent.Deleted:
+                        if deleted.cafeId == cafeId && self.uiState.selectedTab == .reviews {
+                            await MainActor.run {
+                                self.uiState.reviews.removeAll {
+                                    $0.id == deleted.reviewId
+                                }
+                            }
+                        }
+                    default:
+                        break
+                    }
                 }
-            } else if let deleted = event as? ReviewEvent.Deleted {
-                if deleted.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.uiState.reviews.removeAll { $0.id == deleted.reviewId }
-                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -292,27 +317,25 @@ final class CafeViewModel: ObservableObject {
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
-        observeCafeDetailUseCase: ObserveCafeDetailUseCase = KoinInitializerKt.resolveObserveCafeDetailUseCase(),
-        observeReviewEventUseCase: ObserveReviewEventUseCase = KoinInitializerKt.resolveObserveReviewEventUseCase(),
-        toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase()
+        toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
-        self.observeCafeDetailUseCase = observeCafeDetailUseCase
-        self.observeReviewEventUseCase = observeReviewEventUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
+        self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.reviewEventPublisher = reviewEventPublisher
 
-        bindCafeDetail()
+        observeCafeDetailEvent()
         observeReviewEvent()
         loadCafeDetail()
     }
     
     deinit {
-        watchHandles.values.forEach { $0.cancel() }
-        watchHandles.removeAll()
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
@@ -322,9 +345,6 @@ final class CafeViewModel: ObservableObject {
         case castPage
         case noticePage
         case reviewPage
-    }
-
-    private enum WatchKey {
         case cafeDetail
         case reviewEvent
     }

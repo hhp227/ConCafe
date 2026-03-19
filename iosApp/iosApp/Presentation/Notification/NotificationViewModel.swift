@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class NotificationViewModel: ObservableObject {
@@ -21,26 +22,23 @@ final class NotificationViewModel: ObservableObject {
 
     let event = PassthroughSubject<NotificationEvent, Never>()
 
-    private var loadTask: Task<Void, Never>?
-
-    private var sessionWatchHandle: WatchHandle?
-
     private func observeSession() {
-        sessionWatchHandle = observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-
-            Task { @MainActor in
-                self.loadNotifications()
+        Task {
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.loadNotifications()
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
 
     private func loadNotifications() {
-        loadTask?.cancel()
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        loadTask = Task {
+        Task {
             do {
                 let result = try await getNotificationFeedUseCase.invoke(pageSize: 20)
 
@@ -66,8 +64,7 @@ final class NotificationViewModel: ObservableObject {
     }
 
     private func handleNotificationTap(id: String, type: String, targetId: String?) {
-        loadTask?.cancel()
-        loadTask = Task {
+        Task {
             do {
                 let result = try await markNotificationReadUseCase.invoke(notificationId: id)
 
@@ -147,10 +144,5 @@ final class NotificationViewModel: ObservableObject {
 
         observeSession()
         loadNotifications()
-    }
-
-    deinit {
-        loadTask?.cancel()
-        sessionWatchHandle?.cancel()
     }
 }
