@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 struct ScheduleUiState {
     var managedCastId: String = ""
@@ -15,13 +16,13 @@ struct ScheduleUiState {
     var errorMessage: String?
     var castSummary = CastSummary()
     var weekRangeLabel: String = ""
-    var weekDays: [WeekDay] = []
-    var schedules: [DaySchedule] = []
+    var weekDays: [ScheduleManagementWeekDay] = []
+    var schedules: [ScheduleManagementDaySchedule] = []
     var selectedDayId: String = ""
     var infoMessage: String?
     var editingScheduleId: String?
     var editingScheduleTitle: String = ""
-    var editStatus: ScheduleEditStatus = .work
+    var editStatus: CastScheduleStatus = .work
     var editStartTime: String = "10:00"
     var editEndTime: String = "19:00"
     var pendingUpdates: [PendingScheduleUpdate] = []
@@ -51,26 +52,9 @@ struct ScheduleUiState {
         var initials: String = ""
     }
 
-    struct WeekDay: Identifiable {
-        let id: String
-        let label: String
-        let number: String
-        var isSelected: Bool
-        var isWorking: Bool
-    }
-
-    struct DaySchedule: Identifiable {
-        let id: String
-        let title: String
-        let timeLabel: String
-        let statusLabel: String
-        let isWorking: Bool
-        let status: ScheduleEditStatus
-    }
-
     struct PendingScheduleUpdate: Identifiable {
         let date: String
-        let status: ScheduleEditStatus
+        let status: CastScheduleStatus
         let startTime: String?
         let endTime: String?
 
@@ -97,19 +81,5 @@ struct ScheduleUiState {
         }
 
         return max(parse(end) - parse(start), 0)
-    }
-}
-
-enum ScheduleEditStatus: String, CaseIterable {
-    case work
-    case off
-    case vacation
-
-    var label: String {
-        switch self {
-        case .work: return "근무"
-        case .off: return "휴무"
-        case .vacation: return "휴가"
-        }
     }
 }

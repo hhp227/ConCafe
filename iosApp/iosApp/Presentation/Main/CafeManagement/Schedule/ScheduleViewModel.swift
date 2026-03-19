@@ -165,11 +165,6 @@ final class ScheduleViewModel: ObservableObject {
             uiState.infoMessage = "달력 보기 연결은 다음 단계에서 제공합니다."
         case .selectDay(let id):
             uiState.selectedDayId = id
-            uiState.weekDays = uiState.weekDays.map { day in
-                var nextDay = day
-                nextDay.isSelected = day.id == id
-                return nextDay
-            }
         case .clickEditDay(let id):
             guard let selected = uiState.schedules.first(where: { $0.id == id }) else { return }
             uiState.isEditSheetVisible = true
@@ -209,11 +204,13 @@ final class ScheduleViewModel: ObservableObject {
                 return pendingUpdate.toDaySchedule(title: schedule.title)
             }
             uiState.weekDays = uiState.weekDays.map { day in
-                var nextDay = day
-                if day.id == editingId {
-                    nextDay.isWorking = pendingUpdate.status == .work
-                }
-                return nextDay
+                guard day.id == editingId else { return day }
+                return ScheduleManagementWeekDay(
+                    id: day.id,
+                    label: day.label,
+                    number: day.number,
+                    isWorking: pendingUpdate.status == .work
+                )
             }
             uiState.pendingUpdates.removeAll { $0.date == editingId }
             uiState.pendingUpdates.append(pendingUpdate)
@@ -239,7 +236,7 @@ final class ScheduleViewModel: ObservableObject {
                             input: CastScheduleUpdate(
                                 castId: managedCastId,
                                 date: pendingUpdate.date,
-                                status: pendingUpdate.status.toDomainStatus(),
+                                status: pendingUpdate.status,
                                 startTime: pendingUpdate.startTime,
                                 endTime: pendingUpdate.endTime
                             )
@@ -315,25 +312,8 @@ private extension Shared.ScheduleManagementData {
                 initials: detail.cast.name.toInitials()
             ),
             weekRangeLabel: weekRangeLabel,
-            weekDays: weekDays.map { day in
-                ScheduleUiState.WeekDay(
-                    id: day.id,
-                    label: day.label,
-                    number: day.number,
-                    isSelected: day.id == selectedDayId,
-                    isWorking: day.isWorking
-                )
-            },
-            schedules: daySchedules.map { schedule in
-                ScheduleUiState.DaySchedule(
-                    id: schedule.id,
-                    title: schedule.title,
-                    timeLabel: schedule.timeLabel,
-                    statusLabel: schedule.statusLabel,
-                    isWorking: schedule.isWorking,
-                    status: schedule.status.toUiStatus()
-                )
-            },
+            weekDays: weekDays,
+            schedules: daySchedules,
             selectedDayId: selectedDayId,
             infoMessage: nil
         )
@@ -372,36 +352,10 @@ private extension String {
     }
 }
 
-private extension ScheduleEditStatus {
-    func toDomainStatus() -> CastScheduleStatus {
-        switch self {
-        case .work:
-            return .work
-        case .off:
-            return .off
-        case .vacation:
-            return .vacation
-        }
-    }
-}
-
-private extension CastScheduleStatus {
-    func toUiStatus() -> ScheduleEditStatus {
-        switch self {
-        case .work:
-            return .work
-        case .off:
-            return .off
-        default:
-            return .vacation
-        }
-    }
-}
-
 private extension ScheduleUiState.PendingScheduleUpdate {
-    func toDaySchedule(title: String) -> ScheduleUiState.DaySchedule {
+    func toDaySchedule(title: String) -> ScheduleManagementDaySchedule {
         let isWorking = status == .work
-        return ScheduleUiState.DaySchedule(
+        return ScheduleManagementDaySchedule(
             id: date,
             title: title,
             timeLabel: {
@@ -418,5 +372,18 @@ private extension ScheduleUiState.PendingScheduleUpdate {
             isWorking: isWorking,
             status: status
         )
+    }
+}
+
+private extension CastScheduleStatus {
+    var label: String {
+        switch self {
+        case .work:
+            return "근무"
+        case .off:
+            return "휴무"
+        default:
+            return "휴가"
+        }
     }
 }

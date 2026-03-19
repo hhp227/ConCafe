@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 enum ScheduleAction {
     case clickBack
@@ -14,7 +15,7 @@ enum ScheduleAction {
     case selectDay(id: String)
     case clickEditDay(id: String)
     case dismissEditSheet
-    case changeEditStatus(ScheduleEditStatus)
+    case changeEditStatus(CastScheduleStatus)
     case changeEditStartTime(String)
     case changeEditEndTime(String)
     case submitEditDay

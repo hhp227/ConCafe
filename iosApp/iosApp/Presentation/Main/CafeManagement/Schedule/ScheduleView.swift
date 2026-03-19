@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Shared
 
 struct ScheduleView: View {
     let castId: String?
@@ -134,7 +135,14 @@ private struct ScheduleEditModal: View {
                             .foregroundStyle(Color(hex: "7A707A"))
                     }
                     HStack(spacing: 8) {
-                        ForEach(ScheduleEditStatus.allCases, id: \.rawValue) { status in
+                        ForEach(["work", "off", "vacation"], id: \.self) { statusId in
+                            let status: CastScheduleStatus = {
+                                switch statusId {
+                                case "off": return .off
+                                case "vacation": return .vacation
+                                default: return .work
+                                }
+                            }()
                             Button {
                                 onAction(.changeEditStatus(status))
                             } label: {
@@ -361,26 +369,27 @@ private struct ScheduleContentView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(uiState.weekDays) { day in
+                        let isSelected = day.id == uiState.selectedDayId
                         Button {
                             onAction(.selectDay(id: day.id))
                         } label: {
                             VStack(spacing: 4) {
                                 Text(day.label)
                                     .font(.caption2.weight(.bold))
-                                    .foregroundStyle(day.isSelected ? Color(hex: "24161E").opacity(0.6) : Color(hex: "9C8C98"))
+                                    .foregroundStyle(isSelected ? Color(hex: "24161E").opacity(0.6) : Color(hex: "9C8C98"))
                                 Text(day.number)
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(Color(hex: "24161E"))
                             }
                             .frame(width: 56)
                             .padding(.vertical, 10)
-                            .background(day.isSelected ? Color(hex: "FFD1DC") : Color.white.opacity(0.92))
+                            .background(isSelected ? Color(hex: "FFD1DC") : Color.white.opacity(0.92))
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(day.isSelected ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                                    .stroke(isSelected ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
                             )
-                            .shadow(color: day.isSelected ? Color(hex: "FFD1DC").opacity(0.5) : .clear, radius: 4, x: 0, y: 2)
+                            .shadow(color: isSelected ? Color(hex: "FFD1DC").opacity(0.5) : .clear, radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
                     }
@@ -471,5 +480,18 @@ private struct ScheduleContentView: View {
 struct ScheduleView_Previews: PreviewProvider {
     static var previews: some View {
         ScheduleView(onNavigationAction: { _ in })
+    }
+}
+
+private extension CastScheduleStatus {
+    var label: String {
+        switch self {
+        case .work:
+            return "근무"
+        case .off:
+            return "휴무"
+        default:
+            return "휴가"
+        }
     }
 }
