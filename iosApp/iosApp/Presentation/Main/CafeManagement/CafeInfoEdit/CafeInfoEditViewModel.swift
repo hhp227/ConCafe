@@ -240,6 +240,8 @@ final class CafeInfoEditViewModel: ObservableObject {
             showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
         case .clickManageExceptionDates:
             showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
+        case .dismissImageRequiredAlert:
+            uiState.isImageRequiredAlertVisible = false
         case .clickSave:
             saveCafeInfo()
         case .dismissInfoMessage:
