@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class FanManagementViewModel: ObservableObject {
@@ -36,98 +37,98 @@ final class FanManagementViewModel: ObservableObject {
     private func observeSession() {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
-            
-        }
-        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.unbindCastEvent()
-                self.loadFanManagement()
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.unbindCastEvent()
+                    self.loadFanManagement()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
     
     private func observeCastClaimEvent() {
         tasks[.castClaimEvent]?.cancel()
         tasks[.castClaimEvent] = Task {
-            
-        }
-        /*tasks[.castClaimEvent] = observeCastClaimEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case is Shared.CastClaimEvent.Created, is Shared.CastClaimEvent.Updated:
-                    self.loadFanManagement()
-                default:
-                    break
+            do {
+                for try await event in asyncSequence(for: castClaimEventPublisher.events) {
+                    switch event {
+                    case is Shared.CastClaimEvent.Created, is Shared.CastClaimEvent.Updated:
+                        self.loadFanManagement()
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func bindCastEvent(_ castId: String) {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
-            
-        }
-        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.CastEvent.Created:
-                    if event.cast.id == castId {
-                        self.loadFanManagement()
-                    }
-                case let event as Shared.CastEvent.Updated:
-                    if event.cast.id == castId, let currentData = self.uiState.fanManagementData {
-                        self.uiState.fanManagementData = FanManagementData(
-                            user: currentData.user,
-                            detail: CastDetail(
-                                cast: event.cast,
-                                cafe: currentData.detail.cafe,
-                                images: currentData.detail.images,
-                                schedule: currentData.detail.schedule
-                            ),
-                            followers: currentData.followers
-                        )
-                        self.uiState.stats = self.uiState.stats.map { card in
-                            guard card.label == "평점" else { return card }
-                            return FanManagementUiState.StatCard(
-                                label: card.label,
-                                value: String(format: "%.1f", event.cast.rating),
-                                highlight: card.highlight
-                            )
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.CastEvent.Created:
+                        if event.cast.id == castId {
+                            self.loadFanManagement()
                         }
+                    case let event as Shared.CastEvent.Updated:
+                        if event.cast.id == castId, let currentData = self.uiState.fanManagementData {
+                            self.uiState.fanManagementData = FanManagementData(
+                                user: currentData.user,
+                                detail: CastDetail(
+                                    cast: event.cast,
+                                    cafe: currentData.detail.cafe,
+                                    images: currentData.detail.images,
+                                    schedule: currentData.detail.schedule
+                                ),
+                                followers: currentData.followers
+                            )
+                            self.uiState.stats = self.uiState.stats.map { card in
+                                guard card.label == "평점" else { return card }
+                                return FanManagementUiState.StatCard(
+                                    label: card.label,
+                                    value: String(format: "%.1f", event.cast.rating),
+                                    highlight: card.highlight
+                                )
+                            }
+                        }
+                    case let event as Shared.CastEvent.Deleted:
+                        if event.castId == castId {
+                            self.loadFanManagement()
+                        }
+                    default:
+                        break
                     }
-                case let event as Shared.CastEvent.Deleted:
-                    if event.castId == castId {
-                        self.loadFanManagement()
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func bindScheduleManagementEvent(_ castId: String) {
         tasks[.scheduleEvent]?.cancel()
         tasks[.scheduleEvent] = Task {
-            
-        }
-        /*tasks[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.ScheduleManagementEvent.Updated:
-                    if event.castId == castId {
-                        self.loadFanManagement()
+            do {
+                for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.ScheduleManagementEvent.Updated:
+                        if event.castId == castId {
+                            self.loadFanManagement()
+                        }
+                    default:
+                        break
                     }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func unbindCastEvent() {

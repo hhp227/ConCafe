@@ -4,6 +4,7 @@ import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 class CafeDetailEventPublisher {
     private val _events = MutableSharedFlow<CafeDetailEvent>(
@@ -12,7 +13,7 @@ class CafeDetailEventPublisher {
     )
 
     @NativeCoroutines
-    val events = _events.asSharedFlow()
+    val events: SharedFlow<CafeDetailEvent> = _events.asSharedFlow()
 
     fun publish(event: CafeDetailEvent) {
         _events.tryEmit(event)

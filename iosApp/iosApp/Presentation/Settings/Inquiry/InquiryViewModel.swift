@@ -17,30 +17,6 @@ final class InquiryViewModel: ObservableObject {
 
     let event = PassthroughSubject<InquiryEvent, Never>()
 
-    init(
-        createInquiryUseCase: CreateInquiryUseCase = KoinInitializerKt.resolveCreateInquiryUseCase()
-    ) {
-        self.createInquiryUseCase = createInquiryUseCase
-    }
-
-    func onAction(_ action: InquiryAction) {
-        switch action {
-        case .backTapped:
-            event.send(.navigateBack)
-        case .inquiryTypeChanged(let type):
-            uiState.inquiryType = type
-            uiState.errorMessage = nil
-        case .titleChanged(let value):
-            uiState.title = value
-            uiState.errorMessage = nil
-        case .messageChanged(let value):
-            uiState.message = value
-            uiState.errorMessage = nil
-        case .submitTapped:
-            submitInquiry()
-        }
-    }
-
     private func submitInquiry() {
         if uiState.title.isEmpty {
             uiState.errorMessage = "문의 제목을 입력해 주세요."
@@ -80,6 +56,30 @@ final class InquiryViewModel: ObservableObject {
                 uiState.errorMessage = "문의 접수에 실패했습니다."
             }
         }
+    }
+    
+    func onAction(_ action: InquiryAction) {
+        switch action {
+        case .backTapped:
+            event.send(.navigateBack)
+        case .inquiryTypeChanged(let type):
+            uiState.inquiryType = type
+            uiState.errorMessage = nil
+        case .titleChanged(let value):
+            uiState.title = value
+            uiState.errorMessage = nil
+        case .messageChanged(let value):
+            uiState.message = value
+            uiState.errorMessage = nil
+        case .submitTapped:
+            submitInquiry()
+        }
+    }
+    
+    init(
+        createInquiryUseCase: CreateInquiryUseCase = KoinInitializerKt.resolveCreateInquiryUseCase()
+    ) {
+        self.createInquiryUseCase = createInquiryUseCase
     }
 }
 

@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class AccountSettingsViewModel: ObservableObject {
@@ -21,14 +22,14 @@ final class AccountSettingsViewModel: ObservableObject {
 
     private func observeSession() {
         Task {
-            
-        }
-        /*observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.loadAccountSettings()
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.loadAccountSettings()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func loadAccountSettings() {

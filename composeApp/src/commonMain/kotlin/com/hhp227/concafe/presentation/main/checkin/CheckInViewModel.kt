@@ -125,52 +125,6 @@ class CheckInViewModel(
         }
     }
 
-    fun onAction(action: CheckInAction) {
-        viewModelScope.launch {
-            when (action) {
-                is CheckInAction.ClickCafe -> _event.emit(CheckInEvent.NavigateToCafe(action.id))
-                is CheckInAction.ClickCast -> _event.emit(CheckInEvent.NavigateToCast(action.id))
-                CheckInAction.ClickCheckIn -> {
-                    val currentUser = _uiState.value.currentUser
-
-                    if (currentUser == null) {
-                        _uiState.update {
-                            it.copy(
-                                isLoginPromptVisible = true,
-                                isNewVisitSheetVisible = false
-                            )
-                        }
-                    } else {
-                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
-                    }
-                }
-                CheckInAction.ClickSignIn -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(CheckInEvent.NavigateToSignIn)
-                }
-                CheckInAction.ClickSignUp -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(CheckInEvent.NavigateToSignIn)
-                }
-                CheckInAction.DismissLoginPrompt -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                }
-                CheckInAction.DismissNewVisitSheet -> {
-                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
-                }
-                CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
-                CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
-                is CheckInAction.SubmitNewVisit -> {
-                    submitNewVisit(
-                        cafeId = action.cafeId,
-                        visitedAt = action.visitedAt,
-                        memo = action.memo
-                    )
-                }
-            }
-        }
-    }
-
     private fun submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if (cafeId.isBlank()) {
             _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
@@ -314,6 +268,52 @@ class CheckInViewModel(
             dismissReviewPromptUseCase.invoke(prompt.visitId)
             _uiState.update { it.copy(reviewPrompt = null) }
             _event.emit(CheckInEvent.NavigateToReviewEdit(prompt.cafeId))
+        }
+    }
+    
+    fun onAction(action: CheckInAction) {
+        viewModelScope.launch {
+            when (action) {
+                is CheckInAction.ClickCafe -> _event.emit(CheckInEvent.NavigateToCafe(action.id))
+                is CheckInAction.ClickCast -> _event.emit(CheckInEvent.NavigateToCast(action.id))
+                CheckInAction.ClickCheckIn -> {
+                    val currentUser = _uiState.value.currentUser
+
+                    if (currentUser == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoginPromptVisible = true,
+                                isNewVisitSheetVisible = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
+                    }
+                }
+                CheckInAction.ClickSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(CheckInEvent.NavigateToSignIn)
+                }
+                CheckInAction.ClickSignUp -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(CheckInEvent.NavigateToSignIn)
+                }
+                CheckInAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                CheckInAction.DismissNewVisitSheet -> {
+                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
+                }
+                CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
+                CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
+                is CheckInAction.SubmitNewVisit -> {
+                    submitNewVisit(
+                        cafeId = action.cafeId,
+                        visitedAt = action.visitedAt,
+                        memo = action.memo
+                    )
+                }
+            }
         }
     }
 

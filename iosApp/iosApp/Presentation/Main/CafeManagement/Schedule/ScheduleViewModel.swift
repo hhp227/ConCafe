@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class ScheduleViewModel: ObservableObject {
@@ -32,82 +33,82 @@ final class ScheduleViewModel: ObservableObject {
     private func observeSession() {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
-            
-        }
-        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.unbindCastEvent()
-                self.loadSchedule()
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.unbindCastEvent()
+                    self.loadSchedule()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func bindCastEvent(_ castId: String) {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
-            
-        }
-        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.CastEvent.Created:
-                    if event.cast.id == castId {
-                        self.loadSchedule()
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.CastEvent.Created:
+                        if event.cast.id == castId {
+                            self.loadSchedule()
+                        }
+                    case let event as Shared.CastEvent.Updated:
+                        if event.cast.id == castId {
+                            let cafeName = self.uiState.castSummary.subtitle.components(separatedBy: " / ").last ?? ""
+                            self.uiState.castSummary = ScheduleUiState.CastSummary(
+                                title: event.cast.name,
+                                subtitle: "\(event.cast.conceptRole.toDisplayConceptRole()) / \(cafeName)",
+                                badge: self.uiState.castSummary.badge,
+                                initials: event.cast.name.toInitials()
+                            )
+                        }
+                    case let event as Shared.CastEvent.Deleted:
+                        if event.castId == castId {
+                            self.loadSchedule()
+                        }
+                    default:
+                        break
                     }
-                case let event as Shared.CastEvent.Updated:
-                    if event.cast.id == castId {
-                        let cafeName = self.uiState.castSummary.subtitle.components(separatedBy: " / ").last ?? ""
-                        self.uiState.castSummary = ScheduleUiState.CastSummary(
-                            title: event.cast.name,
-                            subtitle: "\(event.cast.conceptRole.toDisplayConceptRole()) / \(cafeName)",
-                            badge: self.uiState.castSummary.badge,
-                            initials: event.cast.name.toInitials()
-                        )
-                    }
-                case let event as Shared.CastEvent.Deleted:
-                    if event.castId == castId {
-                        self.loadSchedule()
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func bindScheduleManagementEvent(_ castId: String) {
         tasks[.scheduleEvent]?.cancel()
         tasks[.scheduleEvent] = Task {
-            
-        }
-        /*tasks[.scheduleEvent] = observeScheduleManagementEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.ScheduleManagementEvent.Updated:
-                    if event.castId == castId {
-                        if self.uiState.isSaving {
-                            return
+            do {
+                for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.ScheduleManagementEvent.Updated:
+                        if event.castId == castId {
+                            if self.uiState.isSaving {
+                                return
+                            }
+                            self.loadSchedule(showLoading: false)
+                            let message: String
+                            switch event.status {
+                            case .work:
+                                message = "근무 시간이 저장되었습니다."
+                            case .off:
+                                message = "휴무로 변경되었습니다."
+                            default:
+                                message = "휴가 일정으로 변경되었습니다."
+                            }
+                            self.event.send(.showMessage(message))
                         }
-                        self.loadSchedule(showLoading: false)
-                        let message: String
-                        switch event.status {
-                        case .work:
-                            message = "근무 시간이 저장되었습니다."
-                        case .off:
-                            message = "휴무로 변경되었습니다."
-                        default:
-                            message = "휴가 일정으로 변경되었습니다."
-                        }
-                        self.event.send(.showMessage(message))
+                    default:
+                        break
                     }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func unbindCastEvent() {

@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class BannerEditViewModel: ObservableObject {
@@ -31,52 +32,13 @@ final class BannerEditViewModel: ObservableObject {
 
     private func observeSession() {
         Task {
-            
-        }
-        /*observeCurrentUserUseCase.watch { [weak self] user in
-            guard let self else { return }
-            Task { @MainActor in
-                self.uiState.isAdmin = user?.role == .admin
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.uiState.isAdmin = user?.role == .admin
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
-    }
-
-    func onAction(_ action: BannerEditAction) {
-        switch action {
-        case .clickBack:
-            event.send(.navigateBack)
-        case .clickImagePicker:
-            uiState.infoMessage = nil
-        case .selectImage(let imageUrl):
-            uiState.selectedImageLabel = imageUrl
-            uiState.infoMessage = nil
-        case .changeTitle(let value):
-            uiState.title = value
-        case .changeSubtitle(let value):
-            uiState.subtitle = value
-        case .selectTarget(let target):
-            selectTarget(target)
-        case .changeTargetValue(let value):
-            uiState.targetValue = value
-        case .changeDisplayDays(let value):
-            uiState.displayDays = min(max(value, 1), 10)
-        case .clickCafeSelector:
-            uiState.selectorType = .cafe
-            uiState.selectorQuery = ""
-            uiState.selectorOptions = uiState.ownedCafeOptions
-            uiState.isSelectorLoading = false
-        case .clickTargetSelector:
-            openTargetSelector()
-        case .changeSelectorQuery(let value):
-            changeSelectorQuery(value)
-        case .selectSelectorItem(let id):
-            selectSelectorItem(id)
-        case .dismissSelector:
-            dismissSelector()
-        case .clickSave:
-            clickSave()
-        case .dismissInfoMessage:
-            uiState.infoMessage = nil
         }
     }
 
@@ -300,6 +262,45 @@ final class BannerEditViewModel: ObservableObject {
                 uiState.isSaving = false
                 uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
             }
+        }
+    }
+    
+    func onAction(_ action: BannerEditAction) {
+        switch action {
+        case .clickBack:
+            event.send(.navigateBack)
+        case .clickImagePicker:
+            uiState.infoMessage = nil
+        case .selectImage(let imageUrl):
+            uiState.selectedImageLabel = imageUrl
+            uiState.infoMessage = nil
+        case .changeTitle(let value):
+            uiState.title = value
+        case .changeSubtitle(let value):
+            uiState.subtitle = value
+        case .selectTarget(let target):
+            selectTarget(target)
+        case .changeTargetValue(let value):
+            uiState.targetValue = value
+        case .changeDisplayDays(let value):
+            uiState.displayDays = min(max(value, 1), 10)
+        case .clickCafeSelector:
+            uiState.selectorType = .cafe
+            uiState.selectorQuery = ""
+            uiState.selectorOptions = uiState.ownedCafeOptions
+            uiState.isSelectorLoading = false
+        case .clickTargetSelector:
+            openTargetSelector()
+        case .changeSelectorQuery(let value):
+            changeSelectorQuery(value)
+        case .selectSelectorItem(let id):
+            selectSelectorItem(id)
+        case .dismissSelector:
+            dismissSelector()
+        case .clickSave:
+            clickSave()
+        case .dismissInfoMessage:
+            uiState.infoMessage = nil
         }
     }
 

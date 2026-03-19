@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CafeViewModel: ObservableObject {
@@ -36,72 +37,59 @@ final class CafeViewModel: ObservableObject {
     private func observeCafeDetailEvent() {
         tasks[.cafeDetail]?.cancel()
         tasks[.cafeDetail] = Task {
-            /*for await event in cafeDetailEventPublisher.observeNative() {
-                switch event {
-                case is CafeDetailEvent.CafeInfoUpdated:
-                    await self.loadCafeDetail()
-                case is CafeDetailEvent.GoodsCreated,
-                    is CafeDetailEvent.GoodsDeleted,
-                    is CafeDetailEvent.GoodsUpdated,
-                    is CafeDetailEvent.MenuCreated,
-                    is CafeDetailEvent.MenuDeleted,
-                    is CafeDetailEvent.MenuUpdated:
-                    break
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    switch event {
+                    case is CafeDetailEvent.CafeInfoUpdated:
+                        self.loadCafeDetail()
+                    case is CafeDetailEvent.GoodsCreated,
+                        is CafeDetailEvent.GoodsDeleted,
+                        is CafeDetailEvent.GoodsUpdated,
+                        is CafeDetailEvent.MenuCreated,
+                        is CafeDetailEvent.MenuDeleted,
+                        is CafeDetailEvent.MenuUpdated:
+                        break
+                    default:
+                        break
+                    }
                 }
-            }*/
+            } catch {
+                print("Error: \(error)")
+            }
         }
     }
     
     private func observeReviewEvent() {
         tasks[.reviewEvent]?.cancel()
         tasks[.reviewEvent] = Task {
-            /*for await event in reviewEventPublisher.observeNative() {
-                switch event {
-                case let created as ReviewEvent.Created:
-                    if created.cafeId == cafeId &&
-                        self.uiState.selectedTab == .reviews {
-                        
-                        await MainActor.run {
-                            self.uiState.shouldScrollToTopOnReturn = true
+            do {
+                for try await event in asyncSequence(for: reviewEventPublisher.events) {
+                    switch event {
+                    case let created as ReviewEvent.Created:
+                        if created.cafeId == cafeId && self.uiState.selectedTab == .reviews {
+                            await MainActor.run {
+                                self.uiState.shouldScrollToTopOnReturn = true
+                            }
+                            self.loadCafeDetail(refreshReviews: false)
+                            self.refreshReviewPage()
                         }
-                        
-                        await self.loadCafeDetail(refreshReviews: false)
-                        await self.refreshReviewPage()
-                    }
-                case let deleted as ReviewEvent.Deleted:
-                    if deleted.cafeId == cafeId &&
-                        self.uiState.selectedTab == .reviews {
-                        
-                        await MainActor.run {
-                            self.uiState.reviews.removeAll {
-                                $0.id == deleted.reviewId
+                    case let deleted as ReviewEvent.Deleted:
+                        if deleted.cafeId == cafeId && self.uiState.selectedTab == .reviews {
+                            await MainActor.run {
+                                self.uiState.reviews.removeAll {
+                                    $0.id == deleted.reviewId
+                                }
                             }
                         }
+                    default:
+                        break
                     }
-                default:
-                    break
                 }
-            }*/
-        }
-    }
-
-    /*private func observeReviewEvent() {
-        tasks[.reviewEvent]?.cancel()
-        tasks[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            if let created = event as? ReviewEvent.Created {
-                if created.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.uiState.shouldScrollToTopOnReturn = true
-                    self.loadCafeDetail(refreshReviews: false)
-                    self.refreshReviewPage()
-                }
-            } else if let deleted = event as? ReviewEvent.Deleted {
-                if deleted.cafeId == self.cafeId, self.uiState.selectedTab == .reviews {
-                    self.uiState.reviews.removeAll { $0.id == deleted.reviewId }
-                }
+            } catch {
+                print("Error: \(error)")
             }
         }
-    }*/
+    }
 
     private func loadCafeDetail(refreshReviews: Bool = true) {
         uiState.isLoading = true

@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class MenuGoodsViewModel: ObservableObject {
@@ -53,46 +54,45 @@ final class MenuGoodsViewModel: ObservableObject {
     private func observeCafeDetailEvent() {
         tasks[.detailEvent]?.cancel()
         tasks[.detailEvent] = Task {
-            
-        }
-        /*tasks[.detailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-
-            Task { @MainActor in
-                switch event {
-                case let event as CafeDetailEvent.CafeInfoUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    switch event {
+                    case let event as CafeDetailEvent.CafeInfoUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.MenuCreated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.MenuUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.upsertLocalMenu(event.menu)
+                        }
+                    case let event as CafeDetailEvent.MenuDeleted:
+                        if event.cafeId == self.cafeId {
+                            self.removeLocalMenu(itemId: event.itemId)
+                        }
+                    case let event as CafeDetailEvent.GoodsCreated:
+                        if event.cafeId == self.cafeId {
+                            self.loadMenuGoods()
+                        }
+                    case let event as CafeDetailEvent.GoodsUpdated:
+                        if event.cafeId == self.cafeId {
+                            self.upsertLocalGoods(event.goods)
+                        }
+                    case let event as CafeDetailEvent.GoodsDeleted:
+                        if event.cafeId == self.cafeId {
+                            self.removeLocalGoods(itemId: event.itemId)
+                        }
+                    default:
+                        break
                     }
-                case let event as CafeDetailEvent.MenuCreated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
-                    }
-                case let event as CafeDetailEvent.MenuUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.upsertLocalMenu(event.menu)
-                    }
-                case let event as CafeDetailEvent.MenuDeleted:
-                    if event.cafeId == self.cafeId {
-                        self.removeLocalMenu(itemId: event.itemId)
-                    }
-                case let event as CafeDetailEvent.GoodsCreated:
-                    if event.cafeId == self.cafeId {
-                        self.loadMenuGoods()
-                    }
-                case let event as CafeDetailEvent.GoodsUpdated:
-                    if event.cafeId == self.cafeId {
-                        self.upsertLocalGoods(event.goods)
-                    }
-                case let event as CafeDetailEvent.GoodsDeleted:
-                    if event.cafeId == self.cafeId {
-                        self.removeLocalGoods(itemId: event.itemId)
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func applyDetail(_ detail: CafeDetail) {

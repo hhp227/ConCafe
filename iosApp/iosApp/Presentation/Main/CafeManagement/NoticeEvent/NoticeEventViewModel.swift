@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class NoticeEventViewModel: ObservableObject {
@@ -351,39 +352,38 @@ final class NoticeEventViewModel: ObservableObject {
     private func observeNoticeManagementEvent() {
         tasks[.noticeManagementEvent]?.cancel()
         tasks[.noticeManagementEvent] = Task {
-            
-        }
-        /*tasks[.noticeManagementEvent] = observeNoticeManagementEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-
-            Task { @MainActor in
-                if let event = event as? NoticeManagementEvent.NoticeCreated {
-                    if event.cafeId == self.cafeId {
-                        self.loadNoticePage(cursor: nil, append: false)
-                    }
-                } else if let event = event as? NoticeManagementEvent.NoticeUpdated {
-                    if event.cafeId == self.cafeId {
-                        self.patchNotice(event.notice)
-                    }
-                } else if let event = event as? NoticeManagementEvent.NoticeDeleted {
-                    if event.cafeId == self.cafeId {
-                        self.removeNotice(event.noticeId)
-                    }
-                } else if let event = event as? NoticeManagementEvent.EventCreated {
-                    if event.cafeId == self.cafeId {
-                        self.loadEventPage(cursor: nil, append: false)
-                    }
-                } else if let event = event as? NoticeManagementEvent.EventUpdated {
-                    if event.cafeId == self.cafeId {
-                        self.patchEvent(event.event)
-                    }
-                } else if let event = event as? NoticeManagementEvent.EventDeleted {
-                    if event.cafeId == self.cafeId {
-                        self.removeEvent(event.eventId)
+            do {
+                for try await event in asyncSequence(for: noticeManagementEventPublisher.events) {
+                    if let event = event as? NoticeManagementEvent.NoticeCreated {
+                        if event.cafeId == self.cafeId {
+                            self.loadNoticePage(cursor: nil, append: false)
+                        }
+                    } else if let event = event as? NoticeManagementEvent.NoticeUpdated {
+                        if event.cafeId == self.cafeId {
+                            self.patchNotice(event.notice)
+                        }
+                    } else if let event = event as? NoticeManagementEvent.NoticeDeleted {
+                        if event.cafeId == self.cafeId {
+                            self.removeNotice(event.noticeId)
+                        }
+                    } else if let event = event as? NoticeManagementEvent.EventCreated {
+                        if event.cafeId == self.cafeId {
+                            self.loadEventPage(cursor: nil, append: false)
+                        }
+                    } else if let event = event as? NoticeManagementEvent.EventUpdated {
+                        if event.cafeId == self.cafeId {
+                            self.patchEvent(event.event)
+                        }
+                    } else if let event = event as? NoticeManagementEvent.EventDeleted {
+                        if event.cafeId == self.cafeId {
+                            self.removeEvent(event.eventId)
+                        }
                     }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     func onAction(_ action: NoticeEventAction) {

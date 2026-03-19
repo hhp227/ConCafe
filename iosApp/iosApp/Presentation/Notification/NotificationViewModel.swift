@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class NotificationViewModel: ObservableObject {
@@ -23,15 +24,14 @@ final class NotificationViewModel: ObservableObject {
 
     private func observeSession() {
         Task {
-            
-        }
-        /*observeCurrentUserUseCase.watch { [weak self] _ in
-            guard let self else { return }
-
-            Task { @MainActor in
-                self.loadNotifications()
+            do {
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.loadNotifications()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func loadNotifications() {

@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CastViewModel: ObservableObject {
@@ -30,50 +31,52 @@ final class CastViewModel: ObservableObject {
     private func observeCastEvent() {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
-            
-        }
-        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let event as Shared.CastEvent.Created:
-                    if event.cast.id == self.castId {
-                        self.loadCastDetail()
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let event as Shared.CastEvent.Created:
+                        if event.cast.id == self.castId {
+                            self.loadCastDetail()
+                        }
+                    case let event as Shared.CastEvent.Updated:
+                        if event.cast.id == self.castId, let detail = self.uiState.detail {
+                            self.uiState.detail = CastDetail(
+                                cast: event.cast,
+                                cafe: detail.cafe,
+                                images: detail.images,
+                                schedule: detail.schedule
+                            )
+                        }
+                    case let event as Shared.CastEvent.Deleted:
+                        if event.castId == self.castId {
+                            self.event.send(.navigateBack)
+                        }
+                    default:
+                        break
                     }
-                case let event as Shared.CastEvent.Updated:
-                    if event.cast.id == self.castId, let detail = self.uiState.detail {
-                        self.uiState.detail = CastDetail(
-                            cast: event.cast,
-                            cafe: detail.cafe,
-                            images: detail.images,
-                            schedule: detail.schedule
-                        )
-                    }
-                case let event as Shared.CastEvent.Deleted:
-                    if event.castId == self.castId {
-                        self.event.send(.navigateBack)
-                    }
-                default:
-                    break
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeReviewEvent() {
         tasks[.reviewEvent]?.cancel()
         tasks[.reviewEvent] = Task {
-            
-        }
-        /*tasks[.reviewEvent] = observeReviewEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
-            if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
-                self.loadCastDetail()
-            } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
-                self.loadCastDetail()
+            do {
+                for try await event in asyncSequence(for: reviewEventPublisher.events) {
+                    guard let currentCafeId = self.uiState.detail?.cafe.id else { return }
+                    if let created = event as? ReviewEvent.Created, created.cafeId == currentCafeId {
+                        self.loadCastDetail()
+                    } else if let deleted = event as? ReviewEvent.Deleted, deleted.cafeId == currentCafeId {
+                        self.loadCastDetail()
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func loadCastDetail() {

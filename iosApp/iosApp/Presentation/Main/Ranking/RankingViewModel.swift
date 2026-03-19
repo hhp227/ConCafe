@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class RankingViewModel: ObservableObject {
@@ -56,36 +57,36 @@ final class RankingViewModel: ObservableObject {
     private func observeCafeDetailEvent() {
         tasks[.cafeDetailEvent]?.cancel()
         tasks[.cafeDetailEvent] = Task {
-            
-        }
-        /*tasks[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeRanking(updated.cafe)
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeRanking(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeCastEvent() {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
-            
-        }
-        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCastRanking(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.uiState.maidRankings.removeAll { $0.id == deleted.castId }
-                default:
-                    break
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCastRanking(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.uiState.maidRankings.removeAll { $0.id == deleted.castId }
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func patchCafeRanking(_ cafe: Cafe) {

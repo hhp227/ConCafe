@@ -21,22 +21,6 @@ class InquiryLinkViewModel(
     private val _event = MutableSharedFlow<InquiryLinkEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    fun onAction(action: InquiryLinkAction) {
-        when (action) {
-            InquiryLinkAction.ClickBack -> emitNavigateBack()
-            is InquiryLinkAction.ChangeInquiryType -> {
-                _uiState.update { it.copy(inquiryType = action.value, errorMessage = null) }
-            }
-            is InquiryLinkAction.ChangeTitle -> {
-                _uiState.update { it.copy(title = action.value, errorMessage = null) }
-            }
-            is InquiryLinkAction.ChangeMessage -> {
-                _uiState.update { it.copy(message = action.value, errorMessage = null) }
-            }
-            InquiryLinkAction.ClickSubmit -> submitInquiry()
-        }
-    }
-
     private fun emitNavigateBack() {
         viewModelScope.launch {
             _event.emit(InquiryLinkEvent.NavigateBack)
@@ -88,6 +72,22 @@ class InquiryLinkViewModel(
             state.title.isBlank() -> "문의 제목을 입력해 주세요."
             state.message.isBlank() -> "문의 내용을 입력해 주세요."
             else -> null
+        }
+    }
+    
+    fun onAction(action: InquiryLinkAction) {
+        when (action) {
+            InquiryLinkAction.ClickBack -> emitNavigateBack()
+            is InquiryLinkAction.ChangeInquiryType -> {
+                _uiState.update { it.copy(inquiryType = action.value, errorMessage = null) }
+            }
+            is InquiryLinkAction.ChangeTitle -> {
+                _uiState.update { it.copy(title = action.value, errorMessage = null) }
+            }
+            is InquiryLinkAction.ChangeMessage -> {
+                _uiState.update { it.copy(message = action.value, errorMessage = null) }
+            }
+            InquiryLinkAction.ClickSubmit -> submitInquiry()
         }
     }
 

@@ -23,8 +23,6 @@ final class CastEditViewModel: ObservableObject {
 
     private let upsertCastUseCase: UpsertCastUseCase
 
-    private var requestTask: Task<Void, Never>?
-
     private func clickProfilePhoto() {
         uiState.infoMessage = nil
     }
@@ -53,9 +51,8 @@ final class CastEditViewModel: ObservableObject {
 
         uiState.isSaving = true
         uiState.infoMessage = nil
-        requestTask?.cancel()
 
-        requestTask = Task {
+        Task {
             do {
                 let result = try await upsertCastUseCase.invoke(
                     update: CastUpsert(
@@ -85,11 +82,10 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func loadCastDetail(_ castId: String) {
-        requestTask?.cancel()
         uiState.isLoading = true
         uiState.infoMessage = nil
 
-        requestTask = Task {
+        Task {
             do {
                 let result = try await getCastDetailUseCase.invoke(castId: castId)
 
@@ -173,10 +169,6 @@ final class CastEditViewModel: ObservableObject {
             uiState.screenTitle = "캐스트 프로필 추가"
             uiState.saveButtonLabel = "프로필 추가"
         }
-    }
-
-    deinit {
-        requestTask?.cancel()
     }
 }
 

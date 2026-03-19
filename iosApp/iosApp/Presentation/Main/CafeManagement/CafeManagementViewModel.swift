@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CafeManagementViewModel: ObservableObject {
@@ -99,58 +100,57 @@ final class CafeManagementViewModel: ObservableObject {
     private func observeSession() {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
-            
-        }
-        /*tasks[.session] = observeCurrentUserUseCase.watch { [weak self] user in
-            guard let self else { return }
-
-            Task { @MainActor in
-                self.currentUserId = user?.id
-                self.loadCafeManagement()
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.currentUserId = user?.id
+                    self.loadCafeManagement()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeCafeDetailEvent() {
         tasks[.cafeDetailEvent]?.cancel()
         tasks[.cafeDetailEvent] = Task {
-            
-        }
-        /*tasks[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeInfo(updated.cafe)
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeInfo(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeCafeRegistrationClaimEvent() {
         tasks[.cafeRegistrationClaimEvent]?.cancel()
         tasks[.cafeRegistrationClaimEvent] = Task {
-            
-        }
-        /*tasks[.cafeRegistrationClaimEvent] = observeCafeRegistrationClaimEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                guard let currentUserId = self.currentUserId else { return }
-                let shouldRefresh: Bool
-                switch event {
-                case let created as CafeRegistrationClaimEvent.Created:
-                    shouldRefresh = created.requesterUserId == currentUserId
-                case let approved as CafeRegistrationClaimEvent.Approved:
-                    shouldRefresh = approved.requesterUserId == currentUserId
-                case let rejected as CafeRegistrationClaimEvent.Rejected:
-                    shouldRefresh = rejected.requesterUserId == currentUserId
-                default:
-                    shouldRefresh = false
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    guard let currentUserId = self.currentUserId else { return }
+                    let shouldRefresh: Bool
+                    switch event {
+                    case let created as CafeRegistrationClaimEvent.Created:
+                        shouldRefresh = created.requesterUserId == currentUserId
+                    case let approved as CafeRegistrationClaimEvent.Approved:
+                        shouldRefresh = approved.requesterUserId == currentUserId
+                    case let rejected as CafeRegistrationClaimEvent.Rejected:
+                        shouldRefresh = rejected.requesterUserId == currentUserId
+                    default:
+                        shouldRefresh = false
+                    }
+                    if shouldRefresh {
+                        self.loadCafeManagement()
+                    }
                 }
-                if shouldRefresh {
-                    self.loadCafeManagement()
-                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {

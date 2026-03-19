@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -225,49 +226,49 @@ final class HomeViewModel: ObservableObject {
     private func observeCafeDetailEvent() {
         tasks[.cafeDetailEvent]?.cancel()
         tasks[.cafeDetailEvent] = Task {
-            
-        }
-        /*tasks[.cafeDetailEvent] = observeCafeDetailEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
-                    self.patchCafeInfo(updated.cafe)
+            do {
+                for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
+                    if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
+                        self.patchCafeInfo(updated.cafe)
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeBannerEvent() {
         tasks[.bannerEvent]?.cancel()
         tasks[.bannerEvent] = Task {
-            
-        }
-        /*watchHandles[.bannerEvent] = observeBannerEventUseCase.watch { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.loadHomeFeed()
+            do {
+                for try await _ in asyncSequence(for: bannerEventPublisher.events) {
+                    self.loadHomeFeed()
+                }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func observeCastEvent() {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
-            
-        }
-        /*tasks[.castEvent] = observeCastEventUseCase.watch { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                switch event {
-                case let updated as Shared.CastEvent.Updated:
-                    self.patchCast(updated.cast)
-                case let deleted as Shared.CastEvent.Deleted:
-                    self.removeCast(deleted.castId)
-                default:
-                    break
+            do {
+                for try await event in asyncSequence(for: castEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.CastEvent.Updated:
+                        self.patchCast(updated.cast)
+                    case let deleted as Shared.CastEvent.Deleted:
+                        self.removeCast(deleted.castId)
+                    default:
+                        break
+                    }
                 }
+            } catch {
+                print("Error: \(error)")
             }
-        }*/
+        }
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {
