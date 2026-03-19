@@ -14,7 +14,6 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
@@ -121,7 +120,7 @@ class MyInfoViewModel(
     private fun patchCast(cast: Cast) {
         _uiState.update { state ->
             state.copy(
-                castDetail = state.castDetail?.takeIf { it.cast.id == cast.id }?.updatedCast(cast) ?: state.castDetail,
+                castDetail = state.castDetail?.takeIf { it.cast.id == cast.id }?.copy(cast = cast) ?: state.castDetail,
                 followedMaids = state.followedMaids.map { item -> if (item.id == cast.id) cast else item }
             )
         }
@@ -168,5 +167,3 @@ class MyInfoViewModel(
         OBSERVE_CAST_EVENT
     }
 }
-
-private fun CastDetail.updatedCast(cast: Cast): CastDetail = copy(cast = cast)
