@@ -48,14 +48,12 @@ final class BannerEditViewModel: ObservableObject {
                 let result = try await getCafeManagementUseCase.invoke()
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? CafeManagementData {
-                    let options = data.ownedCafes.map { item in
-                        BannerSelectableItem(id: item.id, title: item.name, subtitle: item.city)
-                    }
+                    let options = data.ownedCafes
                     uiState.ownedCafeOptions = options
                     if let initialCafeId {
-                        uiState.selectedCafeOption = options.first(where: { $0.id == initialCafeId })
+                        uiState.selectedCafeId = options.first(where: { $0.id == initialCafeId })?.id
                     } else if uiState.selectedCafeOption == nil && !uiState.isAdmin {
-                        uiState.selectedCafeOption = options.first
+                        uiState.selectedCafeId = options.first?.id
                     }
                     if uiState.selectedTarget == .cafeDetail {
                         uiState.targetValue = uiState.selectedCafeOption?.id ?? ""
@@ -73,17 +71,19 @@ final class BannerEditViewModel: ObservableObject {
 
     private func selectTarget(_ target: BannerTargetType) {
         uiState.selectedTarget = target
-        uiState.selectedContentOption = nil
+        uiState.selectedNoticeId = nil
+        uiState.selectedEventId = nil
         uiState.selectorType = nil
         uiState.selectorQuery = ""
-        uiState.selectorOptions = []
+        uiState.noticeSelectorOptions = []
+        uiState.eventSelectorOptions = []
         uiState.isSelectorLoading = false
         switch target {
         case .cafeDetail:
             if let initialCafeId {
-                uiState.selectedCafeOption = uiState.ownedCafeOptions.first(where: { $0.id == initialCafeId })
+                uiState.selectedCafeId = uiState.ownedCafeOptions.first(where: { $0.id == initialCafeId })?.id
             } else if uiState.selectedCafeOption == nil && !uiState.isAdmin {
-                uiState.selectedCafeOption = uiState.ownedCafeOptions.first
+                uiState.selectedCafeId = uiState.ownedCafeOptions.first?.id
             }
             uiState.targetValue = uiState.selectedCafeOption?.id ?? ""
         case .externalLink:
@@ -102,13 +102,13 @@ final class BannerEditViewModel: ObservableObject {
         case .notice:
             uiState.selectorType = .notice
             uiState.selectorQuery = ""
-            uiState.selectorOptions = []
+            uiState.noticeSelectorOptions = []
             uiState.isSelectorLoading = true
             loadNoticeOptions(cafeId: selectedCafe.id, query: "")
         case .eventDetail:
             uiState.selectorType = .event
             uiState.selectorQuery = ""
-            uiState.selectorOptions = []
+            uiState.eventSelectorOptions = []
             uiState.isSelectorLoading = true
             loadEventOptions(cafeId: selectedCafe.id, query: "")
         default:
@@ -120,10 +120,7 @@ final class BannerEditViewModel: ObservableObject {
         uiState.selectorQuery = value
         switch uiState.selectorType {
         case .cafe:
-            uiState.selectorOptions = uiState.ownedCafeOptions.filter { option in
-                option.title.localizedCaseInsensitiveContains(value) ||
-                option.subtitle.localizedCaseInsensitiveContains(value)
-            }
+            break
         case .notice:
             if let cafeId = uiState.selectedCafeOption?.id {
                 loadNoticeOptions(cafeId: cafeId, query: value)
@@ -145,18 +142,16 @@ final class BannerEditViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeNoticeManagementItem> {
                     let items = page.items as! [CafeNoticeManagementItem]
-                    uiState.selectorOptions = items.map {
-                        BannerSelectableItem(id: $0.id, title: $0.title, subtitle: $0.displayDate)
-                    }
+                    uiState.noticeSelectorOptions = items
                     uiState.isSelectorLoading = false
                 } else {
-                    uiState.selectorOptions = []
+                    uiState.noticeSelectorOptions = []
                     uiState.isSelectorLoading = false
                     uiState.infoMessage = "공지사항 목록을 불러오지 못했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
-                uiState.selectorOptions = []
+                uiState.noticeSelectorOptions = []
                 uiState.isSelectorLoading = false
                 uiState.infoMessage = "공지사항 목록을 불러오지 못했습니다."
             }
@@ -171,18 +166,16 @@ final class BannerEditViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeEventManagementItem> {
                     let items = page.items as! [CafeEventManagementItem]
-                    uiState.selectorOptions = items.map {
-                        BannerSelectableItem(id: $0.id, title: $0.title, subtitle: $0.periodText)
-                    }
+                    uiState.eventSelectorOptions = items
                     uiState.isSelectorLoading = false
                 } else {
-                    uiState.selectorOptions = []
+                    uiState.eventSelectorOptions = []
                     uiState.isSelectorLoading = false
                     uiState.infoMessage = "이벤트 목록을 불러오지 못했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
-                uiState.selectorOptions = []
+                uiState.eventSelectorOptions = []
                 uiState.isSelectorLoading = false
                 uiState.infoMessage = "이벤트 목록을 불러오지 못했습니다."
             }
@@ -193,17 +186,24 @@ final class BannerEditViewModel: ObservableObject {
         switch uiState.selectorType {
         case .cafe:
             guard let selectedCafe = uiState.ownedCafeOptions.first(where: { $0.id == id }) else { return }
-            let sameCafe = uiState.selectedCafeOption?.id == selectedCafe.id
-            uiState.selectedCafeOption = selectedCafe
+            let sameCafe = uiState.selectedCafeId == selectedCafe.id
+            uiState.selectedCafeId = selectedCafe.id
             if uiState.selectedTarget == .cafeDetail {
                 uiState.targetValue = selectedCafe.id
             } else if !sameCafe {
-                uiState.selectedContentOption = nil
+                uiState.selectedNoticeId = nil
+                uiState.selectedEventId = nil
                 uiState.targetValue = ""
             }
-        case .notice, .event:
-            guard let selectedItem = uiState.selectorOptions.first(where: { $0.id == id }) else { return }
-            uiState.selectedContentOption = selectedItem
+        case .notice:
+            guard let selectedItem = uiState.noticeSelectorOptions.first(where: { $0.id == id }) else { return }
+            uiState.selectedNoticeId = selectedItem.id
+            uiState.selectedEventId = nil
+            uiState.targetValue = selectedItem.id
+        case .event:
+            guard let selectedItem = uiState.eventSelectorOptions.first(where: { $0.id == id }) else { return }
+            uiState.selectedEventId = selectedItem.id
+            uiState.selectedNoticeId = nil
             uiState.targetValue = selectedItem.id
         case .none:
             return
@@ -215,7 +215,6 @@ final class BannerEditViewModel: ObservableObject {
         selectorTask?.cancel()
         uiState.selectorType = nil
         uiState.selectorQuery = ""
-        uiState.selectorOptions = []
         uiState.isSelectorLoading = false
     }
 
@@ -241,18 +240,54 @@ final class BannerEditViewModel: ObservableObject {
             return
         }
 
+        let targetType: BannerLinkTargetType
+        switch uiState.selectedTarget {
+        case .cafeDetail:
+            targetType = .cafeDetail
+        case .eventDetail:
+            targetType = .eventDetail
+        case .notice:
+            targetType = .notice
+        case .externalLink:
+            targetType = .externalLink
+        }
+
+        let createInput = HomeBannerCreate(
+            cafeId: uiState.selectedCafeId,
+            title: uiState.title.trimmingCharacters(in: .whitespacesAndNewlines),
+            subtitle: uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
+            imageUrl: uiState.selectedImageLabel,
+            targetType: targetType,
+            targetValue: uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
+            displayDays: Int32(uiState.displayDays)
+        )
+
         uiState.isSaving = true
         uiState.infoMessage = nil
         Task {
             do {
-                let result = try await createHomeBannerUseCase.invoke(input: uiState.toCreateInput())
+                let result = try await createHomeBannerUseCase.invoke(input: createInput)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isSaving = false
                     uiState.infoMessage = nil
                     event.send(.navigateBack)
                 } else if let failure = result as? AppResultFailure {
+                    let userMessage: String
+                    if failure.error is AppErrorUnauthorized {
+                        userMessage = "로그인 후 배너를 등록해주세요."
+                    } else if failure.error is AppErrorPermissionDenied {
+                        userMessage = "배너 등록 권한이 없습니다."
+                    } else if failure.error is AppErrorNotFound {
+                        userMessage = "연결 대상을 찾을 수 없습니다."
+                    } else if let error = failure.error as? AppErrorValidationFailed {
+                        userMessage = error.reason
+                    } else if failure.error is AppErrorNetworkError {
+                        userMessage = "배너를 등록하지 못했습니다."
+                    } else {
+                        userMessage = "배너 등록 중 오류가 발생했습니다."
+                    }
                     uiState.isSaving = false
-                    uiState.infoMessage = failure.error.toUserMessage()
+                    uiState.infoMessage = userMessage
                 } else {
                     uiState.isSaving = false
                     uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
@@ -287,7 +322,6 @@ final class BannerEditViewModel: ObservableObject {
         case .clickCafeSelector:
             uiState.selectorType = .cafe
             uiState.selectorQuery = ""
-            uiState.selectorOptions = uiState.ownedCafeOptions
             uiState.isSelectorLoading = false
         case .clickTargetSelector:
             openTargetSelector()
@@ -324,55 +358,5 @@ final class BannerEditViewModel: ObservableObject {
 
     deinit {
         selectorTask?.cancel()
-    }
-}
-
-private extension BannerEditUiState {
-    func toCreateInput() -> HomeBannerCreate {
-        HomeBannerCreate(
-            cafeId: selectedCafeOption?.id,
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            subtitle: subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
-            imageUrl: selectedImageLabel,
-            targetType: selectedTarget.toDomainType(),
-            targetValue: targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
-            displayDays: Int32(displayDays)
-        )
-    }
-}
-
-private extension BannerTargetType {
-    func toDomainType() -> BannerLinkTargetType {
-        switch self {
-        case .cafeDetail:
-            return .cafeDetail
-        case .eventDetail:
-            return .eventDetail
-        case .notice:
-            return .notice
-        case .externalLink:
-            return .externalLink
-        }
-    }
-}
-
-private extension AppError {
-    func toUserMessage() -> String {
-        if self is AppErrorUnauthorized {
-            return "로그인 후 배너를 등록해주세요."
-        }
-        if self is AppErrorPermissionDenied {
-            return "배너 등록 권한이 없습니다."
-        }
-        if self is AppErrorNotFound {
-            return "연결 대상을 찾을 수 없습니다."
-        }
-        if let error = self as? AppErrorValidationFailed {
-            return error.reason
-        }
-        if self is AppErrorNetworkError {
-            return "배너를 등록하지 못했습니다."
-        }
-        return "배너 등록 중 오류가 발생했습니다."
     }
 }

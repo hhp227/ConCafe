@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -210,14 +211,16 @@ private fun BannerEditContentScreen(
                                     if (uiState.isAdmin) {
                                         SelectionFieldCard(
                                             label = "운영 카페",
-                                            selectedItem = uiState.selectedCafeOption,
+                                            selectedTitle = uiState.selectedCafeOption?.name,
+                                            selectedSubtitle = uiState.selectedCafeOption?.city,
                                             placeholder = "운영 카페를 선택해주세요",
                                             onClick = { onAction(BannerEditAction.ClickCafeSelector) }
                                         )
                                     } else {
                                         FixedSelectionCard(
                                             label = "적용 카페",
-                                            selectedItem = uiState.selectedCafeOption,
+                                            selectedTitle = uiState.selectedCafeOption?.name,
+                                            selectedSubtitle = uiState.selectedCafeOption?.city,
                                             placeholder = "연결할 운영 카페가 없습니다."
                                         )
                                     }
@@ -227,20 +230,23 @@ private fun BannerEditContentScreen(
                                     if (uiState.isAdmin) {
                                         SelectionFieldCard(
                                             label = "운영 카페",
-                                            selectedItem = uiState.selectedCafeOption,
+                                            selectedTitle = uiState.selectedCafeOption?.name,
+                                            selectedSubtitle = uiState.selectedCafeOption?.city,
                                             placeholder = "운영 카페를 선택해주세요",
                                             onClick = { onAction(BannerEditAction.ClickCafeSelector) }
                                         )
                                     } else {
                                         FixedSelectionCard(
                                             label = "적용 카페",
-                                            selectedItem = uiState.selectedCafeOption,
+                                            selectedTitle = uiState.selectedCafeOption?.name,
+                                            selectedSubtitle = uiState.selectedCafeOption?.city,
                                             placeholder = "연결할 운영 카페가 없습니다."
                                         )
                                     }
                                     SelectionFieldCard(
                                         label = uiState.targetSelectionLabel,
-                                        selectedItem = uiState.selectedContentOption,
+                                        selectedTitle = uiState.selectedContentTitle,
+                                        selectedSubtitle = uiState.selectedContentSubtitle,
                                         placeholder = uiState.targetSelectionPlaceholder,
                                         onClick = { onAction(BannerEditAction.ClickTargetSelector) }
                                     )
@@ -313,7 +319,7 @@ private fun BannerSelectorSheet(
             ) {
                 CircularProgressIndicator(color = Color(0xFFEF6797))
             }
-        } else if (uiState.selectorOptions.isEmpty()) {
+        } else if (uiState.activeSelectorItemCount == 0) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -329,11 +335,35 @@ private fun BannerSelectorSheet(
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(uiState.selectorOptions, key = { it.id }) { item ->
-                    SelectorOptionCard(
-                        item = item,
-                        onClick = { onAction(BannerEditAction.SelectSelectorItem(item.id)) }
-                    )
+                when (uiState.selectorType) {
+                    BannerSelectorType.CAFE -> {
+                        items(uiState.filteredCafeSelectorOptions, key = { it.id }) { item ->
+                            SelectorOptionCard(
+                                title = item.name,
+                                subtitle = item.city,
+                                onClick = { onAction(BannerEditAction.SelectSelectorItem(item.id)) }
+                            )
+                        }
+                    }
+                    BannerSelectorType.NOTICE -> {
+                        items(uiState.noticeSelectorOptions, key = { it.id }) { item ->
+                            SelectorOptionCard(
+                                title = item.title,
+                                subtitle = item.displayDate,
+                                onClick = { onAction(BannerEditAction.SelectSelectorItem(item.id)) }
+                            )
+                        }
+                    }
+                    BannerSelectorType.EVENT -> {
+                        items(uiState.eventSelectorOptions, key = { it.id }) { item ->
+                            SelectorOptionCard(
+                                title = item.title,
+                                subtitle = item.periodText,
+                                onClick = { onAction(BannerEditAction.SelectSelectorItem(item.id)) }
+                            )
+                        }
+                    }
+                    null -> Unit
                 }
             }
         }
@@ -498,7 +528,8 @@ private fun TargetTypeGrid(
 @Composable
 private fun SelectionFieldCard(
     label: String,
-    selectedItem: BannerSelectableItem?,
+    selectedTitle: String?,
+    selectedSubtitle: String?,
     placeholder: String,
     onClick: () -> Unit
 ) {
@@ -518,11 +549,11 @@ private fun SelectionFieldCard(
             ) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = selectedItem?.title ?: placeholder,
-                        color = if (selectedItem == null) Color(0xFFAA98A4) else Color(0xFF23161C),
-                        fontWeight = if (selectedItem == null) FontWeight.Normal else FontWeight.SemiBold
+                        text = selectedTitle ?: placeholder,
+                        color = if (selectedTitle == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                        fontWeight = if (selectedTitle == null) FontWeight.Normal else FontWeight.SemiBold
                     )
-                    selectedItem?.subtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
+                    selectedSubtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
@@ -539,7 +570,8 @@ private fun SelectionFieldCard(
 @Composable
 private fun FixedSelectionCard(
     label: String,
-    selectedItem: BannerSelectableItem?,
+    selectedTitle: String?,
+    selectedSubtitle: String?,
     placeholder: String
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -555,11 +587,11 @@ private fun FixedSelectionCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = selectedItem?.title ?: placeholder,
-                    color = if (selectedItem == null) Color(0xFFAA98A4) else Color(0xFF23161C),
-                    fontWeight = if (selectedItem == null) FontWeight.Normal else FontWeight.SemiBold
+                    text = selectedTitle ?: placeholder,
+                    color = if (selectedTitle == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                    fontWeight = if (selectedTitle == null) FontWeight.Normal else FontWeight.SemiBold
                 )
-                selectedItem?.subtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
+                selectedSubtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
@@ -573,7 +605,8 @@ private fun FixedSelectionCard(
 
 @Composable
 private fun SelectorOptionCard(
-    item: BannerSelectableItem,
+    title: String,
+    subtitle: String,
     onClick: () -> Unit
 ) {
     Card(
@@ -587,8 +620,8 @@ private fun SelectorOptionCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(item.title, fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
-            Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8F848F))
+            Text(title, fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8F848F))
         }
     }
 }
@@ -639,8 +672,22 @@ private fun InfoBanner(
 private fun BannerEditContentPreview() {
     BannerEditContentScreen(
         uiState = BannerEditUiState(
-            ownedCafeOptions = listOf(BannerSelectableItem("cafe-1", "루나 메이드 카페", "서울 홍대")),
-            selectedCafeOption = BannerSelectableItem("cafe-1", "루나 메이드 카페", "서울 홍대")
+            ownedCafeOptions = listOf(
+                CafeManagementData.OwnedCafeSummary(
+                    id = "cafe-1",
+                    name = "루나 메이드 카페",
+                    city = "서울 홍대",
+                    isApproved = true,
+                    todayVisitors = 0,
+                    todayCheckIns = 0,
+                    todayReviews = 0,
+                    rating = 0.0,
+                    castCount = 0,
+                    noticeCount = 0,
+                    externalLinkCount = 0
+                )
+            ),
+            selectedCafeId = "cafe-1"
         ),
         onAction = {},
         snackbarHostState = remember { SnackbarHostState() }
