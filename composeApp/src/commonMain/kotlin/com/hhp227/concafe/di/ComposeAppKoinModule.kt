@@ -27,6 +27,7 @@ import com.hhp227.concafe.presentation.review.ReviewEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
@@ -65,5 +66,7 @@ private val composeAppModules = listOf(
 )
 
 fun doInitConCafeAppKoin() {
-    doInitKoin(composeAppModules)
+    doInitKoin(composeAppModules + platformModules())
 }
+
+expect fun platformModules(): List<Module>

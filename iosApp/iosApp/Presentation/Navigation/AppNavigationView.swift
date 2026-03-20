@@ -84,50 +84,10 @@ struct AppNavigationView: View {
                 case .main(let initialTab):
                     currentRoute = .main(initialTab: initialTab)
                     path.removeAll()
-                case .cast:
-                    path.append(route)
-                case .cafe:
-                    path.append(route)
-                case .cafeDashboard:
-                    path.append(route)
-                case .banner:
-                    path.append(route)
-                case .bannerEdit:
-                    path.append(route)
-                case .externalLink:
-                    path.append(route)
-                case .cafeInfoEdit:
-                    path.append(route)
-                case .noticeEvent:
-                    path.append(route)
-                case .castEdit:
-                    path.append(route)
-                case .schedule:
-                    path.append(route)
-                case .menuGoods:
-                    path.append(route)
-                case .menuGoodsEdit:
-                    path.append(route)
-                case .reviewEdit:
-                    path.append(route)
-                case .signIn:
-                    path.append(route)
-                case .signUp:
-                    path.append(route)
-                case .notification:
-                    path.append(route)
-                case .settings:
-                    path.append(route)
-                case .notificationSettings:
-                    path.append(route)
-                case .accountSettings:
-                    path.append(route)
-                case .inquiry:
-                    path.append(route)
-                case .changePassword:
-                    path.append(route)
                 case .entry:
                     currentRoute = .entry
+                default:
+                    path.append(route)
                 }
             case .navigateBack:
                 if !path.isEmpty {
@@ -145,7 +105,6 @@ struct AppNavigationView: View {
         case .entry:
             ProgressView()
         default:
-            // Detail is pushed through NavigationStack path.
             MainView(onNavigationAction: viewModel.onAction)
         }
     }

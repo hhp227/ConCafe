@@ -3,6 +3,8 @@ package com.hhp227.concafe.di
 import com.hhp227.concafe.data.repository.*
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.data.source.MockConCafeDataSource
+import com.hhp227.concafe.data.source.NetworkStatusDataSource
+import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
@@ -10,6 +12,7 @@ import org.koin.dsl.module
 
 val dataSourceModule = module {
     single<ConCafeDataSource> { MockConCafeDataSource() }
+    single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
 }
 
 val repositoryModule = module {
@@ -31,6 +34,7 @@ val repositoryModule = module {
     single<NotificationRepository> { FakeNotificationRepository(get()) }
     single<StorageRepository> { FakeStorageRepository() }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
+    single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
 }
 
 val eventModule = module {
@@ -91,6 +95,7 @@ val useCaseModule = module {
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
+    factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
