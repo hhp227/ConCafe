@@ -10,6 +10,13 @@
 - [# 🎀 ConCafe Firestore 컬렉션 다이어그램.md](./%23%20%F0%9F%8E%80%20ConCafe%20Firestore%20%EC%BB%AC%EB%A0%89%EC%85%98%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 - [Maid_Cafe_Platform_Full_Project_Plan.md](./Maid_Cafe_Platform_Full_Project_Plan.md)
 
+## 최근 정합성 반영 (2026-03-20)
+- [x] Firestore 컬렉션 다이어그램 기준으로 `castScheduleStatuses`, `stamps`, `cafeOwnerClaims`, `cafeRegistrationClaims`, `castClaims` 책임을 MVP 범위 문서에 반영
+- [x] 홈 배너 정책(`ACTIVE` 최대 5개, `SCHEDULED` 자동 승격, 링크 타입별 라우팅) 문서 기준 통일
+- [x] Claim 흐름(캐스트: 팬관리 신청 -> 운영자 승인, 운영자/신규 카페: Admin 승인) 기획서 기준 통일
+- [x] `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 정책을 운영/권한 항목에 반영
+- [x] Repository + DataSource 패턴에서 사용자 목록은 데이터소스 구현 내부 상태로 관리하고, Repository는 인터페이스 메서드 기반 조회/갱신을 사용하도록 정리
+
 ## 0. 목표/범위
 - [ ] MVP 목표 확정: 메이드 중심 팬 플랫폼 + 위치 인증 기반 신뢰 리뷰
 - [ ] MVP 화면 범위 확정: 홈/탐색/역할별 3번째 탭(체크인/팬관리/카페관리/운영관리)/랭킹/마이 + 카페/메이드 상세
@@ -68,7 +75,7 @@
 - [ ] 인증/권한 룰 초안 작성
 - [ ] Cloud Functions 목록 확정
 - [ ] Storage 경로 규칙 정의 (카페/메이드/리뷰 이미지)
-- [ ] 컬렉션 범위 확정: `menus`, `goods`, `notices`, `events`, `favorites`, `followers`, `stamps`, `claims`
+- [x] 컬렉션 범위 확정: `menus`, `goods`, `notices`, `events`, `favorites`, `followers`, `stamps`, `claims`
 
 ### 3-1. 인덱스 체크리스트
 - [ ] 카페 탐색: `approved + region + ratingAvg`

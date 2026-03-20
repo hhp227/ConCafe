@@ -1,55 +1,112 @@
 package com.hhp227.concafe.di
 
-import com.hhp227.concafe.data.repository.*
-import com.hhp227.concafe.data.repository.test.FakeAuthRepository
-import com.hhp227.concafe.data.repository.test.FakeBannerRepository
-import com.hhp227.concafe.data.repository.test.FakeCafeDashboardRepository
-import com.hhp227.concafe.data.repository.test.FakeCafeManagementRepository
-import com.hhp227.concafe.data.repository.test.FakeCafeOwnerClaimRepository
-import com.hhp227.concafe.data.repository.test.FakeCafeRegistrationClaimRepository
-import com.hhp227.concafe.data.repository.test.FakeCafeRepository
-import com.hhp227.concafe.data.repository.test.FakeCastClaimRepository
-import com.hhp227.concafe.data.repository.test.FakeCastRepository
-import com.hhp227.concafe.data.repository.test.FakeInquiryRepository
-import com.hhp227.concafe.data.repository.test.FakeNoticeRepository
-import com.hhp227.concafe.data.repository.test.FakeNotificationRepository
-import com.hhp227.concafe.data.repository.test.FakeRankingRepository
-import com.hhp227.concafe.data.repository.test.FakeReviewRepository
-import com.hhp227.concafe.data.repository.test.FakeStorageRepository
-import com.hhp227.concafe.data.repository.test.FakeUserRepository
-import com.hhp227.concafe.data.repository.test.FakeVisitRepository
+import com.hhp227.concafe.data.repository.AuthRepositoryImpl
+import com.hhp227.concafe.data.repository.BannerRepositoryImpl
+import com.hhp227.concafe.data.repository.CafeDashboardRepositoryImpl
+import com.hhp227.concafe.data.repository.CafeManagementRepositoryImpl
+import com.hhp227.concafe.data.repository.CafeOwnerClaimRepositoryImpl
+import com.hhp227.concafe.data.repository.CafeRegistrationClaimRepositoryImpl
+import com.hhp227.concafe.data.repository.CafeRepositoryImpl
+import com.hhp227.concafe.data.repository.CastClaimRepositoryImpl
+import com.hhp227.concafe.data.repository.CastRepositoryImpl
+import com.hhp227.concafe.data.repository.DefaultNetworkStatusRepository
+import com.hhp227.concafe.data.repository.InquiryRepositoryImpl
+import com.hhp227.concafe.data.repository.NoticeRepositoryImpl
+import com.hhp227.concafe.data.repository.NotificationRepositoryImpl
+import com.hhp227.concafe.data.repository.PlatformImageCompressionRepository
+import com.hhp227.concafe.data.repository.RankingRepositoryImpl
+import com.hhp227.concafe.data.repository.ReviewRepositoryImpl
+import com.hhp227.concafe.data.repository.StorageRepositoryImpl
+import com.hhp227.concafe.data.repository.UserRepositoryImpl
+import com.hhp227.concafe.data.repository.VisitRepositoryImpl
 import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.BannerDataSource
+import com.hhp227.concafe.data.source.CafeDataSource
+import com.hhp227.concafe.data.source.CastClaimDataSource
+import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.InquiryDataSource
 import com.hhp227.concafe.data.source.MockConCafeDataSource
 import com.hhp227.concafe.data.source.NetworkStatusDataSource
+import com.hhp227.concafe.data.source.NoticeDataSource
+import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
+import com.hhp227.concafe.data.source.RankingDataSource
+import com.hhp227.concafe.data.source.ReviewDataSource
+import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.VisitDataSource
+import com.hhp227.concafe.data.source.MyInfoDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreBackendMode
+import com.hhp227.concafe.data.source.firestore.FirestoreConfig
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
+import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
+import com.hhp227.concafe.data.source.firestore.NoOpFirestoreAuthTokenProvider
+import com.hhp227.concafe.data.source.firestore.NoOpFirestoreRestApi
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
+import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 
+private val DEFAULT_BACKEND_MODE = FirestoreBackendMode.MOCK
+private const val FIRESTORE_PROJECT_ID = ""
+
 val dataSourceModule = module {
-    single<ConCafeDataSource> { MockConCafeDataSource() }
+    single { DEFAULT_BACKEND_MODE }
+    single { FirestoreConfig(projectId = FIRESTORE_PROJECT_ID) }
+    single<FirestoreRestApi> { NoOpFirestoreRestApi() }
+    single<FirestoreAuthTokenProvider> { NoOpFirestoreAuthTokenProvider() }
+    single<ConCafeDataSource> {
+        when (get<FirestoreBackendMode>()) {
+            FirestoreBackendMode.MOCK -> MockConCafeDataSource()
+            FirestoreBackendMode.FIRESTORE_REST -> {
+                val dataSource = FirestoreConCafeDataSource(
+                    config = get(),
+                    restApi = get(),
+                    tokenProvider = get()
+                )
+                runBlocking {
+                    runCatching { dataSource.bootstrap() }
+                }
+                dataSource
+            }
+        }
+    }
+    single<AuthDataSource> { get<ConCafeDataSource>() }
+    single<BannerDataSource> { get<ConCafeDataSource>() }
+    single<CafeDataSource> { get<ConCafeDataSource>() }
+    single<CastDataSource> { get<ConCafeDataSource>() }
+    single<CastClaimDataSource> { get<ConCafeDataSource>() }
+    single<InquiryDataSource> { get<ConCafeDataSource>() }
+    single<NoticeDataSource> { get<ConCafeDataSource>() }
+    single<PagingDataSource> { get<ConCafeDataSource>() }
+    single<RankingDataSource> { get<ConCafeDataSource>() }
+    single<ReviewDataSource> { get<ConCafeDataSource>() }
+    single<SocialDataSource> { get<ConCafeDataSource>() }
+    single<VisitDataSource> { get<ConCafeDataSource>() }
+    single<MyInfoDataSource> { get<ConCafeDataSource>() }
     single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
 }
 
 val repositoryModule = module {
-    single<AuthRepository> { FakeAuthRepository(get()) }
-    single<UserRepository> { FakeUserRepository(get()) }
-    single<BannerRepository> { FakeBannerRepository(get()) }
-    single<CafeDashboardRepository> { FakeCafeDashboardRepository(get()) }
-    single<CafeManagementRepository> { FakeCafeManagementRepository(get()) }
-    single<CafeOwnerClaimRepository> { FakeCafeOwnerClaimRepository(get()) }
-    single<CafeRegistrationClaimRepository> { FakeCafeRegistrationClaimRepository(get()) }
-    single<CafeRepository> { FakeCafeRepository(get()) }
-    single<CastRepository> { FakeCastRepository(get()) }
-    single<CastClaimRepository> { FakeCastClaimRepository(get()) }
-    single<InquiryRepository> { FakeInquiryRepository(get()) }
-    single<VisitRepository> { FakeVisitRepository(get()) }
-    single<ReviewRepository> { FakeReviewRepository(get()) }
-    single<NoticeRepository> { FakeNoticeRepository(get()) }
-    single<RankingRepository> { FakeRankingRepository(get()) }
-    single<NotificationRepository> { FakeNotificationRepository(get()) }
-    single<StorageRepository> { FakeStorageRepository() }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get()) }
+    single<BannerRepository> { BannerRepositoryImpl(get(), get()) }
+    single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
+    single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get()) }
+    single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get()) }
+    single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get()) }
+    single<CafeRepository> { CafeRepositoryImpl(get(), get(), get()) }
+    single<CastRepository> { CastRepositoryImpl(get(), get(), get(), get()) }
+    single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<InquiryRepository> { InquiryRepositoryImpl(get()) }
+    single<VisitRepository> { VisitRepositoryImpl(get(), get()) }
+    single<ReviewRepository> { ReviewRepositoryImpl(get(), get(), get()) }
+    single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
+    single<RankingRepository> { RankingRepositoryImpl(get(), get(), get()) }
+    single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
+    single<StorageRepository> { StorageRepositoryImpl() }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
 }

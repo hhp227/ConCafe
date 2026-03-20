@@ -20,6 +20,7 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.model.ExternalLink
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -31,10 +32,14 @@ import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.RankingItem
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
+import com.hhp227.concafe.domain.model.Stamp
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -42,9 +47,17 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MockConCafeDataSource : ConCafeDataSource {
-    override var currentUserId: String? = "user-1"
+    private val _currentUserId = MutableStateFlow<String?>("user-1")
 
-    override val users = mutableListOf(
+    override var currentUserId: String?
+        get() = _currentUserId.value
+        set(value) {
+            _currentUserId.value = value
+        }
+
+    override val currentUserIdFlow: StateFlow<String?> = _currentUserId.asStateFlow()
+
+    private val users = mutableListOf(
         User(
             id = "user-1",
             email = "user1@concafe.app",
@@ -145,6 +158,37 @@ class MockConCafeDataSource : ConCafeDataSource {
             createdAt = "2026-03-14T09:00:00Z"
         )
     )
+
+    override fun findUserById(userId: String): User? {
+        return users.firstOrNull { it.id == userId }
+    }
+
+    override fun findUserByEmail(email: String): User? {
+        return users.firstOrNull { it.email == email }
+    }
+
+    override fun isEmailTaken(email: String): Boolean {
+        return users.any { it.email == email }
+    }
+
+    override fun addUser(user: User) {
+        users.add(user)
+    }
+
+    override fun replaceUser(user: User): Boolean {
+        val index = users.indexOfFirst { it.id == user.id }
+        if (index == -1) {
+            return false
+        }
+
+        users[index] = user
+        return true
+    }
+
+    override fun replaceAllUsers(users: List<User>) {
+        this.users.clear()
+        this.users.addAll(users)
+    }
 
     override val cafes = mutableListOf(
         Cafe(
@@ -298,15 +342,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A", subtitle = "핑크 캐슬 신규 캐스트 소식을 확인하세요", cafeId = "cafe-2", targetType = BannerLinkTargetType.NOTICE, targetValue = "notice-management-2", displayDays = 5),
         HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF", subtitle = "주말 예약 일정을 미리 확인하세요", cafeId = "cafe-3", targetType = BannerLinkTargetType.CAFE_DETAIL, targetValue = "cafe-3", displayDays = 3)
     )
-    override val homeBannerDocuments = banners
-        .mapIndexed { index, banner ->
-            banner.toHomeBannerDocument(
-                index = index,
-                adminOwnerId = "user-4",
-                cafeOwnerId = "user-3"
-            )
-        }
-        .toMutableList()
 
     override val inquiries = mutableListOf<Inquiry>()
 
@@ -351,8 +386,7 @@ class MockConCafeDataSource : ConCafeDataSource {
             )
         }
     }
-    private val castScheduleStatusByCastId = buildCastScheduleStatusesByCastId(castSchedulesByCastId)
-    override val castScheduleStatusDocumentsByCastId = buildCastScheduleStatusDocumentsByCastId(castScheduleStatusByCastId)
+    override val castScheduleStatusByCastId = buildCastScheduleStatusesByCastId(castSchedulesByCastId)
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라가 응대도 좋고 전체 분위기도 정말 만족스러웠어요. 재방문 의사 있습니다.", emptyList(), listOf("maid-1"), 12, "2026-03-09T19:00:00Z"),
@@ -450,7 +484,7 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val cafeExternalLinksByCafeId = mutableMapOf(
         "cafe-1" to mutableListOf(
-            ExternalLinkDocument(
+            ExternalLink(
                 id = "cafe-link-1",
                 platform = "INSTAGRAM",
                 title = "메이드 하우스 인스타",
@@ -465,7 +499,7 @@ class MockConCafeDataSource : ConCafeDataSource {
 
     override val castExternalLinksByCastId = mutableMapOf(
         "maid-1" to mutableListOf(
-            ExternalLinkDocument(
+            ExternalLink(
                 id = "cast-link-1",
                 platform = "X",
                 title = "사쿠라 X",
@@ -479,7 +513,7 @@ class MockConCafeDataSource : ConCafeDataSource {
     )
 
     override val stamps = mutableListOf(
-        StampDocument(
+        Stamp(
             id = "stamp-1",
             userId = "user-1",
             cafeId = "cafe-1",
@@ -920,12 +954,6 @@ class MockConCafeDataSource : ConCafeDataSource {
 
         castSchedulesByCastId[update.castId] = nextSchedules.sortedBy { it.date }
         nextStatuses[date] = update.status
-        castScheduleStatusDocumentsByCastId
-            .getOrPut(update.castId) { mutableMapOf() }[date] = CastScheduleStatusDocument(
-            status = update.status,
-            updatedAt = "${date}T00:00:00Z",
-            updatedBy = currentUserId ?: "system"
-        )
         return updatedSchedule
     }
 
@@ -1013,7 +1041,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         castImagesById.remove(castId)
         castSchedulesByCastId.remove(castId)
         castScheduleStatusByCastId.remove(castId)
-        castScheduleStatusDocumentsByCastId.remove(castId)
         castClaims.removeAll { it.castId == castId }
         followedCastIdsByUser.values.forEach { it.remove(castId) }
         followerUserIdsByCastId.remove(castId)
@@ -1425,68 +1452,4 @@ private fun buildCastScheduleStatusesByCastId(
             }.toMutableMap()
         }
         .toMutableMap()
-}
-
-private fun buildCastScheduleStatusDocumentsByCastId(
-    statusesByCastId: Map<String, Map<String, CastScheduleStatus>>
-): MutableMap<String, MutableMap<String, CastScheduleStatusDocument>> {
-    return statusesByCastId
-        .mapValues { (_, statuses) ->
-            statuses.mapValues { (date, status) ->
-                CastScheduleStatusDocument(
-                    status = status,
-                    updatedAt = "${date}T00:00:00Z",
-                    updatedBy = "system"
-                )
-            }.toMutableMap()
-        }
-        .toMutableMap()
-}
-
-private fun HomeBanner.toHomeBannerDocument(
-    index: Int,
-    adminOwnerId: String,
-    cafeOwnerId: String
-): HomeBannerDocument {
-    val ownerType = if (index == 0) BannerOwnerType.ADMIN else BannerOwnerType.CAFE_OWNER
-    val ownerId = if (index == 0) adminOwnerId else cafeOwnerId
-    return HomeBannerDocument(
-        id = id,
-        ownerType = ownerType,
-        ownerId = ownerId,
-        relatedCafeId = cafeId,
-        title = title,
-        subtitle = subtitle,
-        imageUrl = imageUrl,
-        linkType = targetType.toBannerLinkType(),
-        linkTarget = targetValue,
-        priority = index + 1,
-        maxVisibleGroup = 5,
-        displayDays = displayDays,
-        activeFrom = null,
-        activeUntil = null,
-        status = statusLabel.toBannerStatus(),
-        createdAt = "2026-03-01T09:00:00Z",
-        updatedAt = "2026-03-01T09:00:00Z"
-    )
-}
-
-private fun BannerLinkTargetType.toBannerLinkType(): BannerLinkType {
-    return when (this) {
-        BannerLinkTargetType.CAFE_DETAIL -> BannerLinkType.CAFE
-        BannerLinkTargetType.EVENT_DETAIL -> BannerLinkType.EVENT
-        BannerLinkTargetType.NOTICE -> BannerLinkType.NOTICE
-        BannerLinkTargetType.EXTERNAL_LINK -> BannerLinkType.EXTERNAL
-    }
-}
-
-private fun String.toBannerStatus(): BannerStatus {
-    return when (this.uppercase()) {
-        "DRAFT" -> BannerStatus.DRAFT
-        "SCHEDULED" -> BannerStatus.SCHEDULED
-        "ACTIVE" -> BannerStatus.ACTIVE
-        "ENDED" -> BannerStatus.ENDED
-        "PAUSED" -> BannerStatus.PAUSED
-        else -> BannerStatus.ACTIVE
-    }
 }

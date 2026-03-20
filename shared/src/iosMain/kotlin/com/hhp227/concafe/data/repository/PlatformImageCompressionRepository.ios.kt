@@ -1,6 +1,6 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.domain.repository.CompressedImageData
+import com.hhp227.concafe.domain.model.CompressedImageData
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.memScoped

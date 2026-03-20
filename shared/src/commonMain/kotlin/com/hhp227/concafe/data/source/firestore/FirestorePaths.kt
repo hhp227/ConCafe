@@ -1,0 +1,15 @@
+package com.hhp227.concafe.data.source.firestore
+
+object FirestorePaths {
+    const val USERS = "users"
+    const val HOME_BANNERS = "homeBanners"
+    const val CAFES = "cafes"
+    const val CAST_CLAIMS = "castClaims"
+    const val CAFE_OWNER_CLAIMS = "cafeOwnerClaims"
+    const val CAFE_REGISTRATION_CLAIMS = "cafeRegistrationClaims"
+    const val VISITS = "visits"
+    const val STAMPS = "stamps"
+    const val CAST_SCHEDULES = "castSchedules"
+    const val CAST_SCHEDULE_STATUSES = "castScheduleStatuses"
+}
+
