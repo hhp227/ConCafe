@@ -32,6 +32,7 @@ import com.hhp227.concafe.data.source.NoticeDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
 import com.hhp227.concafe.data.source.RankingDataSource
+import com.hhp227.concafe.data.source.ReviewDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.data.source.MyInfoDataSource
@@ -81,6 +82,7 @@ val dataSourceModule = module {
     single<NoticeDataSource> { get<ConCafeDataSource>() }
     single<PagingDataSource> { get<ConCafeDataSource>() }
     single<RankingDataSource> { get<ConCafeDataSource>() }
+    single<ReviewDataSource> { get<ConCafeDataSource>() }
     single<SocialDataSource> { get<ConCafeDataSource>() }
     single<VisitDataSource> { get<ConCafeDataSource>() }
     single<MyInfoDataSource> { get<ConCafeDataSource>() }
