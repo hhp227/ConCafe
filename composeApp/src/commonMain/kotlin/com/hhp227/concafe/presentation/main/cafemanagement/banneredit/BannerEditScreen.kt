@@ -34,11 +34,12 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun BannerEditScreen(
     initialCafeId: String? = null,
+    initialBannerId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: BannerEditViewModel = viewModel(
-        key = "banner-edit-${initialCafeId.orEmpty()}",
+        key = "banner-edit-${initialCafeId.orEmpty()}-${initialBannerId.orEmpty()}",
         factory = viewModelFactory {
-            initializer { GlobalContext.get().get<BannerEditViewModel> { parametersOf(initialCafeId) } }
+            initializer { GlobalContext.get().get<BannerEditViewModel> { parametersOf(initialCafeId, initialBannerId) } }
         }
     )
 ) {

@@ -9,6 +9,6 @@ import Foundation
 
 enum BannerEvent {
     case navigateBack
-    case navigateToBannerEdit(cafeId: String?)
+    case navigateToBannerEdit(cafeId: String?, bannerId: String?)
     case showMessage(String)
 }

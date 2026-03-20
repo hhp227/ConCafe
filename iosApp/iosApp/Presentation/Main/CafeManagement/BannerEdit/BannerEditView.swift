@@ -11,6 +11,8 @@ import UIKit
 struct BannerEditView: View {
     let initialCafeId: String?
 
+    let initialBannerId: String?
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: BannerEditViewModel
@@ -94,11 +96,18 @@ struct BannerEditView: View {
 
     init(
         initialCafeId: String? = nil,
+        initialBannerId: String? = nil,
         onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
     ) {
         self.initialCafeId = initialCafeId
+        self.initialBannerId = initialBannerId
         self.onNavigationAction = onNavigationAction
-        _viewModel = StateObject(wrappedValue: BannerEditViewModel(initialCafeId: initialCafeId))
+        _viewModel = StateObject(
+            wrappedValue: BannerEditViewModel(
+                initialCafeId: initialCafeId,
+                initialBannerId: initialBannerId
+            )
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
@@ -8,13 +8,9 @@ import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
-import com.hhp227.concafe.domain.event.NoticeManagementEvent
-import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.repository.NoticeRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeNoticeRepository(
     private val dataSource: ConCafeDataSource
@@ -79,7 +75,7 @@ class FakeNoticeRepository(
             displayDate = createdAt.take(10).replace("-", "."),
             isPinned = input.isPinned,
             statusLabel = if (input.reservedAt.isNullOrBlank()) "게시 중" else "임시 저장",
-            statusAccent = if (input.reservedAt.isNullOrBlank()) com.hhp227.concafe.domain.model.NoticeStatusAccent.PUBLISHED else com.hhp227.concafe.domain.model.NoticeStatusAccent.DRAFT
+            statusAccent = if (input.reservedAt.isNullOrBlank()) NoticeStatusAccent.PUBLISHED else NoticeStatusAccent.DRAFT
         )
         dataSource.cafeNoticeManagementItems.add(0, item)
 

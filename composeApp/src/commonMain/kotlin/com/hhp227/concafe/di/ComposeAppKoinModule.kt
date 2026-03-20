@@ -27,6 +27,7 @@ import com.hhp227.concafe.presentation.review.ReviewEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
@@ -43,8 +44,10 @@ private val composeAppPresentationModule = module {
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get()) }
-    factory { (initialCafeId: String) -> BannerEditViewModel(initialCafeId, get(), get(), get(), get(), get(), get()) }
+    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get(), get()) }
+    factory { (initialCafeId: String?, initialBannerId: String?) ->
+        BannerEditViewModel(initialCafeId, initialBannerId, get(), get(), get(), get(), get(), get(), get(), get())
+    }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, isRegistrationMode: Boolean) -> CafeInfoEditViewModel(cafeId, isRegistrationMode, get(), get(), get(), get()) }
@@ -65,5 +68,7 @@ private val composeAppModules = listOf(
 )
 
 fun doInitConCafeAppKoin() {
-    doInitKoin(composeAppModules)
+    doInitKoin(composeAppModules + platformModules())
 }
+
+expect fun platformModules(): List<Module>

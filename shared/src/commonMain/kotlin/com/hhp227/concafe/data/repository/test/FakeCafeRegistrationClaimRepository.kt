@@ -1,8 +1,13 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
-import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
-import com.hhp227.concafe.domain.model.*
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
+import com.hhp227.concafe.domain.model.CafeRegistrationDraft
+import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
+import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeRegistrationClaimRepository
 
 class FakeCafeRegistrationClaimRepository(

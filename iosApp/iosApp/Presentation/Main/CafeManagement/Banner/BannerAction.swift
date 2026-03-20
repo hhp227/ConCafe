@@ -13,4 +13,6 @@ enum BannerAction {
     case createBannerTapped
     case editBannerTapped(id: String)
     case deleteBannerTapped(id: String)
+    case confirmDeleteBanner
+    case dismissDeleteBannerDialog
 }

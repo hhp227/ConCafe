@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
@@ -386,8 +387,58 @@ class CafeDashboardViewModel(
                     is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
                         loadCafeDashboard()
                     }
+                    is BannerEvent.Updated -> if (event.banner.cafeId == cafeId) {
+                        patchUpdatedBannerPreview(event.banner)
+                    }
+                    is BannerEvent.Deleted -> if (event.banner.cafeId == cafeId) {
+                        patchDeletedBannerPreview(event.banner.title)
+                    }
                 }
             }
+        }
+    }
+
+    private fun patchUpdatedBannerPreview(updatedBanner: HomeBanner) {
+        _uiState.update { state ->
+            val currentCafe = state.cafe ?: return@update state
+            val currentPreview = currentCafe.homeBannerPreview
+            if (currentPreview.title != updatedBanner.title) {
+                return@update state
+            }
+            val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
+                "ACTIVE" -> "노출 중"
+                "SCHEDULED" -> "예약 중"
+                else -> "미노출"
+            }
+            state.copy(
+                cafe = currentCafe.copy(
+                    homeBannerPreview = currentPreview.copy(
+                        title = updatedBanner.title,
+                        period = "노출 ${updatedBanner.displayDays}일",
+                        statusLabel = statusLabel
+                    )
+                )
+            )
+        }
+    }
+
+    private fun patchDeletedBannerPreview(deletedBannerTitle: String) {
+        _uiState.update { state ->
+            val currentCafe = state.cafe ?: return@update state
+            val currentPreview = currentCafe.homeBannerPreview
+
+            if (currentPreview.title != deletedBannerTitle) {
+                return@update state
+            }
+            state.copy(
+                cafe = currentCafe.copy(
+                    homeBannerPreview = currentPreview.copy(
+                        title = "등록된 배너 없음",
+                        period = "-",
+                        statusLabel = "미노출"
+                    )
+                )
+            )
         }
     }
 

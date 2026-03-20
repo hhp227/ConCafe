@@ -44,7 +44,14 @@ class NavigationViewModel : ViewModel() {
                     _event.emit(NavigateTo(Banner(action.cafeId)))
                 }
                 is NavigationAction.NavigateToBannerEdit -> {
-                    _event.emit(NavigateTo(BannerEdit(action.cafeId)))
+                    _event.emit(
+                        NavigateTo(
+                            BannerEdit(
+                                cafeId = action.cafeId,
+                                bannerId = action.bannerId
+                            )
+                        )
+                    )
                 }
                 is NavigationAction.NavigateToExternalLink -> {
                     _event.emit(NavigateTo(ExternalLink(action.title, action.url)))

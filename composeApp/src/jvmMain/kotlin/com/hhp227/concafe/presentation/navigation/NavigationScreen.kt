@@ -190,6 +190,7 @@ private fun DetailRoutePane(
         is Route.BannerEdit -> {
             BannerEditScreen(
                 initialCafeId = route.cafeId,
+                initialBannerId = route.bannerId,
                 onNavigationAction = onNavigationAction
             )
         }
