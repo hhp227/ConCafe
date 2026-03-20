@@ -386,8 +386,31 @@ class CafeDashboardViewModel(
                     is BannerEvent.Created -> if (event.banner.cafeId == cafeId) {
                         loadCafeDashboard()
                     }
+                    is BannerEvent.Deleted -> if (event.banner.cafeId == cafeId) {
+                        patchDeletedBannerPreview(event.banner.title)
+                    }
                 }
             }
+        }
+    }
+
+    private fun patchDeletedBannerPreview(deletedBannerTitle: String) {
+        _uiState.update { state ->
+            val currentCafe = state.cafe ?: return@update state
+            val currentPreview = currentCafe.homeBannerPreview
+
+            if (currentPreview.title != deletedBannerTitle) {
+                return@update state
+            }
+            state.copy(
+                cafe = currentCafe.copy(
+                    homeBannerPreview = currentPreview.copy(
+                        title = "등록된 배너 없음",
+                        period = "-",
+                        statusLabel = "미노출"
+                    )
+                )
+            )
         }
     }
 

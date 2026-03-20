@@ -12,6 +12,7 @@ struct BannerUiState {
     var selectedTab: BannerTab = .active
     var locationLabel = "홈 화면 상단"
     var banners: [BannerItem] = []
+    var pendingDeleteBannerId: String? = nil
 
     var filteredBanners: [BannerItem] {
         banners.filter { $0.tab == selectedTab }
@@ -30,6 +31,11 @@ struct BannerUiState {
 
     var sectionCountLabel: String {
         "\(sectionTitle) (\(filteredBanners.count))"
+    }
+
+    var pendingDeleteBanner: BannerItem? {
+        guard let pendingDeleteBannerId else { return nil }
+        return banners.first { $0.id == pendingDeleteBannerId }
     }
 }
 

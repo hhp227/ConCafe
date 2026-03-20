@@ -343,12 +343,35 @@ final class CafeDashboardViewModel: ObservableObject {
                 for try await event in asyncSequence(for: bannerEventPublisher.events) {
                     if let created = event as? Shared.BannerEvent.Created, created.banner.cafeId == self.cafeId {
                         self.loadCafeDashboard()
+                    } else if let deleted = event as? Shared.BannerEvent.Deleted, deleted.banner.cafeId == self.cafeId {
+                        self.patchDeletedBannerPreview(deleted.banner.title)
                     }
                 }
             } catch {
                 print("Error: \(error)")
             }
         }
+    }
+
+    private func patchDeletedBannerPreview(_ deletedBannerTitle: String) {
+        guard let current = uiState.cafe else { return }
+        let currentPreview = current.homeBannerPreview
+        guard currentPreview.title == deletedBannerTitle else { return }
+
+        uiState.cafe = CafeDashboardData(
+            id: current.id,
+            name: current.name,
+            city: current.city,
+            todayCheckIns: current.todayCheckIns,
+            todayReviews: current.todayReviews,
+            rating: current.rating,
+            castPreviews: current.castPreviews,
+            homeBannerPreview: CafeDashboardData.HomeBannerPreview(
+                title: "등록된 배너 없음",
+                period: "-",
+                statusLabel: "미노출"
+            )
+        )
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {

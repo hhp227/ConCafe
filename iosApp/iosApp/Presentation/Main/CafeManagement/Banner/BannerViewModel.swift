@@ -15,6 +15,8 @@ final class BannerViewModel: ObservableObject {
 
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let deleteHomeBannerUseCase: DeleteHomeBannerUseCase
+
     private let bannerEventPublisher: BannerEventPublisher
 
     @Published private(set) var uiState = BannerUiState()
@@ -37,6 +39,10 @@ final class BannerViewModel: ObservableObject {
                         }
                         .map { $0.toBannerItem() }
                     uiState.banners = mapped
+                    if let pendingDeleteBannerId = uiState.pendingDeleteBannerId,
+                       !mapped.contains(where: { $0.id == pendingDeleteBannerId }) {
+                        uiState.pendingDeleteBannerId = nil
+                    }
                 } else {
                     event.send(.showMessage("배너 목록을 불러오지 못했습니다."))
                 }
@@ -55,6 +61,8 @@ final class BannerViewModel: ObservableObject {
                     switch event {
                     case is Shared.BannerEvent.Created:
                         self.loadBanners()
+                    case let deleted as Shared.BannerEvent.Deleted:
+                        self.removeBanner(id: deleted.banner.id)
                     default:
                         break
                     }
@@ -75,18 +83,64 @@ final class BannerViewModel: ObservableObject {
             event.send(.navigateToBannerEdit(cafeId: cafeId))
         case .editBannerTapped:
             event.send(.showMessage("편집 기능은 아직 연결되지 않았습니다."))
-        case .deleteBannerTapped:
-            event.send(.showMessage("삭제 기능은 아직 연결되지 않았습니다."))
+        case .deleteBannerTapped(let id):
+            clickDeleteBanner(id: id)
+        case .dismissDeleteBannerDialog:
+            uiState.pendingDeleteBannerId = nil
+        case .confirmDeleteBanner:
+            confirmDeleteBanner()
+        }
+    }
+
+    private func clickDeleteBanner(id: String) {
+        let hasBanner = uiState.banners.contains { $0.id == id }
+        if !hasBanner {
+            return
+        }
+        uiState.pendingDeleteBannerId = id
+    }
+
+    private func confirmDeleteBanner() {
+        guard let bannerId = uiState.pendingDeleteBannerId else {
+            return
+        }
+
+        uiState.pendingDeleteBannerId = nil
+        tasks[.delete]?.cancel()
+        tasks[.delete] = Task {
+            do {
+                let result = try await deleteHomeBannerUseCase.invoke(bannerId: bannerId)
+                if result is AppResultSuccess<AnyObject> {
+                    removeBanner(id: bannerId)
+                    event.send(.showMessage("배너를 삭제했습니다."))
+                } else if let failure = result as? AppResultFailure {
+                    event.send(.showMessage("\(failure.error)"))
+                } else {
+                    event.send(.showMessage("배너 삭제에 실패했습니다."))
+                }
+            } catch {
+                if Task.isCancelled { return }
+                event.send(.showMessage("배너 삭제에 실패했습니다."))
+            }
+        }
+    }
+
+    private func removeBanner(id: String) {
+        uiState.banners.removeAll { $0.id == id }
+        if uiState.pendingDeleteBannerId == id {
+            uiState.pendingDeleteBannerId = nil
         }
     }
 
     init(
         cafeId: String? = nil,
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        deleteHomeBannerUseCase: DeleteHomeBannerUseCase = KoinInitializerKt.resolveDeleteHomeBannerUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.deleteHomeBannerUseCase = deleteHomeBannerUseCase
         self.bannerEventPublisher = bannerEventPublisher
         observeBannerEvent()
         loadBanners()
@@ -100,6 +154,7 @@ final class BannerViewModel: ObservableObject {
 
 private enum TaskKey {
     case load
+    case delete
     case bannerEvent
 }
 

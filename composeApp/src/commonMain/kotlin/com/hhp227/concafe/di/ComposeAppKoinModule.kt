@@ -44,7 +44,7 @@ private val composeAppPresentationModule = module {
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get()) }
+    factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get(), get()) }
     factory { (initialCafeId: String) -> BannerEditViewModel(initialCafeId, get(), get(), get(), get(), get(), get()) }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }

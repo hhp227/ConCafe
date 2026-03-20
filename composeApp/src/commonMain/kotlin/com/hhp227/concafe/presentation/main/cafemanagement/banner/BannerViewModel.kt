@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.event.BannerEvent as BannerDomainEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ import kotlinx.coroutines.launch
 class BannerViewModel(
     private val cafeId: String? = null,
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
-    private val bannerEventPublisher: BannerEventPublisher
+    private val bannerEventPublisher: BannerEventPublisher,
+    private val deleteHomeBannerUseCase: DeleteHomeBannerUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BannerUiState.empty())
     val uiState: StateFlow<BannerUiState> = _uiState.asStateFlow()
@@ -39,7 +41,14 @@ class BannerViewModel(
                         .filter { banner -> targetCafeId.isNullOrBlank() || banner.cafeId == targetCafeId }
                         .map { banner -> banner.toBannerItem() }
                         .toList()
-                    _uiState.update { it.copy(banners = mapped) }
+                    _uiState.update { state ->
+                        state.copy(
+                            banners = mapped,
+                            pendingDeleteBannerId = state.pendingDeleteBannerId?.takeIf { pendingId ->
+                                mapped.any { it.id == pendingId }
+                            }
+                        )
+                    }
                 }
                 is AppResult.Failure -> {
                     _event.emit(BannerEvent.ShowMessage("배너 목록을 불러오지 못했습니다."))
@@ -53,6 +62,47 @@ class BannerViewModel(
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerDomainEvent.Created -> loadBanners()
+                    is BannerDomainEvent.Deleted -> removeBanner(event.banner.id)
+                }
+            }
+        }
+    }
+
+    private fun removeBanner(bannerId: String) {
+        _uiState.update { state ->
+            state.copy(
+                banners = state.banners.filterNot { it.id == bannerId },
+                pendingDeleteBannerId = state.pendingDeleteBannerId?.takeUnless { it == bannerId }
+            )
+        }
+    }
+
+    private fun clickDeleteBanner(bannerId: String) {
+        val hasBanner = _uiState.value.banners.any { it.id == bannerId }
+        if (!hasBanner) {
+            return
+        }
+        _uiState.update { it.copy(pendingDeleteBannerId = bannerId) }
+    }
+
+    private fun dismissDeleteBannerDialog() {
+        _uiState.update { it.copy(pendingDeleteBannerId = null) }
+    }
+
+    private fun confirmDeleteBanner() {
+        val bannerId = _uiState.value.pendingDeleteBannerId
+        if (bannerId == null) {
+            return
+        }
+        viewModelScope.launch {
+            when (val result = deleteHomeBannerUseCase.invoke(bannerId)) {
+                is AppResult.Success -> {
+                    removeBanner(bannerId)
+                    _event.emit(BannerEvent.ShowMessage("배너를 삭제했습니다."))
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(pendingDeleteBannerId = null) }
+                    _event.emit(BannerEvent.ShowMessage(result.error.toString()))
                 }
             }
         }
@@ -62,7 +112,9 @@ class BannerViewModel(
         when (action) {
             BannerAction.ClickBack -> emitEvent(BannerEvent.NavigateBack)
             BannerAction.ClickCreateBanner -> emitEvent(BannerEvent.NavigateToBannerEdit(cafeId))
-            is BannerAction.ClickDeleteBanner -> emitEvent(BannerEvent.ShowMessage("삭제 기능은 아직 연결되지 않았습니다."))
+            BannerAction.ConfirmDeleteBanner -> confirmDeleteBanner()
+            BannerAction.DismissDeleteBannerDialog -> dismissDeleteBannerDialog()
+            is BannerAction.ClickDeleteBanner -> clickDeleteBanner(action.bannerId)
             is BannerAction.ClickEditBanner -> emitEvent(BannerEvent.ShowMessage("편집 기능은 아직 연결되지 않았습니다."))
             is BannerAction.SelectTab -> _uiState.update { it.copy(selectedTab = action.tab) }
         }

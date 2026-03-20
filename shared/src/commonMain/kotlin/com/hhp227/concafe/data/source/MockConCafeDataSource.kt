@@ -1,9 +1,5 @@
 package com.hhp227.concafe.data.source
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
@@ -302,27 +298,15 @@ class MockConCafeDataSource : ConCafeDataSource {
         HomeBanner("banner-2", "신규 메이드 입점", "FFC2A7", "FF8F7A", subtitle = "핑크 캐슬 신규 캐스트 소식을 확인하세요", cafeId = "cafe-2", targetType = BannerLinkTargetType.NOTICE, targetValue = "notice-management-2", displayDays = 5),
         HomeBanner("banner-3", "주말 예약 오픈", "B6A5FF", "7E88FF", subtitle = "주말 예약 일정을 미리 확인하세요", cafeId = "cafe-3", targetType = BannerLinkTargetType.CAFE_DETAIL, targetValue = "cafe-3", displayDays = 3)
     )
-    override val homeBannerDocuments = banners.mapIndexed { index, banner ->
-        HomeBannerDocument(
-            id = banner.id,
-            ownerType = if (index == 0) BannerOwnerType.ADMIN else BannerOwnerType.CAFE_OWNER,
-            ownerId = if (index == 0) "user-4" else "user-3",
-            relatedCafeId = banner.cafeId,
-            title = banner.title,
-            subtitle = banner.subtitle,
-            imageUrl = banner.imageUrl,
-            linkType = banner.targetType.toBannerLinkType(),
-            linkTarget = banner.targetValue,
-            priority = index + 1,
-            maxVisibleGroup = 5,
-            displayDays = banner.displayDays,
-            activeFrom = null,
-            activeUntil = null,
-            status = banner.statusLabel.toBannerStatus(),
-            createdAt = "2026-03-01T09:00:00Z",
-            updatedAt = "2026-03-01T09:00:00Z"
-        )
-    }.toMutableList()
+    override val homeBannerDocuments = banners
+        .mapIndexed { index, banner ->
+            banner.toHomeBannerDocument(
+                index = index,
+                adminOwnerId = "user-4",
+                cafeOwnerId = "user-3"
+            )
+        }
+        .toMutableList()
 
     override val inquiries = mutableListOf<Inquiry>()
 
@@ -352,39 +336,23 @@ class MockConCafeDataSource : ConCafeDataSource {
         }
     }
     private val castSchedulesByCastId = mutableMapOf(
-        "maid-1" to defaultCastSchedules("maid-1", "cafe-1", listOf("MONDAY", "TUESDAY")),
-        "maid-2" to defaultCastSchedules("maid-2", "cafe-2", listOf("MONDAY", "WEDNESDAY")),
-        "maid-3" to defaultCastSchedules("maid-3", "cafe-3", listOf("TUESDAY", "THURSDAY")),
-        "maid-4" to defaultCastSchedules("maid-4", "cafe-2", listOf("WEDNESDAY", "FRIDAY")),
-        "maid-5" to defaultCastSchedules("maid-5", "cafe-1", listOf("MONDAY", "FRIDAY")),
-        "maid-6" to defaultCastSchedules("maid-6", "cafe-3", listOf("THURSDAY", "SATURDAY"))
+        "maid-1" to buildCastSchedules("maid-1", "cafe-1", listOf("MONDAY", "TUESDAY")),
+        "maid-2" to buildCastSchedules("maid-2", "cafe-2", listOf("MONDAY", "WEDNESDAY")),
+        "maid-3" to buildCastSchedules("maid-3", "cafe-3", listOf("TUESDAY", "THURSDAY")),
+        "maid-4" to buildCastSchedules("maid-4", "cafe-2", listOf("WEDNESDAY", "FRIDAY")),
+        "maid-5" to buildCastSchedules("maid-5", "cafe-1", listOf("MONDAY", "FRIDAY")),
+        "maid-6" to buildCastSchedules("maid-6", "cafe-3", listOf("THURSDAY", "SATURDAY"))
     ).apply {
         maidHouseAdditionalCasts.forEachIndexed { index, cast ->
-            this[cast.id] = defaultCastSchedules(
+            this[cast.id] = buildCastSchedules(
                 cast.id,
                 cast.cafeId,
                 maidHouseWorkingDaysByIndex(index)
             )
         }
     }
-    private val castScheduleStatusByCastId = castSchedulesByCastId
-        .mapValues { (_, schedules) ->
-            schedules.associate { schedule ->
-                schedule.date to CastScheduleStatus.WORK
-            }.toMutableMap()
-        }
-        .toMutableMap()
-    override val castScheduleStatusDocumentsByCastId = castScheduleStatusByCastId
-        .mapValues { (_, statuses) ->
-            statuses.mapValues { (date, status) ->
-                CastScheduleStatusDocument(
-                    status = status,
-                    updatedAt = "${date}T00:00:00Z",
-                    updatedBy = "system"
-                )
-            }.toMutableMap()
-        }
-        .toMutableMap()
+    private val castScheduleStatusByCastId = buildCastScheduleStatusesByCastId(castSchedulesByCastId)
+    override val castScheduleStatusDocumentsByCastId = buildCastScheduleStatusDocumentsByCastId(castScheduleStatusByCastId)
 
     override val reviews = mutableListOf(
         Review("review-1", "user-1", "cafe-1", "visit-1", 5.0f, "사쿠라가 응대도 좋고 전체 분위기도 정말 만족스러웠어요. 재방문 의사 있습니다.", emptyList(), listOf("maid-1"), 12, "2026-03-09T19:00:00Z"),
@@ -446,7 +414,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         Visit("visit-3", "user-1", "cafe-3", "2026-03-09T18:40:00Z", "저녁 타임 분위기 좋음", true),
         Visit("visit-4", "user-1", "cafe-4", "2026-03-08T17:20:00Z", "퇴근 후 방문", true),
         Visit("visit-5", "user-1", "cafe-5", "2026-03-08T19:00:00Z", "주말 메뉴 확인", true),
-        Visit("visit-4", "user-1", "cafe-6", "2026-03-08T20:10:00Z", "체리 시즌 메뉴 주문", true),
+        Visit("visit-6", "user-1", "cafe-6", "2026-03-08T20:10:00Z", "체리 시즌 메뉴 주문", true),
         Visit("visit-7", "user-1", "cafe-7", "2026-03-07T16:40:00Z", "가든 분위기 확인", true),
         Visit("visit-8", "user-1", "cafe-8", "2026-03-07T15:25:00Z", "명동 일정 중 방문", true),
         Visit("visit-9", "user-1", "cafe-9", "2026-03-06T18:05:00Z", "캐주얼 타임 방문", true),
@@ -1064,6 +1032,10 @@ class MockConCafeDataSource : ConCafeDataSource {
     }
 
     override fun refreshReviewProjections(cafeId: String, taggedCastIds: List<String>) {
+        if (taggedCastIds.isNotEmpty()) {
+            // 캐스트 집계 갱신은 후속 단계에서 연결하고, 현재는 카페 리뷰 집계만 갱신한다.
+        }
+
         val cafeIndex = cafes.indexOfFirst { it.id == cafeId }
         if (cafeIndex == -1) return
 
@@ -1085,9 +1057,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         val currentDetail = cafeDetailsById[cafeId] ?: buildCafeDetail(updatedCafe)
         cafeDetailsById[cafeId] = currentDetail.copy(cafe = updatedCafe)
 
-        val castIdsToRefresh = linkedSetOf<String>()
-        castIdsToRefresh.addAll(taggedCastIds)
-        castIdsToRefresh.addAll(casts.filter { it.cafeId == cafeId }.map { it.id })
     }
 
     override fun rankingItemsFromCasts(): List<RankingItem> {
@@ -1153,10 +1122,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         private const val HOME_POPULAR_CAST_MAX_COUNT = 50
         private const val RANKING_MAX_COUNT = 50
     }
-}
-
-private fun defaultCastSchedules(castId: String, cafeId: String, workingDays: List<String>): List<CastSchedule> {
-    return buildCastSchedules(castId, cafeId, workingDays)
 }
 
 private fun buildCafeNoticeManagementItems(): List<CafeNoticeManagementItem> {
@@ -1448,6 +1413,62 @@ private fun buildCastSchedules(castId: String, cafeId: String, workingDays: List
             endTime = "22:00"
         )
     }
+}
+
+private fun buildCastScheduleStatusesByCastId(
+    schedulesByCastId: Map<String, List<CastSchedule>>
+): MutableMap<String, MutableMap<String, CastScheduleStatus>> {
+    return schedulesByCastId
+        .mapValues { (_, schedules) ->
+            schedules.associate { schedule ->
+                schedule.date to CastScheduleStatus.WORK
+            }.toMutableMap()
+        }
+        .toMutableMap()
+}
+
+private fun buildCastScheduleStatusDocumentsByCastId(
+    statusesByCastId: Map<String, Map<String, CastScheduleStatus>>
+): MutableMap<String, MutableMap<String, CastScheduleStatusDocument>> {
+    return statusesByCastId
+        .mapValues { (_, statuses) ->
+            statuses.mapValues { (date, status) ->
+                CastScheduleStatusDocument(
+                    status = status,
+                    updatedAt = "${date}T00:00:00Z",
+                    updatedBy = "system"
+                )
+            }.toMutableMap()
+        }
+        .toMutableMap()
+}
+
+private fun HomeBanner.toHomeBannerDocument(
+    index: Int,
+    adminOwnerId: String,
+    cafeOwnerId: String
+): HomeBannerDocument {
+    val ownerType = if (index == 0) BannerOwnerType.ADMIN else BannerOwnerType.CAFE_OWNER
+    val ownerId = if (index == 0) adminOwnerId else cafeOwnerId
+    return HomeBannerDocument(
+        id = id,
+        ownerType = ownerType,
+        ownerId = ownerId,
+        relatedCafeId = cafeId,
+        title = title,
+        subtitle = subtitle,
+        imageUrl = imageUrl,
+        linkType = targetType.toBannerLinkType(),
+        linkTarget = targetValue,
+        priority = index + 1,
+        maxVisibleGroup = 5,
+        displayDays = displayDays,
+        activeFrom = null,
+        activeUntil = null,
+        status = statusLabel.toBannerStatus(),
+        createdAt = "2026-03-01T09:00:00Z",
+        updatedAt = "2026-03-01T09:00:00Z"
+    )
 }
 
 private fun BannerLinkTargetType.toBannerLinkType(): BannerLinkType {

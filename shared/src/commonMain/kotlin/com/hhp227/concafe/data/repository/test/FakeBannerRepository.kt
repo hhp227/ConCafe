@@ -1,7 +1,6 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
-import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -65,6 +64,20 @@ class FakeBannerRepository(
         return created
     }
 
+    override suspend fun deleteHomeBanner(bannerId: String): HomeBanner {
+        normalizeBannerSlots()
+        val index = dataSource.banners.indexOfFirst { it.id == bannerId }
+        if (index == -1) {
+            throw NoSuchElementException("banner not found")
+        }
+
+        val deleted = dataSource.banners.removeAt(index)
+        dataSource.homeBannerDocuments.removeAll { it.id == deleted.id }
+        updateCafeHomeBannerPreview(deleted.cafeId)
+        normalizeBannerSlots()
+        return deleted
+    }
+
     private fun normalizeBannerSlots() {
         val now = Clock.System.now().toEpochMilliseconds()
         val expiredIds = dataSource.banners
@@ -104,6 +117,29 @@ class FakeBannerRepository(
                 )
             }
         }
+    }
+
+    private fun updateCafeHomeBannerPreview(cafeId: String?) {
+        if (cafeId.isNullOrBlank()) {
+            return
+        }
+
+        val representative = dataSource.banners
+            .asSequence()
+            .filter { it.cafeId == cafeId }
+            .sortedBy { it.createdAtEpochMillis }
+            .firstOrNull()
+        if (representative == null) {
+            dataSource.cafeHomeBannerPreviewByCafeId.remove(cafeId)
+            return
+        }
+
+        val statusLabel = if (representative.statusLabel == STATUS_ACTIVE) "노출 중" else "예약 중"
+        dataSource.cafeHomeBannerPreviewByCafeId[cafeId] = CafeDashboardData.HomeBannerPreview(
+            title = representative.title,
+            period = resolvePeriodLabel(representative.displayDays),
+            statusLabel = statusLabel
+        )
     }
 }
 

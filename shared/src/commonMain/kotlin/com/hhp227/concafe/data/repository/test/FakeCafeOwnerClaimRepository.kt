@@ -1,4 +1,4 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData

@@ -1,8 +1,13 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.model.*
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(

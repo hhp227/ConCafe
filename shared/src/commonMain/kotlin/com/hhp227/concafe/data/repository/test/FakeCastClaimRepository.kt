@@ -1,14 +1,11 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
-import com.hhp227.concafe.domain.common.PagedResult
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastClaimCandidate
-import com.hhp227.concafe.domain.event.CastClaimEvent
 import com.hhp227.concafe.domain.model.CastClaimStatus
-import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.MyCastClaimStatus
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.domain.repository.CastClaimRepository
@@ -39,8 +36,8 @@ class FakeCastClaimRepository(
             pendingClaim = userClaims.firstOrNull { it.status == CastClaimStatus.PENDING },
             latestRejectedClaim = userClaims.firstOrNull { it.status == CastClaimStatus.REJECTED },
             hasRequestableCasts = linkedCast == null &&
-                affiliatedCafeId != null &&
-                dataSource.casts.any { it.cafeId == affiliatedCafeId && it.linkedUserId == null }
+                    affiliatedCafeId != null &&
+                    dataSource.casts.any { it.cafeId == affiliatedCafeId && it.linkedUserId == null }
         )
     }
 

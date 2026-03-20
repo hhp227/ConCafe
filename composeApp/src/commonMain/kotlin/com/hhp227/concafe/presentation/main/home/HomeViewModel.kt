@@ -146,17 +146,6 @@ class HomeViewModel(
         loadNearbyCafePage(cursor = cursor, append = true)
     }
 
-    private fun observeCafeDetailEvent() {
-        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
-        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.events.collectLatest { event ->
-                if (event is CafeDetailEvent.CafeInfoUpdated) {
-                    patchCafeInfo(event.cafe)
-                }
-            }
-        }
-    }
-
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
@@ -171,25 +160,26 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCafeDetailEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
+            cafeDetailEventPublisher.events.collectLatest { event ->
+                if (event is CafeDetailEvent.CafeInfoUpdated) {
+                    patchCafeInfo(event.cafe)
+                }
+            }
+        }
+    }
+
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> loadHomeFeed()
+                    is BannerEvent.Deleted -> removeBanner(event.banner.id)
                 }
             }
-        }
-    }
-
-    private fun patchCafeInfo(cafe: Cafe) {
-        _uiState.update { state ->
-            state.copy(
-                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
-                nearbyCafes = state.nearbyCafes.map { item ->
-                    if (item.id == cafe.id) cafe else item
-                }
-            )
         }
     }
 
@@ -203,6 +193,25 @@ class HomeViewModel(
                     is CastEvent.Deleted -> removeCast(event.castId)
                 }
             }
+        }
+    }
+
+    private fun removeBanner(bannerId: String) {
+        _uiState.update { state ->
+            state.copy(
+                banners = state.banners.filterNot { it.id == bannerId }
+            )
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
+                nearbyCafes = state.nearbyCafes.map { item ->
+                    if (item.id == cafe.id) cafe else item
+                }
+            )
         }
     }
 

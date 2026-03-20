@@ -28,34 +28,6 @@ final class HomeViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private func observeSession() {
-        tasks[.session]?.cancel()
-        tasks[.session] = Task {
-            do {
-                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    uiState = HomeUiState(
-                        isLoggedIn: user != nil,
-                        isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
-                        banners: uiState.banners,
-                        popularCasts: uiState.popularCasts,
-                        popularCastCafeNames: uiState.popularCastCafeNames,
-                        popularCastCursor: uiState.popularCastCursor,
-                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-                        nearbyCafes: uiState.nearbyCafes,
-                        nearbyCafeCursor: uiState.nearbyCafeCursor,
-                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-                        birthdayCasts: uiState.birthdayCasts,
-                        notices: uiState.notices
-                    )
-                }
-            } catch {
-                print("Error: \(error)")
-            }
-        }
-    }
-
     private func loadHomeFeed() {
         Task {
             do {
@@ -271,6 +243,34 @@ final class HomeViewModel: ObservableObject {
         loadNearbyCafePage(cursor: cursor, append: true)
     }
 
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState = HomeUiState(
+                        isLoggedIn: user != nil,
+                        isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func observeCafeDetailEvent() {
         tasks[.cafeDetailEvent]?.cancel()
         tasks[.cafeDetailEvent] = Task {
@@ -290,8 +290,15 @@ final class HomeViewModel: ObservableObject {
         tasks[.bannerEvent]?.cancel()
         tasks[.bannerEvent] = Task {
             do {
-                for try await _ in asyncSequence(for: bannerEventPublisher.events) {
-                    self.loadHomeFeed()
+                for try await event in asyncSequence(for: bannerEventPublisher.events) {
+                    switch event {
+                    case is Shared.BannerEvent.Created:
+                        self.loadHomeFeed()
+                    case let deleted as Shared.BannerEvent.Deleted:
+                        self.removeBanner(id: deleted.banner.id)
+                    default:
+                        break
+                    }
                 }
             } catch {
                 print("Error: \(error)")
@@ -317,6 +324,25 @@ final class HomeViewModel: ObservableObject {
                 print("Error: \(error)")
             }
         }
+    }
+
+    private func removeBanner(id: String) {
+        uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
+            banners: uiState.banners.filter { $0.id != id },
+            popularCasts: uiState.popularCasts,
+            popularCastCafeNames: uiState.popularCastCafeNames,
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+            nearbyCafes: uiState.nearbyCafes,
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts,
+            notices: uiState.notices
+        )
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {

@@ -41,6 +41,27 @@ struct BannerView: View {
                 alertMessage = message
             }
         }
+        .confirmationDialog(
+            "배너 삭제",
+            isPresented: Binding(
+                get: { viewModel.uiState.pendingDeleteBanner != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.dismissDeleteBannerDialog)
+                    }
+                }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("삭제", role: .destructive) {
+                viewModel.onAction(.confirmDeleteBanner)
+            }
+            Button("취소", role: .cancel) {
+                viewModel.onAction(.dismissDeleteBannerDialog)
+            }
+        } message: {
+            Text("'\(viewModel.uiState.pendingDeleteBanner?.title ?? "")' 배너를 삭제하시겠습니까?")
+        }
         .alert(
             "안내",
             isPresented: Binding(

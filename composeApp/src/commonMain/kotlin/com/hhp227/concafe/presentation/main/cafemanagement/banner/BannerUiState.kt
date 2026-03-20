@@ -4,10 +4,14 @@ data class BannerUiState(
     val screenTitle: String = "배너 관리",
     val selectedTab: BannerTab = BannerTab.ACTIVE,
     val locationLabel: String = "홈 화면 상단",
-    val banners: List<BannerItem> = emptyList()
+    val banners: List<BannerItem> = emptyList(),
+    val pendingDeleteBannerId: String? = null
 ) {
     val filteredBanners: List<BannerItem>
         get() = banners.filter { it.tab == selectedTab }
+
+    val pendingDeleteBanner: BannerItem?
+        get() = banners.firstOrNull { it.id == pendingDeleteBannerId }
 
     val sectionTitle: String
         get() = when (selectedTab) {
