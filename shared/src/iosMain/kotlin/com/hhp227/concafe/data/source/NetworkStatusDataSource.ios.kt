@@ -1,7 +1,9 @@
 package com.hhp227.concafe.data.source
 
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -25,6 +27,7 @@ actual fun observePlatformNetworkConnection(): Flow<Boolean> {
         .distinctUntilChanged()
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun isCurrentlyConnected(): Boolean {
     val reachability = SCNetworkReachabilityCreateWithName(null, REACHABILITY_HOST) ?: return false
     return memScoped {
@@ -34,7 +37,7 @@ private fun isCurrentlyConnected(): Boolean {
         if (!didGetFlags) {
             false
         } else {
-            val flags = flagsVar.value.toULong()
+            val flags = flagsVar.ptr.pointed.value.toULong()
             val reachableFlag = kSCNetworkReachabilityFlagsReachable.toULong()
             val connectionRequiredFlag = kSCNetworkReachabilityFlagsConnectionRequired.toULong()
             val isReachable = (flags and reachableFlag) != 0uL
