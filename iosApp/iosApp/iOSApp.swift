@@ -1,5 +1,6 @@
 import SwiftUI
 import Shared
+import FirebaseCore
 
 @main
 struct iOSApp: App {
@@ -11,5 +12,6 @@ struct iOSApp: App {
 
     init() {
         KoinInitializerKt.doInitKoin()
+        FirebaseApp.configure()
     }
 }
