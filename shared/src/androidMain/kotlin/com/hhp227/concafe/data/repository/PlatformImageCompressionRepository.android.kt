@@ -2,7 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.hhp227.concafe.domain.repository.CompressedImageData
+import com.hhp227.concafe.domain.model.CompressedImageData
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.max

@@ -1,9 +1,6 @@
 package com.hhp227.concafe.domain.repository
 
-data class CompressedImageData(
-    val bytes: ByteArray,
-    val fileName: String
-)
+import com.hhp227.concafe.domain.model.CompressedImageData
 
 interface ImageCompressionRepository {
     suspend fun compressIfNeeded(localPath: String, maxBytes: Int): CompressedImageData
