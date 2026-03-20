@@ -384,6 +384,8 @@ private struct PhotosUICompatImagePicker: View {
                 defer {
                     Task { @MainActor in
                         isLoading = false
+                        // Allow selecting the same or another asset again on subsequent picker opens.
+                        selectedItem = nil
                     }
                 }
                 if let data = try? await item.loadTransferable(type: Data.self),
