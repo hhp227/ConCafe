@@ -1,5 +1,9 @@
 package com.hhp227.concafe.data.repository
 
+import com.hhp227.concafe.data.source.CafeDataSource
+import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
@@ -13,7 +17,12 @@ import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
 
-class CastRepositoryImpl : CastRepository {
+class CastRepositoryImpl(
+    private val castDataSource: CastDataSource,
+    private val cafeDataSource: CafeDataSource,
+    private val socialDataSource: SocialDataSource,
+    private val pagingDataSource: PagingDataSource
+) : CastRepository {
     override suspend fun searchCasts(
         query: String?,
         country: String?,
@@ -22,50 +31,86 @@ class CastRepositoryImpl : CastRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        TODO("Not yet implemented")
+        var filtered = castDataSource.casts
+
+        if (!query.isNullOrBlank()) {
+            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        }
+
+        if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
+            val validCafeIds = cafeDataSource.cafes.filter { cafe ->
+                val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
+                val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
+                countryMatched && cityMatched
+            }.map { it.id }.toSet()
+            filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
+        }
+
+        filtered = when (sort) {
+            CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
+            CastSort.LATEST -> filtered.sortedByDescending { it.id }
+            CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
+        }
+
+        return pagingDataSource.toPaged(filtered, cursor, pageSize)
     }
 
-    override suspend fun getHomePopularCastPage(
-        cursor: String?,
-        pageSize: Int
-    ): PagedResult<Cast> {
-        TODO("Not yet implemented")
+    override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
+        val sorted = castDataSource.casts
+            .sortedByDescending { it.followerCount }
+        return pagingDataSource.toPaged(sorted, cursor, pageSize)
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
-        TODO("Not yet implemented")
+        return castDataSource.castDetail(castId)
+            ?: throw NoSuchElementException("cast detail not found")
     }
 
-    override suspend fun getCafeCastPage(
-        cafeId: String,
-        cursor: String?,
-        pageSize: Int
-    ): PagedResult<CafeCastPreview> {
-        TODO("Not yet implemented")
+    override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
+        val sorted = castDataSource.casts
+            .filter { it.cafeId == cafeId }
+            .sortedWith(
+                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                    .thenBy { it.name }
+            )
+            .map { cast ->
+                CafeCastPreview(
+                    id = cast.id,
+                    name = cast.name,
+                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                )
+            }
+
+        return pagingDataSource.toPaged(sorted, cursor, pageSize)
     }
 
-    override suspend fun getCafeCastListPage(
-        cafeId: String,
-        cursor: String?,
-        pageSize: Int
-    ): PagedResult<CafeDetailCast> {
-        TODO("Not yet implemented")
+    override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
+        val sorted = castDataSource.casts
+            .filter { it.cafeId == cafeId }
+            .sortedWith(
+                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                    .thenBy { it.name }
+            )
+            .map { cast ->
+                CafeDetailCast(
+                    cast = cast,
+                    isWorking = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                )
+            }
+
+        return pagingDataSource.toPaged(sorted, cursor, pageSize)
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        TODO("Not yet implemented")
+        return castDataSource.upsertCast(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
-        TODO("Not yet implemented")
+        return castDataSource.deleteCast(castId)
     }
 
-    override suspend fun getCastSchedules(
-        castId: String,
-        fromDate: String,
-        toDate: String
-    ): List<CastSchedule> {
-        TODO("Not yet implemented")
+    override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
+        return castDataSource.castSchedules(castId, fromDate, toDate)
     }
 
     override suspend fun getCastScheduleStatuses(
@@ -73,30 +118,49 @@ class CastRepositoryImpl : CastRepository {
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
-        TODO("Not yet implemented")
+        return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
-        TODO("Not yet implemented")
+        return castDataSource.updateCastSchedule(update)
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
-        TODO("Not yet implemented")
+        return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
     }
 
     override suspend fun followCast(userId: String, castId: String) {
-        TODO("Not yet implemented")
+        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
+        set.add(castId)
     }
 
     override suspend fun unfollowCast(userId: String, castId: String) {
-        TODO("Not yet implemented")
+        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
+        set.remove(castId)
     }
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
-        TODO("Not yet implemented")
+        return socialDataSource.followedCastIdsByUser
+            .filterValues { followedIds -> followedIds.contains(castId) }
+            .keys
+            .sorted()
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
-        TODO("Not yet implemented")
+        return castDataSource.casts
+            .sortedByDescending { castDataSource.castTodayVisitCountById[it.id] ?: 0 }
+            .take(limit)
+            .map { cast ->
+                val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
+
+                CheckInCastSummary(
+                    id = cast.id,
+                    cafeId = cast.cafeId,
+                    cafeName = cafeName,
+                    name = cast.name,
+                    profileImage = cast.profileImage,
+                    todayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
+                )
+            }
     }
 }

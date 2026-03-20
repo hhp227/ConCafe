@@ -1,18 +1,24 @@
 package com.hhp227.concafe.data.repository
 
+import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
 import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.datetime.Clock
 
-class VisitRepositoryImpl : VisitRepository {
+class VisitRepositoryImpl(
+    private val visitDataSource: VisitDataSource,
+    private val pagingDataSource: PagingDataSource
+) : VisitRepository {
     override suspend fun verifyVisit(
         cafeId: String,
         latitude: Double,
         longitude: Double,
         visitedAt: String
     ): VisitVerificationResult {
-        TODO("Not yet implemented")
+        return visitDataSource.verifyVisitResult(cafeId, latitude, longitude)
     }
 
     override suspend fun createVisit(
@@ -21,7 +27,16 @@ class VisitRepositoryImpl : VisitRepository {
         visitedAt: String,
         memo: String?
     ): Visit {
-        TODO("Not yet implemented")
+        val visit = Visit(
+            id = nextEntityId("visit"),
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = visitedAt,
+            memo = memo,
+            verified = false
+        )
+        visitDataSource.visits.add(visit)
+        return visit
     }
 
     override suspend fun getVisits(
@@ -29,6 +44,12 @@ class VisitRepositoryImpl : VisitRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<Visit> {
-        TODO("Not yet implemented")
+        val items = visitDataSource.visits.filter { it.userId == userId }.sortedByDescending { it.visitedAt }
+        return pagingDataSource.toPaged(items, cursor, pageSize)
     }
+}
+
+private fun nextEntityId(prefix: String): String {
+    val now = Clock.System.now().toEpochMilliseconds()
+    return "$prefix-$now"
 }

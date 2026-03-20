@@ -37,6 +37,9 @@ import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -44,9 +47,17 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MockConCafeDataSource : ConCafeDataSource {
-    override var currentUserId: String? = "user-1"
+    private val _currentUserId = MutableStateFlow<String?>("user-1")
 
-    override val users = mutableListOf(
+    override var currentUserId: String?
+        get() = _currentUserId.value
+        set(value) {
+            _currentUserId.value = value
+        }
+
+    override val currentUserIdFlow: StateFlow<String?> = _currentUserId.asStateFlow()
+
+    private val users = mutableListOf(
         User(
             id = "user-1",
             email = "user1@concafe.app",
@@ -147,6 +158,37 @@ class MockConCafeDataSource : ConCafeDataSource {
             createdAt = "2026-03-14T09:00:00Z"
         )
     )
+
+    override fun findUserById(userId: String): User? {
+        return users.firstOrNull { it.id == userId }
+    }
+
+    override fun findUserByEmail(email: String): User? {
+        return users.firstOrNull { it.email == email }
+    }
+
+    override fun isEmailTaken(email: String): Boolean {
+        return users.any { it.email == email }
+    }
+
+    override fun addUser(user: User) {
+        users.add(user)
+    }
+
+    override fun replaceUser(user: User): Boolean {
+        val index = users.indexOfFirst { it.id == user.id }
+        if (index == -1) {
+            return false
+        }
+
+        users[index] = user
+        return true
+    }
+
+    override fun replaceAllUsers(users: List<User>) {
+        this.users.clear()
+        this.users.addAll(users)
+    }
 
     override val cafes = mutableListOf(
         Cafe(
