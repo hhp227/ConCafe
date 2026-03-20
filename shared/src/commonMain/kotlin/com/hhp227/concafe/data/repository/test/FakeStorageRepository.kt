@@ -1,4 +1,4 @@
-package com.hhp227.concafe.data.repository
+package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.domain.repository.StorageRepository
 import kotlin.random.Random
@@ -28,7 +28,7 @@ class FakeStorageRepository : StorageRepository {
             .ifEmpty { "image" }
             .replace('.', '-')
             .replace('_', '-')
-        val randomToken = Random.nextInt(100000, 999999)
+        val randomToken = Random.Default.nextInt(100000, 999999)
         return "https://mock-storage.concafe/$safeFolder/$normalizedToken-$randomToken.jpg"
     }
 }

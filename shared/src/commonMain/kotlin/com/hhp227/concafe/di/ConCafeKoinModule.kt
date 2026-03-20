@@ -1,8 +1,27 @@
 package com.hhp227.concafe.di
 
 import com.hhp227.concafe.data.repository.*
+import com.hhp227.concafe.data.repository.test.FakeAuthRepository
+import com.hhp227.concafe.data.repository.test.FakeBannerRepository
+import com.hhp227.concafe.data.repository.test.FakeCafeDashboardRepository
+import com.hhp227.concafe.data.repository.test.FakeCafeManagementRepository
+import com.hhp227.concafe.data.repository.test.FakeCafeOwnerClaimRepository
+import com.hhp227.concafe.data.repository.test.FakeCafeRegistrationClaimRepository
+import com.hhp227.concafe.data.repository.test.FakeCafeRepository
+import com.hhp227.concafe.data.repository.test.FakeCastClaimRepository
+import com.hhp227.concafe.data.repository.test.FakeCastRepository
+import com.hhp227.concafe.data.repository.test.FakeInquiryRepository
+import com.hhp227.concafe.data.repository.test.FakeNoticeRepository
+import com.hhp227.concafe.data.repository.test.FakeNotificationRepository
+import com.hhp227.concafe.data.repository.test.FakeRankingRepository
+import com.hhp227.concafe.data.repository.test.FakeReviewRepository
+import com.hhp227.concafe.data.repository.test.FakeStorageRepository
+import com.hhp227.concafe.data.repository.test.FakeUserRepository
+import com.hhp227.concafe.data.repository.test.FakeVisitRepository
 import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.data.source.MockConCafeDataSource
+import com.hhp227.concafe.data.source.NetworkStatusDataSource
+import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
@@ -10,6 +29,7 @@ import org.koin.dsl.module
 
 val dataSourceModule = module {
     single<ConCafeDataSource> { MockConCafeDataSource() }
+    single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
 }
 
 val repositoryModule = module {
@@ -31,6 +51,7 @@ val repositoryModule = module {
     single<NotificationRepository> { FakeNotificationRepository(get()) }
     single<StorageRepository> { FakeStorageRepository() }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
+    single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
 }
 
 val eventModule = module {
@@ -68,6 +89,7 @@ val useCaseModule = module {
     factory { DeleteCafeEventUseCase(get(), get()) }
     factory { DeleteCafeNoticeUseCase(get(), get()) }
     factory { DeleteCafeMenuGoodsUseCase(get(), get()) }
+    factory { DeleteHomeBannerUseCase(get(), get(), get(), get()) }
     factory { DeleteCastUseCase(get(), get(), get(), get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
@@ -91,6 +113,8 @@ val useCaseModule = module {
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
+    factory { ObserveNetworkAlertStateUseCase(get()) }
+    factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { SignUpUseCase(get()) }
@@ -103,6 +127,7 @@ val useCaseModule = module {
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }
+    factory { UpdateHomeBannerUseCase(get(), get(), get(), get()) }
     factory { UpdateCastScheduleUseCase(get(), get(), get()) }
     factory { ApproveCastClaimUseCase(get(), get(), get()) }
     factory { RejectCastClaimUseCase(get(), get(), get()) }

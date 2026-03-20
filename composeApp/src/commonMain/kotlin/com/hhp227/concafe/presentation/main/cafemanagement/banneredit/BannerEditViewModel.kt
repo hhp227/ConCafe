@@ -5,13 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeBannerCreate
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeBannerManagementUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -24,8 +27,11 @@ import kotlinx.coroutines.launch
 
 class BannerEditViewModel(
     private val initialCafeId: String? = null,
+    private val initialBannerId: String? = null,
     private val createHomeBannerUseCase: CreateHomeBannerUseCase,
+    private val updateHomeBannerUseCase: UpdateHomeBannerUseCase,
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
+    private val getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeEventPageUseCase: GetCafeEventPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
@@ -38,6 +44,14 @@ class BannerEditViewModel(
     val event = _event.asSharedFlow()
 
     private var selectorJob: Job? = null
+
+    private fun observeSession() {
+        viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update { it.copy(isAdmin = user?.role == UserRole.ADMIN) }
+            }
+        }
+    }
 
     private fun loadOwnedCafeOptions() {
         viewModelScope.launch {
@@ -87,10 +101,58 @@ class BannerEditViewModel(
         }
     }
 
-    private fun observeSession() {
+    private fun loadEditingBanner() {
+        val targetBannerId = initialBannerId ?: return
         viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest { user ->
-                _uiState.update { it.copy(isAdmin = user?.role == UserRole.ADMIN) }
+            when (val result = getHomeBannerManagementUseCase.invoke(initialCafeId)) {
+                is AppResult.Success -> {
+                    val banner = result.data.firstOrNull { it.id == targetBannerId }
+                    if (banner == null) {
+                        _uiState.update { it.copy(infoMessage = "수정할 배너를 찾을 수 없습니다.") }
+                    } else {
+                        applyEditingBanner(banner)
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = "수정할 배너 정보를 불러오지 못했습니다.") }
+                }
+            }
+        }
+    }
+
+    private fun applyEditingBanner(banner: HomeBanner) {
+        val target = when (banner.targetType) {
+            BannerLinkTargetType.CAFE_DETAIL -> BannerTargetType.CAFE_DETAIL
+            BannerLinkTargetType.EVENT_DETAIL -> BannerTargetType.EVENT_DETAIL
+            BannerLinkTargetType.NOTICE -> BannerTargetType.NOTICE
+            BannerLinkTargetType.EXTERNAL_LINK -> BannerTargetType.EXTERNAL_LINK
+        }
+        _uiState.update { state ->
+            state.copy(
+                editingBannerId = banner.id,
+                screenTitle = "배너 수정",
+                submitButtonText = "배너 수정하기",
+                selectedImageLabel = banner.imageUrl,
+                originalImageUrl = banner.imageUrl,
+                title = banner.title,
+                subtitle = banner.subtitle,
+                selectedTarget = target,
+                targetValue = banner.targetValue,
+                displayDays = banner.displayDays.coerceIn(1, 10),
+                selectedCafeId = banner.cafeId,
+                selectedNoticeId = if (target == BannerTargetType.NOTICE) banner.targetValue else null,
+                selectedEventId = if (target == BannerTargetType.EVENT_DETAIL) banner.targetValue else null,
+                selectorType = null,
+                selectorQuery = "",
+                infoMessage = null
+            )
+        }
+        val editingCafeId = banner.cafeId
+        if (!editingCafeId.isNullOrBlank()) {
+            if (target == BannerTargetType.NOTICE) {
+                loadNoticeOptions(editingCafeId, query = "")
+            } else if (target == BannerTargetType.EVENT_DETAIL) {
+                loadEventOptions(editingCafeId, query = "")
             }
         }
     }
@@ -337,28 +399,22 @@ class BannerEditViewModel(
 
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
         viewModelScope.launch {
-            val uploadedImageUrl = when (
-                val uploadResult = uploadImageUseCase.invoke(
-                    localPath = currentState.selectedImageLabel.orEmpty(),
-                    folder = "banners"
-                )
-            ) {
-                is AppResult.Success -> uploadResult.data
-                is AppResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            infoMessage = "배너 이미지를 업로드하지 못했습니다."
-                        )
-                    }
-                    return@launch
+            val imageUrl = resolveBannerImageUrl(currentState)
+            if (imageUrl == null) {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                    )
                 }
+                return@launch
             }
+
             val createInput = HomeBannerCreate(
                 cafeId = currentState.selectedCafeId,
                 title = currentState.title.trim(),
                 subtitle = currentState.subtitle.trim(),
-                imageUrl = uploadedImageUrl,
+                imageUrl = imageUrl,
                 targetType = when (currentState.selectedTarget) {
                     BannerTargetType.CAFE_DETAIL -> BannerLinkTargetType.CAFE_DETAIL
                     BannerTargetType.EVENT_DETAIL -> BannerLinkTargetType.EVENT_DETAIL
@@ -368,7 +424,13 @@ class BannerEditViewModel(
                 targetValue = currentState.targetValue.trim(),
                 displayDays = currentState.displayDays
             )
-            when (val result = createHomeBannerUseCase.invoke(createInput)) {
+            val editingBannerId = currentState.editingBannerId
+            val saveResult = if (!editingBannerId.isNullOrBlank()) {
+                updateHomeBannerUseCase.invoke(editingBannerId, createInput)
+            } else {
+                createHomeBannerUseCase.invoke(createInput)
+            }
+            when (val result = saveResult) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isSaving = false, infoMessage = null) }
                     _event.emit(BannerEditEvent.NavigateBack)
@@ -380,7 +442,7 @@ class BannerEditViewModel(
                         AppError.NotFound -> "연결 대상을 찾을 수 없습니다."
                         is AppError.ValidationFailed -> error.reason
                         is AppError.NetworkError -> "배너를 등록하지 못했습니다."
-                        is AppError.Unknown -> "배너 등록 중 오류가 발생했습니다."
+                        is AppError.Unknown -> "배너 저장 중 오류가 발생했습니다."
                     }
                     _uiState.update {
                         it.copy(
@@ -390,6 +452,23 @@ class BannerEditViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun resolveBannerImageUrl(state: BannerEditUiState): String? {
+        val selectedImageLabel = state.selectedImageLabel
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+
+        val isRemoteImage = selectedImageLabel.startsWith("http://") || selectedImageLabel.startsWith("https://")
+        if (isRemoteImage || selectedImageLabel == state.originalImageUrl) {
+            return selectedImageLabel
+        }
+
+        return when (val uploadResult = uploadImageUseCase.invoke(localPath = selectedImageLabel, folder = "banners")) {
+            is AppResult.Success -> uploadResult.data
+            is AppResult.Failure -> null
         }
     }
     
@@ -425,5 +504,6 @@ class BannerEditViewModel(
     init {
         observeSession()
         loadOwnedCafeOptions()
+        loadEditingBanner()
     }
 }

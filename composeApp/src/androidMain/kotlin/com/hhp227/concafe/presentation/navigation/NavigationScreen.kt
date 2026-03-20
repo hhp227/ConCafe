@@ -111,6 +111,7 @@ fun NavigationScreen(
 
             BannerEditScreen(
                 initialCafeId = bannerEditRoute.cafeId,
+                initialBannerId = bannerEditRoute.bannerId,
                 onNavigationAction = viewModel::onAction
             )
         }

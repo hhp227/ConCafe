@@ -146,17 +146,6 @@ class HomeViewModel(
         loadNearbyCafePage(cursor = cursor, append = true)
     }
 
-    private fun observeCafeDetailEvent() {
-        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
-        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
-            cafeDetailEventPublisher.events.collectLatest { event ->
-                if (event is CafeDetailEvent.CafeInfoUpdated) {
-                    patchCafeInfo(event.cafe)
-                }
-            }
-        }
-    }
-
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
@@ -171,25 +160,27 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCafeDetailEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
+            cafeDetailEventPublisher.events.collectLatest { event ->
+                if (event is CafeDetailEvent.CafeInfoUpdated) {
+                    patchCafeInfo(event.cafe)
+                }
+            }
+        }
+    }
+
     private fun observeBannerEvent() {
         jobs[TaskKey.OBSERVE_BANNER_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> loadHomeFeed()
+                    is BannerEvent.Updated -> patchBanner(event.banner)
+                    is BannerEvent.Deleted -> removeBanner(event.banner.id)
                 }
             }
-        }
-    }
-
-    private fun patchCafeInfo(cafe: Cafe) {
-        _uiState.update { state ->
-            state.copy(
-                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
-                nearbyCafes = state.nearbyCafes.map { item ->
-                    if (item.id == cafe.id) cafe else item
-                }
-            )
         }
     }
 
@@ -203,6 +194,35 @@ class HomeViewModel(
                     is CastEvent.Deleted -> removeCast(event.castId)
                 }
             }
+        }
+    }
+
+    private fun patchBanner(updatedBanner: HomeBanner) {
+        _uiState.update { state ->
+            state.copy(
+                banners = state.banners.map { banner ->
+                    if (banner.id == updatedBanner.id) updatedBanner else banner
+                }
+            )
+        }
+    }
+
+    private fun removeBanner(bannerId: String) {
+        _uiState.update { state ->
+            state.copy(
+                banners = state.banners.filterNot { it.id == bannerId }
+            )
+        }
+    }
+
+    private fun patchCafeInfo(cafe: Cafe) {
+        _uiState.update { state ->
+            state.copy(
+                popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
+                nearbyCafes = state.nearbyCafes.map { item ->
+                    if (item.id == cafe.id) cafe else item
+                }
+            )
         }
     }
 
@@ -225,32 +245,6 @@ class HomeViewModel(
                 popularCasts = state.popularCasts.filterNot { it.id == castId },
                 birthdayCasts = state.birthdayCasts.filterNot { it.id == castId }
             )
-        }
-    }
-
-    fun onAction(action: HomeAction) {
-        viewModelScope.launch {
-            when (action) {
-                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
-                is HomeAction.ClickMaid -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCast(action.id))
-                }
-                is HomeAction.ClickBirthdayMaid -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCast(action.id))
-                }
-                is HomeAction.ClickCafe -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCafe(action.id))
-                }
-                HomeAction.ClickLoginPromptSignIn -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(HomeEvent.NavigateToSignIn)
-                }
-                HomeAction.DismissLoginPrompt -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                }
-                HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
-                HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
-            }
         }
     }
 
@@ -283,6 +277,32 @@ class HomeViewModel(
                         _event.emit(HomeEvent.NavigateToCafe(cafeId))
                     }
                 }
+            }
+        }
+    }
+
+    fun onAction(action: HomeAction) {
+        viewModelScope.launch {
+            when (action) {
+                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
+                is HomeAction.ClickMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickBirthdayMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickCafe -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCafe(action.id))
+                }
+                HomeAction.ClickLoginPromptSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(HomeEvent.NavigateToSignIn)
+                }
+                HomeAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
+                HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
             }
         }
     }

@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
 import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
+import com.hhp227.concafe.di.resolveRestoreSessionUseCase
 import com.hhp227.concafe.domain.model.MainNavigationTab
 import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
@@ -37,7 +38,8 @@ fun MainScreen(
             initializer {
                 MainViewModel(
                     resolveGetMainNavigationUseCase(),
-                    resolveObserveCurrentUserUseCase()
+                    resolveObserveCurrentUserUseCase(),
+                    resolveRestoreSessionUseCase()
                 )
             }
         }

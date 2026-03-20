@@ -37,6 +37,7 @@ homeBanners/{bannerId}
 - 현재 mock/shared 구현은 `displayDays`를 저장하고, 활성 배너는 최대 5개까지만 홈에 노출한다.
 - 홈 피드 조회 시 종료된 `ACTIVE` 배너를 `ENDED`로 정리하고, 빈 슬롯이 있으면 `SCHEDULED` 배너를 자동 승격한다.
 - 외부 링크 타입 배너는 홈에서 탭 시 외부 브라우저가 아니라 앱 내부 외부 링크 화면(WebView)으로 이동한다.
+- shared mock 데이터소스 계약에는 `homeBanners` 문서형 필드(`ownerType`, `ownerId`, `linkType`, `status`, `activeFrom/Until` 포함)가 반영되어 있으며, 기존 `HomeBanner` UI 모델과 병행 유지된다.
 
 cafes/{cafeId}
 ├─ ownerIds: []
@@ -152,6 +153,7 @@ castScheduleStatuses/{castId}/days/{date}
 - `WORK`일 때만 `castSchedules` 문서에 실제 시작/종료 시간이 존재한다.
 - `OFF`, `VACATION`은 상태 문서로 유지하고, UI는 `GetScheduleManagementDataUseCase`가 두 데이터를 조합해 만든다.
 - 프로필 이미지, 갤러리 이미지, 외부 SNS 링크 저장은 후속 단계에서 연결한다.
+- shared mock 데이터소스에는 `castScheduleStatuses/{castId}/days/{date}` 대응 문서형 필드(`status`, `updatedAt`, `updatedBy`)가 추가되어 상태 갱신 시 동기화된다.
 
 visits/{visitId}
 ├─ userId
@@ -166,6 +168,9 @@ castFollowers/{castId}/users/{userId}
 cafeFavorites/{cafeId}/users/{userId}
 └─ createdAt
 
+구현 메모
+- shared mock 데이터소스에는 역인덱스 필드(`favoriteUserIdsByCafeId`, `followerUserIdsByCastId`)가 추가되어 컬렉션 구조와 읽기 방향을 함께 유지한다.
+
 cafes/{cafeId}/events/{eventId}
 ├─ eventType: BIRTHDAY | ANNIVERSARY | COLLAB | SPECIAL_GUEST
 ├─ relatedCastId
@@ -178,6 +183,9 @@ stamps/{stampId}
 ├─ cafeId
 ├─ visitId
 └─ earnedAt
+
+구현 메모
+- shared mock 데이터소스에 `stamps` 컬렉션 대응 필드가 추가되어 Firebase 연결 전에도 적립 데이터 모델을 유지한다.
 
 castClaims/{claimId}
 ├─ userId

@@ -14,9 +14,15 @@ import KMPNativeCoroutinesAsync
 final class BannerEditViewModel: ObservableObject {
     private let initialCafeId: String?
 
+    private let initialBannerId: String?
+
     private let createHomeBannerUseCase: CreateHomeBannerUseCase
 
+    private let updateHomeBannerUseCase: UpdateHomeBannerUseCase
+
     private let getCafeManagementUseCase: GetCafeManagementUseCase
+
+    private let getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase
 
     private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
 
@@ -67,6 +73,63 @@ final class BannerEditViewModel: ObservableObject {
             } catch {
                 uiState.ownedCafeOptions = []
                 uiState.infoMessage = "운영 카페 목록을 불러오지 못했습니다."
+            }
+        }
+    }
+
+    private func loadEditingBanner() {
+        guard let initialBannerId else { return }
+        Task {
+            do {
+                let result = try await getHomeBannerManagementUseCase.invoke(cafeId: initialCafeId)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let banners = success.data as? [HomeBanner],
+                   let banner = banners.first(where: { $0.id == initialBannerId }) {
+                    applyEditingBanner(banner)
+                } else {
+                    uiState.infoMessage = "수정할 배너 정보를 불러오지 못했습니다."
+                }
+            } catch {
+                uiState.infoMessage = "수정할 배너 정보를 불러오지 못했습니다."
+            }
+        }
+    }
+
+    private func applyEditingBanner(_ banner: HomeBanner) {
+        let target: BannerTargetType
+        switch banner.targetType {
+        case .cafeDetail:
+            target = .cafeDetail
+        case .eventDetail:
+            target = .eventDetail
+        case .notice:
+            target = .notice
+        case .externalLink:
+            target = .externalLink
+        default:
+            target = .externalLink
+        }
+
+        uiState.editingBannerId = banner.id
+        uiState.screenTitle = "배너 수정"
+        uiState.submitButtonText = "배너 수정하기"
+        uiState.selectedImageLabel = banner.imageUrl
+        uiState.originalImageUrl = banner.imageUrl
+        uiState.title = banner.title
+        uiState.subtitle = banner.subtitle
+        uiState.displayDays = min(max(Int(banner.displayDays), 1), 10)
+        uiState.selectedCafeId = banner.cafeId
+        uiState.selectedTarget = target
+        uiState.targetValue = banner.targetValue
+        uiState.selectedNoticeId = uiState.selectedTarget == .notice ? banner.targetValue : nil
+        uiState.selectedEventId = uiState.selectedTarget == .eventDetail ? banner.targetValue : nil
+        uiState.infoMessage = nil
+
+        if let cafeId = banner.cafeId, !cafeId.isEmpty {
+            if uiState.selectedTarget == .notice {
+                loadNoticeOptions(cafeId: cafeId, query: "")
+            } else if uiState.selectedTarget == .eventDetail {
+                loadEventOptions(cafeId: cafeId, query: "")
             }
         }
     }
@@ -264,12 +327,7 @@ final class BannerEditViewModel: ObservableObject {
         uiState.infoMessage = nil
         Task {
             do {
-                let uploadedImageResult = try await uploadImageUseCase.invoke(
-                    localPath: uiState.selectedImageLabel ?? "",
-                    folder: "banners"
-                )
-                guard let uploadSuccess = uploadedImageResult as? AppResultSuccess<AnyObject>,
-                      let uploadedImageUrl = uploadSuccess.data as? String else {
+                guard let imageUrl = try await resolveBannerImageUrl() else {
                     uiState.isSaving = false
                     uiState.infoMessage = "배너 이미지를 업로드하지 못했습니다."
                     return
@@ -279,12 +337,20 @@ final class BannerEditViewModel: ObservableObject {
                     cafeId: uiState.selectedCafeId,
                     title: uiState.title.trimmingCharacters(in: .whitespacesAndNewlines),
                     subtitle: uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines),
-                    imageUrl: uploadedImageUrl,
+                    imageUrl: imageUrl,
                     targetType: targetType,
                     targetValue: uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines),
                     displayDays: Int32(uiState.displayDays)
                 )
-                let result = try await createHomeBannerUseCase.invoke(input: createInput)
+                let result: Any
+                if let editingBannerId = uiState.editingBannerId, !editingBannerId.isEmpty {
+                    result = try await updateHomeBannerUseCase.invoke(
+                        bannerId: editingBannerId,
+                        input: createInput
+                    )
+                } else {
+                    result = try await createHomeBannerUseCase.invoke(input: createInput)
+                }
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isSaving = false
                     uiState.infoMessage = nil
@@ -302,20 +368,44 @@ final class BannerEditViewModel: ObservableObject {
                     } else if failure.error is AppErrorNetworkError {
                         userMessage = "배너를 등록하지 못했습니다."
                     } else {
-                        userMessage = "배너 등록 중 오류가 발생했습니다."
+                        userMessage = "배너 저장 중 오류가 발생했습니다."
                     }
                     uiState.isSaving = false
                     uiState.infoMessage = userMessage
                 } else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
+                    uiState.infoMessage = "배너 저장 중 오류가 발생했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSaving = false
-                uiState.infoMessage = "배너 등록 중 오류가 발생했습니다."
+                uiState.infoMessage = "배너 저장 중 오류가 발생했습니다."
             }
         }
+    }
+
+    private func resolveBannerImageUrl() async throws -> String? {
+        let selectedImage = uiState.selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if selectedImage.isEmpty {
+            return nil
+        }
+
+        if selectedImage.hasPrefix("http://") || selectedImage.hasPrefix("https://") {
+            return selectedImage
+        }
+        if let originalImageUrl = uiState.originalImageUrl, originalImageUrl == selectedImage {
+            return originalImageUrl
+        }
+
+        let uploadResult = try await uploadImageUseCase.invoke(
+            localPath: selectedImage,
+            folder: "banners"
+        )
+        if let uploadSuccess = uploadResult as? AppResultSuccess<AnyObject>,
+           let uploadedImageUrl = uploadSuccess.data as? String {
+            return uploadedImageUrl
+        }
+        return nil
     }
     
     func onAction(_ action: BannerEditAction) {
@@ -361,22 +451,30 @@ final class BannerEditViewModel: ObservableObject {
 
     init(
         initialCafeId: String? = nil,
+        initialBannerId: String? = nil,
         createHomeBannerUseCase: CreateHomeBannerUseCase = KoinInitializerKt.resolveCreateHomeBannerUseCase(),
+        updateHomeBannerUseCase: UpdateHomeBannerUseCase = KoinInitializerKt.resolveUpdateHomeBannerUseCase(),
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
+        getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase = KoinInitializerKt.resolveGetHomeBannerManagementUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.initialCafeId = initialCafeId
+        self.initialBannerId = initialBannerId
         self.createHomeBannerUseCase = createHomeBannerUseCase
+        self.updateHomeBannerUseCase = updateHomeBannerUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
+        self.getHomeBannerManagementUseCase = getHomeBannerManagementUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeEventPageUseCase = getCafeEventPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.uploadImageUseCase = uploadImageUseCase
+
         observeSession()
         loadOwnedCafeOptions()
+        loadEditingBanner()
     }
 
     deinit {

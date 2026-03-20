@@ -28,34 +28,6 @@ final class HomeViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private func observeSession() {
-        tasks[.session]?.cancel()
-        tasks[.session] = Task {
-            do {
-                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    uiState = HomeUiState(
-                        isLoggedIn: user != nil,
-                        isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
-                        banners: uiState.banners,
-                        popularCasts: uiState.popularCasts,
-                        popularCastCafeNames: uiState.popularCastCafeNames,
-                        popularCastCursor: uiState.popularCastCursor,
-                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-                        nearbyCafes: uiState.nearbyCafes,
-                        nearbyCafeCursor: uiState.nearbyCafeCursor,
-                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-                        birthdayCasts: uiState.birthdayCasts,
-                        notices: uiState.notices
-                    )
-                }
-            } catch {
-                print("Error: \(error)")
-            }
-        }
-    }
-
     private func loadHomeFeed() {
         Task {
             do {
@@ -271,6 +243,34 @@ final class HomeViewModel: ObservableObject {
         loadNearbyCafePage(cursor: cursor, append: true)
     }
 
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState = HomeUiState(
+                        isLoggedIn: user != nil,
+                        isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices
+                    )
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func observeCafeDetailEvent() {
         tasks[.cafeDetailEvent]?.cancel()
         tasks[.cafeDetailEvent] = Task {
@@ -290,8 +290,17 @@ final class HomeViewModel: ObservableObject {
         tasks[.bannerEvent]?.cancel()
         tasks[.bannerEvent] = Task {
             do {
-                for try await _ in asyncSequence(for: bannerEventPublisher.events) {
-                    self.loadHomeFeed()
+                for try await event in asyncSequence(for: bannerEventPublisher.events) {
+                    switch event {
+                    case is Shared.BannerEvent.Created:
+                        self.loadHomeFeed()
+                    case let updated as Shared.BannerEvent.Updated:
+                        self.patchBanner(updated.banner)
+                    case let deleted as Shared.BannerEvent.Deleted:
+                        self.removeBanner(id: deleted.banner.id)
+                    default:
+                        break
+                    }
                 }
             } catch {
                 print("Error: \(error)")
@@ -317,6 +326,46 @@ final class HomeViewModel: ObservableObject {
                 print("Error: \(error)")
             }
         }
+    }
+
+    private func patchBanner(_ updatedBanner: HomeBanner) {
+        uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
+            banners: uiState.banners.map { banner in
+                banner.id == updatedBanner.id ? updatedBanner : banner
+            },
+            popularCasts: uiState.popularCasts,
+            popularCastCafeNames: uiState.popularCastCafeNames,
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+            nearbyCafes: uiState.nearbyCafes,
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts,
+            notices: uiState.notices
+        )
+    }
+
+    private func removeBanner(id: String) {
+        uiState = HomeUiState(
+            isLoggedIn: uiState.isLoggedIn,
+            isLoginPromptVisible: uiState.isLoginPromptVisible,
+            banners: uiState.banners.filter { $0.id != id },
+            popularCasts: uiState.popularCasts,
+            popularCastCafeNames: uiState.popularCastCafeNames,
+            popularCastCursor: uiState.popularCastCursor,
+            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+            nearbyCafes: uiState.nearbyCafes,
+            nearbyCafeCursor: uiState.nearbyCafeCursor,
+            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+            birthdayCasts: uiState.birthdayCasts,
+            notices: uiState.notices
+        )
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {
@@ -401,6 +450,24 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func handleBannerTap(_ banner: HomeBanner) {
+        switch banner.targetType {
+        case .externalLink:
+            if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                event.send(.navigateToExternalLink(title: banner.title, url: banner.targetValue))
+            }
+        case .cafeDetail, .eventDetail, .notice:
+            let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
+            if let cafeId, !cafeId.isEmpty {
+                requireSignedIn { [weak self] in
+                    self?.event.send(.navigateToCafe(id: cafeId))
+                }
+            }
+        default:
+            break
+        }
+    }
+
     func onAction(_ action: HomeAction) {
         switch action {
         case .bannerTapped(let banner):
@@ -456,24 +523,6 @@ final class HomeViewModel: ObservableObject {
             loadMorePopularCasts()
         case .loadMoreNearbyCafes:
             loadMoreNearbyCafes()
-        }
-    }
-
-    private func handleBannerTap(_ banner: HomeBanner) {
-        switch banner.targetType {
-        case .externalLink:
-            if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                event.send(.navigateToExternalLink(title: banner.title, url: banner.targetValue))
-            }
-        case .cafeDetail, .eventDetail, .notice:
-            let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
-            if let cafeId, !cafeId.isEmpty {
-                requireSignedIn { [weak self] in
-                    self?.event.send(.navigateToCafe(id: cafeId))
-                }
-            }
-        default:
-            break
         }
     }
 

@@ -49,7 +49,12 @@ fun BannerScreen(
             when (event) {
                 BannerEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is BannerEvent.NavigateToBannerEdit -> {
-                    onNavigationAction(NavigationAction.NavigateToBannerEdit(event.cafeId))
+                    onNavigationAction(
+                        NavigationAction.NavigateToBannerEdit(
+                            cafeId = event.cafeId,
+                            bannerId = event.bannerId
+                        )
+                    )
                 }
                 is BannerEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
@@ -60,6 +65,23 @@ fun BannerScreen(
         snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
+    uiState.pendingDeleteBanner?.let { banner ->
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(BannerAction.DismissDeleteBannerDialog) },
+            title = { Text("배너 삭제") },
+            text = { Text("'${banner.title}' 배너를 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(BannerAction.ConfirmDeleteBanner) }) {
+                    Text("삭제")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(BannerAction.DismissDeleteBannerDialog) }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

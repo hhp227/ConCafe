@@ -16,6 +16,8 @@ final class MainViewModel: ObservableObject {
     
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let restoreSessionUseCase: RestoreSessionUseCase
+
     @Published private(set) var uiState = MainUiState.empty
 
     let event = PassthroughSubject<MainEvent, Never>()
@@ -61,6 +63,17 @@ final class MainViewModel: ObservableObject {
         }
     }
 
+    private func restoreSession() {
+        Task {
+            do {
+                _ = try await restoreSessionUseCase.invoke()
+                refreshNavigation(preferredRoute: uiState.selectedTab)
+            } catch {
+                refreshNavigation(preferredRoute: uiState.selectedTab)
+            }
+        }
+    }
+
     func onAction(_ action: MainAction) {
         switch action {
         case .enter(let preferredRoute):
@@ -74,13 +87,15 @@ final class MainViewModel: ObservableObject {
 
     init(
         getMainNavigationUseCase: GetMainNavigationUseCase = KoinInitializerKt.resolveGetMainNavigationUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        restoreSessionUseCase: RestoreSessionUseCase = KoinInitializerKt.resolveRestoreSessionUseCase()
     ) {
         self.getMainNavigationUseCase = getMainNavigationUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.restoreSessionUseCase = restoreSessionUseCase
 
         observeSession()
-        onAction(.enter())
+        restoreSession()
     }
     
     deinit {
