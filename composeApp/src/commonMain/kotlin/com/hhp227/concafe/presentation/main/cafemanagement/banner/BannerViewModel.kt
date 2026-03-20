@@ -62,8 +62,38 @@ class BannerViewModel(
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerDomainEvent.Created -> loadBanners()
+                    is BannerDomainEvent.Updated -> patchBanner(event.banner)
                     is BannerDomainEvent.Deleted -> removeBanner(event.banner.id)
                 }
+            }
+        }
+    }
+
+    private fun patchBanner(updatedBanner: HomeBanner) {
+        _uiState.update { state ->
+            val targetCafeId = cafeId
+            val shouldShow = targetCafeId.isNullOrBlank() || updatedBanner.cafeId == targetCafeId
+            val existingIndex = state.banners.indexOfFirst { it.id == updatedBanner.id }
+
+            when {
+                shouldShow && existingIndex >= 0 -> {
+                    val patched = state.banners.toMutableList()
+                    patched[existingIndex] = updatedBanner.toBannerItem()
+                    state.copy(banners = patched)
+                }
+                shouldShow && existingIndex < 0 -> {
+                    state.copy(banners = listOf(updatedBanner.toBannerItem()) + state.banners)
+                }
+                !shouldShow && existingIndex >= 0 -> {
+                    val filtered = state.banners.filterNot { it.id == updatedBanner.id }
+                    state.copy(
+                        banners = filtered,
+                        pendingDeleteBannerId = state.pendingDeleteBannerId?.takeIf { pendingId ->
+                            filtered.any { it.id == pendingId }
+                        }
+                    )
+                }
+                else -> state
             }
         }
     }
@@ -111,13 +141,23 @@ class BannerViewModel(
     fun onAction(action: BannerAction) {
         when (action) {
             BannerAction.ClickBack -> emitEvent(BannerEvent.NavigateBack)
-            BannerAction.ClickCreateBanner -> emitEvent(BannerEvent.NavigateToBannerEdit(cafeId))
+            BannerAction.ClickCreateBanner -> emitEvent(BannerEvent.NavigateToBannerEdit(cafeId = cafeId))
             BannerAction.ConfirmDeleteBanner -> confirmDeleteBanner()
             BannerAction.DismissDeleteBannerDialog -> dismissDeleteBannerDialog()
             is BannerAction.ClickDeleteBanner -> clickDeleteBanner(action.bannerId)
-            is BannerAction.ClickEditBanner -> emitEvent(BannerEvent.ShowMessage("편집 기능은 아직 연결되지 않았습니다."))
+            is BannerAction.ClickEditBanner -> clickEditBanner(action.bannerId)
             is BannerAction.SelectTab -> _uiState.update { it.copy(selectedTab = action.tab) }
         }
+    }
+
+    private fun clickEditBanner(bannerId: String) {
+        val banner = _uiState.value.banners.firstOrNull { it.id == bannerId } ?: return
+        emitEvent(
+            BannerEvent.NavigateToBannerEdit(
+                cafeId = banner.cafeId ?: cafeId,
+                bannerId = banner.id
+            )
+        )
     }
 
     private fun emitEvent(event: BannerEvent) {
@@ -151,6 +191,7 @@ private fun HomeBanner.toBannerItem(): BannerItem {
     }
     return BannerItem(
         id = id,
+        cafeId = cafeId,
         title = title,
         description = subtitle,
         periodText = "노출 ${displayDays}일",

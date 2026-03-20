@@ -35,8 +35,8 @@ struct BannerView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
-            case .navigateToBannerEdit(let cafeId):
-                onNavigationAction(.navigateToBannerEdit(cafeId: cafeId))
+            case .navigateToBannerEdit(let cafeId, let bannerId):
+                onNavigationAction(.navigateToBannerEdit(cafeId: cafeId, bannerId: bannerId))
             case .showMessage(let message):
                 alertMessage = message
             }

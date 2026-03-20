@@ -177,6 +177,7 @@ class HomeViewModel(
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is BannerEvent.Created -> loadHomeFeed()
+                    is BannerEvent.Updated -> patchBanner(event.banner)
                     is BannerEvent.Deleted -> removeBanner(event.banner.id)
                 }
             }
@@ -193,6 +194,16 @@ class HomeViewModel(
                     is CastEvent.Deleted -> removeCast(event.castId)
                 }
             }
+        }
+    }
+
+    private fun patchBanner(updatedBanner: HomeBanner) {
+        _uiState.update { state ->
+            state.copy(
+                banners = state.banners.map { banner ->
+                    if (banner.id == updatedBanner.id) updatedBanner else banner
+                }
+            )
         }
     }
 
@@ -237,32 +248,6 @@ class HomeViewModel(
         }
     }
 
-    fun onAction(action: HomeAction) {
-        viewModelScope.launch {
-            when (action) {
-                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
-                is HomeAction.ClickMaid -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCast(action.id))
-                }
-                is HomeAction.ClickBirthdayMaid -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCast(action.id))
-                }
-                is HomeAction.ClickCafe -> requireSignedIn {
-                    _event.emit(HomeEvent.NavigateToCafe(action.id))
-                }
-                HomeAction.ClickLoginPromptSignIn -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                    _event.emit(HomeEvent.NavigateToSignIn)
-                }
-                HomeAction.DismissLoginPrompt -> {
-                    _uiState.update { it.copy(isLoginPromptVisible = false) }
-                }
-                HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
-                HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
-            }
-        }
-    }
-
     private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
         if (_uiState.value.isLoggedIn) {
             onAuthenticated()
@@ -292,6 +277,32 @@ class HomeViewModel(
                         _event.emit(HomeEvent.NavigateToCafe(cafeId))
                     }
                 }
+            }
+        }
+    }
+
+    fun onAction(action: HomeAction) {
+        viewModelScope.launch {
+            when (action) {
+                is HomeAction.ClickBanner -> handleBannerClick(action.banner)
+                is HomeAction.ClickMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickBirthdayMaid -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCast(action.id))
+                }
+                is HomeAction.ClickCafe -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCafe(action.id))
+                }
+                HomeAction.ClickLoginPromptSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(HomeEvent.NavigateToSignIn)
+                }
+                HomeAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
+                HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
             }
         }
     }

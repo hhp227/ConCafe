@@ -49,7 +49,12 @@ fun BannerScreen(
             when (event) {
                 BannerEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is BannerEvent.NavigateToBannerEdit -> {
-                    onNavigationAction(NavigationAction.NavigateToBannerEdit(event.cafeId))
+                    onNavigationAction(
+                        NavigationAction.NavigateToBannerEdit(
+                            cafeId = event.cafeId,
+                            bannerId = event.bannerId
+                        )
+                    )
                 }
                 is BannerEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }

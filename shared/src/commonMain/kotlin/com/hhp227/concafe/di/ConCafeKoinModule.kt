@@ -127,6 +127,7 @@ val useCaseModule = module {
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }
+    factory { UpdateHomeBannerUseCase(get(), get(), get(), get()) }
     factory { UpdateCastScheduleUseCase(get(), get(), get()) }
     factory { ApproveCastClaimUseCase(get(), get(), get()) }
     factory { RejectCastClaimUseCase(get(), get(), get()) }

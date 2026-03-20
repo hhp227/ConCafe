@@ -61,6 +61,8 @@ final class BannerViewModel: ObservableObject {
                     switch event {
                     case is Shared.BannerEvent.Created:
                         self.loadBanners()
+                    case let updated as Shared.BannerEvent.Updated:
+                        self.patchBanner(updated.banner)
                     case let deleted as Shared.BannerEvent.Deleted:
                         self.removeBanner(id: deleted.banner.id)
                     default:
@@ -73,6 +75,30 @@ final class BannerViewModel: ObservableObject {
         }
     }
 
+    private func patchBanner(_ updatedBanner: HomeBanner) {
+        let shouldShow: Bool
+        if let cafeId = cafeId {
+            shouldShow = updatedBanner.cafeId == cafeId
+        } else {
+            shouldShow = true
+        }
+
+        if let index = uiState.banners.firstIndex(where: { $0.id == updatedBanner.id }) {
+            if shouldShow {
+                uiState.banners[index] = updatedBanner.toBannerItem()
+            } else {
+                uiState.banners.remove(at: index)
+            }
+        } else if shouldShow {
+            uiState.banners.insert(updatedBanner.toBannerItem(), at: 0)
+        }
+
+        if let pendingDeleteBannerId = uiState.pendingDeleteBannerId,
+           !uiState.banners.contains(where: { $0.id == pendingDeleteBannerId }) {
+            uiState.pendingDeleteBannerId = nil
+        }
+    }
+
     func onAction(_ action: BannerAction) {
         switch action {
         case .backTapped:
@@ -80,9 +106,9 @@ final class BannerViewModel: ObservableObject {
         case .selectTab(let tab):
             uiState.selectedTab = tab
         case .createBannerTapped:
-            event.send(.navigateToBannerEdit(cafeId: cafeId))
-        case .editBannerTapped:
-            event.send(.showMessage("편집 기능은 아직 연결되지 않았습니다."))
+            event.send(.navigateToBannerEdit(cafeId: cafeId, bannerId: nil))
+        case .editBannerTapped(let id):
+            clickEditBanner(id: id)
         case .deleteBannerTapped(let id):
             clickDeleteBanner(id: id)
         case .dismissDeleteBannerDialog:
@@ -98,6 +124,13 @@ final class BannerViewModel: ObservableObject {
             return
         }
         uiState.pendingDeleteBannerId = id
+    }
+
+    private func clickEditBanner(id: String) {
+        guard let banner = uiState.banners.first(where: { $0.id == id }) else {
+            return
+        }
+        event.send(.navigateToBannerEdit(cafeId: banner.cafeId ?? cafeId, bannerId: banner.id))
     }
 
     private func confirmDeleteBanner() {
@@ -191,6 +224,7 @@ private extension HomeBanner {
         }
         return BannerItem(
             id: id,
+            cafeId: cafeId,
             title: title,
             description: subtitle,
             periodText: "노출 \(displayDays)일",

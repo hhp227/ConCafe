@@ -41,6 +41,7 @@ struct BannerUiState {
 
 struct BannerItem: Identifiable {
     let id: String
+    let cafeId: String?
     let title: String
     let description: String
     let periodText: String

@@ -9,12 +9,14 @@ import Foundation
 import Shared
 
 struct BannerEditUiState {
+    var editingBannerId: String? = nil
     var screenTitle = "새 배너 등록"
     var submitButtonText = "배너 등록하기"
     var imageSectionTitle = "배너 이미지 업로드"
     var imageGuideText = "권장 비율 16:9 (1080x600px)"
     var imageButtonText = "이미지 선택"
     var selectedImageLabel: String? = nil
+    var originalImageUrl: String? = nil
     var title = ""
     var subtitle = ""
     var selectedTarget: BannerTargetType = .cafeDetail

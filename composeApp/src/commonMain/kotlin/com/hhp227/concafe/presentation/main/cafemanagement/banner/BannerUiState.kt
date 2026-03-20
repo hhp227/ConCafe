@@ -30,6 +30,7 @@ data class BannerUiState(
 
 data class BannerItem(
     val id: String,
+    val cafeId: String?,
     val title: String,
     val description: String,
     val periodText: String,
