@@ -41,6 +41,34 @@ class FakeAuthRepository(
         }
     }
 
+    override suspend fun signInWithGoogleIdToken(idToken: String): User {
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("google idToken is required")
+        }
+
+        val email = "google-user@concafe.test"
+        val found = dataSource.users.firstOrNull { it.email == email }
+        return if (found != null) {
+            dataSource.currentUserId = found.id
+            currentUserFlow.value = found
+            found
+        } else {
+            val created = User(
+                id = "user-${dataSource.users.size + 1}",
+                email = email,
+                nickname = "구글유저",
+                profileImage = null,
+                role = UserRole.VISITOR,
+                banned = false,
+                createdAt = "2026-03-05T00:00:00Z"
+            )
+            dataSource.users.add(created)
+            dataSource.currentUserId = created.id
+            currentUserFlow.value = created
+            created
+        }
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,
@@ -77,6 +105,22 @@ class FakeAuthRepository(
     }
 
     override suspend fun signOut() {
+        dataSource.currentUserId = null
+        currentUserFlow.value = null
+    }
+
+    override suspend fun deleteAccount(password: String) {
+        if (password.isBlank()) {
+            throw IllegalArgumentException("password is required")
+        }
+
+        val currentUserId = dataSource.currentUserId ?: return
+        val userIndex = dataSource.users.indexOfFirst { it.id == currentUserId }
+
+        if (userIndex >= 0) {
+            dataSource.users.removeAt(userIndex)
+        }
+
         dataSource.currentUserId = null
         currentUserFlow.value = null
     }

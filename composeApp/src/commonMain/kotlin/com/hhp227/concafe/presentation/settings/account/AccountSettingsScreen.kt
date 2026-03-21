@@ -76,6 +76,7 @@ fun AccountSettingsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 AccountSettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                AccountSettingsEvent.NavigateToMain -> onNavigationAction(NavigationAction.NavigateToMain())
                 is AccountSettingsEvent.NavigateToCastEdit -> {
                     onNavigationAction(
                         NavigationAction.NavigateToCastEdit(
@@ -94,8 +95,9 @@ fun AccountSettingsScreen(
 
     if (uiState.isDeleteDialogVisible) {
         DeleteAccountDialog(
-            confirmation = uiState.deleteConfirmation,
-            onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeleteConfirmation(it)) },
+            password = uiState.deletePassword,
+            errorMessage = uiState.deletePasswordErrorMessage,
+            onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeletePassword(it)) },
             onDismiss = { viewModel.onAction(AccountSettingsAction.ClickDismissDeleteDialog) },
             onConfirm = { viewModel.onAction(AccountSettingsAction.ClickDeleteAccount) }
         )
@@ -459,7 +461,8 @@ private fun AccountMetaRow(
 
 @Composable
 private fun DeleteAccountDialog(
-    confirmation: String,
+    password: String,
+    errorMessage: String?,
     onValueChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -476,13 +479,21 @@ private fun DeleteAccountDialog(
         title = { Text("회원탈퇴 확인") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
+                Text("계정 보안을 위해 현재 비밀번호를 입력해 주세요.")
                 ConCafeFormField(
-                    label = "확인 문구",
-                    value = confirmation,
+                    label = "현재 비밀번호",
+                    value = password,
                     onValueChange = onValueChange,
-                    placeholder = "탈퇴"
+                    placeholder = "비밀번호 입력",
+                    isPassword = true
                 )
+                if (!errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFD1436F)
+                    )
+                }
             }
         },
         confirmButton = {

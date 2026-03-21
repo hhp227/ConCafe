@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -15,7 +16,8 @@ import com.hhp227.concafe.domain.repository.CafeRepository
 class CafeRepositoryImpl(
     private val cafeDataSource: CafeDataSource,
     private val socialDataSource: SocialDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val pagingDataSource: PagingDataSource,
+    private val visitDataSource: VisitDataSource
 ) : CafeRepository {
     override suspend fun searchCafes(
         query: String?,
@@ -30,21 +32,17 @@ class CafeRepositoryImpl(
         if (!query.isNullOrBlank()) {
             filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
         }
-
         if (!country.isNullOrBlank()) {
             filtered = filtered.filter { it.region.country.equals(country, ignoreCase = true) }
         }
-
         if (!city.isNullOrBlank()) {
             filtered = filtered.filter { it.region.city.equals(city, ignoreCase = true) }
         }
-
         filtered = when (sort) {
             CafeSort.POPULAR -> filtered.sortedByDescending { it.reviewCount }
             CafeSort.LATEST -> filtered.sortedByDescending { it.id }
             CafeSort.RATING -> filtered.sortedByDescending { it.ratingAvg }
         }
-
         return pagingDataSource.toPaged(filtered, cursor, pageSize)
     }
 
@@ -82,9 +80,12 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
+        val visitCountByCafeId = visitDataSource.visits
+            .groupingBy { it.cafeId }
+            .eachCount()
         return cafeDataSource.cafes
             .filter { it.approved }
-            .sortedByDescending { cafeDataSource.cafeCheckInCountById[it.id] ?: 0 }
+            .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
             .take(limit)
             .map { cafe ->
                 CheckInCafeSummary(
@@ -93,7 +94,7 @@ class CafeRepositoryImpl(
                     locationLabel = cafe.region.city,
                     geoPoint = cafe.region.location,
                     rating = cafe.ratingAvg,
-                    checkInCount = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0
+                    checkInCount = visitCountByCafeId[cafe.id] ?: 0
                 )
             }
     }

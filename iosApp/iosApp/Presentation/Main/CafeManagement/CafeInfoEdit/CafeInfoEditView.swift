@@ -7,6 +7,8 @@
 
 import SwiftUI
 import UIKit
+import MapKit
+import CoreLocation
 
 struct CafeInfoEditView: View {
     let cafeId: String?
@@ -25,6 +27,9 @@ struct CafeInfoEditView: View {
         CafeInfoEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
+            onSearchAddressLocation: { query in
+                resolveAddressAndUpdateMap(query: query)
+            },
             onRepresentativeImagePick: {
                 imagePickTarget = .representative
                 isPhotoPickerPresented = true
@@ -43,6 +48,23 @@ struct CafeInfoEditView: View {
             case .showSaveSuccessAlert:
                 break
             }
+        }
+        .alert(
+            "이미지 등록 필요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("카페 등록/수정에는 대표 이미지 또는 갤러리 이미지가 필요합니다.")
         }
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
@@ -72,6 +94,41 @@ struct CafeInfoEditView: View {
         }
     }
 
+    private func resolveAddressAndUpdateMap(query: String) {
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if normalizedQuery.isEmpty {
+            return
+        }
+        let geocoder = CLGeocoder()
+
+        geocoder.geocodeAddressString(normalizedQuery) { placemarks, _ in
+            guard let location = placemarks?.first?.location else { return }
+            let fullAddress = placemarks?
+                .first
+                .flatMap { placemark -> String? in
+                    let address = [
+                        placemark.administrativeArea,
+                        placemark.locality,
+                        placemark.thoroughfare,
+                        placemark.subThoroughfare
+                    ]
+                        .compactMap { $0 }
+                        .joined(separator: " ")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    return address.isEmpty ? nil : address
+                } ?? normalizedQuery
+
+            DispatchQueue.main.async {
+                viewModel.onAction(.setPinnedLocation(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                ))
+                viewModel.onAction(.changeAddress(fullAddress))
+            }
+        }
+    }
+
     init(
         cafeId: String? = nil,
         isRegistrationMode: Bool = false,
@@ -93,6 +150,8 @@ private struct CafeInfoEditContentView: View {
     let uiState: CafeInfoEditUiState
 
     let onAction: (CafeInfoEditAction) -> Void
+
+    let onSearchAddressLocation: (String) -> Void
 
     let onRepresentativeImagePick: () -> Void
 
@@ -245,22 +304,31 @@ private struct CafeInfoEditContentView: View {
                     set: { onAction(.changeAddress($0)) }
                 ),
                 trailingContent: {
-                    Image(systemName: "location.fill")
-                        .foregroundStyle(Color(hex: "EF6797"))
+                    Button {
+                        onSearchAddressLocation(uiState.address)
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .foregroundStyle(Color(hex: "EF6797"))
+                    }
+                    .buttonStyle(.plain)
                 }
             )
             ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(hex: "F4EFF2"))
-                    .frame(height: 160)
-                VStack(spacing: 8) {
-                    Image(systemName: "map")
-                        .font(.system(size: 36))
-                        .foregroundStyle(Color(hex: "B5A9B0"))
-                    Text("지도 미리보기")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(hex: "998D95"))
+                CafeInfoLocationMapView(
+                    latitude: uiState.mapLatitude,
+                    longitude: uiState.mapLongitude
+                ) { latitude, longitude, address in
+                    onAction(.setPinnedLocation(latitude: latitude, longitude: longitude))
+                    let resolvedAddress: String
+                    if let address, !address.isEmpty {
+                        resolvedAddress = address
+                    } else {
+                        resolvedAddress = "위도 \(formatCoordinate(latitude)), 경도 \(formatCoordinate(longitude))"
+                    }
+                    onAction(.changeAddress(resolvedAddress))
                 }
+                    .frame(height: 160)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 Button {
                     onAction(.clickPinLocation)
                 } label: {
@@ -279,6 +347,10 @@ private struct CafeInfoEditContentView: View {
                 .buttonStyle(.plain)
                 .padding(10)
             }
+            Text("선택 좌표: \(formatCoordinate(uiState.mapLatitude)), \(formatCoordinate(uiState.mapLongitude))")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "7E737B"))
+                .frame(maxWidth: .infinity, alignment: .leading)
             ConCafeFormField(
                 label: "연락처",
                 text: Binding(
@@ -565,6 +637,99 @@ private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func formatCoordinate(_ value: Double) -> String {
+    String(format: "%.5f", value)
+}
+
+private struct CafeInfoLocationMapView: UIViewRepresentable {
+    let latitude: Double
+
+    let longitude: Double
+
+    let onLocationSelected: (Double, Double, String?) -> Void
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+
+        let tapRecognizer = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleMapTap(_:))
+        )
+        mapView.addGestureRecognizer(tapRecognizer)
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        context.coordinator.onLocationSelected = onLocationSelected
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let region = MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+
+        mapView.setRegion(region, animated: false)
+        context.coordinator.updateAnnotation(on: mapView, coordinate: coordinate)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onLocationSelected: onLocationSelected)
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var onLocationSelected: (Double, Double, String?) -> Void
+
+        private var selectedAnnotation: MKPointAnnotation?
+
+        private let geocoder = CLGeocoder()
+
+        @objc func handleMapTap(_ recognizer: UITapGestureRecognizer) {
+            guard let mapView = recognizer.view as? MKMapView else { return }
+            let point = recognizer.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+            updateAnnotation(on: mapView, coordinate: coordinate)
+            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            geocoder.reverseGeocodeLocation(location) { placemarks, _ in
+                let first = placemarks?.first
+                let address = [
+                    first?.administrativeArea,
+                    first?.locality,
+                    first?.thoroughfare,
+                    first?.subThoroughfare
+                ]
+                    .compactMap { $0 }
+                    .joined(separator: " ")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let normalizedAddress = address.isEmpty ? nil : address
+                DispatchQueue.main.async {
+                    self.onLocationSelected(
+                        coordinate.latitude,
+                        coordinate.longitude,
+                        normalizedAddress
+                    )
+                }
+            }
+        }
+
+        func updateAnnotation(on mapView: MKMapView, coordinate: CLLocationCoordinate2D) {
+            if let selectedAnnotation {
+                selectedAnnotation.coordinate = coordinate
+            } else {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = coordinate
+                mapView.addAnnotation(annotation)
+                selectedAnnotation = annotation
+            }
+        }
+
+        init(onLocationSelected: @escaping (Double, Double, String?) -> Void) {
+            self.onLocationSelected = onLocationSelected
+        }
+    }
 }
 
 private enum CafeInfoImagePickTarget {

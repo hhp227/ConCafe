@@ -8,6 +8,6 @@ sealed interface AccountSettingsAction {
     data object ClickOpenChangePassword : AccountSettingsAction
     data object ClickShowDeleteDialog : AccountSettingsAction
     data object ClickDismissDeleteDialog : AccountSettingsAction
-    data class ChangeDeleteConfirmation(val value: String) : AccountSettingsAction
+    data class ChangeDeletePassword(val value: String) : AccountSettingsAction
     data object ClickDeleteAccount : AccountSettingsAction
 }

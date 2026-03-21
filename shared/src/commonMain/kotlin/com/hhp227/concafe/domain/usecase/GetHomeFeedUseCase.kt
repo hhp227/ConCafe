@@ -41,7 +41,8 @@ class GetHomeFeedUseCase(
                 .map { it.cafeId }
                 .distinct()
                 .associateWith { cafeId ->
-                    cafeRepository.getCafeDetail(cafeId).cafe.name
+                    runCatching { cafeRepository.getCafeDetail(cafeId).cafe.name }
+                        .getOrElse { cafeId }
                 }
             val birthdayCasts = castRepository.searchCasts(
                 query = null,

@@ -37,12 +37,20 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel)
             implementation(libs.koin.core)
             implementation(libs.kmp.nativecoroutines.core)
+            implementation(libs.ktor.client.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
         iosMain.dependencies {
             implementation(libs.kmp.nativecoroutines.core)
+            implementation(libs.ktor.client.darwin)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.android)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
         }
     }
     targets.all {

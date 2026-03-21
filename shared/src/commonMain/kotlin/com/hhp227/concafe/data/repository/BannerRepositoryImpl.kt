@@ -2,7 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.BannerDataSource
 import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -18,7 +18,8 @@ import kotlinx.datetime.toLocalDateTime
 
 class BannerRepositoryImpl(
     private val bannerDataSource: BannerDataSource,
-    private val cafeDataSource: CafeDataSource
+    private val cafeDataSource: CafeDataSource,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : BannerRepository {
     override suspend fun getAllHomeBanners(): List<HomeBanner> {
         normalizeBannerSlots()
@@ -69,10 +70,7 @@ class BannerRepositoryImpl(
                 statusLabel = if (statusLabel == STATUS_ACTIVE) "노출 중" else "예약 중"
             )
         }
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-        if (firestoreDataSource != null) {
-            runCatching { firestoreDataSource.pushHomeBanner(created) }
-        }
+        runCatching { firestoreSyncDataSource.pushHomeBanner(created) }
         return created
     }
 
@@ -109,10 +107,7 @@ class BannerRepositoryImpl(
         changedCafeIds.forEach { changedCafeId ->
             updateCafeHomeBannerPreview(changedCafeId)
         }
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-        if (firestoreDataSource != null) {
-            runCatching { firestoreDataSource.pushHomeBanner(updated) }
-        }
+        runCatching { firestoreSyncDataSource.pushHomeBanner(updated) }
         return updated
     }
 
@@ -126,10 +121,7 @@ class BannerRepositoryImpl(
         val deleted = bannerDataSource.banners.removeAt(index)
         updateCafeHomeBannerPreview(deleted.cafeId)
         normalizeBannerSlots()
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-        if (firestoreDataSource != null) {
-            runCatching { firestoreDataSource.deleteHomeBanner(bannerId) }
-        }
+        runCatching { firestoreSyncDataSource.deleteHomeBanner(bannerId) }
         return deleted
     }
 

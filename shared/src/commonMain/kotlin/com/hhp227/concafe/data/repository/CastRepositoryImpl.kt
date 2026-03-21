@@ -36,7 +36,6 @@ class CastRepositoryImpl(
         if (!query.isNullOrBlank()) {
             filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
         }
-
         if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
             val validCafeIds = cafeDataSource.cafes.filter { cafe ->
                 val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
@@ -45,13 +44,11 @@ class CastRepositoryImpl(
             }.map { it.id }.toSet()
             filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
         }
-
         filtered = when (sort) {
             CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
             CastSort.LATEST -> filtered.sortedByDescending { it.id }
             CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
         }
-
         return pagingDataSource.toPaged(filtered, cursor, pageSize)
     }
 
@@ -80,7 +77,6 @@ class CastRepositoryImpl(
                     isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
                 )
             }
-
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
     }
 
@@ -97,7 +93,6 @@ class CastRepositoryImpl(
                     isWorking = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
                 )
             }
-
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
     }
 
@@ -147,8 +142,12 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
+        val castScoreById = castDataSource.casts.associate { cast ->
+            val score = castDataSource.castTodayVisitCountById[cast.id] ?: cast.followerCount
+            cast.id to score
+        }
         return castDataSource.casts
-            .sortedByDescending { castDataSource.castTodayVisitCountById[it.id] ?: 0 }
+            .sortedByDescending { castScoreById[it.id] ?: 0 }
             .take(limit)
             .map { cast ->
                 val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId

@@ -112,8 +112,12 @@ private struct RankingContentView: View {
 
     private var rankingList: some View {
         VStack(spacing: 12) {
-            ForEach(uiState.rankingEntries, id: \.id) { item in
-                rankingCard(item)
+            if !uiState.rankingEntries.isEmpty {
+                ForEach(uiState.rankingEntries, id: \.id) { item in
+                    rankingCard(item)
+                }
+            } else {
+                RankingEmptyPlaceholderCard()
             }
         }
         .padding(.horizontal, 16)
@@ -131,6 +135,24 @@ private struct RankingContentView: View {
                 }
             }
         )
+    }
+}
+
+private struct RankingEmptyPlaceholderCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("아직 집계된 랭킹이 없어요")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5C525D"))
+            Text("활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.")
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A7F8B"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

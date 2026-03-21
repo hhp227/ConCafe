@@ -173,9 +173,17 @@ private struct ExploreContentView: View {
                                       uiState.canLoadMoreMaids,
                                       !uiState.isLoadingMoreMaids else { return }
                                 onAction(.loadMoreMaids)
-                            }
+                        }
                     }
                 }
+            }
+            if (uiState.selectedTab == .cafe && !uiState.cafes.isEmpty) || (uiState.selectedTab == .maid && !uiState.maids.isEmpty) {
+                EmptyView()
+            } else {
+                ExploreEmptyPlaceholderCard(
+                    title: uiState.selectedTab == .cafe ? "카페 검색 결과가 없어요" : "캐스트 검색 결과가 없어요",
+                    description: "검색어 또는 필터를 바꿔서 다시 찾아보세요."
+                )
             }
             pagingFooter
         }
@@ -262,6 +270,28 @@ private struct ExploreContentView: View {
             endPoint: .bottom
         )
         .overlay(Image(systemName: "person.fill").foregroundStyle(Color.white.opacity(0.85)))
+    }
+}
+
+private struct ExploreEmptyPlaceholderCard: View {
+    let title: String
+
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5C525D"))
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A7F8B"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

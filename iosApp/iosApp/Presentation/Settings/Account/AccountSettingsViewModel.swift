@@ -16,9 +16,13 @@ final class AccountSettingsViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let deleteAccountUseCase: DeleteAccountUseCase
+
     @Published private(set) var uiState = AccountSettingsUiState.empty
 
     let event = PassthroughSubject<AccountSettingsEvent, Never>()
+
+    private var deleteAccountTask: Task<Void, Never>?
 
     private func observeSession() {
         Task {
@@ -83,23 +87,52 @@ final class AccountSettingsViewModel: ObservableObject {
 
     private func showDeleteDialog() {
         uiState.isDeleteDialogVisible = true
-        uiState.deleteConfirmation = ""
+        uiState.deletePassword = ""
+        uiState.deletePasswordErrorMessage = nil
     }
 
     private func dismissDeleteDialog() {
         uiState.isDeleteDialogVisible = false
-        uiState.deleteConfirmation = ""
+        uiState.deletePassword = ""
+        uiState.deletePasswordErrorMessage = nil
     }
 
     private func deleteAccount() {
-        if uiState.deleteConfirmation != deleteConfirmationText {
-            emitMessage("'\(deleteConfirmationText)'를 정확히 입력해 주세요.")
+        if uiState.deletePassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            uiState.deletePasswordErrorMessage = "회원 비밀번호를 입력해 주세요."
             return
         }
-        uiState.isDeleteRequested = true
-        uiState.isDeleteDialogVisible = false
-        uiState.deleteConfirmation = ""
-        emitMessage("회원탈퇴 요청 단계를 진행했어요. 실제 서버 삭제 연동은 후속 단계에서 연결됩니다.")
+
+        uiState.isLoading = true
+        uiState.errorMessage = nil
+
+        deleteAccountTask?.cancel()
+        let password = uiState.deletePassword
+        deleteAccountTask = Task {
+            do {
+                let result = try await deleteAccountUseCase.invoke(password: password)
+
+                if let failure = result as? AppResultFailure {
+                    let message = mapDeleteFailureMessage(failure)
+                    uiState.isLoading = false
+                    uiState.errorMessage = nil
+                    uiState.deletePasswordErrorMessage = message
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = nil
+                    uiState.isDeleteRequested = true
+                    uiState.isDeleteDialogVisible = false
+                    uiState.deletePassword = ""
+                    uiState.deletePasswordErrorMessage = nil
+                    event.send(.navigateToMain)
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.errorMessage = "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+                emitMessage("회원탈퇴에 실패했습니다. 다시 시도해 주세요.")
+            }
+        }
     }
 
     func onAction(_ action: AccountSettingsAction) {
@@ -118,8 +151,9 @@ final class AccountSettingsViewModel: ObservableObject {
             showDeleteDialog()
         case .dismissDeleteDialogTapped:
             dismissDeleteDialog()
-        case .deleteConfirmationChanged(let value):
-            uiState.deleteConfirmation = value
+        case .deletePasswordChanged(let value):
+            uiState.deletePassword = value
+            uiState.deletePasswordErrorMessage = nil
         case .deleteAccountTapped:
             deleteAccount()
         }
@@ -127,14 +161,31 @@ final class AccountSettingsViewModel: ObservableObject {
 
     init(
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        deleteAccountUseCase: DeleteAccountUseCase = KoinInitializerKt.resolveDeleteAccountUseCase()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.deleteAccountUseCase = deleteAccountUseCase
 
         loadAccountSettings()
         observeSession()
     }
 
-    private let deleteConfirmationText = "탈퇴"
+    deinit {
+        deleteAccountTask?.cancel()
+    }
+
+    private func mapDeleteFailureMessage(_ failure: AppResultFailure) -> String {
+        let rawError = String(describing: failure.error).uppercased()
+
+        if rawError.contains("INVALID PASSWORD")
+            || rawError.contains("INVALID_LOGIN_CREDENTIALS")
+            || rawError.contains("INVALID_PASSWORD")
+            || rawError.contains("EMAIL_NOT_FOUND") {
+            return "비밀번호가 올바르지 않습니다."
+        } else {
+            return "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        }
+    }
 }

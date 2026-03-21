@@ -22,6 +22,7 @@ enum CafeInfoEditAction {
     case clickAddGalleryImage
     case addGalleryImage(String)
     case clickPinLocation
+    case setPinnedLocation(latitude: Double, longitude: Double)
     case clickManageExceptionDates
     case dismissImageRequiredAlert
     case clickSave

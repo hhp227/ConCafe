@@ -14,6 +14,8 @@ data class CafeInfoEditUiState(
     val representativeImageUrl: String? = null,
     val galleryImages: List<String> = emptyList(),
     val address: String = "",
+    val mapLatitude: Double = 37.5665,
+    val mapLongitude: Double = 126.9780,
     val contactNumber: String = "",
     val weekdayOpen: String = "",
     val weekdayClose: String = "",

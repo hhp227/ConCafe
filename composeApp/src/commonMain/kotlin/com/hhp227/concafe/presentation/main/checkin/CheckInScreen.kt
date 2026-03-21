@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -261,19 +262,33 @@ private fun CheckInGuestScreen(
                 CheckInGuestSectionTitle("🔥 인기 컨셉 카페")
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                PopularCafeSection(
-                    cafes = uiState.popularCafes,
-                    onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
-                )
+                if (uiState.popularCafes.isNotEmpty()) {
+                    PopularCafeSection(
+                        cafes = uiState.popularCafes,
+                        onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
+                    )
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title = "인기 카페가 아직 없어요",
+                        description = "주변 카페 데이터가 들어오면 여기에 표시됩니다."
+                    )
+                }
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 CheckInGuestSectionTitle("☕ 오늘 인기 캐스트")
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                PopularCastSection(
-                    casts = uiState.popularCasts,
-                    onCastClick = { onAction(CheckInAction.ClickCast(it)) }
-                )
+                if (uiState.popularCasts.isNotEmpty()) {
+                    PopularCastSection(
+                        casts = uiState.popularCasts,
+                        onCastClick = { onAction(CheckInAction.ClickCast(it)) }
+                    )
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title = "인기 캐스트가 아직 없어요",
+                        description = "활동이 누적되면 추천 캐스트를 볼 수 있어요."
+                    )
+                }
             }
             if (uiState.errorMessage != null) {
                 Text(
@@ -384,47 +399,14 @@ private fun CafeMapSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(Color(0xFFFFDDEB), Color(0xFFFFF5F9), Color(0xFFFFE8F1))
-                        ),
-                        RoundedCornerShape(24.dp)
-                    )
             ) {
-                mapCafes.take(6).forEachIndexed { index, cafe ->
-                    val markerModifier = when (index) {
-                        0 -> Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 36.dp)
-                        1 -> Modifier.align(Alignment.TopEnd).padding(end = 34.dp, top = 58.dp)
-                        2 -> Modifier.align(Alignment.CenterStart).padding(start = 54.dp)
-                        3 -> Modifier.align(Alignment.Center).padding(bottom = 10.dp)
-                        4 -> Modifier.align(Alignment.CenterEnd).padding(end = 40.dp, top = 24.dp)
-                        else -> Modifier.align(Alignment.BottomStart).padding(start = 110.dp, bottom = 28.dp)
-                    }
-
-                    Surface(
-                        modifier = markerModifier.clickable { onCafeClick(cafe.id) },
-                        shape = RoundedCornerShape(18.dp),
-                        color = Color.White.copy(alpha = 0.95f),
-                        shadowElevation = 6.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .background(Color(0xFFEF6797), CircleShape)
-                            )
-                            Text(
-                                text = cafe.name,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
+                CheckInCafeMap(
+                    cafes = mapCafes,
+                    onCafeClick = onCafeClick,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(24.dp))
+                )
             }
         }
     }
@@ -1168,6 +1150,35 @@ private fun EmptyVisitState(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF7C7480)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CheckInSectionPlaceholderCard(
+    title: String,
+    description: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2F7))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5B4F57)
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF857A82)
             )
         }
     }

@@ -158,6 +158,9 @@ class SignUpViewModel: ObservableObject {
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isLoading = false
                     event.send(.signedUp)
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isLoading = false
+                    uiState.errorMessage = resolveSignUpErrorMessage(failure.error)
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
@@ -275,6 +278,41 @@ class SignUpViewModel: ObservableObject {
             return .cast
         case .visitor, .none:
             return .visitor
+        }
+    }
+
+    private func resolveSignUpErrorMessage(_ error: AppError) -> String {
+        if let validation = error as? AppErrorValidationFailed {
+            return mapFirebaseSignUpReason(validation.reason)
+        } else if let network = error as? AppErrorNetworkError {
+            return network.message ?? "네트워크 오류로 회원가입에 실패했습니다."
+        } else if let unknown = error as? AppErrorUnknown {
+            return mapFirebaseSignUpReason(unknown.cause ?? "")
+        } else {
+            return "회원가입에 실패했습니다. 입력값을 확인해주세요."
+        }
+    }
+
+    private func mapFirebaseSignUpReason(_ reason: String) -> String {
+        let normalized = reason.uppercased()
+
+        if normalized.contains("EMAIL_EXISTS")
+            || normalized.contains("EMAIL ALREADY EXISTS")
+            || normalized.contains("EMAIL_ALREADY_IN_USE") {
+            return "이미 가입된 이메일입니다."
+        } else if normalized.contains("INVALID_EMAIL") {
+            return "이메일 형식이 올바르지 않습니다."
+        } else if normalized.contains("WEAK_PASSWORD")
+                    || normalized.contains("PASSWORD SHOULD BE AT LEAST") {
+            return "비밀번호 보안 강도가 낮습니다. 더 강한 비밀번호를 입력해주세요."
+        } else if normalized.contains("TOO_MANY_ATTEMPTS_TRY_LATER") {
+            return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if normalized.contains("NETWORK") {
+            return "네트워크 오류로 회원가입에 실패했습니다."
+        } else if !reason.isEmpty {
+            return reason
+        } else {
+            return "회원가입에 실패했습니다. 입력값을 확인해주세요."
         }
     }
 

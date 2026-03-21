@@ -21,6 +21,8 @@ struct CafeInfoEditUiState {
     var representativeImageUrl: String?
     var galleryImages: [String] = []
     var address = ""
+    var mapLatitude = 37.5665
+    var mapLongitude = 126.9780
     var contactNumber = ""
     var weekdayOpen = ""
     var weekdayClose = ""

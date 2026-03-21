@@ -19,16 +19,15 @@ import com.hhp227.concafe.data.repository.ReviewRepositoryImpl
 import com.hhp227.concafe.data.repository.StorageRepositoryImpl
 import com.hhp227.concafe.data.repository.UserRepositoryImpl
 import com.hhp227.concafe.data.repository.VisitRepositoryImpl
-import com.hhp227.concafe.data.source.ConCafeDataSource
 import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.BannerDataSource
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastClaimDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.InquiryDataSource
-import com.hhp227.concafe.data.source.MockConCafeDataSource
 import com.hhp227.concafe.data.source.NetworkStatusDataSource
 import com.hhp227.concafe.data.source.NoticeDataSource
+import com.hhp227.concafe.data.source.NotificationDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
 import com.hhp227.concafe.data.source.RankingDataSource
@@ -36,68 +35,59 @@ import com.hhp227.concafe.data.source.ReviewDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.data.source.MyInfoDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreBackendMode
 import com.hhp227.concafe.data.source.firestore.FirestoreConfig
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
-import com.hhp227.concafe.data.source.firestore.NoOpFirestoreAuthTokenProvider
-import com.hhp227.concafe.data.source.firestore.NoOpFirestoreRestApi
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 
-private val DEFAULT_BACKEND_MODE = FirestoreBackendMode.MOCK
-private const val FIRESTORE_PROJECT_ID = ""
+private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
 
 val dataSourceModule = module {
-    single { DEFAULT_BACKEND_MODE }
     single { FirestoreConfig(projectId = FIRESTORE_PROJECT_ID) }
-    single<FirestoreRestApi> { NoOpFirestoreRestApi() }
-    single<FirestoreAuthTokenProvider> { NoOpFirestoreAuthTokenProvider() }
-    single<ConCafeDataSource> {
-        when (get<FirestoreBackendMode>()) {
-            FirestoreBackendMode.MOCK -> MockConCafeDataSource()
-            FirestoreBackendMode.FIRESTORE_REST -> {
-                val dataSource = FirestoreConCafeDataSource(
-                    config = get(),
-                    restApi = get(),
-                    tokenProvider = get()
-                )
-                runBlocking {
-                    runCatching { dataSource.bootstrap() }
-                }
-                dataSource
-            }
+    single {
+        val dataSource = FirestoreConCafeDataSource(
+            config = get(),
+            restApi = get(),
+            tokenProvider = get()
+        )
+
+        runBlocking {
+            runCatching { dataSource.bootstrap() }
         }
+        dataSource
     }
-    single<AuthDataSource> { get<ConCafeDataSource>() }
-    single<BannerDataSource> { get<ConCafeDataSource>() }
-    single<CafeDataSource> { get<ConCafeDataSource>() }
-    single<CastDataSource> { get<ConCafeDataSource>() }
-    single<CastClaimDataSource> { get<ConCafeDataSource>() }
-    single<InquiryDataSource> { get<ConCafeDataSource>() }
-    single<NoticeDataSource> { get<ConCafeDataSource>() }
-    single<PagingDataSource> { get<ConCafeDataSource>() }
-    single<RankingDataSource> { get<ConCafeDataSource>() }
-    single<ReviewDataSource> { get<ConCafeDataSource>() }
-    single<SocialDataSource> { get<ConCafeDataSource>() }
-    single<VisitDataSource> { get<ConCafeDataSource>() }
-    single<MyInfoDataSource> { get<ConCafeDataSource>() }
+    single<AuthDataSource> { get<FirestoreConCafeDataSource>() }
+    single<BannerDataSource> { get<FirestoreConCafeDataSource>() }
+    single<CafeDataSource> { get<FirestoreConCafeDataSource>() }
+    single<CastDataSource> { get<FirestoreConCafeDataSource>() }
+    single<CastClaimDataSource> { get<FirestoreConCafeDataSource>() }
+    single<InquiryDataSource> { get<FirestoreConCafeDataSource>() }
+    single<NoticeDataSource> { get<FirestoreConCafeDataSource>() }
+    single<PagingDataSource> { get<FirestoreConCafeDataSource>() }
+    single<RankingDataSource> { get<FirestoreConCafeDataSource>() }
+    single<ReviewDataSource> { get<FirestoreConCafeDataSource>() }
+    single<SocialDataSource> { get<FirestoreConCafeDataSource>() }
+    single<VisitDataSource> { get<FirestoreConCafeDataSource>() }
+    single<MyInfoDataSource> { get<FirestoreConCafeDataSource>() }
+    single<NotificationDataSource> { get<FirestoreConCafeDataSource>() }
+    single<FirestoreSyncDataSource> { get<FirestoreConCafeDataSource>() }
     single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
 }
 
 val repositoryModule = module {
-    single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get()) }
-    single<BannerRepository> { BannerRepositoryImpl(get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
+    single<BannerRepository> { BannerRepositoryImpl(get(), get(), get()) }
     single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
-    single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get()) }
+    single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get(), get()) }
     single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get()) }
-    single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get()) }
-    single<CafeRepository> { CafeRepositoryImpl(get(), get(), get()) }
+    single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get(), get()) }
+    single<CafeRepository> { CafeRepositoryImpl(get(), get(), get(), get()) }
     single<CastRepository> { CastRepositoryImpl(get(), get(), get(), get()) }
     single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get(), get(), get()) }
     single<InquiryRepository> { InquiryRepositoryImpl(get()) }
@@ -106,7 +96,7 @@ val repositoryModule = module {
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
     single<RankingRepository> { RankingRepositoryImpl(get(), get(), get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
-    single<StorageRepository> { StorageRepositoryImpl() }
+    single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
 }
@@ -148,6 +138,7 @@ val useCaseModule = module {
     factory { DeleteCafeMenuGoodsUseCase(get(), get()) }
     factory { DeleteHomeBannerUseCase(get(), get(), get(), get()) }
     factory { DeleteCastUseCase(get(), get(), get(), get()) }
+    factory { DeleteAccountUseCase(get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }
@@ -173,6 +164,7 @@ val useCaseModule = module {
     factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
+    factory { SignInWithGoogleIdTokenUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { SignUpUseCase(get()) }
     factory { SignOutUseCase(get()) }

@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -16,7 +17,8 @@ import kotlinx.datetime.toLocalDateTime
 
 class CafeRegistrationClaimRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val cafeDataSource: CafeDataSource
+    private val cafeDataSource: CafeDataSource,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeRegistrationClaimRepository {
     override suspend fun createCafeRegistrationClaim(
         userId: String,
@@ -47,6 +49,15 @@ class CafeRegistrationClaimRepositoryImpl(
             message = "관리자 승인 후 새 카페가 생성되고 운영 카페에 자동 연결됩니다."
         )
         claims.add(0, claim)
+        try {
+            firestoreSyncDataSource.pushCafeRegistrationClaim(
+                requesterUserId = userId,
+                claim = claim
+            )
+        } catch (e: Exception) {
+            claims.removeAll { existing -> existing.claimId == claim.claimId }
+            throw e
+        }
         return PendingCafeRegistrationClaimPreview(
             claimId = claim.claimId,
             requesterUserId = userId,

@@ -10,12 +10,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -97,7 +99,8 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = true,
-                deleteConfirmation = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
@@ -106,25 +109,54 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = false,
-                deleteConfirmation = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
 
     private fun clickDeleteAccount() {
         val state = _uiState.value
-        if (state.deleteConfirmation != DELETE_CONFIRMATION_TEXT) {
-            emitMessage("'$DELETE_CONFIRMATION_TEXT'를 정확히 입력해 주세요.")
+
+        if (state.deletePassword.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    deletePasswordErrorMessage = "회원 비밀번호를 입력해 주세요."
+                )
+            }
             return
         }
-        _uiState.update {
-            it.copy(
-                isDeleteRequested = true,
-                isDeleteDialogVisible = false,
-                deleteConfirmation = ""
-            )
+
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        viewModelScope.launch {
+            when (val result = deleteAccountUseCase.invoke(state.deletePassword)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            isDeleteRequested = true,
+                            isDeleteDialogVisible = false,
+                            deletePassword = ""
+                        )
+                    }
+                    _event.emit(AccountSettingsEvent.NavigateToMain)
+                }
+
+                is AppResult.Failure -> {
+                    val message = mapDeleteFailureMessage(result)
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            deletePasswordErrorMessage = message
+                        )
+                    }
+                }
+            }
         }
-        emitMessage("회원탈퇴 요청 단계를 진행했어요. 실제 서버 삭제 연동은 후속 단계에서 연결됩니다.")
     }
 
     private fun emitMessage(message: String) {
@@ -142,8 +174,11 @@ class AccountSettingsViewModel(
             AccountSettingsAction.ClickOpenChangePassword -> clickOpenChangePassword()
             AccountSettingsAction.ClickShowDeleteDialog -> clickShowDeleteDialog()
             AccountSettingsAction.ClickDismissDeleteDialog -> clickDismissDeleteDialog()
-            is AccountSettingsAction.ChangeDeleteConfirmation -> _uiState.update {
-                it.copy(deleteConfirmation = action.value)
+            is AccountSettingsAction.ChangeDeletePassword -> _uiState.update {
+                it.copy(
+                    deletePassword = action.value,
+                    deletePasswordErrorMessage = null
+                )
             }
             AccountSettingsAction.ClickDeleteAccount -> clickDeleteAccount()
         }
@@ -154,7 +189,18 @@ class AccountSettingsViewModel(
         observeSession()
     }
 
-    private companion object {
-        private const val DELETE_CONFIRMATION_TEXT = "탈퇴"
+    private fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString()
+        val normalized = rawError.uppercase()
+
+        return if (normalized.contains("INVALID PASSWORD")
+            || normalized.contains("INVALID_LOGIN_CREDENTIALS")
+            || normalized.contains("INVALID_PASSWORD")
+            || normalized.contains("EMAIL_NOT_FOUND")
+        ) {
+            "비밀번호가 올바르지 않습니다."
+        } else {
+            "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        }
     }
 }

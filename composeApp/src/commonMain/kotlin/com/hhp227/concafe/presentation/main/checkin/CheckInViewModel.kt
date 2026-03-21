@@ -42,14 +42,13 @@ class CheckInViewModel(
 
     val event = _event.asSharedFlow()
 
-    private var observeSessionJob: Job? = null
-    private var observeCafeDetailEventJob: Job? = null
-    private var observeCastEventJob: Job? = null
+    private val jobs = mutableMapOf<TaskKey, Job>()
 
     private fun loadGuestFeed() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_GUEST_FEED]?.cancel()
+        jobs[TaskKey.LOAD_GUEST_FEED] = viewModelScope.launch {
             when (val result = getCheckInGuestFeedUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.update {
@@ -76,7 +75,8 @@ class CheckInViewModel(
     }
 
     private fun observeSession() {
-        observeSessionJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest { user ->
                 _uiState.update {
                     it.copy(
@@ -102,7 +102,8 @@ class CheckInViewModel(
     }
 
     private fun loadUserFeed() {
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_USER_FEED]?.cancel()
+        jobs[TaskKey.LOAD_USER_FEED] = viewModelScope.launch {
             when (val result = getCheckInUserFeedUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.update {
@@ -138,7 +139,8 @@ class CheckInViewModel(
 
         _uiState.update { it.copy(errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[TaskKey.SUBMIT_VISIT]?.cancel()
+        jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
             when (val result = createVisitUseCase.invoke(
                 cafeId = cafeId,
                 visitedAt = visitedAt,
@@ -157,8 +159,8 @@ class CheckInViewModel(
     }
 
     private fun observeCafeDetailEvent() {
-        observeCafeDetailEventJob?.cancel()
-        observeCafeDetailEventJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
             cafeDetailEventPublisher.events.collectLatest { event ->
                 if (event is CafeDetailEvent.CafeInfoUpdated) {
                     patchCafe(event.cafe)
@@ -168,8 +170,8 @@ class CheckInViewModel(
     }
 
     private fun observeCastEvent() {
-        observeCastEventJob?.cancel()
-        observeCastEventJob = viewModelScope.launch {
+        jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
             castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
@@ -256,7 +258,8 @@ class CheckInViewModel(
 
     private fun dismissReviewPrompt() {
         val prompt = _uiState.value.reviewPrompt ?: return
-        viewModelScope.launch {
+        jobs[TaskKey.REVIEW_PROMPT_ACTION]?.cancel()
+        jobs[TaskKey.REVIEW_PROMPT_ACTION] = viewModelScope.launch {
             dismissReviewPromptUseCase.invoke(prompt.visitId)
             _uiState.update { it.copy(reviewPrompt = null) }
         }
@@ -264,7 +267,8 @@ class CheckInViewModel(
 
     private fun clickWriteReviewPrompt() {
         val prompt = _uiState.value.reviewPrompt ?: return
-        viewModelScope.launch {
+        jobs[TaskKey.REVIEW_PROMPT_ACTION]?.cancel()
+        jobs[TaskKey.REVIEW_PROMPT_ACTION] = viewModelScope.launch {
             dismissReviewPromptUseCase.invoke(prompt.visitId)
             _uiState.update { it.copy(reviewPrompt = null) }
             _event.emit(CheckInEvent.NavigateToReviewEdit(prompt.cafeId))
@@ -347,9 +351,18 @@ class CheckInViewModel(
     }
 
     override fun onCleared() {
-        observeSessionJob?.cancel()
-        observeCafeDetailEventJob?.cancel()
-        observeCastEventJob?.cancel()
+        jobs.values.forEach { it.cancel() }
+        jobs.clear()
         super.onCleared()
+    }
+
+    private enum class TaskKey {
+        LOAD_GUEST_FEED,
+        OBSERVE_SESSION,
+        LOAD_USER_FEED,
+        SUBMIT_VISIT,
+        OBSERVE_CAFE_DETAIL_EVENT,
+        OBSERVE_CAST_EVENT,
+        REVIEW_PROMPT_ACTION
     }
 }

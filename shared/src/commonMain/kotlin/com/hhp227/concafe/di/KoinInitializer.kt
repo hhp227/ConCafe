@@ -23,6 +23,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -60,6 +61,7 @@ import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
@@ -90,7 +92,7 @@ fun doInitKoin(): KoinApplication? {
 fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     return if (koinApplication == null) {
         startKoin {
-            modules(concafeModules + extraModules)
+            modules(concafeModules + sharedPlatformModules() + extraModules)
         }.also { koinApplication = it }
     } else {
         null
@@ -265,6 +267,13 @@ fun resolveDeleteCastUseCase(): DeleteCastUseCase {
     return koin.get()
 }
 
+fun resolveDeleteAccountUseCase(): DeleteAccountUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveDeleteHomeBannerUseCase(): DeleteHomeBannerUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -413,6 +422,13 @@ fun resolveSignOutUseCase(): SignOutUseCase {
 }
 
 fun resolveSignInUseCase(): SignInUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithGoogleIdTokenUseCase(): SignInWithGoogleIdTokenUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
