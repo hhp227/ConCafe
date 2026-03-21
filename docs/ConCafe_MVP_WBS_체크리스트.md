@@ -17,6 +17,13 @@
 - [x] `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 정책을 운영/권한 항목에 반영
 - [x] Repository + DataSource 패턴에서 사용자 목록은 데이터소스 구현 내부 상태로 관리하고, Repository는 인터페이스 메서드 기반 조회/갱신을 사용하도록 정리
 
+## 최근 정합성 반영 (2026-03-22)
+- [x] 앱 런타임 데이터소스가 Firestore 경로를 사용하고, `MockConCafeDataSource`는 테스트 코드로만 분리됨
+- [x] Firebase Auth 기반 세션 복원이 Android/iOS/Desktop 공통 흐름(`restoreSession` + `observeCurrentUser`)으로 정렬됨
+- [x] Admin 운영관리 승인 대기 목록 조회가 Firestore pending claim 조회 경로로 연결됨
+- [x] Firestore Rules 초안에 Admin의 claim 조회(read) 허용 규칙이 반영됨
+- [x] 운영관리 승인 대기 카드 이미지 노출이 Compose/iOS에 공통 반영됨
+
 ## 0. 목표/범위
 - [ ] MVP 목표 확정: 메이드 중심 팬 플랫폼 + 위치 인증 기반 신뢰 리뷰
 - [ ] MVP 화면 범위 확정: 홈/탐색/역할별 3번째 탭(체크인/팬관리/카페관리/운영관리)/랭킹/마이 + 카페/메이드 상세

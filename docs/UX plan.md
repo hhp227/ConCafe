@@ -26,6 +26,13 @@
 - 비로그인 사용자가 카페/캐스트 카드를 탭하면 네비게이션은 차단하고 로그인 유도 Dialog/Alert를 노출한다.
 - 로그인 유도 Dialog/Alert의 기본 액션은 `로그인`(SignIn 이동) / `취소`다.
 
+### 구현 정합성 메모 (2026-03-22)
+- 런타임 앱 데이터소스는 `FirestoreConCafeDataSource` + Firebase Auth/Firestore/Storage REST 경로를 사용한다.
+- `MockConCafeDataSource`는 현재 `shared/src/commonTest` 테스트 전용으로만 남아 있고 앱 런타임에서는 사용하지 않는다.
+- 세션 복원은 3플랫폼 공통으로 `restoreSession` + `observeCurrentUser` 조합으로 동작한다.
+- 지도는 Android(Compose GoogleMap), iOS(Apple Map), Desktop(Google Maps JavaScript WebView)로 분기 구현되어 있다.
+- `운영관리`의 승인 대기 목록은 Firestore pending claim 조회 경로를 사용한다.
+
 ---
 
 # 1️⃣ 🏠 홈 (Home)

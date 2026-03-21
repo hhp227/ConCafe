@@ -209,25 +209,43 @@ castClaims/{claimId}
 cafeOwnerClaims/{claimId}
 ├─ userId
 ├─ cafeId
+├─ cafeName (optional)
+├─ location (optional)
+├─ imageUrl (optional)
 ├─ status: PENDING | APPROVED | REJECTED
 ├─ message
 ├─ evidenceImageUrls: []
 ├─ reviewedBy
 ├─ reviewedAt
-└─ createdAt
+├─ requestedAt
+└─ createdAt (legacy)
 
 cafeRegistrationClaims/{claimId}
 ├─ userId
-├─ draft
-│  ├─ name
-│  ├─ description
-│  ├─ region
-│  ├─ thumbnailImage
-│  └─ businessHours
+├─ cafeName
+├─ description
+├─ thumbnailImage
+├─ conceptType
+├─ businessHours
+├─ phoneNumber
+├─ region
+│  ├─ country
+│  ├─ city
+│  ├─ address
+│  └─ location (GeoPoint)
 ├─ status: PENDING | APPROVED | REJECTED
+├─ message
+├─ requestedAt
+├─ approvedCafeId (optional)
 ├─ reviewedBy
 ├─ reviewedAt
-└─ createdAt
+└─ createdAt (legacy)
+
+구현 정합성 메모 (2026-03-22)
+- Admin 운영관리의 pending claim 목록은 Firestore 직접 조회를 사용한다.
+- `cafeRegistrationClaims`는 현재 `draft` 중첩 객체가 아니라 평탄 필드(`cafeName`, `description`, `region` 등)로 저장한다.
+- `cafeOwnerClaims`는 조회 시 `cafeName/location/imageUrl`를 optional 필드로 보강해 UI 카드 정보를 렌더링한다.
+- Firestore Rules는 관리자(`ADMIN`)가 `cafeOwnerClaims`, `cafeRegistrationClaims`를 read할 수 있도록 반영되어 있다.
 
 공지/이벤트 관리 메모
 - `cafes/{cafeId}/notices`, `cafes/{cafeId}/events`는 카페별 페이지네이션 조회를 사용하며 현재 페이지 크기는 15개다.

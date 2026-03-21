@@ -29,6 +29,13 @@
 - `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 기준을 운영 권한 흐름에 반영했다.
 - Repository + DataSource 패턴 정리를 진행했다: 사용자 목록은 데이터소스 구현 내부에서만 보유하고, Repository는 인터페이스 메서드로만 조회/수정하도록 통일했다.
 
+## 최근 반영 (2026-03-22)
+- 런타임 데이터 경로를 Firestore 기준으로 재정렬했다. `MockConCafeDataSource`는 테스트 코드(`shared/src/commonTest`) 전용으로만 남긴다.
+- 인증/세션은 Firebase Auth REST + `PersistedFirebaseAuthTokenProvider` 기반으로 Android/iOS/Desktop 공통 복원 흐름을 사용한다.
+- Admin 운영관리 `승인 대기 요청` 조회를 Firestore pending claim 조회 경로로 연결했다.
+- Firestore Rules에 Admin claim 조회(read) 허용 규칙을 추가해 `cafeOwnerClaims`, `cafeRegistrationClaims` 관리자 조회가 가능하도록 보정했다.
+- Admin 운영관리 UI의 승인 대기 카드 이미지 노출을 Compose/iOS 모두 반영했다.
+
 ## A. 사전 확정 작업 (P0)
 
 ### A-01. 도메인 enum/스키마 최종 확정
