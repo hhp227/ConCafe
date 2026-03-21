@@ -97,6 +97,8 @@ final class AccountSettingsViewModel: ObservableObject {
 
     private func deleteAccount() {
         if uiState.deletePassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            uiState.isDeleteDialogVisible = false
+            uiState.deletePassword = ""
             emitMessage("회원 비밀번호를 입력해 주세요.")
             return
         }
@@ -113,7 +115,9 @@ final class AccountSettingsViewModel: ObservableObject {
                 if let failure = result as? AppResultFailure {
                     let message = mapDeleteFailureMessage(failure)
                     uiState.isLoading = false
-                    uiState.errorMessage = message
+                    uiState.errorMessage = nil
+                    uiState.isDeleteDialogVisible = false
+                    uiState.deletePassword = ""
                     emitMessage(message)
                 } else {
                     uiState.isLoading = false

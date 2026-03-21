@@ -117,6 +117,12 @@ class AccountSettingsViewModel(
         val state = _uiState.value
 
         if (state.deletePassword.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    isDeleteDialogVisible = false,
+                    deletePassword = ""
+                )
+            }
             emitMessage("회원 비밀번호를 입력해 주세요.")
             return
         }
@@ -145,7 +151,9 @@ class AccountSettingsViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = message
+                            errorMessage = null,
+                            isDeleteDialogVisible = false,
+                            deletePassword = ""
                         )
                     }
                     _event.emit(AccountSettingsEvent.ShowMessage(message))
