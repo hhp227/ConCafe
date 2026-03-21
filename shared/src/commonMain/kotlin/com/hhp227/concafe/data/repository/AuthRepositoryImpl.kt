@@ -94,12 +94,12 @@ class AuthRepositoryImpl(
 
     override suspend fun restoreSession(): User? {
         syncCurrentUserIdFromFirebase()
-        return authDataSource.currentUserId?.let { authDataSource.findUserById(it) }
+        return resolveCurrentUser()
     }
 
     override suspend fun getCurrentUser(): User? {
         syncCurrentUserIdFromFirebase()
-        return authDataSource.currentUserId?.let { authDataSource.findUserById(it) }
+        return resolveCurrentUser()
     }
 
     override fun observeCurrentUser(): Flow<User?> {
@@ -160,6 +160,22 @@ class AuthRepositoryImpl(
         val firebaseUserId = authTokenProvider.getCurrentUserId()
 
         authDataSource.currentUserId = firebaseUserId
+    }
+
+    private suspend fun resolveCurrentUser(): User? {
+        val currentUserId = authDataSource.currentUserId ?: return null
+        val localUser = authDataSource.findUserById(currentUserId)
+
+        if (localUser != null) {
+            return localUser
+        }
+        val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId) ?: return null
+        val replaced = authDataSource.replaceUser(remoteUser)
+
+        if (!replaced) {
+            authDataSource.addUser(remoteUser)
+        }
+        return remoteUser
     }
 }
 
