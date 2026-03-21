@@ -19,7 +19,6 @@ material3 = "1.5.12"
 navigationComposeAndroid = "2.8.9"
 androidxComposeMaterial = "1.5.4"
 google-services = "4.4.1"
-firebase-bom = "32.7.0"
 koin = "3.5.6"
 kmp-nativecoroutines = "1.0.0-ALPHA-30"
 ksp = "1.9.24-1.0.20"
@@ -48,9 +47,6 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationComposeAndroid" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "androidxComposeMaterial" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
-firebase-firestore = { module = "com.google.firebase:firebase-firestore-ktx" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
 kmp-nativecoroutines-ksp = { module = "com.rickclephas.kmp:kmp-nativecoroutines-ksp", version.ref = "kmp-nativecoroutines" }
