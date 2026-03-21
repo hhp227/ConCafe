@@ -278,7 +278,8 @@ final class CheckInViewModel: ObservableObject {
 
     private func dismissReviewPrompt() {
         guard let prompt = uiState.reviewPrompt else { return }
-        Task {
+        tasks[.reviewPromptAction]?.cancel()
+        tasks[.reviewPromptAction] = Task {
             _ = try? await dismissReviewPromptUseCase.invoke(visitId: prompt.visitId)
             uiState.reviewPrompt = nil
         }
@@ -286,7 +287,8 @@ final class CheckInViewModel: ObservableObject {
 
     private func writeReviewPrompt() {
         guard let prompt = uiState.reviewPrompt else { return }
-        Task {
+        tasks[.reviewPromptAction]?.cancel()
+        tasks[.reviewPromptAction] = Task {
             _ = try? await dismissReviewPromptUseCase.invoke(visitId: prompt.visitId)
             uiState.reviewPrompt = nil
             event.send(.navigateToReviewEdit(cafeId: prompt.cafeId))
@@ -369,5 +371,6 @@ final class CheckInViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case castEvent
+        case reviewPromptAction
     }
 }
