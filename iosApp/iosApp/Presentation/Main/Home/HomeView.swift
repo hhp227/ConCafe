@@ -201,7 +201,7 @@ private struct HomeContentView: View {
                                 title: "근처 카페가 아직 없어요",
                                 description: "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요."
                             )
-                            .padding(.horizontal, 16)
+                            .frame(width: max(contentWidth - 32, 0), alignment: .leading)
                         }
                     }
                     .padding(.horizontal, 16)
