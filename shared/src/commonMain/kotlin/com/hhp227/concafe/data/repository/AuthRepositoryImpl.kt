@@ -104,7 +104,11 @@ class AuthRepositoryImpl(
 
     override fun observeCurrentUser(): Flow<User?> {
         return authDataSource.currentUserIdFlow.map { userId ->
-            userId?.let { authDataSource.findUserById(it) }
+            if (userId == null) {
+                null
+            } else {
+                resolveCurrentUser()
+            }
         }
     }
 
