@@ -1,7 +1,23 @@
 package com.hhp227.concafe.data.source.firestore
 
-import com.hhp227.concafe.data.source.ConCafeDataSource
-import com.hhp227.concafe.data.source.MockConCafeDataSource
+import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.BannerDataSource
+import com.hhp227.concafe.data.source.CafeDataSource
+import com.hhp227.concafe.data.source.CastClaimDataSource
+import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.ExternalLinkDataSource
+import com.hhp227.concafe.data.source.FirestoreCacheDataSource
+import com.hhp227.concafe.data.source.InquiryDataSource
+import com.hhp227.concafe.data.source.MyInfoDataSource
+import com.hhp227.concafe.data.source.NoticeDataSource
+import com.hhp227.concafe.data.source.NotificationDataSource
+import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.RankingDataSource
+import com.hhp227.concafe.data.source.ReviewDataSource
+import com.hhp227.concafe.data.source.ScheduleStatusDataSource
+import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.StampDataSource
+import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.User
@@ -23,8 +39,26 @@ class FirestoreConCafeDataSource(
     private val config: FirestoreConfig,
     private val restApi: FirestoreRestApi,
     private val tokenProvider: FirestoreAuthTokenProvider,
-    private val delegate: MockConCafeDataSource = MockConCafeDataSource()
-) : ConCafeDataSource by delegate {
+    private val delegate: FirestoreCacheDataSource = FirestoreCacheDataSource()
+) :
+    AuthDataSource by delegate,
+    CafeDataSource by delegate,
+    CastDataSource by delegate,
+    CastClaimDataSource by delegate,
+    BannerDataSource by delegate,
+    InquiryDataSource by delegate,
+    NoticeDataSource by delegate,
+    ReviewDataSource by delegate,
+    VisitDataSource by delegate,
+    ExternalLinkDataSource by delegate,
+    StampDataSource by delegate,
+    ScheduleStatusDataSource by delegate,
+    NotificationDataSource by delegate,
+    SocialDataSource by delegate,
+    MyInfoDataSource by delegate,
+    RankingDataSource by delegate,
+    PagingDataSource by delegate,
+    FirestoreSyncDataSource {
     suspend fun bootstrap() {
         val idToken = tokenProvider.getIdToken()
 
@@ -32,7 +66,18 @@ class FirestoreConCafeDataSource(
         loadHomeBanners(idToken)
     }
 
-    suspend fun pushUser(user: User) {
+    override suspend fun fetchUser(userId: String): User? {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+
+        return runCatching {
+            val response = restApi.get(path, idToken)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            parseUserDocument(parsed)
+        }.getOrNull()
+    }
+
+    override suspend fun pushUser(user: User) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/${user.id}"
         val body = firestoreDocumentBody(
@@ -48,7 +93,7 @@ class FirestoreConCafeDataSource(
         restApi.patch(path, body, idToken)
     }
 
-    suspend fun pushHomeBanner(banner: HomeBanner) {
+    override suspend fun pushHomeBanner(banner: HomeBanner) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.HOME_BANNERS}/${banner.id}"
         val body = firestoreDocumentBody(
@@ -68,7 +113,7 @@ class FirestoreConCafeDataSource(
         restApi.patch(path, body, idToken)
     }
 
-    suspend fun deleteHomeBanner(bannerId: String) {
+    override suspend fun deleteHomeBanner(bannerId: String) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.HOME_BANNERS}/$bannerId"
         restApi.delete(path, idToken)
@@ -82,9 +127,7 @@ class FirestoreConCafeDataSource(
             parseUserDocument(element.jsonObject)
         }
 
-        if (users.isNotEmpty()) {
-            replaceAllUsers(users)
-        }
+        replaceAllUsers(users)
     }
 
     private suspend fun loadHomeBanners(idToken: String?) {
@@ -95,10 +138,8 @@ class FirestoreConCafeDataSource(
             parseHomeBannerDocument(element.jsonObject)
         }
 
-        if (banners.isNotEmpty()) {
-            this.banners.clear()
-            this.banners.addAll(banners)
-        }
+        this.banners.clear()
+        this.banners.addAll(banners)
     }
 
     private fun parseUserDocument(document: JsonObject): User? {

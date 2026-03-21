@@ -22,6 +22,7 @@ google-services = "4.4.1"
 koin = "3.5.6"
 kmp-nativecoroutines = "1.0.0-ALPHA-30"
 ksp = "1.9.24-1.0.20"
+ktor = "2.3.12"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -50,6 +51,10 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
 kmp-nativecoroutines-ksp = { module = "com.rickclephas.kmp:kmp-nativecoroutines-ksp", version.ref = "kmp-nativecoroutines" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

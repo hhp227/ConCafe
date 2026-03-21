@@ -2,7 +2,8 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CastDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
@@ -12,15 +13,31 @@ import kotlinx.datetime.Clock
 
 class AuthRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val castDataSource: CastDataSource
+    private val castDataSource: CastDataSource,
+    private val authTokenProvider: FirestoreAuthTokenProvider,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : AuthRepository {
     override suspend fun signIn(email: String, password: String): User {
-        if (!email.isBlank() && !password.isBlank()) {
-            return authDataSource.findUserByEmail(email)?.also {
-                authDataSource.currentUserId = it.id
-            } ?: throw IllegalArgumentException("invalid credentials")
-        } else {
+        if (email.isBlank() || password.isBlank()) {
             throw IllegalArgumentException("email/password is required")
+        }
+
+        if (authTokenProvider.supportsEmailPasswordAuth()) {
+            val session = authTokenProvider.signInWithEmailPassword(email, password)
+            if (session != null) {
+                val user = resolveUserFromSession(session.userId, session.email)
+                authDataSource.currentUserId = user.id
+                return user
+            }
+        }
+
+        val foundUser = authDataSource.findUserByEmail(email)
+
+        return if (foundUser != null) {
+            authDataSource.currentUserId = foundUser.id
+            foundUser
+        } else {
+            throw IllegalArgumentException("invalid credentials")
         }
     }
 
@@ -31,42 +48,57 @@ class AuthRepositoryImpl(
         role: UserRole,
         affiliatedCafeId: String?
     ): User {
-        if (!email.isBlank() && !password.isBlank() && !nickname.isBlank()) {
-            if (!authDataSource.isEmailTaken(email)) {
-                val user = User(
-                    id = nextEntityId("user"),
-                    email = email,
-                    nickname = nickname,
-                    profileImage = null,
-                    role = role,
-                    banned = false,
-                    createdAt = nowIsoUtc()
-                )
-
-                authDataSource.addUser(user)
-                if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-                    castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
-                }
-                (authDataSource as? FirestoreConCafeDataSource)?.runCatching { pushUser(user) }
-                authDataSource.currentUserId = user.id
-                return user
-            } else {
-                throw IllegalArgumentException("email already exists")
-            }
-        } else {
+        if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
             throw IllegalArgumentException("email/password/nickname is required")
         }
+
+        if (authDataSource.isEmailTaken(email)) {
+            throw IllegalArgumentException("email already exists")
+        }
+
+        val firebaseUserId = if (authTokenProvider.supportsEmailPasswordAuth()) {
+            authTokenProvider.signUpWithEmailPassword(email, password)?.userId
+        } else {
+            null
+        }
+
+        val user = User(
+            id = firebaseUserId ?: nextEntityId("user"),
+            email = email,
+            nickname = nickname,
+            profileImage = null,
+            role = role,
+            banned = false,
+            createdAt = nowIsoUtc()
+        )
+
+        authDataSource.addUser(user)
+        if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+            castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+        }
+
+        runCatching { firestoreSyncDataSource.pushUser(user) }
+
+        authDataSource.currentUserId = user.id
+
+        return user
     }
 
     override suspend fun signOut() {
+        if (authTokenProvider.supportsEmailPasswordAuth()) {
+            authTokenProvider.signOut()
+        }
+
         authDataSource.currentUserId = null
     }
 
     override suspend fun restoreSession(): User? {
+        syncCurrentUserIdFromFirebase()
         return authDataSource.currentUserId?.let { authDataSource.findUserById(it) }
     }
 
     override suspend fun getCurrentUser(): User? {
+        syncCurrentUserIdFromFirebase()
         return authDataSource.currentUserId?.let { authDataSource.findUserById(it) }
     }
 
@@ -74,6 +106,60 @@ class AuthRepositoryImpl(
         return authDataSource.currentUserIdFlow.map { userId ->
             userId?.let { authDataSource.findUserById(it) }
         }
+    }
+
+    private suspend fun resolveUserFromSession(userId: String, email: String): User {
+        val foundById = authDataSource.findUserById(userId)
+        if (foundById != null) {
+            return foundById
+        }
+
+        val remoteUser = firestoreSyncDataSource.fetchUser(userId)
+        if (remoteUser != null) {
+            val replaced = authDataSource.replaceUser(remoteUser)
+            if (!replaced) {
+                authDataSource.addUser(remoteUser)
+            }
+            return remoteUser
+        }
+
+        val foundByEmail = authDataSource.findUserByEmail(email)
+        if (foundByEmail != null) {
+            val migratedUser = foundByEmail.copy(id = userId, email = email)
+            val replaced = authDataSource.replaceUser(migratedUser)
+
+            return if (replaced) {
+                migratedUser
+            } else {
+                foundByEmail
+            }
+        }
+
+        val createdUser = User(
+            id = userId,
+            email = email,
+            nickname = email.substringBefore("@").ifBlank { "유저" },
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = nowIsoUtc()
+        )
+
+        authDataSource.addUser(createdUser)
+
+        runCatching { firestoreSyncDataSource.pushUser(createdUser) }
+
+        return createdUser
+    }
+
+    private suspend fun syncCurrentUserIdFromFirebase() {
+        if (!authTokenProvider.supportsEmailPasswordAuth()) {
+            return
+        }
+
+        val firebaseUserId = authTokenProvider.getCurrentUserId()
+
+        authDataSource.currentUserId = firebaseUserId
     }
 }
 

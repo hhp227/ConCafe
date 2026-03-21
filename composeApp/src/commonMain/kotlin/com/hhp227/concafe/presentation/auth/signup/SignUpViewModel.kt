@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
@@ -213,7 +214,7 @@ class SignUpViewModel(
 
         viewModelScope.launch {
             when (
-                signUpUseCase.invoke(
+                val result = signUpUseCase.invoke(
                     email = uiState.value.email.trim(),
                     password = uiState.value.password,
                     nickname = nickname,
@@ -229,7 +230,7 @@ class SignUpViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                            errorMessage = resolveSignUpErrorMessage(result.error)
                         )
                     }
                 }
@@ -311,6 +312,48 @@ class SignUpViewModel(
             SignUpUiState.UserType.CAST -> UserRole.CAST
             SignUpUiState.UserType.VISITOR,
             null -> UserRole.VISITOR
+        }
+    }
+
+    private fun resolveSignUpErrorMessage(error: AppError): String {
+        return when (error) {
+            is AppError.ValidationFailed -> mapFirebaseSignUpReason(error.reason)
+            is AppError.NetworkError -> error.message ?: "네트워크 오류로 회원가입에 실패했습니다."
+            is AppError.Unknown -> mapFirebaseSignUpReason(error.cause ?: "")
+            else -> "회원가입에 실패했습니다. 입력값을 확인해주세요."
+        }
+    }
+
+    private fun mapFirebaseSignUpReason(reason: String): String {
+        val normalizedReason = reason.uppercase()
+
+        return if (
+            normalizedReason.contains("EMAIL_EXISTS") ||
+            normalizedReason.contains("EMAIL ALREADY EXISTS") ||
+            normalizedReason.contains("EMAIL_ALREADY_IN_USE")
+        ) {
+            "이미 가입된 이메일입니다."
+        } else if (
+            normalizedReason.contains("INVALID_EMAIL")
+        ) {
+            "이메일 형식이 올바르지 않습니다."
+        } else if (
+            normalizedReason.contains("WEAK_PASSWORD") ||
+            normalizedReason.contains("PASSWORD SHOULD BE AT LEAST")
+        ) {
+            "비밀번호 보안 강도가 낮습니다. 더 강한 비밀번호를 입력해주세요."
+        } else if (
+            normalizedReason.contains("TOO_MANY_ATTEMPTS_TRY_LATER")
+        ) {
+            "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if (
+            normalizedReason.contains("NETWORK")
+        ) {
+            "네트워크 오류로 회원가입에 실패했습니다."
+        } else if (reason.isNotBlank()) {
+            reason
+        } else {
+            "회원가입에 실패했습니다. 입력값을 확인해주세요."
         }
     }
 

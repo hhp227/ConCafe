@@ -90,7 +90,7 @@ fun doInitKoin(): KoinApplication? {
 fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     return if (koinApplication == null) {
         startKoin {
-            modules(concafeModules + extraModules)
+            modules(concafeModules + sharedPlatformModules() + extraModules)
         }.also { koinApplication = it }
     } else {
         null
