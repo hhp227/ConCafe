@@ -8,6 +8,8 @@ interface FirestoreSyncDataSource {
 
     suspend fun pushUser(user: User)
 
+    suspend fun deleteUser(userId: String)
+
     suspend fun pushHomeBanner(banner: HomeBanner)
 
     suspend fun deleteHomeBanner(bannerId: String)
@@ -19,6 +21,9 @@ class NoOpFirestoreSyncDataSource : FirestoreSyncDataSource {
     }
 
     override suspend fun pushUser(user: User) {
+    }
+
+    override suspend fun deleteUser(userId: String) {
     }
 
     override suspend fun pushHomeBanner(banner: HomeBanner) {

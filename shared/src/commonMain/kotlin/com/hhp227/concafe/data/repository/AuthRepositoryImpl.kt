@@ -92,6 +92,39 @@ class AuthRepositoryImpl(
         authDataSource.currentUserId = null
     }
 
+    override suspend fun deleteAccount(password: String) {
+        if (password.isBlank()) {
+            throw IllegalArgumentException("password is required")
+        }
+
+        if (!authTokenProvider.supportsEmailPasswordAuth()) {
+            throw IllegalArgumentException("email/password auth not supported")
+        }
+
+        val currentUserId = authDataSource.currentUserId
+            ?: authTokenProvider.getCurrentUserId()
+            ?: throw IllegalArgumentException("no signed in user")
+
+        val currentUserEmail = authDataSource.findUserById(currentUserId)?.email
+            ?: authTokenProvider.getCurrentUserEmail()
+            ?: throw IllegalArgumentException("current user email not found")
+
+        val verifiedSession = authTokenProvider.signInWithEmailPassword(
+            email = currentUserEmail,
+            password = password
+        ) ?: throw IllegalArgumentException("invalid password")
+
+        if (verifiedSession.userId != currentUserId) {
+            throw IllegalArgumentException("password does not match current user")
+        }
+
+        runCatching { firestoreSyncDataSource.deleteUser(currentUserId) }
+
+        authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
+
+        authDataSource.currentUserId = null
+    }
+
     override suspend fun restoreSession(): User? {
         syncCurrentUserIdFromFirebase()
         return resolveCurrentUser()

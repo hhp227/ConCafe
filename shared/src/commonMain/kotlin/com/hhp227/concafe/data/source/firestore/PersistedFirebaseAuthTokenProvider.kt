@@ -34,6 +34,13 @@ class PersistedFirebaseAuthTokenProvider(
         clearPersistedSession()
     }
 
+    override suspend fun deleteCurrentUser(idToken: String?) {
+        val resolvedIdToken = idToken ?: cachedSession?.idToken
+
+        delegate.deleteCurrentUser(resolvedIdToken)
+        clearPersistedSession()
+    }
+
     override fun getCurrentUserId(): String? {
         val currentSession = cachedSession
         return currentSession?.userId ?: delegate.getCurrentUserId()

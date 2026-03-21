@@ -15,6 +15,6 @@ enum AccountSettingsAction {
     case openChangePasswordTapped
     case showDeleteDialogTapped
     case dismissDeleteDialogTapped
-    case deleteConfirmationChanged(String)
+    case deletePasswordChanged(String)
     case deleteAccountTapped
 }

@@ -11,6 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -25,6 +29,7 @@ fun ConCafeFormField(
     enabled: Boolean = true,
     minLines: Int = 1,
     singleLine: Boolean = true,
+    isPassword: Boolean = false,
     leadingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null
 ) {
@@ -43,6 +48,16 @@ fun ConCafeFormField(
             readOnly = readOnly,
             minLines = minLines,
             singleLine = singleLine,
+            visualTransformation = if (isPassword) {
+                PasswordVisualTransformation()
+            } else {
+                VisualTransformation.None
+            },
+            keyboardOptions = if (isPassword) {
+                KeyboardOptions(keyboardType = KeyboardType.Password)
+            } else {
+                KeyboardOptions.Default
+            },
             shape = RoundedCornerShape(16.dp),
             placeholder = {
                 if (placeholder.isNotEmpty()) {

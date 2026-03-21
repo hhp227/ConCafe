@@ -23,6 +23,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -259,6 +260,13 @@ fun resolveDeleteCafeMenuGoodsUseCase(): DeleteCafeMenuGoodsUseCase {
 }
 
 fun resolveDeleteCastUseCase(): DeleteCastUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteAccountUseCase(): DeleteAccountUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

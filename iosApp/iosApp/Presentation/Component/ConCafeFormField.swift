@@ -17,6 +17,8 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
 
     let isEditable: Bool
 
+    let isSecure: Bool
+
     @ViewBuilder let leadingContent: () -> Leading
 
     @ViewBuilder let trailingContent: () -> Trailing
@@ -28,10 +30,17 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
                 .foregroundStyle(Color(hex: "665A63"))
             HStack(spacing: 8) {
                 leadingContent()
-                TextField("", text: $text, prompt: placeholderText as? Text)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .allowsHitTesting(isEditable)
+                if isSecure {
+                    SecureField("", text: $text, prompt: placeholderText as? Text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .allowsHitTesting(isEditable)
+                } else {
+                    TextField("", text: $text, prompt: placeholderText as? Text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .allowsHitTesting(isEditable)
+                }
                 trailingContent()
             }
             .padding(.horizontal, 16)
@@ -61,12 +70,14 @@ extension ConCafeFormField where Leading == EmptyView, Trailing == EmptyView {
         label: String,
         text: Binding<String>,
         placeholder: String = "",
-        isEditable: Bool = true
+        isEditable: Bool = true,
+        isSecure: Bool = false
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
         self.leadingContent = { EmptyView() }
         self.trailingContent = { EmptyView() }
     }
@@ -78,12 +89,14 @@ extension ConCafeFormField where Trailing == EmptyView {
         text: Binding<String>,
         placeholder: String = "",
         isEditable: Bool = true,
+        isSecure: Bool = false,
         @ViewBuilder leadingContent: @escaping () -> Leading
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
         self.leadingContent = leadingContent
         self.trailingContent = { EmptyView() }
     }
@@ -95,12 +108,14 @@ extension ConCafeFormField where Leading == EmptyView {
         text: Binding<String>,
         placeholder: String = "",
         isEditable: Bool = true,
+        isSecure: Bool = false,
         @ViewBuilder trailingContent: @escaping () -> Trailing
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
         self.leadingContent = { EmptyView() }
         self.trailingContent = trailingContent
     }

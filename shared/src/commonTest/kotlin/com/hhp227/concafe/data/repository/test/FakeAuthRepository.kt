@@ -81,6 +81,22 @@ class FakeAuthRepository(
         currentUserFlow.value = null
     }
 
+    override suspend fun deleteAccount(password: String) {
+        if (password.isBlank()) {
+            throw IllegalArgumentException("password is required")
+        }
+
+        val currentUserId = dataSource.currentUserId ?: return
+        val userIndex = dataSource.users.indexOfFirst { it.id == currentUserId }
+
+        if (userIndex >= 0) {
+            dataSource.users.removeAt(userIndex)
+        }
+
+        dataSource.currentUserId = null
+        currentUserFlow.value = null
+    }
+
     override suspend fun restoreSession(): User? {
         val restored = dataSource.users.firstOrNull { it.id == dataSource.currentUserId }
         currentUserFlow.value = restored

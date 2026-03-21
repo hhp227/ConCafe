@@ -59,7 +59,7 @@ private val composeAppPresentationModule = module {
     factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get(), get()) }
-    factory { AccountSettingsViewModel(get(), get()) }
+    factory { AccountSettingsViewModel(get(), get(), get()) }
     factory { InquiryLinkViewModel(get()) }
 }
 

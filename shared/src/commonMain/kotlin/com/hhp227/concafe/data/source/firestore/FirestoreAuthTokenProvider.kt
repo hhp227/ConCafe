@@ -15,6 +15,8 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signOut()
 
+    suspend fun deleteCurrentUser(idToken: String?)
+
     fun getCurrentUserId(): String?
 
     fun getCurrentUserEmail(): String?
@@ -36,6 +38,9 @@ class NoOpFirestoreAuthTokenProvider : FirestoreAuthTokenProvider {
     }
 
     override suspend fun signOut() {
+    }
+
+    override suspend fun deleteCurrentUser(idToken: String?) {
     }
 
     override fun getCurrentUserId(): String? {

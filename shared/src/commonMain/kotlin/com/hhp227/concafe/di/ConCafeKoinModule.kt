@@ -137,6 +137,7 @@ val useCaseModule = module {
     factory { DeleteCafeMenuGoodsUseCase(get(), get()) }
     factory { DeleteHomeBannerUseCase(get(), get(), get(), get()) }
     factory { DeleteCastUseCase(get(), get(), get(), get()) }
+    factory { DeleteAccountUseCase(get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }

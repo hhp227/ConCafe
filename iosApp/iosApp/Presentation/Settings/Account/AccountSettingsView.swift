@@ -83,9 +83,9 @@ private struct AccountSettingsContentView: View {
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
         )) {
             AccountDeleteConfirmationSheet(
-                confirmationText: Binding(
-                    get: { uiState.deleteConfirmation },
-                    set: { onAction(.deleteConfirmationChanged($0)) }
+                passwordText: Binding(
+                    get: { uiState.deletePassword },
+                    set: { onAction(.deletePasswordChanged($0)) }
                 ),
                 onDismiss: { onAction(.dismissDeleteDialogTapped) },
                 onDelete: { onAction(.deleteAccountTapped) }
@@ -384,7 +384,7 @@ private extension UserRole {
 }
 
 private struct AccountDeleteConfirmationSheet: View {
-    @Binding var confirmationText: String
+    @Binding var passwordText: String
 
     let onDismiss: () -> Void
 
@@ -396,14 +396,15 @@ private struct AccountDeleteConfirmationSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("회원탈퇴")
                         .font(.title3.bold())
-                    Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
+                    Text("계정 보안을 위해 현재 비밀번호를 입력해 주세요.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 ConCafeFormField(
-                    label: "확인 문구",
-                    text: $confirmationText,
-                    placeholder: "탈퇴"
+                    label: "현재 비밀번호",
+                    text: $passwordText,
+                    placeholder: "비밀번호 입력",
+                    isSecure: true
                 )
                 .textInputAutocapitalization(.never)
                 HStack(spacing: 12) {

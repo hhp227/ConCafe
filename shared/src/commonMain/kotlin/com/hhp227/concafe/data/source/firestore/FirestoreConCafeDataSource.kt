@@ -93,6 +93,12 @@ class FirestoreConCafeDataSource(
         restApi.patch(path, body, idToken)
     }
 
+    override suspend fun deleteUser(userId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+        restApi.delete(path, idToken)
+    }
+
     override suspend fun pushHomeBanner(banner: HomeBanner) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.HOME_BANNERS}/${banner.id}"

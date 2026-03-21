@@ -60,6 +60,28 @@ class FirebaseAuthRestTokenProvider(
         currentSession = null
     }
 
+    override suspend fun deleteCurrentUser(idToken: String?) {
+        if (!supportsEmailPasswordAuth()) {
+            return
+        }
+
+        val resolvedIdToken = idToken ?: currentSession?.idToken
+
+        if (resolvedIdToken.isNullOrBlank()) {
+            throw IllegalStateException("Firebase auth delete requires idToken")
+        }
+
+        val body = """
+            {
+              "idToken": "${escapeJson(resolvedIdToken)}"
+            }
+        """.trimIndent()
+
+        restClient.postJson(deleteAccountUrl(), body)
+
+        currentSession = null
+    }
+
     override fun getCurrentUserId(): String? {
         return currentSession?.userId
     }
@@ -78,6 +100,10 @@ class FirebaseAuthRestTokenProvider(
 
     private fun signUpUrl(): String {
         return "$FIREBASE_AUTH_BASE_URL/accounts:signUp?key=$apiKey"
+    }
+
+    private fun deleteAccountUrl(): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:delete?key=$apiKey"
     }
 
     private fun parseSessionFromResponse(response: String): FirebaseAuthSession {

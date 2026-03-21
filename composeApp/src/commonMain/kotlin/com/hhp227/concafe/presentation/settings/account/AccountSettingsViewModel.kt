@@ -10,12 +10,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 
 class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -97,7 +99,7 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = true,
-                deleteConfirmation = ""
+                deletePassword = ""
             )
         }
     }
@@ -106,25 +108,48 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = false,
-                deleteConfirmation = ""
+                deletePassword = ""
             )
         }
     }
 
     private fun clickDeleteAccount() {
         val state = _uiState.value
-        if (state.deleteConfirmation != DELETE_CONFIRMATION_TEXT) {
-            emitMessage("'$DELETE_CONFIRMATION_TEXT'를 정확히 입력해 주세요.")
+
+        if (state.deletePassword.isBlank()) {
+            emitMessage("회원 비밀번호를 입력해 주세요.")
             return
         }
-        _uiState.update {
-            it.copy(
-                isDeleteRequested = true,
-                isDeleteDialogVisible = false,
-                deleteConfirmation = ""
-            )
+
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        viewModelScope.launch {
+            when (deleteAccountUseCase.invoke(state.deletePassword)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            isDeleteRequested = true,
+                            isDeleteDialogVisible = false,
+                            deletePassword = ""
+                        )
+                    }
+                    _event.emit(AccountSettingsEvent.ShowMessage("회원탈퇴가 완료되었습니다."))
+                    _event.emit(AccountSettingsEvent.NavigateBack)
+                }
+
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "회원탈퇴에 실패했습니다."
+                        )
+                    }
+                    _event.emit(AccountSettingsEvent.ShowMessage("회원탈퇴에 실패했습니다. 다시 시도해 주세요."))
+                }
+            }
         }
-        emitMessage("회원탈퇴 요청 단계를 진행했어요. 실제 서버 삭제 연동은 후속 단계에서 연결됩니다.")
     }
 
     private fun emitMessage(message: String) {
@@ -142,8 +167,8 @@ class AccountSettingsViewModel(
             AccountSettingsAction.ClickOpenChangePassword -> clickOpenChangePassword()
             AccountSettingsAction.ClickShowDeleteDialog -> clickShowDeleteDialog()
             AccountSettingsAction.ClickDismissDeleteDialog -> clickDismissDeleteDialog()
-            is AccountSettingsAction.ChangeDeleteConfirmation -> _uiState.update {
-                it.copy(deleteConfirmation = action.value)
+            is AccountSettingsAction.ChangeDeletePassword -> _uiState.update {
+                it.copy(deletePassword = action.value)
             }
             AccountSettingsAction.ClickDeleteAccount -> clickDeleteAccount()
         }
@@ -152,9 +177,5 @@ class AccountSettingsViewModel(
     init {
         loadAccountSettings()
         observeSession()
-    }
-
-    private companion object {
-        private const val DELETE_CONFIRMATION_TEXT = "탈퇴"
     }
 }
