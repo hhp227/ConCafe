@@ -124,7 +124,7 @@ class AccountSettingsViewModel(
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            when (deleteAccountUseCase.invoke(state.deletePassword)) {
+            when (val result = deleteAccountUseCase.invoke(state.deletePassword)) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -135,18 +135,19 @@ class AccountSettingsViewModel(
                             deletePassword = ""
                         )
                     }
-                    _event.emit(AccountSettingsEvent.ShowMessage("회원탈퇴가 완료되었습니다."))
                     _event.emit(AccountSettingsEvent.NavigateBack)
                 }
 
                 is AppResult.Failure -> {
+                    val message = mapDeleteFailureMessage(result)
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "회원탈퇴에 실패했습니다."
+                            errorMessage = message
                         )
                     }
-                    _event.emit(AccountSettingsEvent.ShowMessage("회원탈퇴에 실패했습니다. 다시 시도해 주세요."))
+                    _event.emit(AccountSettingsEvent.ShowMessage(message))
                 }
             }
         }
@@ -177,5 +178,20 @@ class AccountSettingsViewModel(
     init {
         loadAccountSettings()
         observeSession()
+    }
+
+    private fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString()
+        val normalized = rawError.uppercase()
+
+        return if (normalized.contains("INVALID PASSWORD")
+            || normalized.contains("INVALID_LOGIN_CREDENTIALS")
+            || normalized.contains("INVALID_PASSWORD")
+            || normalized.contains("EMAIL_NOT_FOUND")
+        ) {
+            "비밀번호가 올바르지 않습니다."
+        } else {
+            "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        }
     }
 }

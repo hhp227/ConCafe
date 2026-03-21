@@ -109,10 +109,20 @@ class AuthRepositoryImpl(
             ?: authTokenProvider.getCurrentUserEmail()
             ?: throw IllegalArgumentException("current user email not found")
 
-        val verifiedSession = authTokenProvider.signInWithEmailPassword(
-            email = currentUserEmail,
-            password = password
-        ) ?: throw IllegalArgumentException("invalid password")
+        val verifiedSession = try {
+            authTokenProvider.signInWithEmailPassword(
+                email = currentUserEmail,
+                password = password
+            ) ?: throw IllegalArgumentException("invalid password")
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            if (isInvalidPasswordError(e)) {
+                throw IllegalArgumentException("invalid password")
+            } else {
+                throw e
+            }
+        }
 
         if (verifiedSession.userId != currentUserId) {
             throw IllegalArgumentException("password does not match current user")
@@ -240,6 +250,14 @@ class AuthRepositoryImpl(
         }
         return restoredUser
     }
+}
+
+private fun isInvalidPasswordError(error: Exception): Boolean {
+    val message = error.message.orEmpty().uppercase()
+
+    return message.contains("INVALID_LOGIN_CREDENTIALS")
+        || message.contains("INVALID_PASSWORD")
+        || message.contains("EMAIL_NOT_FOUND")
 }
 
 private fun nextEntityId(prefix: String): String {

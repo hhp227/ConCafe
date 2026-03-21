@@ -105,27 +105,28 @@ final class AccountSettingsViewModel: ObservableObject {
         uiState.errorMessage = nil
 
         deleteAccountTask?.cancel()
+        let password = uiState.deletePassword
         deleteAccountTask = Task {
             do {
-                let result = try await deleteAccountUseCase.invoke(password: uiState.deletePassword)
+                let result = try await deleteAccountUseCase.invoke(password: password)
 
-                if result is AppResultFailure {
+                if let failure = result as? AppResultFailure {
+                    let message = mapDeleteFailureMessage(failure)
                     uiState.isLoading = false
-                    uiState.errorMessage = "회원탈퇴에 실패했습니다."
-                    emitMessage("회원탈퇴에 실패했습니다. 다시 시도해 주세요.")
+                    uiState.errorMessage = message
+                    emitMessage(message)
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.isDeleteRequested = true
                     uiState.isDeleteDialogVisible = false
                     uiState.deletePassword = ""
-                    emitMessage("회원탈퇴가 완료되었습니다.")
                     event.send(.navigateBack)
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = "회원탈퇴에 실패했습니다."
+                uiState.errorMessage = "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
                 emitMessage("회원탈퇴에 실패했습니다. 다시 시도해 주세요.")
             }
         }
@@ -169,5 +170,18 @@ final class AccountSettingsViewModel: ObservableObject {
 
     deinit {
         deleteAccountTask?.cancel()
+    }
+
+    private func mapDeleteFailureMessage(_ failure: AppResultFailure) -> String {
+        let rawError = String(describing: failure.error).uppercased()
+
+        if rawError.contains("INVALID PASSWORD")
+            || rawError.contains("INVALID_LOGIN_CREDENTIALS")
+            || rawError.contains("INVALID_PASSWORD")
+            || rawError.contains("EMAIL_NOT_FOUND") {
+            return "비밀번호가 올바르지 않습니다."
+        } else {
+            return "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        }
     }
 }
