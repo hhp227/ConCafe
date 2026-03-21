@@ -124,18 +124,24 @@ private fun RankingContent(
                 onSelect = { index -> onAction(RankingAction.SelectAd(index)) }
             )
         }
-        items(uiState.rankingEntries) { item ->
-            RankingEntryCard(
-                item = item,
-                isMaid = uiState.selectedTab == RankingUiState.TabType.MAIDS,
-                onClick = {
-                    if (uiState.selectedTab == RankingUiState.TabType.MAIDS) {
-                        onAction(RankingAction.ClickMaid(item.id))
-                    } else {
-                        onAction(RankingAction.ClickCafe(item.id))
+        if (uiState.rankingEntries.isNotEmpty()) {
+            items(uiState.rankingEntries) { item ->
+                RankingEntryCard(
+                    item = item,
+                    isMaid = uiState.selectedTab == RankingUiState.TabType.MAIDS,
+                    onClick = {
+                        if (uiState.selectedTab == RankingUiState.TabType.MAIDS) {
+                            onAction(RankingAction.ClickMaid(item.id))
+                        } else {
+                            onAction(RankingAction.ClickCafe(item.id))
+                        }
                     }
-                }
-            )
+                )
+            }
+        } else {
+            item {
+                RankingEmptyPlaceholder()
+            }
         }
     }
 }
@@ -288,6 +294,36 @@ fun RankingPromoBanner(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RankingEmptyPlaceholder() {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "아직 집계된 랭킹이 없어요",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5C525D)
+            )
+            Text(
+                text = "활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8A7F8B)
+            )
         }
     }
 }

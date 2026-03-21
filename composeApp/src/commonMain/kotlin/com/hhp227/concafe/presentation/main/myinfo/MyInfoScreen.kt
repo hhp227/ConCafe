@@ -246,26 +246,33 @@ private fun GuestMyInfoScreen(
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                uiState.popularCafes.forEach { cafe ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
-                            )
-                            Column {
-                                Text(cafe.name, fontWeight = FontWeight.SemiBold)
-                                Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+                if (uiState.popularCafes.isNotEmpty()) {
+                    uiState.popularCafes.forEach { cafe ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
+                                )
+                                Column {
+                                    Text(cafe.name, fontWeight = FontWeight.SemiBold)
+                                    Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
+                } else {
+                    MyInfoSectionPlaceholder(
+                        title = "둘러볼 인기 카페가 없어요",
+                        description = "활동 데이터가 쌓이면 추천 카페가 표시됩니다."
+                    )
                 }
             }
         }
@@ -310,6 +317,38 @@ private data class GuestFeatureItem(
 )
 
 @Composable
+private fun MyInfoSectionPlaceholder(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5C525D)
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8A7F8B)
+            )
+        }
+    }
+}
+
+@Composable
 private fun ProfileMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
@@ -351,41 +390,56 @@ private fun ProfileMyInfoScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                uiState.badges.forEach { badge ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            modifier = Modifier
-                                .size(70.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (badge.unlocked) Color(0xFFEF6797) else Color(0xFFDADADA)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(badge.icon)
+                if (uiState.badges.isNotEmpty()) {
+                    uiState.badges.forEach { badge ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (badge.unlocked) Color(0xFFEF6797) else Color(0xFFDADADA)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(badge.icon)
+                            }
+                            Text(badge.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
                         }
-                        Text(badge.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
                     }
+                } else {
+                    MyInfoSectionPlaceholder(
+                        title = "획득한 배지가 아직 없어요",
+                        description = "체크인과 활동을 통해 첫 배지를 모아보세요."
+                    )
                 }
             }
         }
         item {
             Text("최근 방문", fontWeight = FontWeight.Bold)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                items(uiState.recentVisits) { cafe ->
-                    Column(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) }
-                    ) {
-                        Box(
+            if (uiState.recentVisits.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    items(uiState.recentVisits) { cafe ->
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
-                        )
-                        Text(cafe.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                .width(120.dp)
+                                .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
+                            )
+                            Text(cafe.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
+            } else {
+                MyInfoSectionPlaceholder(
+                    title = "최근 방문 기록이 없어요",
+                    description = "첫 체크인을 완료하면 이곳에 방문한 카페가 표시됩니다.",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
         item {
@@ -393,47 +447,63 @@ private fun ProfileMyInfoScreen(
             val favoriteRows = favoriteItems.chunked(2)
 
             Text("즐겨찾기", fontWeight = FontWeight.Bold)
-            Column(
-                modifier = Modifier.padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                favoriteRows.forEach { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        rowItems.forEach { cafe ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                CafeSummaryCard(
-                                    name = cafe.name,
-                                    rating = "${cafe.ratingAvg}",
-                                    location = cafe.region.city,
-                                    onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
-                                )
+            if (favoriteItems.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    favoriteRows.forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowItems.forEach { cafe ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    CafeSummaryCard(
+                                        name = cafe.name,
+                                        rating = "${cafe.ratingAvg}",
+                                        location = cafe.region.city,
+                                        onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
+                                    )
+                                }
                             }
-                        }
-                        if (rowItems.size == 1) {
-                            Box(modifier = Modifier.weight(1f))
+                            if (rowItems.size == 1) {
+                                Box(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }
+            } else {
+                MyInfoSectionPlaceholder(
+                    title = "즐겨찾기한 카페가 없어요",
+                    description = "좋아하는 카페를 즐겨찾기에 추가해보세요.",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
         item {
             if (uiState.user?.role != UserRole.CAST) {
                 Text("팔로우한 캐스트", fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    items(uiState.followedMaids.take(6)) { maid ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(CircleShape)
-                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
-                            )
-                            Text(maid.name, style = MaterialTheme.typography.bodySmall)
+                if (uiState.followedMaids.isNotEmpty()) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        items(uiState.followedMaids.take(6)) { maid ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAction(MyInfoAction.ClickMaid(maid.id)) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .clip(CircleShape)
+                                        .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
+                                )
+                                Text(maid.name, style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
+                } else {
+                    MyInfoSectionPlaceholder(
+                        title = "팔로우한 캐스트가 없어요",
+                        description = "관심 있는 캐스트를 팔로우하면 여기서 바로 볼 수 있어요.",
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
         }

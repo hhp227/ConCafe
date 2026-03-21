@@ -131,6 +131,7 @@ class FirestoreConCafeDataSource(
     override suspend fun deleteHomeBanner(bannerId: String) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.HOME_BANNERS}/$bannerId"
+
         restApi.delete(path, idToken)
     }
 
@@ -203,6 +204,7 @@ class FirestoreConCafeDataSource(
                     document = element.jsonObject
                 )
             }
+
             loadedNotices.addAll(notices)
         }
         loadedNotices.sortByDescending { it.createdAt }

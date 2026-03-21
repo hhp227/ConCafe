@@ -218,36 +218,78 @@ fun ExploreContentScreen(
                 }
             }
         } else {
-            items(rows) { rowItems ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    rowItems.forEach { item ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            when (item) {
-                                is ExploreGridItem.CafeItem -> CafeCard(
-                                    cafe = item.cafe,
-                                    onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
-                                )
-                                is ExploreGridItem.MaidItem -> MaidCard(
-                                    maid = item.maid,
-                                    cafeName = item.cafeName,
-                                    onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
-                                )
+            if (rows.isNotEmpty()) {
+                items(rows) { rowItems ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        rowItems.forEach { item ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                when (item) {
+                                    is ExploreGridItem.CafeItem -> CafeCard(
+                                        cafe = item.cafe,
+                                        onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
+                                    )
+                                    is ExploreGridItem.MaidItem -> MaidCard(
+                                        maid = item.maid,
+                                        cafeName = item.cafeName,
+                                        onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
+                                    )
+                                }
                             }
                         }
+                        if (rowItems.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+                }
+            } else {
+                item {
+                    ExploreEmptyPlaceholder(
+                        title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) "카페 검색 결과가 없어요" else "캐스트 검색 결과가 없어요",
+                        description = "검색어 또는 필터를 바꿔서 다시 찾아보세요."
+                    )
                 }
             }
             item {
                 ExplorePagingTrigger(uiState = uiState, onAction = onAction)
             }
+        }
+    }
+}
+
+@Composable
+private fun ExploreEmptyPlaceholder(
+    title: String,
+    description: String
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5C525D)
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8A7F8B)
+            )
         }
     }
 }
@@ -269,7 +311,6 @@ private fun ExplorePagingTrigger(
     }
 
     if (!canLoadMore && !isLoadingMore) return
-
     if (canLoadMore && !isLoadingMore) {
         LaunchedEffect(
             uiState.selectedTab,

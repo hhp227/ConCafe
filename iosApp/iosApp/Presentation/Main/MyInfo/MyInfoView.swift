@@ -165,23 +165,30 @@ private struct GuestMyInfoView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    ForEach(uiState.popularCafes, id: \.id) { cafe in
-                        HStack(spacing: 10) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 64, height: 64)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(cafe.name).bold()
-                                Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))").font(.caption)
+                    if !uiState.popularCafes.isEmpty {
+                        ForEach(uiState.popularCafes, id: \.id) { cafe in
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
+                                    .frame(width: 64, height: 64)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(cafe.name).bold()
+                                    Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))").font(.caption)
+                                }
+                                Spacer()
                             }
-                            Spacer()
+                            .padding(10)
+                            .background(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .onTapGesture {
+                                onAction(.cafeTapped(id: cafe.id))
+                            }
                         }
-                        .padding(10)
-                        .background(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .onTapGesture {
-                            onAction(.cafeTapped(id: cafe.id))
-                        }
+                    } else {
+                        MyInfoSectionPlaceholderCard(
+                            title: "둘러볼 인기 카페가 없어요",
+                            description: "활동 데이터가 쌓이면 추천 카페가 표시됩니다."
+                        )
                     }
                 }
                 VStack(spacing: 8) {
@@ -397,15 +404,22 @@ private struct ProfileMyInfoView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(uiState.badges, id: \.id) { badge in
-                        VStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
-                                .frame(width: 70, height: 70)
-                                .overlay(Text(badge.icon))
-                            Text(badge.name)
-                                .font(.caption2)
+                    if !uiState.badges.isEmpty {
+                        ForEach(uiState.badges, id: \.id) { badge in
+                            VStack {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
+                                    .frame(width: 70, height: 70)
+                                    .overlay(Text(badge.icon))
+                                Text(badge.name)
+                                    .font(.caption2)
+                            }
                         }
+                    } else {
+                        MyInfoSectionPlaceholderCard(
+                            title: "획득한 배지가 아직 없어요",
+                            description: "체크인과 활동을 통해 첫 배지를 모아보세요."
+                        )
                     }
                 }
             }
@@ -415,18 +429,25 @@ private struct ProfileMyInfoView: View {
     private var recentVisitsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("최근 방문").font(.headline)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(uiState.recentVisits, id: \.id) { cafe in
-                        VStack(alignment: .leading, spacing: 6) {
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 120, height: 120)
-                            Text(cafe.name).font(.caption)
+            if !uiState.recentVisits.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(uiState.recentVisits, id: \.id) { cafe in
+                            VStack(alignment: .leading, spacing: 6) {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
+                                    .frame(width: 120, height: 120)
+                                Text(cafe.name).font(.caption)
+                            }
+                            .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }
                         }
-                        .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }
                     }
                 }
+            } else {
+                MyInfoSectionPlaceholderCard(
+                    title: "최근 방문 기록이 없어요",
+                    description: "첫 체크인을 완료하면 이곳에 방문한 카페가 표시됩니다."
+                )
             }
         }
     }
@@ -434,17 +455,24 @@ private struct ProfileMyInfoView: View {
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("즐겨찾기").font(.headline)
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
-                    CafeSummaryCard(
-                        name: cafe.name,
-                        rating: String(format: "%.1f", cafe.ratingAvg),
-                        location: cafe.region.city,
-                        thumbnailImage: cafe.thumbnailImage,
-                        trailingLabel: nil,
-                        onTap: { onAction(.cafeTapped(id: cafe.id)) }
-                    )
+            if !uiState.favorites.isEmpty {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
+                        CafeSummaryCard(
+                            name: cafe.name,
+                            rating: String(format: "%.1f", cafe.ratingAvg),
+                            location: cafe.region.city,
+                            thumbnailImage: cafe.thumbnailImage,
+                            trailingLabel: nil,
+                            onTap: { onAction(.cafeTapped(id: cafe.id)) }
+                        )
+                    }
                 }
+            } else {
+                MyInfoSectionPlaceholderCard(
+                    title: "즐겨찾기한 카페가 없어요",
+                    description: "좋아하는 카페를 즐겨찾기에 추가해보세요."
+                )
             }
         }
     }
@@ -452,19 +480,26 @@ private struct ProfileMyInfoView: View {
     private var followedMaidsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("팔로우한 캐스트").font(.headline)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(uiState.followedMaids.prefix(6), id: \.id) { maid in
-                        VStack {
-                            Circle()
-                                .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 72, height: 72)
-                            Text(maid.name)
-                                .font(.caption)
+            if !uiState.followedMaids.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(uiState.followedMaids.prefix(6), id: \.id) { maid in
+                            VStack {
+                                Circle()
+                                    .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
+                                    .frame(width: 72, height: 72)
+                                Text(maid.name)
+                                    .font(.caption)
+                            }
+                            .onTapGesture { onAction(.maidTapped(id: maid.id)) }
                         }
-                        .onTapGesture { onAction(.maidTapped(id: maid.id)) }
                     }
                 }
+            } else {
+                MyInfoSectionPlaceholderCard(
+                    title: "팔로우한 캐스트가 없어요",
+                    description: "관심 있는 캐스트를 팔로우하면 여기서 바로 볼 수 있어요."
+                )
             }
         }
     }
@@ -474,6 +509,27 @@ private struct MyInfoMetricCard {
     let title: String
     let value: String
     let highlight: Bool
+}
+
+private struct MyInfoSectionPlaceholderCard: View {
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5C525D"))
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A7F8B"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
 }
 
 struct MyInfoView_Previews: PreviewProvider {

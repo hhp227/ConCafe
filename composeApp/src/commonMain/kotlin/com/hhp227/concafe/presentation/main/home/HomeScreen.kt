@@ -218,14 +218,24 @@ fun HomeContentScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(uiState.popularCasts) { maid ->
-                    ConCafeCastCard(
-                        name = maid.name,
-                        subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
-                        modifier = Modifier.width(132.dp),
-                        metaText = "👥 ${maid.followerCount}",
-                        onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
-                    )
+                if (uiState.popularCasts.isNotEmpty()) {
+                    items(uiState.popularCasts) { maid ->
+                        ConCafeCastCard(
+                            name = maid.name,
+                            subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
+                            modifier = Modifier.width(132.dp),
+                            metaText = "👥 ${maid.followerCount}",
+                            onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
+                        )
+                    }
+                } else {
+                    item {
+                        HomeSectionPlaceholderCard(
+                            title = "인기 캐스트 데이터가 없어요",
+                            description = "팔로우와 방문이 쌓이면 이 영역에 표시됩니다.",
+                            modifier = Modifier.fillParentMaxWidth()
+                        )
+                    }
                 }
             }
         }
@@ -251,23 +261,33 @@ fun HomeContentScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
-                        items(uiState.nearbyCafes) { cafe ->
-                            NearByCafeItem(
-                                cafe = cafe,
-                                modifier = Modifier
-                                    .width(itemWidth)
-                                    .height(92.dp)
-                                    .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
-                            )
+                        if (uiState.nearbyCafes.isNotEmpty()) {
+                            items(uiState.nearbyCafes) { cafe ->
+                                NearByCafeItem(
+                                    cafe = cafe,
+                                    modifier = Modifier
+                                        .width(itemWidth)
+                                        .height(92.dp)
+                                        .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
+                                )
+                            }
+                        } else {
+                            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                                HomeSectionPlaceholderCard(
+                                    title = "근처 카페가 아직 없어요",
+                                    description = "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요.",
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-        if (uiState.birthdayCasts.isNotEmpty()) {
-            item {
-                SectionTitle("생일인 캐스트", Icons.Default.Cake)
-                Spacer(Modifier.height(10.dp))
+        item {
+            SectionTitle("생일인 캐스트", Icons.Default.Cake)
+            Spacer(Modifier.height(10.dp))
+            if (uiState.birthdayCasts.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp)
@@ -287,6 +307,11 @@ fun HomeContentScreen(
                         }
                     }
                 }
+            } else {
+                HomeSectionPlaceholderCard(
+                    title = "오늘은 생일인 캐스트가 없어요",
+                    description = "곧 업데이트될 생일 일정을 기다려주세요."
+                )
             }
         }
         item {
@@ -296,27 +321,66 @@ fun HomeContentScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                uiState.notices.forEach { notice ->
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                if (uiState.notices.isNotEmpty()) {
+                    uiState.notices.forEach { notice ->
+                        Card(
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(notice.cafeName, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
-                                Text(notice.content, style = MaterialTheme.typography.bodyMedium)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(notice.cafeName, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                    Text(notice.content, style = MaterialTheme.typography.bodyMedium)
+                                }
+                                Text(notice.relativeTime, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
                             }
-                            Text(notice.relativeTime, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
                         }
                     }
+                } else {
+                    HomeSectionPlaceholderCard(
+                        title = "최근 공지가 없어요",
+                        description = "새 공지가 등록되면 이 영역에 표시됩니다."
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeSectionPlaceholderCard(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF5C525D)
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8A7F8B)
+            )
         }
     }
 }

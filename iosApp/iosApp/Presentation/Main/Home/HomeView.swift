@@ -83,9 +83,7 @@ private struct HomeContentView: View {
                 bannerSection
                 popularCastSection
                 nearbyCafeSection
-                if !uiState.birthdayCasts.isEmpty {
-                    birthdaySection
-                }
+                birthdaySection
                 noticeSection
             }
             .padding(.vertical, 16)
@@ -145,14 +143,21 @@ private struct HomeContentView: View {
             )
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(uiState.popularCasts, id: \.id) { maid in
-                        ConCafeCastCard(
-                            name: maid.name,
-                            subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
-                            metaText: "👥 \(maid.followerCount)",
-                            onTap: { onAction(.maidTapped(id: maid.id)) }
+                    if !uiState.popularCasts.isEmpty {
+                        ForEach(uiState.popularCasts, id: \.id) { maid in
+                            ConCafeCastCard(
+                                name: maid.name,
+                                subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
+                                metaText: "👥 \(maid.followerCount)",
+                                onTap: { onAction(.maidTapped(id: maid.id)) }
+                            )
+                            .frame(width: 132, alignment: .leading)
+                        }
+                    } else {
+                        HomeSectionPlaceholderCard(
+                            title: "인기 캐스트 데이터가 없어요",
+                            description: "팔로우와 방문이 쌓이면 이 영역에 표시됩니다."
                         )
-                        .frame(width: 132, alignment: .leading)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -173,19 +178,27 @@ private struct HomeContentView: View {
                     onAction: { onAction(.loadMoreNearbyCafes) }
                 )
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHGrid(
-                        rows: Array(repeating: GridItem(.fixed(92), spacing: 12), count: 3),
-                        alignment: .center,
-                        spacing: 12
-                    ) {
-                        ForEach(uiState.nearbyCafes, id: \.id) { cafe in
-                            NearByCafeItem(cafe: cafe)
-                            .frame(width: itemWidth, height: 92, alignment: .leading)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                onAction(.cafeTapped(id: cafe.id))
+                    if !uiState.nearbyCafes.isEmpty {
+                        LazyHGrid(
+                            rows: Array(repeating: GridItem(.fixed(92), spacing: 12), count: 3),
+                            alignment: .center,
+                            spacing: 12
+                        ) {
+                            ForEach(uiState.nearbyCafes, id: \.id) { cafe in
+                                NearByCafeItem(cafe: cafe)
+                                .frame(width: itemWidth, height: 92, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onAction(.cafeTapped(id: cafe.id))
+                                }
                             }
                         }
+                    } else {
+                        HomeSectionPlaceholderCard(
+                            title: "근처 카페가 아직 없어요",
+                            description: "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요."
+                        )
+                        .padding(.horizontal, 16)
                     }
                     .padding(.horizontal, 16)
                 }
@@ -210,21 +223,29 @@ private struct HomeContentView: View {
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: birthdaySectionIconName, title: "생일인 캐스트")
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(uiState.birthdayCasts, id: \.id) { maid in
-                        VStack(spacing: 8) {
-                            Circle()
-                                .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 74, height: 74)
-                            Text(maid.name)
-                                .font(.caption)
-                        }
-                        .onTapGesture {
-                            onAction(.birthdayMaidTapped(id: maid.id))
+            if !uiState.birthdayCasts.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(uiState.birthdayCasts, id: \.id) { maid in
+                            VStack(spacing: 8) {
+                                Circle()
+                                    .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
+                                    .frame(width: 74, height: 74)
+                                Text(maid.name)
+                                    .font(.caption)
+                            }
+                            .onTapGesture {
+                                onAction(.birthdayMaidTapped(id: maid.id))
+                            }
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
+            } else {
+                HomeSectionPlaceholderCard(
+                    title: "오늘은 생일인 캐스트가 없어요",
+                    description: "곧 업데이트될 생일 일정을 기다려주세요."
+                )
                 .padding(.horizontal, 16)
             }
         }
@@ -241,23 +262,30 @@ private struct HomeContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: "megaphone.fill", title: "최근 카페 공지")
             VStack(spacing: 10) {
-                ForEach(uiState.notices, id: \.id) { notice in
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(notice.cafeName)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color(hex: "EF6797"))
-                            Text(notice.content)
-                                .font(.subheadline)
+                if !uiState.notices.isEmpty {
+                    ForEach(uiState.notices, id: \.id) { notice in
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(notice.cafeName)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color(hex: "EF6797"))
+                                Text(notice.content)
+                                    .font(.subheadline)
+                            }
+                            Spacer()
+                            Text(notice.relativeTime)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
-                        Spacer()
-                        Text(notice.relativeTime)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                        .padding(12)
+                        .background(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
-                    .padding(12)
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                } else {
+                    HomeSectionPlaceholderCard(
+                        title: "최근 공지가 없어요",
+                        description: "새 공지가 등록되면 이 영역에 표시됩니다."
+                    )
                 }
             }
             .padding(.horizontal, 16)
@@ -286,6 +314,27 @@ private struct HomeBannerPlaceholderCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 16)
         .frame(height: 190)
+    }
+}
+
+private struct HomeSectionPlaceholderCard: View {
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "5C525D"))
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "8A7F8B"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
