@@ -7,6 +7,9 @@ import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class GetCheckInUserFeedUseCase(
     private val authRepository: AuthRepository,
@@ -41,7 +44,7 @@ class GetCheckInUserFeedUseCase(
 
                 AppResult.Success(
                     CheckInUserFeed(
-                        todayVisits = visitEntries.filter { it.visitedAt.startsWith(TODAY_DATE) }.take(TODAY_VISIT_LIMIT),
+                        todayVisits = visitEntries.filter { it.visitedAt.startsWith(todayDateText()) }.take(TODAY_VISIT_LIMIT),
                         recentVisits = visitEntries.take(RECENT_VISIT_LIMIT)
                     )
                 )
@@ -65,8 +68,14 @@ class GetCheckInUserFeedUseCase(
         }
     }
 
+    private fun todayDateText(): String {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val month = today.monthNumber.toString().padStart(2, '0')
+        val day = today.dayOfMonth.toString().padStart(2, '0')
+        return "${today.year}-$month-$day"
+    }
+
     private companion object {
-        private const val TODAY_DATE = "2026-03-09"
         private const val TODAY_VISIT_LIMIT = 4
         private const val RECENT_VISIT_LIMIT = 5
         private const val VISIT_PAGE_SIZE = 12

@@ -19,9 +19,15 @@ import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.model.Visit
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -61,15 +67,18 @@ class FirestoreConCafeDataSource(
     FirestoreSyncDataSource {
     suspend fun bootstrap() {
         val idToken = tokenProvider.getIdToken()
-
-        loadUsers(idToken)
-        loadHomeBanners(idToken)
+        clearHomeFeedCollections()
+        runCatching { loadUsers(idToken) }
+        runCatching { loadHomeBanners(idToken) }
+        runCatching { loadCafes(idToken) }
+        runCatching { loadCasts(idToken) }
+        runCatching { loadNotices(idToken) }
+        runCatching { loadVisits(idToken) }
     }
 
     override suspend fun fetchUser(userId: String): User? {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
-
         return runCatching {
             val response = restApi.get(path, idToken)
             val parsed = Json.parseToJsonElement(response).jsonObject
@@ -148,6 +157,78 @@ class FirestoreConCafeDataSource(
         this.banners.addAll(banners)
     }
 
+    private suspend fun loadCafes(idToken: String?) {
+        val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.CAFES}", idToken)
+        val parsed = Json.parseToJsonElement(response).jsonObject
+        val documents = parsed["documents"]?.jsonArray.orEmpty()
+        val cafes = documents.mapNotNull { element ->
+            parseCafeDocument(element.jsonObject)
+        }
+
+        this.cafes.clear()
+        this.cafes.addAll(cafes)
+    }
+
+    private suspend fun loadCasts(idToken: String?) {
+        val loadedCasts = mutableListOf<Cast>()
+
+        cafes.forEach { cafe ->
+            val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${cafe.id}/${FirestorePaths.CAFE_CASTS}"
+            val response = restApi.get(path, idToken)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            val documents = parsed["documents"]?.jsonArray.orEmpty()
+            val casts = documents.mapNotNull { element ->
+                parseCastDocument(cafe.id, element.jsonObject)
+            }
+
+            loadedCasts.addAll(casts)
+        }
+        delegate.casts.clear()
+        delegate.casts.addAll(loadedCasts)
+    }
+
+    private suspend fun loadNotices(idToken: String?) {
+        val loadedNotices = mutableListOf<Notice>()
+        val cafeNameById = cafes.associate { it.id to it.name }
+
+        cafes.forEach { cafe ->
+            val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${cafe.id}/${FirestorePaths.CAFE_NOTICES}"
+            val response = restApi.get(path, idToken)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            val documents = parsed["documents"]?.jsonArray.orEmpty()
+            val notices = documents.mapNotNull { element ->
+                parseNoticeDocument(
+                    cafeId = cafe.id,
+                    cafeName = cafeNameById[cafe.id].orEmpty(),
+                    document = element.jsonObject
+                )
+            }
+            loadedNotices.addAll(notices)
+        }
+        loadedNotices.sortByDescending { it.createdAt }
+        this.notices.clear()
+        this.notices.addAll(loadedNotices)
+    }
+
+    private suspend fun loadVisits(idToken: String?) {
+        val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.VISITS}", idToken)
+        val parsed = Json.parseToJsonElement(response).jsonObject
+        val documents = parsed["documents"]?.jsonArray.orEmpty()
+        val visits = documents.mapNotNull { element ->
+            parseVisitDocument(element.jsonObject)
+        }
+
+        this.visits.clear()
+        this.visits.addAll(visits.sortedByDescending { it.visitedAt })
+    }
+
+    private fun clearHomeFeedCollections() {
+        this.cafes.clear()
+        delegate.casts.clear()
+        this.notices.clear()
+        this.visits.clear()
+    }
+
     private fun parseUserDocument(document: JsonObject): User? {
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
@@ -191,6 +272,97 @@ class FirestoreConCafeDataSource(
             activatedAtEpochMillis = fields.getFirestoreLong("activatedAtEpochMillis") ?: 0L
         )
     }
+
+    private fun parseCafeDocument(document: JsonObject): Cafe? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val cafeId = name.substringAfterLast("/")
+        val regionField = fields["region"]?.jsonObject?.get("mapValue")?.jsonObject?.get("fields")?.jsonObject
+        val locationField = regionField
+            ?.get("location")
+            ?.jsonObject
+            ?.get("geoPointValue")
+            ?.jsonObject
+        return Cafe(
+            id = cafeId,
+            name = fields.getFirestoreString("name").orEmpty(),
+            desc = fields.getFirestoreString("desc").orEmpty(),
+            region = Region(
+                country = regionField?.getFirestoreString("country")
+                    ?: fields.getFirestoreString("country")
+                    ?: "KR",
+                city = regionField?.getFirestoreString("city")
+                    ?: fields.getFirestoreString("city")
+                    ?: "",
+                address = regionField?.getFirestoreString("address")
+                    ?: fields.getFirestoreString("address")
+                    ?: "",
+                location = GeoPoint(
+                    latitude = locationField?.get("latitude")?.jsonPrimitive?.doubleOrNull ?: 0.0,
+                    longitude = locationField?.get("longitude")?.jsonPrimitive?.doubleOrNull ?: 0.0
+                )
+            ),
+            thumbnailImage = fields.getFirestoreString("thumbnailImage"),
+            ratingAvg = fields.getFirestoreDouble("ratingAvg")
+                ?: fields.getFirestoreLong("ratingAvg")?.toDouble()
+                ?: 0.0,
+            reviewCount = fields.getFirestoreLong("reviewCount")?.toInt() ?: 0,
+            approved = fields.getFirestoreBoolean("approved") ?: true,
+            conceptType = fields.getFirestoreString("conceptType") ?: "MAID"
+        )
+    }
+
+    private fun parseCastDocument(cafeId: String, document: JsonObject): Cast? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val castId = name.substringAfterLast("/")
+        return Cast(
+            id = castId,
+            cafeId = cafeId,
+            name = fields.getFirestoreString("name").orEmpty(),
+            linkedUserId = fields.getFirestoreString("linkedUserId"),
+            profileImage = fields.getFirestoreString("profileImage"),
+            desc = fields.getFirestoreString("desc").orEmpty(),
+            birthday = fields.getFirestoreString("birthday"),
+            conceptRole = fields.getFirestoreString("conceptRole") ?: "maid",
+            followerCount = fields.getFirestoreLong("followerCount")?.toInt() ?: 0,
+            rating = fields.getFirestoreDouble("rating")
+                ?: fields.getFirestoreLong("rating")?.toDouble()
+                ?: 0.0
+        )
+    }
+
+    private fun parseNoticeDocument(cafeId: String, cafeName: String, document: JsonObject): Notice? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val noticeId = name.substringAfterLast("/")
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        return Notice(
+            id = noticeId,
+            cafeId = cafeId,
+            cafeName = cafeName,
+            title = fields.getFirestoreString("title").orEmpty(),
+            content = fields.getFirestoreString("content").orEmpty(),
+            createdAt = createdAt,
+            relativeTime = "최근"
+        )
+    }
+
+    private fun parseVisitDocument(document: JsonObject): Visit? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val visitId = name.substringAfterLast("/")
+        val userId = fields.getFirestoreString("userId") ?: return null
+        val cafeId = fields.getFirestoreString("cafeId") ?: return null
+        return Visit(
+            id = visitId,
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = fields.getFirestoreString("visitedAt").orEmpty(),
+            memo = fields.getFirestoreString("memo"),
+            verified = fields.getFirestoreBoolean("verified") ?: false
+        )
+    }
 }
 
 private fun JsonObject.getFirestoreString(key: String): String? {
@@ -208,6 +380,13 @@ private fun JsonObject.getFirestoreLong(key: String): Long? {
     val fromInteger = valueObject["integerValue"]?.jsonPrimitive?.longOrNull
     val fromDouble = valueObject["doubleValue"]?.jsonPrimitive?.doubleOrNull?.toLong()
     return fromInteger ?: fromDouble
+}
+
+private fun JsonObject.getFirestoreDouble(key: String): Double? {
+    val valueObject = this[key]?.jsonObject ?: return null
+    val fromDouble = valueObject["doubleValue"]?.jsonPrimitive?.doubleOrNull
+    val fromInteger = valueObject["integerValue"]?.jsonPrimitive?.longOrNull?.toDouble()
+    return fromDouble ?: fromInteger
 }
 
 private fun firestoreDocumentBody(fields: Map<String, JsonElement>): String {

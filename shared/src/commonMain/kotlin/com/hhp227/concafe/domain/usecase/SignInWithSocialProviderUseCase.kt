@@ -13,7 +13,7 @@ class SignInWithSocialProviderUseCase(
             AppResult.Failure(AppError.ValidationFailed("unsupported social provider"))
         } else {
             signInUseCase.invoke(
-                email = "$normalized@mock.concafe",
+                email = "$normalized@social.concafe",
                 password = SOCIAL_SIGN_IN_PASSWORD
             )
         }

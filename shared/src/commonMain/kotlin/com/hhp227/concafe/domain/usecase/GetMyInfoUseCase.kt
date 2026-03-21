@@ -49,8 +49,9 @@ class GetMyInfoUseCase(
                     )
                 )
             } else {
+                val firestoreUser = userRepository.getUser(currentUser.id)
                 val summary = userRepository.getMyPageSummary(currentUser.id)
-                val castDetail = if (currentUser.role == UserRole.CAST) {
+                val castDetail = if (firestoreUser.role == UserRole.CAST) {
                     castRepository.searchCasts(
                         query = null,
                         country = null,
@@ -66,7 +67,7 @@ class GetMyInfoUseCase(
                 } else {
                     null
                 }
-                val ownedCafes = if (currentUser.role == UserRole.CAFE_OWNER) {
+                val ownedCafes = if (firestoreUser.role == UserRole.CAFE_OWNER) {
                     cafeManagementRepository.getCafeManagementData(currentUser.id).ownedCafes
                 } else {
                     emptyList()
@@ -107,7 +108,7 @@ class GetMyInfoUseCase(
                 AppResult.Success(
                     MyInfoFeed(
                         isLoggedIn = true,
-                        user = currentUser,
+                        user = firestoreUser,
                         summary = summary,
                         castDetail = castDetail,
                         ownedCafes = ownedCafes,

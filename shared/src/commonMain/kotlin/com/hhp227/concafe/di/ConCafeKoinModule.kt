@@ -55,6 +55,7 @@ val dataSourceModule = module {
             restApi = get(),
             tokenProvider = get()
         )
+
         runBlocking {
             runCatching { dataSource.bootstrap() }
         }
@@ -80,13 +81,13 @@ val dataSourceModule = module {
 
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
     single<BannerRepository> { BannerRepositoryImpl(get(), get(), get()) }
     single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
     single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get()) }
     single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get()) }
     single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get()) }
-    single<CafeRepository> { CafeRepositoryImpl(get(), get(), get()) }
+    single<CafeRepository> { CafeRepositoryImpl(get(), get(), get(), get()) }
     single<CastRepository> { CastRepositoryImpl(get(), get(), get(), get()) }
     single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get(), get(), get()) }
     single<InquiryRepository> { InquiryRepositoryImpl(get()) }
