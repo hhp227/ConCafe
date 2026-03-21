@@ -83,7 +83,9 @@ private struct HomeContentView: View {
                 bannerSection
                 popularCastSection
                 nearbyCafeSection
-                birthdaySection
+                if !uiState.birthdayCasts.isEmpty {
+                    birthdaySection
+                }
                 noticeSection
             }
             .padding(.vertical, 16)
@@ -223,29 +225,21 @@ private struct HomeContentView: View {
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(icon: birthdaySectionIconName, title: "생일인 캐스트")
-            if !uiState.birthdayCasts.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        ForEach(uiState.birthdayCasts, id: \.id) { maid in
-                            VStack(spacing: 8) {
-                                Circle()
-                                    .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
-                                    .frame(width: 74, height: 74)
-                                Text(maid.name)
-                                    .font(.caption)
-                            }
-                            .onTapGesture {
-                                onAction(.birthdayMaidTapped(id: maid.id))
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(uiState.birthdayCasts, id: \.id) { maid in
+                        VStack(spacing: 8) {
+                            Circle()
+                                .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
+                                .frame(width: 74, height: 74)
+                            Text(maid.name)
+                                .font(.caption)
+                        }
+                        .onTapGesture {
+                            onAction(.birthdayMaidTapped(id: maid.id))
                         }
                     }
-                    .padding(.horizontal, 16)
                 }
-            } else {
-                HomeSectionPlaceholderCard(
-                    title: "오늘은 생일인 캐스트가 없어요",
-                    description: "곧 업데이트될 생일 일정을 기다려주세요."
-                )
                 .padding(.horizontal, 16)
             }
         }

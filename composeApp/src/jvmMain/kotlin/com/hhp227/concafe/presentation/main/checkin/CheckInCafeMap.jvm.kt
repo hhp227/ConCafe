@@ -120,15 +120,25 @@ private fun buildCheckInMapHtml(
         """.trimIndent()
     }
 
-    val centerLatitude = cafes.map { it.geoPoint.latitude }.averageOrDefault(37.5665)
-    val centerLongitude = cafes.map { it.geoPoint.longitude }.averageOrDefault(126.9780)
-    val cafesJson = cafes.joinToString(prefix = "[", postfix = "]") { cafe ->
+    val normalizedCafes = cafes.mapNotNull { cafe ->
+        val normalizedLatitude = normalizeLatitude(cafe.geoPoint.latitude) ?: return@mapNotNull null
+        val normalizedLongitude = normalizeLongitude(cafe.geoPoint.longitude) ?: return@mapNotNull null
+        NormalizedCafeMapItem(
+            id = cafe.id,
+            name = cafe.name,
+            latitude = normalizedLatitude,
+            longitude = normalizedLongitude
+        )
+    }
+    val centerLatitude = normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
+    val centerLongitude = normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
+    val cafesJson = normalizedCafes.joinToString(prefix = "[", postfix = "]") { cafe ->
         """
         {
           id: "${escapeJs(cafe.id)}",
           name: "${escapeJs(cafe.name)}",
-          latitude: ${cafe.geoPoint.latitude},
-          longitude: ${cafe.geoPoint.longitude}
+          latitude: ${cafe.latitude},
+          longitude: ${cafe.longitude}
         }
         """.trimIndent()
     }
@@ -151,6 +161,7 @@ private fun buildCheckInMapHtml(
                 map = new google.maps.Map(document.getElementById("map"), {
                   center: center,
                   zoom: 13,
+                  mapTypeId: "roadmap",
                   mapTypeControl: false,
                   streetViewControl: false
                 });
@@ -226,3 +237,38 @@ private fun escapeJs(value: String): String {
 private fun List<Double>.averageOrDefault(default: Double): Double {
     return if (isEmpty()) default else average()
 }
+
+private fun normalizeLatitude(value: Double): Double? {
+    if (!value.isFinite()) {
+        return null
+    }
+
+    if (value < -90.0 || value > 90.0) {
+        return null
+    }
+
+    return value
+}
+
+private fun normalizeLongitude(value: Double): Double? {
+    if (!value.isFinite()) {
+        return null
+    }
+
+    if (value < -180.0 || value > 180.0) {
+        return null
+    }
+
+    return value
+}
+
+private data class NormalizedCafeMapItem(
+    val id: String,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double
+)
+
+private const val DEFAULT_LATITUDE = 37.5665
+
+private const val DEFAULT_LONGITUDE = 126.9780

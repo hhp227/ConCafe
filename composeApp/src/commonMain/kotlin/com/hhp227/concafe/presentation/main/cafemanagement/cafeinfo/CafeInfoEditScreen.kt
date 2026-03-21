@@ -323,9 +323,12 @@ private fun CafeInfoEditContent(
                                     longitude = uiState.mapLongitude,
                                     onLocationSelected = { latitude, longitude, address ->
                                         onAction(CafeInfoEditAction.SetPinnedLocation(latitude, longitude))
-                                        if (!address.isNullOrBlank()) {
-                                            onAction(CafeInfoEditAction.ChangeAddress(address))
+                                        val resolvedAddress = if (address.isNullOrBlank()) {
+                                            "위도 ${formatCoordinate(latitude)}, 경도 ${formatCoordinate(longitude)}"
+                                        } else {
+                                            address
                                         }
+                                        onAction(CafeInfoEditAction.ChangeAddress(resolvedAddress))
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()

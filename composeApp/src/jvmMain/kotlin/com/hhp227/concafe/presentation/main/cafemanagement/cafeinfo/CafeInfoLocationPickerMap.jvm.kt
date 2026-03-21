@@ -130,6 +130,9 @@ private fun buildLocationPickerMapHtml(
         """.trimIndent()
     }
 
+    val normalizedLatitude = normalizeLatitude(latitude) ?: DEFAULT_LATITUDE
+    val normalizedLongitude = normalizeLongitude(longitude) ?: DEFAULT_LONGITUDE
+
     return """
         <!doctype html>
         <html>
@@ -146,11 +149,12 @@ private fun buildLocationPickerMapHtml(
               let marker;
               let geocoder;
               function initMap() {
-                const selected = { lat: $latitude, lng: $longitude };
+                const selected = { lat: $normalizedLatitude, lng: $normalizedLongitude };
                 geocoder = new google.maps.Geocoder();
                 map = new google.maps.Map(document.getElementById("map"), {
                   center: selected,
                   zoom: 15,
+                  mapTypeId: "roadmap",
                   mapTypeControl: false,
                   streetViewControl: false
                 });
@@ -224,3 +228,31 @@ private fun resolveGoogleMapsApiKeyFromAndroidXml(): String {
     }
     return ""
 }
+
+private fun normalizeLatitude(value: Double): Double? {
+    if (!value.isFinite()) {
+        return null
+    }
+
+    if (value < -90.0 || value > 90.0) {
+        return null
+    }
+
+    return value
+}
+
+private fun normalizeLongitude(value: Double): Double? {
+    if (!value.isFinite()) {
+        return null
+    }
+
+    if (value < -180.0 || value > 180.0) {
+        return null
+    }
+
+    return value
+}
+
+private const val DEFAULT_LATITUDE = 37.5665
+
+private const val DEFAULT_LONGITUDE = 126.9780

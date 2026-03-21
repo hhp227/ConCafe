@@ -284,10 +284,10 @@ fun HomeContentScreen(
                 }
             }
         }
-        item {
-            SectionTitle("생일인 캐스트", Icons.Default.Cake)
-            Spacer(Modifier.height(10.dp))
-            if (uiState.birthdayCasts.isNotEmpty()) {
+        if (uiState.birthdayCasts.isNotEmpty()) {
+            item {
+                SectionTitle("생일인 캐스트", Icons.Default.Cake)
+                Spacer(Modifier.height(10.dp))
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp)
@@ -307,11 +307,6 @@ fun HomeContentScreen(
                         }
                     }
                 }
-            } else {
-                HomeSectionPlaceholderCard(
-                    title = "오늘은 생일인 캐스트가 없어요",
-                    description = "곧 업데이트될 생일 일정을 기다려주세요."
-                )
             }
         }
         item {

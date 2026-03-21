@@ -84,7 +84,7 @@ val repositoryModule = module {
     single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
     single<BannerRepository> { BannerRepositoryImpl(get(), get(), get()) }
     single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
-    single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get()) }
+    single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get(), get(), get()) }
     single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get()) }
     single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get(), get()) }
     single<CafeRepository> { CafeRepositoryImpl(get(), get(), get(), get()) }

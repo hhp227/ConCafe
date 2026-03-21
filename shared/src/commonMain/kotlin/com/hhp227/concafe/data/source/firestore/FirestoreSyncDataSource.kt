@@ -22,4 +22,6 @@ interface FirestoreSyncDataSource {
     suspend fun pushHomeBanner(banner: HomeBanner)
 
     suspend fun deleteHomeBanner(bannerId: String)
+
+    suspend fun refreshCafeManagementData(userId: String)
 }

@@ -182,6 +182,56 @@ class FirestoreConCafeDataSource(
         restApi.delete(path, idToken)
     }
 
+    override suspend fun refreshCafeManagementData(userId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val ownerClaimDocuments = runUserScopedQuery(
+            collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+            userId = userId,
+            idToken = idToken
+        )
+        val registrationClaimDocuments = runUserScopedQuery(
+            collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+            userId = userId,
+            idToken = idToken
+        )
+        val ownerClaims = ownerClaimDocuments.mapNotNull { document ->
+            parsePendingCafeOwnerClaimDocument(document)
+        }
+        val registrationClaims = registrationClaimDocuments.mapNotNull { document ->
+            parseCafeRegistrationClaimDocument(document)
+        }
+        val ownedCafeIds = mutableSetOf<String>()
+
+        ownerClaims.forEach { claim ->
+            val isApproved = claim.status.isApprovedClaimStatus()
+
+            if (isApproved) {
+                ownedCafeIds.add(claim.cafeId)
+            }
+        }
+        registrationClaimDocuments.forEach { document ->
+            val fields = document["fields"]?.jsonObject
+
+            if (fields != null) {
+                val status = fields.getFirestoreString("status").orEmpty()
+                val approvedCafeId = fields.getFirestoreString("approvedCafeId")
+                    ?: fields.getFirestoreString("cafeId")
+                val isApproved = status.isApprovedClaimStatus()
+
+                if (isApproved && !approvedCafeId.isNullOrBlank()) {
+                    ownedCafeIds.add(approvedCafeId)
+                }
+            }
+        }
+        pendingCafeClaimsByUser[userId] = ownerClaims
+            .sortedByDescending { it.requestedAt }
+            .toMutableList()
+        pendingCafeRegistrationClaimsByUser[userId] = registrationClaims
+            .sortedByDescending { it.requestedAt }
+            .toMutableList()
+        ownedCafeIdsByUser[userId] = ownedCafeIds.toMutableList()
+    }
+
     private suspend fun loadUsers(idToken: String?) {
         val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.USERS}", idToken)
         val parsed = Json.parseToJsonElement(response).jsonObject
@@ -269,6 +319,36 @@ class FirestoreConCafeDataSource(
 
         this.visits.clear()
         this.visits.addAll(visits.sortedByDescending { it.visitedAt })
+    }
+
+    private suspend fun runUserScopedQuery(
+        collectionId: String,
+        userId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "$collectionId" }
+                ],
+                "where": {
+                    "fieldFilter": {
+                      "field": { "fieldPath": "userId" },
+                      "op": "EQUAL",
+                      "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
+                    }
+                  }
+                }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
     }
 
     private fun clearHomeFeedCollections() {
@@ -413,6 +493,71 @@ class FirestoreConCafeDataSource(
         )
     }
 
+    private fun parsePendingCafeOwnerClaimDocument(document: JsonObject): CafeManagementData.PendingClaimSummary? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val claimId = name.substringAfterLast("/")
+        val cafeId = fields.getFirestoreString("cafeId").orEmpty()
+        val resolvedCafeName = if (fields.getFirestoreString("cafeName").isNullOrBlank()) {
+            cafes.firstOrNull { it.id == cafeId }?.name
+        } else {
+            fields.getFirestoreString("cafeName")
+        }
+        return CafeManagementData.PendingClaimSummary(
+            claimId = claimId,
+            cafeId = cafeId,
+            cafeName = resolvedCafeName ?: "신청 카페",
+            requestedAt = fields.getFirestoreString("requestedAt")
+                ?: fields.getFirestoreString("createdAt")
+                ?: "",
+            status = fields.getFirestoreString("status") ?: DEFAULT_OWNER_CLAIM_STATUS,
+            message = fields.getFirestoreString("message")
+                ?: "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
+        )
+    }
+
+    private fun parseCafeRegistrationClaimDocument(document: JsonObject): CafeRegistrationClaim? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val claimId = name.substringAfterLast("/")
+        val regionFields = fields.getFirestoreMap("region")
+        val locationField = regionFields
+            ?.get("location")
+            ?.jsonObject
+            ?.get("geoPointValue")
+            ?.jsonObject
+        return CafeRegistrationClaim(
+            claimId = claimId,
+            cafeName = fields.getFirestoreString("cafeName").orEmpty(),
+            description = fields.getFirestoreString("description").orEmpty(),
+            region = Region(
+                country = regionFields?.getFirestoreString("country")
+                    ?: fields.getFirestoreString("country")
+                    ?: "KR",
+                city = regionFields?.getFirestoreString("city")
+                    ?: fields.getFirestoreString("city")
+                    ?: "",
+                address = regionFields?.getFirestoreString("address")
+                    ?: fields.getFirestoreString("address")
+                    ?: "",
+                location = GeoPoint(
+                    latitude = locationField?.get("latitude")?.jsonPrimitive?.doubleOrNull ?: 0.0,
+                    longitude = locationField?.get("longitude")?.jsonPrimitive?.doubleOrNull ?: 0.0
+                )
+            ),
+            thumbnailImage = fields.getFirestoreString("thumbnailImage"),
+            conceptType = fields.getFirestoreString("conceptType") ?: "MAID",
+            businessHours = fields.getFirestoreString("businessHours").orEmpty(),
+            phoneNumber = fields.getFirestoreString("phoneNumber").orEmpty(),
+            requestedAt = fields.getFirestoreString("requestedAt")
+                ?: fields.getFirestoreString("createdAt")
+                ?: "",
+            status = fields.getFirestoreString("status") ?: DEFAULT_REGISTRATION_CLAIM_STATUS,
+            message = fields.getFirestoreString("message")
+                ?: "관리자 승인 후 새 카페가 생성되고 운영 카페에 자동 연결됩니다."
+        )
+    }
+
     private fun parseMyPageSummaryDocument(userId: String, document: JsonObject): MyPageSummary {
         val fields = document["fields"]?.jsonObject
         val statsField = fields?.getFirestoreMap("stats")
@@ -445,6 +590,11 @@ class FirestoreConCafeDataSource(
             badgesCount = badgesCount,
             level = level
         )
+    }
+
+    private companion object {
+        const val DEFAULT_OWNER_CLAIM_STATUS = "승인 대기 중"
+        const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
     }
 }
 
@@ -569,4 +719,19 @@ private fun BannerLinkTargetType.toFirestoreLinkType(): String {
         BannerLinkTargetType.NOTICE -> "NOTICE"
         BannerLinkTargetType.EXTERNAL_LINK -> "EXTERNAL"
     }
+}
+
+private fun String.isApprovedClaimStatus(): Boolean {
+    val normalized = trim()
+        .uppercase()
+        .replace("-", "_")
+        .replace(" ", "_")
+    return normalized == "APPROVED"
+        || normalized == "승인"
+        || normalized == "승인완료"
+        || normalized == "승인_완료"
+}
+
+private fun escapeFirestoreQueryString(value: String): String {
+    return value.replace("\\", "\\\\").replace("\"", "\\\"")
 }

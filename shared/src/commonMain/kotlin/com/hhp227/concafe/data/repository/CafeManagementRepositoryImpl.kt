@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.NoticeDataSource
 import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
@@ -12,16 +13,20 @@ class CafeManagementRepositoryImpl(
     private val authDataSource: AuthDataSource,
     private val cafeDataSource: CafeDataSource,
     private val castDataSource: CastDataSource,
-    private val noticeDataSource: NoticeDataSource
+    private val noticeDataSource: NoticeDataSource,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
+        runCatching {
+            firestoreSyncDataSource.refreshCafeManagementData(userId)
+        }
+
         val currentUser = authDataSource.findUserById(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
             cafeDataSource.cafes
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
-
         val ownedCafes = manageableCafes
             .map { cafe ->
                 val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
@@ -41,7 +46,6 @@ class CafeManagementRepositoryImpl(
                     externalLinkCount = 3
                 )
             }
-
         val searchableCafes = cafeDataSource.cafes.map { cafe ->
             CafeManagementData.SearchableCafeSummary(
                 id = cafe.id,
@@ -49,7 +53,6 @@ class CafeManagementRepositoryImpl(
                 location = "${cafe.region.city} ${cafe.region.address}"
             )
         }
-
         val pendingCafeOwnerClaims = cafeDataSource.pendingCafeClaimsByUser[userId].orEmpty()
         val pendingCafeRegistrationClaims = cafeDataSource.pendingCafeRegistrationClaimsByUser[userId]
             .orEmpty()
@@ -65,7 +68,6 @@ class CafeManagementRepositoryImpl(
             }
         val pendingClaims = (pendingCafeOwnerClaims + pendingCafeRegistrationClaims)
             .sortedByDescending { it.requestedAt }
-
         return CafeManagementData(
             ownedCafes = ownedCafes,
             searchableCafes = searchableCafes,

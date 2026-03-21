@@ -319,9 +319,13 @@ private struct CafeInfoEditContentView: View {
                     longitude: uiState.mapLongitude
                 ) { latitude, longitude, address in
                     onAction(.setPinnedLocation(latitude: latitude, longitude: longitude))
+                    let resolvedAddress: String
                     if let address, !address.isEmpty {
-                        onAction(.changeAddress(address))
+                        resolvedAddress = address
+                    } else {
+                        resolvedAddress = "위도 \(formatCoordinate(latitude)), 경도 \(formatCoordinate(longitude))"
                     }
+                    onAction(.changeAddress(resolvedAddress))
                 }
                     .frame(height: 160)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
