@@ -23,6 +23,8 @@ koin = "3.5.6"
 kmp-nativecoroutines = "1.0.0-ALPHA-30"
 ksp = "1.9.24-1.0.20"
 ktor = "2.3.12"
+androidx-credentials = "1.3.0"
+googleid = "1.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -48,6 +50,9 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationComposeAndroid" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "androidxComposeMaterial" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
 kmp-nativecoroutines-ksp = { module = "com.rickclephas.kmp:kmp-nativecoroutines-ksp", version.ref = "kmp-nativecoroutines" }

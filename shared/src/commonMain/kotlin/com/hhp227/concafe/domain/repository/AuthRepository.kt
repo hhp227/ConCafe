@@ -8,6 +8,8 @@ import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
 
+    suspend fun signInWithGoogleIdToken(idToken: String): User
+
     suspend fun signUp(
         email: String,
         password: String,

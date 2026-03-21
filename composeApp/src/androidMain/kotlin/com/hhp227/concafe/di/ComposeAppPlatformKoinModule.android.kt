@@ -1,25 +1,27 @@
 package com.hhp227.concafe.di
 
+import android.app.Application
 import android.content.Context
+import com.hhp227.concafe.presentation.auth.signin.AndroidGoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-private object AndroidAppContextHolder {
-    var appContext: Context? = null
-}
-
-fun setComposeAppContext(context: Context) {
-    AndroidAppContextHolder.appContext = context.applicationContext
-}
-
 actual fun platformModules(): List<Module> {
-    val appContext = requireNotNull(AndroidAppContextHolder.appContext) {
-        "Android Context is not initialized. Call setComposeAppContext() before doInitConCafeAppKoin()."
-    }
+    return emptyList()
+}
 
+internal fun androidPlatformModules(application: Application): List<Module> {
     return listOf(
         module {
-            single<Context> { appContext }
+            single<Context> { application }
+            single {
+                AndroidCurrentActivityProvider(application)
+            }
+            single<GoogleIdTokenProvider> {
+                val currentActivityProvider = get<AndroidCurrentActivityProvider>()
+                AndroidGoogleIdTokenProvider(activityProvider = currentActivityProvider::getCurrentActivity)
+            }
         }
     )
 }

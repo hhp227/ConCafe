@@ -35,6 +35,31 @@ class FirebaseAuthRestTokenProvider(
         return session
     }
 
+    override suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("google idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=google.com",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = restClient.postJson(signInWithIdpUrl(), body)
+        val session = parseSessionFromResponse(response)
+
+        currentSession = session
+
+        return session
+    }
+
     override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
         if (!supportsEmailPasswordAuth()) {
             return null
@@ -100,6 +125,10 @@ class FirebaseAuthRestTokenProvider(
 
     private fun signUpUrl(): String {
         return "$FIREBASE_AUTH_BASE_URL/accounts:signUp?key=$apiKey"
+    }
+
+    private fun signInWithIdpUrl(): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:signInWithIdp?key=$apiKey"
     }
 
     private fun deleteAccountUrl(): String {

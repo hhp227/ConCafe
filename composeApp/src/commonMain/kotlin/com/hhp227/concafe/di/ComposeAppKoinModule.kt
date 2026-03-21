@@ -31,7 +31,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { SignInViewModel(get(), get()) }
+    factory { SignInViewModel(get(), get(), get(), get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get()) }
@@ -68,7 +68,11 @@ private val composeAppModules = listOf(
 )
 
 fun doInitConCafeAppKoin() {
-    doInitKoin(composeAppModules + platformModules())
+    doInitConCafeAppKoin(emptyList())
+}
+
+fun doInitConCafeAppKoin(extraPlatformModules: List<Module>) {
+    doInitKoin(composeAppModules + platformModules() + extraPlatformModules)
 }
 
 expect fun platformModules(): List<Module>

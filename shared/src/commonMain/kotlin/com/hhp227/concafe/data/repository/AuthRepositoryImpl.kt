@@ -24,6 +24,7 @@ class AuthRepositoryImpl(
 
         if (authTokenProvider.supportsEmailPasswordAuth()) {
             val session = authTokenProvider.signInWithEmailPassword(email, password)
+
             if (session != null) {
                 val user = resolveUserFromSession(session.userId, session.email)
                 authDataSource.currentUserId = user.id
@@ -39,6 +40,17 @@ class AuthRepositoryImpl(
         } else {
             throw IllegalArgumentException("invalid credentials")
         }
+    }
+
+    override suspend fun signInWithGoogleIdToken(idToken: String): User {
+        if (!idToken.isBlank()) {
+            val session = authTokenProvider.signInWithGoogleIdToken(idToken)
+                ?: throw IllegalArgumentException("google sign-in is not supported")
+            val user = resolveUserFromSession(session.userId, session.email)
+            authDataSource.currentUserId = user.id
+            return user
+        }
+        throw IllegalArgumentException("google idToken is required")
     }
 
     override suspend fun signUp(
@@ -195,18 +207,14 @@ class AuthRepositoryImpl(
         authDataSource.addUser(createdUser)
 
         runCatching { firestoreSyncDataSource.pushUser(createdUser) }
-
         return createdUser
     }
 
     private suspend fun syncCurrentUserIdFromFirebase() {
-        if (!authTokenProvider.supportsEmailPasswordAuth()) {
-            return
+        if (authTokenProvider.supportsEmailPasswordAuth()) {
+            val firebaseUserId = authTokenProvider.getCurrentUserId()
+            authDataSource.currentUserId = firebaseUserId
         }
-
-        val firebaseUserId = authTokenProvider.getCurrentUserId()
-
-        authDataSource.currentUserId = firebaseUserId
     }
 
     private suspend fun resolveCurrentUser(): User? {
@@ -254,7 +262,6 @@ class AuthRepositoryImpl(
 
 private fun isInvalidPasswordError(error: Exception): Boolean {
     val message = error.message.orEmpty().uppercase()
-
     return message.contains("INVALID_LOGIN_CREDENTIALS")
         || message.contains("INVALID_PASSWORD")
         || message.contains("EMAIL_NOT_FOUND")

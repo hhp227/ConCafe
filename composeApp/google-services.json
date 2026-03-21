@@ -12,7 +12,20 @@
           "package_name": "com.hhp227.concafe"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "387905493709-75k85msbmcs8h2aokq1p5tefmfh3aimd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hhp227.concafe",
+            "certificate_hash": "1683390a51fc38859d86ef2805e81b061dfc2f20"
+          }
+        },
+        {
+          "client_id": "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "387905493709-7ri7oqu3nppb96s7541qa6m1tfpujhug.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hhp227.ConCafe"
+              }
+            }
+          ]
         }
       }
     }

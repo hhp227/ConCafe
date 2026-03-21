@@ -22,6 +22,13 @@ class PersistedFirebaseAuthTokenProvider(
         return session
     }
 
+    override suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession? {
+        val session = delegate.signInWithGoogleIdToken(idToken)
+
+        persistSession(session)
+        return session
+    }
+
     override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
         val session = delegate.signUpWithEmailPassword(email, password)
 

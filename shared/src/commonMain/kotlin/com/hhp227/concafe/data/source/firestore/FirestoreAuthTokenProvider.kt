@@ -11,6 +11,8 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession?
 
+    suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession?
+
     suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession?
 
     suspend fun signOut()
@@ -30,6 +32,10 @@ class NoOpFirestoreAuthTokenProvider : FirestoreAuthTokenProvider {
     }
 
     override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
+        return null
+    }
+
+    override suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession? {
         return null
     }
 
