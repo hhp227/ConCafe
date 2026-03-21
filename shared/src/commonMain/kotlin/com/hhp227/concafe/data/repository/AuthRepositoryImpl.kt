@@ -15,18 +15,13 @@ class AuthRepositoryImpl(
     private val castDataSource: CastDataSource
 ) : AuthRepository {
     override suspend fun signIn(email: String, password: String): User {
-        if (email.isBlank() || password.isBlank()) {
+        if (!email.isBlank() && !password.isBlank()) {
+            return authDataSource.findUserByEmail(email)?.also {
+                authDataSource.currentUserId = it.id
+            } ?: throw IllegalArgumentException("invalid credentials")
+        } else {
             throw IllegalArgumentException("email/password is required")
         }
-
-        val found = authDataSource.findUserByEmail(email)
-
-        if (found == null) {
-            throw IllegalArgumentException("invalid credentials")
-        }
-
-        authDataSource.currentUserId = found.id
-        return found
     }
 
     override suspend fun signUp(
@@ -36,37 +31,31 @@ class AuthRepositoryImpl(
         role: UserRole,
         affiliatedCafeId: String?
     ): User {
-        if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
+        if (!email.isBlank() && !password.isBlank() && !nickname.isBlank()) {
+            if (!authDataSource.isEmailTaken(email)) {
+                val user = User(
+                    id = nextEntityId("user"),
+                    email = email,
+                    nickname = nickname,
+                    profileImage = null,
+                    role = role,
+                    banned = false,
+                    createdAt = nowIsoUtc()
+                )
+
+                authDataSource.addUser(user)
+                if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+                    castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+                }
+                (authDataSource as? FirestoreConCafeDataSource)?.runCatching { pushUser(user) }
+                authDataSource.currentUserId = user.id
+                return user
+            } else {
+                throw IllegalArgumentException("email already exists")
+            }
+        } else {
             throw IllegalArgumentException("email/password/nickname is required")
         }
-
-        val duplicate = authDataSource.isEmailTaken(email)
-
-        if (duplicate) {
-            throw IllegalArgumentException("email already exists")
-        }
-
-        val user = User(
-            id = nextEntityId("user"),
-            email = email,
-            nickname = nickname,
-            profileImage = null,
-            role = role,
-            banned = false,
-            createdAt = nowIsoUtc()
-        )
-        authDataSource.addUser(user)
-
-        if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-            castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
-        }
-        val firestoreDataSource = authDataSource as? FirestoreConCafeDataSource
-        if (firestoreDataSource != null) {
-            runCatching { firestoreDataSource.pushUser(user) }
-        }
-
-        authDataSource.currentUserId = user.id
-        return user
     }
 
     override suspend fun signOut() {

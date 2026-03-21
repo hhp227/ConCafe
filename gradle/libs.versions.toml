@@ -18,6 +18,7 @@ kotlinx-serialization = "1.6.3"
 material3 = "1.5.12"
 navigationComposeAndroid = "2.8.9"
 androidxComposeMaterial = "1.5.4"
+google-services = "4.4.1"
 koin = "3.5.6"
 kmp-nativecoroutines = "1.0.0-ALPHA-30"
 ksp = "1.9.24-1.0.20"
@@ -56,5 +57,6 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kmp-nativecoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmp-nativecoroutines" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "387905493709",
+    "project_id": "concafe-5f7fd",
+    "storage_bucket": "concafe-5f7fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387905493709:android:2437deebd8ae220075e784",
+        "android_client_info": {
+          "package_name": "com.hhp227.concafe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
