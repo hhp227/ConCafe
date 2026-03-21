@@ -182,6 +182,8 @@ fun HomeContentScreen(
                             }
                         }
                     }
+                } else {
+                    HomeBannerPlaceholderCard()
                 }
                 if (uiState.banners.size > 1) {
                     Row(
@@ -314,6 +316,46 @@ fun HomeContentScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeBannerPlaceholderCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFFEDE7EA),
+                            Color(0xFFF6F2F4)
+                        )
+                    )
+                )
+                .padding(18.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "홈 배너 준비 중",
+                    color = Color(0xFF6E6671),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "곧 새로운 소식을 보여드릴게요.",
+                    color = Color(0xFF8E8794),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

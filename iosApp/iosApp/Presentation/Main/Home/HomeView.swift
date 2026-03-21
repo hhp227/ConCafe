@@ -95,30 +95,34 @@ private struct HomeContentView: View {
     
     private var bannerSection: some View {
         VStack(spacing: 10) {
-            TabView(selection: $currentBannerPage) {
-                ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                    ZStack(alignment: .bottomLeading) {
-                        LinearGradient(
-                            colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        Text(banner.title)
-                            .font(.title3.weight(.bold))
-                            .foregroundColor(.white)
-                            .padding(16)
+            if !uiState.banners.isEmpty {
+                TabView(selection: $currentBannerPage) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                        ZStack(alignment: .bottomLeading) {
+                            LinearGradient(
+                                colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            Text(banner.title)
+                                .font(.title3.weight(.bold))
+                                .foregroundColor(.white)
+                                .padding(16)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .padding(.horizontal, 16)
+                        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .onTapGesture {
+                            onAction(.bannerTapped(banner))
+                        }
+                        .tag(index)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .padding(.horizontal, 16)
-                    .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .onTapGesture {
-                        onAction(.bannerTapped(banner))
-                    }
-                    .tag(index)
                 }
+                .frame(height: 190)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+            } else {
+                HomeBannerPlaceholderCard()
             }
-            .frame(height: 190)
-            .tabViewStyle(.page(indexDisplayMode: .never))
             if uiState.banners.count > 1 {
                 HStack(spacing: 6) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
@@ -258,6 +262,30 @@ private struct HomeContentView: View {
             }
             .padding(.horizontal, 16)
         }
+    }
+}
+
+private struct HomeBannerPlaceholderCard: View {
+    var body: some View {
+        ZStack(alignment: .leading) {
+            LinearGradient(
+                colors: [Color(hex: "EDE7EA"), Color(hex: "F6F2F4")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            VStack(alignment: .leading, spacing: 6) {
+                Text("홈 배너 준비 중")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color(hex: "6E6671"))
+                Text("곧 새로운 소식을 보여드릴게요.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "8E8794"))
+            }
+            .padding(16)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, 16)
+        .frame(height: 190)
     }
 }
 
