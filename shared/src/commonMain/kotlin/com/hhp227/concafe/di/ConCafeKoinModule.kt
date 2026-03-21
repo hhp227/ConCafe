@@ -96,7 +96,7 @@ val repositoryModule = module {
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
     single<RankingRepository> { RankingRepositoryImpl(get(), get(), get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
-    single<StorageRepository> { StorageRepositoryImpl() }
+    single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
 }

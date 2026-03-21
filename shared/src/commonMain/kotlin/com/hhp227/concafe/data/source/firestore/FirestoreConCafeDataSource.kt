@@ -23,6 +23,7 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.User
@@ -83,6 +84,16 @@ class FirestoreConCafeDataSource(
             val response = restApi.get(path, idToken)
             val parsed = Json.parseToJsonElement(response).jsonObject
             parseUserDocument(parsed)
+        }.getOrNull()
+    }
+
+    override suspend fun fetchMyPageSummary(userId: String): MyPageSummary? {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+        return runCatching {
+            val response = restApi.get(path, idToken)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            parseMyPageSummaryDocument(userId = userId, document = parsed)
         }.getOrNull()
     }
 
@@ -365,6 +376,40 @@ class FirestoreConCafeDataSource(
             verified = fields.getFirestoreBoolean("verified") ?: false
         )
     }
+
+    private fun parseMyPageSummaryDocument(userId: String, document: JsonObject): MyPageSummary {
+        val fields = document["fields"]?.jsonObject
+        val statsField = fields?.getFirestoreMap("stats")
+        val visitCount = statsField?.getFirestoreInt("visitCount")
+            ?: fields?.getFirestoreInt("visitCount")
+            ?: 0
+        val favoritesCount = statsField?.getFirestoreInt("favoritesCount")
+            ?: statsField?.getFirestoreInt("favoriteCount")
+            ?: fields?.getFirestoreInt("favoritesCount")
+            ?: 0
+        val followedCastsCount = statsField?.getFirestoreInt("followedCastsCount")
+            ?: statsField?.getFirestoreInt("followedCount")
+            ?: fields?.getFirestoreInt("followedCastsCount")
+            ?: 0
+        val badgesCount = statsField?.getFirestoreInt("badgesCount")
+            ?: statsField?.getFirestoreInt("badgeCount")
+            ?: statsField?.getFirestoreInt("stampCount")
+            ?: fields?.getFirestoreInt("badgesCount")
+            ?: fields?.getFirestoreInt("badgeCount")
+            ?: fields?.getFirestoreInt("stampCount")
+            ?: 0
+        val level = statsField?.getFirestoreInt("level")
+            ?: fields?.getFirestoreInt("level")
+            ?: 1
+        return MyPageSummary(
+            userId = userId,
+            totalVisits = visitCount,
+            favoritesCount = favoritesCount,
+            followedCastsCount = followedCastsCount,
+            badgesCount = badgesCount,
+            level = level
+        )
+    }
 }
 
 private fun JsonObject.getFirestoreString(key: String): String? {
@@ -389,6 +434,19 @@ private fun JsonObject.getFirestoreDouble(key: String): Double? {
     val fromDouble = valueObject["doubleValue"]?.jsonPrimitive?.doubleOrNull
     val fromInteger = valueObject["integerValue"]?.jsonPrimitive?.longOrNull?.toDouble()
     return fromDouble ?: fromInteger
+}
+
+private fun JsonObject.getFirestoreInt(key: String): Int? {
+    return getFirestoreLong(key)?.toInt()
+}
+
+private fun JsonObject.getFirestoreMap(key: String): JsonObject? {
+    return this[key]
+        ?.jsonObject
+        ?.get("mapValue")
+        ?.jsonObject
+        ?.get("fields")
+        ?.jsonObject
 }
 
 private fun firestoreDocumentBody(fields: Map<String, JsonElement>): String {

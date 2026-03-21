@@ -1,10 +1,13 @@
 package com.hhp227.concafe.data.source.firestore
 
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.User
 
 interface FirestoreSyncDataSource {
     suspend fun fetchUser(userId: String): User?
+
+    suspend fun fetchMyPageSummary(userId: String): MyPageSummary?
 
     suspend fun pushUser(user: User)
 

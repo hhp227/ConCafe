@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -172,7 +173,9 @@ class FirestoreCacheDataSource :
         val favoritesCount = favoriteCafeIdsByUser[userId]?.size ?: 0
         val followedCount = followedCastIdsByUser[userId]?.size ?: 0
         val visitCount = visits.count { it.userId == userId }
-        return MyPageSummary(userId, visitCount, favoritesCount, followedCount, badgesCount = 3, level = 4)
+        val badgesCount = stamps.count { it.userId == userId }
+        val level = max(1, 1 + (visitCount / 5))
+        return MyPageSummary(userId, visitCount, favoritesCount, followedCount, badgesCount, level)
     }
 
     override fun cafeDetail(cafeId: String): CafeDetail? {

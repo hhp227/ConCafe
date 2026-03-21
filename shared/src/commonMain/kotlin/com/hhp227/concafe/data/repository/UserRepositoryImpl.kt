@@ -39,6 +39,14 @@ class UserRepositoryImpl(
     }
 
     override suspend fun getMyPageSummary(userId: String): MyPageSummary {
-        return myInfoDataSource.defaultMyPageSummary(userId)
+        val remoteSummary = runCatching {
+            firestoreSyncDataSource.fetchMyPageSummary(userId)
+        }.getOrNull()
+
+        if (remoteSummary != null) {
+            return remoteSummary
+        } else {
+            return myInfoDataSource.defaultMyPageSummary(userId)
+        }
     }
 }

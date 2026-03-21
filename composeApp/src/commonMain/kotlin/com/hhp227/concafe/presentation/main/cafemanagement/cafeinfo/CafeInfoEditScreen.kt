@@ -58,6 +58,18 @@ fun CafeInfoEditScreen(
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState
     )
+    if (uiState.isImageRequiredAlertVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) },
+            title = { Text("이미지 등록 필요") },
+            text = { Text("카페 등록/수정에는 대표 이미지 또는 갤러리 이미지가 필요합니다.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) }) {
+                    Text("확인")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)

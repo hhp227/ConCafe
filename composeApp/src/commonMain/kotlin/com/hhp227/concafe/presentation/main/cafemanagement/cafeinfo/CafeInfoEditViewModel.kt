@@ -80,7 +80,12 @@ class CafeInfoEditViewModel(
     private fun saveCafeInfo() {
         val currentState = _uiState.value
         if (currentState.representativeImageUrl.isNullOrBlank() && currentState.galleryImages.none { it.isNotBlank() }) {
-            _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
+            _uiState.update {
+                it.copy(
+                    isImageRequiredAlertVisible = true,
+                    infoMessage = "대표 이미지 또는 갤러리 이미지 1장 이상이 필요합니다."
+                )
+            }
             return
         }
 
@@ -93,10 +98,13 @@ class CafeInfoEditViewModel(
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
 
         viewModelScope.launch {
-            val uploadedRepresentativeImage = uploadImage(currentState.representativeImageUrl, "cafes/representative")
-                ?: return@launch
+            val uploadedRepresentativeImage = if (currentState.representativeImageUrl.isNullOrBlank()) {
+                null
+            } else {
+                uploadImage(currentState.representativeImageUrl, "cafes/representative") ?: return@launch
+            }
             val uploadedGalleryImages = buildList {
-                for (image in currentState.galleryImages) {
+                for (image in currentState.galleryImages.filter { it.isNotBlank() }) {
                     val uploaded = uploadImage(image, "cafes/gallery") ?: return@launch
                     add(uploaded)
                 }
@@ -155,6 +163,15 @@ class CafeInfoEditViewModel(
 
     private fun submitCafeRegistration() {
         val currentState = _uiState.value
+        if (currentState.representativeImageUrl.isNullOrBlank()) {
+            _uiState.update {
+                it.copy(
+                    isImageRequiredAlertVisible = true,
+                    infoMessage = "등록 신청에는 대표 이미지 1장이 필요합니다."
+                )
+            }
+            return
+        }
         _uiState.update { it.copy(isSaving = true, infoMessage = null) }
 
         viewModelScope.launch {

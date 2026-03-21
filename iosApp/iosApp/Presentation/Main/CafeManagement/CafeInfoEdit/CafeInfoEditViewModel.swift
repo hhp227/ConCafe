@@ -73,6 +73,13 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     private func saveCafeInfo() {
+        if (uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+            && uiState.galleryImages.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            uiState.isImageRequiredAlertVisible = true
+            uiState.infoMessage = "대표 이미지 또는 갤러리 이미지 1장 이상이 필요합니다."
+            return
+        }
+
         if isRegistrationMode {
             submitCafeRegistration()
             return
@@ -141,6 +148,12 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     private func submitCafeRegistration() {
+        if uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+            uiState.isImageRequiredAlertVisible = true
+            uiState.infoMessage = "등록 신청에는 대표 이미지 1장이 필요합니다."
+            return
+        }
+
         uiState.isSaving = true
         uiState.infoMessage = nil
 

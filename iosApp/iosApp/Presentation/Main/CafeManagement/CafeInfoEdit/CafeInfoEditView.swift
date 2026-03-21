@@ -44,6 +44,23 @@ struct CafeInfoEditView: View {
                 break
             }
         }
+        .alert(
+            "이미지 등록 필요",
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button("확인") {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text("카페 등록/수정에는 대표 이미지 또는 갤러리 이미지가 필요합니다.")
+        }
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in
