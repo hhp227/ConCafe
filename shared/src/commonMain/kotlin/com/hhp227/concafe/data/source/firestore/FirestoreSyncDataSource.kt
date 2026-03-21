@@ -3,6 +3,8 @@ package com.hhp227.concafe.data.source.firestore
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
+import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
+import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.model.User
 
 interface FirestoreSyncDataSource {
@@ -24,4 +26,8 @@ interface FirestoreSyncDataSource {
     suspend fun deleteHomeBanner(bannerId: String)
 
     suspend fun refreshCafeManagementData(userId: String)
+
+    suspend fun fetchPendingCafeOwnerClaimsForAdmin(): List<PendingCafeOwnerClaimPreview>
+
+    suspend fun fetchPendingCafeRegistrationClaimsForAdmin(): List<PendingCafeRegistrationClaimPreview>
 }

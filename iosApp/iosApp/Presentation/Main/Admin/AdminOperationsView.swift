@@ -128,7 +128,7 @@ struct AdminOperationsView: View {
             title: claim.cafeName,
             subtitle: claim.location,
             requestedAt: claim.requestedAt,
-            imageUrl: claim.imageUrl ?? ""
+            imageUrl: claim.imageUrl
         )
     }
 
@@ -138,7 +138,7 @@ struct AdminOperationsView: View {
             title: "점장 권한 신청 - \(claim.requesterNickname)",
             subtitle: claim.location,
             requestedAt: claim.requestedAt,
-            imageUrl: claim.imageUrl ?? ""
+            imageUrl: claim.imageUrl
         )
     }
 
@@ -147,17 +147,20 @@ struct AdminOperationsView: View {
         title: String,
         subtitle: String,
         requestedAt: String,
-        imageUrl: String
+        imageUrl: String?
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            AsyncImage(url: URL(string: imageUrl)) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                LinearGradient(
-                    colors: [Color(hex: "FFE7EF"), Color(hex: "F4D8E2")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+            if let resolvedImageUrl = resolvedRemoteImageUrl(imageUrl) {
+                AsyncImage(url: resolvedImageUrl) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().scaledToFill()
+                    default:
+                        pendingCardImagePlaceholder
+                    }
+                }
+            } else {
+                pendingCardImagePlaceholder
             }
             .frame(width: 64, height: 64)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -207,6 +210,22 @@ struct AdminOperationsView: View {
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var pendingCardImagePlaceholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE7EF"), Color(hex: "F4D8E2")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
     }
 
     private var quickMenuSection: some View {

@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.UserRole
@@ -12,7 +13,8 @@ import kotlinx.datetime.toLocalDateTime
 
 class CafeOwnerClaimRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val cafeDataSource: CafeDataSource
+    private val cafeDataSource: CafeDataSource,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeOwnerClaimRepository {
     override suspend fun createCafeOwnerClaim(userId: String, cafeId: String): PendingCafeOwnerClaimPreview {
         val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
@@ -51,25 +53,7 @@ class CafeOwnerClaimRepositoryImpl(
     }
 
     override suspend fun getPendingCafeOwnerClaims(): List<PendingCafeOwnerClaimPreview> {
-        return cafeDataSource.pendingCafeClaimsByUser
-            .flatMap { (userId, claims) ->
-                claims.filter { it.status == "승인 대기 중" }.mapNotNull { claim ->
-                    val user = authDataSource.findUserById(userId) ?: return@mapNotNull null
-                    val cafe = cafeDataSource.cafes.firstOrNull { it.id == claim.cafeId } ?: return@mapNotNull null
-                    PendingCafeOwnerClaimPreview(
-                        claimId = claim.claimId,
-                        requesterUserId = userId,
-                        requesterNickname = user.nickname,
-                        cafeId = claim.cafeId,
-                        cafeName = claim.cafeName,
-                        location = "${cafe.region.city} ${cafe.region.address}",
-                        requestedAt = claim.requestedAt,
-                        message = claim.message,
-                        imageUrl = cafe.thumbnailImage
-                    )
-                }
-            }
-            .sortedByDescending { it.requestedAt }
+        return firestoreSyncDataSource.fetchPendingCafeOwnerClaimsForAdmin()
     }
 
     override suspend fun approveCafeOwnerClaim(claimId: String, reviewedBy: String): PendingCafeOwnerClaimPreview {

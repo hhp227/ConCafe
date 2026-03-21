@@ -27,6 +27,8 @@ import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
+import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
@@ -232,6 +234,42 @@ class FirestoreConCafeDataSource(
         ownedCafeIdsByUser[userId] = ownedCafeIds.toMutableList()
     }
 
+    override suspend fun fetchPendingCafeOwnerClaimsForAdmin(): List<PendingCafeOwnerClaimPreview> {
+        val idToken = tokenProvider.getIdToken()
+        val documents = loadCollectionDocuments(
+            collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+            idToken = idToken
+        )
+        val previews = mutableListOf<PendingCafeOwnerClaimPreview>()
+
+        for (document in documents) {
+            val preview = parsePendingCafeOwnerClaimPreviewForAdmin(document)
+
+            if (preview != null) {
+                previews.add(preview)
+            }
+        }
+        return previews.sortedByDescending { it.requestedAt }
+    }
+
+    override suspend fun fetchPendingCafeRegistrationClaimsForAdmin(): List<PendingCafeRegistrationClaimPreview> {
+        val idToken = tokenProvider.getIdToken()
+        val documents = loadCollectionDocuments(
+            collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+            idToken = idToken
+        )
+        val previews = mutableListOf<PendingCafeRegistrationClaimPreview>()
+
+        for (document in documents) {
+            val preview = parsePendingCafeRegistrationClaimPreviewForAdmin(document)
+
+            if (preview != null) {
+                previews.add(preview)
+            }
+        }
+        return previews.sortedByDescending { it.requestedAt }
+    }
+
     private suspend fun loadUsers(idToken: String?) {
         val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.USERS}", idToken)
         val parsed = Json.parseToJsonElement(response).jsonObject
@@ -348,6 +386,17 @@ class FirestoreConCafeDataSource(
 
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun loadCollectionDocuments(
+        collectionId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val response = restApi.get("${config.documentBasePath()}/$collectionId", idToken)
+        val parsed = Json.parseToJsonElement(response).jsonObject
+        return parsed["documents"]?.jsonArray.orEmpty().map { element ->
+            element.jsonObject
         }
     }
 
@@ -558,6 +607,97 @@ class FirestoreConCafeDataSource(
         )
     }
 
+    private suspend fun parsePendingCafeOwnerClaimPreviewForAdmin(
+        document: JsonObject
+    ): PendingCafeOwnerClaimPreview? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val status = fields.getFirestoreString("status").orEmpty()
+
+        if (!status.isPendingClaimStatus()) {
+            return null
+        }
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val claimId = name.substringAfterLast("/")
+        val requesterUserId = fields.getFirestoreString("userId") ?: return null
+        val cafeId = fields.getFirestoreString("cafeId").orEmpty()
+        val cafe = cafes.firstOrNull { it.id == cafeId }
+        val requesterNickname = resolveUserNickname(requesterUserId)
+        val cafeName = fields.getFirestoreString("cafeName")
+            ?: cafe?.name
+            ?: "신청 카페"
+        val location = fields.getFirestoreString("location")
+            ?: listOfNotNull(cafe?.region?.city, cafe?.region?.address).joinToString(" ").ifBlank { "위치 정보 없음" }
+        val requestedAt = fields.getFirestoreString("requestedAt")
+            ?: fields.getFirestoreString("createdAt")
+            ?: ""
+        val message = fields.getFirestoreString("message")
+            ?: "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
+        val imageUrl = fields.getFirestoreString("imageUrl")
+            ?: cafe?.thumbnailImage
+        return PendingCafeOwnerClaimPreview(
+            claimId = claimId,
+            requesterUserId = requesterUserId,
+            requesterNickname = requesterNickname,
+            cafeId = cafeId,
+            cafeName = cafeName,
+            location = location,
+            requestedAt = requestedAt,
+            message = message,
+            imageUrl = imageUrl
+        )
+    }
+
+    private suspend fun parsePendingCafeRegistrationClaimPreviewForAdmin(
+        document: JsonObject
+    ): PendingCafeRegistrationClaimPreview? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val status = fields.getFirestoreString("status").orEmpty()
+        if (!status.isPendingClaimStatus()) {
+            return null
+        }
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val claimId = name.substringAfterLast("/")
+        val requesterUserId = fields.getFirestoreString("userId") ?: return null
+        val requesterNickname = resolveUserNickname(requesterUserId)
+        val regionFields = fields.getFirestoreMap("region")
+        val city = regionFields?.getFirestoreString("city")
+            ?: fields.getFirestoreString("city")
+            ?: ""
+        val address = regionFields?.getFirestoreString("address")
+            ?: fields.getFirestoreString("address")
+            ?: ""
+        val location = listOf(city, address).filter { it.isNotBlank() }.joinToString(" ").ifBlank { "위치 정보 없음" }
+        val requestedAt = fields.getFirestoreString("requestedAt")
+            ?: fields.getFirestoreString("createdAt")
+            ?: ""
+        val message = fields.getFirestoreString("message")
+            ?: "관리자 승인 후 새 카페가 생성되고 운영 카페에 자동 연결됩니다."
+        return PendingCafeRegistrationClaimPreview(
+            claimId = claimId,
+            requesterUserId = requesterUserId,
+            requesterNickname = requesterNickname,
+            cafeName = fields.getFirestoreString("cafeName").orEmpty(),
+            location = location,
+            requestedAt = requestedAt,
+            message = message,
+            imageUrl = fields.getFirestoreString("thumbnailImage")
+        )
+    }
+
+    private suspend fun resolveUserNickname(userId: String): String {
+        val localUser = findUserById(userId)
+
+        if (localUser != null) {
+            return localUser.nickname
+        }
+        val remoteUser = fetchUser(userId)
+
+        if (remoteUser != null) {
+            return remoteUser.nickname
+        }
+        return "알 수 없음"
+    }
+
     private fun parseMyPageSummaryDocument(userId: String, document: JsonObject): MyPageSummary {
         val fields = document["fields"]?.jsonObject
         val statsField = fields?.getFirestoreMap("stats")
@@ -730,6 +870,18 @@ private fun String.isApprovedClaimStatus(): Boolean {
         || normalized == "승인"
         || normalized == "승인완료"
         || normalized == "승인_완료"
+}
+
+private fun String.isPendingClaimStatus(): Boolean {
+    val normalized = trim()
+        .uppercase()
+        .replace("-", "_")
+        .replace(" ", "_")
+    return normalized == "PENDING"
+        || normalized == "승인대기"
+        || normalized == "승인_대기"
+        || normalized == "승인대기중"
+        || normalized == "승인_대기_중"
 }
 
 private fun escapeFirestoreQueryString(value: String): String {

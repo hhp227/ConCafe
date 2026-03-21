@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -254,6 +255,7 @@ private fun PendingCafeRegistrationClaimCard(
         title = claim.cafeName,
         subtitle = claim.location,
         requestedAt = claim.requestedAt,
+        imageUrl = claim.imageUrl,
         onApprove = onApprove,
         onReject = onReject
     )
@@ -269,6 +271,7 @@ private fun PendingCafeOwnerClaimCard(
         title = "점장 권한 신청 - ${claim.requesterNickname}",
         subtitle = claim.location,
         requestedAt = claim.requestedAt,
+        imageUrl = claim.imageUrl,
         onApprove = onApprove,
         onReject = onReject
     )
@@ -279,6 +282,7 @@ private fun PendingClaimCard(
     title: String,
     subtitle: String,
     requestedAt: String,
+    imageUrl: String?,
     onApprove: () -> Unit,
     onReject: () -> Unit
 ) {
@@ -299,7 +303,12 @@ private fun PendingClaimCard(
                             colors = listOf(Color(0xFFFFE7EF), Color(0xFFF4D8E2))
                         )
                     )
-            )
+            ) {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)

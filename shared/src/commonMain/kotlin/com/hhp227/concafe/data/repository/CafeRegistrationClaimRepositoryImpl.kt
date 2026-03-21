@@ -71,14 +71,7 @@ class CafeRegistrationClaimRepositoryImpl(
     }
 
     override suspend fun getPendingCafeRegistrationClaims(): List<PendingCafeRegistrationClaimPreview> {
-        return cafeDataSource.pendingCafeRegistrationClaimsByUser
-            .flatMap { (userId, claims) ->
-                claims.filter { it.status == PENDING_STATUS }.mapNotNull { claim ->
-                    val user = authDataSource.findUserById(userId) ?: return@mapNotNull null
-                    claim.toPreview(userId = userId, requesterNickname = user.nickname)
-                }
-            }
-            .sortedByDescending { it.requestedAt }
+        return firestoreSyncDataSource.fetchPendingCafeRegistrationClaimsForAdmin()
     }
 
     override suspend fun approveCafeRegistrationClaim(claimId: String, reviewedBy: String): PendingCafeRegistrationClaimPreview {
