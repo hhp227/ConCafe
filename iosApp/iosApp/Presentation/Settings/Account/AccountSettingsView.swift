@@ -24,6 +24,8 @@ struct AccountSettingsView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToMain:
+                onNavigationAction(.navigateToMain())
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
             case .navigateToChangePassword:

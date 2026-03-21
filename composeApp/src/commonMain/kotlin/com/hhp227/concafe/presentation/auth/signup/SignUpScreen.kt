@@ -54,7 +54,7 @@ fun SignUpScreen(
         viewModel.event.collect { event ->
             when (event) {
                 SignUpEvent.NavigateBack -> onNavigate(NavigationAction.NavigateBack)
-                SignUpEvent.SignedUp -> onNavigate(NavigationAction.NavigateBack)
+                SignUpEvent.SignedUp -> onNavigate(NavigationAction.NavigateToMain())
             }
         }
     }

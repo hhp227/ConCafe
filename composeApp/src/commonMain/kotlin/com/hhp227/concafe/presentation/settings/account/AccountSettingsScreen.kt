@@ -76,6 +76,7 @@ fun AccountSettingsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 AccountSettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                AccountSettingsEvent.NavigateToMain -> onNavigationAction(NavigationAction.NavigateToMain())
                 is AccountSettingsEvent.NavigateToCastEdit -> {
                     onNavigationAction(
                         NavigationAction.NavigateToCastEdit(

@@ -124,8 +124,7 @@ final class AccountSettingsViewModel: ObservableObject {
                     uiState.isDeleteDialogVisible = false
                     uiState.deletePassword = ""
                     uiState.deletePasswordErrorMessage = nil
-                    event.send(.navigateBack)
-                    event.send(.navigateBack)
+                    event.send(.navigateToMain)
                 }
             } catch {
                 if Task.isCancelled { return }

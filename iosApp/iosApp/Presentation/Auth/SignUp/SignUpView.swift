@@ -23,7 +23,7 @@ struct SignUpView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .signedUp:
-                onNavigationAction(.navigateBack)
+                onNavigationAction(.navigateToMain())
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             }

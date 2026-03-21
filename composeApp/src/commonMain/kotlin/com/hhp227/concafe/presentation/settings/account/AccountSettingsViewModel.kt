@@ -141,8 +141,7 @@ class AccountSettingsViewModel(
                             deletePassword = ""
                         )
                     }
-                    _event.emit(AccountSettingsEvent.NavigateBack)
-                    _event.emit(AccountSettingsEvent.NavigateBack)
+                    _event.emit(AccountSettingsEvent.NavigateToMain)
                 }
 
                 is AppResult.Failure -> {
