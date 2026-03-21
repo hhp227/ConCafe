@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 import Shared
 
 struct CheckInView: View {
@@ -112,31 +113,47 @@ private struct CheckInGuestContentView: View {
                 .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
                 CheckInSectionTitle(title: "🔥 인기 컨셉 카페", trailing: nil)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 14) {
-                        ForEach(uiState.popularCafes, id: \.id) { cafe in
-                            CafeSummaryCard(
-                                name: cafe.name,
-                                rating: String(format: "%.1f", cafe.rating),
-                                location: cafe.locationLabel,
-                                thumbnailImage: nil,
-                                trailingLabel: "체크인 \(cafe.checkInCount)",
-                                onTap: { onAction(.cafeTapped(id: cafe.id)) }
-                            )
-                            .frame(width: 220)
+                if !uiState.popularCafes.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 14) {
+                            ForEach(uiState.popularCafes, id: \.id) { cafe in
+                                CafeSummaryCard(
+                                    name: cafe.name,
+                                    rating: String(format: "%.1f", cafe.rating),
+                                    location: cafe.locationLabel,
+                                    thumbnailImage: nil,
+                                    trailingLabel: "체크인 \(cafe.checkInCount)",
+                                    onTap: { onAction(.cafeTapped(id: cafe.id)) }
+                                )
+                                .frame(width: 220)
+                            }
                         }
+                        .padding(.horizontal, 16)
                     }
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title: "인기 카페가 아직 없어요",
+                        description: "주변 카페 데이터가 들어오면 여기에 표시됩니다."
+                    )
                     .padding(.horizontal, 16)
                 }
                 CheckInSectionTitle(title: "☕ 오늘 인기 캐스트", trailing: nil)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(uiState.popularCasts, id: \.id) { cast in
-                            CheckInCastCard(cast: cast) {
-                                onAction(.castTapped(id: cast.id))
+                if !uiState.popularCasts.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(uiState.popularCasts, id: \.id) { cast in
+                                CheckInCastCard(cast: cast) {
+                                    onAction(.castTapped(id: cast.id))
+                                }
                             }
                         }
+                        .padding(.horizontal, 16)
                     }
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title: "인기 캐스트가 아직 없어요",
+                        description: "활동이 누적되면 추천 캐스트를 볼 수 있어요."
+                    )
                     .padding(.horizontal, 16)
                 }
                 if let errorMessage = uiState.errorMessage {
@@ -191,14 +208,10 @@ private struct CheckInMapSection: View {
 
     let onCheckInTap: () -> Void
 
-    private let markerPositions: [CGPoint] = [
-        CGPoint(x: 0.18, y: 0.18),
-        CGPoint(x: 0.82, y: 0.28),
-        CGPoint(x: 0.22, y: 0.56),
-        CGPoint(x: 0.50, y: 0.50),
-        CGPoint(x: 0.80, y: 0.46),
-        CGPoint(x: 0.36, y: 0.82)
-    ]
+    @State private var mapRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+        span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+    )
 
     var body: some View {
         VStack(spacing: 14) {
@@ -220,27 +233,25 @@ private struct CheckInMapSection: View {
                     .buttonStyle(.bordered)
                     .tint(Color(hex: "EF6797"))
             }
-            GeometryReader { geometry in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "FFDDEB"), Color(hex: "FFF5F9"), Color(hex: "FFE8F1")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+            GeometryReader { _ in
+                Map(
+                    coordinateRegion: $mapRegion,
+                    annotationItems: mapPins
+                ) { pin in
+                    MapAnnotation(
+                        coordinate: CLLocationCoordinate2D(
+                            latitude: pin.latitude,
+                            longitude: pin.longitude
                         )
-                    ForEach(Array(cafes.prefix(6).enumerated()), id: \.element.id) { index, cafe in
-                        let position = markerPositions[index]
-
+                    ) {
                         Button {
-                            onCafeTap(cafe.id)
+                            onCafeTap(pin.id)
                         } label: {
                             HStack(spacing: 6) {
                                 Circle()
                                     .fill(Color(hex: "EF6797"))
                                     .frame(width: 10, height: 10)
-                                Text(cafe.name)
+                                Text(pin.name)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(Color(hex: "4E4750"))
                                     .lineLimit(1)
@@ -252,11 +263,14 @@ private struct CheckInMapSection: View {
                             .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
                         }
                         .buttonStyle(.plain)
-                        .position(
-                            x: geometry.size.width * position.x,
-                            y: geometry.size.height * position.y
-                        )
                     }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .onAppear {
+                    mapRegion = resolvedMapRegion(cafes: cafes)
+                }
+                .onChange(of: cafes.count) { _ in
+                    mapRegion = resolvedMapRegion(cafes: cafes)
                 }
             }
             .frame(height: 240)
@@ -276,6 +290,57 @@ private struct CheckInMapSection: View {
         )
         .padding(.horizontal, 16)
     }
+
+    private var mapPins: [CheckInMapPin] {
+        return cafes.map { cafe in
+            CheckInMapPin(
+                id: cafe.id,
+                name: cafe.name,
+                latitude: cafe.geoPoint.latitude,
+                longitude: cafe.geoPoint.longitude
+            )
+        }
+    }
+
+    private func resolvedMapRegion(cafes: [CheckInCafeSummary]) -> MKCoordinateRegion {
+        if cafes.isEmpty {
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+                span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+            )
+        } else if cafes.count == 1 {
+            let first = cafes[0]
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: first.geoPoint.latitude,
+                    longitude: first.geoPoint.longitude
+                ),
+                span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)
+            )
+        } else {
+            let latitudes = cafes.map { $0.geoPoint.latitude }
+            let longitudes = cafes.map { $0.geoPoint.longitude }
+            let minLatitude = latitudes.min() ?? 37.5
+            let maxLatitude = latitudes.max() ?? 37.6
+            let minLongitude = longitudes.min() ?? 126.9
+            let maxLongitude = longitudes.max() ?? 127.1
+            let centerLatitude = (minLatitude + maxLatitude) / 2.0
+            let centerLongitude = (minLongitude + maxLongitude) / 2.0
+            let latitudeDelta = max(0.03, (maxLatitude - minLatitude) * 1.7)
+            let longitudeDelta = max(0.03, (maxLongitude - minLongitude) * 1.7)
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude),
+                span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            )
+        }
+    }
+}
+
+private struct CheckInMapPin: Identifiable {
+    let id: String
+    let name: String
+    let latitude: Double
+    let longitude: Double
 }
 
 private struct CheckInLoginPromotionSection: View {
@@ -851,6 +916,28 @@ private struct CheckInNewVisitSheet: View {
 
     private func formatVisitTime(_ date: Date) -> String {
         return TimeUtils.formatHourMinute(date)
+    }
+}
+
+private struct CheckInSectionPlaceholderCard: View {
+    let title: String
+
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color(hex: "5B4F57"))
+            Text(description)
+            .font(.caption)
+            .foregroundStyle(Color(hex: "857A82"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color(hex: "FFF2F7"))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

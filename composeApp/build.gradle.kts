@@ -32,6 +32,8 @@ kotlin {
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.googleid)
+            implementation(libs.google.play.services.maps)
+            implementation(libs.google.maps.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
