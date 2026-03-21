@@ -85,9 +85,6 @@
 		0A400E252F655F4F00BD41C7 /* InquiryUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E242F655F4F00BD41C7 /* InquiryUiState.swift */; };
 		0A400E272F655F6900BD41C7 /* InquiryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400E262F655F6900BD41C7 /* InquiryViewModel.swift */; };
 		0A47F5962F6D684F00EA453E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */; };
-		0A47F5992F6D6AFF00EA453E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0A47F5982F6D6AFF00EA453E /* FirebaseFirestore */; };
-		0A47F59B2F6D6AFF00EA453E /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0A47F59A2F6D6AFF00EA453E /* FirebaseFirestoreSwift */; };
-		0A47F59D2F6D6AFF00EA453E /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0A47F59C2F6D6AFF00EA453E /* FirebaseStorage */; };
 		0A48CF112F66A25E00ED21AA /* ChangePasswordUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */; };
 		0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */; };
 		0A48CF152F66A29D00ED21AA /* ChangePasswordEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF142F66A29D00ED21AA /* ChangePasswordEvent.swift */; };
@@ -409,9 +406,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A9A0B182F6B2B2500B69B62 /* KMPNativeCoroutinesAsync in Frameworks */,
-				0A47F59D2F6D6AFF00EA453E /* FirebaseStorage in Frameworks */,
-				0A47F5992F6D6AFF00EA453E /* FirebaseFirestore in Frameworks */,
-				0A47F59B2F6D6AFF00EA453E /* FirebaseFirestoreSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -982,9 +976,6 @@
 			name = iosApp;
 			packageProductDependencies = (
 				0A9A0B172F6B2B2500B69B62 /* KMPNativeCoroutinesAsync */,
-				0A47F5982F6D6AFF00EA453E /* FirebaseFirestore */,
-				0A47F59A2F6D6AFF00EA453E /* FirebaseFirestoreSwift */,
-				0A47F59C2F6D6AFF00EA453E /* FirebaseStorage */,
 			);
 			productName = iosApp;
 			productReference = FEA9D4AD37B8EF9BE110840A /* ConCafe.app */;
@@ -1016,7 +1007,6 @@
 			mainGroup = FBFDA0ED57CE363227DB6AC1;
 			packageReferences = (
 				0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */,
-				0A47F5972F6D6AFF00EA453E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = 7332ACCB08708982CBFABD2D /* Products */;
 			projectDirPath = "";
@@ -1485,14 +1475,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		0A47F5972F6D6AFF00EA453E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 9.0.0;
-			};
-		};
 		0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rickclephas/KMP-NativeCoroutines.git";
@@ -1504,21 +1486,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0A47F5982F6D6AFF00EA453E /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0A47F5972F6D6AFF00EA453E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		0A47F59A2F6D6AFF00EA453E /* FirebaseFirestoreSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0A47F5972F6D6AFF00EA453E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestoreSwift;
-		};
-		0A47F59C2F6D6AFF00EA453E /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0A47F5972F6D6AFF00EA453E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
 		0A9A0B172F6B2B2500B69B62 /* KMPNativeCoroutinesAsync */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
