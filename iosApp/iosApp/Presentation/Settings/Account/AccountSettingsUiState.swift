@@ -15,6 +15,7 @@ struct AccountSettingsUiState {
     var nicknameInput: String
     var isDeleteDialogVisible: Bool
     var deletePassword: String
+    var deletePasswordErrorMessage: String?
     var isDeleteRequested: Bool
 
     var role: UserRole? {
@@ -28,6 +29,7 @@ struct AccountSettingsUiState {
         nicknameInput: "",
         isDeleteDialogVisible: false,
         deletePassword: "",
+        deletePasswordErrorMessage: nil,
         isDeleteRequested: false
     )
 }

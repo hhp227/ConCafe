@@ -99,7 +99,8 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = true,
-                deletePassword = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
@@ -108,7 +109,8 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = false,
-                deletePassword = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
@@ -119,11 +121,9 @@ class AccountSettingsViewModel(
         if (state.deletePassword.isBlank()) {
             _uiState.update {
                 it.copy(
-                    isDeleteDialogVisible = false,
-                    deletePassword = ""
+                    deletePasswordErrorMessage = "회원 비밀번호를 입력해 주세요."
                 )
             }
-            emitMessage("회원 비밀번호를 입력해 주세요.")
             return
         }
 
@@ -152,11 +152,9 @@ class AccountSettingsViewModel(
                         it.copy(
                             isLoading = false,
                             errorMessage = null,
-                            isDeleteDialogVisible = false,
-                            deletePassword = ""
+                            deletePasswordErrorMessage = message
                         )
                     }
-                    _event.emit(AccountSettingsEvent.ShowMessage(message))
                 }
             }
         }
@@ -178,7 +176,10 @@ class AccountSettingsViewModel(
             AccountSettingsAction.ClickShowDeleteDialog -> clickShowDeleteDialog()
             AccountSettingsAction.ClickDismissDeleteDialog -> clickDismissDeleteDialog()
             is AccountSettingsAction.ChangeDeletePassword -> _uiState.update {
-                it.copy(deletePassword = action.value)
+                it.copy(
+                    deletePassword = action.value,
+                    deletePasswordErrorMessage = null
+                )
             }
             AccountSettingsAction.ClickDeleteAccount -> clickDeleteAccount()
         }

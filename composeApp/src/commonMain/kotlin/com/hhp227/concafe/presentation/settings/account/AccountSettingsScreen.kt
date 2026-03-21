@@ -95,6 +95,7 @@ fun AccountSettingsScreen(
     if (uiState.isDeleteDialogVisible) {
         DeleteAccountDialog(
             password = uiState.deletePassword,
+            errorMessage = uiState.deletePasswordErrorMessage,
             onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeletePassword(it)) },
             onDismiss = { viewModel.onAction(AccountSettingsAction.ClickDismissDeleteDialog) },
             onConfirm = { viewModel.onAction(AccountSettingsAction.ClickDeleteAccount) }
@@ -460,6 +461,7 @@ private fun AccountMetaRow(
 @Composable
 private fun DeleteAccountDialog(
     password: String,
+    errorMessage: String?,
     onValueChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -484,6 +486,13 @@ private fun DeleteAccountDialog(
                     placeholder = "비밀번호 입력",
                     isPassword = true
                 )
+                if (!errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFD1436F)
+                    )
+                }
             }
         },
         confirmButton = {

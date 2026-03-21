@@ -87,6 +87,7 @@ private struct AccountSettingsContentView: View {
                     get: { uiState.deletePassword },
                     set: { onAction(.deletePasswordChanged($0)) }
                 ),
+                errorMessage: uiState.deletePasswordErrorMessage,
                 onDismiss: { onAction(.dismissDeleteDialogTapped) },
                 onDelete: { onAction(.deleteAccountTapped) }
             )
@@ -386,6 +387,8 @@ private extension UserRole {
 private struct AccountDeleteConfirmationSheet: View {
     @Binding var passwordText: String
 
+    let errorMessage: String?
+
     let onDismiss: () -> Void
 
     let onDelete: () -> Void
@@ -407,6 +410,12 @@ private struct AccountDeleteConfirmationSheet: View {
                     isSecure: true
                 )
                 .textInputAutocapitalization(.never)
+                if let errorMessage, !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(Color.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 HStack(spacing: 12) {
                     Button(action: onDismiss) {
                         Text("취소")

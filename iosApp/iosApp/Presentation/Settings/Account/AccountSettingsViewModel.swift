@@ -88,18 +88,18 @@ final class AccountSettingsViewModel: ObservableObject {
     private func showDeleteDialog() {
         uiState.isDeleteDialogVisible = true
         uiState.deletePassword = ""
+        uiState.deletePasswordErrorMessage = nil
     }
 
     private func dismissDeleteDialog() {
         uiState.isDeleteDialogVisible = false
         uiState.deletePassword = ""
+        uiState.deletePasswordErrorMessage = nil
     }
 
     private func deleteAccount() {
         if uiState.deletePassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            uiState.isDeleteDialogVisible = false
-            uiState.deletePassword = ""
-            emitMessage("회원 비밀번호를 입력해 주세요.")
+            uiState.deletePasswordErrorMessage = "회원 비밀번호를 입력해 주세요."
             return
         }
 
@@ -116,15 +116,14 @@ final class AccountSettingsViewModel: ObservableObject {
                     let message = mapDeleteFailureMessage(failure)
                     uiState.isLoading = false
                     uiState.errorMessage = nil
-                    uiState.isDeleteDialogVisible = false
-                    uiState.deletePassword = ""
-                    emitMessage(message)
+                    uiState.deletePasswordErrorMessage = message
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.isDeleteRequested = true
                     uiState.isDeleteDialogVisible = false
                     uiState.deletePassword = ""
+                    uiState.deletePasswordErrorMessage = nil
                     event.send(.navigateBack)
                     event.send(.navigateBack)
                 }
@@ -155,6 +154,7 @@ final class AccountSettingsViewModel: ObservableObject {
             dismissDeleteDialog()
         case .deletePasswordChanged(let value):
             uiState.deletePassword = value
+            uiState.deletePasswordErrorMessage = nil
         case .deleteAccountTapped:
             deleteAccount()
         }
