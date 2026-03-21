@@ -39,6 +39,11 @@ class PersistedFirebaseAuthTokenProvider(
         return currentSession?.userId ?: delegate.getCurrentUserId()
     }
 
+    override fun getCurrentUserEmail(): String? {
+        val currentSession = cachedSession
+        return currentSession?.email ?: delegate.getCurrentUserEmail()
+    }
+
     override fun supportsEmailPasswordAuth(): Boolean {
         return delegate.supportsEmailPasswordAuth()
     }

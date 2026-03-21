@@ -64,6 +64,10 @@ class FirebaseAuthRestTokenProvider(
         return currentSession?.userId
     }
 
+    override fun getCurrentUserEmail(): String? {
+        return currentSession?.email
+    }
+
     override fun supportsEmailPasswordAuth(): Boolean {
         return apiKey.isNotBlank()
     }

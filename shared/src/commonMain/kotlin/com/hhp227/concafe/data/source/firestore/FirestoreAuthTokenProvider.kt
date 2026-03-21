@@ -17,6 +17,8 @@ interface FirestoreAuthTokenProvider {
 
     fun getCurrentUserId(): String?
 
+    fun getCurrentUserEmail(): String?
+
     fun supportsEmailPasswordAuth(): Boolean
 }
 
@@ -37,6 +39,10 @@ class NoOpFirestoreAuthTokenProvider : FirestoreAuthTokenProvider {
     }
 
     override fun getCurrentUserId(): String? {
+        return null
+    }
+
+    override fun getCurrentUserEmail(): String? {
         return null
     }
 

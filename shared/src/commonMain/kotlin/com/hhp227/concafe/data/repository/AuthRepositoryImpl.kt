@@ -169,13 +169,39 @@ class AuthRepositoryImpl(
         if (localUser != null) {
             return localUser
         }
-        val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId) ?: return null
-        val replaced = authDataSource.replaceUser(remoteUser)
+
+        val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
+
+        if (remoteUser != null) {
+            val replaced = authDataSource.replaceUser(remoteUser)
+
+            if (!replaced) {
+                authDataSource.addUser(remoteUser)
+            }
+            return remoteUser
+        }
+
+        val currentUserEmail = authTokenProvider.getCurrentUserEmail()
+
+        if (currentUserEmail.isNullOrBlank()) {
+            return null
+        }
+
+        val restoredUser = User(
+            id = currentUserId,
+            email = currentUserEmail,
+            nickname = currentUserEmail.substringBefore("@").ifBlank { "유저" },
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = nowIsoUtc()
+        )
+        val replaced = authDataSource.replaceUser(restoredUser)
 
         if (!replaced) {
-            authDataSource.addUser(remoteUser)
+            authDataSource.addUser(restoredUser)
         }
-        return remoteUser
+        return restoredUser
     }
 }
 
