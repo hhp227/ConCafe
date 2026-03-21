@@ -205,7 +205,10 @@ class FirestoreCacheDataSource :
             name = update.name,
             desc = update.description,
             thumbnailImage = representativeImage,
-            region = currentCafe.region.copy(address = update.address)
+            region = currentCafe.region.copy(
+                address = update.address,
+                location = update.location ?: currentCafe.region.location
+            )
         )
         val updatedDetail = currentDetail.copy(
             cafe = updatedCafe,

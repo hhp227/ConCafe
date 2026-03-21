@@ -20,11 +20,13 @@ import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
@@ -117,6 +119,40 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
         restApi.delete(path, idToken)
+    }
+
+    override suspend fun pushCafeRegistrationClaim(
+        requesterUserId: String,
+        claim: CafeRegistrationClaim
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/${claim.claimId}"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(requesterUserId),
+                "cafeName" to firestoreString(claim.cafeName),
+                "description" to firestoreString(claim.description),
+                "thumbnailImage" to firestoreNullableString(claim.thumbnailImage),
+                "conceptType" to firestoreString(claim.conceptType),
+                "businessHours" to firestoreString(claim.businessHours),
+                "phoneNumber" to firestoreString(claim.phoneNumber),
+                "requestedAt" to firestoreString(claim.requestedAt),
+                "status" to firestoreString(claim.status),
+                "message" to firestoreString(claim.message),
+                "region" to firestoreMap(
+                    mapOf(
+                        "country" to firestoreString(claim.region.country),
+                        "city" to firestoreString(claim.region.city),
+                        "address" to firestoreString(claim.region.address),
+                        "location" to firestoreGeoPoint(
+                            latitude = claim.region.location.latitude,
+                            longitude = claim.region.location.longitude
+                        )
+                    )
+                )
+            )
+        )
+        restApi.patch(path, body, idToken)
     }
 
     override suspend fun pushHomeBanner(banner: HomeBanner) {
@@ -476,15 +512,45 @@ private fun firestoreLong(value: Long): JsonObject {
     return JsonObject(mapOf("integerValue" to JsonPrimitive(value.toString())))
 }
 
+private fun firestoreMap(fields: Map<String, JsonElement>): JsonObject {
+    return JsonObject(
+        mapOf(
+            "mapValue" to JsonObject(
+                mapOf(
+                    "fields" to JsonObject(fields)
+                )
+            )
+        )
+    )
+}
+
+private fun firestoreGeoPoint(latitude: Double, longitude: Double): JsonObject {
+    return JsonObject(
+        mapOf(
+            "geoPointValue" to JsonObject(
+                mapOf(
+                    "latitude" to JsonPrimitive(latitude),
+                    "longitude" to JsonPrimitive(longitude)
+                )
+            )
+        )
+    )
+}
+
 private fun String.toUserRoleOrNull(): UserRole? {
-    return when (this) {
-        "ADMIN" -> UserRole.ADMIN
-        "CAFE_OWNER" -> UserRole.CAFE_OWNER
-        "CAST" -> UserRole.CAST
-        "VISITOR" -> UserRole.VISITOR
+    val normalized = trim()
+        .uppercase()
+        .replace("-", "_")
+        .replace(" ", "_")
+    return when (normalized) {
+        "ADMIN", "ROLE_ADMIN" -> UserRole.ADMIN
+        "CAFE_OWNER", "CAFEOWNER", "OWNER", "ROLE_CAFE_OWNER" -> UserRole.CAFE_OWNER
+        "CAST", "ROLE_CAST" -> UserRole.CAST
+        "VISITOR", "GUEST", "ROLE_VISITOR" -> UserRole.VISITOR
         else -> null
     }
 }
+
 
 private fun String.toBannerLinkTargetTypeOrNull(): BannerLinkTargetType? {
     return when (this) {

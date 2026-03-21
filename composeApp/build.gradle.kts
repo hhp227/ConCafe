@@ -1,5 +1,22 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.internal.os.OperatingSystem
+
+val javafxPlatform = when {
+    OperatingSystem.current().isWindows -> "win"
+    OperatingSystem.current().isMacOsX -> "mac"
+    else -> "linux"
+}
+
+val androidGoogleMapsXml = file("src/androidMain/res/values/google_maps.xml")
+val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
+    val xmlContent = androidGoogleMapsXml.readText()
+    val keyPattern = Regex("""<string\s+name=["']google_maps_api_key["'][^>]*>([^<]+)</string>""")
+    val matchedKey = keyPattern.find(xmlContent)?.groupValues?.get(1)?.trim().orEmpty()
+    matchedKey
+} else {
+    ""
+}
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -55,6 +72,12 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation("${libs.javafx.base.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            implementation("${libs.javafx.graphics.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            implementation("${libs.javafx.controls.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            implementation("${libs.javafx.swing.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            implementation("${libs.javafx.web.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            implementation("${libs.javafx.media.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
         }
     }
 }
@@ -95,6 +118,9 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.hhp227.concafe.MainKt"
+        if (googleMapsJavascriptApiKey.isNotBlank()) {
+            jvmArgs("-Dgoogle.maps.api.key=$googleMapsJavascriptApiKey")
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

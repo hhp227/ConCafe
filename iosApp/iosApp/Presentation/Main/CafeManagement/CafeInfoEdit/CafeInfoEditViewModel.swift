@@ -52,6 +52,8 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
+                    uiState.mapLatitude = detail.cafe.region.location.latitude
+                    uiState.mapLongitude = detail.cafe.region.location.longitude
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
@@ -107,6 +109,10 @@ final class CafeInfoEditViewModel: ObservableObject {
                         description: uiState.cafeDescription,
                         representativeImageUrl: uploadedRepresentativeImage,
                         galleryImages: uploadedGalleryImages,
+                        location: GeoPoint(
+                            latitude: uiState.mapLatitude,
+                            longitude: uiState.mapLongitude
+                        ),
                         address: uiState.address,
                         contactNumber: uiState.contactNumber,
                         weekdayOpen: uiState.weekdayOpen,
@@ -128,6 +134,8 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
+                    uiState.mapLatitude = detail.cafe.region.location.latitude
+                    uiState.mapLongitude = detail.cafe.region.location.longitude
                     uiState.contactNumber = detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
@@ -172,7 +180,10 @@ final class CafeInfoEditViewModel: ObservableObject {
                             country: "KR",
                             city: "Seoul",
                             address: uiState.address.trimmingCharacters(in: .whitespacesAndNewlines),
-                            location: GeoPoint(latitude: 37.5665, longitude: 126.9780)
+                            location: GeoPoint(
+                                latitude: uiState.mapLatitude,
+                                longitude: uiState.mapLongitude
+                            )
                         ),
                         thumbnailImage: uploadedRepresentativeImage,
                         conceptType: "MAID",
@@ -250,7 +261,10 @@ final class CafeInfoEditViewModel: ObservableObject {
         case .clickAddGalleryImage:
             break
         case .clickPinLocation:
-            showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
+            showInfo("지도를 탭해서 위치를 지정해 주세요.")
+        case .setPinnedLocation(let latitude, let longitude):
+            uiState.mapLatitude = latitude
+            uiState.mapLongitude = longitude
         case .clickManageExceptionDates:
             showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
         case .dismissImageRequiredAlert:

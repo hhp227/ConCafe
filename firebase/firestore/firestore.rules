@@ -34,6 +34,22 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    match /cafeRegistrationClaims/{claimId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /cafeOwnerClaims/{claimId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

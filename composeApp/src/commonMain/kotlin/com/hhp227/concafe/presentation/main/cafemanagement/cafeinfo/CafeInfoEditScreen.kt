@@ -27,6 +27,8 @@ import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import kotlin.math.round
+import kotlinx.coroutines.launch
 
 @Composable
 fun CafeInfoEditScreen(
@@ -79,6 +81,8 @@ private fun CafeInfoEditContent(
     onAction: (CafeInfoEditAction) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = {
@@ -281,7 +285,30 @@ private fun CafeInfoEditContent(
                                 label = "지역 / 주소",
                                 value = uiState.address,
                                 trailingIcon = {
-                                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFEF6797))
+                                    IconButton(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                val resolved = resolveCafeAddress(uiState.address)
+                                                if (resolved == null) {
+                                                    snackbarHostState.showSnackbar("입력한 주소를 찾지 못했습니다.")
+                                                } else {
+                                                    onAction(
+                                                        CafeInfoEditAction.SetPinnedLocation(
+                                                            resolved.latitude,
+                                                            resolved.longitude
+                                                        )
+                                                    )
+                                                    onAction(CafeInfoEditAction.ChangeAddress(resolved.fullAddress))
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.LocationOn,
+                                            contentDescription = "주소로 위치 찾기",
+                                            tint = Color(0xFFEF6797)
+                                        )
+                                    }
                                 },
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeAddress(it)) }
                             )
@@ -291,14 +318,19 @@ private fun CafeInfoEditContent(
                                     .height(160.dp)
                                     .background(Color(0xFFF4EFF2), RoundedCornerShape(18.dp))
                             ) {
-                                Column(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFFB5A9B0), modifier = Modifier.size(36.dp))
-                                    Text("지도 미리보기", color = Color(0xFF998D95))
-                                }
+                                CafeInfoLocationPickerMap(
+                                    latitude = uiState.mapLatitude,
+                                    longitude = uiState.mapLongitude,
+                                    onLocationSelected = { latitude, longitude, address ->
+                                        onAction(CafeInfoEditAction.SetPinnedLocation(latitude, longitude))
+                                        if (!address.isNullOrBlank()) {
+                                            onAction(CafeInfoEditAction.ChangeAddress(address))
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(18.dp))
+                                )
                                 Surface(
                                     modifier = Modifier
                                         .align(Alignment.BottomEnd)
@@ -316,6 +348,11 @@ private fun CafeInfoEditContent(
                                     )
                                 }
                             }
+                            Text(
+                                text = "선택 좌표: ${formatCoordinate(uiState.mapLatitude)}, ${formatCoordinate(uiState.mapLongitude)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF7E737B)
+                            )
                             CafeInfoTextField(
                                 label = "연락처",
                                 value = uiState.contactNumber,
@@ -354,6 +391,11 @@ private fun CafeInfoEditContent(
             }
         }
     }
+}
+
+private fun formatCoordinate(value: Double): String {
+    val rounded = round(value * 100000.0) / 100000.0
+    return rounded.toString()
 }
 
 @Composable

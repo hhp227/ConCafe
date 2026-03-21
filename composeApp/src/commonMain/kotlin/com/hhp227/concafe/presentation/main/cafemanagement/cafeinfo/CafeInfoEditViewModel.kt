@@ -55,6 +55,8 @@ class CafeInfoEditViewModel(
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
                             galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
+                            mapLatitude = detail.cafe.region.location.latitude,
+                            mapLongitude = detail.cafe.region.location.longitude,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
@@ -117,6 +119,10 @@ class CafeInfoEditViewModel(
                         description = currentState.cafeDescription,
                         representativeImageUrl = uploadedRepresentativeImage,
                         galleryImages = uploadedGalleryImages,
+                        location = GeoPoint(
+                            latitude = currentState.mapLatitude,
+                            longitude = currentState.mapLongitude
+                        ),
                         address = currentState.address,
                         contactNumber = currentState.contactNumber,
                         weekdayOpen = currentState.weekdayOpen,
@@ -139,6 +145,8 @@ class CafeInfoEditViewModel(
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
                             galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
+                            mapLatitude = detail.cafe.region.location.latitude,
+                            mapLongitude = detail.cafe.region.location.longitude,
                             contactNumber = detail.phoneNumber,
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
@@ -186,7 +194,10 @@ class CafeInfoEditViewModel(
                             country = "KR",
                             city = "Seoul",
                             address = currentState.address.trim(),
-                            location = GeoPoint(37.5665, 126.9780)
+                            location = GeoPoint(
+                                latitude = currentState.mapLatitude,
+                                longitude = currentState.mapLongitude
+                            )
                         ),
                         thumbnailImage = uploadedRepresentativeImage,
                         conceptType = "MAID",
@@ -235,6 +246,12 @@ class CafeInfoEditViewModel(
             is CafeInfoEditAction.ChangeCafeName -> _uiState.update { it.copy(cafeName = action.value) }
             is CafeInfoEditAction.ChangeCafeDescription -> _uiState.update { it.copy(cafeDescription = action.value) }
             is CafeInfoEditAction.ChangeAddress -> _uiState.update { it.copy(address = action.value) }
+            is CafeInfoEditAction.SetPinnedLocation -> _uiState.update {
+                it.copy(
+                    mapLatitude = action.latitude,
+                    mapLongitude = action.longitude
+                )
+            }
             is CafeInfoEditAction.ChangeContactNumber -> _uiState.update { it.copy(contactNumber = action.value) }
             is CafeInfoEditAction.ChangeWeekdayOpen -> _uiState.update { it.copy(weekdayOpen = action.value) }
             is CafeInfoEditAction.ChangeWeekdayClose -> _uiState.update { it.copy(weekdayClose = action.value) }
@@ -261,7 +278,7 @@ class CafeInfoEditViewModel(
             }
             CafeInfoEditAction.ClickRepresentativeImage -> showInfo("대표 이미지 업로드는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.ClickAddGalleryImage -> showInfo("갤러리 이미지 추가는 다음 단계에서 연결됩니다.")
-            CafeInfoEditAction.ClickPinLocation -> showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
+            CafeInfoEditAction.ClickPinLocation -> showInfo("지도를 탭해서 위치를 지정해 주세요.")
             CafeInfoEditAction.ClickManageExceptionDates -> showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
             CafeInfoEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             CafeInfoEditAction.ClickSave -> saveCafeInfo()

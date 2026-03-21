@@ -1,9 +1,8 @@
-package com.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import java.awt.BorderLayout
 import java.io.File
 import javax.swing.JPanel
@@ -17,67 +16,77 @@ import javafx.scene.web.WebView
 import netscape.javascript.JSObject
 
 @Composable
-actual fun CheckInCafeMap(
-    cafes: List<CheckInCafeSummary>,
-    onCafeClick: (String) -> Unit,
+actual fun CafeInfoLocationPickerMap(
+    latitude: Double,
+    longitude: Double,
+    onLocationSelected: (latitude: Double, longitude: Double, address: String?) -> Unit,
     modifier: Modifier
 ) {
     SwingPanel(
         modifier = modifier,
         factory = {
-            JvmCheckInGoogleMapPanel()
+            JvmCafeInfoLocationPickerPanel()
         },
         update = { panel ->
             panel.bind(
-                cafes = cafes,
-                onCafeClick = onCafeClick
+                latitude = latitude,
+                longitude = longitude,
+                onLocationSelected = onLocationSelected
             )
         }
     )
 }
 
-private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
+private class JvmCafeInfoLocationPickerPanel : JPanel(BorderLayout()) {
     private var jfxPanel: JFXPanel? = null
 
     private var webEngine: WebEngine? = null
 
-    private var cafes: List<CheckInCafeSummary> = emptyList()
+    private var latitude: Double = 37.5665
 
-    private var onCafeClick: (String) -> Unit = {}
+    private var longitude: Double = 126.9780
+
+    private var onLocationSelected: (Double, Double, String?) -> Unit = { _, _, _ -> }
 
     private var isBridgeListenerAttached: Boolean = false
-
-    fun bind(cafes: List<CheckInCafeSummary>, onCafeClick: (String) -> Unit) {
-        this.cafes = cafes
-        this.onCafeClick = onCafeClick
-
-        if (webEngine != null) {
-            Platform.runLater {
-                renderMapHtml()
-            }
-        }
-    }
 
     private fun renderMapHtml() {
         val engine = webEngine ?: return
         val apiKey = resolveGoogleMapsApiKey()
-        val html = buildCheckInMapHtml(
+        val html = buildLocationPickerMapHtml(
             apiKey = apiKey,
-            cafes = cafes
+            latitude = latitude,
+            longitude = longitude
         )
 
-        if (isBridgeListenerAttached == false) {
+        if (!isBridgeListenerAttached) {
             engine.loadWorker.stateProperty().addListener { _, _, newState ->
                 if (newState == Worker.State.SUCCEEDED) {
                     val window = engine.executeScript("window") as? JSObject ?: return@addListener
-                    window.setMember("ConCafeBridge", CafeClickBridge { cafeId ->
-                        onCafeClick(cafeId)
+                    window.setMember("ConCafeBridge", LocationBridge { pickedLatitude, pickedLongitude, address ->
+                        onLocationSelected(pickedLatitude, pickedLongitude, address)
                     })
                 }
             }
             isBridgeListenerAttached = true
         }
         engine.loadContent(html)
+    }
+
+    fun bind(
+        latitude: Double,
+        longitude: Double,
+        onLocationSelected: (Double, Double, String?) -> Unit
+    ) {
+        this.latitude = latitude
+        this.longitude = longitude
+        this.onLocationSelected = onLocationSelected
+
+        if (webEngine != null) {
+            Platform.runLater {
+                renderMapHtml()
+            }
+        }
     }
 
     init {
@@ -98,19 +107,20 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
     }
 }
 
-private class CafeClickBridge(
-    private val onCafeClick: (String) -> Unit
+private class LocationBridge(
+    private val onLocationSelected: (Double, Double, String?) -> Unit
 ) {
-    fun onCafeClicked(cafeId: String) {
+    fun onLocationSelected(latitude: Double, longitude: Double, address: String?) {
         SwingUtilities.invokeLater {
-            onCafeClick(cafeId)
+            onLocationSelected(latitude, longitude, address)
         }
     }
 }
 
-private fun buildCheckInMapHtml(
+private fun buildLocationPickerMapHtml(
     apiKey: String,
-    cafes: List<CheckInCafeSummary>
+    latitude: Double,
+    longitude: Double
 ): String {
     if (apiKey.isBlank()) {
         return """
@@ -120,50 +130,49 @@ private fun buildCheckInMapHtml(
         """.trimIndent()
     }
 
-    val centerLatitude = cafes.map { it.geoPoint.latitude }.averageOrDefault(37.5665)
-    val centerLongitude = cafes.map { it.geoPoint.longitude }.averageOrDefault(126.9780)
-    val cafesJson = cafes.joinToString(prefix = "[", postfix = "]") { cafe ->
-        """
-        {
-          id: "${escapeJs(cafe.id)}",
-          name: "${escapeJs(cafe.name)}",
-          latitude: ${cafe.geoPoint.latitude},
-          longitude: ${cafe.geoPoint.longitude}
-        }
-        """.trimIndent()
-    }
-
     return """
         <!doctype html>
         <html>
           <head>
             <meta charset="utf-8" />
             <style>
-              html, body, #map { margin:0; padding:0; width:100%; height:100%; background:#fff5f9; }
+              html, body, #map { margin:0; padding:0; width:100%; height:100%; background:#f4eff2; }
             </style>
           </head>
           <body>
             <div id="map"></div>
             <script>
               let map;
+              let marker;
+              let geocoder;
               function initMap() {
-                const center = { lat: $centerLatitude, lng: $centerLongitude };
+                const selected = { lat: $latitude, lng: $longitude };
+                geocoder = new google.maps.Geocoder();
                 map = new google.maps.Map(document.getElementById("map"), {
-                  center: center,
-                  zoom: 13,
+                  center: selected,
+                  zoom: 15,
                   mapTypeControl: false,
                   streetViewControl: false
                 });
-                const cafes = $cafesJson;
-                cafes.forEach(function(cafe) {
-                  const marker = new google.maps.Marker({
-                    position: { lat: cafe.latitude, lng: cafe.longitude },
-                    map: map,
-                    title: cafe.name
-                  });
-                  marker.addListener("click", function() {
-                    if (window.ConCafeBridge && window.ConCafeBridge.onCafeClicked) {
-                      window.ConCafeBridge.onCafeClicked(cafe.id);
+                marker = new google.maps.Marker({
+                  position: selected,
+                  map: map,
+                  title: "선택한 위치"
+                });
+                map.addListener("click", function(event) {
+                  const picked = event.latLng;
+                  marker.setPosition(picked);
+                  geocoder.geocode({ location: picked }, function(results, status) {
+                    let address = "";
+                    if (status === "OK" && results && results.length > 0) {
+                      address = results[0].formatted_address;
+                    }
+                    if (window.ConCafeBridge && window.ConCafeBridge.onLocationSelected) {
+                      window.ConCafeBridge.onLocationSelected(
+                        picked.lat(),
+                        picked.lng(),
+                        address
+                      );
                     }
                   });
                 });
@@ -177,20 +186,20 @@ private fun buildCheckInMapHtml(
 
 private fun resolveGoogleMapsApiKey(): String {
     val fromEnv = System.getenv("GOOGLE_MAPS_API_KEY")?.trim().orEmpty()
+
     if (fromEnv.isNotBlank()) {
         return fromEnv
     }
-
     val fromProperty = System.getProperty("google.maps.api.key")?.trim().orEmpty()
+
     if (fromProperty.isNotBlank()) {
         return fromProperty
     }
-
     val fromAndroidXml = resolveGoogleMapsApiKeyFromAndroidXml()
+
     if (fromAndroidXml.isNotBlank()) {
         return fromAndroidXml
     }
-
     return ""
 }
 
@@ -214,15 +223,4 @@ private fun resolveGoogleMapsApiKeyFromAndroidXml(): String {
         }
     }
     return ""
-}
-
-private fun escapeJs(value: String): String {
-    return value
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", " ")
-}
-
-private fun List<Double>.averageOrDefault(default: Double): Double {
-    return if (isEmpty()) default else average()
 }
