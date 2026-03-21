@@ -180,27 +180,29 @@ private struct HomeContentView: View {
                     onAction: { onAction(.loadMoreNearbyCafes) }
                 )
                 ScrollView(.horizontal, showsIndicators: false) {
-                    if !uiState.nearbyCafes.isEmpty {
-                        LazyHGrid(
-                            rows: Array(repeating: GridItem(.fixed(92), spacing: 12), count: 3),
-                            alignment: .center,
-                            spacing: 12
-                        ) {
-                            ForEach(uiState.nearbyCafes, id: \.id) { cafe in
-                                NearByCafeItem(cafe: cafe)
-                                .frame(width: itemWidth, height: 92, alignment: .leading)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    onAction(.cafeTapped(id: cafe.id))
+                    Group {
+                        if !uiState.nearbyCafes.isEmpty {
+                            LazyHGrid(
+                                rows: Array(repeating: GridItem(.fixed(92), spacing: 12), count: 3),
+                                alignment: .center,
+                                spacing: 12
+                            ) {
+                                ForEach(uiState.nearbyCafes, id: \.id) { cafe in
+                                    NearByCafeItem(cafe: cafe)
+                                        .frame(width: itemWidth, height: 92, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            onAction(.cafeTapped(id: cafe.id))
+                                        }
                                 }
                             }
+                        } else {
+                            HomeSectionPlaceholderCard(
+                                title: "근처 카페가 아직 없어요",
+                                description: "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요."
+                            )
+                            .padding(.horizontal, 16)
                         }
-                    } else {
-                        HomeSectionPlaceholderCard(
-                            title: "근처 카페가 아직 없어요",
-                            description: "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요."
-                        )
-                        .padding(.horizontal, 16)
                     }
                     .padding(.horizontal, 16)
                 }
