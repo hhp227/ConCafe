@@ -9,8 +9,6 @@ import com.hhp227.concafe.data.source.firestore.createPlatformHttpClient
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-private const val FIREBASE_AUTH_API_KEY = "AIzaSyDK81bVr6DKDI6F9OFXWColSbANyrcWSSM"
-
 actual fun sharedPlatformModules(): List<Module> {
     return listOf(
         module {
@@ -18,7 +16,7 @@ actual fun sharedPlatformModules(): List<Module> {
             single<FirestoreRestApi> { KtorFirestoreRestApi(get()) }
             single<FirestoreAuthTokenProvider> {
                 FirebaseAuthRestTokenProvider(
-                    apiKey = FIREBASE_AUTH_API_KEY,
+                    apiKey = FIREBASE_WEB_API_KEY,
                     restClient = KtorFirebaseAuthRestClient(get())
                 )
             }
