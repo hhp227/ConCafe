@@ -49,11 +49,28 @@ class CafeRepositoryImpl(
 
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
         val cachedDetail = cafeDataSource.cafeDetail(cafeId)
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
 
         if (cachedDetail != null) {
+            val shouldRefresh = firestoreDataSource != null && (
+                cachedDetail.businessHours.isBlank() ||
+                    cachedDetail.phoneNumber.isBlank() ||
+                    cachedDetail.businessHours == "운영시간 정보 준비중" ||
+                    cachedDetail.phoneNumber == "연락처 정보 준비중"
+                )
+
+            if (shouldRefresh) {
+                runCatching {
+                    firestoreDataSource?.refreshCafeDetail(cafeId)
+                }
+                val refreshed = cafeDataSource.cafeDetail(cafeId)
+
+                if (refreshed != null) {
+                    return refreshed
+                }
+            }
             return cachedDetail
         }
-        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
 
         if (firestoreDataSource != null) {
             runCatching {

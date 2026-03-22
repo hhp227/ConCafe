@@ -773,6 +773,11 @@ class FirestoreConCafeDataSource(
                 "name" to firestoreString(claim.cafeName),
                 "desc" to firestoreString(claim.description),
                 "thumbnailImage" to firestoreNullableString(claim.thumbnailImage),
+                "images" to firestoreStringArray(
+                    listOfNotNull(claim.thumbnailImage?.trim()?.takeIf { value -> value.isNotEmpty() })
+                ),
+                "businessHours" to firestoreString(claim.businessHours),
+                "phoneNumber" to firestoreString(claim.phoneNumber),
                 "approved" to firestoreBoolean(true),
                 "conceptType" to firestoreString(claim.conceptType),
                 "ratingAvg" to firestoreLong(0),
@@ -1092,9 +1097,15 @@ class FirestoreConCafeDataSource(
 
     private fun parseCafeDetailMetadata(document: JsonObject): CafeDetailMetadata {
         val fields = document["fields"]?.jsonObject
-        val images = fields?.getFirestoreStringList("galleryImages")
+        val images = fields
+            ?.getFirestoreStringList("galleryImages")
             ?.filter { image -> image.isNotBlank() }
             .orEmpty()
+            .ifEmpty {
+                fields?.getFirestoreStringList("images")
+                    ?.filter { image -> image.isNotBlank() }
+                    .orEmpty()
+            }
         val businessHours = fields
             ?.getFirestoreString("businessHours")
             ?.trim()
