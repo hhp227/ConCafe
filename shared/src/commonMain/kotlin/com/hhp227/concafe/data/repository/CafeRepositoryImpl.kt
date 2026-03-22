@@ -109,7 +109,8 @@ class CafeRepositoryImpl(
                     locationLabel = cafe.region.city,
                     geoPoint = cafe.region.location,
                     rating = cafe.ratingAvg,
-                    checkInCount = visitCountByCafeId[cafe.id] ?: 0
+                    checkInCount = visitCountByCafeId[cafe.id] ?: 0,
+                    thumbnailImage = cafe.thumbnailImage
                 )
             }
     }
