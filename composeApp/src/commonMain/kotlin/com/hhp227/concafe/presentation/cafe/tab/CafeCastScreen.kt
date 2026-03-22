@@ -35,6 +35,7 @@ fun CafeCastScreen(
                         ConCafeCastCard(
                             name = castItem.cast.name,
                             subtitle = castItem.cast.desc,
+                            imageUrl = castItem.cast.profileImage,
                             isWorking = castItem.isWorking,
                             subtitleMaxLines = 2,
                             modifier = Modifier.weight(1f),
