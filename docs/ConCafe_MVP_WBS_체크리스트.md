@@ -11,7 +11,7 @@
 - [Maid_Cafe_Platform_Full_Project_Plan.md](./Maid_Cafe_Platform_Full_Project_Plan.md)
 
 ## 최근 정합성 반영 (2026-03-20)
-- [x] Firestore 컬렉션 다이어그램 기준으로 `castScheduleStatuses`, `stamps`, `cafeOwnerClaims`, `cafeRegistrationClaims`, `castClaims` 책임을 MVP 범위 문서에 반영
+- [x] Firestore 컬렉션 다이어그램 기준으로 `castSchedules`(상태 포함), `stamps`, `cafeOwnerClaims`, `cafeRegistrationClaims`, `castClaims` 책임을 MVP 범위 문서에 반영
 - [x] 홈 배너 정책(`ACTIVE` 최대 5개, `SCHEDULED` 자동 승격, 링크 타입별 라우팅) 문서 기준 통일
 - [x] Claim 흐름(캐스트: 팬관리 신청 -> 운영자 승인, 운영자/신규 카페: Admin 승인) 기획서 기준 통일
 - [x] `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 정책을 운영/권한 항목에 반영
@@ -23,6 +23,8 @@
 - [x] Admin 운영관리 승인 대기 목록 조회가 Firestore pending claim 조회 경로로 연결됨
 - [x] Firestore Rules 초안에 Admin의 claim 조회(read) 허용 규칙이 반영됨
 - [x] 운영관리 승인 대기 카드 이미지 노출이 Compose/iOS에 공통 반영됨
+- [x] 캐스트 상세 조회 시 캐시 우선 + Firestore 동기화(카페 상세/스케줄/visits 재동기화 후 재조회) 경로가 공통 shared 로직으로 반영됨
+- [x] 캐스트 상세 `방문 인증` 수치가 임시 계산식(팔로워/스케줄)에서 `visits` 기반 집계로 변경됨
 
 ## 0. 목표/범위
 - [ ] MVP 목표 확정: 메이드 중심 팬 플랫폼 + 위치 인증 기반 신뢰 리뷰

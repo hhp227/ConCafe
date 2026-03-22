@@ -36,6 +36,27 @@ service cloud.firestore {
       return isAdmin() || isCafeOwner(cafeId);
     }
 
+    function isValidScheduleStatus(status) {
+      return status == "WORK" || status == "OFF" || status == "VACATION";
+    }
+
+    function isValidCastScheduleWriteData() {
+      return request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.date is string
+        && request.resource.data.status is string
+        && isValidScheduleStatus(request.resource.data.status)
+        && (
+          (
+            request.resource.data.status == "WORK"
+            && request.resource.data.startTime is string
+            && request.resource.data.endTime is string
+          )
+          ||
+          request.resource.data.status != "WORK"
+        );
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow write: if false;
@@ -73,7 +94,7 @@ service cloud.firestore {
     }
 
     match /visits/{visitId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read: if true;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
     }
@@ -106,26 +127,7 @@ service cloud.firestore {
     match /castSchedules/{scheduleId} {
       allow read: if true;
       allow create, update: if isSignedIn()
-        && request.resource.data.cafeId is string
-        && request.resource.data.castId is string
-        && canManageCafe(request.resource.data.cafeId)
-        && exists(
-          /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
-        );
-      allow delete: if isSignedIn()
-        && resource.data.cafeId is string
-        && resource.data.castId is string
-        && canManageCafe(resource.data.cafeId)
-        && exists(
-          /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
-        );
-    }
-
-    match /castScheduleStatuses/{statusId} {
-      allow read: if true;
-      allow create, update: if isSignedIn()
-        && request.resource.data.cafeId is string
-        && request.resource.data.castId is string
+        && isValidCastScheduleWriteData()
         && canManageCafe(request.resource.data.cafeId)
         && exists(
           /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
