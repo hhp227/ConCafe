@@ -46,12 +46,12 @@ private fun InfoCard(detail: CafeDetail) {
             InfoRow(
                 icon = Icons.Default.AccessTime,
                 title = "영업시간",
-                value = detail.businessHours
+                value = detail.businessHours.ifBlank { "운영시간 정보 준비중" }
             )
             InfoRow(
                 icon = Icons.Default.Phone,
                 title = "전화번호",
-                value = detail.phoneNumber
+                value = detail.phoneNumber.ifBlank { "연락처 정보 준비중" }
             )
         }
     }

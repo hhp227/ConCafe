@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -330,7 +331,19 @@ fun CafeContentScreen(
 private fun CafeHeroSection(
     detail: CafeDetail
 ) {
-    val pagerState = rememberPagerState(pageCount = { detail.images.size })
+    val heroImages = remember(detail) {
+        val normalized = detail.images
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        val fallbackThumbnail = detail.cafe.thumbnailImage?.trim().orEmpty()
+
+        when {
+            normalized.isNotEmpty() -> normalized
+            fallbackThumbnail.isNotEmpty() -> listOf(fallbackThumbnail)
+            else -> listOf("")
+        }
+    }
+    val pagerState = rememberPagerState(pageCount = { heroImages.size })
 
     Box(
         modifier = Modifier
@@ -341,7 +354,7 @@ private fun CafeHeroSection(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            val imageUrl = detail.images[page]
+            val imageUrl = heroImages[page]
 
             Box(
                 modifier = Modifier
@@ -356,14 +369,21 @@ private fun CafeHeroSection(
                         )
                     )
             ) {
-                Icon(
-                    imageVector = Icons.Default.LocalCafe,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.9f),
-                    modifier = Modifier
-                        .size(72.dp)
-                        .align(Alignment.Center)
-                )
+                if (imageUrl.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = imageUrl,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.LocalCafe,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier
+                            .size(72.dp)
+                            .align(Alignment.Center)
+                    )
+                }
             }
         }
         Row(
@@ -372,7 +392,7 @@ private fun CafeHeroSection(
                 .padding(bottom = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            repeat(detail.images.size) { index ->
+            repeat(heroImages.size) { index ->
                 Box(
                     modifier = Modifier
                         .size(width = if (pagerState.currentPage == index) 18.dp else 8.dp, height = 8.dp)

@@ -1095,10 +1095,18 @@ class FirestoreConCafeDataSource(
         val images = fields?.getFirestoreStringList("galleryImages")
             ?.filter { image -> image.isNotBlank() }
             .orEmpty()
+        val businessHours = fields
+            ?.getFirestoreString("businessHours")
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
+        val phoneNumber = fields
+            ?.getFirestoreString("phoneNumber")
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
         return CafeDetailMetadata(
             images = if (images.isEmpty()) null else images,
-            businessHours = fields?.getFirestoreString("businessHours"),
-            phoneNumber = fields?.getFirestoreString("phoneNumber")
+            businessHours = businessHours,
+            phoneNumber = phoneNumber
         )
     }
 
