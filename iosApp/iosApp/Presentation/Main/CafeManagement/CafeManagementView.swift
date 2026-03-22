@@ -270,7 +270,7 @@ private struct CafeManagementContentView: View {
     private var searchCafeSection: some View {
         let ownedCafeIds = Set(uiState.ownedCafes.map(\.id))
         let visibleSearchableCafes = uiState.filteredSearchableCafes.filter { !ownedCafeIds.contains($0.id) }
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
             sectionHeader(
                 title: "기존 카페 검색",
                 subtitle: "기등록되어있는 카페를 검색해서 등록할수 있습니다."

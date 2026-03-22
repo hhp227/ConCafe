@@ -188,6 +188,7 @@
 		0AB609342F69031C00591FEE /* goyangdeogyang_extrabold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */; };
 		0AB609352F69031C00591FEE /* goyangdeogyang_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */; };
 		0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */; };
+		0ABE84D42F6FC6990014281C /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
 		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
@@ -383,6 +384,7 @@
 		0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_extrabold.ttf; sourceTree = "<group>"; };
 		0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_bold.ttf; sourceTree = "<group>"; };
 		0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInComponents.swift; sourceTree = "<group>"; };
+		0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAsyncImage.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
 		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
@@ -873,6 +875,7 @@
 				0A27F1E72F5D6CCD003D4763 /* Compat.swift */,
 				0AB6092D2F69011000591FEE /* ConCafeLogo.swift */,
 				0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */,
+				0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1141,6 +1144,7 @@
 				0A8ABA722F5C1D2A00265D4F /* SettingsView.swift in Sources */,
 				0A8ABA692F5C1C8500265D4F /* FanManagementViewModel.swift in Sources */,
 				0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */,
+				0ABE84D42F6FC6990014281C /* CachedAsyncImage.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
 				0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */,

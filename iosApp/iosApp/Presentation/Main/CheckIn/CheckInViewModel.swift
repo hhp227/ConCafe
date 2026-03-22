@@ -228,7 +228,8 @@ final class CheckInViewModel: ObservableObject {
                 locationLabel: cafe.region.city,
                 geoPoint: item.geoPoint,
                 rating: cafe.ratingAvg,
-                checkInCount: item.checkInCount
+                checkInCount: item.checkInCount,
+                thumbnailImage: item.thumbnailImage
             )
         }
         uiState.popularCafes = uiState.popularCafes.map { item in
@@ -239,7 +240,8 @@ final class CheckInViewModel: ObservableObject {
                 locationLabel: cafe.region.city,
                 geoPoint: item.geoPoint,
                 rating: cafe.ratingAvg,
-                checkInCount: item.checkInCount
+                checkInCount: item.checkInCount,
+                thumbnailImage: item.thumbnailImage
             )
         }
         uiState.popularCasts = uiState.popularCasts.map { item in

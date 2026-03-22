@@ -150,16 +150,11 @@ struct AdminOperationsView: View {
         imageUrl: String?
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            if let resolvedImageUrl = resolvedRemoteImageUrl(imageUrl) {
-                AsyncImage(url: resolvedImageUrl) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().scaledToFill()
-                    default:
-                        pendingCardImagePlaceholder
-                    }
-                }
-            } else {
+            AsyncImage(url: resolvedRemoteImageUrl(imageUrl)) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
                 pendingCardImagePlaceholder
             }
             .frame(width: 64, height: 64)
