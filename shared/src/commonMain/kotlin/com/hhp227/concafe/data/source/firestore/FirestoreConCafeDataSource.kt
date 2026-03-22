@@ -32,6 +32,8 @@ import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -444,6 +446,88 @@ class FirestoreConCafeDataSource(
         )
         hydratedCafeDetailIds.add(update.cafeId)
         return updated
+    }
+
+    suspend fun upsertCastRemote(update: CastUpsert): CastDetail {
+        require(update.name.isNotBlank()) { "cast name is required" }
+        require(update.conceptRole.isNotBlank()) { "concept role is required" }
+
+        val existingCast = update.castId
+            ?.takeIf { value -> value.isNotBlank() }
+            ?.let { castId -> casts.firstOrNull { cast -> cast.id == castId } }
+        val targetCafeId = update.cafeId
+            ?.takeIf { value -> value.isNotBlank() }
+            ?: existingCast?.cafeId
+            ?: throw IllegalArgumentException("cafeId is required")
+        val targetCafe = cafes.firstOrNull { cafe -> cafe.id == targetCafeId }
+            ?: throw NoSuchElementException("cafe not found")
+        val castId = existingCast?.id
+            ?: update.castId?.takeIf { value -> value.isNotBlank() }
+            ?: nextFirestoreEntityId("cast")
+        val normalizedName = update.name.trim()
+        val normalizedConceptRole = update.conceptRole.trim()
+        val normalizedIntroduction = update.introduction.trim()
+        val normalizedBirthday = update.birthday?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val normalizedProfileImage = update.profileImage
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
+            ?: existingCast?.profileImage
+        val normalizedGalleryImages = update.galleryImages
+            .map { image -> image.trim() }
+            .filter { image -> image.isNotEmpty() }
+        val linkedUserId = existingCast?.linkedUserId ?: currentUserId
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$targetCafeId/${FirestorePaths.CAFE_CASTS}/$castId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "name" to firestoreString(normalizedName),
+                "linkedUserId" to firestoreNullableString(linkedUserId),
+                "profileImage" to firestoreNullableString(normalizedProfileImage),
+                "desc" to firestoreString(normalizedIntroduction),
+                "birthday" to firestoreNullableString(normalizedBirthday),
+                "conceptRole" to firestoreString(normalizedConceptRole),
+                "followerCount" to firestoreLong((existingCast?.followerCount ?: 0).toLong()),
+                "rating" to firestoreDouble(existingCast?.rating ?: 0.0),
+                "galleryImages" to firestoreStringArray(normalizedGalleryImages)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        runCatching {
+            refreshCafeDetail(targetCafeId)
+        }
+
+        val cached = delegate.upsertCast(
+            update.copy(
+                castId = castId,
+                cafeId = targetCafe.id,
+                name = normalizedName,
+                conceptRole = normalizedConceptRole,
+                birthday = normalizedBirthday,
+                introduction = normalizedIntroduction,
+                profileImage = normalizedProfileImage,
+                galleryImages = normalizedGalleryImages
+            )
+        )
+        hydratedCafeDetailIds.add(targetCafeId)
+        return cached
+    }
+
+    suspend fun deleteCastRemote(castId: String): Cast {
+        require(castId.isNotBlank()) { "castId is required" }
+
+        val existingCast = casts.firstOrNull { cast -> cast.id == castId }
+            ?: throw NoSuchElementException("cast detail not found")
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${existingCast.cafeId}/${FirestorePaths.CAFE_CASTS}/$castId"
+
+        restApi.delete(path, idToken)
+        runCatching {
+            refreshCafeDetail(existingCast.cafeId)
+        }
+        val deleted = delegate.deleteCast(castId)
+        hydratedCafeDetailIds.add(existingCast.cafeId)
+        return deleted
     }
 
     suspend fun upsertCafeMenuGoodsRemote(update: CafeMenuGoodsUpsert): CafeDetail {
@@ -1985,6 +2069,10 @@ private fun firestoreBoolean(value: Boolean): JsonObject {
 
 private fun firestoreLong(value: Long): JsonObject {
     return JsonObject(mapOf("integerValue" to JsonPrimitive(value.toString())))
+}
+
+private fun firestoreDouble(value: Double): JsonObject {
+    return JsonObject(mapOf("doubleValue" to JsonPrimitive(value)))
 }
 
 private fun firestoreStringArray(values: List<String>): JsonObject {

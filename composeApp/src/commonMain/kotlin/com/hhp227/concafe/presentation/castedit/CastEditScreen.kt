@@ -31,10 +31,15 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,19 +47,26 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -107,6 +119,9 @@ private fun CastEditContentScreen(
     uiState: CastEditUiState,
     onAction: (CastEditAction) -> Unit
 ) {
+    var isBirthdayPickerVisible by remember { mutableStateOf(false) }
+    val initialBirthdayMillis = remember(uiState.birthday) { TimeUtils.parseBirthdayToEpochMillisOrNull(uiState.birthday) }
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -230,18 +245,10 @@ private fun CastEditContentScreen(
                         )
                     }
                     item {
-                        ConCafeFormField(
-                            label = "생일",
+                        BirthdayInputField(
                             value = uiState.birthday,
                             onValueChange = { onAction(CastEditAction.ChangeBirthday(it)) },
-                            placeholder = "MM / DD / YYYY",
-                            trailingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    tint = Color(0xFFB1A3AC)
-                                )
-                            }
+                            onClickCalendar = { isBirthdayPickerVisible = true }
                         )
                     }
                     item {
@@ -274,6 +281,94 @@ private fun CastEditContentScreen(
                 }
             }
         }
+    }
+    if (isBirthdayPickerVisible) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialBirthdayMillis)
+
+        DatePickerDialog(
+            onDismissRequest = { isBirthdayPickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val selected = datePickerState.selectedDateMillis
+                        if (selected != null) {
+                            onAction(CastEditAction.ChangeBirthday(TimeUtils.formatBirthdayFromEpochMillis(selected)))
+                        }
+                        isBirthdayPickerVisible = false
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isBirthdayPickerVisible = false }) {
+                    Text("취소")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+private fun BirthdayInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onClickCalendar: () -> Unit
+) {
+    var birthdayTextFieldValue by remember {
+        mutableStateOf(TextFieldValue())
+    }
+
+    LaunchedEffect(value) {
+        if (birthdayTextFieldValue.text != value) {
+            birthdayTextFieldValue = TextFieldValue(
+                text = value,
+                selection = TextRange(value.length)
+            )
+        }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "생일",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF665A63)
+        )
+        OutlinedTextField(
+            value = birthdayTextFieldValue,
+            onValueChange = { nextValue ->
+                val normalized = TimeUtils.normalizeBirthdayInput(nextValue.text)
+                birthdayTextFieldValue = TextFieldValue(
+                    text = normalized,
+                    selection = TextRange(normalized.length)
+                )
+                onValueChange(normalized)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            ),
+            placeholder = { Text("MM/DD/YYYY", color = Color(0xFFAA98A4)) },
+            shape = RoundedCornerShape(16.dp),
+            trailingIcon = {
+                IconButton(onClick = onClickCalendar) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = "생일 선택",
+                        tint = Color(0xFFB1A3AC)
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFF8F5F6),
+                unfocusedContainerColor = Color(0xFFF8F5F6),
+                focusedBorderColor = Color(0xFFFFD1DC),
+                unfocusedBorderColor = Color(0x4DFFD1DC)
+            )
+        )
     }
 }
 

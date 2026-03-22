@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
@@ -97,10 +98,16 @@ class CastRepositoryImpl(
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.upsertCastRemote(update)
+        }
         return castDataSource.upsertCast(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.deleteCastRemote(castId)
+        }
         return castDataSource.deleteCast(castId)
     }
 

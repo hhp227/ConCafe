@@ -48,7 +48,7 @@ service cloud.firestore {
 
       match /casts/{castId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if canManageCafe(cafeId);
       }
 
       match /notices/{noticeId} {

@@ -86,13 +86,41 @@ object TimeUtils {
             .mapNotNull { match ->
                 val hour = match.groupValues[1].toIntOrNull() ?: return@mapNotNull null
                 val minute = match.groupValues[2].toIntOrNull() ?: return@mapNotNull null
-                if (hour in 0..23 && minute in 0..59) {
+                return@mapNotNull if (hour in 0..23 && minute in 0..59) {
                     formatHourMinute(hour, minute)
                 } else {
                     null
                 }
             }
             .toList()
+    }
+
+    fun normalizeBirthdayInput(raw: String): String {
+        val digits = raw.filter { it.isDigit() }.take(8)
+        return when {
+            digits.length <= 2 -> digits
+            digits.length <= 4 -> "${digits.take(2)}/${digits.drop(2)}"
+            else -> "${digits.take(2)}/${digits.substring(2, 4)}/${digits.drop(4)}"
+        }
+    }
+
+    fun parseBirthdayToEpochMillisOrNull(value: String): Long? {
+        val matched = Regex("""^\s*(\d{2})/(\d{2})/(\d{4})\s*$""").find(value) ?: return null
+        val month = matched.groupValues[1].toIntOrNull() ?: return null
+        val day = matched.groupValues[2].toIntOrNull() ?: return null
+        val year = matched.groupValues[3].toIntOrNull() ?: return null
+        if (month !in 1..12 || day !in 1..31) return null
+        val iso = "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+        val epochDay = epochDayFromIsoDateOrNull(iso) ?: return null
+        return epochDay * MILLIS_PER_DAY
+    }
+
+    fun formatBirthdayFromEpochMillis(millis: Long): String {
+        val (year, month, day) = dateFromEpochMillis(millis)
+        val monthText = month.toString().padStart(2, '0')
+        val dayText = day.toString().padStart(2, '0')
+        val yearText = year.toString().padStart(4, '0')
+        return "$monthText/$dayText/$yearText"
     }
 
     fun buildVisitedAtUtcString(dateMillis: Long, hour: Int, minute: Int): String {

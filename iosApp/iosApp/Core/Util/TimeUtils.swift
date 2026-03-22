@@ -133,6 +133,33 @@ final class TimeUtils {
         }
     }
 
+    static func normalizeBirthdayInput(_ raw: String) -> String {
+        let digits = String(raw.filter { $0.isNumber }.prefix(8))
+        if digits.count <= 2 {
+            return digits
+        }
+        if digits.count <= 4 {
+            return "\(digits.prefix(2))/\(digits.dropFirst(2))"
+        }
+        return "\(digits.prefix(2))/\(digits.dropFirst(2).prefix(2))/\(digits.dropFirst(4))"
+    }
+
+    static func parseBirthdayDate(_ value: String) -> Date? {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter.date(from: normalized)
+    }
+
+    static func formatBirthdayDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter.string(from: date)
+    }
+
     static func defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 23) -> [String] {
         var options: [String] = []
 
