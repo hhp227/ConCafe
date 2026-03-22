@@ -76,13 +76,13 @@ class FirestoreConCafeDataSource(
         clearHomeFeedCollections()
         runCatching { loadUsers(idToken) }
             .onFailure { throwable -> println("Firestore bootstrap loadUsers failed: ${throwable.message}") }
-        runCatching { loadHomeBanners(idToken) }
+        runCatching { loadHomeBanners(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadHomeBanners failed: ${throwable.message}") }
-        runCatching { loadCafes(idToken) }
+        runCatching { loadCafes(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadCafes failed: ${throwable.message}") }
-        runCatching { loadCasts(idToken) }
+        runCatching { loadCasts(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadCasts failed: ${throwable.message}") }
-        runCatching { loadNotices(idToken) }
+        runCatching { loadNotices(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadNotices failed: ${throwable.message}") }
         runCatching { loadVisits(idToken) }
             .onFailure { throwable -> println("Firestore bootstrap loadVisits failed: ${throwable.message}") }
