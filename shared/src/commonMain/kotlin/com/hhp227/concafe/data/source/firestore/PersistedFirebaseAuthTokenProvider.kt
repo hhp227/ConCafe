@@ -1,5 +1,7 @@
 package com.hhp227.concafe.data.source.firestore
 
+import kotlinx.datetime.Clock
+
 class PersistedFirebaseAuthTokenProvider(
     private val delegate: FirestoreAuthTokenProvider,
     private val sessionStore: FirebaseAuthSessionStore
@@ -8,11 +10,16 @@ class PersistedFirebaseAuthTokenProvider(
 
     override suspend fun getIdToken(): String? {
         val currentSession = cachedSession
-        return if (currentSession != null) {
-            currentSession.idToken
-        } else {
-            delegate.getIdToken()
+
+        if (currentSession != null) {
+            val refreshed = refreshSessionIfNeeded(currentSession)
+
+            if (refreshed != currentSession) {
+                persistSession(refreshed)
+            }
+            return refreshed.idToken
         }
+        return delegate.getIdToken()
     }
 
     override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
@@ -48,6 +55,13 @@ class PersistedFirebaseAuthTokenProvider(
         clearPersistedSession()
     }
 
+    override suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession? {
+        val refreshed = delegate.refreshSession(session) ?: return null
+
+        persistSession(refreshed)
+        return refreshed
+    }
+
     override fun getCurrentUserId(): String? {
         val currentSession = cachedSession
         return currentSession?.userId ?: delegate.getCurrentUserId()
@@ -75,6 +89,18 @@ class PersistedFirebaseAuthTokenProvider(
     private fun clearPersistedSession() {
         persistSession(null)
     }
+
+    private suspend fun refreshSessionIfNeeded(session: FirebaseAuthSession): FirebaseAuthSession {
+        val expiresAt = session.expiresAtEpochSeconds
+        val shouldRefresh = expiresAt != null && (expiresAt - nowEpochSeconds()) <= TOKEN_REFRESH_BUFFER_SECONDS
+
+        if (!shouldRefresh) {
+            return session
+        }
+        return runCatching { delegate.refreshSession(session) }
+            .getOrNull()
+            ?: session
+    }
 }
 
 interface FirebaseAuthSessionStore {
@@ -83,4 +109,10 @@ interface FirebaseAuthSessionStore {
     fun save(session: FirebaseAuthSession)
 
     fun clear()
+}
+
+private const val TOKEN_REFRESH_BUFFER_SECONDS = 60L
+
+private fun nowEpochSeconds(): Long {
+    return Clock.System.now().epochSeconds
 }

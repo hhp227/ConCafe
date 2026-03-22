@@ -233,22 +233,7 @@ class AuthRepositoryImpl(
         if (currentUserEmail.isNullOrBlank()) {
             return null
         }
-
-        val restoredUser = User(
-            id = currentUserId,
-            email = currentUserEmail,
-            nickname = currentUserEmail.substringBefore("@").ifBlank { "유저" },
-            profileImage = null,
-            role = UserRole.VISITOR,
-            banned = false,
-            createdAt = nowIsoUtc()
-        )
-        val replaced = authDataSource.replaceUser(restoredUser)
-
-        if (!replaced) {
-            authDataSource.addUser(restoredUser)
-        }
-        return restoredUser
+        return null
     }
 }
 

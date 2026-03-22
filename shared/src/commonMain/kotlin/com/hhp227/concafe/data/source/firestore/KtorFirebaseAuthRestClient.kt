@@ -18,13 +18,25 @@ class KtorFirebaseAuthRestClient(
             setBody(body)
             header("Accept", "application/json")
         }
-
         val responseBody = response.bodyAsText()
 
         if (response.status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
             throw IllegalStateException("Firebase auth request failed(${response.status.value}): $responseBody")
         }
+        return responseBody
+    }
 
+    override suspend fun postFormUrlEncoded(url: String, body: String): String {
+        val response = httpClient.post(url) {
+            contentType(ContentType.Application.FormUrlEncoded)
+            setBody(body)
+            header("Accept", "application/json")
+        }
+        val responseBody = response.bodyAsText()
+
+        if (response.status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
+            throw IllegalStateException("Firebase auth request failed(${response.status.value}): $responseBody")
+        }
         return responseBody
     }
 }
