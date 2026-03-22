@@ -5,12 +5,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -40,7 +42,8 @@ actual fun CompatImagePicker(
 @Composable
 actual fun CompatImageDisplay(
     imageUrl: String?,
-    modifier: Modifier
+    modifier: Modifier,
+    applyRoundedClip: Boolean
 ) {
     val imageBitmap = imageUrl?.let { decodeImageBitmap(it) }
 
@@ -60,14 +63,21 @@ actual fun CompatImageDisplay(
                     .matchParentSize()
                     .background(
                         Color(0x1A8B6F7A),
-                        RoundedCornerShape(20.dp)
+                        if (applyRoundedClip) RoundedCornerShape(20.dp) else RoundedCornerShape(0.dp)
                     )
             )
         } else {
+            val imageModifier = if (applyRoundedClip) {
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+            } else {
+                Modifier.fillMaxSize()
+            }
             Image(
                 bitmap = imageBitmap,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = imageModifier,
                 contentScale = ContentScale.Crop
             )
         }

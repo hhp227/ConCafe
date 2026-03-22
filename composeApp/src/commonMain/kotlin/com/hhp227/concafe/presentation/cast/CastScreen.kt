@@ -35,6 +35,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -229,8 +230,11 @@ private fun CastHeroSection(
     detail: CastDetail,
     scrollOffset: Int
 ) {
-    val images = detail.images.ifEmpty { listOf("") }
-    val pagerState = rememberPagerState(pageCount = { images.size })
+    val heroImages = resolveHeroImages(
+        images = detail.images,
+        fallbackProfileImage = detail.cast.profileImage
+    )
+    val pagerState = rememberPagerState(pageCount = { heroImages.size })
     val parallaxOffset = if (scrollOffset == Int.MAX_VALUE) {
         120f
     } else {
@@ -246,12 +250,29 @@ private fun CastHeroSection(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
+            val imageUrl = heroImages[page]
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { translationY = parallaxOffset }
-                    .background(heroBrush(page))
+                    .background(
+                        if (imageUrl.isBlank()) {
+                            heroBrush(page)
+                        } else {
+                            Brush.verticalGradient(
+                                colors = listOf(colorFromHex("FFC6DB"), colorFromHex("F7A6C5"))
+                            )
+                        }
+                    )
             ) {
+                if (imageUrl.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = imageUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        applyRoundedClip = false
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -264,26 +285,28 @@ private fun CastHeroSection(
                             )
                         )
                 )
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.18f))
-                        .padding(18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Text(
-                        text = detail.cast.name,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                if (imageUrl.isBlank()) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(56.dp)
+                        )
+                        Text(
+                            text = detail.cast.name,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
                 Text(
                     text = detail.cafe.name,
@@ -294,14 +317,14 @@ private fun CastHeroSection(
                 )
             }
         }
-        if (images.size > 1) {
+        if (heroImages.size > 1) {
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                repeat(images.size) { index ->
+                repeat(heroImages.size) { index ->
                     Box(
                         modifier = Modifier
                             .size(width = if (pagerState.currentPage == index) 18.dp else 8.dp, height = 8.dp)
@@ -315,6 +338,20 @@ private fun CastHeroSection(
             }
         }
     }
+}
+
+private fun resolveHeroImages(
+    images: List<String>,
+    fallbackProfileImage: String?
+): List<String> {
+    val normalized = images
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    if (normalized.isNotEmpty()) {
+        return normalized
+    }
+    val fallback = fallbackProfileImage?.trim().orEmpty()
+    return if (fallback.isNotEmpty()) listOf(fallback) else listOf("")
 }
 
 @Composable

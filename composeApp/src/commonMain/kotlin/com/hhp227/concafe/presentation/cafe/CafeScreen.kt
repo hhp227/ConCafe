@@ -372,7 +372,8 @@ private fun CafeHeroSection(
                 if (imageUrl.isNotBlank()) {
                     CompatImageDisplay(
                         imageUrl = imageUrl,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        applyRoundedClip = false
                     )
                 } else {
                     Icon(

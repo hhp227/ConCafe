@@ -12,5 +12,6 @@ expect fun CompatImagePicker(
 @Composable
 expect fun CompatImageDisplay(
     imageUrl: String?,
-    modifier: Modifier
+    modifier: Modifier,
+    applyRoundedClip: Boolean = true
 )

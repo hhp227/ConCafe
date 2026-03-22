@@ -202,6 +202,7 @@ private struct CafeContentView: View {
             }
         }
         .frame(height: 280 + topSafeArea)
+        .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
     }
 
