@@ -158,6 +158,29 @@ class FirestoreConCafeDataSource(
         restApi.patch(path, body, idToken)
     }
 
+    override suspend fun pushCafeOwnerClaim(
+        requesterUserId: String,
+        claim: CafeManagementData.PendingClaimSummary,
+        location: String,
+        imageUrl: String?
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/${claim.claimId}"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(requesterUserId),
+                "cafeId" to firestoreString(claim.cafeId),
+                "cafeName" to firestoreString(claim.cafeName),
+                "location" to firestoreString(location),
+                "imageUrl" to firestoreNullableString(imageUrl),
+                "requestedAt" to firestoreString(claim.requestedAt),
+                "status" to firestoreString(claim.status),
+                "message" to firestoreString(claim.message)
+            )
+        )
+        restApi.patch(path, body, idToken)
+    }
+
     override suspend fun pushHomeBanner(banner: HomeBanner) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.HOME_BANNERS}/${banner.id}"
@@ -226,6 +249,10 @@ class FirestoreConCafeDataSource(
                 }
             }
         }
+        syncOwnedCafeDocuments(
+            ownedCafeIds = ownedCafeIds,
+            idToken = idToken
+        )
         pendingCafeClaimsByUser[userId] = ownerClaims
             .sortedByDescending { it.requestedAt }
             .toMutableList()
@@ -233,6 +260,31 @@ class FirestoreConCafeDataSource(
             .sortedByDescending { it.requestedAt }
             .toMutableList()
         ownedCafeIdsByUser[userId] = ownedCafeIds.toMutableList()
+    }
+
+    private suspend fun syncOwnedCafeDocuments(
+        ownedCafeIds: Set<String>,
+        idToken: String?
+    ) {
+        ownedCafeIds.forEach { cafeId ->
+            val hasCafe = cafes.any { it.id == cafeId }
+
+            if (hasCafe) {
+                return@forEach
+            }
+            val cafeDocument = runCatching {
+                val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId"
+                val response = restApi.get(path, idToken)
+                Json.parseToJsonElement(response).jsonObject
+            }.getOrNull()
+            val parsedCafe = cafeDocument?.let { document ->
+                parseCafeDocument(document)
+            }
+
+            if (parsedCafe != null) {
+                cafes.add(parsedCafe)
+            }
+        }
     }
 
     override suspend fun fetchPendingCafeOwnerClaimsForAdmin(): List<PendingCafeOwnerClaimPreview> {

@@ -39,6 +39,17 @@ class CafeOwnerClaimRepositoryImpl(
             message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
         )
         claims.add(0, claim)
+        try {
+            firestoreSyncDataSource.pushCafeOwnerClaim(
+                requesterUserId = userId,
+                claim = claim,
+                location = "${cafe.region.city} ${cafe.region.address}",
+                imageUrl = cafe.thumbnailImage
+            )
+        } catch (e: Exception) {
+            claims.removeAll { existing -> existing.claimId == claim.claimId }
+            throw e
+        }
         return PendingCafeOwnerClaimPreview(
             claimId = claim.claimId,
             requesterUserId = userId,
