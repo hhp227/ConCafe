@@ -31,6 +31,7 @@ import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -469,15 +470,16 @@ private fun PopularCafeCard(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PopularCastCard(
     cast: CheckInCastSummary,
     onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
-            .width(200.dp)
-            .clickable(onClick = onClick),
+            .width(200.dp),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -506,6 +508,14 @@ private fun PopularCastCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
+                    if (!cast.profileImage.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = cast.profileImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                        )
+                    }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(

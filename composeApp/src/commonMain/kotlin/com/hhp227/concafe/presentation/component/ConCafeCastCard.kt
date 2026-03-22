@@ -2,13 +2,7 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +21,7 @@ import androidx.compose.ui.unit.dp
 fun ConCafeCastCard(
     name: String,
     subtitle: String,
+    imageUrl: String? = null,
     modifier: Modifier = Modifier,
     imageHeight: Dp = 130.dp,
     subtitleMaxLines: Int = 1,
@@ -50,12 +45,24 @@ fun ConCafeCastCard(
                 .fillMaxWidth()
                 .height(imageHeight)
                 .clip(RoundedCornerShape(imageCornerRadius))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("FFDCE8"), colorFromHex("FFC4D8"))
-                    )
-                )
         ) {
+            if (imageUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(colorFromHex("FFDCE8"), colorFromHex("FFC4D8"))
+                            )
+                        )
+                )
+            } else {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier
+                        .matchParentSize()
+                )
+            }
             if (isWorking || !conceptRole.isNullOrBlank()) {
                 Row(
                     modifier = Modifier

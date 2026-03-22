@@ -397,21 +397,30 @@ private struct CheckInCastCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "FFD1E2"), Color(hex: "FFEAF2")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFD1E2"), Color(hex: "FFEAF2")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 56, height: 56)
-                    .overlay(
-                        Text(String(cast.name.prefix(1)))
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(Color(hex: "B74C72"))
-                    )
-
+                    Text(String(cast.name.prefix(1)))
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Color(hex: "B74C72"))
+                    if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !rawImageUrl.isEmpty,
+                       let imageUrl = URL(string: rawImageUrl) {
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear
+                        )
+                    }
+                }
+                .frame(width: 56, height: 56)
+                .clipShape(Circle())
+                .clipped()
                 VStack(alignment: .leading, spacing: 4) {
                     Text(cast.name)
                         .font(.subheadline.weight(.bold))
@@ -423,7 +432,6 @@ private struct CheckInCastCard: View {
                         .lineLimit(1)
                 }
             }
-
             HStack {
                 Text("오늘 방문 \(cast.todayVisit)")
                     .font(.caption.weight(.semibold))
