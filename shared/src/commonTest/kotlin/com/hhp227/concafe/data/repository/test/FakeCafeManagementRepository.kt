@@ -29,7 +29,8 @@ class FakeCafeManagementRepository(
                 rating = cafe.ratingAvg,
                 castCount = cafeCasts.size,
                 noticeCount = cafeNotices.size,
-                externalLinkCount = 3
+                externalLinkCount = 3,
+                thumbnailImage = cafe.thumbnailImage
             )
         }
     }
@@ -57,7 +58,8 @@ class FakeCafeManagementRepository(
                     rating = cafe.ratingAvg,
                     castCount = cafeCasts.size,
                     noticeCount = cafeNotices.size,
-                    externalLinkCount = 3
+                    externalLinkCount = 3,
+                    thumbnailImage = cafe.thumbnailImage
                 )
             }
 

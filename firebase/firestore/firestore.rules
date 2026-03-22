@@ -15,6 +15,24 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
     }
 
+    function isCafeOwner(cafeId) {
+      return isSignedIn()
+        && ("ownerIds" in resource.data)
+        && request.auth.uid in resource.data.ownerIds;
+    }
+
+    function isCafeOwnerEditableUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "name",
+        "desc",
+        "thumbnailImage",
+        "galleryImages",
+        "businessHours",
+        "phoneNumber",
+        "region"
+      ]);
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow write: if false;
@@ -22,7 +40,8 @@ service cloud.firestore {
 
     match /cafes/{cafeId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isCafeOwner(cafeId) && isCafeOwnerEditableUpdate());
 
       match /casts/{castId} {
         allow read: if true;

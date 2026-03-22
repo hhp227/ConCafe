@@ -20,6 +20,8 @@ import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.GeoPoint
@@ -73,6 +75,7 @@ class FirestoreConCafeDataSource(
     FirestoreSyncDataSource {
     suspend fun bootstrap() {
         val idToken = tokenProvider.getIdToken()
+
         clearHomeFeedCollections()
         runCatching { loadUsers(idToken) }
             .onFailure { throwable -> println("Firestore bootstrap loadUsers failed: ${throwable.message}") }
@@ -86,6 +89,132 @@ class FirestoreConCafeDataSource(
             .onFailure { throwable -> println("Firestore bootstrap loadNotices failed: ${throwable.message}") }
         runCatching { loadVisits(idToken) }
             .onFailure { throwable -> println("Firestore bootstrap loadVisits failed: ${throwable.message}") }
+    }
+
+    override fun cafeDetail(cafeId: String): CafeDetail? {
+        val cafe = cafes.firstOrNull { it.id == cafeId } ?: return null
+        val cached = delegate.cafeDetailsById[cafeId]
+        val synced = cached?.copy(
+            cafe = cafe,
+            casts = delegate.casts.filter { cast -> cast.cafeId == cafeId },
+            notices = notices
+                .filter { notice -> notice.cafeId == cafeId }
+                .sortedByDescending { notice -> notice.createdAt }
+        )
+            ?: CafeDetail(
+                cafe = cafe,
+                images = listOfNotNull(cafe.thumbnailImage),
+                casts = delegate.casts.filter { cast -> cast.cafeId == cafeId },
+                menus = emptyList(),
+                goods = emptyList(),
+                notices = notices
+                    .filter { notice -> notice.cafeId == cafeId }
+                    .sortedByDescending { notice -> notice.createdAt },
+                businessHours = "운영시간 정보 준비중",
+                phoneNumber = "연락처 정보 준비중"
+            )
+        delegate.cafeDetailsById[cafeId] = synced
+        return synced
+    }
+
+    suspend fun refreshCafeDetail(cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val cafeDocument = runCatching {
+            loadCafeDocument(cafeId, idToken)
+        }.recoverCatching {
+            loadCafeDocument(cafeId, null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load cafe document for $cafeId", throwable)
+        }
+        val cafe = parseCafeDocument(cafeDocument) ?: throw NoSuchElementException("cafe not found")
+        val detailMetadata = parseCafeDetailMetadata(cafeDocument)
+        val cafePath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId"
+        val castsResponse = restApi.get("$cafePath/${FirestorePaths.CAFE_CASTS}", null)
+        val castsDocuments = Json.parseToJsonElement(castsResponse).jsonObject["documents"]?.jsonArray.orEmpty()
+        val parsedCasts = castsDocuments.mapNotNull { document ->
+            parseCastDocument(cafeId, document.jsonObject)
+        }
+        val noticesResponse = restApi.get("$cafePath/${FirestorePaths.CAFE_NOTICES}", null)
+        val noticeDocuments = Json.parseToJsonElement(noticesResponse).jsonObject["documents"]?.jsonArray.orEmpty()
+        val parsedNotices = noticeDocuments.mapNotNull { document ->
+            parseNoticeDocument(
+                cafeId = cafeId,
+                cafeName = cafe.name,
+                document = document.jsonObject
+            )
+        }.sortedByDescending { notice -> notice.createdAt }
+        upsertCafeAndDetail(
+            cafe = cafe,
+            casts = parsedCasts,
+            notices = parsedNotices,
+            images = detailMetadata.images,
+            businessHours = detailMetadata.businessHours,
+            phoneNumber = detailMetadata.phoneNumber
+        )
+    }
+
+    suspend fun updateCafeInfoRemote(update: CafeInfoUpdate): CafeDetail {
+        val cafe = cafes.firstOrNull { current -> current.id == update.cafeId }
+            ?: throw NoSuchElementException("cafe not found")
+        val currentDetail = delegate.cafeDetailsById[update.cafeId] ?: cafeDetail(update.cafeId)
+        val representativeImage = update.representativeImageUrl
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
+            ?: currentDetail?.images?.firstOrNull()
+            ?: cafe.thumbnailImage
+        val galleryImages = update.galleryImages
+            .map { image -> image.trim() }
+            .filter { image -> image.isNotEmpty() }
+        val nextImages = buildList {
+            representativeImage?.let { image -> add(image) }
+            addAll(galleryImages.filterNot { image -> image == representativeImage })
+        }
+        val resolvedLocation = update.location ?: cafe.region.location
+        val businessHours = formatBusinessHours(update)
+        val phoneNumber = update.contactNumber.trim()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}" +
+            "?updateMask.fieldPaths=name" +
+            "&updateMask.fieldPaths=desc" +
+            "&updateMask.fieldPaths=thumbnailImage" +
+            "&updateMask.fieldPaths=galleryImages" +
+            "&updateMask.fieldPaths=businessHours" +
+            "&updateMask.fieldPaths=phoneNumber" +
+            "&updateMask.fieldPaths=region"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "name" to firestoreString(update.name.trim()),
+                "desc" to firestoreString(update.description.trim()),
+                "thumbnailImage" to firestoreNullableString(representativeImage),
+                "galleryImages" to firestoreStringArray(nextImages),
+                "businessHours" to firestoreString(businessHours),
+                "phoneNumber" to firestoreString(phoneNumber),
+                "region" to firestoreMap(
+                    mapOf(
+                        "country" to firestoreString(cafe.region.country),
+                        "city" to firestoreString(cafe.region.city),
+                        "address" to firestoreString(update.address.trim()),
+                        "location" to firestoreGeoPoint(
+                            latitude = resolvedLocation.latitude,
+                            longitude = resolvedLocation.longitude
+                        )
+                    )
+                )
+            )
+        )
+        val idToken = tokenProvider.getIdToken()
+
+        restApi.patch(path, body, idToken)
+        return delegate.updateCafeInfo(
+            update.copy(
+                name = update.name.trim(),
+                description = update.description.trim(),
+                representativeImageUrl = representativeImage,
+                galleryImages = nextImages,
+                location = resolvedLocation,
+                address = update.address.trim(),
+                contactNumber = phoneNumber
+            )
+        )
     }
 
     override suspend fun fetchUser(userId: String): User? {
@@ -917,6 +1046,82 @@ class FirestoreConCafeDataSource(
         this.visits.clear()
     }
 
+    private fun upsertCafeAndDetail(
+        cafe: Cafe,
+        casts: List<Cast>,
+        notices: List<Notice>,
+        images: List<String>? = null,
+        businessHours: String? = null,
+        phoneNumber: String? = null
+    ) {
+        val cafeIndex = cafes.indexOfFirst { current -> current.id == cafe.id }
+
+        if (cafeIndex >= 0) {
+            cafes[cafeIndex] = cafe
+        } else {
+            cafes.add(cafe)
+        }
+        delegate.casts.removeAll { cast -> cast.cafeId == cafe.id }
+        delegate.casts.addAll(casts)
+        this.notices.removeAll { notice -> notice.cafeId == cafe.id }
+        this.notices.addAll(notices)
+        val cachedDetail = delegate.cafeDetailsById[cafe.id]
+        val detail = if (cachedDetail != null) {
+            cachedDetail.copy(
+                cafe = cafe,
+                casts = casts,
+                images = images ?: cachedDetail.images,
+                notices = notices,
+                businessHours = businessHours ?: cachedDetail.businessHours,
+                phoneNumber = phoneNumber ?: cachedDetail.phoneNumber
+            )
+        } else {
+            CafeDetail(
+                cafe = cafe,
+                images = images ?: listOfNotNull(cafe.thumbnailImage),
+                casts = casts,
+                menus = emptyList(),
+                goods = emptyList(),
+                notices = notices,
+                businessHours = businessHours ?: "운영시간 정보 준비중",
+                phoneNumber = phoneNumber ?: "연락처 정보 준비중"
+            )
+        }
+        delegate.cafeDetailsById[cafe.id] = detail
+    }
+
+    private fun parseCafeDetailMetadata(document: JsonObject): CafeDetailMetadata {
+        val fields = document["fields"]?.jsonObject
+        val images = fields?.getFirestoreStringList("galleryImages")
+            ?.filter { image -> image.isNotBlank() }
+            .orEmpty()
+        return CafeDetailMetadata(
+            images = if (images.isEmpty()) null else images,
+            businessHours = fields?.getFirestoreString("businessHours"),
+            phoneNumber = fields?.getFirestoreString("phoneNumber")
+        )
+    }
+
+    private fun formatBusinessHours(update: CafeInfoUpdate): String {
+        val weekdayOpen = update.weekdayOpen.trim()
+        val weekdayClose = update.weekdayClose.trim()
+        val weekendOpen = update.weekendOpen.trim()
+        val weekendClose = update.weekendClose.trim()
+        val weekday = weekdayOpen.isNotEmpty() && weekdayClose.isNotEmpty()
+        val weekend = weekendOpen.isNotEmpty() && weekendClose.isNotEmpty()
+        return when {
+            weekday && weekend && weekdayOpen == weekendOpen && weekdayClose == weekendClose ->
+                "매일 $weekdayOpen - $weekdayClose"
+            weekday && weekend ->
+                "평일 $weekdayOpen - $weekdayClose / 주말 $weekendOpen - $weekendClose"
+            weekday ->
+                "평일 $weekdayOpen - $weekdayClose"
+            weekend ->
+                "주말 $weekendOpen - $weekendClose"
+            else -> ""
+        }
+    }
+
     private fun parseUserDocument(document: JsonObject): User? {
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
@@ -1247,6 +1452,12 @@ class FirestoreConCafeDataSource(
         const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
     }
 }
+
+private data class CafeDetailMetadata(
+    val images: List<String>?,
+    val businessHours: String?,
+    val phoneNumber: String?
+)
 
 private fun JsonObject.getFirestoreString(key: String): String? {
     val valueObject = this[key]?.jsonObject ?: return null
