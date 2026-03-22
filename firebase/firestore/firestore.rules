@@ -103,6 +103,42 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /castSchedules/{scheduleId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && canManageCafe(request.resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+        );
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && resource.data.castId is string
+        && canManageCafe(resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
+        );
+    }
+
+    match /castScheduleStatuses/{statusId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && canManageCafe(request.resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+        );
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && resource.data.castId is string
+        && canManageCafe(resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
+        );
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -396,7 +396,7 @@ private struct CastRecentActivitySection: View {
             Text("최근 활동")
                 .font(.headline)
             HStack(spacing: 10) {
-                CastActivityCard(value: "\(detail.recentVisitCount)", label: "방문 인증")
+                CastActivityCard(value: "\(detail.visitCertificationCount)", label: "방문 인증")
                 CastActivityCard(value: "\(detail.cast.followerCount)", label: "팔로워")
                 CastActivityCard(value: String(format: "%.1f", detail.cast.rating), label: "평점")
             }
@@ -510,12 +510,6 @@ private struct CastScrollOffsetPreferenceKey: PreferenceKey {
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
-    }
-}
-
-private extension CastDetail {
-    var recentVisitCount: Int {
-        max(Int(cast.followerCount) / 8, schedule.count)
     }
 }
 

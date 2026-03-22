@@ -94,12 +94,12 @@ final class ScheduleViewModel: ObservableObject {
         tasks[.scheduleEvent] = Task {
             do {
                 for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    if self.uiState.isSaving {
+                        continue
+                    }
                     switch event {
                     case let event as Shared.ScheduleManagementEvent.Updated:
                         if event.castId == castId {
-                            if self.uiState.isSaving {
-                                return
-                            }
                             self.loadSchedule(showLoading: false)
                             let message: String
                             switch event.status {

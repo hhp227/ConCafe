@@ -113,6 +113,11 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
+            }
+        }
         return castDataSource.castSchedules(castId, fromDate, toDate)
     }
 
@@ -121,10 +126,18 @@ class CastRepositoryImpl(
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
+            }
+        }
         return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.updateCastScheduleRemote(update)
+        }
         return castDataSource.updateCastSchedule(update)
     }
 

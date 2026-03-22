@@ -603,7 +603,7 @@ private fun CastRecentActivitySection(detail: CastDetail) {
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
-                value = detail.recentVisitCount().toString(),
+                value = detail.visitCertificationCount.toString(),
                 label = "방문 인증"
             )
             CastActivityCard(
@@ -804,10 +804,6 @@ private fun heroBrush(index: Int): Brush {
         listOf(colorFromHex("F8D6E9"), colorFromHex("D98AB7"))
     )
     return Brush.verticalGradient(gradients[index % gradients.size])
-}
-
-private fun CastDetail.recentVisitCount(): Int {
-    return (cast.followerCount / 8).coerceAtLeast(schedule.size)
 }
 
 @Composable
