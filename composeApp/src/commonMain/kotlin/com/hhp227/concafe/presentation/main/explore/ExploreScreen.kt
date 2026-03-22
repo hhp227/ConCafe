@@ -346,6 +346,7 @@ private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
         name = cafe.name,
         rating = "${cafe.ratingAvg}",
         location = cafe.region.city,
+        thumbnailImage = cafe.thumbnailImage,
         onClick = onClick
     )
 }

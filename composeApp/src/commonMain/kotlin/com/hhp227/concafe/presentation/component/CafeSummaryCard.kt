@@ -30,6 +30,7 @@ fun CafeSummaryCard(
     name: String,
     rating: String,
     location: String,
+    thumbnailImage: String? = null,
     modifier: Modifier = Modifier,
     trailingLabel: String? = null,
     onClick: () -> Unit
@@ -41,6 +42,8 @@ fun CafeSummaryCard(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
+            val resolvedThumbnailImage = thumbnailImage?.trim().orEmpty()
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -50,7 +53,14 @@ fun CafeSummaryCard(
                             colors = listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
                         )
                     )
-            )
+            ) {
+                if (resolvedThumbnailImage.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = resolvedThumbnailImage,
+                        modifier = Modifier.fillMaxWidth().height(120.dp)
+                    )
+                }
+            }
         }
         Column(
             modifier = Modifier.padding(8.dp),

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct CafeSummaryCard: View {
     let name: String
@@ -57,25 +58,29 @@ struct CafeSummaryCard: View {
 
     @ViewBuilder
     private var cafeImage: some View {
-        if let thumbnailImage,
-           let url = URL(string: thumbnailImage) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    placeholderCafeImage
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    placeholderCafeImage
-                @unknown default:
-                    placeholderCafeImage
+        GeometryReader { geometry in
+            let imageSize = geometry.size
+
+            ZStack {
+                placeholderCafeImage
+                if let resolvedImageUrl = resolvedRemoteImageUrl(thumbnailImage) {
+                    CachedAsyncImage(
+                        url: resolvedImageUrl,
+                        placeholder: EmptyView()
+                    )
+                    .frame(width: imageSize.width, height: imageSize.height)
+                    .clipped()
                 }
             }
-        } else {
-            placeholderCafeImage
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
     }
 
     private var placeholderCafeImage: some View {

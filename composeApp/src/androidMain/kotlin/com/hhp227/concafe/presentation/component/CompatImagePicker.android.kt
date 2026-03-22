@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -109,6 +110,10 @@ private suspend fun decodeImageBitmap(
     context: Context,
     imageUrl: String
 ): Bitmap? = withContext(Dispatchers.IO) {
+    AndroidBitmapMemoryCache.get(imageUrl)?.let { cached ->
+        return@withContext cached
+    }
+
     runCatching {
         val stream = when {
             imageUrl.startsWith("content://") || imageUrl.startsWith("file://") ->
@@ -118,6 +123,22 @@ private suspend fun decodeImageBitmap(
             else -> FileInputStream(imageUrl)
         }
 
-        stream.use { BitmapFactory.decodeStream(it) }
+        val decoded = stream.use { BitmapFactory.decodeStream(it) }
+        if (decoded != null) {
+            AndroidBitmapMemoryCache.put(imageUrl, decoded)
+        }
+        decoded
     }.getOrNull()
+}
+
+private object AndroidBitmapMemoryCache {
+    private val cache = object : LruCache<String, Bitmap>(120) {}
+
+    fun get(key: String): Bitmap? {
+        return cache.get(key)
+    }
+
+    fun put(key: String, bitmap: Bitmap) {
+        cache.put(key, bitmap)
+    }
 }
