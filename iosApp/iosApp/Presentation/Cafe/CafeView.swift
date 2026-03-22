@@ -264,7 +264,7 @@ private struct CafeContentView: View {
         switch uiState.selectedTab {
         case .info:
             CafeInfoView(cafeDetail: detail)
-        case .maids:
+        case .casts:
             CafeCastView(
                 maids: uiState.casts,
                 canLoadMore: uiState.canLoadMoreCasts,

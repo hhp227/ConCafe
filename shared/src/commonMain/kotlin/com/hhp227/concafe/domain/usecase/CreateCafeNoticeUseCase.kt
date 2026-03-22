@@ -14,10 +14,12 @@ class CreateCafeNoticeUseCase(
 ) {
     suspend operator fun invoke(input: CafeNoticeCreate): AppResult<CafeNoticeManagementItem> {
         return try {
+            val created = noticeRepository.createCafeNotice(input)
+
             noticeManagementEventPublisher.publish(
                 NoticeManagementEvent.NoticeCreated(input.cafeId)
             )
-            AppResult.Success(noticeRepository.createCafeNotice(input))
+            AppResult.Success(created)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

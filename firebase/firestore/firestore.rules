@@ -17,8 +17,7 @@ service cloud.firestore {
 
     function isCafeOwner(cafeId) {
       return isSignedIn()
-        && ("ownerIds" in resource.data)
-        && request.auth.uid in resource.data.ownerIds;
+        && request.auth.uid in get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds;
     }
 
     function isCafeOwnerEditableUpdate() {
@@ -31,6 +30,10 @@ service cloud.firestore {
         "phoneNumber",
         "region"
       ]);
+    }
+
+    function canManageCafe(cafeId) {
+      return isAdmin() || isCafeOwner(cafeId);
     }
 
     match /homeBanners/{bannerId} {
@@ -50,7 +53,12 @@ service cloud.firestore {
 
       match /notices/{noticeId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /events/{eventId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
       }
     }
 

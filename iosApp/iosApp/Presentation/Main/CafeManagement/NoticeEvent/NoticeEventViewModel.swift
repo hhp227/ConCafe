@@ -288,6 +288,7 @@ final class NoticeEventViewModel: ObservableObject {
                 } else {
                     uiState.infoMessage = isEditing ? "이벤트가 수정되었습니다." : "이벤트가 등록되었습니다."
                 }
+                refreshCurrentTab()
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSubmittingForm = false

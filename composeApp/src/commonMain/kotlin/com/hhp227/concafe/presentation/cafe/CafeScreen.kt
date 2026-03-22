@@ -110,7 +110,7 @@ fun CafeContentScreen(
                 listState.canScrollForward,
                 uiState.selectedTab,
                 when (uiState.selectedTab) {
-                    CafeUiState.TabType.MAIDS -> uiState.casts.size
+                    CafeUiState.TabType.CASTS -> uiState.casts.size
                     CafeUiState.TabType.NOTICES -> uiState.notices.size
                     CafeUiState.TabType.REVIEWS -> uiState.reviews.size
                     else -> 0
@@ -120,7 +120,7 @@ fun CafeContentScreen(
             .collect { (canScrollForward, _, _) ->
                 if (!canScrollForward) {
                     when (uiState.selectedTab) {
-                        CafeUiState.TabType.MAIDS -> {
+                        CafeUiState.TabType.CASTS -> {
                             if (uiState.canLoadMoreCasts && !uiState.isLoadingMoreCasts) {
                                 onAction(CafeAction.LoadMoreCasts)
                             }
@@ -466,7 +466,7 @@ private fun CafeTabContent(
 
     when (uiState.selectedTab) {
         CafeUiState.TabType.INFO -> CafeInfoScreen(detail)
-        CafeUiState.TabType.MAIDS -> CafeCastScreen(
+        CafeUiState.TabType.CASTS -> CafeCastScreen(
             casts = uiState.casts,
             canLoadMore = uiState.canLoadMoreCasts,
             isLoadingMore = uiState.isLoadingMoreCasts,

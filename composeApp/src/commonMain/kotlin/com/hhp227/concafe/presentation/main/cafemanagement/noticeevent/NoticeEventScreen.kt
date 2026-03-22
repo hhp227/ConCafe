@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -112,7 +114,8 @@ fun NoticeEventScreen(
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(NoticeEventAction.DismissFormSheet) },
             containerColor = Color(0xFFF8F5F6),
-            sheetState = sheetState
+            sheetState = sheetState,
+            windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
             NoticeEventFormSheetContent(
                 uiState = uiState,
@@ -307,7 +310,6 @@ private fun NoticeEventFormSheetContent(
             .fillMaxWidth()
             .fillMaxHeight(0.86f)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-            .imePadding()
     ) {
         Row(
             modifier = Modifier
@@ -409,7 +411,11 @@ private fun NoticeEventFormSheetContent(
         }
         Surface(
             color = Color.Transparent,
-            modifier = Modifier.navigationBarsPadding()
+            modifier = Modifier.windowInsetsPadding(
+                WindowInsets.navigationBars
+                    .union(WindowInsets.ime)
+                    .only(WindowInsetsSides.Bottom)
+            )
         ) {
             Box(
                 modifier = Modifier

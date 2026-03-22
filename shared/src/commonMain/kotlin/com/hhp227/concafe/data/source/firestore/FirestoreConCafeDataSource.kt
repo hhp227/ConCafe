@@ -21,13 +21,20 @@ import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeEventCreate
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
+import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeNoticeCreate
+import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
+import com.hhp227.concafe.domain.model.CafeNoticeUpdate
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
@@ -151,6 +158,198 @@ class FirestoreConCafeDataSource(
             businessHours = detailMetadata.businessHours,
             phoneNumber = detailMetadata.phoneNumber
         )
+    }
+
+    suspend fun refreshCafeNoticeEventManagement(cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val cafeName = cafes.firstOrNull { cafe -> cafe.id == cafeId }?.name.orEmpty()
+        val noticesDocuments = runCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_NOTICES, idToken)
+        }.recoverCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_NOTICES, null)
+        }.getOrElse { emptyList() }
+        val eventsDocuments = runCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_EVENTS, idToken)
+        }.recoverCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_EVENTS, null)
+        }.getOrElse { emptyList() }
+        val parsedNotices = noticesDocuments.mapNotNull { document ->
+            parseNoticeManagementDocument(cafeId = cafeId, document = document)
+        }.sortedByDescending { item -> item.createdAt }
+        val parsedNoticeFeeds = noticesDocuments.mapNotNull { document ->
+            parseNoticeDocument(cafeId = cafeId, cafeName = cafeName, document = document)
+        }.sortedByDescending { item -> item.createdAt }
+        val parsedEvents = eventsDocuments.mapNotNull { document ->
+            parseEventManagementDocument(cafeId = cafeId, document = document)
+        }.sortedByDescending { item -> item.startDate }
+
+        cafeNoticeManagementItems.removeAll { item -> item.cafeId == cafeId }
+        cafeNoticeManagementItems.addAll(parsedNotices)
+        notices.removeAll { notice -> notice.cafeId == cafeId }
+        notices.addAll(parsedNoticeFeeds)
+        notices.sortByDescending { notice -> notice.createdAt }
+        cafeEventManagementItems.removeAll { item -> item.cafeId == cafeId }
+        cafeEventManagementItems.addAll(parsedEvents)
+    }
+
+    suspend fun createCafeNoticeRemote(input: CafeNoticeCreate): CafeNoticeManagementItem {
+        val idToken = tokenProvider.getIdToken()
+        val noticeId = nextFirestoreEntityId("notice-management")
+        val createdAt = Clock.System.now().toString()
+        val statusLabel = if (input.reservedAt.isNullOrBlank()) "게시 중" else "임시 저장"
+        val statusAccent = if (input.reservedAt.isNullOrBlank()) NoticeStatusAccent.PUBLISHED else NoticeStatusAccent.DRAFT
+        val body = firestoreDocumentBody(
+            mapOf(
+                "title" to firestoreString(input.title.trim()),
+                "content" to firestoreString(input.content.trim()),
+                "createdAt" to firestoreString(createdAt),
+                "isPinned" to firestoreBoolean(input.isPinned),
+                "statusLabel" to firestoreString(statusLabel),
+                "statusAccent" to firestoreString(statusAccent.name),
+                "reservedAt" to firestoreNullableString(input.reservedAt?.trim()?.takeIf { value -> value.isNotEmpty() })
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_NOTICES}/$noticeId"
+
+        restApi.patch(path, body, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(input.cafeId)
+        }
+        return cafeNoticeManagementItems.firstOrNull { item -> item.id == noticeId }
+            ?: CafeNoticeManagementItem(
+                id = noticeId,
+                cafeId = input.cafeId,
+                title = input.title.trim(),
+                content = input.content.trim(),
+                createdAt = createdAt,
+                displayDate = createdAt.take(10).replace("-", "."),
+                isPinned = input.isPinned,
+                statusLabel = statusLabel,
+                statusAccent = statusAccent
+            )
+    }
+
+    suspend fun updateCafeNoticeRemote(input: CafeNoticeUpdate): CafeNoticeManagementItem {
+        val idToken = tokenProvider.getIdToken()
+        val statusLabel = if (input.reservedAt.isNullOrBlank()) "게시 중" else "임시 저장"
+        val statusAccent = if (input.reservedAt.isNullOrBlank()) NoticeStatusAccent.PUBLISHED else NoticeStatusAccent.DRAFT
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_NOTICES}/${input.noticeId}" +
+            "?updateMask.fieldPaths=title" +
+            "&updateMask.fieldPaths=content" +
+            "&updateMask.fieldPaths=isPinned" +
+            "&updateMask.fieldPaths=statusLabel" +
+            "&updateMask.fieldPaths=statusAccent" +
+            "&updateMask.fieldPaths=reservedAt"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "title" to firestoreString(input.title.trim()),
+                "content" to firestoreString(input.content.trim()),
+                "isPinned" to firestoreBoolean(input.isPinned),
+                "statusLabel" to firestoreString(statusLabel),
+                "statusAccent" to firestoreString(statusAccent.name),
+                "reservedAt" to firestoreNullableString(input.reservedAt?.trim()?.takeIf { value -> value.isNotEmpty() })
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(input.cafeId)
+        }
+        return cafeNoticeManagementItems.firstOrNull { item -> item.id == input.noticeId }
+            ?: throw NoSuchElementException("notice not found")
+    }
+
+    suspend fun deleteCafeNoticeRemote(cafeId: String, noticeId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_NOTICES}/$noticeId"
+
+        restApi.delete(path, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(cafeId)
+        }
+    }
+
+    suspend fun createCafeEventRemote(input: CafeEventCreate): CafeEventManagementItem {
+        val idToken = tokenProvider.getIdToken()
+        val eventId = nextFirestoreEntityId("event-management")
+        val periodText = input.periodText?.trim()?.takeIf { value -> value.isNotEmpty() } ?: "게시 일정 선택 필요"
+        val startDate = periodText.substringBefore(" - ", missingDelimiterValue = periodText)
+        val endDate = periodText.substringAfter(" - ", missingDelimiterValue = startDate)
+        val statusLabel = if (input.periodText.isNullOrBlank()) "진행 예정" else "진행 중"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "title" to firestoreString(input.title.trim()),
+                "content" to firestoreString(input.content.trim()),
+                "imageUrl" to firestoreString(input.imageUrl.trim()),
+                "startDate" to firestoreString(startDate),
+                "endDate" to firestoreString(endDate),
+                "statusLabel" to firestoreString(statusLabel),
+                "isDimmed" to firestoreBoolean(false)
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_EVENTS}/$eventId"
+
+        restApi.patch(path, body, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(input.cafeId)
+        }
+        return cafeEventManagementItems.firstOrNull { item -> item.id == eventId }
+            ?: CafeEventManagementItem(
+                id = eventId,
+                cafeId = input.cafeId,
+                title = input.title.trim(),
+                content = input.content.trim(),
+                imageUrl = input.imageUrl.trim(),
+                startDate = startDate,
+                endDate = endDate,
+                statusLabel = statusLabel,
+                isDimmed = false
+            )
+    }
+
+    suspend fun updateCafeEventRemote(input: CafeEventUpdate): CafeEventManagementItem {
+        val idToken = tokenProvider.getIdToken()
+        val original = cafeEventManagementItems.firstOrNull { item -> item.id == input.eventId && item.cafeId == input.cafeId }
+        val periodText = input.periodText?.trim()?.takeIf { value -> value.isNotEmpty() } ?: original?.periodText ?: "게시 일정 선택 필요"
+        val startDate = periodText.substringBefore(" - ", missingDelimiterValue = periodText)
+        val endDate = periodText.substringAfter(" - ", missingDelimiterValue = startDate)
+        val statusLabel = if (input.periodText.isNullOrBlank()) original?.statusLabel ?: "진행 예정" else "진행 중"
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_EVENTS}/${input.eventId}" +
+            "?updateMask.fieldPaths=title" +
+            "&updateMask.fieldPaths=content" +
+            "&updateMask.fieldPaths=imageUrl" +
+            "&updateMask.fieldPaths=startDate" +
+            "&updateMask.fieldPaths=endDate" +
+            "&updateMask.fieldPaths=statusLabel" +
+            "&updateMask.fieldPaths=isDimmed"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "title" to firestoreString(input.title.trim()),
+                "content" to firestoreString(input.content.trim()),
+                "imageUrl" to firestoreString(input.imageUrl.trim()),
+                "startDate" to firestoreString(startDate),
+                "endDate" to firestoreString(endDate),
+                "statusLabel" to firestoreString(statusLabel),
+                "isDimmed" to firestoreBoolean(false)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(input.cafeId)
+        }
+        return cafeEventManagementItems.firstOrNull { item -> item.id == input.eventId }
+            ?: throw NoSuchElementException("event not found")
+    }
+
+    suspend fun deleteCafeEventRemote(cafeId: String, eventId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_EVENTS}/$eventId"
+
+        restApi.delete(path, idToken)
+        runCatching {
+            refreshCafeNoticeEventManagement(cafeId)
+        }
     }
 
     suspend fun updateCafeInfoRemote(update: CafeInfoUpdate): CafeDetail {
@@ -762,6 +961,17 @@ class FirestoreConCafeDataSource(
         return Json.parseToJsonElement(response).jsonObject
     }
 
+    private suspend fun loadCafeSubCollectionDocuments(
+        cafeId: String,
+        collectionId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/$collectionId"
+        val response = restApi.get(path, idToken)
+        val parsed = Json.parseToJsonElement(response).jsonObject
+        return parsed["documents"]?.jsonArray.orEmpty().map { element -> element.jsonObject }
+    }
+
     private suspend fun createApprovedCafeDocument(
         cafeId: String,
         claim: CafeRegistrationClaim,
@@ -1257,6 +1467,55 @@ class FirestoreConCafeDataSource(
             content = fields.getFirestoreString("content").orEmpty(),
             createdAt = createdAt,
             relativeTime = "최근"
+        )
+    }
+
+    private fun parseNoticeManagementDocument(
+        cafeId: String,
+        document: JsonObject
+    ): CafeNoticeManagementItem? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val noticeId = name.substringAfterLast("/")
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        val statusAccent = when (fields.getFirestoreString("statusAccent")?.uppercase()) {
+            NoticeStatusAccent.DRAFT.name -> NoticeStatusAccent.DRAFT
+            NoticeStatusAccent.ENDED.name -> NoticeStatusAccent.ENDED
+            else -> NoticeStatusAccent.PUBLISHED
+        }
+        return CafeNoticeManagementItem(
+            id = noticeId,
+            cafeId = cafeId,
+            title = fields.getFirestoreString("title").orEmpty(),
+            content = fields.getFirestoreString("content").orEmpty(),
+            createdAt = createdAt,
+            displayDate = createdAt.take(10).replace("-", "."),
+            isPinned = fields.getFirestoreBoolean("isPinned") ?: false,
+            statusLabel = fields.getFirestoreString("statusLabel")
+                ?: if (statusAccent == NoticeStatusAccent.DRAFT) "임시 저장" else "게시 중",
+            statusAccent = statusAccent
+        )
+    }
+
+    private fun parseEventManagementDocument(
+        cafeId: String,
+        document: JsonObject
+    ): CafeEventManagementItem? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val eventId = name.substringAfterLast("/")
+        val startDate = fields.getFirestoreString("startDate").orEmpty()
+        val endDate = fields.getFirestoreString("endDate") ?: startDate
+        return CafeEventManagementItem(
+            id = eventId,
+            cafeId = cafeId,
+            title = fields.getFirestoreString("title").orEmpty(),
+            content = fields.getFirestoreString("content").orEmpty(),
+            imageUrl = fields.getFirestoreString("imageUrl").orEmpty(),
+            startDate = startDate,
+            endDate = endDate,
+            statusLabel = fields.getFirestoreString("statusLabel") ?: "진행 예정",
+            isDimmed = fields.getFirestoreBoolean("isDimmed") ?: false
         )
     }
 

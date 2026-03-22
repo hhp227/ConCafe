@@ -55,7 +55,7 @@ struct CafeUiState {
 
     enum TabType: String, CaseIterable {
         case info = "정보"
-        case maids = "메이드"
+        case casts = "캐스트"
         case menu = "메뉴"
         case reviews = "리뷰"
         case notices = "공지"
