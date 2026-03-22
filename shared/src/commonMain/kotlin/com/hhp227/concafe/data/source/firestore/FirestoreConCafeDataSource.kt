@@ -75,11 +75,17 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
         clearHomeFeedCollections()
         runCatching { loadUsers(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadUsers failed: ${throwable.message}") }
         runCatching { loadHomeBanners(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadHomeBanners failed: ${throwable.message}") }
         runCatching { loadCafes(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadCafes failed: ${throwable.message}") }
         runCatching { loadCasts(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadCasts failed: ${throwable.message}") }
         runCatching { loadNotices(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadNotices failed: ${throwable.message}") }
         runCatching { loadVisits(idToken) }
+            .onFailure { throwable -> println("Firestore bootstrap loadVisits failed: ${throwable.message}") }
     }
 
     override suspend fun fetchUser(userId: String): User? {
