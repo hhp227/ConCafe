@@ -60,8 +60,15 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
-        return castDataSource.castDetail(castId)
-            ?: throw NoSuchElementException("cast detail not found")
+        var detail = castDataSource.castDetail(castId)
+
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastDetailRemote(castId)
+            }
+            detail = castDataSource.castDetail(castId) ?: detail
+        }
+        return detail ?: throw NoSuchElementException("cast detail not found")
     }
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {

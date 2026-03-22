@@ -53,7 +53,9 @@ import com.hhp227.concafe.domain.model.Visit
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -548,49 +550,69 @@ class FirestoreConCafeDataSource(
         }.recoverCatching {
             loadCollectionDocuments(FirestorePaths.CAST_SCHEDULES, null)
         }.getOrElse { emptyList() }
-        val statusDocuments = runCatching {
-            loadCollectionDocuments(FirestorePaths.CAST_SCHEDULE_STATUSES, idToken)
-        }.recoverCatching {
-            loadCollectionDocuments(FirestorePaths.CAST_SCHEDULE_STATUSES, null)
-        }.getOrElse { emptyList() }
 
         val remoteSchedulesByDate = schedulesDocuments.mapNotNull { document ->
             parseCastScheduleDocument(document)
-        }.filter { schedule ->
-            schedule.castId == castId && schedule.date >= fromDate && schedule.date <= toDate
-        }.associateBy { schedule -> schedule.date }
-
-        val remoteStatusesByDate = statusDocuments.mapNotNull { document ->
-            parseCastScheduleStatusDocument(document)
-        }.filter { statusEntry ->
-            statusEntry.castId == castId && statusEntry.date >= fromDate && statusEntry.date <= toDate
-        }.associate { statusEntry ->
-            statusEntry.date to statusEntry.status
-        }
+        }.filter { scheduleEntry ->
+            scheduleEntry.castId == castId && scheduleEntry.date >= fromDate && scheduleEntry.date <= toDate
+        }.associateBy { scheduleEntry -> scheduleEntry.date }
 
         enumerateDates(fromDate, toDate).forEach { date ->
-            val schedule = remoteSchedulesByDate[date]
-            val status = remoteStatusesByDate[date]
-                ?: if (schedule != null) CastScheduleStatus.WORK else CastScheduleStatus.OFF
-            val update = if (status == CastScheduleStatus.WORK && schedule != null) {
+            val scheduleEntry = remoteSchedulesByDate[date]
+            val status = scheduleEntry?.status ?: CastScheduleStatus.OFF
+            val update = if (
+                status == CastScheduleStatus.WORK &&
+                scheduleEntry?.startTime != null &&
+                scheduleEntry.endTime != null
+            ) {
                 CastScheduleUpdate(
                     castId = castId,
                     date = date,
                     status = CastScheduleStatus.WORK,
-                    startTime = schedule.startTime,
-                    endTime = schedule.endTime
+                    startTime = scheduleEntry.startTime,
+                    endTime = scheduleEntry.endTime
                 )
             } else {
                 CastScheduleUpdate(
                     castId = castId,
                     date = date,
-                    status = status,
+                    status = if (status == CastScheduleStatus.WORK) CastScheduleStatus.OFF else status,
                     startTime = null,
                     endTime = null
                 )
             }
             delegate.updateCastSchedule(update)
         }
+    }
+
+    suspend fun refreshCastDetailRemote(castId: String) {
+        require(castId.isNotBlank()) { "castId is required" }
+        val idToken = tokenProvider.getIdToken()
+
+        if (cafes.isEmpty()) {
+            runCatching { loadCafes(idToken = null) }
+        }
+        val cachedCafeId = casts.firstOrNull { cast -> cast.id == castId }?.cafeId
+        val resolvedCafeId = cachedCafeId ?: resolveCafeIdByCastId(castId, idToken)
+            ?: throw NoSuchElementException("cast detail not found")
+
+        refreshCafeDetail(resolvedCafeId)
+        runCatching { loadVisits(idToken) }
+            .recoverCatching { loadVisits(idToken = null) }
+            .getOrElse { throwable ->
+                throw IllegalStateException("Failed to refresh visits for cast detail", throwable)
+            }
+        val currentDate = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+        val fromDate = (currentDate + DatePeriod(days = -30)).toString()
+        val toDate = (currentDate + DatePeriod(days = 60)).toString()
+        runCatching {
+            refreshCastSchedulesRemote(castId = castId, fromDate = fromDate, toDate = toDate)
+        }
+            .getOrElse { throwable ->
+                throw IllegalStateException("Failed to refresh cast schedules for cast detail", throwable)
+            }
     }
 
     suspend fun updateCastScheduleRemote(update: CastScheduleUpdate): CastSchedule? {
@@ -600,7 +622,6 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
         val documentId = "${update.castId}_${update.date}"
         val schedulePath = "${config.documentBasePath()}/${FirestorePaths.CAST_SCHEDULES}/$documentId"
-        val statusPath = "${config.documentBasePath()}/${FirestorePaths.CAST_SCHEDULE_STATUSES}/$documentId"
 
         when (update.status) {
             CastScheduleStatus.WORK -> {
@@ -620,32 +641,22 @@ class FirestoreConCafeDataSource(
                         "status" to firestoreString(CastScheduleStatus.WORK.name)
                     )
                 )
-                val statusBody = firestoreDocumentBody(
-                    mapOf(
-                        "castId" to firestoreString(update.castId),
-                        "cafeId" to firestoreString(cast.cafeId),
-                        "date" to firestoreString(update.date),
-                        "status" to firestoreString(CastScheduleStatus.WORK.name)
-                    )
-                )
 
                 restApi.patch(schedulePath, scheduleBody, idToken)
-                restApi.patch(statusPath, statusBody, idToken)
             }
             CastScheduleStatus.OFF,
             CastScheduleStatus.VACATION -> {
-                runCatching {
-                    restApi.delete(schedulePath, idToken)
-                }
-                val statusBody = firestoreDocumentBody(
+                val scheduleBody = firestoreDocumentBody(
                     mapOf(
                         "castId" to firestoreString(update.castId),
                         "cafeId" to firestoreString(cast.cafeId),
                         "date" to firestoreString(update.date),
+                        "startTime" to firestoreNullableString(null),
+                        "endTime" to firestoreNullableString(null),
                         "status" to firestoreString(update.status.name)
                     )
                 )
-                restApi.patch(statusPath, statusBody, idToken)
+                restApi.patch(schedulePath, scheduleBody, idToken)
             }
         }
 
@@ -1272,6 +1283,28 @@ class FirestoreConCafeDataSource(
         return parsed["documents"]?.jsonArray.orEmpty().map { element ->
             element.jsonObject
         }
+    }
+
+    private suspend fun resolveCafeIdByCastId(
+        castId: String,
+        idToken: String?
+    ): String? {
+        cafes.forEach { cafe ->
+            val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${cafe.id}/${FirestorePaths.CAFE_CASTS}/$castId"
+            val response = runCatching { restApi.get(path, idToken) }
+                .recoverCatching { restApi.get(path, null) }
+                .getOrNull()
+                ?: return@forEach
+            val parsed = runCatching {
+                parseCastDocument(cafe.id, Json.parseToJsonElement(response).jsonObject)
+            }.getOrNull()
+            if (parsed != null) {
+                delegate.casts.removeAll { cast -> cast.id == castId }
+                delegate.casts.add(parsed)
+            }
+            return cafe.id
+        }
+        return null
     }
 
     private suspend fun loadCafeRegistrationClaimDocument(claimId: String, idToken: String?): JsonObject {
@@ -1922,31 +1955,31 @@ class FirestoreConCafeDataSource(
         )
     }
 
-    private fun parseCastScheduleDocument(document: JsonObject): CastSchedule? {
+    private fun parseCastScheduleDocument(document: JsonObject): CastScheduleDocumentEntry? {
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val scheduleId = name.substringAfterLast("/")
         val castId = fields.getFirestoreString("castId") ?: return null
         val cafeId = fields.getFirestoreString("cafeId") ?: return null
         val date = fields.getFirestoreString("date") ?: return null
-        val startTime = fields.getFirestoreString("startTime") ?: return null
-        val endTime = fields.getFirestoreString("endTime") ?: return null
-        return CastSchedule(
+        val startTime = fields.getFirestoreString("startTime")
+        val endTime = fields.getFirestoreString("endTime")
+        val rawStatus = fields.getFirestoreString("status")
+        val status = parseCastScheduleStatus(rawStatus)
+            ?: if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) {
+                CastScheduleStatus.WORK
+            } else {
+                CastScheduleStatus.OFF
+            }
+        return CastScheduleDocumentEntry(
             id = scheduleId,
             castId = castId,
             cafeId = cafeId,
             date = date,
+            status = status,
             startTime = startTime,
             endTime = endTime
         )
-    }
-
-    private fun parseCastScheduleStatusDocument(document: JsonObject): CastScheduleStatusEntry? {
-        val fields = document["fields"]?.jsonObject ?: return null
-        val castId = fields.getFirestoreString("castId") ?: return null
-        val date = fields.getFirestoreString("date") ?: return null
-        val status = parseCastScheduleStatus(fields.getFirestoreString("status")) ?: return null
-        return CastScheduleStatusEntry(castId = castId, date = date, status = status)
     }
 
     private fun parsePendingCafeOwnerClaimDocument(document: JsonObject): CafeManagementData.PendingClaimSummary? {
@@ -2151,10 +2184,14 @@ private data class CafeDetailMetadata(
     val phoneNumber: String?
 )
 
-private data class CastScheduleStatusEntry(
+private data class CastScheduleDocumentEntry(
+    val id: String,
     val castId: String,
+    val cafeId: String,
     val date: String,
-    val status: CastScheduleStatus
+    val status: CastScheduleStatus,
+    val startTime: String?,
+    val endTime: String?
 )
 
 private fun parseCastScheduleStatus(raw: String?): CastScheduleStatus? {

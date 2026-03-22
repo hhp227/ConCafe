@@ -15,6 +15,5 @@ object FirestorePaths {
     const val VISITS = "visits"
     const val STAMPS = "stamps"
     const val CAST_SCHEDULES = "castSchedules"
-    const val CAST_SCHEDULE_STATUSES = "castScheduleStatuses"
 }
 

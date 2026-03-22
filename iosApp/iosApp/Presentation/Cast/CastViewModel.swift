@@ -44,7 +44,8 @@ final class CastViewModel: ObservableObject {
                                 cast: event.cast,
                                 cafe: detail.cafe,
                                 images: detail.images,
-                                schedule: detail.schedule
+                                schedule: detail.schedule,
+                                visitCertificationCount: detail.visitCertificationCount
                             )
                         }
                     case let event as Shared.CastEvent.Deleted:

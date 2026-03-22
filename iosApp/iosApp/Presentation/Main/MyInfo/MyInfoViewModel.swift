@@ -147,7 +147,8 @@ final class MyInfoViewModel: ObservableObject {
                 cast: detail.cast,
                 cafe: cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
         }
     }
@@ -159,7 +160,8 @@ final class MyInfoViewModel: ObservableObject {
                 cast: cast,
                 cafe: detail.cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
         }
     }
