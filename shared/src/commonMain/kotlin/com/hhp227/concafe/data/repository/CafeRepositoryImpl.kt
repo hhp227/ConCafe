@@ -68,6 +68,21 @@ class CafeRepositoryImpl(
         return set?.contains(cafeId) ?: false
     }
 
+    override suspend fun getFavoriteCafeIds(userId: String): List<String> {
+        return socialDataSource.favoriteCafeIdsByUser[userId]
+            ?.toList()
+            .orEmpty()
+            .sorted()
+    }
+
+    override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {
+        val idSet = cafeIds.toSet()
+        return cafeDataSource.cafes
+            .asSequence()
+            .filter { cafe -> cafe.approved && idSet.contains(cafe.id) }
+            .toList()
+    }
+
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
         val set = socialDataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
         return if (set.contains(cafeId)) {
@@ -94,7 +109,8 @@ class CafeRepositoryImpl(
                     locationLabel = cafe.region.city,
                     geoPoint = cafe.region.location,
                     rating = cafe.ratingAvg,
-                    checkInCount = visitCountByCafeId[cafe.id] ?: 0
+                    checkInCount = visitCountByCafeId[cafe.id] ?: 0,
+                    thumbnailImage = cafe.thumbnailImage
                 )
             }
     }

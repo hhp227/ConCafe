@@ -16,6 +16,37 @@ class CafeManagementRepositoryImpl(
     private val noticeDataSource: NoticeDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
+    override suspend fun getOwnedCafes(userId: String): List<CafeManagementData.OwnedCafeSummary> {
+        runCatching {
+            firestoreSyncDataSource.refreshCafeManagementData(userId)
+        }
+
+        val currentUser = authDataSource.findUserById(userId)
+        val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
+            cafeDataSource.cafes
+        } else {
+            cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
+        }
+        return manageableCafes.map { cafe ->
+            val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
+            val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
+
+            CafeManagementData.OwnedCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                city = cafe.region.city,
+                isApproved = cafe.approved,
+                todayVisitors = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0,
+                todayCheckIns = (cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
+                todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
+                rating = cafe.ratingAvg,
+                castCount = cafeCasts.size,
+                noticeCount = cafeNotices.size,
+                externalLinkCount = 3
+            )
+        }
+    }
+
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
         runCatching {
             firestoreSyncDataSource.refreshCafeManagementData(userId)
@@ -27,25 +58,24 @@ class CafeManagementRepositoryImpl(
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
-        val ownedCafes = manageableCafes
-            .map { cafe ->
-                val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
-                val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
+        val ownedCafes = manageableCafes.map { cafe ->
+            val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
+            val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
 
-                CafeManagementData.OwnedCafeSummary(
-                    id = cafe.id,
-                    name = cafe.name,
-                    city = cafe.region.city,
-                    isApproved = cafe.approved,
-                    todayVisitors = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0,
-                    todayCheckIns = (cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
-                    todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
-                    rating = cafe.ratingAvg,
-                    castCount = cafeCasts.size,
-                    noticeCount = cafeNotices.size,
-                    externalLinkCount = 3
-                )
-            }
+            CafeManagementData.OwnedCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                city = cafe.region.city,
+                isApproved = cafe.approved,
+                todayVisitors = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0,
+                todayCheckIns = (cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
+                todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
+                rating = cafe.ratingAvg,
+                castCount = cafeCasts.size,
+                noticeCount = cafeNotices.size,
+                externalLinkCount = 3
+            )
+        }
         val searchableCafes = cafeDataSource.cafes.map { cafe ->
             CafeManagementData.SearchableCafeSummary(
                 id = cafe.id,

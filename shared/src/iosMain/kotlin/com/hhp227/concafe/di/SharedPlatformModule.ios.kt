@@ -20,6 +20,7 @@ actual fun sharedPlatformModules(): List<Module> {
                 PersistedFirebaseAuthTokenProvider(
                     delegate = FirebaseAuthRestTokenProvider(
                         apiKey = FIREBASE_WEB_API_KEY,
+                        fallbackApiKeys = listOf(FIREBASE_IOS_API_KEY),
                         restClient = KtorFirebaseAuthRestClient(get())
                     ),
                     sessionStore = IosFirebaseAuthSessionStore()

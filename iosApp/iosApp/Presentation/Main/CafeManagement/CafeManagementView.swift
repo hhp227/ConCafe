@@ -67,6 +67,8 @@ private struct CafeManagementContentView: View {
                             }
                         }
                     }
+                    searchCafeSection
+                    addCafeCard
                 } else {
                     searchCafeSection
                     emptyStateCard
@@ -237,8 +239,38 @@ private struct CafeManagementContentView: View {
         .buttonStyle(.plain)
     }
 
-    private var searchCafeSection: some View {
+    private var addCafeCard: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Text("새 카페 추가")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+            Text("신규 카페를 등록해 운영 카페 목록에 추가할 수 있습니다.")
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: "786E7A"))
+            Button("새 카페 등록") {
+                onAction(.clickCreateCafe)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color(hex: "6A5666"))
+            .padding(.horizontal, 16)
+            .frame(height: 44)
+            .background(Color(hex: "F6EDF4"))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+        )
+    }
+
+    private var searchCafeSection: some View {
+        let ownedCafeIds = Set(uiState.ownedCafes.map(\.id))
+        let visibleSearchableCafes = uiState.filteredSearchableCafes.filter { !ownedCafeIds.contains($0.id) }
+        return VStack(alignment: .leading, spacing: 12) {
             sectionHeader(
                 title: "기존 카페 검색",
                 subtitle: "기등록되어있는 카페를 검색해서 등록할수 있습니다."
@@ -266,7 +298,7 @@ private struct CafeManagementContentView: View {
             )
             if !uiState.cafeSearchQuery.isEmpty {
                 VStack(spacing: 0) {
-                    if uiState.filteredSearchableCafes.isEmpty {
+                    if visibleSearchableCafes.isEmpty {
                         Text("검색 결과가 없습니다")
                             .font(.subheadline)
                             .foregroundStyle(Color(hex: "8E8794"))
@@ -274,10 +306,10 @@ private struct CafeManagementContentView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 20)
                     } else {
-                        ForEach(Array(uiState.filteredSearchableCafes.enumerated()), id: \.element.id) { index, cafe in
+                        ForEach(Array(visibleSearchableCafes.enumerated()), id: \.element.id) { index, cafe in
                             searchCafeItem(cafe: cafe)
 
-                            if index < uiState.filteredSearchableCafes.count - 1 {
+                            if index < visibleSearchableCafes.count - 1 {
                                 Divider()
                                     .overlay(Color(hex: "F1EAF1"))
                             }

@@ -3,7 +3,9 @@ package com.hhp227.concafe.data.source.firestore
 data class FirebaseAuthSession(
     val userId: String,
     val email: String,
-    val idToken: String?
+    val idToken: String?,
+    val refreshToken: String?,
+    val expiresAtEpochSeconds: Long?
 )
 
 interface FirestoreAuthTokenProvider {
@@ -18,6 +20,8 @@ interface FirestoreAuthTokenProvider {
     suspend fun signOut()
 
     suspend fun deleteCurrentUser(idToken: String?)
+
+    suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession?
 
     fun getCurrentUserId(): String?
 
@@ -47,6 +51,10 @@ class NoOpFirestoreAuthTokenProvider : FirestoreAuthTokenProvider {
     }
 
     override suspend fun deleteCurrentUser(idToken: String?) {
+    }
+
+    override suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession? {
+        return null
     }
 
     override fun getCurrentUserId(): String? {
