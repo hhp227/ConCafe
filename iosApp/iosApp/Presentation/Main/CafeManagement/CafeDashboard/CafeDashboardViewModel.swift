@@ -24,6 +24,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let rejectCastClaimUseCase: RejectCastClaimUseCase
 
+    private let cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase
+
     private let deleteCastUseCase: DeleteCastUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
@@ -161,8 +163,20 @@ final class CafeDashboardViewModel: ObservableObject {
         event.send(.navigateToBannerEdit)
     }
 
+    private func loadExternalLinks() {
+        let links = cafeExternalLinkLocalUseCase.load(cafeId: cafeId).map { persisted in
+            CafeDashboardExternalLink(
+                id: persisted.id,
+                title: persisted.title,
+                url: persisted.url
+            )
+        }
+        uiState.externalLinks = links
+    }
+
     private func dismissExternalLinkSheet() {
         uiState.isExternalLinkSheetVisible = false
+        uiState.editingExternalLinkId = nil
         uiState.externalLinkTitle = ""
         uiState.externalLinkUrl = ""
     }
@@ -181,20 +195,28 @@ final class CafeDashboardViewModel: ObservableObject {
             return
         }
 
-        let title = uiState.externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        let url = uiState.externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines)
-        uiState.isExternalLinkSheetVisible = false
-        uiState.externalLinks.insert(
-            CafeDashboardExternalLink(
-                id: "external-link-\(UUID().uuidString)",
-                title: title,
-                url: url
-            ),
-            at: 0
+        let isEdit = uiState.editingExternalLinkId != nil
+        let title = uiState.externalLinkTitle
+        let url = uiState.externalLinkUrl
+        let persisted = cafeExternalLinkLocalUseCase.upsert(
+            cafeId: cafeId,
+            linkId: uiState.editingExternalLinkId,
+            title: title,
+            url: url
         )
+
+        uiState.externalLinks = persisted.map { item in
+            CafeDashboardExternalLink(
+                id: item.id,
+                title: item.title,
+                url: item.url
+            )
+        }
+        uiState.isExternalLinkSheetVisible = false
+        uiState.editingExternalLinkId = nil
         uiState.externalLinkTitle = ""
         uiState.externalLinkUrl = ""
-        uiState.infoMessage = "외부 링크를 추가했습니다."
+        uiState.infoMessage = isEdit ? "외부 링크를 수정했습니다." : "외부 링크를 추가했습니다."
     }
 
     private func clickExternalLinkItem(_ linkId: String) {
@@ -202,8 +224,24 @@ final class CafeDashboardViewModel: ObservableObject {
         event.send(.navigateToExternalLink(title: link.title, url: link.url))
     }
 
+    private func clickEditExternalLink(_ linkId: String) {
+        guard let link = uiState.externalLinks.first(where: { $0.id == linkId }) else { return }
+        uiState.isExternalLinkSheetVisible = true
+        uiState.editingExternalLinkId = link.id
+        uiState.externalLinkTitle = link.title
+        uiState.externalLinkUrl = link.url
+        uiState.infoMessage = nil
+    }
+
     private func clickDeleteExternalLink(_ linkId: String) {
-        uiState.externalLinks.removeAll { $0.id == linkId }
+        let persisted = cafeExternalLinkLocalUseCase.delete(cafeId: cafeId, linkId: linkId)
+        uiState.externalLinks = persisted.map { item in
+            CafeDashboardExternalLink(
+                id: item.id,
+                title: item.title,
+                url: item.url
+            )
+        }
         uiState.infoMessage = "외부 링크를 삭제했습니다."
     }
 
@@ -502,6 +540,8 @@ final class CafeDashboardViewModel: ObservableObject {
             submitExternalLink()
         case .clickExternalLinkItem(let linkId):
             clickExternalLinkItem(linkId)
+        case .clickEditExternalLink(let linkId):
+            clickEditExternalLink(linkId)
         case .clickDeleteExternalLink(let linkId):
             clickDeleteExternalLink(linkId)
         case .clickCastSchedule(let castId):
@@ -530,6 +570,7 @@ final class CafeDashboardViewModel: ObservableObject {
         getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase = KoinInitializerKt.resolveGetPendingCastClaimsForCafeUseCase(),
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
+        cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase = KoinInitializerKt.resolveCafeExternalLinkLocalUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
@@ -542,6 +583,7 @@ final class CafeDashboardViewModel: ObservableObject {
         self.getPendingCastClaimsForCafeUseCase = getPendingCastClaimsForCafeUseCase
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
+        self.cafeExternalLinkLocalUseCase = cafeExternalLinkLocalUseCase
         self.deleteCastUseCase = deleteCastUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
@@ -552,6 +594,7 @@ final class CafeDashboardViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        loadExternalLinks()
         loadCafeDashboard()
     }
 

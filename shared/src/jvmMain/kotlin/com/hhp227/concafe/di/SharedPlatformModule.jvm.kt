@@ -1,5 +1,7 @@
 package com.hhp227.concafe.di
 
+import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
+import com.hhp227.concafe.data.source.local.JvmCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
@@ -15,6 +17,7 @@ actual fun sharedPlatformModules(): List<Module> {
     return listOf(
         module {
             single { createPlatformHttpClient() }
+            single<CafeExternalLinkLocalStore> { JvmCafeExternalLinkLocalStore() }
             single<FirestoreRestApi> { KtorFirestoreRestApi(get()) }
             single<FirestoreAuthTokenProvider> {
                 PersistedFirebaseAuthTokenProvider(

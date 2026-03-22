@@ -39,6 +39,7 @@ import com.hhp227.concafe.data.source.firestore.FirestoreConfig
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
+import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
@@ -126,6 +127,7 @@ val useCaseModule = module {
     factory { CreateReviewUseCase(get(), get(), get(), get()) }
     factory { CreateCastClaimUseCase(get(), get(), get()) }
     factory { CreateCafeEventUseCase(get(), get()) }
+    factory { CafeExternalLinkLocalUseCase(get<CafeExternalLinkLocalStore>()) }
     factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }

@@ -236,6 +236,9 @@ private fun CafeDashboardContentScreen(
                                 onItemClick = { linkId ->
                                     onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
                                 },
+                                onEditClick = { linkId ->
+                                    onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
+                                },
                                 onDeleteClick = { linkId ->
                                     onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
                                 }
@@ -274,7 +277,7 @@ private fun ExternalLinkSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "외부 링크 추가",
+            text = uiState.externalLinkSheetTitle,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -307,7 +310,7 @@ private fun ExternalLinkSheetContent(
                 disabledContentColor = Color(0xFF7F7078)
             )
         ) {
-            Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+            Text(uiState.externalLinkSubmitLabel, fontWeight = FontWeight.Bold)
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
@@ -324,6 +327,7 @@ private fun ExternalLinkSection(
     links: List<CafeDashboardExternalLink>,
     onAddClick: () -> Unit,
     onItemClick: (String) -> Unit,
+    onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit
 ) {
     Surface(
@@ -411,6 +415,13 @@ private fun ExternalLinkSection(
                                         color = Color(0xFF2B2330)
                                     )
                                 }
+                            }
+                            IconButton(onClick = { onEditClick(link.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "외부 링크 수정",
+                                    tint = Color(0xFF8F848F)
+                                )
                             }
                             IconButton(onClick = { onDeleteClick(link.id) }) {
                                 Icon(

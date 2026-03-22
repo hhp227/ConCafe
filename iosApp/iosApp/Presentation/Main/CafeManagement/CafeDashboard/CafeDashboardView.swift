@@ -616,6 +616,13 @@ private struct CafeDashboardContentView: View {
                         }
                         .buttonStyle(.plain)
                         Button {
+                            onAction(.clickEditExternalLink(link.id))
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(Color(hex: "8F848F"))
+                        }
+                        .buttonStyle(.plain)
+                        Button {
                             onAction(.clickDeleteExternalLink(link.id))
                         } label: {
                             Image(systemName: "trash")
@@ -670,7 +677,7 @@ private struct ExternalLinkInputSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("외부 링크 추가")
+            Text(uiState.externalLinkSheetTitle)
                 .font(.title3.weight(.bold))
             Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
                 .font(.subheadline)
@@ -694,7 +701,7 @@ private struct ExternalLinkInputSheet: View {
             Button {
                 onAction(.submitExternalLink)
             } label: {
-                Text("외부 링크 추가")
+                Text(uiState.externalLinkSubmitLabel)
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
