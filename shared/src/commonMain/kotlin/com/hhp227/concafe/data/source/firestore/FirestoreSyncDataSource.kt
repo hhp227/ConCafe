@@ -39,6 +39,16 @@ interface FirestoreSyncDataSource {
 
     suspend fun fetchPendingCafeRegistrationClaimsForAdmin(): List<PendingCafeRegistrationClaimPreview>
 
+    suspend fun approveCafeOwnerClaimForAdmin(
+        claimId: String,
+        reviewedBy: String
+    ): PendingCafeOwnerClaimPreview
+
+    suspend fun rejectCafeOwnerClaimForAdmin(
+        claimId: String,
+        reviewedBy: String
+    ): PendingCafeOwnerClaimPreview
+
     suspend fun approveCafeRegistrationClaimForAdmin(
         claimId: String,
         reviewedBy: String

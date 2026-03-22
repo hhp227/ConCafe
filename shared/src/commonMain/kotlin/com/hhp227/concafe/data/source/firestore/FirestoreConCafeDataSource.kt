@@ -235,6 +235,17 @@ class FirestoreConCafeDataSource(
                 ownedCafeIds.add(claim.cafeId)
             }
         }
+        val userDocument = runCatching {
+            val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+            val response = restApi.get(path, idToken)
+            Json.parseToJsonElement(response).jsonObject
+        }.getOrNull()
+        val ownedCafeIdsFromUser = userDocument
+            ?.get("fields")
+            ?.jsonObject
+            ?.getFirestoreStringList("ownedCafeIds")
+            .orEmpty()
+        ownedCafeIds.addAll(ownedCafeIdsFromUser)
         registrationClaimDocuments.forEach { document ->
             val fields = document["fields"]?.jsonObject
 
@@ -323,6 +334,67 @@ class FirestoreConCafeDataSource(
         return previews.sortedByDescending { it.requestedAt }
     }
 
+    override suspend fun approveCafeOwnerClaimForAdmin(
+        claimId: String,
+        reviewedBy: String
+    ): PendingCafeOwnerClaimPreview {
+        val idToken = tokenProvider.getIdToken()
+        val claimDocument = loadCafeOwnerClaimDocument(claimId, idToken)
+        val claimFields = claimDocument["fields"]?.jsonObject ?: throw NoSuchElementException("claim not found")
+        val currentStatus = claimFields.getFirestoreString("status").orEmpty()
+
+        if (!currentStatus.isPendingClaimStatus()) {
+            throw IllegalArgumentException("already reviewed claim")
+        }
+        val preview = parsePendingCafeOwnerClaimPreviewForAdmin(claimDocument)
+            ?: throw NoSuchElementException("claim not found")
+
+        markCafeOwnerClaimReviewed(
+            claimId = claimId,
+            reviewedBy = reviewedBy,
+            status = "APPROVED",
+            message = "관리자 승인으로 운영 카페에 연결되었습니다.",
+            idToken = idToken
+        )
+        appendOwnerMapping(
+            userId = preview.requesterUserId,
+            cafeId = preview.cafeId,
+            idToken = idToken
+        )
+        promoteRequesterRoleToCafeOwnerIfNeeded(
+            requesterUserId = preview.requesterUserId,
+            idToken = idToken
+        )
+        applyApprovedOwnerClaimToCache(preview)
+        return preview
+    }
+
+    override suspend fun rejectCafeOwnerClaimForAdmin(
+        claimId: String,
+        reviewedBy: String
+    ): PendingCafeOwnerClaimPreview {
+        val idToken = tokenProvider.getIdToken()
+        val claimDocument = loadCafeOwnerClaimDocument(claimId, idToken)
+        val claimFields = claimDocument["fields"]?.jsonObject ?: throw NoSuchElementException("claim not found")
+        val currentStatus = claimFields.getFirestoreString("status").orEmpty()
+
+        if (!currentStatus.isPendingClaimStatus()) {
+            throw IllegalArgumentException("already reviewed claim")
+        }
+        val preview = parsePendingCafeOwnerClaimPreviewForAdmin(claimDocument)
+            ?: throw NoSuchElementException("claim not found")
+
+        markCafeOwnerClaimReviewed(
+            claimId = claimId,
+            reviewedBy = reviewedBy,
+            status = "REJECTED",
+            message = "관리자 검토 결과 반려되었습니다.",
+            idToken = idToken
+        )
+        applyRejectedOwnerClaimToCache(preview)
+        return preview
+    }
+
     override suspend fun approveCafeRegistrationClaimForAdmin(
         claimId: String,
         reviewedBy: String
@@ -352,6 +424,11 @@ class FirestoreConCafeDataSource(
             status = "APPROVED",
             message = "관리자 승인으로 카페가 생성되었습니다.",
             approvedCafeId = newCafeId,
+            idToken = idToken
+        )
+        appendOwnerMapping(
+            userId = preview.requesterUserId,
+            cafeId = newCafeId,
             idToken = idToken
         )
         promoteRequesterRoleToCafeOwnerIfNeeded(
@@ -532,6 +609,24 @@ class FirestoreConCafeDataSource(
         return Json.parseToJsonElement(response).jsonObject
     }
 
+    private suspend fun loadCafeOwnerClaimDocument(claimId: String, idToken: String?): JsonObject {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId"
+        val response = restApi.get(path, idToken)
+        return Json.parseToJsonElement(response).jsonObject
+    }
+
+    private suspend fun loadUserDocument(userId: String, idToken: String?): JsonObject {
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+        val response = restApi.get(path, idToken)
+        return Json.parseToJsonElement(response).jsonObject
+    }
+
+    private suspend fun loadCafeDocument(cafeId: String, idToken: String?): JsonObject {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId"
+        val response = restApi.get(path, idToken)
+        return Json.parseToJsonElement(response).jsonObject
+    }
+
     private suspend fun createApprovedCafeDocument(
         cafeId: String,
         claim: CafeRegistrationClaim,
@@ -547,6 +642,7 @@ class FirestoreConCafeDataSource(
                 "conceptType" to firestoreString(claim.conceptType),
                 "ratingAvg" to firestoreLong(0),
                 "reviewCount" to firestoreLong(0),
+                "ownerIds" to firestoreStringArray(emptyList()),
                 "region" to firestoreMap(
                     mapOf(
                         "country" to firestoreString(claim.region.country),
@@ -580,6 +676,88 @@ class FirestoreConCafeDataSource(
                 "reviewedBy" to firestoreString(reviewedBy),
                 "reviewedAt" to firestoreString(Clock.System.now().toString()),
                 "approvedCafeId" to firestoreNullableString(approvedCafeId)
+            )
+        )
+        restApi.patch(path, body, idToken)
+    }
+
+    private suspend fun markCafeOwnerClaimReviewed(
+        claimId: String,
+        reviewedBy: String,
+        status: String,
+        message: String,
+        idToken: String?
+    ) {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "status" to firestoreString(status),
+                "message" to firestoreString(message),
+                "reviewedBy" to firestoreString(reviewedBy),
+                "reviewedAt" to firestoreString(Clock.System.now().toString())
+            )
+        )
+        restApi.patch(path, body, idToken)
+    }
+
+    private suspend fun appendOwnerMapping(
+        userId: String,
+        cafeId: String,
+        idToken: String?
+    ) {
+        appendOwnedCafeIdToUser(
+            userId = userId,
+            cafeId = cafeId,
+            idToken = idToken
+        )
+        appendOwnerIdToCafe(
+            cafeId = cafeId,
+            userId = userId,
+            idToken = idToken
+        )
+    }
+
+    private suspend fun appendOwnedCafeIdToUser(
+        userId: String,
+        cafeId: String,
+        idToken: String?
+    ) {
+        val userDocument = runCatching {
+            loadUserDocument(userId, idToken)
+        }.getOrNull() ?: return
+        val fields = userDocument["fields"]?.jsonObject ?: return
+        val existingIds = fields.getFirestoreStringList("ownedCafeIds").toMutableList()
+
+        if (!existingIds.contains(cafeId)) {
+            existingIds.add(cafeId)
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId?updateMask.fieldPaths=ownedCafeIds"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "ownedCafeIds" to firestoreStringArray(existingIds)
+            )
+        )
+        restApi.patch(path, body, idToken)
+    }
+
+    private suspend fun appendOwnerIdToCafe(
+        cafeId: String,
+        userId: String,
+        idToken: String?
+    ) {
+        val cafeDocument = runCatching {
+            loadCafeDocument(cafeId, idToken)
+        }.getOrNull() ?: return
+        val fields = cafeDocument["fields"]?.jsonObject ?: return
+        val existingIds = fields.getFirestoreStringList("ownerIds").toMutableList()
+
+        if (!existingIds.contains(userId)) {
+            existingIds.add(userId)
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId?updateMask.fieldPaths=ownerIds"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "ownerIds" to firestoreStringArray(existingIds)
             )
         )
         restApi.patch(path, body, idToken)
@@ -663,6 +841,49 @@ class FirestoreConCafeDataSource(
             if (originalCafe == null) {
                 cafes.removeAll { it.id == newCafeId }
             }
+            throw e
+        }
+    }
+
+    private fun applyApprovedOwnerClaimToCache(preview: PendingCafeOwnerClaimPreview) {
+        val requesterUserId = preview.requesterUserId
+        val originalClaims = pendingCafeClaimsByUser[requesterUserId]?.toList().orEmpty()
+        val originalOwnedCafeIds = ownedCafeIdsByUser[requesterUserId]?.toList().orEmpty()
+        val originalUser = findUserById(requesterUserId)
+
+        try {
+            pendingCafeClaimsByUser[requesterUserId] =
+                originalClaims.filterNot { it.claimId == preview.claimId }.toMutableList()
+
+            val nextOwnedCafeIds = originalOwnedCafeIds.toMutableList()
+
+            if (!nextOwnedCafeIds.contains(preview.cafeId)) {
+                nextOwnedCafeIds.add(preview.cafeId)
+            }
+            ownedCafeIdsByUser[requesterUserId] = nextOwnedCafeIds
+
+            if (originalUser != null && originalUser.role != UserRole.ADMIN && originalUser.role != UserRole.CAFE_OWNER) {
+                replaceUser(originalUser.copy(role = UserRole.CAFE_OWNER))
+            }
+        } catch (e: Exception) {
+            pendingCafeClaimsByUser[requesterUserId] = originalClaims.toMutableList()
+            ownedCafeIdsByUser[requesterUserId] = originalOwnedCafeIds.toMutableList()
+            if (originalUser != null) {
+                replaceUser(originalUser)
+            }
+            throw e
+        }
+    }
+
+    private fun applyRejectedOwnerClaimToCache(preview: PendingCafeOwnerClaimPreview) {
+        val requesterUserId = preview.requesterUserId
+        val originalClaims = pendingCafeClaimsByUser[requesterUserId]?.toList().orEmpty()
+
+        try {
+            pendingCafeClaimsByUser[requesterUserId] =
+                originalClaims.filterNot { it.claimId == preview.claimId }.toMutableList()
+        } catch (e: Exception) {
+            pendingCafeClaimsByUser[requesterUserId] = originalClaims.toMutableList()
             throw e
         }
     }
@@ -1058,6 +1279,15 @@ private fun JsonObject.getFirestoreMap(key: String): JsonObject? {
         ?.jsonObject
 }
 
+private fun JsonObject.getFirestoreStringList(key: String): List<String> {
+    val valueObject = this[key]?.jsonObject ?: return emptyList()
+    val arrayValue = valueObject["arrayValue"]?.jsonObject ?: return emptyList()
+    val values = arrayValue["values"]?.jsonArray.orEmpty()
+    return values.mapNotNull { element ->
+        element.jsonObject["stringValue"]?.jsonPrimitive?.contentOrNull
+    }
+}
+
 private fun firestoreDocumentBody(fields: Map<String, JsonElement>): String {
     val fieldsJson = fields.entries.joinToString(",") { (key, value) ->
         "\"$key\":$value"
@@ -1083,6 +1313,21 @@ private fun firestoreBoolean(value: Boolean): JsonObject {
 
 private fun firestoreLong(value: Long): JsonObject {
     return JsonObject(mapOf("integerValue" to JsonPrimitive(value.toString())))
+}
+
+private fun firestoreStringArray(values: List<String>): JsonObject {
+    val firestoreValues = values.map { value ->
+        firestoreString(value)
+    }
+    return JsonObject(
+        mapOf(
+            "arrayValue" to JsonObject(
+                mapOf(
+                    "values" to kotlinx.serialization.json.JsonArray(firestoreValues)
+                )
+            )
+        )
+    )
 }
 
 private fun firestoreMap(fields: Map<String, JsonElement>): JsonObject {
