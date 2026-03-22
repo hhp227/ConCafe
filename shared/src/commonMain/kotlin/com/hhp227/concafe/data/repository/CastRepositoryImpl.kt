@@ -139,6 +139,10 @@ class CastRepositoryImpl(
             .toList()
     }
 
+    override suspend fun getCastByLinkedUserId(userId: String): Cast? {
+        return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+    }
+
     override suspend fun followCast(userId: String, castId: String) {
         val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.add(castId)
