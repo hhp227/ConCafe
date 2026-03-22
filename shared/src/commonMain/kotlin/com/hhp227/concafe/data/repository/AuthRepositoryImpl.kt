@@ -104,11 +104,12 @@ class AuthRepositoryImpl(
             throw IllegalArgumentException("email/password auth not supported")
         }
 
-        val currentUserId = authDataSource.currentUserId
-            ?: authTokenProvider.getCurrentUserId()
+        // Prefer provider session as source of truth, fallback to cache only when needed.
+        val currentUserId = authTokenProvider.getCurrentUserId()
+            ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
-        val currentUserEmail = authDataSource.findUserById(currentUserId)?.email
-            ?: authTokenProvider.getCurrentUserEmail()
+        val currentUserEmail = authTokenProvider.getCurrentUserEmail()
+            ?: authDataSource.findUserById(currentUserId)?.email
             ?: throw IllegalArgumentException("current user email not found")
         val verifiedSession = try {
             authTokenProvider.signInWithEmailPassword(
@@ -129,8 +130,7 @@ class AuthRepositoryImpl(
             throw IllegalArgumentException("password does not match current user")
         }
 
-        runCatching { firestoreSyncDataSource.deleteUser(currentUserId) }
-
+        firestoreSyncDataSource.deleteUser(currentUserId)
         authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
 
         authDataSource.currentUserId = null

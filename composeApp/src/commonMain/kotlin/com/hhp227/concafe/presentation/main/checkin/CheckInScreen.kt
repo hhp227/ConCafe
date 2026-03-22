@@ -461,6 +461,7 @@ private fun PopularCafeCard(
         name = cafe.name,
         rating = "${cafe.rating}",
         location = cafe.locationLabel,
+        thumbnailImage = cafe.thumbnailImage,
         modifier = Modifier
             .width(220.dp),
         trailingLabel = "체크인 ${cafe.checkInCount}",

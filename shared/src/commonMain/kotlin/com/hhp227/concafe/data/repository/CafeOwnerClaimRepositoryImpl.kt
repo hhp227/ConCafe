@@ -5,7 +5,6 @@ import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
-import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeOwnerClaimRepository
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -39,6 +38,17 @@ class CafeOwnerClaimRepositoryImpl(
             message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
         )
         claims.add(0, claim)
+        try {
+            firestoreSyncDataSource.pushCafeOwnerClaim(
+                requesterUserId = userId,
+                claim = claim,
+                location = "${cafe.region.city} ${cafe.region.address}",
+                imageUrl = cafe.thumbnailImage
+            )
+        } catch (e: Exception) {
+            claims.removeAll { existing -> existing.claimId == claim.claimId }
+            throw e
+        }
         return PendingCafeOwnerClaimPreview(
             claimId = claim.claimId,
             requesterUserId = userId,
@@ -57,58 +67,17 @@ class CafeOwnerClaimRepositoryImpl(
     }
 
     override suspend fun approveCafeOwnerClaim(claimId: String, reviewedBy: String): PendingCafeOwnerClaimPreview {
-        val resolved = resolveClaim(claimId)
-        val claims = cafeDataSource.pendingCafeClaimsByUser[resolved.requesterUserId]
-            ?: throw NoSuchElementException("claim not found")
-        claims.removeAll { it.claimId == claimId }
-
-        val ownedCafeIds = cafeDataSource.ownedCafeIdsByUser.getOrPut(resolved.requesterUserId) { mutableListOf() }
-        if (!ownedCafeIds.contains(resolved.cafeId)) {
-            ownedCafeIds.add(resolved.cafeId)
-        }
-
-        val currentUser = authDataSource.findUserById(resolved.requesterUserId)
-        if (currentUser != null && currentUser.role != UserRole.ADMIN) {
-            authDataSource.replaceUser(currentUser.copy(role = UserRole.CAFE_OWNER))
-        }
-        return resolved
+        return firestoreSyncDataSource.approveCafeOwnerClaimForAdmin(
+            claimId = claimId,
+            reviewedBy = reviewedBy
+        )
     }
 
     override suspend fun rejectCafeOwnerClaim(claimId: String, reviewedBy: String): PendingCafeOwnerClaimPreview {
-        val resolved = resolveClaim(claimId)
-        val claims = cafeDataSource.pendingCafeClaimsByUser[resolved.requesterUserId]
-            ?: throw NoSuchElementException("claim not found")
-        val claimIndex = claims.indexOfFirst { it.claimId == claimId }
-        if (claimIndex == -1) {
-            throw NoSuchElementException("claim not found")
-        }
-        val current = claims[claimIndex]
-        claims[claimIndex] = current.copy(status = "반려", message = current.message)
-        return resolved
-    }
-
-    private fun resolveClaim(claimId: String): PendingCafeOwnerClaimPreview {
-        return cafeDataSource.pendingCafeClaimsByUser
-            .flatMap { (userId, claims) ->
-                claims.mapNotNull { claim ->
-                    if (claim.claimId != claimId) return@mapNotNull null
-                    val user = authDataSource.findUserById(userId) ?: return@mapNotNull null
-                    val cafe = cafeDataSource.cafes.firstOrNull { it.id == claim.cafeId } ?: return@mapNotNull null
-                    PendingCafeOwnerClaimPreview(
-                        claimId = claim.claimId,
-                        requesterUserId = userId,
-                        requesterNickname = user.nickname,
-                        cafeId = claim.cafeId,
-                        cafeName = claim.cafeName,
-                        location = "${cafe.region.city} ${cafe.region.address}",
-                        requestedAt = claim.requestedAt,
-                        message = claim.message,
-                        imageUrl = cafe.thumbnailImage
-                    )
-                }
-            }
-            .firstOrNull()
-            ?: throw NoSuchElementException("claim not found")
+        return firestoreSyncDataSource.rejectCafeOwnerClaimForAdmin(
+            claimId = claimId,
+            reviewedBy = reviewedBy
+        )
     }
 }
 

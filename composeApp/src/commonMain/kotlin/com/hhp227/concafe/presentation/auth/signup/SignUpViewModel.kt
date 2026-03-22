@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
@@ -21,6 +22,7 @@ import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
     private val signUpUseCase: SignUpUseCase,
+    private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
     private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
     private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
@@ -202,27 +204,30 @@ class SignUpViewModel(
     }
 
     private fun submit() {
-        val validationMessage = validate(uiState.value)
+        val currentState = uiState.value
+        val validationMessage = validate(currentState)
         if (validationMessage != null) {
             _uiState.update { it.copy(errorMessage = validationMessage, infoMessage = null) }
             return
         }
 
-        val nickname = resolveNickname(uiState.value)
-        val role = resolveRole(uiState.value)
+        val nickname = resolveNickname(currentState)
+        val role = resolveRole(currentState)
+        val selectedCafeId = currentState.selectedCafe?.id
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
 
         viewModelScope.launch {
             when (
                 val result = signUpUseCase.invoke(
-                    email = uiState.value.email.trim(),
-                    password = uiState.value.password,
+                    email = currentState.email.trim(),
+                    password = currentState.password,
                     nickname = nickname,
                     role = role,
-                    affiliatedCafeId = if (role == UserRole.CAST) uiState.value.selectedCafe?.id else null
+                    affiliatedCafeId = if (role == UserRole.CAST) selectedCafeId else null
                 )
             ) {
                 is AppResult.Success -> {
+                    createOwnerCafeClaimIfNeeded(role, selectedCafeId)
                     _uiState.update { it.copy(isLoading = false) }
                     _event.emit(SignUpEvent.SignedUp)
                 }
@@ -235,6 +240,12 @@ class SignUpViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun createOwnerCafeClaimIfNeeded(role: UserRole, selectedCafeId: String?) {
+        if (role == UserRole.CAFE_OWNER && !selectedCafeId.isNullOrBlank()) {
+            createCafeOwnerClaimUseCase.invoke(selectedCafeId)
         }
     }
 

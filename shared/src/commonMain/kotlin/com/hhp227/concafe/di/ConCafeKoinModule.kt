@@ -151,7 +151,7 @@ val useCaseModule = module {
     factory { GetMainNavigationUseCase(get()) }
     factory { GetMyCastClaimStatusUseCase(get(), get()) }
     factory { GetMyRequestableCastPageUseCase(get(), get()) }
-    factory { GetMyInfoUseCase(get(), get(), get(), get(), get()) }
+    factory { GetMyInfoUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
     factory { GetRankingFeedUseCase(get(), get(), get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }

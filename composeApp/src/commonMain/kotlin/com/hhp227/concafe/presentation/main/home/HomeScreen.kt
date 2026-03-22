@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -494,7 +495,16 @@ private fun NearByCafeItem(
                 .size(92.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(Brush.verticalGradient(listOf(Color(0xFFFFE1C7), Color(0xFFFFCEAE))))
-        )
+        ) {
+            val resolvedThumbnailImage = cafe.thumbnailImage?.trim().orEmpty()
+
+            if (resolvedThumbnailImage.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = resolvedThumbnailImage,
+                    modifier = Modifier.size(92.dp)
+                )
+            }
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)

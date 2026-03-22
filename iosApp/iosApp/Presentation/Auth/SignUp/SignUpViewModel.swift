@@ -15,6 +15,8 @@ class SignUpViewModel: ObservableObject {
 
     private let signUpUseCase: SignUpUseCase
 
+    private let createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase
+
     private let signInUseCase: SignInUseCase
 
     private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
@@ -140,22 +142,25 @@ class SignUpViewModel: ObservableObject {
             return
         }
 
+        let currentState = uiState
+        let role = resolveRole(currentState)
+        let selectedCafeId = currentState.selectedCafe?.id
         uiState.isLoading = true
         clearMessages()
 
         requestTask?.cancel()
         requestTask = Task {
             do {
-                let role = resolveRole(uiState)
                 let result = try await signUpUseCase.invoke(
-                    email: uiState.email.trimmingCharacters(in: .whitespacesAndNewlines),
-                    password: uiState.password,
-                    nickname: resolveNickname(uiState),
+                    email: currentState.email.trimmingCharacters(in: .whitespacesAndNewlines),
+                    password: currentState.password,
+                    nickname: resolveNickname(currentState),
                     role: role,
-                    affiliatedCafeId: role == .cast ? uiState.selectedCafe?.id : nil
+                    affiliatedCafeId: role == .cast ? selectedCafeId : nil
                 )
 
                 if result is AppResultSuccess<AnyObject> {
+                    await createOwnerCafeClaimIfNeeded(role: role, selectedCafeId: selectedCafeId)
                     uiState.isLoading = false
                     event.send(.signedUp)
                 } else if let failure = result as? AppResultFailure {
@@ -170,6 +175,12 @@ class SignUpViewModel: ObservableObject {
                 uiState.isLoading = false
                 uiState.errorMessage = error.localizedDescription
             }
+        }
+    }
+
+    private func createOwnerCafeClaimIfNeeded(role: UserRole, selectedCafeId: String?) async {
+        if role == .cafeOwner, let selectedCafeId, !selectedCafeId.isEmpty {
+            _ = try? await createCafeOwnerClaimUseCase.invoke(cafeId: selectedCafeId)
         }
     }
 
@@ -367,10 +378,12 @@ class SignUpViewModel: ObservableObject {
     init(
         getSignUpCafeListUseCase: GetSignUpCafeListUseCase = KoinInitializerKt.resolveGetSignUpCafeListUseCase(),
         signUpUseCase: SignUpUseCase = KoinInitializerKt.resolveSignUpUseCase(),
+        createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
+        self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.signInUseCase = signInUseCase
         self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
         self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()

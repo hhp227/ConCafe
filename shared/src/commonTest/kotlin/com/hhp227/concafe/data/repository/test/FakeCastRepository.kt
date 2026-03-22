@@ -121,6 +121,25 @@ class FakeCastRepository(
         return dataSource.followedCastIdsByUser[userId]?.contains(castId) == true
     }
 
+    override suspend fun getFollowedCastIds(userId: String): List<String> {
+        return dataSource.followedCastIdsByUser[userId]
+            ?.toList()
+            .orEmpty()
+            .sorted()
+    }
+
+    override suspend fun getCastsByIds(castIds: List<String>): List<Cast> {
+        val idSet = castIds.toSet()
+        return dataSource.casts
+            .asSequence()
+            .filter { cast -> idSet.contains(cast.id) }
+            .toList()
+    }
+
+    override suspend fun getCastByLinkedUserId(userId: String): Cast? {
+        return dataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+    }
+
     override suspend fun followCast(userId: String, castId: String) {
         val set = dataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.add(castId)

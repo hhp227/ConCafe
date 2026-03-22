@@ -376,8 +376,29 @@ private struct NearByCafeItem: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 16)
-            .fill(LinearGradient(colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")], startPoint: .top, endPoint: .bottom))
+            GeometryReader { geometry in
+                let imageSize = geometry.size
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    if let resolvedImageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
+                        CachedAsyncImage(
+                            url: resolvedImageUrl,
+                            placeholder: EmptyView()
+                        )
+                        .frame(width: imageSize.width, height: imageSize.height)
+                        .clipped()
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
             .frame(width: 92, height: 92)
             VStack(alignment: .leading, spacing: 4) {
                 Text(cafe.name)
@@ -396,6 +417,14 @@ private struct NearByCafeItem: View {
             }
             Spacer(minLength: 0)
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
     }
 }
 

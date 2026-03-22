@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import org.jetbrains.skia.Image
+import java.util.LinkedHashMap
 import java.awt.GraphicsEnvironment
 import java.io.File
 import java.net.URL
@@ -98,6 +99,10 @@ private fun chooseImageFile(): String? {
 }
 
 private fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
+    JvmImageBitmapMemoryCache.get(imageUrl)?.let { cached ->
+        return cached
+    }
+
     return runCatching {
         val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
             URL(imageUrl).readBytes()
@@ -105,6 +110,25 @@ private fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
             File(imageUrl).readBytes()
         }
 
-        Image.makeFromEncoded(bytes).asImageBitmap()
+        val decoded = Image.makeFromEncoded(bytes).asImageBitmap()
+        JvmImageBitmapMemoryCache.put(imageUrl, decoded)
+        decoded
     }.getOrNull()
+}
+
+private object JvmImageBitmapMemoryCache {
+    private const val MAX_ENTRIES = 120
+    private val cache = object : LinkedHashMap<String, ImageBitmap>(MAX_ENTRIES, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?): Boolean {
+            return size > MAX_ENTRIES
+        }
+    }
+
+    fun get(key: String): ImageBitmap? = synchronized(cache) {
+        cache[key]
+    }
+
+    fun put(key: String, value: ImageBitmap) = synchronized(cache) {
+        cache[key] = value
+    }
 }

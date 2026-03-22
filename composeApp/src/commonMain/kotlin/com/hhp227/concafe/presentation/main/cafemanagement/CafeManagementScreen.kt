@@ -162,11 +162,26 @@ private fun CafeManagementContentScreen(
                             PendingClaimCard(claim = claim)
                         }
                     }
+                    item {
+                        SearchCafeSection(
+                            searchQuery = uiState.cafeSearchQuery,
+                            searchResults = uiState.filteredSearchableCafes,
+                            excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
+                            onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
+                            onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                        )
+                    }
+                    item {
+                        AddCafeCard(
+                            onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
+                        )
+                    }
                 } else {
                     item {
                         SearchCafeSection(
                             searchQuery = uiState.cafeSearchQuery,
                             searchResults = uiState.filteredSearchableCafes,
+                            excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
                             onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
                             onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
                         )
@@ -178,6 +193,44 @@ private fun CafeManagementContentScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddCafeCard(
+    onCreateCafe: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "새 카페 추가",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2B2330)
+            )
+            Text(
+                text = "신규 카페를 등록해 운영 카페 목록에 추가할 수 있습니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF786E7A)
+            )
+            Button(
+                onClick = onCreateCafe,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF6EDF4),
+                    contentColor = Color(0xFF6A5666)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(text = "새 카페 등록", fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -402,9 +455,11 @@ private fun ExpandOwnedCafeButton(
 private fun SearchCafeSection(
     searchQuery: String,
     searchResults: List<CafeManagementData.SearchableCafeSummary>,
+    excludedCafeIds: Set<String>,
     onSearchQueryChange: (String) -> Unit,
     onClaimCafe: (String) -> Unit
 ) {
+    val visibleSearchResults = searchResults.filterNot { excludedCafeIds.contains(it.id) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
             title = "기존 카페 검색",
@@ -455,19 +510,19 @@ private fun SearchCafeSection(
                 border = BorderStroke(1.dp, Color(0xFFE4DDE5))
             ) {
                 Column {
-                    if (searchResults.isEmpty()) {
+                    if (visibleSearchResults.isEmpty()) {
                         Text(
                             text = "검색 결과가 없습니다",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
                             color = Color(0xFF8E8794)
                         )
                     } else {
-                        searchResults.forEachIndexed { index, cafe ->
+                        visibleSearchResults.forEachIndexed { index, cafe ->
                             SearchCafeItem(
                                 cafe = cafe,
                                 onClaimClick = { onClaimCafe(cafe.id) }
                             )
-                            if (index < searchResults.lastIndex) {
+                            if (index < visibleSearchResults.lastIndex) {
                                 Divider(color = Color(0xFFF1EAF1))
                             }
                         }

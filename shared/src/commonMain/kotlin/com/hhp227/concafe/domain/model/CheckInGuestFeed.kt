@@ -13,7 +13,8 @@ data class CheckInCafeSummary(
     val locationLabel: String,
     val geoPoint: GeoPoint,
     val rating: Double,
-    val checkInCount: Int
+    val checkInCount: Int,
+    val thumbnailImage: String? = null
 )
 
 data class CheckInCastSummary(
