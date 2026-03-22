@@ -4,6 +4,8 @@ object FirestorePaths {
     const val USERS = "users"
     const val HOME_BANNERS = "homeBanners"
     const val CAFES = "cafes"
+    const val CAFE_MENUS = "menus"
+    const val CAFE_GOODS = "goods"
     const val CAFE_CASTS = "casts"
     const val CAFE_NOTICES = "notices"
     const val CAFE_EVENTS = "events"

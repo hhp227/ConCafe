@@ -323,7 +323,7 @@ private fun PriceField(
         placeholder = "0",
         leadingContent = {
             Text(
-                text = "¥",
+                text = "₩",
                 color = Color(0xFF6B5A65),
                 fontWeight = FontWeight.SemiBold
             )
@@ -339,6 +339,7 @@ private fun CategoryGrid(
     val categoryIds = listOf("drink", "food", "dessert", "goods")
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         val categories = categoryIds.chunked(2)
+
         categories.forEach { rowCategories ->
             Row(
                 modifier = Modifier.fillMaxWidth(),

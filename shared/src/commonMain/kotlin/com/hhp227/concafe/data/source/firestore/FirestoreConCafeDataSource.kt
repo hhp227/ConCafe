@@ -25,12 +25,15 @@ import com.hhp227.concafe.domain.model.CafeEventCreate
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.GeoPoint
+import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
@@ -80,6 +83,12 @@ class FirestoreConCafeDataSource(
     RankingDataSource by delegate,
     PagingDataSource by delegate,
     FirestoreSyncDataSource {
+    private val hydratedCafeDetailIds = mutableSetOf<String>()
+
+    fun isCafeDetailHydrated(cafeId: String): Boolean {
+        return hydratedCafeDetailIds.contains(cafeId)
+    }
+
     suspend fun bootstrap() {
         val idToken = tokenProvider.getIdToken()
 
@@ -150,14 +159,33 @@ class FirestoreConCafeDataSource(
                 document = document.jsonObject
             )
         }.sortedByDescending { notice -> notice.createdAt }
+        val menusDocuments = runCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_MENUS, idToken)
+        }.recoverCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_MENUS, null)
+        }.getOrElse { emptyList() }
+        val goodsDocuments = runCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_GOODS, idToken)
+        }.recoverCatching {
+            loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_GOODS, null)
+        }.getOrElse { emptyList() }
+        val parsedMenus = menusDocuments
+            .mapNotNull { document -> parseMenuDocument(document) }
+            .sortedBy { menu -> menu.name.lowercase() }
+        val parsedGoods = goodsDocuments
+            .mapNotNull { document -> parseGoodsDocument(document) }
+            .sortedBy { goods -> goods.name.lowercase() }
         upsertCafeAndDetail(
             cafe = cafe,
             casts = parsedCasts,
             notices = parsedNotices,
+            menus = parsedMenus,
+            goods = parsedGoods,
             images = detailMetadata.images,
             businessHours = detailMetadata.businessHours,
             phoneNumber = detailMetadata.phoneNumber
         )
+        hydratedCafeDetailIds.add(cafeId)
     }
 
     suspend fun refreshCafeNoticeEventManagement(cafeId: String) {
@@ -403,7 +431,7 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
 
         restApi.patch(path, body, idToken)
-        return delegate.updateCafeInfo(
+        val updated = delegate.updateCafeInfo(
             update.copy(
                 name = update.name.trim(),
                 description = update.description.trim(),
@@ -414,6 +442,105 @@ class FirestoreConCafeDataSource(
                 contactNumber = phoneNumber
             )
         )
+        hydratedCafeDetailIds.add(update.cafeId)
+        return updated
+    }
+
+    suspend fun upsertCafeMenuGoodsRemote(update: CafeMenuGoodsUpsert): CafeDetail {
+        require(update.cafeId.isNotBlank()) { "cafeId is required" }
+        require(update.name.isNotBlank()) { "name is required" }
+        require(update.price >= 0) { "price must be zero or positive" }
+        require(update.category.isNotBlank()) { "category is required" }
+
+        val idToken = tokenProvider.getIdToken()
+        val normalizedCategory = update.category.trim().lowercase()
+        val isGoodsCategory = normalizedCategory == "goods"
+        val itemId = update.itemId?.trim()?.takeIf { value -> value.isNotEmpty() }
+            ?: nextFirestoreEntityId(if (isGoodsCategory) "goods" else "menu")
+        val cachedDetail = delegate.cafeDetailsById[update.cafeId]
+        val existingMenu = cachedDetail?.menus?.firstOrNull { menu -> menu.id == itemId }
+        val existingGoods = cachedDetail?.goods?.firstOrNull { goods -> goods.id == itemId }
+        val resolvedImage = update.imageUrl
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
+            ?: existingMenu?.image
+            ?: existingGoods?.image
+
+        if (isGoodsCategory) {
+            val stock = if (update.isInStock) {
+                when {
+                    existingGoods?.stock != null && existingGoods.stock > 0 -> existingGoods.stock
+                    else -> 50
+                }
+            } else {
+                0
+            }
+            val body = firestoreDocumentBody(
+                mapOf(
+                    "name" to firestoreString(update.name.trim()),
+                    "price" to firestoreLong(update.price.toLong()),
+                    "image" to firestoreNullableString(resolvedImage),
+                    "stock" to firestoreLong(stock.toLong())
+                )
+            )
+            val goodsPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}/${FirestorePaths.CAFE_GOODS}/$itemId"
+            restApi.patch(goodsPath, body, idToken)
+            if (existingMenu != null) {
+                val menuPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}/${FirestorePaths.CAFE_MENUS}/$itemId"
+                runCatching { restApi.delete(menuPath, idToken) }
+            }
+        } else {
+            val body = firestoreDocumentBody(
+                mapOf(
+                    "name" to firestoreString(update.name.trim()),
+                    "price" to firestoreLong(update.price.toLong()),
+                    "desc" to firestoreString(update.description.trim()),
+                    "image" to firestoreNullableString(resolvedImage),
+                    "category" to firestoreString(normalizedCategory),
+                    "isAvailable" to firestoreBoolean(update.isInStock)
+                )
+            )
+            val menuPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}/${FirestorePaths.CAFE_MENUS}/$itemId"
+            restApi.patch(menuPath, body, idToken)
+            if (existingGoods != null) {
+                val goodsPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}/${FirestorePaths.CAFE_GOODS}/$itemId"
+                runCatching { restApi.delete(goodsPath, idToken) }
+            }
+        }
+        refreshCafeDetail(update.cafeId)
+        return delegate.cafeDetailsById[update.cafeId]
+            ?: throw NoSuchElementException("cafe detail not found")
+    }
+
+    suspend fun deleteCafeMenuGoodsRemote(cafeId: String, itemId: String): CafeDetail {
+        require(cafeId.isNotBlank()) { "cafeId is required" }
+        require(itemId.isNotBlank()) { "itemId is required" }
+
+        val idToken = tokenProvider.getIdToken()
+        val cachedDetail = delegate.cafeDetailsById[cafeId]
+        val targetIsMenu = cachedDetail?.menus?.any { menu -> menu.id == itemId } == true
+        val targetIsGoods = cachedDetail?.goods?.any { goods -> goods.id == itemId } == true
+        var deleted = false
+
+        if (targetIsMenu || !targetIsGoods) {
+            val menuPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_MENUS}/$itemId"
+            if (runCatching { restApi.delete(menuPath, idToken) }.isSuccess) {
+                deleted = true
+            }
+        }
+        if (targetIsGoods || !targetIsMenu) {
+            val goodsPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_GOODS}/$itemId"
+            if (runCatching { restApi.delete(goodsPath, idToken) }.isSuccess) {
+                deleted = true
+            }
+        }
+        if (!deleted) {
+            throw NoSuchElementException("menu goods item not found")
+        }
+
+        refreshCafeDetail(cafeId)
+        return delegate.cafeDetailsById[cafeId]
+            ?: throw NoSuchElementException("cafe detail not found")
     }
 
     override suspend fun fetchUser(userId: String): User? {
@@ -1259,12 +1386,15 @@ class FirestoreConCafeDataSource(
         delegate.casts.clear()
         this.notices.clear()
         this.visits.clear()
+        hydratedCafeDetailIds.clear()
     }
 
     private fun upsertCafeAndDetail(
         cafe: Cafe,
         casts: List<Cast>,
         notices: List<Notice>,
+        menus: List<CafeMenu>? = null,
+        goods: List<Goods>? = null,
         images: List<String>? = null,
         businessHours: String? = null,
         phoneNumber: String? = null
@@ -1286,6 +1416,8 @@ class FirestoreConCafeDataSource(
                 cafe = cafe,
                 casts = casts,
                 images = images ?: cachedDetail.images,
+                menus = menus ?: cachedDetail.menus,
+                goods = goods ?: cachedDetail.goods,
                 notices = notices,
                 businessHours = businessHours ?: cachedDetail.businessHours,
                 phoneNumber = phoneNumber ?: cachedDetail.phoneNumber
@@ -1295,14 +1427,53 @@ class FirestoreConCafeDataSource(
                 cafe = cafe,
                 images = images ?: listOfNotNull(cafe.thumbnailImage),
                 casts = casts,
-                menus = emptyList(),
-                goods = emptyList(),
+                menus = menus ?: emptyList(),
+                goods = goods ?: emptyList(),
                 notices = notices,
                 businessHours = businessHours ?: "운영시간 정보 준비중",
                 phoneNumber = phoneNumber ?: "연락처 정보 준비중"
             )
         }
         delegate.cafeDetailsById[cafe.id] = detail
+    }
+
+    private fun parseMenuDocument(document: JsonObject): CafeMenu? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val menuId = name.substringAfterLast("/")
+        val category = fields.getFirestoreString("category")
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
+            ?: "drink"
+        val description = fields.getFirestoreString("desc")
+            ?: fields.getFirestoreString("description")
+            ?: ""
+        return CafeMenu(
+            id = menuId,
+            name = fields.getFirestoreString("name").orEmpty(),
+            price = (fields.getFirestoreLong("price") ?: 0L).toInt(),
+            desc = description,
+            image = fields.getFirestoreString("image")
+                ?: fields.getFirestoreString("imageUrl")
+                ?: fields.getFirestoreString("thumbnailImage"),
+            category = category,
+            isAvailable = fields.getFirestoreBoolean("isAvailable") ?: true
+        )
+    }
+
+    private fun parseGoodsDocument(document: JsonObject): Goods? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val goodsId = name.substringAfterLast("/")
+        return Goods(
+            id = goodsId,
+            name = fields.getFirestoreString("name").orEmpty(),
+            price = (fields.getFirestoreLong("price") ?: 0L).toInt(),
+            image = fields.getFirestoreString("image")
+                ?: fields.getFirestoreString("imageUrl")
+                ?: fields.getFirestoreString("thumbnailImage"),
+            stock = (fields.getFirestoreLong("stock") ?: 0L).toInt()
+        )
     }
 
     private fun parseCafeDetailMetadata(document: JsonObject): CafeDetailMetadata {

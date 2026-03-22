@@ -60,6 +60,16 @@ service cloud.firestore {
         allow read: if true;
         allow write: if canManageCafe(cafeId);
       }
+
+      match /menus/{menuId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /goods/{goodsId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
     }
 
     match /visits/{visitId} {

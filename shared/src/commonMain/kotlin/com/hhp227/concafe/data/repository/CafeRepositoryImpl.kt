@@ -53,6 +53,7 @@ class CafeRepositoryImpl(
 
         if (cachedDetail != null) {
             val shouldRefresh = firestoreDataSource != null && (
+                !firestoreDataSource.isCafeDetailHydrated(cafeId) ||
                 cachedDetail.businessHours.isBlank() ||
                     cachedDetail.phoneNumber.isBlank() ||
                     cachedDetail.businessHours == "운영시간 정보 준비중" ||
@@ -95,10 +96,20 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.upsertCafeMenuGoodsRemote(update)
+        }
         return cafeDataSource.upsertCafeMenuGoods(update)
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.deleteCafeMenuGoodsRemote(cafeId, itemId)
+        }
         return cafeDataSource.deleteCafeMenuGoods(cafeId, itemId)
     }
 

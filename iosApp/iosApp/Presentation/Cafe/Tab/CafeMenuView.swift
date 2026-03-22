@@ -18,11 +18,29 @@ struct CafeMenuView: View {
             VStack(spacing: 12) {
                 ForEach(menus, id: \.id) { menu in
                     HStack(spacing: 12) {
-                        LinearGradient(
-                            colors: menu.image == nil ? [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")] : [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                        GeometryReader { proxy in
+                            let imageSize = proxy.size
+                            let trimmed = menu.image?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                            let resolvedUrl = trimmed.isEmpty ? nil : URL(string: trimmed)
+
+                            ZStack {
+                                if let resolvedUrl {
+                                    CachedAsyncImage(
+                                        url: resolvedUrl,
+                                        placeholder: EmptyView()
+                                    )
+                                    .frame(width: imageSize.width, height: imageSize.height)
+                                    .clipped()
+                                }
+                                LinearGradient(
+                                    colors: resolvedUrl == nil ? [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")] : [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                .opacity(resolvedUrl == nil ? 1 : 0.28)
+                            }
+                            .frame(width: imageSize.width, height: imageSize.height)
+                        }
                         .frame(width: 84, height: 84)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         VStack(alignment: .leading, spacing: 6) {
