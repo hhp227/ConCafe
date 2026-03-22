@@ -65,6 +65,36 @@ object TimeUtils {
         return "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
     }
 
+    fun parseHourMinuteOrDefault(
+        value: String,
+        defaultHour: Int = 10,
+        defaultMinute: Int = 0
+    ): Pair<Int, Int> {
+        val matched = Regex("""^\s*(\d{1,2}):(\d{2})\s*$""").find(value)
+        val hour = matched?.groupValues?.getOrNull(1)?.toIntOrNull()
+        val minute = matched?.groupValues?.getOrNull(2)?.toIntOrNull()
+        return if (hour != null && minute != null && hour in 0..23 && minute in 0..59) {
+            hour to minute
+        } else {
+            defaultHour to defaultMinute
+        }
+    }
+
+    fun extractNormalizedHourMinuteList(value: String): List<String> {
+        return Regex("""(\d{1,2}):(\d{2})""")
+            .findAll(value)
+            .mapNotNull { match ->
+                val hour = match.groupValues[1].toIntOrNull() ?: return@mapNotNull null
+                val minute = match.groupValues[2].toIntOrNull() ?: return@mapNotNull null
+                if (hour in 0..23 && minute in 0..59) {
+                    formatHourMinute(hour, minute)
+                } else {
+                    null
+                }
+            }
+            .toList()
+    }
+
     fun buildVisitedAtUtcString(dateMillis: Long, hour: Int, minute: Int): String {
         return "${formatIsoDateFromEpochMillis(dateMillis)}T${formatHourMinute(hour, minute)}:00Z"
     }

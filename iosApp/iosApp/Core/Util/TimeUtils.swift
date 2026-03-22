@@ -89,6 +89,50 @@ final class TimeUtils {
         return formatter.string(from: date)
     }
 
+    static func formatHourMinute(hour: Int, minute: Int) -> String {
+        String(format: "%02d:%02d", hour, minute)
+    }
+
+    static func parseHourMinute(
+        _ value: String,
+        defaultHour: Int = 10,
+        defaultMinute: Int = 0
+    ) -> Date {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "H:mm"
+        if let parsed = formatter.date(from: normalized) {
+            return parsed
+        }
+
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = defaultHour
+        components.minute = defaultMinute
+        components.second = 0
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    static func extractNormalizedHourMinuteList(from value: String) -> [String] {
+        let pattern = #"(\d{1,2}):(\d{2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(location: 0, length: value.utf16.count)
+        let matches = regex.matches(in: value, range: range)
+        return matches.compactMap { match in
+            guard
+                let hourRange = Range(match.range(at: 1), in: value),
+                let minuteRange = Range(match.range(at: 2), in: value),
+                let hour = Int(value[hourRange]),
+                let minute = Int(value[minuteRange]),
+                (0...23).contains(hour),
+                (0...59).contains(minute)
+            else {
+                return nil
+            }
+            return formatHourMinute(hour: hour, minute: minute)
+        }
+    }
+
     static func defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 23) -> [String] {
         var options: [String] = []
 
