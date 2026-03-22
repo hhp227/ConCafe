@@ -8,10 +8,12 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class AdminOperationsViewModel: ObservableObject {
     @Published private(set) var uiState = AdminOperationsUiState()
+
     let event = PassthroughSubject<AdminOperationsEvent, Never>()
 
     private let getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase
@@ -25,6 +27,10 @@ final class AdminOperationsViewModel: ObservableObject {
     private let rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase
 
     private let rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase
+
+    private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadPendingRequests() {
         Task { @MainActor in
@@ -42,24 +48,73 @@ final class AdminOperationsViewModel: ObservableObject {
                     uiState.pendingCafeOwnerClaims = sortedOwnerClaims
                     uiState.metrics = buildAdminMetrics(pendingCount: sortedRegistrations.count + sortedOwnerClaims.count)
                     uiState.infoMessage = nil
+                    AdminPendingCache.snapshot = AdminPendingSnapshot(
+                        registrationClaims: sortedRegistrations,
+                        ownerClaims: sortedOwnerClaims
+                    )
                 } else if let failure = registration as? AppResultFailure {
-                    uiState.pendingCafeRegistrationClaims = []
-                    uiState.pendingCafeOwnerClaims = []
-                    uiState.metrics = buildAdminMetrics(pendingCount: 0)
                     uiState.infoMessage = "\(failure.error)"
                 } else if let failure = roleClaimsResult as? AppResultFailure {
-                    uiState.pendingCafeRegistrationClaims = []
-                    uiState.pendingCafeOwnerClaims = []
-                    uiState.metrics = buildAdminMetrics(pendingCount: 0)
                     uiState.infoMessage = "\(failure.error)"
                 }
             } catch {
-                uiState.pendingCafeRegistrationClaims = []
-                uiState.pendingCafeOwnerClaims = []
-                uiState.metrics = buildAdminMetrics(pendingCount: 0)
                 uiState.infoMessage = error.localizedDescription
             }
         }
+    }
+
+    private func showCachedPendingRequests() {
+        guard let snapshot = AdminPendingCache.snapshot else { return }
+        uiState.pendingCafeRegistrationClaims = snapshot.registrationClaims
+        uiState.pendingCafeOwnerClaims = snapshot.ownerClaims
+        uiState.metrics = buildAdminMetrics(
+            pendingCount: snapshot.registrationClaims.count + snapshot.ownerClaims.count
+        )
+    }
+
+    private func observeClaimEvents() {
+        tasks[.claimEvent]?.cancel()
+        tasks[.claimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    switch event {
+                    case let created as CafeRegistrationClaimEvent.Created:
+                        _ = created
+                        self.loadPendingRequests()
+                    case let approved as CafeRegistrationClaimEvent.Approved:
+                        self.removeRegistrationClaimLocally(claimId: approved.claimId)
+                    case let rejected as CafeRegistrationClaimEvent.Rejected:
+                        self.removeRegistrationClaimLocally(claimId: rejected.claimId)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func removeRegistrationClaimLocally(claimId: String) {
+        uiState.pendingCafeRegistrationClaims.removeAll { $0.claimId == claimId }
+        uiState.metrics = buildAdminMetrics(
+            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count
+        )
+        AdminPendingCache.snapshot = AdminPendingSnapshot(
+            registrationClaims: uiState.pendingCafeRegistrationClaims,
+            ownerClaims: uiState.pendingCafeOwnerClaims
+        )
+    }
+
+    private func removeOwnerClaimLocally(claimId: String) {
+        uiState.pendingCafeOwnerClaims.removeAll { $0.claimId == claimId }
+        uiState.metrics = buildAdminMetrics(
+            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count
+        )
+        AdminPendingCache.snapshot = AdminPendingSnapshot(
+            registrationClaims: uiState.pendingCafeRegistrationClaims,
+            ownerClaims: uiState.pendingCafeOwnerClaims
+        )
     }
 
     private func handlePendingResult(id: String, approved: Bool) {
@@ -88,7 +143,11 @@ final class AdminOperationsViewModel: ObservableObject {
                 }
 
                 if result is AppResultSuccess<AnyObject> {
-                    loadPendingRequests()
+                    if selectedFilter == .cafeRegistration {
+                        removeRegistrationClaimLocally(claimId: id)
+                    } else {
+                        removeOwnerClaimLocally(claimId: id)
+                    }
                     uiState.infoMessage = approved
                         ? "\(requestTitle) 요청을 승인했습니다."
                         : "\(requestTitle) 요청을 반려했습니다."
@@ -135,7 +194,8 @@ final class AdminOperationsViewModel: ObservableObject {
         approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase = KoinInitializerKt.resolveApproveCafeRegistrationClaimUseCase(),
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
         rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
-        rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase = KoinInitializerKt.resolveRejectCafeOwnerClaimUseCase()
+        rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase = KoinInitializerKt.resolveRejectCafeOwnerClaimUseCase(),
+        cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher()
     ) {
         self.getPendingCafeRegistrationClaimsUseCase = getPendingCafeRegistrationClaimsUseCase
         self.getPendingCafeOwnerClaimsUseCase = getPendingCafeOwnerClaimsUseCase
@@ -143,8 +203,29 @@ final class AdminOperationsViewModel: ObservableObject {
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
         self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
         self.rejectCafeOwnerClaimUseCase = rejectCafeOwnerClaimUseCase
+        self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
+        showCachedPendingRequests()
+        observeClaimEvents()
         loadPendingRequests()
+    }
+
+    deinit {
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case claimEvent
     }
 }
 
 private let adminBannerMenuId = "banner"
+
+private struct AdminPendingSnapshot {
+    let registrationClaims: [PendingCafeRegistrationClaimPreview]
+    let ownerClaims: [PendingCafeOwnerClaimPreview]
+}
+
+private enum AdminPendingCache {
+    static var snapshot: AdminPendingSnapshot?
+}

@@ -37,6 +37,10 @@ interface CastRepository {
 
     suspend fun isFollowing(userId: String, castId: String): Boolean
 
+    suspend fun getFollowedCastIds(userId: String): List<String>
+
+    suspend fun getCastsByIds(castIds: List<String>): List<Cast>
+
     suspend fun followCast(userId: String, castId: String)
 
     suspend fun unfollowCast(userId: String, castId: String)

@@ -66,6 +66,21 @@ class FakeCafeRepository(
         return set?.contains(cafeId) ?: false
     }
 
+    override suspend fun getFavoriteCafeIds(userId: String): List<String> {
+        return dataSource.favoriteCafeIdsByUser[userId]
+            ?.toList()
+            .orEmpty()
+            .sorted()
+    }
+
+    override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {
+        val idSet = cafeIds.toSet()
+        return dataSource.cafes
+            .asSequence()
+            .filter { cafe -> cafe.approved && idSet.contains(cafe.id) }
+            .toList()
+    }
+
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
         val set = dataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
         return if (set.contains(cafeId)) {

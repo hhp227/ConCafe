@@ -49,6 +49,14 @@ final class MyInfoViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                 let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedRecentVisits = normalizeCafes(
+                        feed.recentVisits,
+                        maxCount: Int(feed.summary?.totalVisits ?? 0)
+                    )
+                    let normalizedFavorites = normalizeCafes(
+                        feed.favorites,
+                        maxCount: Int(feed.summary?.favoritesCount ?? 0)
+                    )
                     uiState = MyInfoUiState(
                         isLoading: false,
                         errorMessage: nil,
@@ -59,8 +67,8 @@ final class MyInfoViewModel: ObservableObject {
                         ownedCafes: feed.ownedCafes,
                         badges: feed.badges,
                         popularCafes: feed.popularCafes,
-                        recentVisits: feed.recentVisits,
-                        favorites: feed.favorites,
+                        recentVisits: normalizedRecentVisits,
+                        favorites: normalizedFavorites,
                         followedMaids: feed.followedMaids,
                         isLoginPromptVisible: false
                     )
@@ -213,5 +221,19 @@ final class MyInfoViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case castEvent
+    }
+
+    private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {
+        guard maxCount > 0 else { return [] }
+        var seen = Set<String>()
+        var normalized: [Cafe] = []
+
+        for cafe in cafes {
+            if seen.contains(cafe.id) { continue }
+            seen.insert(cafe.id)
+            normalized.append(cafe)
+            if normalized.count >= maxCount { break }
+        }
+        return normalized
     }
 }

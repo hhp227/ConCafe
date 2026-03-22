@@ -50,6 +50,14 @@ class MyInfoViewModel(
         viewModelScope.launch {
             when (val result = getMyInfoUseCase.invoke()) {
                 is AppResult.Success -> {
+                    val normalizedRecentVisits = normalizeCafes(
+                        items = result.data.recentVisits,
+                        maxCount = result.data.summary?.totalVisits ?: 0
+                    )
+                    val normalizedFavorites = normalizeCafes(
+                        items = result.data.favorites,
+                        maxCount = result.data.summary?.favoritesCount ?: 0
+                    )
                     _uiState.value = MyInfoUiState(
                         isLoading = false,
                         errorMessage = null,
@@ -60,8 +68,8 @@ class MyInfoViewModel(
                         ownedCafes = result.data.ownedCafes,
                         badges = result.data.badges,
                         popularCafes = result.data.popularCafes,
-                        recentVisits = result.data.recentVisits,
-                        favorites = result.data.favorites,
+                        recentVisits = normalizedRecentVisits,
+                        favorites = normalizedFavorites,
                         followedMaids = result.data.followedMaids,
                         isLoginPromptVisible = false
                     )
@@ -181,5 +189,12 @@ class MyInfoViewModel(
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT
+    }
+
+    private fun normalizeCafes(items: List<Cafe>, maxCount: Int): List<Cafe> {
+        if (maxCount <= 0) return emptyList()
+        return items
+            .distinctBy { it.id }
+            .take(maxCount)
     }
 }

@@ -2,7 +2,7 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.MyInfoFeed
@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.repository.VisitRepository
 import com.hhp227.concafe.domain.repository.UserRepository
 
 class GetMyInfoUseCase(
@@ -19,18 +20,12 @@ class GetMyInfoUseCase(
     private val userRepository: UserRepository,
     private val cafeManagementRepository: CafeManagementRepository,
     private val cafeRepository: CafeRepository,
-    private val castRepository: CastRepository
+    private val castRepository: CastRepository,
+    private val visitRepository: VisitRepository
 ) {
     suspend operator fun invoke(): AppResult<MyInfoFeed> {
         return try {
-            val popularCafes = cafeRepository.searchCafes(
-                query = null,
-                country = null,
-                city = null,
-                sort = CafeSort.RATING,
-                cursor = null,
-                pageSize = 3
-            ).items
+            val popularCafes = fetchPopularCafes(limit = 3)
             val currentUser = authRepository.getCurrentUser()
 
             if (currentUser == null) {
@@ -72,30 +67,23 @@ class GetMyInfoUseCase(
                 } else {
                     emptyList()
                 }
-                val recentVisits = cafeRepository.searchCafes(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CafeSort.LATEST,
+                val recentVisitCafeIds = visitRepository.getVisits(
+                    userId = currentUser.id,
                     cursor = null,
-                    pageSize = 3
+                    pageSize = 100
                 ).items
-                val favorites = cafeRepository.searchCafes(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CafeSort.POPULAR,
-                    cursor = null,
-                    pageSize = summary.favoritesCount.coerceAtLeast(2)
-                ).items
-                val followedMaids = castRepository.searchCasts(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CastSort.FOLLOWERS,
-                    cursor = null,
-                    pageSize = summary.followedCastsCount.coerceAtLeast(3)
-                ).items
+                    .sortedByDescending { it.visitedAt }
+                    .map { it.cafeId }
+                    .distinct()
+                    .take(3)
+
+                val recentVisits = fetchCafesByIdsInOrder(recentVisitCafeIds)
+                val favoriteCafeIds = cafeRepository.getFavoriteCafeIds(currentUser.id)
+                val favorites = cafeRepository.getCafesByIds(favoriteCafeIds)
+                    .sortedByDescending { it.ratingAvg }
+                val followedCastIds = castRepository.getFollowedCastIds(currentUser.id)
+                val followedMaids = castRepository.getCastsByIds(followedCastIds)
+                    .sortedByDescending { it.followerCount }
                 val unlockedBadges = summary.badgesCount.coerceAtLeast(0)
                 val badges = listOf(
                     ProfileBadge("badge-1", "첫 방문", "🎉", unlockedBadges >= 1),
@@ -127,5 +115,23 @@ class GetMyInfoUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+
+    private suspend fun fetchPopularCafes(limit: Int): List<Cafe> {
+        val page = cafeRepository.searchCafes(
+            query = null,
+            country = null,
+            city = null,
+            sort = CafeSort.RATING,
+            cursor = null,
+            pageSize = limit
+        )
+        return page.items
+    }
+
+    private suspend fun fetchCafesByIdsInOrder(cafeIds: List<String>): List<Cafe> {
+        val cafes = cafeRepository.getCafesByIds(cafeIds)
+        val cafeById = cafes.associateBy { it.id }
+        return cafeIds.mapNotNull { cafeId -> cafeById[cafeId] }
     }
 }

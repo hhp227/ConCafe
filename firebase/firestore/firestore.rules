@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
     function isAdmin() {
       return isSignedIn()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
@@ -18,7 +22,7 @@ service cloud.firestore {
 
     match /cafes/{cafeId} {
       allow read: if true;
-      allow write: if false;
+      allow create, update, delete: if isAdmin();
 
       match /casts/{castId} {
         allow read: if true;
@@ -38,9 +42,10 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update, delete: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && (isSelf(userId) || isAdmin());
+      allow create: if isSelf(userId);
+      allow update: if isSelf(userId) || isAdmin();
+      allow delete: if isSelf(userId);
     }
 
     match /cafeRegistrationClaims/{claimId} {
@@ -48,7 +53,8 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow read: if isSignedIn()
         && (resource.data.userId == request.auth.uid || isAdmin());
-      allow update, delete: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /cafeOwnerClaims/{claimId} {
@@ -56,7 +62,8 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow read: if isSignedIn()
         && (resource.data.userId == request.auth.uid || isAdmin());
-      allow update, delete: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /{document=**} {
