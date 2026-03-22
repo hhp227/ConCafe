@@ -508,7 +508,10 @@ class CafeDashboardViewModel(
                             state.copy(
                                 castPreviews = state.castPreviews.map { preview ->
                                     if (preview.id == event.cast.id) {
-                                        preview.copy(name = event.cast.name)
+                                        preview.copy(
+                                            name = event.cast.name,
+                                            profileImage = event.cast.profileImage
+                                        )
                                     } else {
                                         preview
                                     }

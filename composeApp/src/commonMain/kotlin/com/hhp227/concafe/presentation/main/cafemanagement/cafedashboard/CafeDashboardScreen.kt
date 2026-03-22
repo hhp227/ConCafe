@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,6 +28,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -901,13 +903,26 @@ private fun CastPreviewItem(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(72.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
-                            ),
-                            shape = CircleShape
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
+                                ),
+                                shape = CircleShape
+                            )
+                    )
+                    if (!cast.profileImage.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = cast.profileImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
                         )
-                )
+                    }
+                }
                 if (isSelected) {
                     Surface(
                         modifier = Modifier

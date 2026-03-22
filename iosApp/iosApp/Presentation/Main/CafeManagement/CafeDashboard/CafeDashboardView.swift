@@ -442,13 +442,27 @@ private struct CafeDashboardContentView: View {
                         .stroke(isSelected ? Color(hex: "EF6797") : .clear, lineWidth: 2)
                         .frame(width: 78, height: 78)
                     ZStack(alignment: .topTrailing) {
-                        LinearGradient(
-                            colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        GeometryReader { proxy in
+                            ZStack {
+                                LinearGradient(
+                                    colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
+                                   !rawImageUrl.isEmpty,
+                                   let imageUrl = URL(string: rawImageUrl) {
+                                    CachedAsyncImage(
+                                        url: imageUrl,
+                                        placeholder: Color.clear
+                                    )
+                                }
+                            }
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipShape(Circle())
+                            .clipped()
+                        }
                         .frame(width: 72, height: 72)
-                        .clipShape(Circle())
                         if isSelected {
                             Circle()
                                 .fill(Color(hex: "EF6797"))

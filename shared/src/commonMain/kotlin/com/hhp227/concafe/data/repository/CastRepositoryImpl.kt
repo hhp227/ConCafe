@@ -75,7 +75,8 @@ class CastRepositoryImpl(
                 CafeCastPreview(
                     id = cast.id,
                     name = cast.name,
-                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id),
+                    profileImage = cast.profileImage
                 )
             }
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
