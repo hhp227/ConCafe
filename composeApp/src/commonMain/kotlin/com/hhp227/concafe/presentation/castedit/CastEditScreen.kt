@@ -106,7 +106,9 @@ private fun CastEditContentScreen(
         },
         bottomBar = {
             Surface(
-                modifier = Modifier.navigationBarsPadding(),
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding(),
                 color = Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {

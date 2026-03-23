@@ -157,31 +157,45 @@ private struct CafeInfoEditContentView: View {
 
     let onGalleryImagePick: () -> Void
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if uiState.isLoading {
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
+        GeometryReader { proxy in
+            let safeAreaBottom = proxy.safeAreaInsets.bottom
+            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    if uiState.isLoading {
+                        ProgressView()
+                            .tint(Color(hex: "EF6797"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 32)
+                    }
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(message: infoMessage)
+                    }
+                    basicInformationSection
+                    representativeImageSection
+                    if !uiState.isRegistrationMode {
+                        gallerySection
+                    }
+                    locationContactSection
+                    businessHoursSection
                 }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                basicInformationSection
-                representativeImageSection
-                if !uiState.isRegistrationMode {
-                    gallerySection
-                }
-                locationContactSection
-                businessHoursSection
+                .padding(16)
+                .padding(.bottom, 100)
             }
-            .padding(16)
-            .padding(.bottom, 100)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomSaveBar
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardOverlap = 0
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(Color(hex: "F8F5F6"))
     }
@@ -400,7 +414,7 @@ private struct CafeInfoEditContentView: View {
         }
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
@@ -430,6 +444,7 @@ private struct CafeInfoEditContentView: View {
             .padding(.bottom, 14)
             .background(Color.white.opacity(0.92))
         }
+        .padding(.bottom, keyboardBottomInset)
     }
 
     private func editSectionCard<Content: View, Trailing: View>(
@@ -682,6 +697,14 @@ private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
+    let userInfo = notification.userInfo
+    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+    let screenHeight = UIScreen.main.bounds.height
+    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+    return overlap
 }
 
 private func formatCoordinate(_ value: Double) -> String {

@@ -110,63 +110,77 @@ private struct CastEditContentView: View {
 
     @State private var selectedBirthdayDate = Date()
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        Group {
-            if uiState.isLoading {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        profilePhotoSection
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
-                        }
-                        ConCafeFormField(
-                            label: "캐스트 이름",
-                            text: Binding(
-                                get: { uiState.castName },
-                                set: { onAction(.changeCastName($0)) }
-                            )
-                        )
-                        ConCafeFormField(
-                            label: "컨셉 역할",
-                            text: Binding(
-                                get: { uiState.conceptRole },
-                                set: { onAction(.changeConceptRole($0)) }
-                            )
-                        )
-                        BirthdayInputField(
-                            text: Binding(
-                                get: { uiState.birthday },
-                                set: { onAction(.changeBirthday($0)) }
-                            ),
-                            onTapCalendar: {
-                                selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
-                                isBirthdayPickerPresented = true
-                            }
-                        )
-                        ConCafeFormEditor(
-                            label: "소개 및 바이오",
-                            text: Binding(
-                                get: { uiState.introduction },
-                                set: { onAction(.changeIntroduction($0)) }
-                            )
-                        )
-                        gallerySection
+        GeometryReader { proxy in
+            let safeAreaBottom = proxy.safeAreaInsets.bottom
+            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
+
+            Group {
+                if uiState.isLoading {
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .tint(Color(hex: "EF6797"))
+                        Spacer()
                     }
-                    .padding(16)
-                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            profilePhotoSection
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(message: infoMessage)
+                            }
+                            ConCafeFormField(
+                                label: "캐스트 이름",
+                                text: Binding(
+                                    get: { uiState.castName },
+                                    set: { onAction(.changeCastName($0)) }
+                                )
+                            )
+                            ConCafeFormField(
+                                label: "컨셉 역할",
+                                text: Binding(
+                                    get: { uiState.conceptRole },
+                                    set: { onAction(.changeConceptRole($0)) }
+                                )
+                            )
+                            BirthdayInputField(
+                                text: Binding(
+                                    get: { uiState.birthday },
+                                    set: { onAction(.changeBirthday($0)) }
+                                ),
+                                onTapCalendar: {
+                                    selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
+                                    isBirthdayPickerPresented = true
+                                }
+                            )
+                            ConCafeFormEditor(
+                                label: "소개 및 바이오",
+                                text: Binding(
+                                    get: { uiState.introduction },
+                                    set: { onAction(.changeIntroduction($0)) }
+                                )
+                            )
+                            gallerySection
+                        }
+                        .padding(16)
+                        .padding(.bottom, 24)
+                    }
                 }
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            bottomSaveBar
+            .safeAreaInset(edge: .bottom) {
+                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardOverlap = 0
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(
             LinearGradient(
@@ -367,7 +381,7 @@ private struct CastEditContentView: View {
         .buttonStyle(.plain)
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
         Button {
             onAction(.clickSave)
         } label: {
@@ -395,6 +409,7 @@ private struct CastEditContentView: View {
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
         }
+        .padding(.bottom, keyboardBottomInset)
     }
 
     private func infoBanner(message: String) -> some View {
@@ -419,6 +434,14 @@ private struct CastEditContentView: View {
         )
     }
 
+}
+
+private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
+    let userInfo = notification.userInfo
+    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+    let screenHeight = UIScreen.main.bounds.height
+    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+    return overlap
 }
 
 private struct BirthdayInputField: View {

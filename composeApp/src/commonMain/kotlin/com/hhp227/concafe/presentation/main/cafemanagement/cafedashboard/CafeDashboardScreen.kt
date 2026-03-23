@@ -153,110 +153,110 @@ private fun CafeDashboardContentScreen(
                     )
                 )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                cafe?.let {
-                    item {
-                        DashboardHeroCard(cafe = it)
-                    }
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                uiState.infoMessage?.let { message ->
-                    item {
-                        InfoBanner(
-                            message = message,
-                            onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
-                        )
-                    }
-                }
-                if (uiState.isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 48.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    cafe?.let {
+                        item {
+                            DashboardHeroCard(cafe = it)
                         }
                     }
-                } else if (cafe != null) {
-                    item {
-                        DashboardMetricGrid(cafe = cafe)
-                    }
-                    if (uiState.pendingCastClaims.isNotEmpty()) {
+                    uiState.infoMessage?.let { message ->
                         item {
-                            PendingCastClaimSection(
-                                claims = uiState.pendingCastClaims,
-                                onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
-                                onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                            InfoBanner(
+                                message = message,
+                                onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
                             )
                         }
                     }
-                    item {
-                        ShortcutGrid(
-                            onShortcutClick = { shortcut ->
-                                onAction(CafeDashboardAction.ClickShortcut(shortcut))
-                            }
-                        )
-                    }
-                    item {
-                        CastManagementSection(
-                            casts = uiState.castPreviews,
-                            hasMoreCasts = uiState.hasMoreCasts,
-                            isLoadingMoreCasts = uiState.isLoadingMoreCasts,
-                            onCastManagementClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
-                            },
-                            onDeleteClick = {
-                                onAction(CafeDashboardAction.ClickDeleteCast)
-                            },
-                            canDelete = uiState.selectedCastId != null,
-                            onScheduleClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
-                            },
-                            selectedCastId = uiState.selectedCastId,
-                            onCastScheduleSelect = { castId ->
-                                onAction(CafeDashboardAction.ClickCastSchedule(castId))
-                            },
-                            onLoadMoreClick = {
-                                onAction(CafeDashboardAction.ClickLoadMoreCasts)
-                            }
-                        )
-                    }
-                    if (uiState.externalLinks.isNotEmpty()) {
+                    if (cafe != null) {
                         item {
-                            ExternalLinkSection(
-                                links = uiState.externalLinks,
-                                onAddClick = {
-                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
-                                },
-                                onItemClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
-                                },
-                                onEditClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
-                                },
-                                onDeleteClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                            DashboardMetricGrid(cafe = cafe)
+                        }
+                        if (uiState.pendingCastClaims.isNotEmpty()) {
+                            item {
+                                PendingCastClaimSection(
+                                    claims = uiState.pendingCastClaims,
+                                    onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
+                                    onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                                )
+                            }
+                        }
+                        item {
+                            ShortcutGrid(
+                                onShortcutClick = { shortcut ->
+                                    onAction(CafeDashboardAction.ClickShortcut(shortcut))
                                 }
                             )
                         }
-                    }
-                    item {
-                        HomeBannerSection(
-                            banner = cafe.homeBannerPreview,
-                            onBannerClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
-                            },
-                            onCreateBannerClick = {
-                                onAction(CafeDashboardAction.ClickCreateBanner)
+                        item {
+                            CastManagementSection(
+                                casts = uiState.castPreviews,
+                                hasMoreCasts = uiState.hasMoreCasts,
+                                isLoadingMoreCasts = uiState.isLoadingMoreCasts,
+                                onCastManagementClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
+                                },
+                                onDeleteClick = {
+                                    onAction(CafeDashboardAction.ClickDeleteCast)
+                                },
+                                canDelete = uiState.selectedCastId != null,
+                                onScheduleClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                                },
+                                selectedCastId = uiState.selectedCastId,
+                                onCastScheduleSelect = { castId ->
+                                    onAction(CafeDashboardAction.ClickCastSchedule(castId))
+                                },
+                                onLoadMoreClick = {
+                                    onAction(CafeDashboardAction.ClickLoadMoreCasts)
+                                }
+                            )
+                        }
+                        if (uiState.externalLinks.isNotEmpty()) {
+                            item {
+                                ExternalLinkSection(
+                                    links = uiState.externalLinks,
+                                    onAddClick = {
+                                        onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
+                                    },
+                                    onItemClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
+                                    },
+                                    onEditClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
+                                    },
+                                    onDeleteClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                                    }
+                                )
                             }
-                        )
+                        }
+                        item {
+                            HomeBannerSection(
+                                banner = cafe.homeBannerPreview,
+                                onBannerClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
+                                },
+                                onCreateBannerClick = {
+                                    onAction(CafeDashboardAction.ClickCreateBanner)
+                                }
+                            )
+                        }
                     }
                 }
             }

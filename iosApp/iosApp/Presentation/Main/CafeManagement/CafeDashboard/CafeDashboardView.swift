@@ -90,33 +90,40 @@ private struct CafeDashboardContentView: View {
     let onAction: (CafeDashboardAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                if uiState.cafe != nil {
-                    heroCard
-                }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                if uiState.isLoading {
+        Group {
+            if uiState.isLoading {
+                VStack {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 48)
-                } else if uiState.cafe != nil {
-                    metricGrid
-                    if !uiState.pendingCastClaims.isEmpty {
-                        pendingCastClaimSection
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            } else {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        if uiState.cafe != nil {
+                            heroCard
+                        }
+                        if let infoMessage = uiState.infoMessage {
+                            infoBanner(message: infoMessage)
+                        }
+                        if uiState.cafe != nil {
+                            metricGrid
+                            if !uiState.pendingCastClaims.isEmpty {
+                                pendingCastClaimSection
+                            }
+                            shortcutGrid
+                            castManagementSection
+                            if !uiState.externalLinks.isEmpty {
+                                externalLinkSection
+                            }
+                            homeBannerSection
+                        }
                     }
-                    shortcutGrid
-                    castManagementSection
-                    if !uiState.externalLinks.isEmpty {
-                        externalLinkSection
-                    }
-                    homeBannerSection
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
         }
         .background(
             LinearGradient(

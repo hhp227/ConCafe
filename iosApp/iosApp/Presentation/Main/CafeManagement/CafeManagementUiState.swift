@@ -10,15 +10,11 @@ import Shared
 
 struct CafeManagementUiState {
     var ownedCafes: [CafeManagementData.OwnedCafeSummary] = []
-
     var searchableCafes: [CafeManagementData.SearchableCafeSummary] = []
-
     var pendingClaims: [CafeManagementData.PendingClaimSummary] = []
-
+    var isLoading = true
     var isShowingAllCafes = false
-
     var cafeSearchQuery = ""
-
     var infoMessage: String?
 
     var featuredCafe: CafeManagementData.OwnedCafeSummary? {

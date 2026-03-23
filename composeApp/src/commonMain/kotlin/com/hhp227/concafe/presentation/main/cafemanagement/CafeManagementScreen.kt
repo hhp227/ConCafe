@@ -31,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -109,91 +110,102 @@ private fun CafeManagementContentScreen(
                     )
                 )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                item {
-                    CafeManagementHeroCard(
-                        cafeCount = uiState.ownedCafes.size,
-                        featuredCafe = uiState.featuredCafe
-                    )
-                }
-                uiState.infoMessage?.let { message ->
+            if (!uiState.isLoading) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
                     item {
-                        InfoBanner(
-                            message = message,
-                            onDismiss = { onAction(CafeManagementAction.DismissInfoMessage) }
+                        CafeManagementHeroCard(
+                            cafeCount = uiState.ownedCafes.size,
+                            featuredCafe = uiState.featuredCafe
                         )
                     }
-                }
-                if (uiState.hasOwnedCafes) {
-                    item {
-                        SectionHeader(
-                            title = "내 카페",
-                            subtitle = "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
-                        )
-                    }
-                    items(uiState.visibleOwnedCafes, key = { it.id }) { cafe ->
-                        CompactOwnedCafeCard(
-                            cafe = cafe,
-                            onClick = { onAction(CafeManagementAction.ClickCafe(cafe.id)) },
-                            onArrowClick = { onAction(CafeManagementAction.ClickCafeDetail(cafe.id)) }
-                        )
-                    }
-                    if (uiState.hasHiddenOwnedCafes) {
+                    uiState.infoMessage?.let { message ->
                         item {
-                            ExpandOwnedCafeButton(
-                                isExpanded = uiState.isShowingAllCafes,
-                                hiddenCount = (uiState.ownedCafes.size - uiState.visibleOwnedCafes.size).coerceAtLeast(0),
-                                onClick = { onAction(CafeManagementAction.ToggleCafeListExpanded) }
+                            InfoBanner(
+                                message = message,
+                                onDismiss = { onAction(CafeManagementAction.DismissInfoMessage) }
                             )
                         }
                     }
-                    if (uiState.pendingClaims.isNotEmpty()) {
+                    if (uiState.hasOwnedCafes) {
                         item {
                             SectionHeader(
-                                title = "운영자 신청 상태",
-                                subtitle = "기존 카페 연결 요청 현황"
+                                title = "내 카페",
+                                subtitle = "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
                             )
                         }
-                        items(uiState.pendingClaims, key = { it.cafeName + it.requestedAt }) { claim ->
-                            PendingClaimCard(claim = claim)
+                        items(uiState.visibleOwnedCafes, key = { it.id }) { cafe ->
+                            CompactOwnedCafeCard(
+                                cafe = cafe,
+                                onClick = { onAction(CafeManagementAction.ClickCafe(cafe.id)) },
+                                onArrowClick = { onAction(CafeManagementAction.ClickCafeDetail(cafe.id)) }
+                            )
+                        }
+                        if (uiState.hasHiddenOwnedCafes) {
+                            item {
+                                ExpandOwnedCafeButton(
+                                    isExpanded = uiState.isShowingAllCafes,
+                                    hiddenCount = (uiState.ownedCafes.size - uiState.visibleOwnedCafes.size).coerceAtLeast(0),
+                                    onClick = { onAction(CafeManagementAction.ToggleCafeListExpanded) }
+                                )
+                            }
+                        }
+                        if (uiState.pendingClaims.isNotEmpty()) {
+                            item {
+                                SectionHeader(
+                                    title = "운영자 신청 상태",
+                                    subtitle = "기존 카페 연결 요청 현황"
+                                )
+                            }
+                            items(uiState.pendingClaims, key = { it.cafeName + it.requestedAt }) { claim ->
+                                PendingClaimCard(claim = claim)
+                            }
+                        }
+                        item {
+                            SearchCafeSection(
+                                searchQuery = uiState.cafeSearchQuery,
+                                searchResults = uiState.filteredSearchableCafes,
+                                excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
+                                onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
+                                onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                            )
+                        }
+                        item {
+                            AddCafeCard(
+                                onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
+                            )
+                        }
+                    } else {
+                        item {
+                            SearchCafeSection(
+                                searchQuery = uiState.cafeSearchQuery,
+                                searchResults = uiState.filteredSearchableCafes,
+                                excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
+                                onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
+                                onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                            )
+                        }
+                        item {
+                            EmptyStateCard(
+                                pendingClaims = uiState.pendingClaims,
+                                onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
+                            )
                         }
                     }
-                    item {
-                        SearchCafeSection(
-                            searchQuery = uiState.cafeSearchQuery,
-                            searchResults = uiState.filteredSearchableCafes,
-                            excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
-                            onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
-                            onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
-                        )
-                    }
-                    item {
-                        AddCafeCard(
-                            onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
-                        )
-                    }
-                } else {
-                    item {
-                        SearchCafeSection(
-                            searchQuery = uiState.cafeSearchQuery,
-                            searchResults = uiState.filteredSearchableCafes,
-                            excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
-                            onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
-                            onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
-                        )
-                    }
-                    item {
-                        EmptyStateCard(
-                            pendingClaims = uiState.pendingClaims,
-                            onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
-                        )
-                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
         }

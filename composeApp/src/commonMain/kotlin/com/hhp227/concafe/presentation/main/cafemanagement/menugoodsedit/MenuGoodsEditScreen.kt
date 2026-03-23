@@ -95,6 +95,7 @@ private fun MenuGoodsEditContentScreen(
                 Box(
                     modifier = Modifier
                         .navigationBarsPadding()
+                        .imePadding()
                         .fillMaxWidth()
                         .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)

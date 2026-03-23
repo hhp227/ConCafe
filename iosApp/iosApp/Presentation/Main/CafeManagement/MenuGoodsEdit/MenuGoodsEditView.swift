@@ -19,69 +19,83 @@ struct MenuGoodsEditView: View {
 
     @State private var isPhotoPickerPresented = false
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(viewModel.uiState.screenTitle)
-                    .font(.title2.weight(.bold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        GeometryReader { proxy in
+            let safeAreaBottom = proxy.safeAreaInsets.bottom
+            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
 
-                Text(viewModel.uiState.isEditMode ? "항목 정보를 수정합니다." : "새 항목을 등록합니다.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                if let infoMessage = viewModel.uiState.infoMessage {
-                    Text(infoMessage)
-                        .font(.footnote)
-                        .foregroundStyle(Color(hex: "6B5320"))
-                        .padding(12)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(viewModel.uiState.screenTitle)
+                        .font(.title2.weight(.bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(hex: "FFF6D7"))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    Text(viewModel.uiState.isEditMode ? "항목 정보를 수정합니다." : "새 항목을 등록합니다.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    if let infoMessage = viewModel.uiState.infoMessage {
+                        Text(infoMessage)
+                            .font(.footnote)
+                            .foregroundStyle(Color(hex: "6B5320"))
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(hex: "FFF6D7"))
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    photoUploadSection
+                    Group {
+                        ConCafeFormField(
+                            label: "항목명",
+                            text: Binding(
+                                get: { viewModel.uiState.itemName },
+                                set: { viewModel.onAction(.changeName($0)) }
+                            )
+                        )
+                        ConCafeFormField(
+                            label: "가격",
+                            text: Binding(
+                                get: { viewModel.uiState.price },
+                                set: { viewModel.onAction(.changePrice($0)) }
+                            ),
+                            leadingContent: {
+                                Text("₩")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Color(hex: "6B5A65"))
+                            }
+                        )
+                        .keyboardType(.numberPad)
+                        ConCafeFormEditor(
+                            label: "설명",
+                            text: Binding(
+                                get: { viewModel.uiState.description },
+                                set: { viewModel.onAction(.changeDescription($0)) }
+                            )
+                        )
+                        categorySection
+                        Toggle(
+                            "재고 있음",
+                            isOn: Binding(
+                                get: { viewModel.uiState.isInStock },
+                                set: { viewModel.onAction(.toggleStock($0)) }
+                            )
+                        )
+                    }
                 }
-                photoUploadSection
-                Group {
-                    ConCafeFormField(
-                        label: "항목명",
-                        text: Binding(
-                            get: { viewModel.uiState.itemName },
-                            set: { viewModel.onAction(.changeName($0)) }
-                        )
-                    )
-                    ConCafeFormField(
-                        label: "가격",
-                        text: Binding(
-                            get: { viewModel.uiState.price },
-                            set: { viewModel.onAction(.changePrice($0)) }
-                        ),
-                        leadingContent: {
-                            Text("₩")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(hex: "6B5A65"))
-                        }
-                    )
-                    .keyboardType(.numberPad)
-                    ConCafeFormEditor(
-                        label: "설명",
-                        text: Binding(
-                            get: { viewModel.uiState.description },
-                            set: { viewModel.onAction(.changeDescription($0)) }
-                        )
-                    )
-                    categorySection
-                    Toggle(
-                        "재고 있음",
-                        isOn: Binding(
-                            get: { viewModel.uiState.isInStock },
-                            set: { viewModel.onAction(.toggleStock($0)) }
-                        )
-                    )
-                }
+                .padding(16)
             }
-            .padding(16)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            saveButtonBar
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardOverlap = 0
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -114,7 +128,7 @@ struct MenuGoodsEditView: View {
         _viewModel = StateObject(wrappedValue: MenuGoodsEditViewModel(cafeId: cafeId, itemId: itemId))
     }
 
-    private var saveButtonBar: some View {
+    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
@@ -144,6 +158,7 @@ struct MenuGoodsEditView: View {
             .padding(.bottom, 14)
             .background(Color.white.opacity(0.92))
         }
+        .padding(.bottom, keyboardBottomInset)
     }
 
     private var categorySection: some View {
@@ -296,6 +311,14 @@ struct MenuGoodsEditView: View {
 
     private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
         saveCompressedImageToTemporaryFile(image)
+    }
+
+    private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
+        let userInfo = notification.userInfo
+        let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+        let screenHeight = UIScreen.main.bounds.height
+        let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+        return overlap
     }
 }
 

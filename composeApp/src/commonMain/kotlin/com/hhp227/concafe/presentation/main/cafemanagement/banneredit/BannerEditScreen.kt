@@ -119,39 +119,45 @@ private fun BannerEditContentScreen(
         },
         bottomBar = {
             Surface(
-                modifier = Modifier.imePadding(),
                 color = Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, Color(0x1AFFD1DC))
             ) {
-                Button(
-                    onClick = { onAction(BannerEditAction.ClickSave) },
-                    enabled = uiState.isSaveEnabled,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .navigationBarsPadding(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330),
-                        disabledContainerColor = Color(0xFFF4D7DF),
-                        disabledContentColor = Color(0xFF8B7D83)
-                    )
+                        .navigationBarsPadding()
+                        .imePadding()
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
-                    if (uiState.isSaving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = Color(0xFF2B2330),
-                            strokeWidth = 2.dp
+                    Button(
+                        onClick = { onAction(BannerEditAction.ClickSave) },
+                        enabled = uiState.isSaveEnabled,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD1DC),
+                            contentColor = Color(0xFF2B2330),
+                            disabledContainerColor = Color(0xFFF4D7DF),
+                            disabledContentColor = Color(0xFF8B7D83)
                         )
-                    } else {
-                        Icon(Icons.Default.Save, contentDescription = null)
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color(0xFF2B2330),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Save, contentDescription = null)
+                        }
+                        Text(
+                            text = uiState.submitButtonText,
+                            modifier = Modifier.padding(start = 8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Text(
-                        text = uiState.submitButtonText,
-                        modifier = Modifier.padding(start = 8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
         }

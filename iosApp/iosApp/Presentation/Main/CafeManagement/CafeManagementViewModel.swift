@@ -31,6 +31,7 @@ final class CafeManagementViewModel: ObservableObject {
 
     private func loadCafeManagement() {
         Task {
+            uiState.isLoading = true
             do {
                 let result = try await getCafeManagementUseCase.invoke()
 
@@ -39,16 +40,19 @@ final class CafeManagementViewModel: ObservableObject {
                     uiState.ownedCafes = data.ownedCafes
                     uiState.searchableCafes = data.searchableCafes
                     uiState.pendingClaims = data.pendingClaims
+                    uiState.isLoading = false
                 } else if let failure = result as? AppResultFailure {
                     uiState.ownedCafes = []
                     uiState.searchableCafes = []
                     uiState.pendingClaims = []
+                    uiState.isLoading = false
                     uiState.infoMessage = "\(failure.error)"
                 }
             } catch {
                 uiState.ownedCafes = []
                 uiState.searchableCafes = []
                 uiState.pendingClaims = []
+                uiState.isLoading = false
                 uiState.infoMessage = error.localizedDescription
             }
         }

@@ -111,6 +111,7 @@ private fun CafeInfoEditContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
+                        .imePadding()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
