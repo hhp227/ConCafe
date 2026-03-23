@@ -118,13 +118,8 @@ private struct BannerEditContentView: View {
 
     let onPickImage: () -> Void
 
-    @State private var keyboardOverlap: CGFloat = 0
-
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 16) {
                     bannerImageCard
@@ -138,9 +133,6 @@ private struct BannerEditContentView: View {
                 .padding(16)
                 .padding(.bottom, 100)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
-            }
             .background(
                 LinearGradient(
                     colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
@@ -148,8 +140,7 @@ private struct BannerEditContentView: View {
                     endPoint: .bottom
                 )
             )
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            bottomSaveBar()
         }
     }
 
@@ -350,7 +341,7 @@ private struct BannerEditContentView: View {
         }
     }
 
-    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomSaveBar() -> some View {
         Button {
             onAction(.clickSave)
         } label: {
@@ -374,7 +365,6 @@ private struct BannerEditContentView: View {
         }
         .buttonStyle(.plain)
         .disabled(!uiState.isSaveEnabled)
-        .padding(.bottom, keyboardBottomInset)
     }
 
     private func sectionCard<Content: View>(

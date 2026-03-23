@@ -19,23 +19,16 @@ struct MenuGoodsEditView: View {
 
     @State private var isPhotoPickerPresented = false
 
-    @State private var keyboardOverlap: CGFloat = 0
-
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(viewModel.uiState.screenTitle)
                         .font(.title2.weight(.bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
-
                     Text(viewModel.uiState.isEditMode ? "항목 정보를 수정합니다." : "새 항목을 등록합니다.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-
                     if let infoMessage = viewModel.uiState.infoMessage {
                         Text(infoMessage)
                             .font(.footnote)
@@ -86,11 +79,7 @@ struct MenuGoodsEditView: View {
                 }
                 .padding(16)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
-            }
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            bottomSaveBar()
         }
         .navigationTitle(viewModel.uiState.screenTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -123,7 +112,7 @@ struct MenuGoodsEditView: View {
         _viewModel = StateObject(wrappedValue: MenuGoodsEditViewModel(cafeId: cafeId, itemId: itemId))
     }
 
-    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
@@ -153,7 +142,6 @@ struct MenuGoodsEditView: View {
             .padding(.bottom, 14)
             .background(Color.white.opacity(0.92))
         }
-        .padding(.bottom, keyboardBottomInset)
     }
 
     private var categorySection: some View {

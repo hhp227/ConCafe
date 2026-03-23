@@ -157,13 +157,8 @@ private struct CafeInfoEditContentView: View {
 
     let onGalleryImagePick: () -> Void
 
-    @State private var keyboardOverlap: CGFloat = 0
-
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 16) {
                     if uiState.isLoading {
@@ -186,11 +181,7 @@ private struct CafeInfoEditContentView: View {
                 .padding(16)
                 .padding(.bottom, 100)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
-            }
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            bottomSaveBar()
         }
         .background(Color(hex: "F8F5F6"))
     }
@@ -409,7 +400,7 @@ private struct CafeInfoEditContentView: View {
         }
     }
 
-    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
@@ -439,7 +430,6 @@ private struct CafeInfoEditContentView: View {
             .padding(.bottom, 14)
             .background(Color.white.opacity(0.92))
         }
-        .padding(.bottom, keyboardBottomInset)
     }
 
     private func editSectionCard<Content: View, Trailing: View>(

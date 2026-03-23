@@ -110,13 +110,8 @@ private struct CastEditContentView: View {
 
     @State private var selectedBirthdayDate = Date()
 
-    @State private var keyboardOverlap: CGFloat = 0
-
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             Group {
                 if uiState.isLoading {
                     VStack {
@@ -168,14 +163,11 @@ private struct CastEditContentView: View {
                         }
                         .padding(16)
                         .padding(.bottom, 24)
+                        .padding(.bottom, 60)
                     }
                 }
+                bottomSaveBar()
             }
-            .safeAreaInset(edge: .bottom) {
-                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
-            }
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(
             LinearGradient(
@@ -376,7 +368,7 @@ private struct CastEditContentView: View {
         .buttonStyle(.plain)
     }
 
-    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomSaveBar() -> some View {
         Button {
             onAction(.clickSave)
         } label: {
@@ -404,7 +396,6 @@ private struct CastEditContentView: View {
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
         }
-        .padding(.bottom, keyboardBottomInset)
     }
 
     private func infoBanner(message: String) -> some View {

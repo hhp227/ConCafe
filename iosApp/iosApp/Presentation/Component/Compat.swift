@@ -260,48 +260,6 @@ func compatSystemImageName(iOS16: String, fallback: String) -> String {
     }
 }
 
-private func currentKeyWindow() -> UIWindow? {
-    let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-
-    for scene in windowScenes {
-        if let keyWindow = scene.windows.first(where: { $0.isKeyWindow }) {
-            return keyWindow
-        }
-    }
-    return windowScenes.first?.windows.first
-}
-
-func resolveKeyboardOverlapHeight(from notification: Notification) -> CGFloat {
-    guard let keyboardFrameScreen = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
-        return 0
-    }
-
-    if let keyWindow = currentKeyWindow() {
-        let keyboardFrameInWindow = keyWindow.convert(keyboardFrameScreen, from: nil)
-        return max(0, keyWindow.bounds.intersection(keyboardFrameInWindow).height)
-    }
-
-    let screenHeight = UIScreen.main.bounds.height
-    return max(0, screenHeight - keyboardFrameScreen.minY)
-}
-
-func calculateKeyboardBottomInset(overlap: CGFloat, safeAreaBottom: CGFloat) -> CGFloat {
-    let inset = max(0, overlap - safeAreaBottom)
-    return inset
-}
-
-extension View {
-    func bindKeyboardOverlap(_ overlap: Binding<CGFloat>) -> some View {
-        self
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
-                overlap.wrappedValue = resolveKeyboardOverlapHeight(from: notification)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                overlap.wrappedValue = 0
-            }
-    }
-}
-
 struct CompatImagePicker: View {
     let onImageSelected: (UIImage) -> Void
 

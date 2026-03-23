@@ -324,13 +324,8 @@ private struct NoticeEventFormSheet: View {
 
     @State private var isImagePickerPresented = false
 
-    @State private var keyboardOverlap: CGFloat = 0
-
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             ZStack(alignment: .bottom) {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
@@ -447,18 +442,15 @@ private struct NoticeEventFormSheet: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 24)
+                        .padding(.bottom, 60)
                     }
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    bottomSubmitBar(keyboardBottomInset: keyboardBottomInset)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: 720)
                 .background(Color(hex: "F8F5F6"))
                 .ignoresSafeArea(edges: .bottom)
             }
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            bottomSubmitBar()
         }
         .sheet(isPresented: $isImagePickerPresented) {
             CompatImagePicker(
@@ -475,7 +467,7 @@ private struct NoticeEventFormSheet: View {
         }
     }
 
-    private func bottomSubmitBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomSubmitBar() -> some View {
         LinearGradient(
             colors: [Color.clear, Color(hex: "F8F5F6"), Color(hex: "F8F5F6")],
             startPoint: .top,
@@ -500,7 +492,6 @@ private struct NoticeEventFormSheet: View {
             .padding(.top, 10)
             .padding(.bottom, 24)
         }
-        .padding(.bottom, keyboardBottomInset)
     }
 
     private var representativeImageSection: some View {

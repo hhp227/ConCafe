@@ -66,10 +66,7 @@ private struct ReviewEditContentView: View {
     @State private var keyboardOverlap: CGFloat = 0
 
     var body: some View {
-        GeometryReader { proxy in
-            let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
-
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
@@ -90,12 +87,9 @@ private struct ReviewEditContentView: View {
                     }
                 }
                 .padding(.bottom, 12)
+                .padding(.bottom, 60)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomBar(keyboardBottomInset: keyboardBottomInset)
-            }
-            .bindKeyboardOverlap($keyboardOverlap)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            bottomBar()
         }
         .background(
             LinearGradient(
@@ -333,7 +327,7 @@ private struct ReviewEditContentView: View {
         }
     }
 
-    private func bottomBar(keyboardBottomInset: CGFloat) -> some View {
+    private func bottomBar() -> some View {
         Group {
             if uiState.isLoggedIn {
                 Button {
@@ -359,7 +353,6 @@ private struct ReviewEditContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 14)
-                .padding(.bottom, keyboardBottomInset)
                 .background(Color.white.opacity(0.96))
             }
         }
