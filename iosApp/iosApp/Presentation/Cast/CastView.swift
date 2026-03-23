@@ -9,7 +9,6 @@ import SwiftUI
 import Shared
 
 private let castCurrentDate = "2026-03-08"
-private let castHeroHeight: CGFloat = 340
 private let castSummaryTitleTriggerOffset: CGFloat = 22
 
 struct CastView: View {
@@ -164,7 +163,7 @@ private struct CastHeroSection: View {
                         heroPlaceholder(index: index)
                     }
                     LinearGradient(
-                        colors: [.clear, Color.black.opacity(0.52)],
+                        colors: [.clear, Color.black.opacity(0.4)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -191,7 +190,7 @@ private struct CastHeroSection: View {
                 .clipped()
             }
         }
-        .frame(height: castHeroHeight + topSafeArea)
+        .frame(height: 230 + topSafeArea)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
     }

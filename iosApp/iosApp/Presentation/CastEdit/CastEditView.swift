@@ -115,7 +115,7 @@ private struct CastEditContentView: View {
     var body: some View {
         GeometryReader { proxy in
             let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
+            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
 
             Group {
                 if uiState.isLoading {
@@ -174,12 +174,7 @@ private struct CastEditContentView: View {
             .safeAreaInset(edge: .bottom) {
                 bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
-                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                keyboardOverlap = 0
-            }
+            .bindKeyboardOverlap($keyboardOverlap)
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(
@@ -434,14 +429,6 @@ private struct CastEditContentView: View {
         )
     }
 
-}
-
-private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
-    let userInfo = notification.userInfo
-    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-    let screenHeight = UIScreen.main.bounds.height
-    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
-    return overlap
 }
 
 private struct BirthdayInputField: View {

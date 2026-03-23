@@ -30,6 +30,7 @@ import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -274,8 +275,7 @@ private fun ExternalLinkSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .navigationBarsPadding()
-            .imePadding(),
+            .keyboardBottomInsets(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(

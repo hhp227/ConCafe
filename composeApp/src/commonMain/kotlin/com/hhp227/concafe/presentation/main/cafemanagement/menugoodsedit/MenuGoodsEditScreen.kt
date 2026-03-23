@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -94,9 +95,8 @@ private fun MenuGoodsEditContentScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .navigationBarsPadding()
-                        .imePadding()
                         .fillMaxWidth()
+                        .keyboardBottomInsets()
                         .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {

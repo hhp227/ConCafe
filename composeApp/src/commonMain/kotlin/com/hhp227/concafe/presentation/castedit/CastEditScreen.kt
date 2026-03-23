@@ -33,6 +33,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -107,8 +108,7 @@ private fun CastEditContentScreen(
         bottomBar = {
             Surface(
                 modifier = Modifier
-                    .navigationBarsPadding()
-                    .imePadding(),
+                    .keyboardBottomInsets(),
                 color = Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {

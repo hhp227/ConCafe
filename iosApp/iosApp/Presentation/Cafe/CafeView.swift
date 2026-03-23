@@ -195,13 +195,13 @@ private struct CafeContentView: View {
                         heroPlaceholder
                     }
                 }
-                .frame(height: 280 + topSafeArea)
+                .frame(height: 230 + topSafeArea)
                 .offset(y: parallaxOffset)
                 .scaleEffect(stretchScale, anchor: .center)
                 .clipped()
             }
         }
-        .frame(height: 280 + topSafeArea)
+        .frame(height: 230 + topSafeArea)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
     }

@@ -63,8 +63,13 @@ private struct ReviewEditContentView: View {
 
     let onPickPhoto: () -> Void
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        VStack(spacing: 0) {
+        GeometryReader { proxy in
+            let safeAreaBottom = proxy.safeAreaInsets.bottom
+            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
+
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
@@ -86,7 +91,11 @@ private struct ReviewEditContentView: View {
                 }
                 .padding(.bottom, 12)
             }
-            bottomBar
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomBar(keyboardBottomInset: keyboardBottomInset)
+            }
+            .bindKeyboardOverlap($keyboardOverlap)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(
             LinearGradient(
@@ -324,7 +333,7 @@ private struct ReviewEditContentView: View {
         }
     }
 
-    private var bottomBar: some View {
+    private func bottomBar(keyboardBottomInset: CGFloat) -> some View {
         Group {
             if uiState.isLoggedIn {
                 Button {
@@ -350,6 +359,7 @@ private struct ReviewEditContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 14)
+                .padding(.bottom, keyboardBottomInset)
                 .background(Color.white.opacity(0.96))
             }
         }

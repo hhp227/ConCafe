@@ -33,6 +33,7 @@ import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -141,8 +142,7 @@ private fun CheckInNewVisitDialog(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .width(520.dp)
-                    .imePadding()
-                    .navigationBarsPadding(),
+                    .keyboardBottomInsets(),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 color = Color.White,
                 tonalElevation = 0.dp,

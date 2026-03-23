@@ -329,7 +329,7 @@ private struct NoticeEventFormSheet: View {
     var body: some View {
         GeometryReader { proxy in
             let safeAreaBottom = proxy.safeAreaInsets.bottom
-            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
+            let keyboardBottomInset = calculateKeyboardBottomInset(overlap: keyboardOverlap, safeAreaBottom: safeAreaBottom)
 
             ZStack(alignment: .bottom) {
                 Color.black.opacity(0.5)
@@ -457,12 +457,7 @@ private struct NoticeEventFormSheet: View {
                 .background(Color(hex: "F8F5F6"))
                 .ignoresSafeArea(edges: .bottom)
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
-                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                keyboardOverlap = 0
-            }
+            .bindKeyboardOverlap($keyboardOverlap)
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .sheet(isPresented: $isImagePickerPresented) {
@@ -611,15 +606,6 @@ private struct NoticeEventFormImageView: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
-}
-
-private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
-    let userInfo = notification.userInfo
-    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-    let screenHeight = UIScreen.main.bounds.height
-    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
-
-    return overlap
 }
 
 struct NoticeEventView_Previews: PreviewProvider {

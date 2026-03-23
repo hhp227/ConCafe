@@ -260,6 +260,33 @@ func compatSystemImageName(iOS16: String, fallback: String) -> String {
     }
 }
 
+func resolveKeyboardOverlapHeight(from notification: Notification) -> CGFloat {
+    let userInfo = notification.userInfo
+    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+    let screenHeight = UIScreen.main.bounds.height
+    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+
+    return overlap
+}
+
+func calculateKeyboardBottomInset(overlap: CGFloat, safeAreaBottom: CGFloat) -> CGFloat {
+    let inset = max(0, overlap - safeAreaBottom)
+
+    return inset
+}
+
+extension View {
+    func bindKeyboardOverlap(_ overlap: Binding<CGFloat>) -> some View {
+        self
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+                overlap.wrappedValue = resolveKeyboardOverlapHeight(from: notification)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                overlap.wrappedValue = 0
+            }
+    }
+}
+
 struct CompatImagePicker: View {
     let onImageSelected: (UIImage) -> Void
 
