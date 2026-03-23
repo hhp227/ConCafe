@@ -78,19 +78,29 @@ private struct HomeContentView: View {
     let onAction: (HomeAction) -> Void
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                bannerSection
-                popularCastSection
-                nearbyCafeSection
-                if !uiState.birthdayCasts.isEmpty {
-                    birthdaySection
+        if !uiState.isLoading {
+            ScrollView {
+                VStack(spacing: 24) {
+                    bannerSection
+                    popularCastSection
+                    nearbyCafeSection
+                    if !uiState.birthdayCasts.isEmpty {
+                        birthdaySection
+                    }
+                    noticeSection
                 }
-                noticeSection
+                .padding(.vertical, 16)
             }
-            .padding(.vertical, 16)
+            .background(Color(hex: "FFF9FC"))
+        } else {
+            ZStack {
+                Color(hex: "FFF9FC")
+                    .ignoresSafeArea()
+                ProgressView()
+                    .tint(Color(hex: "EF6797"))
+                    .controlSize(.regular)
+            }
         }
-        .background(Color(hex: "FFF9FC"))
     }
     
     private var bannerSection: some View {

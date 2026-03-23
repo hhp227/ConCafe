@@ -9,6 +9,7 @@ import Foundation
 import Shared
 
 struct HomeUiState {
+    var isLoading: Bool = false
     var isLoggedIn: Bool
     var isLoginPromptVisible: Bool
     let banners: [HomeBanner]
@@ -25,6 +26,7 @@ struct HomeUiState {
     let notices: [Notice]
 
     static let empty = HomeUiState(
+        isLoading: false,
         isLoggedIn: false,
         isLoginPromptVisible: false,
         banners: [],

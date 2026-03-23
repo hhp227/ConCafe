@@ -48,6 +48,7 @@ import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.model.Region
+import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
@@ -114,6 +115,8 @@ class FirestoreConCafeDataSource(
             .onFailure { throwable -> println("Firestore bootstrap loadCasts failed: ${throwable.message}") }
         runCatching { loadNotices(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadNotices failed: ${throwable.message}") }
+        runCatching { loadReviews(idToken = null) }
+            .onFailure { throwable -> println("Firestore bootstrap loadReviews failed: ${throwable.message}") }
         runCatching { loadVisits(idToken) }
             .onFailure { throwable -> println("Firestore bootstrap loadVisits failed: ${throwable.message}") }
     }
@@ -390,6 +393,210 @@ class FirestoreConCafeDataSource(
         runCatching {
             refreshCafeNoticeEventManagement(cafeId)
         }
+    }
+
+    suspend fun refreshCafeReviews(cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val reviewDocuments = runCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.REVIEWS,
+                fieldPath = "cafeId",
+                fieldValue = cafeId,
+                idToken = idToken,
+                orderByCreatedAtDesc = false
+            )
+        }.recoverCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.REVIEWS,
+                fieldPath = "cafeId",
+                fieldValue = cafeId,
+                idToken = null,
+                orderByCreatedAtDesc = false
+            )
+        }.getOrElse { throwable ->
+            println("Firestore refreshCafeReviews failed: ${throwable.message}")
+            return
+        }
+        val parsedReviews = reviewDocuments
+            .mapNotNull { document -> parseReviewDocument(document) }
+            .sortedByDescending { review -> review.createdAt }
+
+        reviews.removeAll { review -> review.cafeId == cafeId }
+        reviews.addAll(parsedReviews)
+        refreshReviewProjections(cafeId = cafeId, taggedCastIds = emptyList())
+    }
+
+    suspend fun createReviewRemote(
+        userId: String,
+        cafeId: String,
+        visitId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review {
+        val idToken = tokenProvider.getIdToken()
+        val reviewId = nextFirestoreEntityId("review")
+        val createdAt = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "visitId" to firestoreString(visitId),
+                "rating" to firestoreDouble(rating.toDouble()),
+                "content" to firestoreString(content.trim()),
+                "imageUrls" to firestoreStringArray(imageUrls),
+                "taggedCastIds" to firestoreStringArray(taggedCastIds),
+                "likeCount" to firestoreLong(0L),
+                "createdAt" to firestoreString(createdAt),
+                "updatedAt" to firestoreString(createdAt)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+
+        val created = Review(
+            id = reviewId,
+            userId = userId,
+            cafeId = cafeId,
+            visitId = visitId,
+            rating = rating,
+            content = content.trim(),
+            imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds,
+            likeCount = 0,
+            createdAt = createdAt
+        )
+        reviews.removeAll { review -> review.id == reviewId }
+        reviews.add(created)
+        refreshReviewProjections(cafeId = cafeId, taggedCastIds = taggedCastIds)
+
+        return created
+    }
+
+    suspend fun updateReviewRemote(
+        reviewId: String,
+        requesterId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review {
+        val idToken = tokenProvider.getIdToken()
+        val existing = resolveReviewById(reviewId = reviewId, idToken = idToken)
+            ?: throw NoSuchElementException("review not found")
+
+        if (existing.userId != requesterId) {
+            throw IllegalStateException("no permission to update review")
+        }
+
+        val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId" +
+            "?updateMask.fieldPaths=rating" +
+            "&updateMask.fieldPaths=content" +
+            "&updateMask.fieldPaths=imageUrls" +
+            "&updateMask.fieldPaths=taggedCastIds" +
+            "&updateMask.fieldPaths=updatedAt"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "rating" to firestoreDouble(rating.toDouble()),
+                "content" to firestoreString(content.trim()),
+                "imageUrls" to firestoreStringArray(imageUrls),
+                "taggedCastIds" to firestoreStringArray(taggedCastIds),
+                "updatedAt" to firestoreString(Clock.System.now().toString())
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+
+        val updated = existing.copy(
+            rating = rating,
+            content = content.trim(),
+            imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds
+        )
+        val index = reviews.indexOfFirst { review -> review.id == reviewId }
+
+        if (index >= 0) {
+            reviews[index] = updated
+        } else {
+            reviews.add(updated)
+        }
+        refreshReviewProjections(cafeId = updated.cafeId, taggedCastIds = updated.taggedCastIds)
+
+        return updated
+    }
+
+    suspend fun deleteReviewRemote(reviewId: String, requesterId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val existing = resolveReviewById(reviewId = reviewId, idToken = idToken)
+            ?: throw NoSuchElementException("review not found")
+
+        if (existing.userId != requesterId) {
+            throw IllegalStateException("no permission to delete review")
+        }
+
+        val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId"
+        restApi.delete(path, idToken)
+
+        reviews.removeAll { review -> review.id == reviewId }
+        refreshReviewProjections(cafeId = existing.cafeId, taggedCastIds = existing.taggedCastIds)
+    }
+
+    suspend fun likeReviewRemote(reviewId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val existing = resolveReviewById(reviewId = reviewId, idToken = idToken)
+            ?: throw NoSuchElementException("review not found")
+        val nextLikeCount = existing.likeCount + 1
+        val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId?updateMask.fieldPaths=likeCount"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "likeCount" to firestoreLong(nextLikeCount.toLong())
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+
+        val index = reviews.indexOfFirst { review -> review.id == reviewId }
+
+        if (index >= 0) {
+            reviews[index] = existing.copy(likeCount = nextLikeCount)
+        } else {
+            reviews.add(existing.copy(likeCount = nextLikeCount))
+        }
+    }
+
+    suspend fun hasReviewForVisitRemote(visitId: String): Boolean {
+        if (visitId.isBlank()) {
+            return false
+        }
+        val idToken = tokenProvider.getIdToken()
+        val reviewDocuments = runCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.REVIEWS,
+                fieldPath = "visitId",
+                fieldValue = visitId,
+                idToken = idToken,
+                orderByCreatedAtDesc = false
+            )
+        }.recoverCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.REVIEWS,
+                fieldPath = "visitId",
+                fieldValue = visitId,
+                idToken = null,
+                orderByCreatedAtDesc = false
+            )
+        }.getOrElse { emptyList() }
+        val parsedReviews = reviewDocuments.mapNotNull { document -> parseReviewDocument(document) }
+
+        if (parsedReviews.isNotEmpty()) {
+            val first = parsedReviews.first()
+            reviews.removeAll { review -> review.id == first.id }
+            reviews.add(first)
+        }
+
+        return parsedReviews.isNotEmpty()
     }
 
     suspend fun updateCafeInfoRemote(update: CafeInfoUpdate): CafeDetail {
@@ -1277,6 +1484,21 @@ class FirestoreConCafeDataSource(
         this.notices.addAll(loadedNotices)
     }
 
+    private suspend fun loadReviews(idToken: String?) {
+        val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.REVIEWS}", idToken)
+        val parsed = Json.parseToJsonElement(response).jsonObject
+        val documents = parsed["documents"]?.jsonArray.orEmpty()
+        val parsedReviews = documents
+            .mapNotNull { element -> parseReviewDocument(element.jsonObject) }
+            .sortedByDescending { review -> review.createdAt }
+
+        this.reviews.clear()
+        this.reviews.addAll(parsedReviews)
+        cafes.forEach { cafe ->
+            refreshReviewProjections(cafeId = cafe.id, taggedCastIds = emptyList())
+        }
+    }
+
     private suspend fun loadVisits(idToken: String?) {
         val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.VISITS}", idToken)
         val parsed = Json.parseToJsonElement(response).jsonObject
@@ -1317,6 +1539,73 @@ class FirestoreConCafeDataSource(
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
+    }
+
+    private suspend fun runFieldScopedQuery(
+        collectionId: String,
+        fieldPath: String,
+        fieldValue: String,
+        idToken: String?,
+        orderByCreatedAtDesc: Boolean
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val orderBySection = if (orderByCreatedAtDesc) {
+            """
+            ,
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ]
+            """.trimIndent()
+        } else {
+            ""
+        }
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "$collectionId" }
+                ],
+                "where": {
+                    "fieldFilter": {
+                      "field": { "fieldPath": "$fieldPath" },
+                      "op": "EQUAL",
+                      "value": { "stringValue": "${escapeFirestoreQueryString(fieldValue)}" }
+                    }
+                  }$orderBySection
+                }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun resolveReviewById(reviewId: String, idToken: String?): Review? {
+        val cached = reviews.firstOrNull { review -> review.id == reviewId }
+
+        if (cached != null) {
+            return cached
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId"
+        val document = runCatching {
+            Json.parseToJsonElement(restApi.get(path, idToken)).jsonObject
+        }.recoverCatching {
+            Json.parseToJsonElement(restApi.get(path, null)).jsonObject
+        }.getOrNull()
+        val parsed = document?.let { parseReviewDocument(it) }
+
+        if (parsed != null) {
+            reviews.removeAll { review -> review.id == parsed.id }
+            reviews.add(parsed)
+        }
+
+        return parsed
     }
 
     private suspend fun loadCollectionDocuments(
@@ -2009,6 +2298,30 @@ class FirestoreConCafeDataSource(
             visitedAt = fields.getFirestoreString("visitedAt").orEmpty(),
             memo = fields.getFirestoreString("memo"),
             verified = fields.getFirestoreBoolean("verified") ?: false
+        )
+    }
+
+    private fun parseReviewDocument(document: JsonObject): Review? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val reviewId = name.substringAfterLast("/")
+        val userId = fields.getFirestoreString("userId") ?: return null
+        val cafeId = fields.getFirestoreString("cafeId") ?: return null
+        val ratingValue = fields.getFirestoreDouble("rating")
+            ?: fields.getFirestoreLong("rating")?.toDouble()
+            ?: 0.0
+
+        return Review(
+            id = reviewId,
+            userId = userId,
+            cafeId = cafeId,
+            visitId = fields.getFirestoreString("visitId").orEmpty(),
+            rating = ratingValue.toFloat(),
+            content = fields.getFirestoreString("content").orEmpty(),
+            imageUrls = fields.getFirestoreStringList("imageUrls"),
+            taggedCastIds = fields.getFirestoreStringList("taggedCastIds"),
+            likeCount = fields.getFirestoreLong("likeCount")?.toInt() ?: 0,
+            createdAt = fields.getFirestoreString("createdAt").orEmpty()
         )
     }
 

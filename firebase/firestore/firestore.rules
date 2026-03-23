@@ -68,6 +68,50 @@ service cloud.firestore {
         );
     }
 
+    function isValidReviewCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitId is string
+        && request.resource.data.rating is number
+        && request.resource.data.content is string
+        && request.resource.data.imageUrls is list
+        && request.resource.data.taggedCastIds is list
+        && request.resource.data.likeCount is int
+        && request.resource.data.createdAt is string;
+    }
+
+    function isReviewOwnerEditableUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.visitId == resource.data.visitId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount == resource.data.likeCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "rating",
+          "content",
+          "imageUrls",
+          "taggedCastIds",
+          "updatedAt"
+        ]);
+    }
+
+    function isReviewLikeOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.visitId == resource.data.visitId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.rating == resource.data.rating
+        && request.resource.data.content == resource.data.content
+        && request.resource.data.imageUrls == resource.data.imageUrls
+        && request.resource.data.taggedCastIds == resource.data.taggedCastIds
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= resource.data.likeCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "likeCount"
+        ]);
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow create: if isAdmin()
@@ -175,6 +219,17 @@ service cloud.firestore {
         && exists(
           /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
         );
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidReviewCreateData();
+      allow update: if isSignedIn()
+        && (isReviewOwnerEditableUpdate() || isReviewLikeOnlyUpdate());
+      allow delete: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
     match /{document=**} {

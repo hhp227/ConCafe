@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.MyInfoDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.ReviewDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.repository.ReviewRepository
@@ -18,6 +19,11 @@ class ReviewRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Review> {
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCafeReviews(cafeId)
+            }
+        }
         val items = reviewDataSource.reviews
             .filter { it.cafeId == cafeId }
             .sortedByDescending { it.createdAt }
@@ -35,6 +41,17 @@ class ReviewRepositoryImpl(
     ): Review {
         if (content.isBlank()) {
             throw IllegalArgumentException("review content is required")
+        }
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.createReviewRemote(
+                userId = userId,
+                cafeId = cafeId,
+                visitId = visitId,
+                rating = rating,
+                content = content,
+                imageUrls = imageUrls,
+                taggedCastIds = taggedCastIds
+            )
         }
 
         val review = Review(
@@ -57,7 +74,52 @@ class ReviewRepositoryImpl(
         return review
     }
 
+    override suspend fun updateReview(
+        reviewId: String,
+        requesterId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review {
+        if (content.isBlank()) {
+            throw IllegalArgumentException("review content is required")
+        }
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.updateReviewRemote(
+                reviewId = reviewId,
+                requesterId = requesterId,
+                rating = rating,
+                content = content,
+                imageUrls = imageUrls,
+                taggedCastIds = taggedCastIds
+            )
+        }
+        val index = reviewDataSource.reviews.indexOfFirst { it.id == reviewId && it.userId == requesterId }
+
+        if (index == -1) {
+            throw IllegalStateException("no permission to update review")
+        }
+
+        val current = reviewDataSource.reviews[index]
+        val updated = current.copy(
+            rating = rating,
+            content = content.trim(),
+            imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds
+        )
+        reviewDataSource.reviews[index] = updated
+        reviewDataSource.refreshReviewProjections(
+            cafeId = updated.cafeId,
+            taggedCastIds = updated.taggedCastIds
+        )
+        return updated
+    }
+
     override suspend fun hasReviewForVisit(visitId: String): Boolean {
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.hasReviewForVisitRemote(visitId)
+        }
         return reviewDataSource.reviews.any { it.visitId == visitId }
     }
 
@@ -72,6 +134,10 @@ class ReviewRepositoryImpl(
     }
 
     override suspend fun likeReview(userId: String, reviewId: String) {
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.likeReviewRemote(reviewId = reviewId)
+            return
+        }
         val index = reviewDataSource.reviews.indexOfFirst { it.id == reviewId }
 
         if (index == -1) {
@@ -83,6 +149,13 @@ class ReviewRepositoryImpl(
     }
 
     override suspend fun deleteReview(reviewId: String, requesterId: String) {
+        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.deleteReviewRemote(
+                reviewId = reviewId,
+                requesterId = requesterId
+            )
+            return
+        }
         val index = reviewDataSource.reviews.indexOfFirst {
             it.id == reviewId && it.userId == requesterId
         }
