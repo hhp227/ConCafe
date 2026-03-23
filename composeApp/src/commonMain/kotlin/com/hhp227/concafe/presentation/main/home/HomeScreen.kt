@@ -135,6 +135,7 @@ fun HomeContentScreen(
                         pageSpacing = 12.dp
                     ) { page ->
                         val banner = uiState.banners[page]
+                        val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
 
                         Card(
                             modifier = Modifier
@@ -152,15 +153,33 @@ fun HomeContentScreen(
                                                 colorFromHex(banner.endColorHex)
                                             )
                                         )
-                                    )
-                                    .padding(18.dp),
+                                    ),
                                 contentAlignment = Alignment.BottomStart
                             ) {
+                                if (imageUrl != null) {
+                                    CompatImageDisplay(
+                                        imageUrl = imageUrl,
+                                        modifier = Modifier.matchParentSize()
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .background(
+                                                Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.Black.copy(alpha = 0.1f),
+                                                        Color.Black.copy(alpha = 0.45f)
+                                                    )
+                                                )
+                                            )
+                                    )
+                                }
                                 Text(
                                     text = banner.title,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(18.dp)
                                 )
                             }
                         }

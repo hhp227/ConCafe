@@ -446,25 +446,21 @@ class CafeDashboardViewModel(
                 state
             } else {
                 val currentPreview = currentCafe.homeBannerPreview
-                if (currentPreview.title == updatedBanner.title) {
-                    val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
-                        "ACTIVE" -> "노출 중"
-                        "SCHEDULED" -> "예약 중"
-                        else -> "미노출"
-                    }
-                    state.copy(
-                        cafe = currentCafe.copy(
-                            homeBannerPreview = currentPreview.copy(
-                                title = updatedBanner.title,
-                                period = "노출 ${updatedBanner.displayDays}일",
-                                statusLabel = statusLabel,
-                                imageUrl = updatedBanner.imageUrl
-                            )
+                val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
+                    "ACTIVE" -> "노출 중"
+                    "SCHEDULED" -> "예약 중"
+                    else -> "미노출"
+                }
+                state.copy(
+                    cafe = currentCafe.copy(
+                        homeBannerPreview = currentPreview.copy(
+                            title = updatedBanner.title,
+                            period = "노출 ${updatedBanner.displayDays}일",
+                            statusLabel = statusLabel,
+                            imageUrl = updatedBanner.imageUrl
                         )
                     )
-                } else {
-                    state
-                }
+                )
             }
         }
     }

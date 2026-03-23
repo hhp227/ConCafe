@@ -396,30 +396,28 @@ final class CafeDashboardViewModel: ObservableObject {
     private func patchUpdatedBannerPreview(_ updatedBanner: HomeBanner) {
         if let current = uiState.cafe {
             let currentPreview = current.homeBannerPreview
-            if currentPreview.title == updatedBanner.title {
-                let statusLabel: String
-                switch updatedBanner.statusLabel.uppercased() {
-                case "ACTIVE":
-                    statusLabel = "노출 중"
-                case "SCHEDULED":
-                    statusLabel = "예약 중"
-                default:
-                    statusLabel = "미노출"
-                }
-                uiState.cafe = CafeDashboardData(
-                    id: current.id,
-                    name: current.name,
-                    city: current.city,
-                    todayCheckIns: current.todayCheckIns,
-                    todayReviews: current.todayReviews,
-                    rating: current.rating,
-                    castPreviews: current.castPreviews,
-                    homeBannerPreview: CafeDashboardData.HomeBannerPreview(
-                        title: updatedBanner.title,
-                        period: "노출 \(updatedBanner.displayDays)일",
-                        statusLabel: statusLabel,
-                        imageUrl: updatedBanner.imageUrl
-                    )
+            let statusLabel: String
+            switch updatedBanner.statusLabel.uppercased() {
+            case "ACTIVE":
+                statusLabel = "노출 중"
+            case "SCHEDULED":
+                statusLabel = "예약 중"
+            default:
+                statusLabel = "미노출"
+            }
+            uiState.cafe = CafeDashboardData(
+                id: current.id,
+                name: current.name,
+                city: current.city,
+                todayCheckIns: current.todayCheckIns,
+                todayReviews: current.todayReviews,
+                rating: current.rating,
+                castPreviews: current.castPreviews,
+                homeBannerPreview: CafeDashboardData.HomeBannerPreview(
+                    title: updatedBanner.title,
+                    period: "노출 \(updatedBanner.displayDays)일",
+                    statusLabel: statusLabel,
+                    imageUrl: updatedBanner.imageUrl
                 )
             }
         }
