@@ -19,6 +19,7 @@ data class CafeDashboardData(
     data class HomeBannerPreview(
         val title: String,
         val period: String,
-        val statusLabel: String
+        val statusLabel: String,
+        val imageUrl: String? = null
     )
 }

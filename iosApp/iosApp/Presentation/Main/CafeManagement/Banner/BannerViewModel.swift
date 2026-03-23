@@ -13,7 +13,7 @@ import KMPNativeCoroutinesAsync
 final class BannerViewModel: ObservableObject {
     private let cafeId: String?
 
-    private let getHomeFeedUseCase: GetHomeFeedUseCase
+    private let getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase
 
     private let deleteHomeBannerUseCase: DeleteHomeBannerUseCase
 
@@ -29,14 +29,11 @@ final class BannerViewModel: ObservableObject {
         tasks[.load]?.cancel()
         tasks[.load] = Task {
             do {
-                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
+                let result = try await getHomeBannerManagementUseCase.invoke(cafeId: cafeId)
+
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let feed = success.data as? HomeFeed {
-                    let mapped = feed.banners
-                        .filter { banner in
-                            guard let cafeId else { return true }
-                            return banner.cafeId == cafeId
-                        }
+                   let banners = success.data as? [HomeBanner] {
+                    let mapped = banners
                         .map { $0.toBannerItem() }
                     uiState.banners = mapped
                     if let pendingDeleteBannerId = uiState.pendingDeleteBannerId,
@@ -167,12 +164,12 @@ final class BannerViewModel: ObservableObject {
 
     init(
         cafeId: String? = nil,
-        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase = KoinInitializerKt.resolveGetHomeBannerManagementUseCase(),
         deleteHomeBannerUseCase: DeleteHomeBannerUseCase = KoinInitializerKt.resolveDeleteHomeBannerUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher()
     ) {
         self.cafeId = cafeId
-        self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.getHomeBannerManagementUseCase = getHomeBannerManagementUseCase
         self.deleteHomeBannerUseCase = deleteHomeBannerUseCase
         self.bannerEventPublisher = bannerEventPublisher
         observeBannerEvent()
@@ -231,7 +228,8 @@ private extension HomeBanner {
             statusLabel: statusLabel,
             tab: tab,
             accentHex: startColorHex,
-            imageIcon: icon
+            imageIcon: icon,
+            imageUrl: imageUrl
         )
     }
 }

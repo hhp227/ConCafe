@@ -20,6 +20,7 @@ import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeEventCreate
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
@@ -891,6 +892,15 @@ class FirestoreConCafeDataSource(
         restApi.delete(path, idToken)
     }
 
+    override suspend fun refreshHomeBanners() {
+        val idToken = tokenProvider.getIdToken()
+        runCatching {
+            loadHomeBanners(idToken = idToken)
+        }.recoverCatching {
+            loadHomeBanners(idToken = null)
+        }.getOrThrow()
+    }
+
     override suspend fun refreshCafeManagementData(userId: String) {
         val idToken = tokenProvider.getIdToken()
         val ownerClaimDocuments = runUserScopedQuery(
@@ -1176,7 +1186,41 @@ class FirestoreConCafeDataSource(
         }
 
         this.banners.clear()
-        this.banners.addAll(banners)
+        this.banners.addAll(banners.sortedByDescending { banner -> banner.createdAtEpochMillis })
+        rebuildCafeHomeBannerPreviewByCafeId()
+    }
+
+    private fun rebuildCafeHomeBannerPreviewByCafeId() {
+        val previewByCafeId = banners
+            .asSequence()
+            .mapNotNull { banner ->
+                val cafeId = banner.cafeId?.takeIf { value -> value.isNotBlank() } ?: return@mapNotNull null
+                cafeId to banner
+            }
+            .groupBy(keySelector = { entry -> entry.first }, valueTransform = { entry -> entry.second })
+            .mapValues { entry ->
+                entry.value
+                    .sortedWith(
+                        compareByDescending<HomeBanner> { banner -> banner.statusLabel.uppercase() == "ACTIVE" }
+                            .thenByDescending { banner -> banner.createdAtEpochMillis }
+                    )
+                    .first()
+            }
+
+        cafeHomeBannerPreviewByCafeId.clear()
+        previewByCafeId.forEach { entry ->
+            val statusLabel = when (entry.value.statusLabel.uppercase()) {
+                "ACTIVE" -> "노출 중"
+                "SCHEDULED" -> "예약 중"
+                else -> "미노출"
+            }
+            cafeHomeBannerPreviewByCafeId[entry.key] = CafeDashboardData.HomeBannerPreview(
+                title = entry.value.title,
+                period = resolvePeriodLabel(entry.value.displayDays),
+                statusLabel = statusLabel,
+                imageUrl = entry.value.imageUrl
+            )
+        }
     }
 
     private suspend fun loadCafes(idToken: String?) {
@@ -1770,6 +1814,18 @@ class FirestoreConCafeDataSource(
                 "주말 $weekendOpen - $weekendClose"
             else -> ""
         }
+    }
+
+    private fun resolvePeriodLabel(displayDays: Int): String {
+        val startDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val endDate = startDate.plus(DatePeriod(days = displayDays - 1))
+        return "${startDate.toPeriodText()} - ${endDate.toPeriodText()}"
+    }
+
+    private fun LocalDate.toPeriodText(): String {
+        val monthText = monthNumber.toString().padStart(2, '0')
+        val dayText = dayOfMonth.toString().padStart(2, '0')
+        return "$year.$monthText.$dayText"
     }
 
     private fun parseUserDocument(document: JsonObject): User? {

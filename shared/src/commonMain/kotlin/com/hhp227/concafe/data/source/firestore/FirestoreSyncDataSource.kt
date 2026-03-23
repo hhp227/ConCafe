@@ -33,6 +33,8 @@ interface FirestoreSyncDataSource {
 
     suspend fun deleteHomeBanner(bannerId: String)
 
+    suspend fun refreshHomeBanners()
+
     suspend fun refreshCafeManagementData(userId: String)
 
     suspend fun fetchPendingCafeOwnerClaimsForAdmin(): List<PendingCafeOwnerClaimPreview>

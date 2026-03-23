@@ -1080,22 +1080,32 @@ private fun HomeBannerSection(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+
                         Box(
                             modifier = Modifier
                                 .size(width = 96.dp, height = 64.dp)
+                                .clip(RoundedCornerShape(14.dp))
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(Color(0xFFFFD1DC), Color(0xFFFFE4EC))
-                                    ),
-                                    RoundedCornerShape(14.dp)
+                                    )
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Image,
-                                contentDescription = null,
-                                tint = Color.White
-                            )
+                            if (imageUrl != null) {
+                                CompatImageDisplay(
+                                    imageUrl = imageUrl,
+                                    modifier = Modifier.fillMaxSize(),
+                                    applyRoundedClip = false
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
                         }
                         Column(
                             modifier = Modifier.weight(1f),

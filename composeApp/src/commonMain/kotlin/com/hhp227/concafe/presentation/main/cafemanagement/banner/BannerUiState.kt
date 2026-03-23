@@ -37,7 +37,8 @@ data class BannerItem(
     val statusLabel: String,
     val tab: BannerTab,
     val accentColorHex: String,
-    val imageIcon: String
+    val imageIcon: String,
+    val imageUrl: String? = null
 )
 
 enum class BannerTab(val label: String) {

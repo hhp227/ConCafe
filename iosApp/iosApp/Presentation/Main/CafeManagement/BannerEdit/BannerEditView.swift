@@ -118,30 +118,44 @@ private struct BannerEditContentView: View {
 
     let onPickImage: () -> Void
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                bannerImageCard
-                basicInformationSection
-                targetSection
-                periodSection
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
+        GeometryReader { proxy in
+            let safeAreaBottom = proxy.safeAreaInsets.bottom
+            let keyboardBottomInset = max(0, keyboardOverlap - safeAreaBottom)
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    bannerImageCard
+                    basicInformationSection
+                    targetSection
+                    periodSection
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(message: infoMessage)
+                    }
                 }
+                .padding(16)
+                .padding(.bottom, 100)
             }
-            .padding(16)
-            .padding(.bottom, 100)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomSaveBar
-        }
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
-                startPoint: .top,
-                endPoint: .bottom
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomSaveBar(keyboardBottomInset: keyboardBottomInset)
+            }
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
             )
-        )
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+                keyboardOverlap = resolveKeyboardOverlap(notification: notification)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardOverlap = 0
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
     }
 
     private var bannerImageCard: some View {
@@ -341,7 +355,7 @@ private struct BannerEditContentView: View {
         }
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar(keyboardBottomInset: CGFloat) -> some View {
         Button {
             onAction(.clickSave)
         } label: {
@@ -365,6 +379,7 @@ private struct BannerEditContentView: View {
         }
         .buttonStyle(.plain)
         .disabled(!uiState.isSaveEnabled)
+        .padding(.bottom, keyboardBottomInset)
     }
 
     private func sectionCard<Content: View>(
@@ -488,6 +503,14 @@ private struct BannerEditContentView: View {
         .background(Color(hex: "FFD1DC").opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
+}
+
+private func resolveKeyboardOverlap(notification: Notification) -> CGFloat {
+    let userInfo = notification.userInfo
+    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+    let screenHeight = UIScreen.main.bounds.height
+    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+    return overlap
 }
 
 private struct BannerEditImageView<Placeholder: View>: View {

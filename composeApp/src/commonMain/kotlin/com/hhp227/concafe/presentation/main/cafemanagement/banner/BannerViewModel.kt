@@ -8,7 +8,7 @@ import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
-import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeBannerManagementUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class BannerViewModel(
     private val cafeId: String? = null,
-    private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val deleteHomeBannerUseCase: DeleteHomeBannerUseCase
 ) : ViewModel() {
@@ -33,12 +33,10 @@ class BannerViewModel(
 
     private fun loadBanners() {
         viewModelScope.launch {
-            when (val result = getHomeFeedUseCase.invoke(popularCastCursor = null, nearbyCafeCursor = null)) {
+            when (val result = getHomeBannerManagementUseCase.invoke(cafeId = cafeId)) {
                 is AppResult.Success -> {
-                    val targetCafeId = cafeId
-                    val mapped = result.data.banners
+                    val mapped = result.data
                         .asSequence()
-                        .filter { banner -> targetCafeId.isNullOrBlank() || banner.cafeId == targetCafeId }
                         .map { banner -> banner.toBannerItem() }
                         .toList()
                     _uiState.update { state ->
@@ -198,6 +196,7 @@ private fun HomeBanner.toBannerItem(): BannerItem {
         statusLabel = status,
         tab = tab,
         accentColorHex = startColorHex,
-        imageIcon = icon
+        imageIcon = icon,
+        imageUrl = imageUrl
     )
 }

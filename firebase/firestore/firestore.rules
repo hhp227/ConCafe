@@ -17,7 +17,18 @@ service cloud.firestore {
 
     function isCafeOwner(cafeId) {
       return isSignedIn()
-        && request.auth.uid in get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds;
+        && (
+          (
+            exists(/databases/$(database)/documents/cafes/$(cafeId))
+            && get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds is list
+            && request.auth.uid in get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds
+          )
+          || (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedCafeIds is list
+            && cafeId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedCafeIds
+          )
+        );
     }
 
     function isCafeOwnerEditableUpdate() {
@@ -59,7 +70,32 @@ service cloud.firestore {
 
     match /homeBanners/{bannerId} {
       allow read: if true;
-      allow write: if false;
+      allow create: if isAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.relatedCafeId is string
+          && isCafeOwner(request.resource.data.relatedCafeId)
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && (
+            (
+              request.resource.data.relatedCafeId is string
+              && isCafeOwner(request.resource.data.relatedCafeId)
+            )
+            || (
+              resource.data.relatedCafeId is string
+              && isCafeOwner(resource.data.relatedCafeId)
+            )
+          )
+        );
+      allow delete: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.relatedCafeId is string
+          && isCafeOwner(resource.data.relatedCafeId)
+        );
     }
 
     match /cafes/{cafeId} {

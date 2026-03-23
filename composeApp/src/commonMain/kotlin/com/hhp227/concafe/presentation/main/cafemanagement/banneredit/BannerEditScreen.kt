@@ -119,6 +119,7 @@ private fun BannerEditContentScreen(
         },
         bottomBar = {
             Surface(
+                modifier = Modifier.imePadding(),
                 color = Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, Color(0x1AFFD1DC))
             ) {
@@ -128,7 +129,7 @@ private fun BannerEditContentScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+                        .navigationBarsPadding(),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFD1DC),

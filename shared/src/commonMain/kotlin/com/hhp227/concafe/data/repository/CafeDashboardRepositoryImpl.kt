@@ -49,7 +49,8 @@ class CafeDashboardRepositoryImpl(
             ?: CafeDashboardData.HomeBannerPreview(
                 title = "홈 배너를 등록해보세요",
                 period = "설정된 배너 없음",
-                statusLabel = "미등록"
+                statusLabel = "미등록",
+                imageUrl = null
             )
 
         return CafeDashboardData(

@@ -49,6 +49,7 @@ struct BannerItem: Identifiable {
     let tab: BannerTab
     let accentHex: String
     let imageIcon: String
+    let imageUrl: String?
 }
 
 enum BannerTab: String, CaseIterable {

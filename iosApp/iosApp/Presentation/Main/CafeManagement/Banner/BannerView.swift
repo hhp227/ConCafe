@@ -216,18 +216,34 @@ private struct BannerCardView: View {
     }
 
     private var thumbnail: some View {
-        LinearGradient(
-            colors: [Color(hex: banner.accentHex), Color(hex: "FFE6ED")],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .overlay(
-            Image(systemName: banner.imageIcon)
-                .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(.white)
-        )
+        GeometryReader { proxy in
+            let imageSize = proxy.size
+            let trimmedImageUrl = banner.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let resolvedImageUrl = trimmedImageUrl.isEmpty ? nil : URL(string: trimmedImageUrl)
+
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: banner.accentHex), Color(hex: "FFE6ED")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                if let resolvedImageUrl {
+                    CachedAsyncImage(
+                        url: resolvedImageUrl,
+                        placeholder: Color.clear
+                    )
+                    .frame(width: imageSize.width, height: imageSize.height)
+                    .clipped()
+                } else {
+                    Image(systemName: banner.imageIcon)
+                        .font(.system(size: 34, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+        }
         .frame(width: 96, height: 96)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipped()
     }
 }
 
