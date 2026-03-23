@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
@@ -101,7 +102,15 @@ class MyInfoViewModel(
             castEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CastEvent.Created -> Unit
-                    is CastEvent.Updated -> patchCast(event.cast)
+                    is CastEvent.Updated -> {
+                        val isFollowing = event.isFollowing
+
+                        if (isFollowing != null) {
+                            updateFollowedCast(event.cast, isFollowing)
+                        } else {
+                            patchCast(event.cast)
+                        }
+                    }
                     is CastEvent.Deleted -> removeCast(event.castId)
                 }
             }
@@ -141,6 +150,46 @@ class MyInfoViewModel(
                 castDetail = state.castDetail?.takeUnless { it.cast.id == castId },
                 followedMaids = state.followedMaids.filterNot { it.id == castId }
             )
+        }
+    }
+
+    private fun updateFollowedCast(cast: Cast, isFollowing: Boolean) {
+        _uiState.update { state ->
+            val followedMaids = if (isFollowing) {
+                upsertFollowedCast(state.followedMaids, cast)
+            } else {
+                state.followedMaids.filterNot { item -> item.id == cast.id }
+            }
+            val summary = updateFollowedCount(
+                summary = state.summary,
+                followedMaids = followedMaids
+            )
+            state.copy(
+                castDetail = state.castDetail?.takeIf { detail -> detail.cast.id == cast.id }?.copy(cast = cast)
+                    ?: state.castDetail,
+                summary = summary,
+                followedMaids = followedMaids
+            )
+        }
+    }
+
+    private fun upsertFollowedCast(items: List<Cast>, cast: Cast): List<Cast> {
+        val hasCast = items.any { item -> item.id == cast.id }
+        return if (hasCast) {
+            items.map { item -> if (item.id == cast.id) cast else item }
+        } else {
+            listOf(cast) + items
+        }
+    }
+
+    private fun updateFollowedCount(
+        summary: MyPageSummary?,
+        followedMaids: List<Cast>
+    ): MyPageSummary? {
+        return if (summary != null) {
+            summary.copy(followedCastsCount = followedMaids.size)
+        } else {
+            null
         }
     }
 

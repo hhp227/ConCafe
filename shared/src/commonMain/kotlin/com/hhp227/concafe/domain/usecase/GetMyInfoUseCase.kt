@@ -104,10 +104,15 @@ class GetMyInfoUseCase(
                         castRepository.getCastsByIds(followedCastIdsDeferred.await())
                             .sortedByDescending { it.followerCount }
                     }
+                    val followedCastCountDeferred = async {
+                        followedCastIdsDeferred.await().size
+                    }
                     LoadedMyInfoDependencies(
                         popularCafes = popularCafesDeferred.await(),
                         firestoreUser = firestoreUser,
-                        summary = summaryDeferred.await(),
+                        summary = summaryDeferred.await().copy(
+                            followedCastsCount = followedCastCountDeferred.await()
+                        ),
                         castDetail = castDetailDeferred?.await(),
                         ownedCafes = ownedCafesDeferred?.await().orEmpty(),
                         recentVisits = recentVisitsDeferred.await(),

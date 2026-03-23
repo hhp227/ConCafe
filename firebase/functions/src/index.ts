@@ -39,6 +39,27 @@ async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
   );
 }
 
+async function syncCastFollowerAggregate(cafeId: string, castId: string): Promise<void> {
+  const snapshot = await db
+    .collection("castFollows")
+    .where("castId", "==", castId)
+    .select("userId")
+    .get();
+  const followerCount = snapshot.size;
+
+  await db
+    .collection("cafes")
+    .doc(cafeId)
+    .collection("casts")
+    .doc(castId)
+    .set(
+      {
+        followerCount: followerCount,
+      },
+      {merge: true}
+    );
+}
+
 export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
   "reviews/{reviewId}",
   async (event) => {
@@ -64,6 +85,48 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
     logger.info("Synced cafe review aggregate.", {
       cafeIds: Array.from(targetCafeIds),
       reviewId: event.params.reviewId,
+    });
+  }
+);
+
+export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
+  "castFollows/{followId}",
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    const followTargets = new Map<string, string>();
+
+    if (
+      typeof beforeData?.cafeId === "string" &&
+      typeof beforeData?.castId === "string" &&
+      beforeData.cafeId.length > 0 &&
+      beforeData.castId.length > 0
+    ) {
+      followTargets.set(beforeData.castId, beforeData.cafeId);
+    }
+    if (
+      typeof afterData?.cafeId === "string" &&
+      typeof afterData?.castId === "string" &&
+      afterData.cafeId.length > 0 &&
+      afterData.castId.length > 0
+    ) {
+      followTargets.set(afterData.castId, afterData.cafeId);
+    }
+    if (followTargets.size == 0) {
+      return;
+    }
+
+    await Promise.all(
+      Array.from(followTargets.entries()).map(async ([castId, cafeId]) => {
+        await syncCastFollowerAggregate(cafeId, castId);
+      })
+    );
+    logger.info("Synced cast follower aggregate.", {
+      followId: event.params.followId,
+      targets: Array.from(followTargets.entries()).map(([castId, cafeId]) => ({
+        castId: castId,
+        cafeId: cafeId,
+      })),
     });
   }
 );

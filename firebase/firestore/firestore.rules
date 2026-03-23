@@ -232,6 +232,19 @@ service cloud.firestore {
         && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
+    match /castFollows/{followId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.castId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId is string
+        && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

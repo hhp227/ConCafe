@@ -566,6 +566,108 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    suspend fun refreshFollowedCastIds(userId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val followDocuments = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = null
+            )
+        }.getOrElse { emptyList() }
+        val followedCastIds = followDocuments
+            .mapNotNull { document ->
+                document["fields"]?.jsonObject?.getFirestoreString("castId")
+            }
+            .toMutableSet()
+
+        followedCastIdsByUser[userId] = followedCastIds
+    }
+
+    suspend fun refreshFollowerUserIds(castId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val followDocuments = runCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                fieldPath = "castId",
+                fieldValue = castId,
+                idToken = idToken,
+                orderByCreatedAtDesc = false
+            )
+        }.recoverCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                fieldPath = "castId",
+                fieldValue = castId,
+                idToken = null,
+                orderByCreatedAtDesc = false
+            )
+        }.getOrElse { emptyList() }
+        val followerIds = followDocuments
+            .mapNotNull { document ->
+                document["fields"]?.jsonObject?.getFirestoreString("userId")
+            }
+            .toMutableSet()
+
+        followerUserIdsByCastId[castId] = followerIds
+        syncCastFollowerCountInCache(castId = castId, followerCount = followerIds.size)
+    }
+
+    suspend fun followCastRemote(userId: String, castId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val cast = delegate.casts.firstOrNull { item -> item.id == castId }
+            ?: runCatching {
+                refreshCastDetailRemote(castId)
+                delegate.casts.firstOrNull { item -> item.id == castId }
+            }.getOrNull()
+            ?: throw NoSuchElementException("cast not found")
+        runCatching { refreshFollowedCastIds(userId) }
+        runCatching { refreshFollowerUserIds(castId) }
+        val followId = buildCastFollowDocumentId(userId = userId, castId = castId)
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_FOLLOWS}/$followId"
+        val createdAt = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "castId" to firestoreString(castId),
+                "cafeId" to firestoreString(cast.cafeId),
+                "createdAt" to firestoreString(createdAt)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        val followedSet = followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
+        val followerSet = followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
+
+        followedSet.add(castId)
+        followerSet.add(userId)
+        syncCastFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+    }
+
+    suspend fun unfollowCastRemote(userId: String, castId: String) {
+        val idToken = tokenProvider.getIdToken()
+        runCatching { refreshFollowedCastIds(userId) }
+        runCatching { refreshFollowerUserIds(castId) }
+        val followId = buildCastFollowDocumentId(userId = userId, castId = castId)
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_FOLLOWS}/$followId"
+
+        runCatching {
+            restApi.delete(path, idToken)
+        }
+        val followedSet = followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
+        val followerSet = followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
+
+        followedSet.remove(castId)
+        followerSet.remove(userId)
+        syncCastFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+    }
+
     suspend fun hasReviewForVisitRemote(visitId: String): Boolean {
         if (visitId.isBlank()) {
             return false
@@ -1606,6 +1708,35 @@ class FirestoreConCafeDataSource(
         }
 
         return parsed
+    }
+
+    private fun syncCastFollowerCountInCache(castId: String, followerCount: Int) {
+        val index = delegate.casts.indexOfFirst { cast -> cast.id == castId }
+
+        if (index >= 0) {
+            val cast = delegate.casts[index]
+            val updatedCast = cast.copy(followerCount = followerCount)
+
+            delegate.casts[index] = updatedCast
+            delegate.cafeDetailsById[cast.cafeId]?.let { detail ->
+                delegate.cafeDetailsById[cast.cafeId] = detail.copy(
+                    casts = detail.casts.map { item ->
+                        if (item.id == castId) {
+                            updatedCast
+                        } else {
+                            item
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    private fun buildCastFollowDocumentId(userId: String, castId: String): String {
+        val normalizedUserId = userId.replace("/", "_")
+        val normalizedCastId = castId.replace("/", "_")
+
+        return "${normalizedUserId}_$normalizedCastId"
     }
 
     private suspend fun loadCollectionDocuments(

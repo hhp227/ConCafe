@@ -475,9 +475,22 @@ private fun ProfileMyInfoScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(72.dp)
-                                        .clip(CircleShape)
-                                        .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
-                                )
+                                        .clip(CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (maid.profileImage.isNullOrBlank()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
+                                        )
+                                    } else {
+                                        CompatImageDisplay(
+                                            imageUrl = maid.profileImage,
+                                            modifier = Modifier.matchParentSize()
+                                        )
+                                    }
+                                }
                                 Text(maid.name, style = MaterialTheme.typography.bodySmall)
                             }
                         }

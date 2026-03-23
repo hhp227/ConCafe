@@ -173,7 +173,7 @@ val useCaseModule = module {
     factory { RequestPhoneVerificationCodeUseCase() }
     factory { VerifyPhoneVerificationCodeUseCase() }
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
-    factory { ToggleFollowCastUseCase(get(), get()) }
+    factory { ToggleFollowCastUseCase(get(), get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get()) }
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
