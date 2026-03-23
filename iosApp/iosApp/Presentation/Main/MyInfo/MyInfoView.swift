@@ -541,6 +541,14 @@ private struct ProfileMyInfoView: View {
             }
         }
     }
+    
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
+    }
 }
 
 private struct MyInfoMetricCard {
@@ -551,6 +559,7 @@ private struct MyInfoMetricCard {
 
 private struct MyInfoSectionPlaceholderCard: View {
     let title: String
+    
     let description: String
 
     var body: some View {

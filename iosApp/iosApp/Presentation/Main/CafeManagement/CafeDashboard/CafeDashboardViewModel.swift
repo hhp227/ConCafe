@@ -419,7 +419,7 @@ final class CafeDashboardViewModel: ObservableObject {
                     statusLabel: statusLabel,
                     imageUrl: updatedBanner.imageUrl
                 )
-            }
+            )
         }
     }
 
