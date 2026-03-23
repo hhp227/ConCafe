@@ -25,6 +25,11 @@ class GetCafeDetailUseCase(
         return try {
             val currentUser = authRepository.getCurrentUser()
             val detail = normalizeDetail(cafeRepository.getCafeDetail(cafeId))
+            val reviewPage = reviewRepository.getCafeReviews(
+                cafeId = cafeId,
+                cursor = null,
+                pageSize = INITIAL_REVIEW_PAGE_SIZE
+            )
             val currentDate = "2026-03-08"
             val castItems = detail.casts.map { cast ->
                 val castDetail = castRepository.getCastDetail(cast.id)
@@ -35,11 +40,6 @@ class GetCafeDetailUseCase(
                     isWorking = isWorking
                 )
             }
-            val reviewPage = reviewRepository.getCafeReviews(
-                cafeId = cafeId,
-                cursor = null,
-                pageSize = INITIAL_REVIEW_PAGE_SIZE
-            )
             val isFavorite = if (currentUser != null) {
                 cafeRepository.isFavorite(currentUser.id, cafeId)
             } else {
