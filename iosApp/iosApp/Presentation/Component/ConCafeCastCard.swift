@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct ConCafeCastCard: View {
     let name: String
 
     let subtitle: String
+
+    var imageUrl: String? = nil
 
     var containerColor = Color(hex: "FFF9FC")
 
@@ -34,13 +37,27 @@ struct ConCafeCastCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LinearGradient(
-                colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            GeometryReader { proxy in
+                ZStack {
+                    if let raw = imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty,
+                       let url = URL(string: raw) {
+                        CachedAsyncImage(
+                            url: url,
+                            placeholder: Color.clear
+                        )
+                    } else {
+                        LinearGradient(
+                            colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
+                .clipped()
+            }
             .frame(height: imageHeight)
-            .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
             .overlay(alignment: .topTrailing) {
                 if isWorking || !(conceptRole?.isEmpty ?? true) {
                     HStack(spacing: 6) {

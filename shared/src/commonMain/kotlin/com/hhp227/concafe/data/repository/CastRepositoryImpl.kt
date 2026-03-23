@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
@@ -59,8 +60,15 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
-        return castDataSource.castDetail(castId)
-            ?: throw NoSuchElementException("cast detail not found")
+        var detail = castDataSource.castDetail(castId)
+
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastDetailRemote(castId)
+            }
+            detail = castDataSource.castDetail(castId) ?: detail
+        }
+        return detail ?: throw NoSuchElementException("cast detail not found")
     }
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
@@ -74,7 +82,8 @@ class CastRepositoryImpl(
                 CafeCastPreview(
                     id = cast.id,
                     name = cast.name,
-                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id),
+                    profileImage = cast.profileImage
                 )
             }
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
@@ -97,14 +106,25 @@ class CastRepositoryImpl(
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.upsertCastRemote(update)
+        }
         return castDataSource.upsertCast(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.deleteCastRemote(castId)
+        }
         return castDataSource.deleteCast(castId)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
+            }
+        }
         return castDataSource.castSchedules(castId, fromDate, toDate)
     }
 
@@ -113,10 +133,18 @@ class CastRepositoryImpl(
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
+            }
+        }
         return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.updateCastScheduleRemote(update)
+        }
         return castDataSource.updateCastSchedule(update)
     }
 

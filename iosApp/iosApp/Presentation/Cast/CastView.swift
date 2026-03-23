@@ -141,24 +141,24 @@ private struct CastHeroSection: View {
         let upwardScroll = min(scrollOffset, 0)
         let parallaxOffset = -upwardScroll * 0.35
         let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroImages = resolveHeroImages(
+            images: detail.images,
+            fallbackProfileImage: detail.cast.profileImage
+        )
 
         TabView {
-            ForEach(Array(detail.images.enumerated()), id: \.offset) { index, image in
+            ForEach(Array(heroImages.enumerated()), id: \.offset) { index, image in
                 ZStack {
-                    if let url = URL(string: image), !image.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                heroPlaceholder(index: index)
-                            case .success(let loadedImage):
-                                loadedImage
-                                    .resizable()
-                                    .scaledToFill()
-                            case .failure:
-                                heroPlaceholder(index: index)
-                            @unknown default:
-                                heroPlaceholder(index: index)
-                            }
+                    let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    if let url = URL(string: trimmed), !trimmed.isEmpty {
+                        GeometryReader { geometry in
+                            CachedAsyncImage(
+                                url: url,
+                                placeholder: heroPlaceholder(index: index)
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
                         }
                     } else {
                         heroPlaceholder(index: index)
@@ -168,16 +168,18 @@ private struct CastHeroSection: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    VStack(spacing: 8) {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 54))
-                            .foregroundStyle(.white)
-                        Text(detail.cast.name)
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(.white)
+                    if trimmed.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 54))
+                                .foregroundStyle(.white)
+                            Text(detail.cast.name)
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(.white)
+                        }
+                        .padding(24)
+                        .background(Circle().fill(Color.white.opacity(0.16)))
                     }
-                    .padding(24)
-                    .background(Circle().fill(Color.white.opacity(0.16)))
                     Text(detail.cafe.name)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color.white.opacity(0.9))
@@ -190,6 +192,7 @@ private struct CastHeroSection: View {
             }
         }
         .frame(height: castHeroHeight + topSafeArea)
+        .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
 
@@ -206,6 +209,20 @@ private struct CastHeroSection: View {
             endPoint: .bottom
         )
     }
+}
+
+private func resolveHeroImages(
+    images: [String],
+    fallbackProfileImage: String?
+) -> [String] {
+    let normalized = images
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    if !normalized.isEmpty {
+        return normalized
+    }
+    let fallback = (fallbackProfileImage ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    return fallback.isEmpty ? [""] : [fallback]
 }
 
 private struct CastSummarySection: View {
@@ -379,7 +396,7 @@ private struct CastRecentActivitySection: View {
             Text("최근 활동")
                 .font(.headline)
             HStack(spacing: 10) {
-                CastActivityCard(value: "\(detail.recentVisitCount)", label: "방문 인증")
+                CastActivityCard(value: "\(detail.visitCertificationCount)", label: "방문 인증")
                 CastActivityCard(value: "\(detail.cast.followerCount)", label: "팔로워")
                 CastActivityCard(value: String(format: "%.1f", detail.cast.rating), label: "평점")
             }
@@ -493,12 +510,6 @@ private struct CastScrollOffsetPreferenceKey: PreferenceKey {
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
-    }
-}
-
-private extension CastDetail {
-    var recentVisitCount: Int {
-        max(Int(cast.followerCount) / 8, schedule.count)
     }
 }
 

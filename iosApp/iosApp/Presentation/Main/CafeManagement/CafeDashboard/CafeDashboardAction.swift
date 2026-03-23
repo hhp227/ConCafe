@@ -16,6 +16,7 @@ enum CafeDashboardAction {
     case changeExternalLinkUrl(String)
     case submitExternalLink
     case clickExternalLinkItem(String)
+    case clickEditExternalLink(String)
     case clickDeleteExternalLink(String)
     case clickCastSchedule(String)
     case clickDeleteCast

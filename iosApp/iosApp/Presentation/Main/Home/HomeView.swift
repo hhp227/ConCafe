@@ -150,6 +150,7 @@ private struct HomeContentView: View {
                             ConCafeCastCard(
                                 name: maid.name,
                                 subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
+                                imageUrl: maid.profileImage,
                                 metaText: "👥 \(maid.followerCount)",
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
                             )
@@ -231,9 +232,24 @@ private struct HomeContentView: View {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
                         VStack(spacing: 8) {
-                            Circle()
-                                .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
-                                .frame(width: 74, height: 74)
+                            GeometryReader { proxy in
+                                ZStack {
+                                    Circle()
+                                        .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
+                                    if let rawImageUrl = maid.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
+                                       !rawImageUrl.isEmpty,
+                                       let imageUrl = URL(string: rawImageUrl) {
+                                        CachedAsyncImage(
+                                            url: imageUrl,
+                                            placeholder: Color.clear
+                                        )
+                                    }
+                                }
+                                .frame(width: proxy.size.width, height: proxy.size.height)
+                                .clipShape(Circle())
+                                .clipped()
+                            }
+                            .frame(width: 74, height: 74)
                             Text(maid.name)
                                 .font(.caption)
                         }

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 
 @Composable
@@ -48,7 +49,26 @@ fun CafeMenuScreen(menus: List<CafeMenu>) {
                                         }
                                     )
                                 )
-                        )
+                        ) {
+                            if (!menu.image.isNullOrBlank()) {
+                                CompatImageDisplay(
+                                    imageUrl = menu.image,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(
+                                                    colorFromHex("FFD8E8").copy(alpha = 0.28f),
+                                                    colorFromHex("F5AFCC").copy(alpha = 0.28f)
+                                                )
+                                            )
+                                        )
+                                )
+                            }
+                        }
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(6.dp)

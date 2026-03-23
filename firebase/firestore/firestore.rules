@@ -15,6 +15,48 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
     }
 
+    function isCafeOwner(cafeId) {
+      return isSignedIn()
+        && request.auth.uid in get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds;
+    }
+
+    function isCafeOwnerEditableUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "name",
+        "desc",
+        "thumbnailImage",
+        "galleryImages",
+        "businessHours",
+        "phoneNumber",
+        "region"
+      ]);
+    }
+
+    function canManageCafe(cafeId) {
+      return isAdmin() || isCafeOwner(cafeId);
+    }
+
+    function isValidScheduleStatus(status) {
+      return status == "WORK" || status == "OFF" || status == "VACATION";
+    }
+
+    function isValidCastScheduleWriteData() {
+      return request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.date is string
+        && request.resource.data.status is string
+        && isValidScheduleStatus(request.resource.data.status)
+        && (
+          (
+            request.resource.data.status == "WORK"
+            && request.resource.data.startTime is string
+            && request.resource.data.endTime is string
+          )
+          ||
+          request.resource.data.status != "WORK"
+        );
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow write: if false;
@@ -22,21 +64,37 @@ service cloud.firestore {
 
     match /cafes/{cafeId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isCafeOwner(cafeId) && isCafeOwnerEditableUpdate());
 
       match /casts/{castId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if canManageCafe(cafeId);
       }
 
       match /notices/{noticeId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /events/{eventId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /menus/{menuId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /goods/{goodsId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
       }
     }
 
     match /visits/{visitId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read: if true;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
     }
@@ -64,6 +122,23 @@ service cloud.firestore {
         && (resource.data.userId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
       allow delete: if false;
+    }
+
+    match /castSchedules/{scheduleId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && isValidCastScheduleWriteData()
+        && canManageCafe(request.resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+        );
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && resource.data.castId is string
+        && canManageCafe(resource.data.cafeId)
+        && exists(
+          /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
+        );
     }
 
     match /{document=**} {

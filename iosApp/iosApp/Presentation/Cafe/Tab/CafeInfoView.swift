@@ -21,8 +21,20 @@ struct CafeInfoView: View {
     private func infoCard(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             infoRow(icon: "mappin.and.ellipse", title: "주소", value: detail.cafe.region.address)
-            infoRow(icon: "clock.fill", title: "영업시간", value: detail.businessHours)
-            infoRow(icon: "phone.fill", title: "전화번호", value: detail.phoneNumber)
+            infoRow(
+                icon: "clock.fill",
+                title: "영업시간",
+                value: detail.businessHours.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "운영시간 정보 준비중"
+                    : detail.businessHours
+            )
+            infoRow(
+                icon: "phone.fill",
+                title: "전화번호",
+                value: detail.phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "연락처 정보 준비중"
+                    : detail.phoneNumber
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

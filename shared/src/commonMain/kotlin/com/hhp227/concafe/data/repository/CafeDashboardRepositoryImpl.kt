@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.repository.CafeDashboardRepository
 
@@ -10,12 +11,29 @@ class CafeDashboardRepositoryImpl(
     private val castDataSource: CastDataSource
 ) : CafeDashboardRepository {
     override suspend fun getCafeDashboardData(cafeId: String, ownerUserId: String?): CafeDashboardData {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
         if (ownerUserId != null && !cafeDataSource.ownedCafeIdsByUser[ownerUserId].orEmpty().contains(cafeId)) {
-            throw NoSuchElementException("cafe dashboard not found")
+            if (firestoreDataSource != null) {
+                runCatching {
+                    firestoreDataSource.refreshCafeManagementData(ownerUserId)
+                }
+            }
+            if (!cafeDataSource.ownedCafeIdsByUser[ownerUserId].orEmpty().contains(cafeId)) {
+                throw NoSuchElementException("cafe dashboard not found")
+            }
         }
 
-        val cafe = cafeDataSource.cafes.firstOrNull { it.id == cafeId }
-            ?: throw NoSuchElementException("cafe dashboard not found")
+        var cafe = cafeDataSource.cafes.firstOrNull { it.id == cafeId }
+
+        if (cafe == null && firestoreDataSource != null) {
+            runCatching {
+                firestoreDataSource.refreshCafeDetail(cafeId)
+            }
+            cafe = cafeDataSource.cafes.firstOrNull { it.id == cafeId }
+        }
+        if (cafe == null) {
+            throw NoSuchElementException("cafe dashboard not found")
+        }
 
         val castPreviews = castDataSource.casts
             .filter { it.cafeId == cafeId }
@@ -28,7 +46,11 @@ class CafeDashboardRepositoryImpl(
             }
 
         val homeBannerPreview = cafeDataSource.cafeHomeBannerPreviewByCafeId[cafeId]
-            ?: throw NoSuchElementException("home banner preview not found")
+            ?: CafeDashboardData.HomeBannerPreview(
+                title = "홈 배너를 등록해보세요",
+                period = "설정된 배너 없음",
+                statusLabel = "미등록"
+            )
 
         return CafeDashboardData(
             id = cafe.id,

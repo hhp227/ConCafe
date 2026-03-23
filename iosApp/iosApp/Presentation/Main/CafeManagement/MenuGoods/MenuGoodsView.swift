@@ -320,6 +320,7 @@ private struct MenuGoodsContentView: View {
         return HStack(alignment: .top, spacing: 14) {
             itemThumbnail(
                 name: item.name,
+                imageUrl: item.image,
                 isAvailable: isAvailable,
                 isMenu: true
             )
@@ -396,6 +397,7 @@ private struct MenuGoodsContentView: View {
         return HStack(alignment: .top, spacing: 14) {
             itemThumbnail(
                 name: item.name,
+                imageUrl: item.image,
                 isAvailable: isAvailable,
                 isMenu: false
             )
@@ -469,7 +471,7 @@ private struct MenuGoodsContentView: View {
         )
     }
 
-    private func itemThumbnail(name: String, isAvailable: Bool, isMenu: Bool) -> some View {
+    private func itemThumbnail(name: String, imageUrl: String?, isAvailable: Bool, isMenu: Bool) -> some View {
         let colors: [Color]
 
         if isMenu {
@@ -481,18 +483,32 @@ private struct MenuGoodsContentView: View {
                 ? [Color(hex: "FFEBCB"), Color(hex: "FFD7A1")]
                 : [Color(hex: "E7E1DA"), Color(hex: "CBC0B2")]
         }
-        return ZStack {
-            LinearGradient(
-                colors: colors,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(spacing: 6) {
-                Image(systemName: isMenu ? "storefront" : "shippingbox")
-                    .foregroundStyle(Color(hex: "704A5F"))
-                Text(String(name.prefix(1)))
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(Color(hex: "704A5F"))
+        return GeometryReader { proxy in
+            let imageSize = proxy.size
+            let trimmed = imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let resolvedUrl = trimmed.isEmpty ? nil : URL(string: trimmed)
+            ZStack {
+                if let resolvedUrl {
+                    CachedAsyncImage(
+                        url: resolvedUrl,
+                        placeholder: EmptyView()
+                    )
+                    .frame(width: imageSize.width, height: imageSize.height)
+                    .clipped()
+                }
+                LinearGradient(
+                    colors: colors,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .opacity(resolvedUrl == nil ? 1 : 0.28)
+                VStack(spacing: 6) {
+                    Image(systemName: isMenu ? "storefront" : "shippingbox")
+                        .foregroundStyle(Color(hex: "704A5F"))
+                    Text(String(name.prefix(1)))
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(Color(hex: "704A5F"))
+                }
             }
         }
         .frame(width: 96, height: 108)

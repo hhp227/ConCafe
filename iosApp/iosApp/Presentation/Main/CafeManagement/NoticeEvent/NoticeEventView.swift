@@ -473,6 +473,7 @@ private struct NoticeEventFormSheet: View {
             .background(Color(hex: "F8F5F6"))
             .ignoresSafeArea(edges: .bottom)
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .sheet(isPresented: $isImagePickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in

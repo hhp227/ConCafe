@@ -16,6 +16,8 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
+    private let upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase
+
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
@@ -188,10 +190,64 @@ final class MenuGoodsViewModel: ObservableObject {
             guard let item = uiState.menuItems.first(where: { $0.id == itemId }) else { return }
             let nextAvailability = !uiState.isMenuAvailable(item)
             uiState.menuAvailabilityOverrides[itemId] = nextAvailability
+            uiState.infoMessage = nil
+            tasks[.toggleAvailability]?.cancel()
+            tasks[.toggleAvailability] = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let result = try await upsertCafeMenuGoodsUseCase.invoke(
+                        update: CafeMenuGoodsUpsert(
+                            cafeId: cafeId,
+                            itemId: item.id,
+                            name: item.name,
+                            price: item.price,
+                            category: item.category,
+                            description: item.desc,
+                            isInStock: nextAvailability,
+                            imageUrl: item.image
+                        )
+                    )
+                    if result is AppResultFailure {
+                        uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+                        uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+                    uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                }
+            }
         case .goods:
             guard let item = uiState.goodsItems.first(where: { $0.id == itemId }) else { return }
             let nextAvailability = !uiState.isGoodsAvailable(item)
             uiState.goodsAvailabilityOverrides[itemId] = nextAvailability
+            uiState.infoMessage = nil
+            tasks[.toggleAvailability]?.cancel()
+            tasks[.toggleAvailability] = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let result = try await upsertCafeMenuGoodsUseCase.invoke(
+                        update: CafeMenuGoodsUpsert(
+                            cafeId: cafeId,
+                            itemId: item.id,
+                            name: item.name,
+                            price: item.price,
+                            category: "goods",
+                            description: "카페 굿즈 판매 항목",
+                            isInStock: nextAvailability,
+                            imageUrl: item.image
+                        )
+                    )
+                    if result is AppResultFailure {
+                        uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+                        uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+                    uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                }
+            }
         }
     }
 
@@ -291,11 +347,13 @@ final class MenuGoodsViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase(),
         deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.upsertCafeMenuGoodsUseCase = upsertCafeMenuGoodsUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
@@ -311,5 +369,6 @@ final class MenuGoodsViewModel: ObservableObject {
     private enum TaskKey {
         case load
         case detailEvent
+        case toggleAvailability
     }
 }

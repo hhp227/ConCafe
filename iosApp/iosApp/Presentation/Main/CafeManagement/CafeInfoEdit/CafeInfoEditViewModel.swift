@@ -54,7 +54,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.address = detail.cafe.region.address
                     uiState.mapLatitude = detail.cafe.region.location.latitude
                     uiState.mapLongitude = detail.cafe.region.location.longitude
-                    uiState.contactNumber = detail.phoneNumber
+                    uiState.contactNumber = detail.phoneNumber == "연락처 정보 준비중" ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -136,7 +136,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.address = detail.cafe.region.address
                     uiState.mapLatitude = detail.cafe.region.location.latitude
                     uiState.mapLongitude = detail.cafe.region.location.longitude
-                    uiState.contactNumber = detail.phoneNumber
+                    uiState.contactNumber = detail.phoneNumber == "연락처 정보 준비중" ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -281,21 +281,12 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     private func parseBusinessHours(_ businessHours: String) -> (weekdayOpen: String, weekdayClose: String, weekendOpen: String, weekendClose: String) {
-        let pattern = #"(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})"#
-        let regex = try? NSRegularExpression(pattern: pattern)
-        let range = NSRange(location: 0, length: businessHours.utf16.count)
-
-        guard
-            let match = regex?.firstMatch(in: businessHours, range: range),
-            let openRange = Range(match.range(at: 1), in: businessHours),
-            let closeRange = Range(match.range(at: 2), in: businessHours)
-        else {
-            return ("", "", "", "")
-        }
-
-        let open = String(businessHours[openRange])
-        let close = String(businessHours[closeRange])
-        return (open, close, open, close)
+        let times = TimeUtils.extractNormalizedHourMinuteList(from: businessHours)
+        let weekdayOpen = times.indices.contains(0) ? times[0] : ""
+        let weekdayClose = times.indices.contains(1) ? times[1] : ""
+        let weekendOpen = times.indices.contains(2) ? times[2] : weekdayOpen
+        let weekendClose = times.indices.contains(3) ? times[3] : weekdayClose
+        return (weekdayOpen, weekdayClose, weekendOpen, weekendClose)
     }
 
     init(

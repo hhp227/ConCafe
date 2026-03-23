@@ -106,6 +106,10 @@ private struct CastEditContentView: View {
 
     let onPickGalleryImage: () -> Void
 
+    @State private var isBirthdayPickerPresented = false
+
+    @State private var selectedBirthdayDate = Date()
+
     var body: some View {
         Group {
             if uiState.isLoading {
@@ -137,15 +141,14 @@ private struct CastEditContentView: View {
                                 set: { onAction(.changeConceptRole($0)) }
                             )
                         )
-                        ConCafeFormField(
-                            label: "생일",
+                        BirthdayInputField(
                             text: Binding(
                                 get: { uiState.birthday },
                                 set: { onAction(.changeBirthday($0)) }
                             ),
-                            trailingContent: {
-                                Image(systemName: "calendar")
-                                    .foregroundStyle(Color(hex: "B1A3AC"))
+                            onTapCalendar: {
+                                selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
+                                isBirthdayPickerPresented = true
                             }
                         )
                         ConCafeFormEditor(
@@ -173,6 +176,30 @@ private struct CastEditContentView: View {
             )
         )
         .background(Color(hex: "F8F5F6"))
+        .sheet(isPresented: $isBirthdayPickerPresented) {
+            CompatNavigationContainer(title: "생일 선택") {
+                VStack {
+                    DatePicker(
+                        "생일 선택",
+                        selection: $selectedBirthdayDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .padding()
+                    Spacer()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("확인") {
+                        onAction(.changeBirthday(TimeUtils.formatBirthdayDate(selectedBirthdayDate)))
+                        isBirthdayPickerPresented = false
+                    }
+                }
+            }
+            .compatFractionSheetDetent(0.45)
+        }
     }
 
     private var profilePhotoSection: some View {
@@ -390,6 +417,96 @@ private struct CastEditContentView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color(hex: "F1D88D"), lineWidth: 1)
         )
+    }
+
+}
+
+private struct BirthdayInputField: View {
+    @Binding var text: String
+
+    let onTapCalendar: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("생일")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color(hex: "665A63"))
+            HStack(spacing: 8) {
+                MaskedBirthdayTextField(text: $text)
+                    .frame(maxWidth: .infinity)
+                Button(action: onTapCalendar) {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(Color(hex: "B1A3AC"))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 52)
+            .background(Color(hex: "F8F5F6"))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+            )
+        }
+    }
+}
+
+private struct MaskedBirthdayTextField: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.delegate = context.coordinator
+        textField.keyboardType = .numberPad
+        textField.placeholder = "MM/DD/YYYY"
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.borderStyle = .none
+        textField.backgroundColor = .clear
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+        if uiView.isFirstResponder {
+            moveCursorToEnd(uiView)
+        }
+    }
+
+    private func moveCursorToEnd(_ textField: UITextField) {
+        let endPosition = textField.endOfDocument
+        textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding private var text: String
+
+        func textField(
+            _ textField: UITextField,
+            shouldChangeCharactersIn range: NSRange,
+            replacementString string: String
+        ) -> Bool {
+            let currentText = textField.text ?? ""
+            guard let currentRange = Range(range, in: currentText) else { return false }
+            let updatedText = currentText.replacingCharacters(in: currentRange, with: string)
+            let normalized = TimeUtils.normalizeBirthdayInput(updatedText)
+            text = normalized
+            textField.text = normalized
+            let endPosition = textField.endOfDocument
+            textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
+            return false
+        }
+
+        init(text: Binding<String>) {
+            self._text = text
+        }
     }
 }
 

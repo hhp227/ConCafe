@@ -30,6 +30,7 @@ fun ConCafeFormField(
     minLines: Int = 1,
     singleLine: Boolean = true,
     isPassword: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
     leadingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null
 ) {
@@ -56,7 +57,7 @@ fun ConCafeFormField(
             keyboardOptions = if (isPassword) {
                 KeyboardOptions(keyboardType = KeyboardType.Password)
             } else {
-                KeyboardOptions.Default
+                KeyboardOptions(keyboardType = keyboardType)
             },
             shape = RoundedCornerShape(16.dp),
             placeholder = {

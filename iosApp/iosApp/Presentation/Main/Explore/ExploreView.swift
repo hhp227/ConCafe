@@ -222,28 +222,23 @@ private struct ExploreContentView: View {
 
     private func maidCard(_ maid: Cast) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                if let urlString = maid.profileImage,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            placeholderMaidImage
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        case .failure:
-                            placeholderMaidImage
-                        @unknown default:
-                            placeholderMaidImage
-                        }
-                    }
-                } else {
+            GeometryReader { proxy in
+                ZStack {
                     placeholderMaidImage
+                    if let rawImageUrl = maid.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !rawImageUrl.isEmpty,
+                       let imageUrl = URL(string: rawImageUrl) {
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear
+                        )
+                    }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipped()
             }
             .frame(height: 120)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 4) {
                 Text(maid.name)
                     .font(.subheadline.weight(.semibold))

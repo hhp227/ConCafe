@@ -167,23 +167,29 @@ private struct CafeContentView: View {
         let upwardScroll = min(scrollOffset, 0)
         let parallaxOffset = upwardScroll < 0 ? (-upwardScroll * 0.35) : 0
         let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroImages: [String] = {
+            let normalized = detail.images
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            if !normalized.isEmpty {
+                return normalized
+            }
+            let fallback = detail.cafe.thumbnailImage?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return fallback.isEmpty ? [""] : [fallback]
+        }()
         return TabView {
-            ForEach(Array(detail.images.enumerated()), id: \.offset) { _, image in
+            ForEach(Array(heroImages.enumerated()), id: \.offset) { _, image in
                 ZStack {
-                    if let url = URL(string: image), !image.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                heroPlaceholder
-                            case .success(let loadedImage):
-                                loadedImage
-                                .resizable()
-                                .scaledToFill()
-                            case .failure:
-                                heroPlaceholder
-                            @unknown default:
-                                heroPlaceholder
-                            }
+                    let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    if let url = URL(string: trimmed), !trimmed.isEmpty {
+                        GeometryReader { geometry in
+                            CachedAsyncImage(
+                                url: url,
+                                placeholder: heroPlaceholder
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
                         }
                     } else {
                         heroPlaceholder
@@ -196,6 +202,7 @@ private struct CafeContentView: View {
             }
         }
         .frame(height: 280 + topSafeArea)
+        .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
     }
 
@@ -258,7 +265,7 @@ private struct CafeContentView: View {
         switch uiState.selectedTab {
         case .info:
             CafeInfoView(cafeDetail: detail)
-        case .maids:
+        case .casts:
             CafeCastView(
                 maids: uiState.casts,
                 canLoadMore: uiState.canLoadMoreCasts,

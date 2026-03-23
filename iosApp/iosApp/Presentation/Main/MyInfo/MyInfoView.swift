@@ -168,9 +168,24 @@ private struct GuestMyInfoView: View {
                     if !uiState.popularCafes.isEmpty {
                         ForEach(uiState.popularCafes, id: \.id) { cafe in
                             HStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
-                                    .frame(width: 64, height: 64)
+                                GeometryReader { geometry in
+                                    let imageSize = geometry.size
+
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
+                                        if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
+                                            CachedAsyncImage(
+                                                url: imageUrl,
+                                                placeholder: EmptyView()
+                                            )
+                                            .frame(width: imageSize.width, height: imageSize.height)
+                                            .clipped()
+                                        }
+                                    }
+                                }
+                                .frame(width: 64, height: 64)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(cafe.name).bold()
                                     Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))").font(.caption)
@@ -227,6 +242,14 @@ private struct GuestMyInfoView: View {
             }
             .padding(16)
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
     }
 }
 

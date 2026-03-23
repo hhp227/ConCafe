@@ -45,6 +45,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -345,6 +347,8 @@ private fun CompactOwnedCafeCard(
     onClick: () -> Unit,
     onArrowClick: () -> Unit
 ) {
+    val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
+
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -354,16 +358,27 @@ private fun CompactOwnedCafeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1.8f)
-                .background(
-                    Brush.linearGradient(
-                        colors = if (cafe.isApproved) {
-                            listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
-                        } else {
-                            listOf(Color(0xFF3A3240), Color(0xFF6F6272), Color(0xFFB8A8B2))
-                        }
-                    )
-                )
+                .clip(RoundedCornerShape(24.dp))
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = if (cafe.isApproved) {
+                                listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
+                            } else {
+                                listOf(Color(0xFF3A3240), Color(0xFF6F6272), Color(0xFFB8A8B2))
+                            }
+                        )
+                    )
+            )
+            if (resolvedThumbnail.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = resolvedThumbnail,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()

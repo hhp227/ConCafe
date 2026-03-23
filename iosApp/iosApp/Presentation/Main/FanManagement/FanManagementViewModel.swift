@@ -84,7 +84,8 @@ final class FanManagementViewModel: ObservableObject {
                                     cast: event.cast,
                                     cafe: currentData.detail.cafe,
                                     images: currentData.detail.images,
-                                    schedule: currentData.detail.schedule
+                                    schedule: currentData.detail.schedule,
+                                    visitCertificationCount: currentData.detail.visitCertificationCount
                                 ),
                                 followers: currentData.followers
                             )

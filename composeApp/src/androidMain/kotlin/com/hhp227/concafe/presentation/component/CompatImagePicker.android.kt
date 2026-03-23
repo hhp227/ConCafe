@@ -72,7 +72,8 @@ private fun saveToCacheFile(context: Context, uri: Uri): String? {
 @Composable
 actual fun CompatImageDisplay(
     imageUrl: String?,
-    modifier: Modifier
+    modifier: Modifier,
+    applyRoundedClip: Boolean
 ) {
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -83,10 +84,14 @@ actual fun CompatImageDisplay(
         }
     }
     if (bitmap == null) {
+        val placeholderModifier = if (applyRoundedClip) {
+            modifier.clip(RoundedCornerShape(20.dp))
+        } else {
+            modifier
+        }
         Box(
-            modifier = modifier
+            modifier = placeholderModifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
                 .background(Color(0x19000000)),
             contentAlignment = Alignment.Center
         ) {
@@ -97,10 +102,15 @@ actual fun CompatImageDisplay(
             )
         }
     } else {
+        val imageModifier = if (applyRoundedClip) {
+            modifier.clip(RoundedCornerShape(20.dp))
+        } else {
+            modifier
+        }
         Image(
             bitmap = bitmap!!.asImageBitmap(),
             contentDescription = null,
-            modifier = modifier.clip(RoundedCornerShape(20.dp)),
+            modifier = imageModifier,
             contentScale = ContentScale.Crop
         )
     }

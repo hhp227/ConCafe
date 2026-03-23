@@ -3,18 +3,7 @@ package com.hhp227.concafe.presentation.main.myinfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -25,23 +14,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,10 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.presentation.navigation.NavigationAction
-import com.hhp227.concafe.presentation.navigation.NavigationAction.*
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.navigation.NavigationAction.*
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -248,6 +223,8 @@ private fun GuestMyInfoScreen(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
                 if (uiState.popularCafes.isNotEmpty()) {
                     uiState.popularCafes.forEach { cafe ->
+                        val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -260,7 +237,14 @@ private fun GuestMyInfoScreen(
                                         .size(64.dp)
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
-                                )
+                                ) {
+                                    if (resolvedThumbnail.isNotBlank()) {
+                                        CompatImageDisplay(
+                                            imageUrl = resolvedThumbnail,
+                                            modifier = Modifier.matchParentSize()
+                                        )
+                                    }
+                                }
                                 Column {
                                     Text(cafe.name, fontWeight = FontWeight.SemiBold)
                                     Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)

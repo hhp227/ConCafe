@@ -137,23 +137,17 @@ castSchedules/{scheduleId}
 ├─ castId
 ├─ cafeId
 ├─ date
-├─ startTime
-├─ endTime
-└─ createdAt
-
-castScheduleStatuses/{castId}/days/{date}
 ├─ status: WORK | OFF | VACATION
-├─ updatedAt
-└─ updatedBy
+├─ startTime (WORK일 때만)
+├─ endTime (WORK일 때만)
+└─ createdAt
 
 구현 메모
 - 현재 캐스트 프로필 편집 화면의 저장 범위는 `cafes/{cafeId}/casts/{castId}` 기본 정보와 `castSchedules`이다.
 - 근무 요일 UI는 별도 `workingDays` 배열 필드가 아니라 `castSchedules` 문서 생성/수정 결과를 다시 읽어 계산한다.
-- 현재 출근표 수정 구현은 `castSchedules`와 별도로 날짜별 상태(`WORK/OFF/VACATION`)를 함께 관리한다.
-- `WORK`일 때만 `castSchedules` 문서에 실제 시작/종료 시간이 존재한다.
-- `OFF`, `VACATION`은 상태 문서로 유지하고, UI는 `GetScheduleManagementDataUseCase`가 두 데이터를 조합해 만든다.
+- 출근표는 `castSchedules` 단일 컬렉션으로 관리하며, 상태(`WORK/OFF/VACATION`)와 시간을 같은 문서에서 조회한다.
+- `WORK`일 때만 시작/종료 시간이 존재하고, `OFF`/`VACATION`은 시간 필드를 비워 저장한다.
 - 프로필 이미지, 갤러리 이미지, 외부 SNS 링크 저장은 후속 단계에서 연결한다.
-- shared mock 데이터소스에는 `castScheduleStatuses/{castId}/days/{date}` 대응 문서형 필드(`status`, `updatedAt`, `updatedBy`)가 추가되어 상태 갱신 시 동기화된다.
 
 visits/{visitId}
 ├─ userId

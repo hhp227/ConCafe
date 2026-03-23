@@ -55,13 +55,12 @@ struct MenuGoodsEditView: View {
                             set: { viewModel.onAction(.changePrice($0)) }
                         ),
                         leadingContent: {
-                            Text("¥")
+                            Text("₩")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color(hex: "6B5A65"))
                         }
                     )
                     .keyboardType(.numberPad)
-
                     ConCafeFormEditor(
                         label: "설명",
                         text: Binding(

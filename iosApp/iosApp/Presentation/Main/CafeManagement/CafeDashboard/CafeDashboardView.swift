@@ -442,13 +442,27 @@ private struct CafeDashboardContentView: View {
                         .stroke(isSelected ? Color(hex: "EF6797") : .clear, lineWidth: 2)
                         .frame(width: 78, height: 78)
                     ZStack(alignment: .topTrailing) {
-                        LinearGradient(
-                            colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        GeometryReader { proxy in
+                            ZStack {
+                                LinearGradient(
+                                    colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
+                                   !rawImageUrl.isEmpty,
+                                   let imageUrl = URL(string: rawImageUrl) {
+                                    CachedAsyncImage(
+                                        url: imageUrl,
+                                        placeholder: Color.clear
+                                    )
+                                }
+                            }
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipShape(Circle())
+                            .clipped()
+                        }
                         .frame(width: 72, height: 72)
-                        .clipShape(Circle())
                         if isSelected {
                             Circle()
                                 .fill(Color(hex: "EF6797"))
@@ -616,6 +630,13 @@ private struct CafeDashboardContentView: View {
                         }
                         .buttonStyle(.plain)
                         Button {
+                            onAction(.clickEditExternalLink(link.id))
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(Color(hex: "8F848F"))
+                        }
+                        .buttonStyle(.plain)
+                        Button {
                             onAction(.clickDeleteExternalLink(link.id))
                         } label: {
                             Image(systemName: "trash")
@@ -670,7 +691,7 @@ private struct ExternalLinkInputSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("외부 링크 추가")
+            Text(uiState.externalLinkSheetTitle)
                 .font(.title3.weight(.bold))
             Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
                 .font(.subheadline)
@@ -694,7 +715,7 @@ private struct ExternalLinkInputSheet: View {
             Button {
                 onAction(.submitExternalLink)
             } label: {
-                Text("외부 링크 추가")
+                Text(uiState.externalLinkSubmitLabel)
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)

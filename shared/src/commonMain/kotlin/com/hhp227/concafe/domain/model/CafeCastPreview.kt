@@ -3,5 +3,6 @@ package com.hhp227.concafe.domain.model
 data class CafeCastPreview(
     val id: String,
     val name: String,
-    val isOnShift: Boolean
+    val isOnShift: Boolean,
+    val profileImage: String? = null
 )

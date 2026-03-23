@@ -27,6 +27,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
@@ -35,6 +36,7 @@ class CafeDashboardViewModel(
     private val getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase,
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
+    private val cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
@@ -191,10 +193,22 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun loadExternalLinks() {
+        val links = cafeExternalLinkLocalUseCase.load(cafeId).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
+        }
+        _uiState.update { it.copy(externalLinks = links) }
+    }
+
     private fun dismissExternalLinkSheet() {
         _uiState.update {
             it.copy(
                 isExternalLinkSheetVisible = false,
+                editingExternalLinkId = null,
                 externalLinkTitle = "",
                 externalLinkUrl = ""
             )
@@ -215,20 +229,28 @@ class CafeDashboardViewModel(
             _uiState.update { it.copy(infoMessage = "제목과 링크 URL을 모두 입력해 주세요.") }
             return
         }
+        val isEdit = currentState.editingExternalLinkId != null
+        val updatedLinks = cafeExternalLinkLocalUseCase.upsert(
+            cafeId = cafeId,
+            linkId = currentState.editingExternalLinkId,
+            title = currentState.externalLinkTitle,
+            url = currentState.externalLinkUrl
+        ).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
+        }
 
         _uiState.update {
             it.copy(
-                externalLinks = listOf(
-                    CafeDashboardExternalLink(
-                        id = "external-link-${System.currentTimeMillis()}",
-                        title = currentState.externalLinkTitle.trim(),
-                        url = currentState.externalLinkUrl.trim()
-                    )
-                ) + it.externalLinks,
+                externalLinks = updatedLinks,
                 isExternalLinkSheetVisible = false,
+                editingExternalLinkId = null,
                 externalLinkTitle = "",
                 externalLinkUrl = "",
-                infoMessage = "외부 링크를 추가했습니다."
+                infoMessage = if (isEdit) "외부 링크를 수정했습니다." else "외부 링크를 추가했습니다."
             )
         }
     }
@@ -240,12 +262,31 @@ class CafeDashboardViewModel(
         }
     }
 
-    private fun clickDeleteExternalLink(linkId: String) {
-        val hasItem = _uiState.value.externalLinks.any { it.id == linkId }
-        if (!hasItem) return
+    private fun clickEditExternalLink(linkId: String) {
+        val link = _uiState.value.externalLinks.firstOrNull { it.id == linkId } ?: return
         _uiState.update {
             it.copy(
-                externalLinks = it.externalLinks.filterNot { item -> item.id == linkId },
+                isExternalLinkSheetVisible = true,
+                editingExternalLinkId = link.id,
+                externalLinkTitle = link.title,
+                externalLinkUrl = link.url,
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun clickDeleteExternalLink(linkId: String) {
+        if (_uiState.value.externalLinks.none { it.id == linkId }) return
+        val updatedLinks = cafeExternalLinkLocalUseCase.delete(cafeId, linkId).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
+        }
+        _uiState.update {
+            it.copy(
+                externalLinks = updatedLinks,
                 infoMessage = "외부 링크를 삭제했습니다."
             )
         }
@@ -467,7 +508,10 @@ class CafeDashboardViewModel(
                             state.copy(
                                 castPreviews = state.castPreviews.map { preview ->
                                     if (preview.id == event.cast.id) {
-                                        preview.copy(name = event.cast.name)
+                                        preview.copy(
+                                            name = event.cast.name,
+                                            profileImage = event.cast.profileImage
+                                        )
                                     } else {
                                         preview
                                     }
@@ -516,6 +560,7 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ChangeExternalLinkUrl -> changeExternalLinkUrl(action.value)
             CafeDashboardAction.SubmitExternalLink -> submitExternalLink()
             is CafeDashboardAction.ClickExternalLinkItem -> clickExternalLinkItem(action.linkId)
+            is CafeDashboardAction.ClickEditExternalLink -> clickEditExternalLink(action.linkId)
             is CafeDashboardAction.ClickDeleteExternalLink -> clickDeleteExternalLink(action.linkId)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
             CafeDashboardAction.ClickDeleteCast -> clickDeleteCast()
@@ -533,6 +578,7 @@ class CafeDashboardViewModel(
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        loadExternalLinks()
         loadCafeDashboard()
     }
 

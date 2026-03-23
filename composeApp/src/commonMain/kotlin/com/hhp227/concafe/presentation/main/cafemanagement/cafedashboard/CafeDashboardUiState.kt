@@ -15,6 +15,7 @@ data class CafeDashboardUiState(
     val isLoadingMoreCasts: Boolean = false,
     val isDeleteCastDialogVisible: Boolean = false,
     val isExternalLinkSheetVisible: Boolean = false,
+    val editingExternalLinkId: String? = null,
     val externalLinkTitle: String = "",
     val externalLinkUrl: String = "",
     val isLoading: Boolean = true,
@@ -22,6 +23,12 @@ data class CafeDashboardUiState(
 ) {
     val isExternalLinkSubmitEnabled: Boolean
         get() = externalLinkTitle.isNotBlank() && externalLinkUrl.isNotBlank()
+
+    val externalLinkSheetTitle: String
+        get() = if (editingExternalLinkId == null) "외부 링크 추가" else "외부 링크 수정"
+
+    val externalLinkSubmitLabel: String
+        get() = if (editingExternalLinkId == null) "외부 링크 추가" else "외부 링크 저장"
 }
 
 data class CafeDashboardExternalLink(

@@ -13,6 +13,7 @@ import com.hhp227.concafe.domain.model.CafeRegistrationDraft
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Region
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.usecase.CreateCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
@@ -57,7 +58,9 @@ class CafeInfoEditViewModel(
                             address = detail.cafe.region.address,
                             mapLatitude = detail.cafe.region.location.latitude,
                             mapLongitude = detail.cafe.region.location.longitude,
-                            contactNumber = detail.phoneNumber,
+                            contactNumber = detail.phoneNumber
+                                .takeUnless { phone -> phone == "연락처 정보 준비중" }
+                                .orEmpty(),
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
                             weekendOpen = parsedHours.weekendOpen,
@@ -147,7 +150,9 @@ class CafeInfoEditViewModel(
                             address = detail.cafe.region.address,
                             mapLatitude = detail.cafe.region.location.latitude,
                             mapLongitude = detail.cafe.region.location.longitude,
-                            contactNumber = detail.phoneNumber,
+                            contactNumber = detail.phoneNumber
+                                .takeUnless { phone -> phone == "연락처 정보 준비중" }
+                                .orEmpty(),
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
                             weekendOpen = parsedHours.weekendOpen,
@@ -307,15 +312,16 @@ class CafeInfoEditViewModel(
     }
 
     private fun parseBusinessHours(businessHours: String): ParsedBusinessHours {
-        val timeRange = Regex("""(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})""")
-            .find(businessHours)
-        val open = timeRange?.groupValues?.getOrNull(1).orEmpty()
-        val close = timeRange?.groupValues?.getOrNull(2).orEmpty()
+        val times = TimeUtils.extractNormalizedHourMinuteList(businessHours)
+        val open = times.getOrNull(0).orEmpty()
+        val close = times.getOrNull(1).orEmpty()
+        val weekendOpen = times.getOrNull(2) ?: open
+        val weekendClose = times.getOrNull(3) ?: close
         return ParsedBusinessHours(
             weekdayOpen = open,
             weekdayClose = close,
-            weekendOpen = open,
-            weekendClose = close
+            weekendOpen = weekendOpen,
+            weekendClose = weekendClose
         )
     }
 

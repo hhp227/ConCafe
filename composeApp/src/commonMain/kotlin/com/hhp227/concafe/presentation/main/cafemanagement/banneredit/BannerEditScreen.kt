@@ -697,7 +697,8 @@ private fun BannerEditContentPreview() {
                     rating = 0.0,
                     castCount = 0,
                     noticeCount = 0,
-                    externalLinkCount = 0
+                    externalLinkCount = 0,
+                    thumbnailImage = null
                 )
             ),
             selectedCafeId = "cafe-1"

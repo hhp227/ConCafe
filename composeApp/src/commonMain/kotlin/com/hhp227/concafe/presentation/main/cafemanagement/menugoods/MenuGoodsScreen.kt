@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -525,6 +526,7 @@ private fun MenuItemCard(
         ) {
             ItemThumbnail(
                 label = item.name,
+                imageUrl = item.image,
                 isMenu = true,
                 isAvailable = isAvailable
             )
@@ -625,6 +627,7 @@ private fun GoodsItemCard(
         ) {
             ItemThumbnail(
                 label = item.name,
+                imageUrl = item.image,
                 isMenu = false,
                 isAvailable = isAvailable
             )
@@ -714,9 +717,11 @@ private fun GoodsItemCard(
 @Composable
 private fun ItemThumbnail(
     label: String,
+    imageUrl: String?,
     isMenu: Boolean,
     isAvailable: Boolean
 ) {
+    val hasImage = !imageUrl.isNullOrBlank()
     val gradient = if (isMenu) {
         Brush.linearGradient(
             colors = if (isAvailable) {
@@ -734,6 +739,23 @@ private fun ItemThumbnail(
             }
         )
     }
+    val overlayGradient = if (isMenu) {
+        Brush.linearGradient(
+            colors = if (isAvailable) {
+                listOf(Color(0xFFFFE0EA).copy(alpha = 0.28f), Color(0xFFFAB6D0).copy(alpha = 0.28f))
+            } else {
+                listOf(Color(0xFFF1E2EA).copy(alpha = 0.28f), Color(0xFFD7C1CE).copy(alpha = 0.28f))
+            }
+        )
+    } else {
+        Brush.linearGradient(
+            colors = if (isAvailable) {
+                listOf(Color(0xFFFFEBCB).copy(alpha = 0.28f), Color(0xFFFFD7A1).copy(alpha = 0.28f))
+            } else {
+                listOf(Color(0xFFE7E1DA).copy(alpha = 0.28f), Color(0xFFCBC0B2).copy(alpha = 0.28f))
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -742,6 +764,17 @@ private fun ItemThumbnail(
             .background(gradient),
         contentAlignment = Alignment.Center
     ) {
+        if (hasImage) {
+            CompatImageDisplay(
+                imageUrl = imageUrl,
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(overlayGradient)
+            )
+        }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)

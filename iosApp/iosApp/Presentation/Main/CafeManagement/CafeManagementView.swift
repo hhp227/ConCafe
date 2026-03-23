@@ -161,6 +161,17 @@ private struct CafeManagementContentView: View {
                 onAction(.clickCafe(cafe.id))
             } label: {
                 ZStack(alignment: .bottomLeading) {
+                    GeometryReader { geometry in
+                        let imageSize = geometry.size
+                        if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
+                            CachedAsyncImage(
+                                url: imageUrl,
+                                placeholder: EmptyView()
+                            )
+                            .frame(width: imageSize.width, height: imageSize.height)
+                            .clipped()
+                        }
+                    }
                     LinearGradient(
                         colors: cafe.isApproved
                         ? [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")]
@@ -168,6 +179,7 @@ private struct CafeManagementContentView: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
+                    .opacity(resolvedRemoteImageUrl(cafe.thumbnailImage) == nil ? 1 : 0.34)
                     LinearGradient(
                         colors: [.clear, Color.black.opacity(0.14), Color.black.opacity(0.52)],
                         startPoint: .top,
@@ -209,6 +221,14 @@ private struct CafeManagementContentView: View {
             .padding(.trailing, 10)
             .zIndex(1)
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
     }
 
     private var expandOwnedCafeButton: some View {

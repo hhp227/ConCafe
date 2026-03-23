@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,6 +28,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -236,6 +238,9 @@ private fun CafeDashboardContentScreen(
                                 onItemClick = { linkId ->
                                     onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
                                 },
+                                onEditClick = { linkId ->
+                                    onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
+                                },
                                 onDeleteClick = { linkId ->
                                     onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
                                 }
@@ -274,7 +279,7 @@ private fun ExternalLinkSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "외부 링크 추가",
+            text = uiState.externalLinkSheetTitle,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -307,7 +312,7 @@ private fun ExternalLinkSheetContent(
                 disabledContentColor = Color(0xFF7F7078)
             )
         ) {
-            Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+            Text(uiState.externalLinkSubmitLabel, fontWeight = FontWeight.Bold)
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
@@ -324,6 +329,7 @@ private fun ExternalLinkSection(
     links: List<CafeDashboardExternalLink>,
     onAddClick: () -> Unit,
     onItemClick: (String) -> Unit,
+    onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit
 ) {
     Surface(
@@ -411,6 +417,13 @@ private fun ExternalLinkSection(
                                         color = Color(0xFF2B2330)
                                     )
                                 }
+                            }
+                            IconButton(onClick = { onEditClick(link.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "외부 링크 수정",
+                                    tint = Color(0xFF8F848F)
+                                )
                             }
                             IconButton(onClick = { onDeleteClick(link.id) }) {
                                 Icon(
@@ -890,13 +903,26 @@ private fun CastPreviewItem(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(72.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
-                            ),
-                            shape = CircleShape
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
+                                ),
+                                shape = CircleShape
+                            )
+                    )
+                    if (!cast.profileImage.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = cast.profileImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
                         )
-                )
+                    }
+                }
                 if (isSelected) {
                     Surface(
                         modifier = Modifier

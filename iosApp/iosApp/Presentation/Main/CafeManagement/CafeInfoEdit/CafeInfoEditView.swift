@@ -551,29 +551,14 @@ private struct CafeInfoEditContentView: View {
             Text(label)
                 .font(.subheadline.weight(.medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-            smallTimeField(text: open)
+            TimeFieldPicker(text: open)
             Text("—")
                 .foregroundStyle(Color(hex: "8A8088"))
-            smallTimeField(text: close)
+            TimeFieldPicker(text: close)
         }
         .padding(12)
         .background(Color(hex: "F8F5F6"))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func smallTimeField(text: Binding<String>) -> some View {
-        TextField("", text: text)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
-            )
-            .frame(width: 108)
     }
 
     private func infoBanner(message: String) -> some View {
@@ -598,6 +583,66 @@ private struct CafeInfoEditContentView: View {
         )
     }
 
+}
+
+private struct TimeFieldPicker: View {
+    @Binding var text: String
+
+    @State private var isPresented = false
+
+    @State private var selectedTime = Date()
+
+    var body: some View {
+        Button {
+            selectedTime = TimeUtils.parseHourMinute(text)
+            isPresented = true
+        } label: {
+            HStack(spacing: 6) {
+                Text(normalizedText(text))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color(hex: "2B2330"))
+                Image(systemName: "clock")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "7C7480"))
+            }
+            .frame(width: 108, height: 38)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $isPresented) {
+            CompatNavigationContainer(title: "시간 선택") {
+                VStack {
+                    DatePicker(
+                        "시간 선택",
+                        selection: $selectedTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .padding()
+                    Spacer()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("확인") {
+                        text = TimeUtils.formatHourMinute(selectedTime)
+                        isPresented = false
+                    }
+                }
+            }
+            .compatFractionSheetDetent(0.35)
+        }
+    }
+
+    private func normalizedText(_ raw: String) -> String {
+        return TimeUtils.formatHourMinute(TimeUtils.parseHourMinute(raw))
+    }
 }
 
 private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {

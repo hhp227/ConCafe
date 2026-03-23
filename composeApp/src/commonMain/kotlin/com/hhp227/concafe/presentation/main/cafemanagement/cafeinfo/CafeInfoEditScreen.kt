@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -539,23 +540,73 @@ private fun HoursRow(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun SmallTimeField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.width(108.dp),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedBorderColor = Color(0x33FFD1DC),
-            unfocusedBorderColor = Color(0x33FFD1DC)
+    var isTimePickerVisible by remember { mutableStateOf(false) }
+    val (initialHour, initialMinute) = remember(value) {
+        TimeUtils.parseHourMinuteOrDefault(value)
+    }
+
+    Box(modifier = Modifier.width(108.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            readOnly = true,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = Color(0x33FFD1DC),
+                unfocusedBorderColor = Color(0x33FFD1DC)
+            ),
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.AccessTime,
+                    contentDescription = "시간 선택",
+                    tint = Color(0xFF8A8088),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         )
-    )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { isTimePickerVisible = true }
+        )
+    }
+    if (isTimePickerVisible) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { isTimePickerVisible = false },
+            title = { Text("시간 선택") },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onValueChange(TimeUtils.formatHourMinute(timePickerState.hour, timePickerState.minute))
+                        isTimePickerVisible = false
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isTimePickerVisible = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @Composable

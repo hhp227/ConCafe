@@ -898,7 +898,8 @@ class MockConCafeDataSource : ConCafeDataSource {
             cast = cast,
             cafe = cafe,
             images = castImagesById[cast.id].orEmpty(),
-            schedule = castSchedulesByCastId[cast.id].orEmpty()
+            schedule = castSchedulesByCastId[cast.id].orEmpty(),
+            visitCertificationCount = visits.count { visit -> visit.cafeId == cafe.id }
         )
     }
 
@@ -1027,7 +1028,8 @@ class MockConCafeDataSource : ConCafeDataSource {
             cast = nextCast,
             cafe = targetCafe,
             images = castImagesById[castId].orEmpty(),
-            schedule = castSchedulesByCastId[castId].orEmpty()
+            schedule = castSchedulesByCastId[castId].orEmpty(),
+            visitCertificationCount = visits.count { visit -> visit.cafeId == targetCafe.id }
         )
     }
 

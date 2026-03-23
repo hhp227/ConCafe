@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.NoticeDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeEventCreate
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
@@ -30,6 +31,11 @@ class NoticeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeNoticeManagementItem> {
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+            }
+        }
         val normalizedQuery = query.trim()
         val filtered = noticeDataSource.cafeNoticeManagementItems
             .asSequence()
@@ -50,6 +56,11 @@ class NoticeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeEventManagementItem> {
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+            }
+        }
         val normalizedQuery = query.trim()
         val filtered = noticeDataSource.cafeEventManagementItems
             .asSequence()
@@ -68,6 +79,9 @@ class NoticeRepositoryImpl(
         if (input.cafeId.isBlank()) throw IllegalArgumentException("cafeId is required")
         if (input.title.isBlank()) throw IllegalArgumentException("notice title is required")
         if (input.content.isBlank()) throw IllegalArgumentException("notice content is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.createCafeNoticeRemote(input)
+        }
 
         val createdAt = nowIsoUtc()
         val item = CafeNoticeManagementItem(
@@ -104,6 +118,9 @@ class NoticeRepositoryImpl(
         if (input.title.isBlank()) throw IllegalArgumentException("event title is required")
         if (input.content.isBlank()) throw IllegalArgumentException("event content is required")
         if (input.imageUrl.isBlank()) throw IllegalArgumentException("event image is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.createCafeEventRemote(input)
+        }
 
         val periodText = input.periodText?.takeIf { it.isNotBlank() } ?: "게시 일정 선택 필요"
         val startDate = periodText.substringBefore(" - ", missingDelimiterValue = periodText)
@@ -128,6 +145,9 @@ class NoticeRepositoryImpl(
         if (input.noticeId.isBlank()) throw IllegalArgumentException("noticeId is required")
         if (input.title.isBlank()) throw IllegalArgumentException("notice title is required")
         if (input.content.isBlank()) throw IllegalArgumentException("notice content is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.updateCafeNoticeRemote(input)
+        }
 
         val noticeIndex = noticeDataSource.cafeNoticeManagementItems.indexOfFirst {
             it.id == input.noticeId && it.cafeId == input.cafeId
@@ -161,6 +181,9 @@ class NoticeRepositoryImpl(
         if (input.title.isBlank()) throw IllegalArgumentException("event title is required")
         if (input.content.isBlank()) throw IllegalArgumentException("event content is required")
         if (input.imageUrl.isBlank()) throw IllegalArgumentException("event image is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.updateCafeEventRemote(input)
+        }
 
         val eventIndex = noticeDataSource.cafeEventManagementItems.indexOfFirst {
             it.id == input.eventId && it.cafeId == input.cafeId
@@ -186,6 +209,10 @@ class NoticeRepositoryImpl(
     override suspend fun deleteCafeNotice(cafeId: String, noticeId: String): String {
         if (cafeId.isBlank()) throw IllegalArgumentException("cafeId is required")
         if (noticeId.isBlank()) throw IllegalArgumentException("noticeId is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.deleteCafeNoticeRemote(cafeId = cafeId, noticeId = noticeId)
+            return noticeId
+        }
 
         val noticeIndex = noticeDataSource.cafeNoticeManagementItems.indexOfFirst {
             it.id == noticeId && it.cafeId == cafeId
@@ -203,6 +230,10 @@ class NoticeRepositoryImpl(
     override suspend fun deleteCafeEvent(cafeId: String, eventId: String): String {
         if (cafeId.isBlank()) throw IllegalArgumentException("cafeId is required")
         if (eventId.isBlank()) throw IllegalArgumentException("eventId is required")
+        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.deleteCafeEventRemote(cafeId = cafeId, eventId = eventId)
+            return eventId
+        }
 
         val eventIndex = noticeDataSource.cafeEventManagementItems.indexOfFirst {
             it.id == eventId && it.cafeId == cafeId

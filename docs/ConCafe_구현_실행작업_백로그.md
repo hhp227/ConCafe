@@ -20,7 +20,7 @@
 - 세션 복원(`RestoreSessionUseCase`)을 Main 진입 초기 로직에 연결해 앱 재실행 시 자동 로그인 상태를 복구하도록 반영했다.
 - Compose/iOS MainViewModel 모두 `observeCurrentUser` 스트림 + 초기 `restoreSession()` 호출 조합으로 동일한 세션 복원 흐름을 사용한다.
 - `ConCafeDataSource`를 도메인별 인터페이스 묶음으로 분리(`Auth/Cafe/Cast/Review/Visit/Social/...`)하고, 기존 `ConCafeDataSource`는 조합 인터페이스로 유지했다.
-- Firestore 다이어그램 정합성을 맞추기 위해 shared mock 데이터소스 계약에 `homeBanners` 운영 필드 문서형, `externalLinks`, `stamps`, `castScheduleStatuses` 문서형, `cafeFavorites`/`castFollowers` 역인덱스 필드를 추가했다.
+- Firestore 다이어그램 정합성을 맞추기 위해 shared mock 데이터소스 계약에 `homeBanners` 운영 필드 문서형, `externalLinks`, `stamps`, `castSchedules` 상태 필드, `cafeFavorites`/`castFollowers` 역인덱스 필드를 추가했다.
 
 ## 최근 반영 (2026-03-20)
 - Firestore 컬렉션 다이어그램/통합 기획서 기준으로 Claim 책임을 정리했다:  
@@ -35,6 +35,8 @@
 - Admin 운영관리 `승인 대기 요청` 조회를 Firestore pending claim 조회 경로로 연결했다.
 - Firestore Rules에 Admin claim 조회(read) 허용 규칙을 추가해 `cafeOwnerClaims`, `cafeRegistrationClaims` 관리자 조회가 가능하도록 보정했다.
 - Admin 운영관리 UI의 승인 대기 카드 이미지 노출을 Compose/iOS 모두 반영했다.
+- 캐스트 상세 조회 경로를 `캐시 우선 -> Firestore 재동기화 -> 캐시 재조회`로 보강해 초기 진입 시 데이터 불일치(특히 스케줄) 문제를 줄였다.
+- 캐스트 상세 `방문 인증` 카운트 기준을 임시 파생값(팔로워/스케줄)에서 `visits` 기반 집계로 변경했다.
 
 ## A. 사전 확정 작업 (P0)
 
@@ -421,7 +423,7 @@
 
 ### C-05. 메이드 상세
 - 우선순위: P1
-- 상태: TODO
+- 상태: DOING
 - 산출물: 메이드 상세(프로필/소개/최근 활동/최근 후기/출근표 영역)
 - 작업:
   1. 메이드 기본 정보/이미지 표시
@@ -435,6 +437,11 @@
   - 필수 정보 누락 시 대체 UI가 표시된다.
   - 비로그인 팔로우 시도 시 로그인 화면으로 라우팅된다.
   - 숨김 처리되지 않은 외부 링크만 노출된다.
+- 진행 메모:
+  - 기본 상세 섹션(프로필/소개/최근 활동/후기/출근표)과 카페 이동, 팔로우 로그인 가드는 반영되었다.
+  - 최근 활동의 `방문 인증` 값은 `visits` 기반 집계로 보정되었다.
+  - 캐스트 상세는 캐시 우선 조회 후 Firestore 재동기화 결과를 재반영하도록 보강되었다.
+  - 공식 SNS 링크 노출은 후속 구현 항목으로 남아 있다.
 
 ### C-06. 체크인 + 방문 인증
 - 우선순위: P0

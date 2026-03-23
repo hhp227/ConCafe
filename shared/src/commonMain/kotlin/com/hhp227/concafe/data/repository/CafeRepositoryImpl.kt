@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -47,19 +48,68 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
-        return cafeDataSource.cafeDetail(cafeId)
-            ?: throw NoSuchElementException("cafe detail not found")
+        val cachedDetail = cafeDataSource.cafeDetail(cafeId)
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (cachedDetail != null) {
+            val shouldRefresh = firestoreDataSource != null && (
+                !firestoreDataSource.isCafeDetailHydrated(cafeId) ||
+                cachedDetail.businessHours.isBlank() ||
+                    cachedDetail.phoneNumber.isBlank() ||
+                    cachedDetail.businessHours == "운영시간 정보 준비중" ||
+                    cachedDetail.phoneNumber == "연락처 정보 준비중"
+                )
+
+            if (shouldRefresh) {
+                runCatching {
+                    firestoreDataSource?.refreshCafeDetail(cafeId)
+                }
+                val refreshed = cafeDataSource.cafeDetail(cafeId)
+
+                if (refreshed != null) {
+                    return refreshed
+                }
+            }
+            return cachedDetail
+        }
+
+        if (firestoreDataSource != null) {
+            runCatching {
+                firestoreDataSource.refreshCafeDetail(cafeId)
+            }
+            val refreshed = cafeDataSource.cafeDetail(cafeId)
+
+            if (refreshed != null) {
+                return refreshed
+            }
+        }
+        throw NoSuchElementException("cafe detail not found")
     }
 
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.updateCafeInfoRemote(update)
+        }
         return cafeDataSource.updateCafeInfo(update)
     }
 
     override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.upsertCafeMenuGoodsRemote(update)
+        }
         return cafeDataSource.upsertCafeMenuGoods(update)
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.deleteCafeMenuGoodsRemote(cafeId, itemId)
+        }
         return cafeDataSource.deleteCafeMenuGoods(cafeId, itemId)
     }
 

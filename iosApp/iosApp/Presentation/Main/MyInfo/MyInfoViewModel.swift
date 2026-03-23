@@ -135,7 +135,8 @@ final class MyInfoViewModel: ObservableObject {
                 rating: cafe.ratingAvg,
                 castCount: item.castCount,
                 noticeCount: item.noticeCount,
-                externalLinkCount: item.externalLinkCount
+                externalLinkCount: item.externalLinkCount,
+                thumbnailImage: cafe.thumbnailImage
             )
         }
         uiState.popularCafes = uiState.popularCafes.map { $0.id == cafe.id ? cafe : $0 }
@@ -146,7 +147,8 @@ final class MyInfoViewModel: ObservableObject {
                 cast: detail.cast,
                 cafe: cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
         }
     }
@@ -158,7 +160,8 @@ final class MyInfoViewModel: ObservableObject {
                 cast: cast,
                 cafe: detail.cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
         }
     }

@@ -42,7 +42,8 @@ class CafeManagementRepositoryImpl(
                 rating = cafe.ratingAvg,
                 castCount = cafeCasts.size,
                 noticeCount = cafeNotices.size,
-                externalLinkCount = 3
+                externalLinkCount = 3,
+                thumbnailImage = cafe.thumbnailImage
             )
         }
     }
@@ -73,7 +74,8 @@ class CafeManagementRepositoryImpl(
                 rating = cafe.ratingAvg,
                 castCount = cafeCasts.size,
                 noticeCount = cafeNotices.size,
-                externalLinkCount = 3
+                externalLinkCount = 3,
+                thumbnailImage = cafe.thumbnailImage
             )
         }
         val searchableCafes = cafeDataSource.cafes.map { cafe ->

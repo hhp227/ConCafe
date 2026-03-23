@@ -16,7 +16,8 @@ data class CafeManagementData(
         val rating: Double,
         val castCount: Int,
         val noticeCount: Int,
-        val externalLinkCount: Int
+        val externalLinkCount: Int,
+        val thumbnailImage: String? = null
     )
 
     data class SearchableCafeSummary(

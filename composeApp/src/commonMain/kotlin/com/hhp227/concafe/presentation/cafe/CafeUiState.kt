@@ -29,7 +29,7 @@ data class CafeUiState(
 ) {
     enum class TabType(val label: String) {
         INFO("정보"),
-        MAIDS("메이드"),
+        CASTS("캐스트"),
         MENU("메뉴"),
         REVIEWS("리뷰"),
         NOTICES("공지")

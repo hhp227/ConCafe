@@ -19,6 +19,8 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
 
     let isSecure: Bool
 
+    let keyboardType: UIKeyboardType
+
     @ViewBuilder let leadingContent: () -> Leading
 
     @ViewBuilder let trailingContent: () -> Trailing
@@ -39,6 +41,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
                     TextField("", text: $text, prompt: placeholderText as? Text)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        .keyboardType(keyboardType)
                         .allowsHitTesting(isEditable)
                 }
                 trailingContent()
@@ -71,13 +74,15 @@ extension ConCafeFormField where Leading == EmptyView, Trailing == EmptyView {
         text: Binding<String>,
         placeholder: String = "",
         isEditable: Bool = true,
-        isSecure: Bool = false
+        isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
         self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = { EmptyView() }
         self.trailingContent = { EmptyView() }
     }
@@ -90,6 +95,7 @@ extension ConCafeFormField where Trailing == EmptyView {
         placeholder: String = "",
         isEditable: Bool = true,
         isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default,
         @ViewBuilder leadingContent: @escaping () -> Leading
     ) {
         self.label = label
@@ -97,6 +103,7 @@ extension ConCafeFormField where Trailing == EmptyView {
         self.placeholder = placeholder
         self.isEditable = isEditable
         self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = leadingContent
         self.trailingContent = { EmptyView() }
     }
@@ -109,6 +116,7 @@ extension ConCafeFormField where Leading == EmptyView {
         placeholder: String = "",
         isEditable: Bool = true,
         isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default,
         @ViewBuilder trailingContent: @escaping () -> Trailing
     ) {
         self.label = label
@@ -116,6 +124,7 @@ extension ConCafeFormField where Leading == EmptyView {
         self.placeholder = placeholder
         self.isEditable = isEditable
         self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = { EmptyView() }
         self.trailingContent = trailingContent
     }

@@ -167,7 +167,8 @@ final class CafeManagementViewModel: ObservableObject {
                 rating: cafe.ratingAvg,
                 castCount: item.castCount,
                 noticeCount: item.noticeCount,
-                externalLinkCount: item.externalLinkCount
+                externalLinkCount: item.externalLinkCount,
+                thumbnailImage: cafe.thumbnailImage
             )
         }
         uiState.searchableCafes = uiState.searchableCafes.map { item in

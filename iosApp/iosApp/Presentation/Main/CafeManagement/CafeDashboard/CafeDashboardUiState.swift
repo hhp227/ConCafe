@@ -19,6 +19,7 @@ struct CafeDashboardUiState {
     var isLoadingMoreCasts = false
     var isDeleteCastDialogVisible = false
     var isExternalLinkSheetVisible = false
+    var editingExternalLinkId: String?
     var externalLinkTitle = ""
     var externalLinkUrl = ""
     var isLoading = true
@@ -27,6 +28,14 @@ struct CafeDashboardUiState {
     var isExternalLinkSubmitEnabled: Bool {
         !externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var externalLinkSheetTitle: String {
+        editingExternalLinkId == nil ? "외부 링크 추가" : "외부 링크 수정"
+    }
+
+    var externalLinkSubmitLabel: String {
+        editingExternalLinkId == nil ? "외부 링크 추가" : "외부 링크 저장"
     }
 }
 

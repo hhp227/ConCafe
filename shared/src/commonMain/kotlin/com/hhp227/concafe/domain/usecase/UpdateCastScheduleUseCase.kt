@@ -30,7 +30,6 @@ class UpdateCastScheduleUseCase(
             if (!isAllowed) {
                 return AppResult.Failure(AppError.PermissionDenied)
             }
-
             if (input.status == CastScheduleStatus.WORK) {
                 val startTime = input.startTime?.takeIf { it.isNotBlank() }
                     ?: return AppResult.Failure(AppError.ValidationFailed("start time is required"))
@@ -40,6 +39,7 @@ class UpdateCastScheduleUseCase(
                     return AppResult.Failure(AppError.ValidationFailed("end time must be after start time"))
                 }
             }
+            val updated = castRepository.updateCastSchedule(input)
             scheduleManagementEventPublisher.publish(
                 ScheduleManagementEvent.Updated(
                     castId = input.castId,
@@ -47,7 +47,7 @@ class UpdateCastScheduleUseCase(
                     status = input.status
                 )
             )
-            AppResult.Success(castRepository.updateCastSchedule(input))
+            AppResult.Success(updated)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

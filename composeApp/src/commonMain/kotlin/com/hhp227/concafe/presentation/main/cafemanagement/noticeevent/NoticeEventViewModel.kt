@@ -282,6 +282,7 @@ class NoticeEventViewModel(
                             }
                         )
                     }
+                    refreshCurrentTab()
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
