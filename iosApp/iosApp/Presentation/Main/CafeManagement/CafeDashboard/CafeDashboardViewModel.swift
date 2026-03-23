@@ -140,7 +140,7 @@ final class CafeDashboardViewModel: ObservableObject {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
         case .homeBanner:
-            event.send(.navigateToBanner)
+            event.send(.navigateToBanner(cafeId: cafeId))
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
@@ -160,7 +160,7 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func clickCreateBanner() {
-        event.send(.navigateToBannerEdit)
+        event.send(.navigateToBannerEdit(cafeId: cafeId))
     }
 
     private func loadExternalLinks() {

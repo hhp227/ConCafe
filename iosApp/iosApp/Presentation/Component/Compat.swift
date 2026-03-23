@@ -260,18 +260,33 @@ func compatSystemImageName(iOS16: String, fallback: String) -> String {
     }
 }
 
-func resolveKeyboardOverlapHeight(from notification: Notification) -> CGFloat {
-    let userInfo = notification.userInfo
-    let keyboardFrame = (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-    let screenHeight = UIScreen.main.bounds.height
-    let overlap = max(0, screenHeight - (keyboardFrame?.minY ?? screenHeight))
+private func currentKeyWindow() -> UIWindow? {
+    let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
 
-    return overlap
+    for scene in windowScenes {
+        if let keyWindow = scene.windows.first(where: { $0.isKeyWindow }) {
+            return keyWindow
+        }
+    }
+    return windowScenes.first?.windows.first
+}
+
+func resolveKeyboardOverlapHeight(from notification: Notification) -> CGFloat {
+    guard let keyboardFrameScreen = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
+        return 0
+    }
+
+    if let keyWindow = currentKeyWindow() {
+        let keyboardFrameInWindow = keyWindow.convert(keyboardFrameScreen, from: nil)
+        return max(0, keyWindow.bounds.intersection(keyboardFrameInWindow).height)
+    }
+
+    let screenHeight = UIScreen.main.bounds.height
+    return max(0, screenHeight - keyboardFrameScreen.minY)
 }
 
 func calculateKeyboardBottomInset(overlap: CGFloat, safeAreaBottom: CGFloat) -> CGFloat {
     let inset = max(0, overlap - safeAreaBottom)
-
     return inset
 }
 
@@ -316,7 +331,6 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
         var configuration = PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
         configuration.selectionLimit = 1
         configuration.filter = .images
-
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         return picker

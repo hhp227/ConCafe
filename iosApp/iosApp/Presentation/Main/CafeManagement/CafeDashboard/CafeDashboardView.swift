@@ -55,10 +55,10 @@ struct CafeDashboardView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
-            case .navigateToBanner:
-                onNavigationAction(.navigateToBanner(cafeId: viewModel.uiState.cafe?.id))
-            case .navigateToBannerEdit:
-                onNavigationAction(.navigateToBannerEdit(cafeId: viewModel.uiState.cafe?.id))
+            case .navigateToBanner(let cafeId):
+                onNavigationAction(.navigateToBanner(cafeId: cafeId))
+            case .navigateToBannerEdit(let cafeId):
+                onNavigationAction(.navigateToBannerEdit(cafeId: cafeId))
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
             case .navigateToNoticeEvent(let cafeId):
