@@ -481,7 +481,7 @@ private struct MaskedBirthdayTextField: UIViewRepresentable {
     }
 
     private func moveCursorToEnd(_ textField: UITextField) {
-        guard let endPosition = textField.endOfDocument else { return }
+        let endPosition = textField.endOfDocument
         textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
     }
 
@@ -499,9 +499,8 @@ private struct MaskedBirthdayTextField: UIViewRepresentable {
             let normalized = TimeUtils.normalizeBirthdayInput(updatedText)
             text = normalized
             textField.text = normalized
-            if let endPosition = textField.endOfDocument {
-                textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
-            }
+            let endPosition = textField.endOfDocument
+            textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
             return false
         }
 
