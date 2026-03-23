@@ -185,6 +185,7 @@ class FirestoreConCafeDataSource(
         val parsedGoods = goodsDocuments
             .mapNotNull { document -> parseGoodsDocument(document) }
             .sortedBy { goods -> goods.name.lowercase() }
+
         upsertCafeAndDetail(
             cafe = cafe,
             casts = parsedCasts,

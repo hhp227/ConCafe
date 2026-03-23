@@ -44,20 +44,14 @@ struct MenuGoodsView: View {
             "항목 삭제",
             isPresented: Binding(
                 get: { viewModel.uiState.pendingDeleteItemId != nil },
-                set: { isPresented in
-                    if !isPresented {
-                        viewModel.onAction(.cancelDeleteItem)
-                    }
-                }
+                set: { _ in }
             )
         ) {
             Button("취소", role: .cancel) {
                 viewModel.onAction(.cancelDeleteItem)
             }
             Button("삭제", role: .destructive) {
-                if let itemId = viewModel.uiState.pendingDeleteItemId {
-                    viewModel.onAction(.confirmDeleteItem(itemId))
-                }
+                viewModel.onAction(.confirmDeleteItem)
             }
         } message: {
             Text("항목을 삭제 하시겠습니까?")
