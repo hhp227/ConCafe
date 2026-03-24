@@ -493,7 +493,6 @@ private struct CheckInVisitCard: View {
                         endPoint: .bottom
                     )
                 )
-
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.bold))
@@ -524,7 +523,6 @@ private struct CheckInMoreVisitCard: View {
                         endPoint: .bottom
                     )
                 )
-
             VStack(spacing: 6) {
                 Text("+\(remainingCount)")
                     .font(.system(size: 28, weight: .bold))
@@ -775,88 +773,96 @@ private struct CheckInNewVisitSheet: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color(hex: "E1D7DE"))
-                .frame(width: 42, height: 5)
-            HStack {
-                Spacer()
-                Text("방문 추가")
-                    .font(.title3.weight(.bold))
-                Spacer()
-                Button {
-                    onAction(.dismissNewVisitSheet)
-                } label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(Color(hex: "7C7480"))
-                        .padding(4)
-                }
-            }
-            Text("방문을 기록할 카페를 선택해주세요.")
-                .font(.footnote)
-                .foregroundStyle(Color(hex: "7C7480"))
-                .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(spacing: 10) {
-                if cafes.isEmpty {
-                    VStack(spacing: 6) {
-                        Text("현재 선택 가능한 카페가 없습니다.")
-                            .font(.footnote)
-                            .foregroundStyle(Color(hex: "7C7480"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        ConCafeFormField(
-                            label: "카페 선택",
-                            text: .constant(""),
-                            placeholder: "선택 가능한 카페가 없습니다.",
-                            isEditable: false
-                        )
-                    }
-                } else {
-                    ZStack {
-                        Menu {
-                            ForEach(cafes, id: \.id) { cafe in
-                                Button(cafe.name) {
-                                    selectedCafeId = cafe.id
-                                }
-                            }
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 16) {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(Color(hex: "E1D7DE"))
+                        .frame(width: 42, height: 5)
+                    HStack {
+                        Spacer()
+                        Text("방문 추가")
+                            .font(.title3.weight(.bold))
+                        Spacer()
+                        Button {
+                            onAction(.dismissNewVisitSheet)
                         } label: {
+                            Image(systemName: "xmark")
+                                .foregroundStyle(Color(hex: "7C7480"))
+                                .padding(4)
+                        }
+                    }
+                    Text("방문을 기록할 카페를 선택해주세요.")
+                        .font(.footnote)
+                        .foregroundStyle(Color(hex: "7C7480"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(spacing: 10) {
+                        if cafes.isEmpty {
+                            VStack(spacing: 6) {
+                                Text("현재 선택 가능한 카페가 없습니다.")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color(hex: "7C7480"))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                ConCafeFormField(
+                                    label: "카페 선택",
+                                    text: .constant(""),
+                                    placeholder: "선택 가능한 카페가 없습니다.",
+                                    isEditable: false
+                                )
+                            }
+                        } else {
+                            ZStack {
+                                Menu {
+                                    ForEach(cafes, id: \.id) { cafe in
+                                        Button(cafe.name) {
+                                            selectedCafeId = cafe.id
+                                        }
+                                    }
+                                } label: {
+                                    ConCafeFormField(
+                                        label: "카페 선택",
+                                        text: .constant(selectedCafeName),
+                                        placeholder: "카페를 선택하세요.",
+                                        isEditable: false,
+                                        trailingContent: {
+                                            Image(systemName: "chevron.down")
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(Color(hex: "7C7480"))
+                                        }
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        ZStack {
                             ConCafeFormField(
-                                label: "카페 선택",
-                                text: .constant(selectedCafeName),
-                                placeholder: "카페를 선택하세요.",
+                                label: "방문 시간",
+                                text: .constant(formatVisitTime(visitTime)),
+                                placeholder: "방문 시간을 선택하세요.",
                                 isEditable: false,
                                 trailingContent: {
-                                    Image(systemName: "chevron.down")
+                                    Image(systemName: "clock")
                                         .font(.caption.weight(.semibold))
                                         .foregroundStyle(Color(hex: "7C7480"))
                                 }
                             )
+                            Button(action: { isTimePickerPresented = true }) {
+                                Color.clear
+                            }
+                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
-                        .buttonStyle(.plain)
+                        ConCafeFormEditor(
+                            label: "메모 (선택)",
+                            text: $memo,
+                            placeholder: "방문 후기를 남겨보세요."
+                        )
                     }
                 }
-                ZStack {
-                    ConCafeFormField(
-                        label: "방문 시간",
-                        text: .constant(formatVisitTime(visitTime)),
-                        placeholder: "방문 시간을 선택하세요.",
-                        isEditable: false,
-                        trailingContent: {
-                            Image(systemName: "clock")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color(hex: "7C7480"))
-                        }
-                    )
-                    Button(action: { isTimePickerPresented = true }) {
-                        Color.clear
-                    }
-                    .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                ConCafeFormEditor(
-                    label: "메모 (선택)",
-                    text: $memo,
-                    placeholder: "방문 후기를 남겨보세요."
-                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 60)
+                .padding(.top, 10)
+                .background(Color.white)
             }
             Button("체크인 완료") {
                 guard let cafeId = selectedCafeId else { return }
@@ -877,13 +883,19 @@ private struct CheckInNewVisitSheet: View {
             .font(.headline.weight(.bold))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .disabled(selectedCafeId == nil)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 10)
+            .padding(.top, 10)
             Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
-        .padding(.top, 10)
-        .background(Color.white)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .background(Color(hex: "F8F5F6"))
         .sheet(isPresented: $isTimePickerPresented) {
             CompatNavigationContainer(title: "방문 시간 선택") {
                 VStack {

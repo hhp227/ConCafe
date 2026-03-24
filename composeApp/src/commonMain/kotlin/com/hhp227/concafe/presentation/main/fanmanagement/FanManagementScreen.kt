@@ -65,6 +65,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 
@@ -528,8 +529,7 @@ private fun CastClaimSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .imePadding()
+            .keyboardBottomInsets()
     ) {
         LazyColumn(
             modifier = Modifier

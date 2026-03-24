@@ -348,7 +348,7 @@ private fun CafeHeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(330.dp)
     ) {
         HorizontalPager(
             state = pagerState,

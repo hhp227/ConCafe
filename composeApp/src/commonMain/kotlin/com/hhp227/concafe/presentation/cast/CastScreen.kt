@@ -66,7 +66,6 @@ import kotlin.text.toSet
 import kotlin.text.uppercase
 
 private const val CURRENT_DATE = "2026-03-08"
-private val HeroHeight = 340.dp
 private val SummaryTitleTriggerOffset = 22.dp
 
 @Composable
@@ -244,7 +243,7 @@ private fun CastHeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(HeroHeight)
+            .height(330.dp)
     ) {
         HorizontalPager(
             state = pagerState,
@@ -280,7 +279,7 @@ private fun CastHeroSection(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color(0xA6000000)
+                                    Color(0x66000000)
                                 )
                             )
                         )

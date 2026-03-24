@@ -116,79 +116,99 @@ fun HomeContentScreen(
 ) {
     val screenBackgroundColor = Color(0xFFFFFBFD)
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(screenBackgroundColor),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = PaddingValues(vertical = 20.dp)
-    ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (uiState.banners.isNotEmpty()) {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        pageSpacing = 12.dp
-                    ) { page ->
-                        val banner = uiState.banners[page]
-
-                        Card(
+    if (!uiState.isLoading) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(screenBackgroundColor),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(vertical = 20.dp)
+        ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (uiState.banners.isNotEmpty()) {
+                        HorizontalPager(
+                            state = pagerState,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onAction(HomeAction.ClickBanner(banner)) },
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Box(
+                                .height(180.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            pageSpacing = 12.dp
+                        ) { page ->
+                            val banner = uiState.banners[page]
+                            val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+
+                            Card(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(
-                                                colorFromHex(banner.startColorHex),
-                                                colorFromHex(banner.endColorHex)
-                                            )
-                                        )
-                                    )
-                                    .padding(18.dp),
-                                contentAlignment = Alignment.BottomStart
+                                    .fillMaxWidth()
+                                    .clickable { onAction(HomeAction.ClickBanner(banner)) },
+                                shape = RoundedCornerShape(20.dp)
                             ) {
-                                Text(
-                                    text = banner.title,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleLarge
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(
+                                                    colorFromHex(banner.startColorHex),
+                                                    colorFromHex(banner.endColorHex)
+                                                )
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.BottomStart
+                                ) {
+                                    if (imageUrl != null) {
+                                        CompatImageDisplay(
+                                            imageUrl = imageUrl,
+                                            modifier = Modifier.matchParentSize()
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        colors = listOf(
+                                                            Color.Black.copy(alpha = 0.1f),
+                                                            Color.Black.copy(alpha = 0.45f)
+                                                        )
+                                                    )
+                                                )
+                                        )
+                                    }
+                                    Text(
+                                        text = banner.title,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier.padding(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        HomeBannerPlaceholderCard()
+                    }
+                    if (uiState.banners.size > 1) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(uiState.banners.size) { page ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 3.dp)
+                                        .size(width = if (pagerState.currentPage == page) 18.dp else 8.dp, height = 8.dp)
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(
+                                            if (pagerState.currentPage == page) Color(0xFFEF6797)
+                                            else Color(0xFFD8D8D8)
+                                        )
                                 )
                             }
                         }
                     }
-                } else {
-                    HomeBannerPlaceholderCard()
-                }
-                if (uiState.banners.size > 1) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        repeat(uiState.banners.size) { page ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 3.dp)
-                                    .size(width = if (pagerState.currentPage == page) 18.dp else 8.dp, height = 8.dp)
-                                    .clip(RoundedCornerShape(999.dp))
-                                    .background(
-                                        if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                        else Color(0xFFD8D8D8)
-                                    )
-                            )
-                        }
-                    }
                 }
             }
-        }
         item {
             SectionTitle(
                 text = "인기 캐스트",
@@ -337,6 +357,16 @@ fun HomeContentScreen(
                     )
                 }
             }
+        }
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(screenBackgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color(0xFFEF6797))
         }
     }
 }

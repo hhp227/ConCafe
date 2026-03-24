@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -94,36 +95,41 @@ private fun ReviewEditContentScreen(
         bottomBar = {
             if (uiState.isLoggedIn) {
                 Surface(
-                    modifier = Modifier.navigationBarsPadding(),
                     color = Color.White.copy(alpha = 0.96f),
                     shadowElevation = 10.dp
                 ) {
-                    Button(
-                        onClick = { onAction(ReviewEditAction.ClickSubmit) },
-                        enabled = uiState.isSubmitEnabled,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .keyboardBottomInsets()
                             .padding(horizontal = 16.dp, vertical = 14.dp)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330),
-                            disabledContainerColor = Color(0xFFF0D9E0),
-                            disabledContentColor = Color(0xFF7F7078)
-                        )
                     ) {
-                        if (uiState.isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF2B2330)
+                        Button(
+                            onClick = { onAction(ReviewEditAction.ClickSubmit) },
+                            enabled = uiState.isSubmitEnabled,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFD1DC),
+                                contentColor = Color(0xFF2B2330),
+                                disabledContainerColor = Color(0xFFF0D9E0),
+                                disabledContentColor = Color(0xFF7F7078)
                             )
-                        } else {
-                            Text(
-                                text = uiState.submitButtonLabel,
-                                fontWeight = FontWeight.Bold
-                            )
+                        ) {
+                            if (uiState.isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color(0xFF2B2330)
+                                )
+                            } else {
+                                Text(
+                                    text = uiState.submitButtonLabel,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

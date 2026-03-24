@@ -108,7 +108,11 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: castEventPublisher.events) {
                     switch event {
                     case let updated as Shared.CastEvent.Updated:
-                        self.patchCast(updated.cast)
+                        if let isFollowing = updated.isFollowing?.boolValue {
+                            self.updateFollowedCast(updated.cast, isFollowing: isFollowing)
+                        } else {
+                            self.patchCast(updated.cast)
+                        }
                     case let deleted as Shared.CastEvent.Deleted:
                         self.removeCast(deleted.castId)
                     default:
@@ -171,6 +175,43 @@ final class MyInfoViewModel: ObservableObject {
         if uiState.castDetail?.cast.id == castId {
             uiState.castDetail = nil
         }
+    }
+
+    private func updateFollowedCast(_ cast: Cast, isFollowing: Bool) {
+        if isFollowing {
+            uiState.followedMaids = upsertFollowedCast(uiState.followedMaids, cast: cast)
+        } else {
+            uiState.followedMaids.removeAll { $0.id == cast.id }
+        }
+        if let summary = uiState.summary {
+            uiState.summary = MyPageSummary(
+                userId: summary.userId,
+                totalVisits: summary.totalVisits,
+                favoritesCount: summary.favoritesCount,
+                followedCastsCount: Int32(uiState.followedMaids.count),
+                badgesCount: summary.badgesCount,
+                level: summary.level
+            )
+        }
+        if let detail = uiState.castDetail, detail.cast.id == cast.id {
+            uiState.castDetail = CastDetail(
+                cast: cast,
+                cafe: detail.cafe,
+                images: detail.images,
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
+            )
+        }
+    }
+
+    private func upsertFollowedCast(_ items: [Cast], cast: Cast) -> [Cast] {
+        var result = items
+        if let index = result.firstIndex(where: { $0.id == cast.id }) {
+            result[index] = cast
+        } else {
+            result.insert(cast, at: 0)
+        }
+        return result
     }
 
     func onAction(_ action: MyInfoAction) {

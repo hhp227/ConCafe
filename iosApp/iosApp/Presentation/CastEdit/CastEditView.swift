@@ -111,62 +111,63 @@ private struct CastEditContentView: View {
     @State private var selectedBirthdayDate = Date()
 
     var body: some View {
-        Group {
-            if uiState.isLoading {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        profilePhotoSection
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
-                        }
-                        ConCafeFormField(
-                            label: "캐스트 이름",
-                            text: Binding(
-                                get: { uiState.castName },
-                                set: { onAction(.changeCastName($0)) }
-                            )
-                        )
-                        ConCafeFormField(
-                            label: "컨셉 역할",
-                            text: Binding(
-                                get: { uiState.conceptRole },
-                                set: { onAction(.changeConceptRole($0)) }
-                            )
-                        )
-                        BirthdayInputField(
-                            text: Binding(
-                                get: { uiState.birthday },
-                                set: { onAction(.changeBirthday($0)) }
-                            ),
-                            onTapCalendar: {
-                                selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
-                                isBirthdayPickerPresented = true
-                            }
-                        )
-                        ConCafeFormEditor(
-                            label: "소개 및 바이오",
-                            text: Binding(
-                                get: { uiState.introduction },
-                                set: { onAction(.changeIntroduction($0)) }
-                            )
-                        )
-                        gallerySection
+        ZStack(alignment: .bottom) {
+            Group {
+                if uiState.isLoading {
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .tint(Color(hex: "EF6797"))
+                        Spacer()
                     }
-                    .padding(16)
-                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            profilePhotoSection
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(message: infoMessage)
+                            }
+                            ConCafeFormField(
+                                label: "캐스트 이름",
+                                text: Binding(
+                                    get: { uiState.castName },
+                                    set: { onAction(.changeCastName($0)) }
+                                )
+                            )
+                            ConCafeFormField(
+                                label: "컨셉 역할",
+                                text: Binding(
+                                    get: { uiState.conceptRole },
+                                    set: { onAction(.changeConceptRole($0)) }
+                                )
+                            )
+                            BirthdayInputField(
+                                text: Binding(
+                                    get: { uiState.birthday },
+                                    set: { onAction(.changeBirthday($0)) }
+                                ),
+                                onTapCalendar: {
+                                    selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
+                                    isBirthdayPickerPresented = true
+                                }
+                            )
+                            ConCafeFormEditor(
+                                label: "소개 및 바이오",
+                                text: Binding(
+                                    get: { uiState.introduction },
+                                    set: { onAction(.changeIntroduction($0)) }
+                                )
+                            )
+                            gallerySection
+                        }
+                        .padding(16)
+                        .padding(.bottom, 24)
+                        .padding(.bottom, 60)
+                    }
                 }
+                bottomSaveBar()
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            bottomSaveBar
         }
         .background(
             LinearGradient(
@@ -367,7 +368,7 @@ private struct CastEditContentView: View {
         .buttonStyle(.plain)
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar() -> some View {
         Button {
             onAction(.clickSave)
         } label: {

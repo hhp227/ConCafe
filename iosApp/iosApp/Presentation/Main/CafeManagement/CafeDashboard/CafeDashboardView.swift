@@ -55,10 +55,10 @@ struct CafeDashboardView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
-            case .navigateToBanner:
-                onNavigationAction(.navigateToBanner(cafeId: viewModel.uiState.cafe?.id))
-            case .navigateToBannerEdit:
-                onNavigationAction(.navigateToBannerEdit(cafeId: viewModel.uiState.cafe?.id))
+            case .navigateToBanner(let cafeId):
+                onNavigationAction(.navigateToBanner(cafeId: cafeId))
+            case .navigateToBannerEdit(let cafeId):
+                onNavigationAction(.navigateToBannerEdit(cafeId: cafeId))
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
             case .navigateToNoticeEvent(let cafeId):
@@ -90,33 +90,40 @@ private struct CafeDashboardContentView: View {
     let onAction: (CafeDashboardAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                if uiState.cafe != nil {
-                    heroCard
-                }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                if uiState.isLoading {
+        Group {
+            if uiState.isLoading {
+                VStack {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 48)
-                } else if uiState.cafe != nil {
-                    metricGrid
-                    if !uiState.pendingCastClaims.isEmpty {
-                        pendingCastClaimSection
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            } else {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        if uiState.cafe != nil {
+                            heroCard
+                        }
+                        if let infoMessage = uiState.infoMessage {
+                            infoBanner(message: infoMessage)
+                        }
+                        if uiState.cafe != nil {
+                            metricGrid
+                            if !uiState.pendingCastClaims.isEmpty {
+                                pendingCastClaimSection
+                            }
+                            shortcutGrid
+                            castManagementSection
+                            if !uiState.externalLinks.isEmpty {
+                                externalLinkSection
+                            }
+                            homeBannerSection
+                        }
                     }
-                    shortcutGrid
-                    castManagementSection
-                    if !uiState.externalLinks.isEmpty {
-                        externalLinkSection
-                    }
-                    homeBannerSection
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
         }
         .background(
             LinearGradient(
@@ -505,17 +512,33 @@ private struct CafeDashboardContentView: View {
             }
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
-                    ZStack {
-                        LinearGradient(
-                            colors: [Color(hex: "FFD1DC"), Color(hex: "FFE4EC")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        Image(systemName: "photo")
-                            .foregroundStyle(.white)
+                    GeometryReader { proxy in
+                        let imageSize = proxy.size
+                        let imageUrl = cafe.homeBannerPreview.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        let resolvedUrl = imageUrl.isEmpty ? nil : URL(string: imageUrl)
+
+                        ZStack {
+                            LinearGradient(
+                                colors: [Color(hex: "FFD1DC"), Color(hex: "FFE4EC")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            if let resolvedUrl {
+                                CachedAsyncImage(
+                                    url: resolvedUrl,
+                                    placeholder: Color.clear
+                                )
+                                .frame(width: imageSize.width, height: imageSize.height)
+                                .clipped()
+                            } else {
+                                Image(systemName: "photo")
+                                    .foregroundStyle(.white)
+                            }
+                        }
                     }
                     .frame(width: 96, height: 64)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipped()
                     VStack(alignment: .leading, spacing: 6) {
                         Text(cafe.homeBannerPreview.title)
                             .font(.subheadline.weight(.bold))

@@ -255,23 +255,29 @@ final class MenuGoodsViewModel: ObservableObject {
         uiState.pendingDeleteItemId = itemId
     }
 
-    private func confirmDeleteItem(_ itemId: String) {
+    private func confirmDeleteItem() {
+        let pendingDeleteItemId = uiState.pendingDeleteItemId
         uiState.infoMessage = nil
         uiState.pendingDeleteItemId = nil
-        Task { [weak self] in
-            guard let self else { return }
 
-            do {
-                let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
-                if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "항목이 삭제되었습니다."
-                } else {
+        if let itemId = pendingDeleteItemId {
+            Task { [weak self] in
+                guard let self else { return }
+
+                do {
+                    let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
+                    if result is AppResultSuccess<AnyObject> {
+                        uiState.infoMessage = "항목이 삭제되었습니다."
+                    } else {
+                        uiState.infoMessage = "항목 삭제에 실패했습니다."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
                     uiState.infoMessage = "항목 삭제에 실패했습니다."
                 }
-            } catch {
-                if Task.isCancelled { return }
-                uiState.infoMessage = "항목 삭제에 실패했습니다."
             }
+        } else {
+            uiState.infoMessage = "삭제할 항목을 찾을 수 없습니다."
         }
     }
 
@@ -333,8 +339,8 @@ final class MenuGoodsViewModel: ObservableObject {
             event.send(.navigateToEdit(cafeId: cafeId, itemId: itemId))
         case .clickDeleteItem(let itemId):
             deleteItem(itemId)
-        case .confirmDeleteItem(let itemId):
-            confirmDeleteItem(itemId)
+        case .confirmDeleteItem:
+            confirmDeleteItem()
         case .cancelDeleteItem:
             cancelDeleteItem()
         case .clickAddNewItem:

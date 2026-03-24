@@ -30,6 +30,7 @@ import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -153,110 +154,110 @@ private fun CafeDashboardContentScreen(
                     )
                 )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                cafe?.let {
-                    item {
-                        DashboardHeroCard(cafe = it)
-                    }
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                uiState.infoMessage?.let { message ->
-                    item {
-                        InfoBanner(
-                            message = message,
-                            onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
-                        )
-                    }
-                }
-                if (uiState.isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 48.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    cafe?.let {
+                        item {
+                            DashboardHeroCard(cafe = it)
                         }
                     }
-                } else if (cafe != null) {
-                    item {
-                        DashboardMetricGrid(cafe = cafe)
-                    }
-                    if (uiState.pendingCastClaims.isNotEmpty()) {
+                    uiState.infoMessage?.let { message ->
                         item {
-                            PendingCastClaimSection(
-                                claims = uiState.pendingCastClaims,
-                                onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
-                                onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                            InfoBanner(
+                                message = message,
+                                onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
                             )
                         }
                     }
-                    item {
-                        ShortcutGrid(
-                            onShortcutClick = { shortcut ->
-                                onAction(CafeDashboardAction.ClickShortcut(shortcut))
-                            }
-                        )
-                    }
-                    item {
-                        CastManagementSection(
-                            casts = uiState.castPreviews,
-                            hasMoreCasts = uiState.hasMoreCasts,
-                            isLoadingMoreCasts = uiState.isLoadingMoreCasts,
-                            onCastManagementClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
-                            },
-                            onDeleteClick = {
-                                onAction(CafeDashboardAction.ClickDeleteCast)
-                            },
-                            canDelete = uiState.selectedCastId != null,
-                            onScheduleClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
-                            },
-                            selectedCastId = uiState.selectedCastId,
-                            onCastScheduleSelect = { castId ->
-                                onAction(CafeDashboardAction.ClickCastSchedule(castId))
-                            },
-                            onLoadMoreClick = {
-                                onAction(CafeDashboardAction.ClickLoadMoreCasts)
-                            }
-                        )
-                    }
-                    if (uiState.externalLinks.isNotEmpty()) {
+                    if (cafe != null) {
                         item {
-                            ExternalLinkSection(
-                                links = uiState.externalLinks,
-                                onAddClick = {
-                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
-                                },
-                                onItemClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
-                                },
-                                onEditClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
-                                },
-                                onDeleteClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                            DashboardMetricGrid(cafe = cafe)
+                        }
+                        if (uiState.pendingCastClaims.isNotEmpty()) {
+                            item {
+                                PendingCastClaimSection(
+                                    claims = uiState.pendingCastClaims,
+                                    onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
+                                    onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                                )
+                            }
+                        }
+                        item {
+                            ShortcutGrid(
+                                onShortcutClick = { shortcut ->
+                                    onAction(CafeDashboardAction.ClickShortcut(shortcut))
                                 }
                             )
                         }
-                    }
-                    item {
-                        HomeBannerSection(
-                            banner = cafe.homeBannerPreview,
-                            onBannerClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
-                            },
-                            onCreateBannerClick = {
-                                onAction(CafeDashboardAction.ClickCreateBanner)
+                        item {
+                            CastManagementSection(
+                                casts = uiState.castPreviews,
+                                hasMoreCasts = uiState.hasMoreCasts,
+                                isLoadingMoreCasts = uiState.isLoadingMoreCasts,
+                                onCastManagementClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
+                                },
+                                onDeleteClick = {
+                                    onAction(CafeDashboardAction.ClickDeleteCast)
+                                },
+                                canDelete = uiState.selectedCastId != null,
+                                onScheduleClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                                },
+                                selectedCastId = uiState.selectedCastId,
+                                onCastScheduleSelect = { castId ->
+                                    onAction(CafeDashboardAction.ClickCastSchedule(castId))
+                                },
+                                onLoadMoreClick = {
+                                    onAction(CafeDashboardAction.ClickLoadMoreCasts)
+                                }
+                            )
+                        }
+                        if (uiState.externalLinks.isNotEmpty()) {
+                            item {
+                                ExternalLinkSection(
+                                    links = uiState.externalLinks,
+                                    onAddClick = {
+                                        onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
+                                    },
+                                    onItemClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
+                                    },
+                                    onEditClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
+                                    },
+                                    onDeleteClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                                    }
+                                )
                             }
-                        )
+                        }
+                        item {
+                            HomeBannerSection(
+                                banner = cafe.homeBannerPreview,
+                                onBannerClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
+                                },
+                                onCreateBannerClick = {
+                                    onAction(CafeDashboardAction.ClickCreateBanner)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -274,8 +275,7 @@ private fun ExternalLinkSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .navigationBarsPadding()
-            .imePadding(),
+            .keyboardBottomInsets(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
@@ -1080,22 +1080,32 @@ private fun HomeBannerSection(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+
                         Box(
                             modifier = Modifier
                                 .size(width = 96.dp, height = 64.dp)
+                                .clip(RoundedCornerShape(14.dp))
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(Color(0xFFFFD1DC), Color(0xFFFFE4EC))
-                                    ),
-                                    RoundedCornerShape(14.dp)
+                                    )
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Image,
-                                contentDescription = null,
-                                tint = Color.White
-                            )
+                            if (imageUrl != null) {
+                                CompatImageDisplay(
+                                    imageUrl = imageUrl,
+                                    modifier = Modifier.fillMaxSize(),
+                                    applyRoundedClip = false
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
                         }
                         Column(
                             modifier = Modifier.weight(1f),

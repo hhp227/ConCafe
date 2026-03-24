@@ -156,14 +156,19 @@ visits/{visitId}
 ├─ visitedAt
 └─ verified
 
-castFollowers/{castId}/users/{userId}
-└─ followedAt
+castFollows/{followId}
+├─ userId
+├─ castId
+├─ cafeId
+└─ createdAt
 
 cafeFavorites/{cafeId}/users/{userId}
 └─ createdAt
 
 구현 메모
 - shared mock 데이터소스에는 역인덱스 필드(`favoriteUserIdsByCafeId`, `followerUserIdsByCastId`)가 추가되어 컬렉션 구조와 읽기 방향을 함께 유지한다.
+- Firestore 실데이터에서는 팔로우를 `castFollows` 루트 컬렉션으로 저장하고, 문서 id는 `userId_castId` 조합을 사용한다.
+- 팔로우 쓰기(create/delete) 이후 캐스트 `followerCount`는 Cloud Functions 트리거(`onCastFollowWrittenSyncFollowerCount`)로 동기화한다.
 
 cafes/{cafeId}/events/{eventId}
 ├─ eventType: BIRTHDAY | ANNIVERSARY | COLLAB | SPECIAL_GUEST
@@ -240,6 +245,10 @@ cafeRegistrationClaims/{claimId}
 - `cafeRegistrationClaims`는 현재 `draft` 중첩 객체가 아니라 평탄 필드(`cafeName`, `description`, `region` 등)로 저장한다.
 - `cafeOwnerClaims`는 조회 시 `cafeName/location/imageUrl`를 optional 필드로 보강해 UI 카드 정보를 렌더링한다.
 - Firestore Rules는 관리자(`ADMIN`)가 `cafeOwnerClaims`, `cafeRegistrationClaims`를 read할 수 있도록 반영되어 있다.
+
+구현 정합성 메모 (2026-03-23)
+- 리뷰 쓰기(create/update/delete) 이후 카페 집계(`cafes/{cafeId}.stats.reviewCount`, `stats.ratingAvg`)는 Cloud Functions 트리거(`onReviewWrittenSyncCafeAggregate`)에서 계산/반영한다.
+- `castFollows` 규칙은 로그인 사용자 read, 본인 문서 create/delete 허용, update 금지로 운영한다.
 
 공지/이벤트 관리 메모
 - `cafes/{cafeId}/notices`, `cafes/{cafeId}/events`는 카페별 페이지네이션 조회를 사용하며 현재 페이지 크기는 15개다.

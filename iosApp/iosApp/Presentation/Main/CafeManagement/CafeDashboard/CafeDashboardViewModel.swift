@@ -140,7 +140,7 @@ final class CafeDashboardViewModel: ObservableObject {
         case .cafeSettings:
             event.send(.navigateToCafeInfoEdit(cafeId: cafeId))
         case .homeBanner:
-            event.send(.navigateToBanner)
+            event.send(.navigateToBanner(cafeId: cafeId))
         case .eventManagement:
             event.send(.navigateToNoticeEvent(cafeId: cafeId))
         case .menuGoods:
@@ -160,7 +160,7 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private func clickCreateBanner() {
-        event.send(.navigateToBannerEdit)
+        event.send(.navigateToBannerEdit(cafeId: cafeId))
     }
 
     private func loadExternalLinks() {
@@ -384,7 +384,7 @@ final class CafeDashboardViewModel: ObservableObject {
                     } else if let updated = event as? Shared.BannerEvent.Updated, updated.banner.cafeId == self.cafeId {
                         self.patchUpdatedBannerPreview(updated.banner)
                     } else if let deleted = event as? Shared.BannerEvent.Deleted, deleted.banner.cafeId == self.cafeId {
-                        self.patchDeletedBannerPreview(deleted.banner.title)
+                        self.loadCafeDashboard()
                     }
                 }
             } catch {
@@ -393,55 +393,34 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
-    private func patchDeletedBannerPreview(_ deletedBannerTitle: String) {
-        guard let current = uiState.cafe else { return }
-        let currentPreview = current.homeBannerPreview
-        guard currentPreview.title == deletedBannerTitle else { return }
-
-        uiState.cafe = CafeDashboardData(
-            id: current.id,
-            name: current.name,
-            city: current.city,
-            todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
-            rating: current.rating,
-            castPreviews: current.castPreviews,
-            homeBannerPreview: CafeDashboardData.HomeBannerPreview(
-                title: "등록된 배너 없음",
-                period: "-",
-                statusLabel: "미노출"
-            )
-        )
-    }
-
     private func patchUpdatedBannerPreview(_ updatedBanner: HomeBanner) {
-        guard let current = uiState.cafe else { return }
-        let currentPreview = current.homeBannerPreview
-        guard currentPreview.title == updatedBanner.title else { return }
-        let statusLabel: String
-        switch updatedBanner.statusLabel.uppercased() {
-        case "ACTIVE":
-            statusLabel = "노출 중"
-        case "SCHEDULED":
-            statusLabel = "예약 중"
-        default:
-            statusLabel = "미노출"
-        }
-
-        uiState.cafe = CafeDashboardData(
-            id: current.id,
-            name: current.name,
-            city: current.city,
-            todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
-            rating: current.rating,
-            castPreviews: current.castPreviews,
-            homeBannerPreview: CafeDashboardData.HomeBannerPreview(
-                title: updatedBanner.title,
-                period: "노출 \(updatedBanner.displayDays)일",
-                statusLabel: statusLabel
+        if let current = uiState.cafe {
+            let currentPreview = current.homeBannerPreview
+            let statusLabel: String
+            switch updatedBanner.statusLabel.uppercased() {
+            case "ACTIVE":
+                statusLabel = "노출 중"
+            case "SCHEDULED":
+                statusLabel = "예약 중"
+            default:
+                statusLabel = "미노출"
+            }
+            uiState.cafe = CafeDashboardData(
+                id: current.id,
+                name: current.name,
+                city: current.city,
+                todayCheckIns: current.todayCheckIns,
+                todayReviews: current.todayReviews,
+                rating: current.rating,
+                castPreviews: current.castPreviews,
+                homeBannerPreview: CafeDashboardData.HomeBannerPreview(
+                    title: updatedBanner.title,
+                    period: "노출 \(updatedBanner.displayDays)일",
+                    statusLabel: statusLabel,
+                    imageUrl: updatedBanner.imageUrl
+                )
             )
-        )
+        }
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {

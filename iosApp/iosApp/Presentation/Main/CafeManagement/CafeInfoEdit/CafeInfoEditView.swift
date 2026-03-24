@@ -158,30 +158,30 @@ private struct CafeInfoEditContentView: View {
     let onGalleryImagePick: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if uiState.isLoading {
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 16) {
+                    if uiState.isLoading {
+                        ProgressView()
+                            .tint(Color(hex: "EF6797"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 32)
+                    }
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(message: infoMessage)
+                    }
+                    basicInformationSection
+                    representativeImageSection
+                    if !uiState.isRegistrationMode {
+                        gallerySection
+                    }
+                    locationContactSection
+                    businessHoursSection
                 }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                basicInformationSection
-                representativeImageSection
-                if !uiState.isRegistrationMode {
-                    gallerySection
-                }
-                locationContactSection
-                businessHoursSection
+                .padding(16)
+                .padding(.bottom, 100)
             }
-            .padding(16)
-            .padding(.bottom, 100)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomSaveBar
+            bottomSaveBar()
         }
         .background(Color(hex: "F8F5F6"))
     }
@@ -400,7 +400,7 @@ private struct CafeInfoEditContentView: View {
         }
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))

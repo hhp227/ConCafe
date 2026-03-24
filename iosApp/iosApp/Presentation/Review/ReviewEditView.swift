@@ -63,8 +63,10 @@ private struct ReviewEditContentView: View {
 
     let onPickPhoto: () -> Void
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
@@ -85,8 +87,9 @@ private struct ReviewEditContentView: View {
                     }
                 }
                 .padding(.bottom, 12)
+                .padding(.bottom, 60)
             }
-            bottomBar
+            bottomBar()
         }
         .background(
             LinearGradient(
@@ -324,7 +327,7 @@ private struct ReviewEditContentView: View {
         }
     }
 
-    private var bottomBar: some View {
+    private func bottomBar() -> some View {
         Group {
             if uiState.isLoggedIn {
                 Button {

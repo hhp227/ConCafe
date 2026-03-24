@@ -37,46 +37,57 @@ private struct CafeManagementContentView: View {
     let onAction: (CafeManagementAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                heroCard
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                if uiState.hasOwnedCafes {
-                    sectionHeader(
-                        title: "내 카페",
-                        subtitle: "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
-                    )
-                    VStack(spacing: 12) {
-                        ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
-                            ownedCafeCard(cafe: cafe)
+        Group {
+            if !uiState.isLoading {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        heroCard
+                        if let infoMessage = uiState.infoMessage {
+                            infoBanner(message: infoMessage)
                         }
-                    }
-                    if uiState.hasHiddenOwnedCafes {
-                        expandOwnedCafeButton
-                    }
-                    if !uiState.pendingClaims.isEmpty {
-                        sectionHeader(
-                            title: "운영자 신청 상태",
-                            subtitle: "기존 카페 연결 요청 현황"
-                        )
-                        VStack(spacing: 12) {
-                            ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
-                                pendingClaimCard(claim: claim)
+                        if uiState.hasOwnedCafes {
+                            sectionHeader(
+                                title: "내 카페",
+                                subtitle: "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
+                            )
+                            VStack(spacing: 12) {
+                                ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
+                                    ownedCafeCard(cafe: cafe)
+                                }
                             }
+                            if uiState.hasHiddenOwnedCafes {
+                                expandOwnedCafeButton
+                            }
+                            if !uiState.pendingClaims.isEmpty {
+                                sectionHeader(
+                                    title: "운영자 신청 상태",
+                                    subtitle: "기존 카페 연결 요청 현황"
+                                )
+                                VStack(spacing: 12) {
+                                    ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
+                                        pendingClaimCard(claim: claim)
+                                    }
+                                }
+                            }
+                            searchCafeSection
+                            addCafeCard
+                        } else {
+                            searchCafeSection
+                            emptyStateCard
                         }
                     }
-                    searchCafeSection
-                    addCafeCard
-                } else {
-                    searchCafeSection
-                    emptyStateCard
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 32)
                 }
+            } else {
+                VStack {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 48)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 32)
         }
         .background(
             LinearGradient(

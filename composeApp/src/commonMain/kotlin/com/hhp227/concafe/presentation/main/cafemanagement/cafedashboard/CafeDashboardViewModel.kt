@@ -432,7 +432,7 @@ class CafeDashboardViewModel(
                         patchUpdatedBannerPreview(event.banner)
                     }
                     is BannerEvent.Deleted -> if (event.banner.cafeId == cafeId) {
-                        patchDeletedBannerPreview(event.banner.title)
+                        loadCafeDashboard()
                     }
                 }
             }
@@ -441,45 +441,27 @@ class CafeDashboardViewModel(
 
     private fun patchUpdatedBannerPreview(updatedBanner: HomeBanner) {
         _uiState.update { state ->
-            val currentCafe = state.cafe ?: return@update state
-            val currentPreview = currentCafe.homeBannerPreview
-            if (currentPreview.title != updatedBanner.title) {
-                return@update state
-            }
-            val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
-                "ACTIVE" -> "노출 중"
-                "SCHEDULED" -> "예약 중"
-                else -> "미노출"
-            }
-            state.copy(
-                cafe = currentCafe.copy(
-                    homeBannerPreview = currentPreview.copy(
-                        title = updatedBanner.title,
-                        period = "노출 ${updatedBanner.displayDays}일",
-                        statusLabel = statusLabel
+            val currentCafe = state.cafe
+            if (currentCafe == null) {
+                state
+            } else {
+                val currentPreview = currentCafe.homeBannerPreview
+                val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
+                    "ACTIVE" -> "노출 중"
+                    "SCHEDULED" -> "예약 중"
+                    else -> "미노출"
+                }
+                state.copy(
+                    cafe = currentCafe.copy(
+                        homeBannerPreview = currentPreview.copy(
+                            title = updatedBanner.title,
+                            period = "노출 ${updatedBanner.displayDays}일",
+                            statusLabel = statusLabel,
+                            imageUrl = updatedBanner.imageUrl
+                        )
                     )
                 )
-            )
-        }
-    }
-
-    private fun patchDeletedBannerPreview(deletedBannerTitle: String) {
-        _uiState.update { state ->
-            val currentCafe = state.cafe ?: return@update state
-            val currentPreview = currentCafe.homeBannerPreview
-
-            if (currentPreview.title != deletedBannerTitle) {
-                return@update state
             }
-            state.copy(
-                cafe = currentCafe.copy(
-                    homeBannerPreview = currentPreview.copy(
-                        title = "등록된 배너 없음",
-                        period = "-",
-                        statusLabel = "미노출"
-                    )
-                )
-            )
         }
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
@@ -411,11 +412,7 @@ private fun NoticeEventFormSheetContent(
         }
         Surface(
             color = Color.Transparent,
-            modifier = Modifier.windowInsetsPadding(
-                WindowInsets.navigationBars
-                    .union(WindowInsets.ime)
-                    .only(WindowInsetsSides.Bottom)
-            )
+            modifier = Modifier.imePadding()
         ) {
             Box(
                 modifier = Modifier
@@ -432,6 +429,7 @@ private fun NoticeEventFormSheetContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 18.dp)
+                        .navigationBarsPadding()
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(

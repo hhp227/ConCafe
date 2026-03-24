@@ -78,19 +78,29 @@ private struct HomeContentView: View {
     let onAction: (HomeAction) -> Void
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                bannerSection
-                popularCastSection
-                nearbyCafeSection
-                if !uiState.birthdayCasts.isEmpty {
-                    birthdaySection
+        if !uiState.isLoading {
+            ScrollView {
+                VStack(spacing: 24) {
+                    bannerSection
+                    popularCastSection
+                    nearbyCafeSection
+                    if !uiState.birthdayCasts.isEmpty {
+                        birthdaySection
+                    }
+                    noticeSection
                 }
-                noticeSection
+                .padding(.vertical, 16)
             }
-            .padding(.vertical, 16)
+            .background(Color(hex: "FFF9FC"))
+        } else {
+            ZStack {
+                Color(hex: "FFF9FC")
+                    .ignoresSafeArea()
+                ProgressView()
+                    .tint(Color(hex: "EF6797"))
+                    .controlSize(.regular)
+            }
         }
-        .background(Color(hex: "FFF9FC"))
     }
     
     private var bannerSection: some View {
@@ -98,16 +108,38 @@ private struct HomeContentView: View {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        ZStack(alignment: .bottomLeading) {
-                            LinearGradient(
-                                colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                            Text(banner.title)
-                                .font(.title3.weight(.bold))
-                                .foregroundColor(.white)
-                                .padding(16)
+                        GeometryReader { proxy in
+                            ZStack(alignment: .bottomLeading) {
+                                let trimmedImageUrl = banner.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+                                if let imageUrl = URL(string: trimmedImageUrl), !trimmedImageUrl.isEmpty {
+                                    CachedAsyncImage(
+                                        url: imageUrl,
+                                        placeholder: LinearGradient(
+                                            colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: proxy.size.width, height: proxy.size.height)
+                                    .clipped()
+                                } else {
+                                    LinearGradient(
+                                        colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                }
+                                LinearGradient(
+                                    colors: [Color.black.opacity(0.12), Color.black.opacity(0.45)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                Text(banner.title)
+                                    .font(.title3.weight(.bold))
+                                    .foregroundColor(.white)
+                                    .padding(16)
+                            }
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .padding(.horizontal, 16)

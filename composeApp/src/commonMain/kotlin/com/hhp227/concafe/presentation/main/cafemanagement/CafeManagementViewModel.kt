@@ -38,13 +38,19 @@ class CafeManagementViewModel(
 
     private fun loadCafeManagement() {
         viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    isLoading = true
+                )
+            }
             when (val result = getCafeManagementUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
                             ownedCafes = result.data.ownedCafes,
                             searchableCafes = result.data.searchableCafes,
-                            pendingClaims = result.data.pendingClaims
+                            pendingClaims = result.data.pendingClaims,
+                            isLoading = false
                         )
                     }
                 }
@@ -54,6 +60,7 @@ class CafeManagementViewModel(
                             ownedCafes = emptyList(),
                             searchableCafes = emptyList(),
                             pendingClaims = emptyList(),
+                            isLoading = false,
                             infoMessage = result.error.toString()
                         )
                     }

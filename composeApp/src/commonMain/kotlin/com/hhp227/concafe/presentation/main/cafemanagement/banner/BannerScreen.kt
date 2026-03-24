@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -292,6 +293,7 @@ private fun BannerCard(
 
 @Composable
 private fun BannerThumbnail(banner: BannerItem) {
+    val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
     Box(
         modifier = Modifier
             .size(96.dp)
@@ -303,12 +305,20 @@ private fun BannerThumbnail(banner: BannerItem) {
             ),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = banner.iconVector(),
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(34.dp)
-        )
+        if (imageUrl != null) {
+            CompatImageDisplay(
+                imageUrl = imageUrl,
+                modifier = Modifier.fillMaxSize(),
+                applyRoundedClip = false
+            )
+        } else {
+            Icon(
+                imageVector = banner.iconVector(),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(34.dp)
+            )
+        }
     }
 }
 

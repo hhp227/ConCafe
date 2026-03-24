@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.FirestoreCacheDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
@@ -149,10 +150,20 @@ class CastRepositoryImpl(
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFollowedCastIds(userId)
+            }
+        }
         return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
     }
 
     override suspend fun getFollowedCastIds(userId: String): List<String> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFollowedCastIds(userId)
+            }
+        }
         return socialDataSource.followedCastIdsByUser[userId]
             ?.toList()
             .orEmpty()
@@ -172,20 +183,46 @@ class CastRepositoryImpl(
     }
 
     override suspend fun followCast(userId: String, castId: String) {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.followCastRemote(
+                userId = userId,
+                castId = castId
+            )
+            return
+        }
         val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.add(castId)
+        val followerSet = socialDataSource.followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
+
+        followerSet.add(userId)
+        updateFollowerCountInCache(castId = castId, followerCount = followerSet.size)
     }
 
     override suspend fun unfollowCast(userId: String, castId: String) {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            firestoreDataSource.unfollowCastRemote(
+                userId = userId,
+                castId = castId
+            )
+            return
+        }
         val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
         set.remove(castId)
+        val followerSet = socialDataSource.followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
+        followerSet.remove(userId)
+        updateFollowerCountInCache(castId = castId, followerCount = followerSet.size)
     }
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
-        return socialDataSource.followedCastIdsByUser
-            .filterValues { followedIds -> followedIds.contains(castId) }
-            .keys
-            .sorted()
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFollowerUserIds(castId)
+            }
+        }
+        return socialDataSource.followerUserIdsByCastId[castId]
+            ?.toList()
+            ?.sorted()
+            .orEmpty()
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
@@ -208,5 +245,17 @@ class CastRepositoryImpl(
                     todayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
                 )
             }
+    }
+
+    private fun updateFollowerCountInCache(castId: String, followerCount: Int) {
+        val cacheDataSource = castDataSource as? FirestoreCacheDataSource
+            ?: return
+        val index = cacheDataSource.casts.indexOfFirst { cast -> cast.id == castId }
+
+        if (index >= 0) {
+            cacheDataSource.casts[index] = cacheDataSource.casts[index].copy(
+                followerCount = followerCount
+            )
+        }
     }
 }

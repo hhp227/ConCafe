@@ -68,8 +68,7 @@ class CafeViewModel(
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                             _uiState.update { it.copy(shouldScrollToTopOnReturn = true) }
-                            loadCafeDetail(refreshReviews = false)
-                            refreshReviewPage()
+                            loadCafeDetail()
                         }
                     }
                     is ReviewEvent.Deleted -> {
@@ -274,7 +273,7 @@ class CafeViewModel(
                     if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                         refreshNoticePage()
                     }
-                    if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
+                    if (action.tab == CafeUiState.TabType.REVIEWS) {
                         refreshReviewPage()
                     }
                 }

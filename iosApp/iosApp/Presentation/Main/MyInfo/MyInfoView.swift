@@ -508,9 +508,24 @@ private struct ProfileMyInfoView: View {
                     HStack(spacing: 12) {
                         ForEach(uiState.followedMaids.prefix(6), id: \.id) { maid in
                             VStack {
-                                Circle()
-                                    .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
-                                    .frame(width: 72, height: 72)
+                                GeometryReader { geometry in
+                                    let imageSize = geometry.size
+
+                                    ZStack {
+                                        Circle()
+                                            .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
+                                        if let imageUrl = resolvedRemoteImageUrl(maid.profileImage) {
+                                            CachedAsyncImage(
+                                                url: imageUrl,
+                                                placeholder: EmptyView()
+                                            )
+                                            .frame(width: imageSize.width, height: imageSize.height)
+                                            .clipped()
+                                        }
+                                    }
+                                }
+                                .frame(width: 72, height: 72)
+                                .clipShape(Circle())
                                 Text(maid.name)
                                     .font(.caption)
                             }
@@ -526,6 +541,14 @@ private struct ProfileMyInfoView: View {
             }
         }
     }
+    
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            return nil
+        }
+        return URL(string: trimmed)
+    }
 }
 
 private struct MyInfoMetricCard {
@@ -536,6 +559,7 @@ private struct MyInfoMetricCard {
 
 private struct MyInfoSectionPlaceholderCard: View {
     let title: String
+    
     let description: String
 
     var body: some View {

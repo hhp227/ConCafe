@@ -46,6 +46,33 @@ class FakeReviewRepository(
         return review
     }
 
+    override suspend fun updateReview(
+        reviewId: String,
+        requesterId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review {
+        if (content.isBlank()) {
+            throw IllegalArgumentException("review content is required")
+        }
+        val index = dataSource.reviews.indexOfFirst { it.id == reviewId && it.userId == requesterId }
+        if (index == -1) {
+            throw IllegalStateException("no permission to update review")
+        }
+        val current = dataSource.reviews[index]
+        val updated = current.copy(
+            rating = rating,
+            content = content.trim(),
+            imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds
+        )
+        dataSource.reviews[index] = updated
+        dataSource.refreshReviewProjections(cafeId = updated.cafeId, taggedCastIds = updated.taggedCastIds)
+        return updated
+    }
+
     override suspend fun hasReviewForVisit(visitId: String): Boolean {
         return dataSource.reviews.any { it.visitId == visitId }
     }

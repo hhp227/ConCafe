@@ -119,29 +119,29 @@ private struct BannerEditContentView: View {
     let onPickImage: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                bannerImageCard
-                basicInformationSection
-                targetSection
-                periodSection
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 16) {
+                    bannerImageCard
+                    basicInformationSection
+                    targetSection
+                    periodSection
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(message: infoMessage)
+                    }
                 }
+                .padding(16)
+                .padding(.bottom, 100)
             }
-            .padding(16)
-            .padding(.bottom, 100)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomSaveBar
-        }
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
-                startPoint: .top,
-                endPoint: .bottom
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
             )
-        )
+            bottomSaveBar()
+        }
     }
 
     private var bannerImageCard: some View {
@@ -341,7 +341,7 @@ private struct BannerEditContentView: View {
         }
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar() -> some View {
         Button {
             onAction(.clickSave)
         } label: {

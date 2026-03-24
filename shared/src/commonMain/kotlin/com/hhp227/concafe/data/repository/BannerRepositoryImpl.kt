@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.BannerDataSource
 import com.hhp227.concafe.data.source.CafeDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.CafeDashboardData
@@ -61,16 +62,17 @@ class BannerRepositoryImpl(
             createdAtEpochMillis = now,
             activatedAtEpochMillis = if (statusLabel == STATUS_ACTIVE) now else 0L
         )
-        bannerDataSource.banners.add(0, created)
+        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
 
-        input.cafeId?.let { cafeId ->
-            cafeDataSource.cafeHomeBannerPreviewByCafeId[cafeId] = CafeDashboardData.HomeBannerPreview(
-                title = created.title,
-                period = resolvePeriodLabel(input.displayDays),
-                statusLabel = if (statusLabel == STATUS_ACTIVE) "노출 중" else "예약 중"
-            )
+        if (firestoreDataSource != null) {
+            firestoreSyncDataSource.pushHomeBanner(created)
+            firestoreSyncDataSource.refreshHomeBanners()
+            rebuildCafeHomeBannerPreviewCache()
+            return bannerDataSource.banners.firstOrNull { banner -> banner.id == created.id } ?: created
+        } else {
+            bannerDataSource.banners.add(0, created)
+            rebuildCafeHomeBannerPreviewCache()
         }
-        runCatching { firestoreSyncDataSource.pushHomeBanner(created) }
         return created
     }
 
@@ -99,15 +101,17 @@ class BannerRepositoryImpl(
             targetValue = input.targetValue.trim(),
             displayDays = input.displayDays
         )
-        bannerDataSource.banners[index] = updated
+        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
 
-        val changedCafeIds = linkedSetOf<String>()
-        existing.cafeId?.takeIf { it.isNotBlank() }?.let { changedCafeIds.add(it) }
-        updated.cafeId?.takeIf { it.isNotBlank() }?.let { changedCafeIds.add(it) }
-        changedCafeIds.forEach { changedCafeId ->
-            updateCafeHomeBannerPreview(changedCafeId)
+        if (firestoreDataSource != null) {
+            firestoreSyncDataSource.pushHomeBanner(updated)
+            firestoreSyncDataSource.refreshHomeBanners()
+            rebuildCafeHomeBannerPreviewCache()
+            return bannerDataSource.banners.firstOrNull { banner -> banner.id == bannerId } ?: updated
+        } else {
+            bannerDataSource.banners[index] = updated
+            rebuildCafeHomeBannerPreviewCache()
         }
-        runCatching { firestoreSyncDataSource.pushHomeBanner(updated) }
         return updated
     }
 
@@ -118,10 +122,19 @@ class BannerRepositoryImpl(
             throw NoSuchElementException("banner not found")
         }
 
-        val deleted = bannerDataSource.banners.removeAt(index)
-        updateCafeHomeBannerPreview(deleted.cafeId)
+        val deleted = bannerDataSource.banners[index]
+        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            firestoreSyncDataSource.deleteHomeBanner(bannerId)
+            firestoreSyncDataSource.refreshHomeBanners()
+            rebuildCafeHomeBannerPreviewCache()
+            return deleted
+        }
+
+        bannerDataSource.banners.removeAt(index)
         normalizeBannerSlots()
-        runCatching { firestoreSyncDataSource.deleteHomeBanner(bannerId) }
+        rebuildCafeHomeBannerPreviewCache()
         return deleted
     }
 
@@ -166,28 +179,37 @@ class BannerRepositoryImpl(
         }
     }
 
-    private fun updateCafeHomeBannerPreview(cafeId: String?) {
-        if (cafeId.isNullOrBlank()) {
-            return
-        }
-
-        val representative = bannerDataSource.banners
+    private fun rebuildCafeHomeBannerPreviewCache() {
+        val previewByCafeId = bannerDataSource.banners
             .asSequence()
-            .filter { it.cafeId == cafeId }
-            .sortedBy { it.createdAtEpochMillis }
-            .firstOrNull()
+            .mapNotNull { banner ->
+                val cafeId = banner.cafeId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                cafeId to banner
+            }
+            .groupBy(keySelector = { it.first }, valueTransform = { it.second })
+            .mapValues { entry ->
+                entry.value
+                    .sortedWith(
+                        compareByDescending<HomeBanner> { banner -> banner.statusLabel.uppercase() == STATUS_ACTIVE }
+                            .thenByDescending { banner -> banner.createdAtEpochMillis }
+                    )
+                    .first()
+            }
 
-        if (representative == null) {
-            cafeDataSource.cafeHomeBannerPreviewByCafeId.remove(cafeId)
-            return
+        cafeDataSource.cafeHomeBannerPreviewByCafeId.clear()
+        previewByCafeId.forEach { entry ->
+            val statusLabel = when (entry.value.statusLabel.uppercase()) {
+                STATUS_ACTIVE -> "노출 중"
+                STATUS_SCHEDULED -> "예약 중"
+                else -> "미노출"
+            }
+            cafeDataSource.cafeHomeBannerPreviewByCafeId[entry.key] = CafeDashboardData.HomeBannerPreview(
+                title = entry.value.title,
+                period = resolvePeriodLabel(entry.value.displayDays),
+                statusLabel = statusLabel,
+                imageUrl = entry.value.imageUrl
+            )
         }
-
-        val statusLabel = if (representative.statusLabel == STATUS_ACTIVE) "노출 중" else "예약 중"
-        cafeDataSource.cafeHomeBannerPreviewByCafeId[cafeId] = CafeDashboardData.HomeBannerPreview(
-            title = representative.title,
-            period = resolvePeriodLabel(representative.displayDays),
-            statusLabel = statusLabel
-        )
     }
 }
 

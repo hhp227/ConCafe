@@ -18,6 +18,15 @@ interface ReviewRepository {
         taggedCastIds: List<String>
     ): Review
 
+    suspend fun updateReview(
+        reviewId: String,
+        requesterId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review
+
     suspend fun hasReviewForVisit(visitId: String): Boolean
 
     suspend fun isReviewPromptDismissed(userId: String, visitId: String): Boolean

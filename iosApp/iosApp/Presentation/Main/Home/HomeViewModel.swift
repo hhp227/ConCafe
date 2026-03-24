@@ -29,6 +29,8 @@ final class HomeViewModel: ObservableObject {
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func loadHomeFeed() {
+        uiState.isLoading = true
+
         Task {
             do {
                 let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
@@ -36,6 +38,7 @@ final class HomeViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject> {
                     if let feed = success.data as? Shared.HomeFeed {
                         uiState = HomeUiState(
+                            isLoading: false,
                             isLoggedIn: uiState.isLoggedIn,
                             isLoginPromptVisible: uiState.isLoginPromptVisible,
                             banners: feed.banners,
@@ -249,6 +252,7 @@ final class HomeViewModel: ObservableObject {
             do {
                 for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
                     uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
                         isLoggedIn: user != nil,
                         isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
                         banners: uiState.banners,

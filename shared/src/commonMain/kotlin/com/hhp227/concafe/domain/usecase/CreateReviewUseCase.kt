@@ -43,21 +43,20 @@ class CreateReviewUseCase(
                     .maxByOrNull { item -> item.visitedAt }
                     ?.id
                     .orEmpty()
+                val created = reviewRepository.createReview(
+                    userId = currentUser.id,
+                    cafeId = cafeId,
+                    visitId = visitId,
+                    rating = rating,
+                    content = content.trim(),
+                    imageUrls = imageUrls,
+                    taggedCastIds = taggedCastIds
+                )
 
                 reviewEventPublisher.publish(
                     ReviewEvent.Created(cafeId)
                 )
-                AppResult.Success(
-                    reviewRepository.createReview(
-                        userId = currentUser.id,
-                        cafeId = cafeId,
-                        visitId = visitId,
-                        rating = rating,
-                        content = content.trim(),
-                        imageUrls = imageUrls,
-                        taggedCastIds = taggedCastIds
-                    )
-                )
+                AppResult.Success(created)
             }
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)

@@ -6,6 +6,7 @@ data class CafeManagementUiState(
     val ownedCafes: List<CafeManagementData.OwnedCafeSummary> = emptyList(),
     val searchableCafes: List<CafeManagementData.SearchableCafeSummary> = emptyList(),
     val pendingClaims: List<CafeManagementData.PendingClaimSummary> = emptyList(),
+    val isLoading: Boolean = true,
     val isShowingAllCafes: Boolean = false,
     val cafeSearchQuery: String = "",
     val infoMessage: String? = null

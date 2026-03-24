@@ -289,7 +289,6 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
         var configuration = PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
         configuration.selectionLimit = 1
         configuration.filter = .images
-
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         return picker

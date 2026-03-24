@@ -70,8 +70,7 @@ final class CafeViewModel: ObservableObject {
                             await MainActor.run {
                                 self.uiState.shouldScrollToTopOnReturn = true
                             }
-                            self.loadCafeDetail(refreshReviews: false)
-                            self.refreshReviewPage()
+                            self.loadCafeDetail()
                         }
                     case let deleted as ReviewEvent.Deleted:
                         if deleted.cafeId == cafeId && self.uiState.selectedTab == .reviews {
@@ -289,7 +288,7 @@ final class CafeViewModel: ObservableObject {
             if tab == .notices, uiState.notices.isEmpty {
                 refreshNoticePage()
             }
-            if tab == .reviews, uiState.reviews.isEmpty {
+            if tab == .reviews {
                 refreshReviewPage()
             }
         case .maidTapped(let id):
