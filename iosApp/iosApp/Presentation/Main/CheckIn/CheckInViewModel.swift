@@ -28,6 +28,8 @@ final class CheckInViewModel: ObservableObject {
 
     private let castEventPublisher: CastEventPublisher
 
+    private let visitEventPublisher: VisitEventPublisher
+
     @Published private(set) var uiState = CheckInUiState.empty
 
     let event = PassthroughSubject<CheckInEvent, Never>()
@@ -219,6 +221,26 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func observeVisitEvent() {
+        tasks[.visitEvent]?.cancel()
+        tasks[.visitEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: visitEventPublisher.events) {
+                    switch event {
+                    case let _ as Shared.VisitEvent.Created:
+                        loadUserFeed()
+                    case let _ as Shared.VisitEvent.Deleted:
+                        loadUserFeed()
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func patchCafe(_ cafe: Cafe) {
         uiState.mapCafes = uiState.mapCafes.map { item in
             guard item.id == cafe.id else { return item }
@@ -344,7 +366,8 @@ final class CheckInViewModel: ObservableObject {
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
         dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
@@ -354,10 +377,12 @@ final class CheckInViewModel: ObservableObject {
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.visitEventPublisher = visitEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeVisitEvent()
         loadGuestFeed()
     }
 
@@ -373,6 +398,7 @@ final class CheckInViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case castEvent
+        case visitEvent
         case reviewPromptAction
     }
 }

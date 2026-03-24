@@ -37,7 +37,6 @@ import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.data.source.MyInfoDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConfig
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
@@ -111,6 +110,7 @@ val eventModule = module {
     single<NoticeManagementEventPublisher> { NoticeManagementEventPublisher() }
     single<ReviewEventPublisher> { ReviewEventPublisher() }
     single<ScheduleManagementEventPublisher> { ScheduleManagementEventPublisher() }
+    single<VisitEventPublisher> { VisitEventPublisher() }
 }
 
 val useCaseModule = module {
@@ -123,7 +123,7 @@ val useCaseModule = module {
     factory { GetCafeManagementUseCase(get(), get()) }
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
-    factory { CreateVisitUseCase(get(), get()) }
+    factory { CreateVisitUseCase(get(), get(), get()) }
     factory { CreateReviewUseCase(get(), get(), get(), get()) }
     factory { CreateCastClaimUseCase(get(), get(), get()) }
     factory { CreateCafeEventUseCase(get(), get()) }

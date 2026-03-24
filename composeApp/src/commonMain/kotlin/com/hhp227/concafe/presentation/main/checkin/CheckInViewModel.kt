@@ -15,8 +15,10 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.VisitEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
@@ -32,7 +34,8 @@ class CheckInViewModel(
     private val shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase,
     private val dismissReviewPromptUseCase: DismissReviewPromptUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val visitEventPublisher: VisitEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -84,7 +87,6 @@ class CheckInViewModel(
                         reviewPrompt = if (user == null) null else it.reviewPrompt
                     )
                 }
-
                 if (user == null) {
                     _uiState.update {
                         it.copy(
@@ -129,12 +131,10 @@ class CheckInViewModel(
             _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
             return
         }
-
         if (visitedAt.isBlank()) {
             _uiState.update { it.copy(errorMessage = "방문 시간을 입력해 주세요.") }
             return
         }
-
         _uiState.update { it.copy(errorMessage = null) }
 
         jobs[TaskKey.SUBMIT_VISIT]?.cancel()
@@ -175,6 +175,18 @@ class CheckInViewModel(
                     is CastEvent.Created -> Unit
                     is CastEvent.Updated -> patchCast(event.cast)
                     is CastEvent.Deleted -> removeCast(event.castId)
+                }
+            }
+        }
+    }
+
+    private fun observeVisitEvent() {
+        jobs[TaskKey.OBSERVE_VISIT_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
+            visitEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is VisitEvent.Created -> loadUserFeed()
+                    is VisitEvent.Deleted -> loadUserFeed() // 추후 로컬 업데이트로 개선
                 }
             }
         }
@@ -345,6 +357,7 @@ class CheckInViewModel(
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeVisitEvent()
         loadGuestFeed()
     }
 
@@ -361,6 +374,7 @@ class CheckInViewModel(
         SUBMIT_VISIT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
+        OBSERVE_VISIT_EVENT,
         REVIEW_PROMPT_ACTION
     }
 }

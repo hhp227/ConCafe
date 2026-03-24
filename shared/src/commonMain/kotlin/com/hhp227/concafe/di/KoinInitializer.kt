@@ -5,10 +5,10 @@ import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
-import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
@@ -82,7 +82,6 @@ import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.mp.KoinPlatform.getKoin
 
 private var koinApplication: KoinApplication? = null
 
@@ -644,6 +643,13 @@ fun resolveReviewEventPublisher(): ReviewEventPublisher {
 }
 
 fun resolveScheduleManagementEventPublisher(): ScheduleManagementEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveVisitEventPublisher(): VisitEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
