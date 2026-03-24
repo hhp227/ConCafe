@@ -426,6 +426,132 @@ class FirestoreConCafeDataSource(
         refreshReviewProjections(cafeId = cafeId, taggedCastIds = emptyList())
     }
 
+    suspend fun refreshVisitsByUserRemote(userId: String) {
+        if (userId.isBlank()) {
+            return
+        }
+        val idToken = tokenProvider.getIdToken()
+        val visitDocuments = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.VISITS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.VISITS,
+                userId = userId,
+                idToken = null
+            )
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to refresh visits for user: $userId", throwable)
+        }
+        val refreshedVisits = visitDocuments
+            .mapNotNull { document -> parseVisitDocument(document) }
+            .sortedByDescending { visit -> visit.visitedAt }
+
+        visits.removeAll { visit -> visit.userId == userId }
+        visits.addAll(refreshedVisits)
+    }
+
+    suspend fun createVisitRemote(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        val idToken = tokenProvider.getIdToken()
+        val visitId = nextFirestoreEntityId("visit")
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "visitedAt" to firestoreString(visitedAt),
+                "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
+                "verified" to firestoreBoolean(false),
+                "createdAt" to firestoreString(now),
+                "updatedAt" to firestoreString(now)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        val createdVisit = Visit(
+            id = visitId,
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = visitedAt,
+            memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() },
+            verified = false
+        )
+
+        val refreshedVisit = runCatching {
+            refreshVisitsByUserRemote(userId)
+            visits.firstOrNull { visit -> visit.id == visitId }
+        }.getOrNull()
+
+        return refreshedVisit ?: createdVisit
+    }
+
+    suspend fun updateVisitRemote(
+        visitId: String,
+        requesterId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        val idToken = tokenProvider.getIdToken()
+        val existing = resolveVisitById(visitId = visitId, idToken = idToken)
+            ?: throw NoSuchElementException("visit not found")
+
+        if (existing.userId != requesterId) {
+            throw IllegalStateException("no permission to update visit")
+        }
+
+        val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId" +
+            "?updateMask.fieldPaths=visitedAt" +
+            "&updateMask.fieldPaths=memo" +
+            "&updateMask.fieldPaths=updatedAt"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "visitedAt" to firestoreString(visitedAt),
+                "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
+                "updatedAt" to firestoreString(Clock.System.now().toString())
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        val fallbackUpdated = existing.copy(
+            visitedAt = visitedAt,
+            memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() }
+        )
+
+        val refreshedVisit = runCatching {
+            refreshVisitsByUserRemote(existing.userId)
+            visits.firstOrNull { visit -> visit.id == visitId }
+        }.getOrNull()
+
+        return refreshedVisit ?: fallbackUpdated
+    }
+
+    suspend fun deleteVisitRemote(visitId: String, requesterId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val existing = resolveVisitById(visitId = visitId, idToken = idToken)
+            ?: throw NoSuchElementException("visit not found")
+
+        if (existing.userId != requesterId) {
+            throw IllegalStateException("no permission to delete visit")
+        }
+
+        val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId"
+        restApi.delete(path, idToken)
+        runCatching {
+            refreshVisitsByUserRemote(existing.userId)
+        }.onFailure {
+            visits.removeAll { visit -> visit.id == visitId }
+        }
+    }
+
     suspend fun createReviewRemote(
         userId: String,
         cafeId: String,
@@ -1705,6 +1831,28 @@ class FirestoreConCafeDataSource(
         if (parsed != null) {
             reviews.removeAll { review -> review.id == parsed.id }
             reviews.add(parsed)
+        }
+
+        return parsed
+    }
+
+    private suspend fun resolveVisitById(visitId: String, idToken: String?): Visit? {
+        val cached = visits.firstOrNull { visit -> visit.id == visitId }
+
+        if (cached != null) {
+            return cached
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId"
+        val document = runCatching {
+            Json.parseToJsonElement(restApi.get(path, idToken)).jsonObject
+        }.recoverCatching {
+            Json.parseToJsonElement(restApi.get(path, null)).jsonObject
+        }.getOrNull()
+        val parsed = document?.let { value -> parseVisitDocument(value) }
+
+        if (parsed != null) {
+            visits.removeAll { visit -> visit.id == parsed.id }
+            visits.add(parsed)
         }
 
         return parsed
