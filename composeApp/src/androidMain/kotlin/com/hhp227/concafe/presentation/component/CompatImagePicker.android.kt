@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +33,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -60,6 +67,7 @@ private fun saveToCacheFile(context: Context, uri: Uri): String? {
     return runCatching {
         val fileName = "img-${System.currentTimeMillis()}.jpg"
         val outputFile = File(context.cacheDir, fileName)
+
         context.contentResolver.openInputStream(uri)?.use { input ->
             outputFile.outputStream().use { output ->
                 input.copyTo(output)
@@ -75,80 +83,41 @@ actual fun CompatImageDisplay(
     modifier: Modifier,
     applyRoundedClip: Boolean
 ) {
-    val context = LocalContext.current
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    LaunchedEffect(imageUrl) {
-        bitmap = imageUrl?.let { url ->
-            decodeImageBitmap(context, url)
-        }
-    }
-    if (bitmap == null) {
-        val placeholderModifier = if (applyRoundedClip) {
-            modifier.clip(RoundedCornerShape(20.dp))
-        } else {
-            modifier
-        }
-        Box(
-            modifier = placeholderModifier
-                .fillMaxWidth()
-                .background(Color(0x19000000)),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = rememberVectorPainter(Icons.Default.Image),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(0.42f)
-            )
-        }
+    val shape = if (applyRoundedClip) RoundedCornerShape(20.dp) else null
+    val finalModifier = if (shape != null) {
+        modifier.clip(shape)
     } else {
-        val imageModifier = if (applyRoundedClip) {
-            modifier.clip(RoundedCornerShape(20.dp))
-        } else {
-            modifier
-        }
+        modifier
+    }
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(imageUrl)
+            .size(600, 300)
+            .crossfade(true)
+            .build()
+    )
+
+    Box(modifier = finalModifier) {
         Image(
-            bitmap = bitmap!!.asImageBitmap(),
+            painter = painter,
             contentDescription = null,
-            modifier = imageModifier,
+            modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop
         )
-    }
-}
-
-private suspend fun decodeImageBitmap(
-    context: Context,
-    imageUrl: String
-): Bitmap? = withContext(Dispatchers.IO) {
-    AndroidBitmapMemoryCache.get(imageUrl)?.let { cached ->
-        return@withContext cached
-    }
-
-    runCatching {
-        val stream = when {
-            imageUrl.startsWith("content://") || imageUrl.startsWith("file://") ->
-                context.contentResolver.openInputStream(Uri.parse(imageUrl))
-            imageUrl.startsWith("http://") || imageUrl.startsWith("https://") ->
-                URL(imageUrl).openStream()
-            else -> FileInputStream(imageUrl)
+        if (painter.state is AsyncImagePainter.State.Loading || painter.state is AsyncImagePainter.State.Error) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0x19000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp),
+                    tint = Color.Gray
+                )
+            }
         }
-
-        val decoded = stream.use { BitmapFactory.decodeStream(it) }
-        if (decoded != null) {
-            AndroidBitmapMemoryCache.put(imageUrl, decoded)
-        }
-        decoded
-    }.getOrNull()
-}
-
-private object AndroidBitmapMemoryCache {
-    private val cache = object : LruCache<String, Bitmap>(120) {}
-
-    fun get(key: String): Bitmap? {
-        return cache.get(key)
-    }
-
-    fun put(key: String, bitmap: Bitmap) {
-        cache.put(key, bitmap)
     }
 }

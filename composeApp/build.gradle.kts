@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
             implementation(libs.google.maps.compose)
+            implementation(libs.coil.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
