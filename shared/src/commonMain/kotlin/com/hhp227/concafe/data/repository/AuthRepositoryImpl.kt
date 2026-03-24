@@ -204,7 +204,12 @@ class AuthRepositoryImpl(
 
     private suspend fun syncCurrentUserIdFromFirebase() {
         if (authTokenProvider.supportsEmailPasswordAuth()) {
-            val firebaseUserId = authTokenProvider.getCurrentUserId()
+            val idToken = authTokenProvider.getIdToken()
+            val firebaseUserId = if (idToken.isNullOrBlank()) {
+                null
+            } else {
+                authTokenProvider.getCurrentUserId()
+            }
             authDataSource.currentUserId = firebaseUserId
         }
     }

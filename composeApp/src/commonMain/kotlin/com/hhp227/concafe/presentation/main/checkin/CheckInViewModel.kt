@@ -35,11 +35,9 @@ class CheckInViewModel(
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
-
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CheckInEvent>(replay = 0)
-
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()

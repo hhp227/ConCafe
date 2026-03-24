@@ -228,15 +228,14 @@ class CastRepositoryImpl(
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
         val castScoreById = castDataSource.casts.associate { cast ->
             val score = castDataSource.castTodayVisitCountById[cast.id] ?: cast.followerCount
-            cast.id to score
+            return@associate cast.id to score
         }
         return castDataSource.casts
             .sortedByDescending { castScoreById[it.id] ?: 0 }
             .take(limit)
             .map { cast ->
                 val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
-
-                CheckInCastSummary(
+                return@map CheckInCastSummary(
                     id = cast.id,
                     cafeId = cast.cafeId,
                     cafeName = cafeName,

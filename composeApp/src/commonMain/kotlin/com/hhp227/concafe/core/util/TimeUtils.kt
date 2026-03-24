@@ -1,5 +1,9 @@
 package com.hhp227.concafe.core.util
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
 object TimeUtils {
     private const val MILLIS_PER_SECOND = 1000L
     private const val MILLIS_PER_MINUTE = 60L * MILLIS_PER_SECOND
@@ -125,6 +129,16 @@ object TimeUtils {
 
     fun buildVisitedAtUtcString(dateMillis: Long, hour: Int, minute: Int): String {
         return "${formatIsoDateFromEpochMillis(dateMillis)}T${formatHourMinute(hour, minute)}:00Z"
+    }
+
+    fun currentIsoDate(): String {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
+    }
+
+    fun currentMonthDayLabelKorean(): String {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return "${now.monthNumber}월 ${now.dayOfMonth}일"
     }
 
     fun defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 23): List<String> {

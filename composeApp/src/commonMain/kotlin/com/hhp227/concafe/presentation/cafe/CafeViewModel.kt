@@ -34,11 +34,9 @@ class CafeViewModel(
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
-
     val uiState: StateFlow<CafeUiState> = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CafeEvent>(replay = 0)
-
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<JobKey, Job>()

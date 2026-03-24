@@ -93,6 +93,21 @@ final class TimeUtils {
         String(format: "%02d:%02d", hour, minute)
     }
 
+    static func currentIsoDate() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar.current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+
+    static func currentMonthDayLabelKorean() -> String {
+        let components = Calendar.current.dateComponents([.month, .day], from: Date())
+        let month = components.month ?? 1
+        let day = components.day ?? 1
+        return "\(month)월 \(day)일"
+    }
+
     static func parseHourMinute(
         _ value: String,
         defaultHour: Int = 10,

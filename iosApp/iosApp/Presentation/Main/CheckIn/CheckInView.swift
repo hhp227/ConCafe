@@ -188,7 +188,7 @@ private struct CheckInUserContentView: View {
                 }
                 .padding(.horizontal, 64)
                 .padding(.vertical, 12)
-                CheckInSectionTitle(title: "오늘의 방문", trailing: "3월 9일")
+                CheckInSectionTitle(title: "오늘의 방문", trailing: TimeUtils.currentMonthDayLabelKorean())
                 CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
                     .frame(height: 20)
@@ -966,7 +966,7 @@ private extension CheckInVisitEntry {
         return TimeUtils.relativeVisitedLabel(
             visitedAt: visitedAt,
             visitedLabel: visitedLabel,
-            referenceDate: "2026-03-09"
+            referenceDate: TimeUtils.currentIsoDate()
         )
     }
 }

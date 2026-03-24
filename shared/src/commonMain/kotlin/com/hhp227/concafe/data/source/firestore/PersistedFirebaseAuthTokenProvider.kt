@@ -11,15 +11,19 @@ class PersistedFirebaseAuthTokenProvider(
     override suspend fun getIdToken(): String? {
         val currentSession = cachedSession
 
-        if (currentSession != null) {
+        if (currentSession == null) {
+            return delegate.getIdToken()
+        } else {
             val refreshed = refreshSessionIfNeeded(currentSession)
 
-            if (refreshed != currentSession) {
+            if (refreshed == null) {
+                clearPersistedSession()
+                return null
+            } else if (refreshed != currentSession) {
                 persistSession(refreshed)
             }
             return refreshed.idToken
         }
-        return delegate.getIdToken()
     }
 
     override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
@@ -90,16 +94,36 @@ class PersistedFirebaseAuthTokenProvider(
         persistSession(null)
     }
 
-    private suspend fun refreshSessionIfNeeded(session: FirebaseAuthSession): FirebaseAuthSession {
+    private suspend fun refreshSessionIfNeeded(session: FirebaseAuthSession): FirebaseAuthSession? {
         val expiresAt = session.expiresAtEpochSeconds
-        val shouldRefresh = expiresAt != null && (expiresAt - nowEpochSeconds()) <= TOKEN_REFRESH_BUFFER_SECONDS
+        val nowEpochSeconds = nowEpochSeconds()
+        val shouldRefresh = if (expiresAt == null) {
+            true
+        } else {
+            (expiresAt - nowEpochSeconds) <= TOKEN_REFRESH_BUFFER_SECONDS
+        }
 
         if (!shouldRefresh) {
             return session
+        } else {
+            val refreshed = runCatching { delegate.refreshSession(session) }.getOrNull()
+
+            if (refreshed != null) {
+                return refreshed
+            }
         }
-        return runCatching { delegate.refreshSession(session) }
-            .getOrNull()
-            ?: session
+
+        val hasValidIdToken = !session.idToken.isNullOrBlank()
+        val isExpired = if (expiresAt == null) {
+            true
+        } else {
+            expiresAt <= nowEpochSeconds
+        }
+        return if (hasValidIdToken && !isExpired) {
+            session
+        } else {
+            null
+        }
     }
 }
 

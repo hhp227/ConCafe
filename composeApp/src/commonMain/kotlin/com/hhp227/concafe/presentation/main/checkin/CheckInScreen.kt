@@ -325,7 +325,7 @@ private fun CheckInUserScreen(
         CheckInButton(
             onClick = { onAction(CheckInAction.ClickCheckIn) }
         )
-        CheckInSectionTitle("오늘의 방문", "3월 9일")
+        CheckInSectionTitle("오늘의 방문", TimeUtils.currentMonthDayLabelKorean())
         TodayVisitsRow(
             visits = uiState.todayVisits
         )
@@ -1131,11 +1131,9 @@ private fun CheckInVisitEntry.relativeVisitedLabel(): String {
     return TimeUtils.relativeVisitedLabel(
         visitedAt = visitedAt,
         visitedLabel = visitedLabel,
-        referenceDate = REFERENCE_DATE
+        referenceDate = TimeUtils.currentIsoDate()
     )
 }
-
-private const val REFERENCE_DATE = "2026-03-09"
 
 @Composable
 private fun EmptyVisitState(
