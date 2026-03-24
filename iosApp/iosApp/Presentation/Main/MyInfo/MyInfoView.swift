@@ -457,9 +457,34 @@ private struct ProfileMyInfoView: View {
                     HStack(spacing: 10) {
                         ForEach(uiState.recentVisits, id: \.id) { cafe in
                             VStack(alignment: .leading, spacing: 6) {
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
-                                    .frame(width: 120, height: 120)
+                                GeometryReader { geometry in
+                                    let imageSize = geometry.size
+
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                        if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
+                                            CachedAsyncImage(
+                                                url: imageUrl,
+                                                placeholder: EmptyView()
+                                            )
+                                            .frame(width: imageSize.width, height: imageSize.height)
+                                            .clipped()
+                                        } else {
+                                            Image(systemName: "photo")
+                                                .font(.system(size: 22, weight: .semibold))
+                                                .foregroundStyle(Color.white.opacity(0.82))
+                                        }
+                                    }
+                                }
+                                .frame(width: 120, height: 120)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                                 Text(cafe.name).font(.caption)
                             }
                             .onTapGesture { onAction(.cafeTapped(id: cafe.id)) }

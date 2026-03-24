@@ -610,19 +610,19 @@ private struct CheckInTimelineItem: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top) {
                     Text(visit.cafeName)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "4E4750"))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color(hex: "4E4750"))
                     Spacer(minLength: 8)
                     Text(visit.relativeVisitedLabel)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "F5F5F5"))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: "F5F5F5"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Text(visit.memo ?? "방문 메모 없음")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -630,6 +630,16 @@ private struct CheckInTimelineItem: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
             .padding(.bottom, 24)
+        }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if trimmed.isEmpty {
+            return nil
+        } else {
+            return URL(string: trimmed)
         }
     }
 }

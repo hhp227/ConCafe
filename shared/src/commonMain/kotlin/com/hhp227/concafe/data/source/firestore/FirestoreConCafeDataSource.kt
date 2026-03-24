@@ -435,20 +435,23 @@ class FirestoreConCafeDataSource(
             runUserScopedQuery(
                 collectionId = FirestorePaths.VISITS,
                 userId = userId,
-                idToken = idToken
+                idToken = idToken,
+                orderByFieldPath = "visitedAt",
+                orderByDescending = true
             )
         }.recoverCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.VISITS,
                 userId = userId,
-                idToken = null
+                idToken = null,
+                orderByFieldPath = "visitedAt",
+                orderByDescending = true
             )
         }.getOrElse { throwable ->
             throw IllegalStateException("Failed to refresh visits for user: $userId", throwable)
         }
         val refreshedVisits = visitDocuments
             .mapNotNull { document -> parseVisitDocument(document) }
-            .sortedByDescending { visit -> visit.visitedAt }
 
         visits.removeAll { visit -> visit.userId == userId }
         visits.addAll(refreshedVisits)
@@ -1728,23 +1731,89 @@ class FirestoreConCafeDataSource(
     }
 
     private suspend fun loadVisits(idToken: String?) {
-        val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.VISITS}", idToken)
-        val parsed = Json.parseToJsonElement(response).jsonObject
-        val documents = parsed["documents"]?.jsonArray.orEmpty()
-        val visits = documents.mapNotNull { element ->
-            parseVisitDocument(element.jsonObject)
+        val visitDocuments = runCollectionQuery(
+            collectionId = FirestorePaths.VISITS,
+            idToken = idToken,
+            orderByFieldPath = "visitedAt",
+            orderByDescending = true
+        )
+        val loadedVisits = visitDocuments.mapNotNull { document ->
+            parseVisitDocument(document)
         }
 
         this.visits.clear()
-        this.visits.addAll(visits.sortedByDescending { it.visitedAt })
+        this.visits.addAll(loadedVisits)
+    }
+
+    private suspend fun runCollectionQuery(
+        collectionId: String,
+        idToken: String?,
+        orderByFieldPath: String? = null,
+        orderByDescending: Boolean = false
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val orderBySection = if (orderByFieldPath != null) {
+            val direction = if (orderByDescending) {
+                "DESCENDING"
+            } else {
+                "ASCENDING"
+            }
+
+            """
+            ,
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "${escapeFirestoreQueryString(orderByFieldPath)}" },
+                    "direction": "$direction"
+                  }
+                ]
+            """.trimIndent()
+        } else {
+            ""
+        }
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "$collectionId" }
+                ]$orderBySection
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
     }
 
     private suspend fun runUserScopedQuery(
         collectionId: String,
         userId: String,
-        idToken: String?
+        idToken: String?,
+        orderByFieldPath: String? = null,
+        orderByDescending: Boolean = false
     ): List<JsonObject> {
         val path = "${config.documentBasePath()}:runQuery"
+        val orderBySection = if (orderByFieldPath != null) {
+            val direction = if (orderByDescending) {
+                "DESCENDING"
+            } else {
+                "ASCENDING"
+            }
+
+            """
+            ,
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "${escapeFirestoreQueryString(orderByFieldPath)}" },
+                    "direction": "$direction"
+                  }
+                ]
+            """.trimIndent()
+        } else {
+            ""
+        }
         val body = """
             {
               "structuredQuery": {
@@ -1757,7 +1826,7 @@ class FirestoreConCafeDataSource(
                       "op": "EQUAL",
                       "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
                     }
-                  }
+                  }$orderBySection
                 }
             }
         """.trimIndent()

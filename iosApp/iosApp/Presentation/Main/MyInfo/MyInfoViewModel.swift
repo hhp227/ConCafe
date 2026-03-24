@@ -51,7 +51,7 @@ final class MyInfoViewModel: ObservableObject {
                 let feed = success.data as? Shared.MyInfoFeed {
                     let normalizedRecentVisits = normalizeCafes(
                         feed.recentVisits,
-                        maxCount: Int(feed.summary?.totalVisits ?? 0)
+                        maxCount: feed.recentVisits.count
                     )
                     let normalizedFavorites = normalizeCafes(
                         feed.favorites,
@@ -268,7 +268,6 @@ final class MyInfoViewModel: ObservableObject {
     }
 
     private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {
-        guard maxCount > 0 else { return [] }
         var seen = Set<String>()
         var normalized: [Cafe] = []
 
@@ -276,7 +275,9 @@ final class MyInfoViewModel: ObservableObject {
             if seen.contains(cafe.id) { continue }
             seen.insert(cafe.id)
             normalized.append(cafe)
-            if normalized.count >= maxCount { break }
+            if maxCount > 0 && normalized.count >= maxCount {
+                break
+            }
         }
         return normalized
     }

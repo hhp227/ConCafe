@@ -402,6 +402,8 @@ private fun ProfileMyInfoScreen(
             if (uiState.recentVisits.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
                     items(uiState.recentVisits) { cafe ->
+                        val thumbnailImage = cafe.thumbnailImage?.trim().orEmpty()
+
                         Column(
                             modifier = Modifier
                                 .width(120.dp)
@@ -413,7 +415,24 @@ private fun ProfileMyInfoScreen(
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
-                            )
+                            ) {
+                                if (thumbnailImage.isNotBlank()) {
+                                    CompatImageDisplay(
+                                        imageUrl = thumbnailImage,
+                                        modifier = Modifier.matchParentSize(),
+                                        applyRoundedClip = false
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Filled.Image,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.82f),
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .size(28.dp)
+                                    )
+                                }
+                            }
                             Text(cafe.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }

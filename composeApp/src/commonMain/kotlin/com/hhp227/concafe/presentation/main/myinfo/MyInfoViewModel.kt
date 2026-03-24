@@ -53,7 +53,7 @@ class MyInfoViewModel(
                 is AppResult.Success -> {
                     val normalizedRecentVisits = normalizeCafes(
                         items = result.data.recentVisits,
-                        maxCount = result.data.summary?.totalVisits ?: 0
+                        maxCount = result.data.recentVisits.size
                     )
                     val normalizedFavorites = normalizeCafes(
                         items = result.data.favorites,
@@ -241,9 +241,12 @@ class MyInfoViewModel(
     }
 
     private fun normalizeCafes(items: List<Cafe>, maxCount: Int): List<Cafe> {
-        if (maxCount <= 0) return emptyList()
-        return items
+        val normalizedItems = items
             .distinctBy { it.id }
-            .take(maxCount)
+        return if (maxCount <= 0) {
+            normalizedItems
+        } else {
+            normalizedItems.take(maxCount)
+        }
     }
 }

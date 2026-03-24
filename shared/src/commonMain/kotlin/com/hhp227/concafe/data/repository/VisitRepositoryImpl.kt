@@ -115,7 +115,9 @@ class VisitRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Visit> {
-        val items = visitDataSource.visits.filter { it.userId == userId }.sortedByDescending { it.visitedAt }
+        val items = visitDataSource.visits.filter { visit ->
+            visit.userId == userId
+        }
         return pagingDataSource.toPaged(items, cursor, pageSize)
     }
 }
