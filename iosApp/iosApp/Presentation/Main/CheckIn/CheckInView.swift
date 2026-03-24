@@ -882,7 +882,7 @@ private struct CheckInNewVisitSheet: View {
                         ZStack {
                             ConCafeFormField(
                                 label: "방문 시간",
-                                text: .constant(formatVisitTime(visitTime)),
+                                text: .constant(TimeUtils.formatHourMinute(visitTime)),
                                 placeholder: "방문 시간을 선택하세요.",
                                 isEditable: false,
                                 trailingContent: {
@@ -977,10 +977,6 @@ private struct CheckInNewVisitSheet: View {
 
     private func makeVisitedAtString(date: Date, time: Date) -> String {
         return TimeUtils.makeVisitedAtString(date: date, time: time)
-    }
-
-    private func formatVisitTime(_ date: Date) -> String {
-        return TimeUtils.formatHourMinute(date)
     }
 }
 

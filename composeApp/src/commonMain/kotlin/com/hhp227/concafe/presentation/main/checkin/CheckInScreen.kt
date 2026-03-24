@@ -757,7 +757,7 @@ private fun NewVisitCheckInBottomSheet(
         Box(modifier = Modifier.fillMaxWidth()) {
             ConCafeFormField(
                 label = "방문 시간",
-                value = formatVisitTime(visitHour, visitMinute),
+                value = TimeUtils.formatHourMinute(visitHour, visitMinute),
                 onValueChange = {},
                 readOnly = true,
                 trailingContent = {
@@ -842,10 +842,6 @@ private fun NewVisitCheckInBottomSheet(
     }
 }
 
-private fun formatVisitTime(hour: Int, minute: Int): String {
-    return TimeUtils.formatHourMinute(hour, minute)
-}
-
 @Composable
 private fun CheckInGuestSectionTitle(
     title: String
@@ -896,15 +892,7 @@ private fun CheckInSectionTitle(
 private fun TodayVisitsRow(
     visits: List<CheckInVisitEntry>
 ) {
-    val todayVisits = visits.map {
-        CheckInVisitCardUi(
-            id = it.id,
-            name = it.cafeName,
-            time = it.visitedLabel
-        )
-    }
-
-    if (todayVisits.isEmpty()) {
+    if (visits.isEmpty()) {
         EmptyVisitState(
             title = "오늘 방문 기록이 아직 없어요",
             description = "지금 체크인하고 첫 방문 기록을 남겨보세요."
@@ -916,23 +904,24 @@ private fun TodayVisitsRow(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            when (todayVisits.size) {
+            when (visits.size) {
                 1 -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
                 else -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
                     MoreVisitCard(
-                        remainingCount = todayVisits.size - 1,
+                        remainingCount = visits.size - 1,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -942,33 +931,49 @@ private fun TodayVisitsRow(
 }
 
 @Composable
-private fun VisitCard(
-    name: String,
-    time: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        modifier = modifier.height(180.dp)
+fun CheckInVisitCard(name: String, time: String, image: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(24.dp)
+
+    Box(
+        modifier = modifier
+            .height(180.dp)
+            .clip(shape)
     ) {
-        Box {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
+        CompatImageDisplay(
+            imageUrl = image,
+            modifier = Modifier.matchParentSize(),
+            applyRoundedClip = false
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.45f)
                         )
                     )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2
             )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Text(name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(time, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-            }
+            Text(
+                text = time,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 12.sp,
+                maxLines = 1
+            )
         }
     }
 }
@@ -1010,12 +1015,6 @@ private fun MoreVisitCard(
         }
     }
 }
-
-private data class CheckInVisitCardUi(
-    val id: String,
-    val name: String,
-    val time: String
-)
 
 @Composable
 private fun CheckInButton(
