@@ -35,6 +35,7 @@ class GetCheckInUserFeedUseCase(
                         id = visit.id,
                         cafeId = visit.cafeId,
                         cafeName = cafe.name,
+                        cafeImage = cafe.thumbnailImage.orEmpty(),
                         visitedAt = visit.visitedAt,
                         visitedLabel = formatVisitedLabel(visit.visitedAt),
                         memo = visit.memo,

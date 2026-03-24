@@ -466,10 +466,10 @@ private struct CheckInTodayVisitsRow: View {
             HStack(spacing: 12) {
                 switch visits.count {
                 case 1:
-                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel, image: visits[0].cafeImage)
                     Spacer(minLength: 0)
                 default:
-                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel, image: visits[0].cafeImage)
                     CheckInMoreVisitCard(remainingCount: visits.count - 1)
                 }
             }
@@ -480,33 +480,68 @@ private struct CheckInTodayVisitsRow: View {
 
 private struct CheckInVisitCard: View {
     let name: String
-
+    
     let time: String
+    
+    let image: String
+
+    private let cornerRadius: CGFloat = 24
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+        GeometryReader { geometry in
+            let size = geometry.size
+
+            ZStack(alignment: .bottomLeading) {
+                CachedAsyncImage(
+                    url: resolvedRemoteImageUrl(image),
+                    placeholder: placeholder
                 )
-            VStack(alignment: .leading, spacing: 4) {
-                Text(name)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                Text(time)
-                    .font(.caption)
-                    .foregroundStyle(Color.white.opacity(0.8))
-                    .lineLimit(1)
+                .frame(width: size.width, height: size.height)
+                .clipped()
+                gradientOverlay
+                textSection
             }
-            .padding(16)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 180)
+    }
+
+    private var placeholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var gradientOverlay: some View {
+        LinearGradient(
+            colors: [
+                Color.black.opacity(0.0),
+                Color.black.opacity(0.45)
+            ],
+            startPoint: .center,
+            endPoint: .bottom
+        )
+    }
+
+    private var textSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(name)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            Text(time)
+                .font(.caption)
+                .foregroundStyle(Color.white.opacity(0.8))
+                .lineLimit(1)
+        }
+        .padding(16)
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : URL(string: trimmed)
     }
 }
 

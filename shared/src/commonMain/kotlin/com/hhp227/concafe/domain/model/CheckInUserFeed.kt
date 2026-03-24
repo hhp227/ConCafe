@@ -9,6 +9,7 @@ data class CheckInVisitEntry(
     val id: String,
     val cafeId: String,
     val cafeName: String,
+    val cafeImage: String,
     val visitedAt: String,
     val visitedLabel: String,
     val memo: String?,
