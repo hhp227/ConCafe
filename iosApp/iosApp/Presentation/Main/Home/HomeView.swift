@@ -16,7 +16,7 @@ struct HomeView: View {
     
     @State private var currentBannerPage = 0
     
-    private let bannerTimer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
+    private let bannerTimer = Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HomeContentView(
@@ -111,6 +111,7 @@ private struct HomeContentView: View {
                         GeometryReader { proxy in
                             ZStack(alignment: .bottomLeading) {
                                 let trimmedImageUrl = banner.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                                let subtitle = banner.subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
 
                                 if let imageUrl = URL(string: trimmedImageUrl), !trimmedImageUrl.isEmpty {
                                     CachedAsyncImage(
@@ -135,10 +136,18 @@ private struct HomeContentView: View {
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
-                                Text(banner.title)
-                                    .font(.title3.weight(.bold))
-                                    .foregroundColor(.white)
-                                    .padding(16)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(banner.title)
+                                        .font(.title3.weight(.bold))
+                                        .foregroundColor(.white)
+                                    if !subtitle.isEmpty {
+                                        Text(subtitle)
+                                            .font(.subheadline.weight(.medium))
+                                            .foregroundColor(.white.opacity(0.92))
+                                            .lineLimit(2)
+                                    }
+                                }
+                                .padding(16)
                             }
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))

@@ -80,7 +80,7 @@ fun HomeScreen(
             pagerState.scrollToPage(normalizedPage)
             if (uiState.banners.size != 1) {
                 while (true) {
-                    delay(3000)
+                    delay(4000)
                     val nextPage = (pagerState.settledPage + 1) % uiState.banners.size
                     pagerState.animateScrollToPage(nextPage)
                 }
@@ -137,6 +137,7 @@ fun HomeContentScreen(
                         ) { page ->
                             val banner = uiState.banners[page]
                             val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+                            val subtitle = banner.subtitle.trim().takeUnless { it.isEmpty() }
 
                             Card(
                                 modifier = Modifier
@@ -175,13 +176,26 @@ fun HomeContentScreen(
                                                 )
                                         )
                                     }
-                                    Text(
-                                        text = banner.title,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        modifier = Modifier.padding(18.dp)
-                                    )
+                                    Column(
+                                        modifier = Modifier.padding(18.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = banner.title,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleLarge
+                                        )
+                                        if (subtitle != null) {
+                                            Text(
+                                                text = subtitle,
+                                                color = Color.White.copy(alpha = 0.92f),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
