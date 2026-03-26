@@ -5,6 +5,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -308,32 +310,77 @@ private fun CheckInUserScreen(
     uiState: CheckInUiState,
     onAction: (CheckInAction) -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
-            .verticalScroll(rememberScrollState()),
+            .background(Color(0xFFFFFBFD)),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CafeMapSection(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-            currentLocationLabel = uiState.currentLocationLabel,
-            mapCafes = uiState.mapCafes,
-            onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
-            onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInButton(
-            onClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInSectionTitle("오늘의 방문", "3월 9일")
-        TodayVisitsRow(
-            visits = uiState.todayVisits
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        CheckInSectionTitle("최근 타임라인", "🕘")
-        TimelineList(
-            visits = uiState.recentVisits
-        )
+        item {
+            CafeMapSection(
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                currentLocationLabel = uiState.currentLocationLabel,
+                mapCafes = uiState.mapCafes,
+                onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+            )
+        }
+        item {
+            CheckInButton(
+                onClick = { onAction(CheckInAction.ClickCheckIn) }
+            )
+        }
+        item {
+            CheckInSectionTitle("오늘의 방문", TimeUtils.currentMonthDayLabelKorean())
+        }
+        item {
+            TodayVisitsRow(
+                visits = uiState.todayVisits
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        item {
+            CheckInSectionTitle("최근 타임라인", "🕘")
+        }
+        if (uiState.recentVisits.isEmpty()) {
+            item {
+                EmptyVisitState(
+                    title = "최근 타임라인이 비어 있어요",
+                    description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
+                )
+            }
+        } else {
+            itemsIndexed(
+                items = uiState.recentVisits,
+                key = { _, visit -> visit.id }
+            ) { _, visit ->
+                TimelineItem(visit)
+            }
+            item {
+                if (uiState.isLoadingMoreRecentVisits) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else if (uiState.canLoadMoreRecentVisits) {
+                    TextButton(
+                        onClick = { onAction(CheckInAction.LoadMoreRecentVisits) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("최근 방문 더 보기")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -757,7 +804,7 @@ private fun NewVisitCheckInBottomSheet(
         Box(modifier = Modifier.fillMaxWidth()) {
             ConCafeFormField(
                 label = "방문 시간",
-                value = formatVisitTime(visitHour, visitMinute),
+                value = TimeUtils.formatHourMinute(visitHour, visitMinute),
                 onValueChange = {},
                 readOnly = true,
                 trailingContent = {
@@ -842,10 +889,6 @@ private fun NewVisitCheckInBottomSheet(
     }
 }
 
-private fun formatVisitTime(hour: Int, minute: Int): String {
-    return TimeUtils.formatHourMinute(hour, minute)
-}
-
 @Composable
 private fun CheckInGuestSectionTitle(
     title: String
@@ -896,15 +939,7 @@ private fun CheckInSectionTitle(
 private fun TodayVisitsRow(
     visits: List<CheckInVisitEntry>
 ) {
-    val todayVisits = visits.map {
-        CheckInVisitCardUi(
-            id = it.id,
-            name = it.cafeName,
-            time = it.visitedLabel
-        )
-    }
-
-    if (todayVisits.isEmpty()) {
+    if (visits.isEmpty()) {
         EmptyVisitState(
             title = "오늘 방문 기록이 아직 없어요",
             description = "지금 체크인하고 첫 방문 기록을 남겨보세요."
@@ -916,23 +951,24 @@ private fun TodayVisitsRow(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            when (todayVisits.size) {
+            when (visits.size) {
                 1 -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
                 else -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
                     MoreVisitCard(
-                        remainingCount = todayVisits.size - 1,
+                        remainingCount = visits.size - 1,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -942,33 +978,49 @@ private fun TodayVisitsRow(
 }
 
 @Composable
-private fun VisitCard(
-    name: String,
-    time: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        modifier = modifier.height(180.dp)
+fun CheckInVisitCard(name: String, time: String, image: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(24.dp)
+
+    Box(
+        modifier = modifier
+            .height(180.dp)
+            .clip(shape)
     ) {
-        Box {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
+        CompatImageDisplay(
+            imageUrl = image,
+            modifier = Modifier.matchParentSize(),
+            applyRoundedClip = false
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.45f)
                         )
                     )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2
             )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Text(name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(time, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-            }
+            Text(
+                text = time,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 12.sp,
+                maxLines = 1
+            )
         }
     }
 }
@@ -1011,12 +1063,6 @@ private fun MoreVisitCard(
     }
 }
 
-private data class CheckInVisitCardUi(
-    val id: String,
-    val name: String,
-    val time: String
-)
-
 @Composable
 private fun CheckInButton(
     onClick: () -> Unit
@@ -1048,29 +1094,6 @@ private fun CheckInButton(
         Icon(Icons.Default.Add, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
         Text("새 방문 체크인", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-    }
-}
-
-@Composable
-private fun TimelineList(
-    visits: List<CheckInVisitEntry>
-) {
-    if (visits.isEmpty()) {
-        EmptyVisitState(
-            title = "최근 타임라인이 비어 있어요",
-            description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
-        )
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            visits.forEach { visit ->
-                TimelineItem(visit)
-            }
-        }
     }
 }
 
@@ -1131,11 +1154,9 @@ private fun CheckInVisitEntry.relativeVisitedLabel(): String {
     return TimeUtils.relativeVisitedLabel(
         visitedAt = visitedAt,
         visitedLabel = visitedLabel,
-        referenceDate = REFERENCE_DATE
+        referenceDate = TimeUtils.currentIsoDate()
     )
 }
-
-private const val REFERENCE_DATE = "2026-03-09"
 
 @Composable
 private fun EmptyVisitState(

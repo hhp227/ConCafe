@@ -1,5 +1,12 @@
 package com.hhp227.concafe.core.util
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+
 object TimeUtils {
     private const val MILLIS_PER_SECOND = 1000L
     private const val MILLIS_PER_MINUTE = 60L * MILLIS_PER_SECOND
@@ -47,18 +54,21 @@ object TimeUtils {
     }
 
     fun extractHourFromEpochMillis(millis: Long): Int {
-        val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
-        return (normalized / MILLIS_PER_HOUR).toInt()
+        val zone = TimeZone.currentSystemDefault()
+        val localDateTime = Instant.fromEpochMilliseconds(millis).toLocalDateTime(zone)
+        return localDateTime.hour
     }
 
     fun extractMinuteFromEpochMillis(millis: Long): Int {
-        val normalized = ((millis % MILLIS_PER_DAY) + MILLIS_PER_DAY) % MILLIS_PER_DAY
-        return ((normalized % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE).toInt()
+        val zone = TimeZone.currentSystemDefault()
+        val localDateTime = Instant.fromEpochMilliseconds(millis).toLocalDateTime(zone)
+        return localDateTime.minute
     }
 
     fun formatIsoDateFromEpochMillis(millis: Long): String {
-        val (year, month, day) = dateFromEpochMillis(millis)
-        return "${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+        val zone = TimeZone.currentSystemDefault()
+        val localDate = Instant.fromEpochMilliseconds(millis).toLocalDateTime(zone).date
+        return "${localDate.year}-${localDate.monthNumber.toString().padStart(2, '0')}-${localDate.dayOfMonth.toString().padStart(2, '0')}"
     }
 
     fun formatHourMinute(hour: Int, minute: Int): String {
@@ -116,15 +126,38 @@ object TimeUtils {
     }
 
     fun formatBirthdayFromEpochMillis(millis: Long): String {
-        val (year, month, day) = dateFromEpochMillis(millis)
-        val monthText = month.toString().padStart(2, '0')
-        val dayText = day.toString().padStart(2, '0')
-        val yearText = year.toString().padStart(4, '0')
+        val zone = TimeZone.currentSystemDefault()
+        val localDate = Instant.fromEpochMilliseconds(millis).toLocalDateTime(zone).date
+        val monthText = localDate.monthNumber.toString().padStart(2, '0')
+        val dayText = localDate.dayOfMonth.toString().padStart(2, '0')
+        val yearText = localDate.year.toString().padStart(4, '0')
         return "$monthText/$dayText/$yearText"
     }
 
     fun buildVisitedAtUtcString(dateMillis: Long, hour: Int, minute: Int): String {
-        return "${formatIsoDateFromEpochMillis(dateMillis)}T${formatHourMinute(hour, minute)}:00Z"
+        val zone = TimeZone.currentSystemDefault()
+        val localDate = Instant.fromEpochMilliseconds(dateMillis).toLocalDateTime(zone).date
+        val localDateTime = LocalDateTime(
+            year = localDate.year,
+            monthNumber = localDate.monthNumber,
+            dayOfMonth = localDate.dayOfMonth,
+            hour = hour.coerceIn(0, 23),
+            minute = minute.coerceIn(0, 59),
+            second = 0,
+            nanosecond = 0
+        )
+
+        return localDateTime.toInstant(zone).toString()
+    }
+
+    fun currentIsoDate(): String {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
+    }
+
+    fun currentMonthDayLabelKorean(): String {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return "${now.monthNumber}월 ${now.dayOfMonth}일"
     }
 
     fun defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 23): List<String> {
@@ -182,24 +215,4 @@ object TimeUtils {
         return hour * 60 + minute
     }
 
-    private fun dateFromEpochMillis(millis: Long): DateParts {
-        val epochDays = millis / MILLIS_PER_DAY
-        val z = epochDays + 719468L
-        val era = z / 146097L
-        val doe = z - era * 146097L
-        val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
-        val y = yoe + era * 400
-        val doy = doe - (365L * yoe + yoe / 4 - yoe / 100)
-        val mp = (5L * doy + 2L) / 153
-        val day = (doy - (153L * mp + 2L) / 5 + 1L).toInt()
-        val month = (mp + if (mp < 10L) 3L else -9L).toInt()
-        val year = (y + if (month <= 2) 1L else 0L).toInt()
-        return DateParts(year = year, month = month, day = day)
-    }
-
-    private data class DateParts(
-        val year: Int,
-        val month: Int,
-        val day: Int
-    )
 }

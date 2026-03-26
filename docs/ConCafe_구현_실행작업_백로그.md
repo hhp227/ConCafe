@@ -46,6 +46,17 @@
 - 카페 리뷰는 Firestore CRUD 경로로 반영되도록 정리했고, 리뷰 변경 시 카페 집계(`reviewCount`, `ratingAvg`)를 Cloud Functions로 동기화하는 트리거를 추가했다.
 - Firestore Rules에 `castFollows` 컬렉션 접근 규칙(본인 생성/삭제, 로그인 읽기)을 반영했다.
 
+## 최근 반영 (2026-03-26)
+- 카페 상세 집계 경로에서 N+1 조회를 제거했다.
+  - 캐스트별 상세 재조회 반복 대신 `카페+날짜` 근무 캐스트 집합 1회 조회로 변경.
+  - 리뷰 작성자별 방문목록 반복 조회를 제거하고, 리뷰 문서의 `visitVerified` 필드를 우선 사용.
+- `GetCafeReviewPageUseCase`/`GetCafeDetailUseCase`에서 사용자 조회를 리뷰 사용자 단위로 중복 제거했다.
+- `ReviewRepository`/`NoticeRepository`는 최초 미캐시 진입 시에만 원격 refresh를 수행하도록 조정해 재진입 과조회 비용을 줄였다.
+- Cloud Functions에 리뷰 방문인증 상태 동기화 트리거를 추가했다.
+  - `onReviewWrittenSyncReviewVisitVerified`
+  - `onVisitWrittenSyncReviewVisitVerified`
+- 함수 로딩 타임아웃 이슈를 줄이기 위해 Functions의 Firestore 초기화를 lazy 초기화로 변경했다.
+
 ## A. 사전 확정 작업 (P0)
 
 ### A-01. 도메인 enum/스키마 최종 확정

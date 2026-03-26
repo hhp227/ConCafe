@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.hhp227.concafe.domain.model.MainNavigationTab
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
@@ -59,7 +60,7 @@ fun NavigationScreen(
     ) {
         composable<Route.Entry> {
             LaunchedEffect(Unit) {
-                val target: Route = Route.Main()
+                val target: Route = Route.Main(initialTab = MainNavigationTab.HOME.route)
 
                 navController.navigate(target) {
                     popUpTo(Route.Entry) { inclusive = true }

@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
             implementation(libs.google.maps.compose)
+            implementation(libs.coil.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -61,6 +62,7 @@ kotlin {
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
             implementation(projects.shared)

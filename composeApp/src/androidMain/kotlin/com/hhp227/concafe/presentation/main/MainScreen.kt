@@ -56,7 +56,7 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    initialTab: String? = null,
+    initialTab: String? = null, // initialTab은 추후 ViewModel에서 처리할예정 리팩토링 TODO
     bottomNavController: NavHostController = rememberNavController(),
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
@@ -75,13 +75,8 @@ fun MainScreen(
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.selectedTab, currentRoute) {
-        if (
-            uiState.selectedTab.isNotBlank() &&
-            uiState.tabs.any { it.route == uiState.selectedTab } &&
-            MainNavigationTab.fromRoute(currentRoute) != null &&
-            currentRoute != uiState.selectedTab
-        ) {
+    LaunchedEffect(uiState.selectedTab) {
+        if (currentRoute != uiState.selectedTab) {
             bottomNavController.navigate(uiState.selectedTab) {
                 popUpTo(bottomNavController.graph.findStartDestination().id) {
                     saveState = true
@@ -145,7 +140,7 @@ fun MainScreen(
     ) { innerPadding ->
         NavHost(
             navController = bottomNavController,
-            startDestination = uiState.selectedTab,
+            startDestination = initialTab.orEmpty(),
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(MainNavigationTab.HOME.route) {

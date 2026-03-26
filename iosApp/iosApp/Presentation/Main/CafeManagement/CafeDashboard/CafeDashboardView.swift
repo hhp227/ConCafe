@@ -12,6 +12,8 @@ import Shared
 struct CafeDashboardView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
+    private let cafeId: String
+
     @StateObject private var viewModel: CafeDashboardViewModel
 
     var body: some View {
@@ -55,9 +57,9 @@ struct CafeDashboardView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
-            case .navigateToBanner(let cafeId):
+            case .navigateToBanner:
                 onNavigationAction(.navigateToBanner(cafeId: cafeId))
-            case .navigateToBannerEdit(let cafeId):
+            case .navigateToBannerEdit:
                 onNavigationAction(.navigateToBannerEdit(cafeId: cafeId))
             case .navigateToCafeInfoEdit(let cafeId):
                 onNavigationAction(.navigateToCafeInfoEdit(id: cafeId))
@@ -79,6 +81,7 @@ struct CafeDashboardView: View {
         cafeId: String,
         onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
+        self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeDashboardViewModel(cafeId: cafeId))
     }

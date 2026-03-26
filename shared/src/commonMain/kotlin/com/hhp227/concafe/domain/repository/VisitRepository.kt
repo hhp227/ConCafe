@@ -9,5 +9,13 @@ interface VisitRepository {
 
     suspend fun createVisit(userId: String, cafeId: String, visitedAt: String, memo: String?): Visit
 
+    suspend fun updateVisit(visitId: String, userId: String, visitedAt: String, memo: String?): Visit
+
+    suspend fun deleteVisit(visitId: String, userId: String)
+
     suspend fun getVisits(userId: String, cursor: String?, pageSize: Int): PagedResult<Visit>
+
+    suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String>
+
+    suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean
 }

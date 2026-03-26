@@ -27,8 +27,41 @@ class FakeVisitRepository(
         return visit
     }
 
+    override suspend fun updateVisit(visitId: String, userId: String, visitedAt: String, memo: String?): Visit {
+        val visitIndex = dataSource.visits.indexOfFirst { visit -> visit.id == visitId && visit.userId == userId }
+
+        if (visitIndex < 0) {
+            throw NoSuchElementException("visit not found")
+        }
+
+        val updated = dataSource.visits[visitIndex].copy(
+            visitedAt = visitedAt,
+            memo = memo
+        )
+        dataSource.visits[visitIndex] = updated
+        return updated
+    }
+
+    override suspend fun deleteVisit(visitId: String, userId: String) {
+        dataSource.visits.removeAll { visit -> visit.id == visitId && visit.userId == userId }
+    }
+
     override suspend fun getVisits(userId: String, cursor: String?, pageSize: Int): PagedResult<Visit> {
         val items = dataSource.visits.filter { it.userId == userId }.sortedByDescending { it.visitedAt }
         return dataSource.toPaged(items, cursor, pageSize)
+    }
+
+    override suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
+        return dataSource.visits
+            .asSequence()
+            .filter { visit -> visit.cafeId == cafeId && visit.verified }
+            .map { visit -> visit.userId }
+            .toSet()
+    }
+
+    override suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean {
+        return dataSource.visits.any { visit ->
+            visit.userId == userId && visit.cafeId == cafeId && visit.verified
+        }
     }
 }

@@ -16,25 +16,29 @@ class GetCheckInUserFeedUseCase(
     private val visitRepository: VisitRepository,
     private val cafeRepository: CafeRepository
 ) {
-    suspend operator fun invoke(): AppResult<CheckInUserFeed> {
+    suspend operator fun invoke(
+        cursor: String?,
+        pageSize: Int = RECENT_VISIT_PAGE_SIZE
+    ): AppResult<CheckInUserFeed> {
         return try {
             val currentUser = authRepository.getCurrentUser()
 
             if (currentUser == null) {
                 AppResult.Failure(AppError.Unauthorized)
             } else {
-                val visits = visitRepository.getVisits(
+                val visitsPage = visitRepository.getVisits(
                     userId = currentUser.id,
-                    cursor = null,
-                    pageSize = VISIT_PAGE_SIZE
-                ).items
-                val visitEntries = visits.map { visit ->
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+                val visitEntries = visitsPage.items.map { visit ->
                     val cafe = cafeRepository.getCafeDetail(visit.cafeId).cafe
 
                     CheckInVisitEntry(
                         id = visit.id,
                         cafeId = visit.cafeId,
                         cafeName = cafe.name,
+                        cafeImage = cafe.thumbnailImage.orEmpty(),
                         visitedAt = visit.visitedAt,
                         visitedLabel = formatVisitedLabel(visit.visitedAt),
                         memo = visit.memo,
@@ -45,7 +49,9 @@ class GetCheckInUserFeedUseCase(
                 AppResult.Success(
                     CheckInUserFeed(
                         todayVisits = visitEntries.filter { it.visitedAt.startsWith(todayDateText()) }.take(TODAY_VISIT_LIMIT),
-                        recentVisits = visitEntries.take(RECENT_VISIT_LIMIT)
+                        recentVisits = visitEntries,
+                        recentVisitsNextCursor = visitsPage.nextCursor,
+                        canLoadMoreRecentVisits = visitsPage.hasNext
                     )
                 )
             }
@@ -77,7 +83,6 @@ class GetCheckInUserFeedUseCase(
 
     private companion object {
         private const val TODAY_VISIT_LIMIT = 4
-        private const val RECENT_VISIT_LIMIT = 5
-        private const val VISIT_PAGE_SIZE = 12
+        private const val RECENT_VISIT_PAGE_SIZE = 12
     }
 }

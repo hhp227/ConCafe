@@ -12,6 +12,9 @@ import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class GetCafeDetailUseCase(
     private val authRepository: AuthRepository,
@@ -30,14 +33,18 @@ class GetCafeDetailUseCase(
                 cursor = null,
                 pageSize = INITIAL_REVIEW_PAGE_SIZE
             )
-            val currentDate = "2026-03-08"
+            val currentDate = Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+            val workingCastIds = castRepository.getWorkingCastIdsByCafeAndDate(
+                cafeId = cafeId,
+                date = currentDate
+            )
             val castItems = detail.casts.map { cast ->
-                val castDetail = castRepository.getCastDetail(cast.id)
-                val isWorking = castDetail.schedule.any { it.date == currentDate }
-
                 CafeDetailCast(
                     cast = cast,
-                    isWorking = isWorking
+                    isWorking = workingCastIds.contains(cast.id)
                 )
             }
             val isFavorite = if (currentUser != null) {
@@ -45,38 +52,19 @@ class GetCafeDetailUseCase(
             } else {
                 false
             }
-            val visitItemsByUserId = buildMap {
-                currentUser?.id?.let { userId ->
-                    put(
-                        userId,
-                        visitRepository.getVisits(userId = userId, cursor = null, pageSize = 20).items
-                    )
-                }
-
-                reviewPage.items
-                    .map { it.userId }
-                    .distinct()
-                    .filterNot { containsKey(it) }
-                    .forEach { userId ->
-                        put(
-                            userId,
-                            visitRepository.getVisits(userId = userId, cursor = null, pageSize = 20).items
-                        )
-                    }
-            }
             val isVisitVerified = if (currentUser != null) {
-                visitItemsByUserId[currentUser.id]
-                    .orEmpty()
-                    .any { it.cafeId == cafeId && it.verified }
+                visitRepository.hasVerifiedVisitAtCafe(userId = currentUser.id, cafeId = cafeId)
             } else {
                 false
             }
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
+            val reviewUsersById = reviewPage.items
+                .map { review -> review.userId }
+                .distinct()
+                .associateWith { userId -> userRepository.getUser(userId) }
             val reviewItems = reviewPage.items.map { review ->
-                val user = userRepository.getUser(review.userId)
-                val verified = visitItemsByUserId[review.userId]
-                    .orEmpty()
-                    .any { it.cafeId == cafeId && it.verified }
+                val user = reviewUsersById[review.userId] ?: userRepository.getUser(review.userId)
+                val verified = review.visitVerified
                 val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                 CafeDetailReview(

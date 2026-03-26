@@ -164,9 +164,9 @@ private struct CafeContentView: View {
     }
 
     private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {
-        let upwardScroll = min(scrollOffset, 0)
-        let parallaxOffset = upwardScroll < 0 ? (-upwardScroll * 0.35) : 0
-        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroHeight = 230 + topSafeArea
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
+        let dynamicHeroHeight = heroHeight + pullDownOffset
         let heroImages: [String] = {
             let normalized = detail.images
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -195,13 +195,13 @@ private struct CafeContentView: View {
                         heroPlaceholder
                     }
                 }
-                .frame(height: 230 + topSafeArea)
-                .offset(y: parallaxOffset)
-                .scaleEffect(stretchScale, anchor: .center)
+                .frame(height: dynamicHeroHeight)
                 .clipped()
             }
         }
-        .frame(height: 230 + topSafeArea)
+        .frame(height: dynamicHeroHeight)
+        .offset(y: pullDownOffset > 0 ? -pullDownOffset : 0)
+        .frame(height: dynamicHeroHeight, alignment: .top)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
     }

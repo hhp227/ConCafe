@@ -33,6 +33,13 @@
 - [x] 리뷰 변경 시 카페 집계(`reviewCount`, `ratingAvg`)를 Cloud Functions 트리거로 동기화하도록 반영됨
 - [x] MyInfo 팔로우 캐스트 섹션에 이미지 노출이 반영되고, iOS는 이미지가 플레이스홀더 영역을 벗어나지 않도록 clip 처리됨
 
+## 최근 정합성 반영 (2026-03-26)
+- [x] 카페 상세 집계에서 캐스트별 상세 반복 조회(N+1) 제거
+- [x] 카페 상세/리뷰 리스트의 방문인증 상태를 리뷰 문서 필드(`visitVerified`) 기반으로 사용하도록 정리
+- [x] 리뷰/공지 탭 재진입 시 전체 원격 재동기화를 줄이고 최초 미캐시 진입 중심으로 최적화
+- [x] Cloud Functions에 리뷰 방문인증 동기화 트리거 추가(`onReviewWrittenSyncReviewVisitVerified`, `onVisitWrittenSyncReviewVisitVerified`)
+- [x] Functions 소스 로딩 타임아웃 개선을 위한 lazy Firestore 초기화 반영
+
 ## 0. 목표/범위
 - [ ] MVP 목표 확정: 메이드 중심 팬 플랫폼 + 위치 인증 기반 신뢰 리뷰
 - [ ] MVP 화면 범위 확정: 홈/탐색/역할별 3번째 탭(체크인/팬관리/카페관리/운영관리)/랭킹/마이 + 카페/메이드 상세

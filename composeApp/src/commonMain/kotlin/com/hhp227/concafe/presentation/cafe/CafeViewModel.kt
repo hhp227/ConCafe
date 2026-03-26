@@ -34,11 +34,9 @@ class CafeViewModel(
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeUiState.empty())
-
     val uiState: StateFlow<CafeUiState> = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CafeEvent>(replay = 0)
-
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<JobKey, Job>()
@@ -67,8 +65,12 @@ class CafeViewModel(
                 when (event) {
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
-                            _uiState.update { it.copy(shouldScrollToTopOnReturn = true) }
-                            loadCafeDetail()
+                            _uiState.update { state ->
+                                state.copy(
+                                    shouldScrollToTopOnReturn = true
+                                )
+                            }
+                            refreshReviewPage()
                         }
                     }
                     is ReviewEvent.Deleted -> {
@@ -273,7 +275,7 @@ class CafeViewModel(
                     if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                         refreshNoticePage()
                     }
-                    if (action.tab == CafeUiState.TabType.REVIEWS) {
+                    if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
                         refreshReviewPage()
                     }
                 }

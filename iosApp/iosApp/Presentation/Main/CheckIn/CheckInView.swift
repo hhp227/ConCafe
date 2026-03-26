@@ -188,12 +188,17 @@ private struct CheckInUserContentView: View {
                 }
                 .padding(.horizontal, 64)
                 .padding(.vertical, 12)
-                CheckInSectionTitle(title: "오늘의 방문", trailing: "3월 9일")
+                CheckInSectionTitle(title: "오늘의 방문", trailing: TimeUtils.currentMonthDayLabelKorean())
                 CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
-                CheckInTimelineList(visits: uiState.recentVisits)
+                CheckInTimelineList(
+                    visits: uiState.recentVisits,
+                    canLoadMore: uiState.canLoadMoreRecentVisits,
+                    isLoadingMore: uiState.isLoadingMoreRecentVisits,
+                    onLoadMore: { onAction(.loadMoreRecentVisits) }
+                )
             }
         }
     }
@@ -466,10 +471,10 @@ private struct CheckInTodayVisitsRow: View {
             HStack(spacing: 12) {
                 switch visits.count {
                 case 1:
-                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel, image: visits[0].cafeImage)
                     Spacer(minLength: 0)
                 default:
-                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel)
+                    CheckInVisitCard(name: visits[0].cafeName, time: visits[0].visitedLabel, image: visits[0].cafeImage)
                     CheckInMoreVisitCard(remainingCount: visits.count - 1)
                 }
             }
@@ -480,33 +485,68 @@ private struct CheckInTodayVisitsRow: View {
 
 private struct CheckInVisitCard: View {
     let name: String
-
+    
     let time: String
+    
+    let image: String
+
+    private let cornerRadius: CGFloat = 24
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+        GeometryReader { geometry in
+            let size = geometry.size
+
+            ZStack(alignment: .bottomLeading) {
+                CachedAsyncImage(
+                    url: resolvedRemoteImageUrl(image),
+                    placeholder: placeholder
                 )
-            VStack(alignment: .leading, spacing: 4) {
-                Text(name)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                Text(time)
-                    .font(.caption)
-                    .foregroundStyle(Color.white.opacity(0.8))
-                    .lineLimit(1)
+                .frame(width: size.width, height: size.height)
+                .clipped()
+                gradientOverlay
+                textSection
             }
-            .padding(16)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 180)
+    }
+
+    private var placeholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var gradientOverlay: some View {
+        LinearGradient(
+            colors: [
+                Color.black.opacity(0.0),
+                Color.black.opacity(0.45)
+            ],
+            startPoint: .center,
+            endPoint: .bottom
+        )
+    }
+
+    private var textSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(name)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            Text(time)
+                .font(.caption)
+                .foregroundStyle(Color.white.opacity(0.8))
+                .lineLimit(1)
+        }
+        .padding(16)
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : URL(string: trimmed)
     }
 }
 
@@ -562,6 +602,12 @@ private struct CheckInPrimaryButton: View {
 private struct CheckInTimelineList: View {
     let visits: [CheckInVisitEntry]
 
+    let canLoadMore: Bool
+
+    let isLoadingMore: Bool
+
+    let onLoadMore: () -> Void
+
     var body: some View {
         if visits.isEmpty {
             CheckInEmptyState(
@@ -575,6 +621,18 @@ private struct CheckInTimelineList: View {
                         visit: visit,
                         showsConnector: index < visits.count - 1
                     )
+                }
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                } else if canLoadMore {
+                    Button("최근 방문 더 보기") {
+                        onLoadMore()
+                    }
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
                 }
             }
             .padding(.horizontal, 16)
@@ -610,19 +668,19 @@ private struct CheckInTimelineItem: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top) {
                     Text(visit.cafeName)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "4E4750"))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color(hex: "4E4750"))
                     Spacer(minLength: 8)
                     Text(visit.relativeVisitedLabel)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "F5F5F5"))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: "F5F5F5"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Text(visit.memo ?? "방문 메모 없음")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -630,6 +688,16 @@ private struct CheckInTimelineItem: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
             .padding(.bottom, 24)
+        }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if trimmed.isEmpty {
+            return nil
+        } else {
+            return URL(string: trimmed)
         }
     }
 }
@@ -837,7 +905,7 @@ private struct CheckInNewVisitSheet: View {
                         ZStack {
                             ConCafeFormField(
                                 label: "방문 시간",
-                                text: .constant(formatVisitTime(visitTime)),
+                                text: .constant(TimeUtils.formatHourMinute(visitTime)),
                                 placeholder: "방문 시간을 선택하세요.",
                                 isEditable: false,
                                 trailingContent: {
@@ -933,10 +1001,6 @@ private struct CheckInNewVisitSheet: View {
     private func makeVisitedAtString(date: Date, time: Date) -> String {
         return TimeUtils.makeVisitedAtString(date: date, time: time)
     }
-
-    private func formatVisitTime(_ date: Date) -> String {
-        return TimeUtils.formatHourMinute(date)
-    }
 }
 
 private struct CheckInSectionPlaceholderCard: View {
@@ -966,7 +1030,7 @@ private extension CheckInVisitEntry {
         return TimeUtils.relativeVisitedLabel(
             visitedAt: visitedAt,
             visitedLabel: visitedLabel,
-            referenceDate: "2026-03-09"
+            referenceDate: TimeUtils.currentIsoDate()
         )
     }
 }

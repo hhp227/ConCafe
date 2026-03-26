@@ -9,11 +9,13 @@ import SwiftUI
 import UIKit
 
 struct MainView: View {
+    let initialTab: String?
+
     @StateObject private var viewModel = MainViewModel()
 
     let onNavigationAction: (NavigationAction) -> Void
 
-    @State private var selectedTab = "home"
+    @State private var selectedTab: String = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,6 +52,15 @@ struct MainView: View {
                     Image(systemName: selectedTab == "myinfo" && viewModel.uiState.currentUser != nil ? "gearshape" : "bell")
                 }
                 .accessibilityLabel(selectedTab == "myinfo" && viewModel.uiState.currentUser != nil ? "설정" : "알림")
+            }
+        }
+        .onAppear {
+            if let initialTab = initialTab, !initialTab.isEmpty {
+                selectedTab = initialTab
+
+                viewModel.onAction(.selectTab(route: initialTab))
+            } else {
+                selectedTab = viewModel.uiState.selectedTab
             }
         }
         .onChange(of: viewModel.uiState.selectedTab) { newValue in
@@ -95,8 +106,13 @@ struct MainView: View {
             }
     }
 
-    init(onNavigationAction: @escaping (NavigationAction) -> Void) {
+    init(
+        initialTab: String? = nil,
+        onNavigationAction: @escaping (NavigationAction) -> Void
+    ) {
+        self.initialTab = initialTab
         self.onNavigationAction = onNavigationAction
+
         Self.configureBarAppearance()
     }
 
@@ -122,6 +138,6 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(onNavigationAction: { _ in })
+        MainView(initialTab: "home", onNavigationAction: { _ in })
     }
 }

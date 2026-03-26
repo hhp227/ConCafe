@@ -112,6 +112,30 @@ service cloud.firestore {
         ]);
     }
 
+    function isValidVisitWriteData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitedAt is string
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        )
+        && request.resource.data.verified is bool;
+    }
+
+    function isVisitOwnerEditableUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.verified == resource.data.verified
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "visitedAt",
+          "memo",
+          "updatedAt"
+        ]);
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow create: if isAdmin()
@@ -175,8 +199,13 @@ service cloud.firestore {
 
     match /visits/{visitId} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if false;
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.userId
+        && isValidVisitWriteData();
+      allow update: if isSignedIn()
+        && (isAdmin() || isVisitOwnerEditableUpdate());
+      allow delete: if isSignedIn()
+        && (isAdmin() || request.auth.uid == resource.data.userId);
     }
 
     match /users/{userId} {

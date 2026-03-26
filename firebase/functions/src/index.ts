@@ -1,17 +1,236 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
-import {initializeApp} from "firebase-admin/app";
+import {getApps, initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 
 setGlobalOptions({ maxInstances: 10 });
 
-initializeApp();
+let firestoreDbInstance: ReturnType<typeof getFirestore> | null = null;
 
-const db = getFirestore();
+function db() {
+  if (firestoreDbInstance != null) {
+    return firestoreDbInstance;
+  }
+  if (getApps().length == 0) {
+    initializeApp();
+  }
+  firestoreDbInstance = getFirestore();
+  return firestoreDbInstance;
+}
+
+type ReviewLike = {
+  id?: unknown;
+  cafeId?: unknown;
+  userId?: unknown;
+  taggedCastIds?: unknown;
+  visitVerified?: unknown;
+};
+
+type VisitLike = {
+  cafeId?: unknown;
+  userId?: unknown;
+  verified?: unknown;
+};
+
+function asNonBlankString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((item) => typeof item === "string")
+    .map((item) => (item as string).trim())
+    .filter((item) => item.length > 0);
+}
+
+function castTargetKey(cafeId: string, castId: string): string {
+  return `${cafeId}::${castId}`;
+}
+
+function parseCastTargetKey(key: string): {cafeId: string; castId: string} {
+  const splitIndex = key.indexOf("::");
+  if (splitIndex < 0) {
+    return {cafeId: "", castId: ""};
+  }
+  return {
+    cafeId: key.substring(0, splitIndex),
+    castId: key.substring(splitIndex + 2),
+  };
+}
+
+function userCafeKey(cafeId: string, userId: string): string {
+  return `${cafeId}::${userId}`;
+}
+
+function parseUserCafeKey(key: string): {cafeId: string; userId: string} {
+  const splitIndex = key.indexOf("::");
+  if (splitIndex < 0) {
+    return {cafeId: "", userId: ""};
+  }
+  return {
+    cafeId: key.substring(0, splitIndex),
+    userId: key.substring(splitIndex + 2),
+  };
+}
+
+async function syncCastVisitCertificationAggregate(cafeId: string, castId: string): Promise<void> {
+  const taggedReviewSnapshot = await db()
+    .collection("reviews")
+    .where("cafeId", "==", cafeId)
+    .where("taggedCastIds", "array-contains", castId)
+    .select("userId")
+    .get();
+
+  if (taggedReviewSnapshot.empty) {
+    await db()
+      .collection("cafes")
+      .doc(cafeId)
+      .collection("casts")
+      .doc(castId)
+      .set(
+        {
+          visitCertificationCount: 0,
+        },
+        {merge: true}
+      );
+    return;
+  }
+
+  const taggedReviewUserIds = taggedReviewSnapshot.docs
+    .map((doc) => asNonBlankString(doc.get("userId")))
+    .filter((userId): userId is string => userId !== null);
+  const taggedReviewUserIdSet = new Set<string>(taggedReviewUserIds);
+
+  const verifiedVisitSnapshot = await db()
+    .collection("visits")
+    .where("cafeId", "==", cafeId)
+    .where("verified", "==", true)
+    .select("userId")
+    .get();
+  const verifiedUserIds = new Set<string>(
+    verifiedVisitSnapshot.docs
+      .map((doc) => asNonBlankString(doc.get("userId")))
+      .filter((userId): userId is string => userId !== null)
+  );
+  const visitCertificationCount = Array.from(taggedReviewUserIdSet)
+    .filter((userId) => verifiedUserIds.has(userId))
+    .length;
+
+  await db()
+    .collection("cafes")
+    .doc(cafeId)
+    .collection("casts")
+    .doc(castId)
+    .set(
+      {
+        visitCertificationCount: visitCertificationCount,
+      },
+      {merge: true}
+    );
+}
+
+async function hasVerifiedVisitAtCafe(cafeId: string, userId: string): Promise<boolean> {
+  const snapshot = await db()
+    .collection("visits")
+    .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
+    .where("verified", "==", true)
+    .limit(1)
+    .select("userId")
+    .get();
+  return !snapshot.empty;
+}
+
+async function syncSingleReviewVisitVerified(reviewId: string, review: ReviewLike | undefined): Promise<void> {
+  const cafeId = asNonBlankString(review?.cafeId);
+  const userId = asNonBlankString(review?.userId);
+
+  if (cafeId == null || userId == null || reviewId.trim().length == 0) {
+    return;
+  }
+  const verified = await hasVerifiedVisitAtCafe(cafeId, userId);
+  const currentValue = review?.visitVerified === true;
+
+  if (currentValue === verified) {
+    return;
+  }
+
+  await db()
+    .collection("reviews")
+    .doc(reviewId)
+    .set(
+      {
+        visitVerified: verified,
+      },
+      {merge: true}
+    );
+}
+
+async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string): Promise<void> {
+  const verified = await hasVerifiedVisitAtCafe(cafeId, userId);
+  const reviewsSnapshot = await db()
+    .collection("reviews")
+    .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
+    .select("userId")
+    .get();
+
+  if (reviewsSnapshot.empty) {
+    return;
+  }
+  const writeBatch = db().batch();
+
+  reviewsSnapshot.docs.forEach((doc) => {
+    writeBatch.set(
+      doc.ref,
+      {
+        visitVerified: verified,
+      },
+      {merge: true}
+    );
+  });
+
+  await writeBatch.commit();
+}
+
+function collectCastTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
+  const targets = new Set<string>();
+  const cafeId = asNonBlankString(review?.cafeId);
+
+  if (cafeId == null) {
+    return targets;
+  }
+
+  asStringArray(review?.taggedCastIds).forEach((castId) => {
+    targets.add(castTargetKey(cafeId, castId));
+  });
+  return targets;
+}
+
+async function loadTaggedCastIdsByCafeAndUser(cafeId: string, userId: string): Promise<Set<string>> {
+  const snapshot = await db()
+    .collection("reviews")
+    .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
+    .select("taggedCastIds")
+    .get();
+  const castIds = new Set<string>();
+
+  snapshot.forEach((doc) => {
+    asStringArray(doc.get("taggedCastIds")).forEach((castId) => {
+      castIds.add(castId);
+    });
+  });
+
+  return castIds;
+}
 
 async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
-  const snapshot = await db
+  const snapshot = await db()
     .collection("reviews")
     .where("cafeId", "==", cafeId)
     .select("rating")
@@ -30,7 +249,7 @@ async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
 
   const ratingAvg = reviewCount == 0 ? 0 : ratingTotal / reviewCount;
 
-  await db.collection("cafes").doc(cafeId).set(
+  await db().collection("cafes").doc(cafeId).set(
     {
       reviewCount: reviewCount,
       ratingAvg: ratingAvg,
@@ -40,14 +259,14 @@ async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
 }
 
 async function syncCastFollowerAggregate(cafeId: string, castId: string): Promise<void> {
-  const snapshot = await db
+  const snapshot = await db()
     .collection("castFollows")
     .where("castId", "==", castId)
     .select("userId")
     .get();
   const followerCount = snapshot.size;
 
-  await db
+  await db()
     .collection("cafes")
     .doc(cafeId)
     .collection("casts")
@@ -127,6 +346,162 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         castId: castId,
         cafeId: cafeId,
       })),
+    });
+  }
+);
+
+export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
+  "reviews/{reviewId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as ReviewLike | undefined;
+    const afterData = event.data?.after.data() as ReviewLike | undefined;
+    const targetKeys = new Set<string>();
+
+    collectCastTargetsFromReviewPayload(beforeData).forEach((key) => targetKeys.add(key));
+    collectCastTargetsFromReviewPayload(afterData).forEach((key) => targetKeys.add(key));
+
+    if (targetKeys.size == 0) {
+      return;
+    }
+
+    await Promise.all(
+      Array.from(targetKeys).map(async (key) => {
+        const {cafeId, castId} = parseCastTargetKey(key);
+
+        if (cafeId.length == 0 || castId.length == 0) {
+          return;
+        }
+        await syncCastVisitCertificationAggregate(cafeId, castId);
+      })
+    );
+
+    logger.info("Synced cast visit certification aggregate from review write.", {
+      reviewId: event.params.reviewId,
+      targets: Array.from(targetKeys),
+    });
+  }
+);
+
+export const onReviewWrittenSyncReviewVisitVerified = onDocumentWritten(
+  "reviews/{reviewId}",
+  async (event) => {
+    const reviewId = asNonBlankString(event.params.reviewId);
+    const afterData = event.data?.after.data() as ReviewLike | undefined;
+
+    if (reviewId == null || afterData == null) {
+      return;
+    }
+    await syncSingleReviewVisitVerified(reviewId, afterData);
+    logger.info("Synced review visitVerified from review write.", {
+      reviewId: reviewId,
+    });
+  }
+);
+
+export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+    const beforeCafeId = asNonBlankString(beforeData?.cafeId);
+    const beforeUserId = asNonBlankString(beforeData?.userId);
+    const beforeVerified = beforeData?.verified === true;
+    const afterCafeId = asNonBlankString(afterData?.cafeId);
+    const afterUserId = asNonBlankString(afterData?.userId);
+    const afterVerified = afterData?.verified === true;
+
+    if (
+      beforeCafeId === afterCafeId &&
+      beforeUserId === afterUserId &&
+      beforeVerified === afterVerified
+    ) {
+      return;
+    }
+
+    const targetPairs = new Set<string>();
+    const sourcePairs = new Set<string>();
+    const visitSources = [beforeData, afterData];
+
+    visitSources.forEach((visit) => {
+      const cafeId = asNonBlankString(visit?.cafeId);
+      const userId = asNonBlankString(visit?.userId);
+
+      if (cafeId == null || userId == null) {
+        return;
+      }
+      sourcePairs.add(userCafeKey(cafeId, userId));
+    });
+
+    await Promise.all(Array.from(sourcePairs).map(async (sourcePair) => {
+      const parsedSource = parseUserCafeKey(sourcePair);
+      const cafeId = parsedSource.cafeId;
+      const userId = parsedSource.userId;
+
+      if (cafeId.length == 0 || userId.length == 0) {
+        return;
+      }
+      const castIds = await loadTaggedCastIdsByCafeAndUser(cafeId, userId);
+
+      castIds.forEach((castId) => {
+        targetPairs.add(castTargetKey(cafeId, castId));
+      });
+    }));
+
+    if (targetPairs.size == 0) {
+      return;
+    }
+
+    await Promise.all(
+      Array.from(targetPairs).map(async (key) => {
+        const {cafeId, castId} = parseCastTargetKey(key);
+
+        if (cafeId.length == 0 || castId.length == 0) {
+          return;
+        }
+        await syncCastVisitCertificationAggregate(cafeId, castId);
+      })
+    );
+
+    logger.info("Synced cast visit certification aggregate from visit write.", {
+      visitId: event.params.visitId,
+      targets: Array.from(targetPairs),
+    });
+  }
+);
+
+export const onVisitWrittenSyncReviewVisitVerified = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+    const sourcePairs = new Set<string>();
+    const visitSources = [beforeData, afterData];
+
+    visitSources.forEach((visit) => {
+      const cafeId = asNonBlankString(visit?.cafeId);
+      const userId = asNonBlankString(visit?.userId);
+
+      if (cafeId == null || userId == null) {
+        return;
+      }
+      sourcePairs.add(userCafeKey(cafeId, userId));
+    });
+
+    if (sourcePairs.size == 0) {
+      return;
+    }
+    await Promise.all(Array.from(sourcePairs).map(async (sourcePair) => {
+      const parsed = parseUserCafeKey(sourcePair);
+
+      if (parsed.cafeId.length == 0 || parsed.userId.length == 0) {
+        return;
+      }
+      await syncUserCafeReviewsVisitVerified(parsed.cafeId, parsed.userId);
+    }));
+
+    logger.info("Synced review visitVerified from visit write.", {
+      visitId: event.params.visitId,
+      targets: Array.from(sourcePairs),
     });
   }
 );

@@ -137,9 +137,9 @@ private struct CastHeroSection: View {
     let topSafeArea: CGFloat
 
     var body: some View {
-        let upwardScroll = min(scrollOffset, 0)
-        let parallaxOffset = -upwardScroll * 0.35
-        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroHeight = 230 + topSafeArea
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
+        let dynamicHeroHeight = heroHeight + pullDownOffset
         let heroImages = resolveHeroImages(
             images: detail.images,
             fallbackProfileImage: detail.cast.profileImage
@@ -185,12 +185,13 @@ private struct CastHeroSection: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                         .padding(20)
                 }
-                .scaleEffect(stretchScale, anchor: .center)
-                .offset(y: parallaxOffset)
+                .frame(height: dynamicHeroHeight)
                 .clipped()
             }
         }
-        .frame(height: 230 + topSafeArea)
+        .frame(height: dynamicHeroHeight)
+        .offset(y: pullDownOffset > 0 ? -pullDownOffset : 0)
+        .frame(height: dynamicHeroHeight, alignment: .top)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
