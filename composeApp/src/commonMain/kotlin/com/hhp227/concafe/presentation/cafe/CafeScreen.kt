@@ -331,6 +331,7 @@ fun CafeContentScreen(
 private fun CafeHeroSection(
     detail: CafeDetail
 ) {
+    val heroHeight = 330.dp
     val heroImages = remember(detail) {
         val normalized = detail.images
             .map { it.trim() }
@@ -348,7 +349,7 @@ private fun CafeHeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(330.dp)
+            .height(heroHeight)
     ) {
         HorizontalPager(
             state = pagerState,

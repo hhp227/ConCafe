@@ -229,6 +229,7 @@ private fun CastHeroSection(
     detail: CastDetail,
     scrollOffset: Int
 ) {
+    val heroHeight = 330.dp
     val heroImages = resolveHeroImages(
         images = detail.images,
         fallbackProfileImage = detail.cast.profileImage
@@ -243,7 +244,7 @@ private fun CastHeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(330.dp)
+            .height(heroHeight)
     ) {
         HorizontalPager(
             state = pagerState,
