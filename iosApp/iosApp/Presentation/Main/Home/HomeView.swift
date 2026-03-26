@@ -183,7 +183,7 @@ private struct HomeContentView: View {
                                 name: maid.name,
                                 subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
                                 imageUrl: maid.profileImage,
-                                metaText: "👥 \(maid.followerCount)",
+                                metaText: "팔로워 \(maid.followerCount)",
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
                             )
                             .frame(width: 132, alignment: .leading)
@@ -458,7 +458,7 @@ private struct NearByCafeItem: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                Text("📍 \(cafe.region.address)")
+                Text(cafe.region.address)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "EF6797"))
                 .lineLimit(1)
