@@ -66,7 +66,8 @@ final class TimeUtils {
         time: Date,
         fallback: String = "2026-03-09T15:00:00Z"
     ) -> String {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
         let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
         let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
 
@@ -78,7 +79,23 @@ final class TimeUtils {
             return fallback
         }
 
-        return String(format: "%04d-%02d-%02dT%02d:%02d:00Z", year, month, day, hour, minute)
+        var localDateTimeComponents = DateComponents()
+        localDateTimeComponents.year = year
+        localDateTimeComponents.month = month
+        localDateTimeComponents.day = day
+        localDateTimeComponents.hour = hour
+        localDateTimeComponents.minute = minute
+        localDateTimeComponents.second = 0
+        localDateTimeComponents.timeZone = TimeZone.current
+
+        guard let localDateTime = calendar.date(from: localDateTimeComponents) else {
+            return fallback
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+        return formatter.string(from: localDateTime)
     }
 
     static func formatHourMinute(_ date: Date) -> String {
