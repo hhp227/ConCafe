@@ -95,10 +95,7 @@ class MyInfoViewModel(
             cafeDetailEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> patchCafe(event.cafe)
-                    is CafeDetailEvent.FavoriteToggled -> applyFavoriteToggle(
-                        cafeId = event.cafeId,
-                        isFavorite = event.isFavorite
-                    )
+                    is CafeDetailEvent.FavoriteToggled -> loadMyInfo()
                     is CafeDetailEvent.MenuCreated,
                     is CafeDetailEvent.MenuUpdated,
                     is CafeDetailEvent.MenuDeleted,
@@ -216,31 +213,6 @@ class MyInfoViewModel(
             summary.copy(followedCastsCount = followedMaids.size)
         } else {
             null
-        }
-    }
-
-    private fun applyFavoriteToggle(cafeId: String, isFavorite: Boolean) {
-        _uiState.update { state ->
-            val summary = state.summary
-            val updatedSummary = if (summary != null) {
-                val nextCount = if (isFavorite) {
-                    summary.favoritesCount + 1
-                } else {
-                    max(summary.favoritesCount - 1, 0)
-                }
-                summary.copy(favoritesCount = nextCount)
-            } else {
-                null
-            }
-            val updatedFavorites = if (isFavorite) {
-                state.favorites
-            } else {
-                state.favorites.filterNot { item -> item.id == cafeId }
-            }
-            state.copy(
-                summary = updatedSummary,
-                favorites = updatedFavorites
-            )
         }
     }
 

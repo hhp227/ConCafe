@@ -95,8 +95,8 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
                     if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                         self.patchCafe(updated.cafe)
-                    } else if let favorite = event as? CafeDetailEvent.FavoriteToggled {
-                        self.applyFavoriteToggle(cafeId: favorite.cafeId, isFavorite: favorite.isFavorite)
+                    } else if event is CafeDetailEvent.FavoriteToggled {
+                        self.loadMyInfo()
                     }
                 }
             } catch {
@@ -236,25 +236,6 @@ final class MyInfoViewModel: ObservableObject {
             result.insert(cast, at: 0)
         }
         return result
-    }
-
-    private func applyFavoriteToggle(cafeId: String, isFavorite: Bool) {
-        if let summary = uiState.summary {
-            let nextCount = isFavorite
-                ? Int(summary.favoritesCount) + 1
-                : max(Int(summary.favoritesCount) - 1, 0)
-            uiState.summary = MyPageSummary(
-                userId: summary.userId,
-                totalVisits: summary.totalVisits,
-                favoritesCount: Int32(nextCount),
-                followedCastsCount: summary.followedCastsCount,
-                badgesCount: summary.badgesCount,
-                level: summary.level
-            )
-        }
-        if !isFavorite {
-            uiState.favorites.removeAll { $0.id == cafeId }
-        }
     }
 
     private func applyVisitCountDelta(_ delta: Int) {

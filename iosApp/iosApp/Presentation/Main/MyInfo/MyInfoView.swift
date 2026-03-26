@@ -410,7 +410,7 @@ private struct ProfileMyInfoView: View {
         default:
             return [
                 .init(title: "방문 횟수", value: "\(uiState.summary?.totalVisits ?? 0)", highlight: false),
-                .init(title: "즐겨찾기", value: "\(uiState.summary?.favoritesCount ?? 0)", highlight: true),
+                .init(title: "즐겨찾기", value: "\(uiState.favorites.count)", highlight: true),
                 .init(title: "팔로우", value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
             ]
         }
