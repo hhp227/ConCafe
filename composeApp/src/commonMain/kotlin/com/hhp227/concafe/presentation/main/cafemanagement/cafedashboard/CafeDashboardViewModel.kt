@@ -409,6 +409,7 @@ class CafeDashboardViewModel(
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         patchCafeInfo(event.cafe)
                     }
+                    is CafeDetailEvent.FavoriteToggled -> Unit
                     is CafeDetailEvent.MenuCreated,
                     is CafeDetailEvent.MenuUpdated,
                     is CafeDetailEvent.MenuDeleted,

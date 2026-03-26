@@ -14,6 +14,7 @@ object FirestorePaths {
     const val CAFE_REGISTRATION_CLAIMS = "cafeRegistrationClaims"
     const val REVIEWS = "reviews"
     const val CAST_FOLLOWS = "castFollows"
+    const val CAFE_FAVORITES = "cafeFavorites"
     const val VISITS = "visits"
     const val STAMPS = "stamps"
     const val CAST_SCHEDULES = "castSchedules"

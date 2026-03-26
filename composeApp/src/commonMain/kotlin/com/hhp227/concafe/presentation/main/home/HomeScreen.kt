@@ -228,7 +228,7 @@ fun HomeContentScreen(
                             subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
                             imageUrl = maid.profileImage,
                             modifier = Modifier.width(132.dp),
-                            metaText = "👥 ${maid.followerCount}",
+                            metaText = "팔로워 ${maid.followerCount}",
                             onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
                         )
                     }
@@ -531,7 +531,7 @@ private fun NearByCafeItem(
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
             Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("📍 ${cafe.region.address}", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(cafe.region.address, color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

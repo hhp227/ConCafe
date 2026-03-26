@@ -52,6 +52,7 @@ class MenuGoodsViewModel(
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()
                     }
+                    is CafeDetailEvent.FavoriteToggled -> Unit
                     is CafeDetailEvent.MenuCreated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()
                     }

@@ -47,6 +47,11 @@ class CafeViewModel(
             cafeDetailEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> loadCafeDetail()
+                    is CafeDetailEvent.FavoriteToggled -> {
+                        if (event.cafeId == cafeId) {
+                            _uiState.update { state -> state.copy(isFavorite = event.isFavorite) }
+                        }
+                    }
                     is CafeDetailEvent.GoodsCreated,
                     is CafeDetailEvent.GoodsDeleted,
                     is CafeDetailEvent.GoodsUpdated,

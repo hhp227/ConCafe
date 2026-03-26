@@ -466,6 +466,7 @@ private fun ProfileMyInfoScreen(
                                         name = cafe.name,
                                         rating = "${cafe.ratingAvg}",
                                         location = cafe.region.city,
+                                        thumbnailImage = cafe.thumbnailImage,
                                         onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
                                     )
                                 }
@@ -656,7 +657,7 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
         else -> {
             listOf(
                 MyInfoMetricCardModel("방문 횟수", (uiState.summary?.totalVisits ?: 0).toString(), false),
-                MyInfoMetricCardModel("즐겨찾기", (uiState.summary?.favoritesCount ?: 0).toString(), true),
+                MyInfoMetricCardModel("즐겨찾기", uiState.favorites.size.toString(), true),
                 MyInfoMetricCardModel("팔로우", (uiState.summary?.followedCastsCount ?: 0).toString(), false)
             )
         }

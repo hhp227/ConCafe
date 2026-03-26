@@ -410,7 +410,7 @@ private struct ProfileMyInfoView: View {
         default:
             return [
                 .init(title: "방문 횟수", value: "\(uiState.summary?.totalVisits ?? 0)", highlight: false),
-                .init(title: "즐겨찾기", value: "\(uiState.summary?.favoritesCount ?? 0)", highlight: true),
+                .init(title: "즐겨찾기", value: "\(uiState.favorites.count)", highlight: true),
                 .init(title: "팔로우", value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
             ]
         }
@@ -506,14 +506,7 @@ private struct ProfileMyInfoView: View {
             if !uiState.favorites.isEmpty {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
-                        CafeSummaryCard(
-                            name: cafe.name,
-                            rating: String(format: "%.1f", cafe.ratingAvg),
-                            location: cafe.region.city,
-                            thumbnailImage: cafe.thumbnailImage,
-                            trailingLabel: nil,
-                            onTap: { onAction(.cafeTapped(id: cafe.id)) }
-                        )
+                        favoriteCafeCard(cafe)
                     }
                 }
             } else {
@@ -522,6 +515,55 @@ private struct ProfileMyInfoView: View {
                     description: "좋아하는 카페를 즐겨찾기에 추가해보세요."
                 )
             }
+        }
+    }
+
+    private func favoriteCafeCard(_ cafe: Cafe) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            GeometryReader { geometry in
+                let imageSize = geometry.size
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: EmptyView()
+                        )
+                        .frame(width: imageSize.width, height: imageSize.height)
+                        .clipped()
+                    } else {
+                        Image(systemName: "building.2.fill")
+                            .foregroundStyle(Color.white.opacity(0.85))
+                    }
+                }
+            }
+            .frame(height: 120)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cafe.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))")
+                    .font(.caption)
+                Text(cafe.region.city)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 4)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onAction(.cafeTapped(id: cafe.id))
         }
     }
 

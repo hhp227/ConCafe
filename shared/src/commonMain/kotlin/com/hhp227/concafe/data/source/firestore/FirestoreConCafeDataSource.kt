@@ -844,6 +844,58 @@ class FirestoreConCafeDataSource(
         followedCastIdsByUser[userId] = followedCastIds
     }
 
+    suspend fun refreshFavoriteCafeIds(userId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val favoriteDocuments = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                userId = userId,
+                idToken = null
+            )
+        }.getOrElse { emptyList() }
+        val favoriteCafeIds = favoriteDocuments
+            .mapNotNull { document ->
+                document["fields"]?.jsonObject?.getFirestoreString("cafeId")
+            }
+            .toMutableSet()
+
+        favoriteCafeIdsByUser[userId] = favoriteCafeIds
+    }
+
+    suspend fun refreshFavoriteUserIds(cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val favoriteDocuments = runCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                fieldPath = "cafeId",
+                fieldValue = cafeId,
+                idToken = idToken,
+                orderByCreatedAtDesc = false
+            )
+        }.recoverCatching {
+            runFieldScopedQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                fieldPath = "cafeId",
+                fieldValue = cafeId,
+                idToken = null,
+                orderByCreatedAtDesc = false
+            )
+        }.getOrElse { emptyList() }
+        val favoriteUserIds = favoriteDocuments
+            .mapNotNull { document ->
+                document["fields"]?.jsonObject?.getFirestoreString("userId")
+            }
+            .toMutableSet()
+
+        favoriteUserIdsByCafeId[cafeId] = favoriteUserIds
+    }
+
     suspend fun refreshFollowerUserIds(castId: String) {
         val idToken = tokenProvider.getIdToken()
         val followDocuments = runCatching {
@@ -920,6 +972,50 @@ class FirestoreConCafeDataSource(
         followedSet.remove(castId)
         followerSet.remove(userId)
         syncCastFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+    }
+
+    suspend fun favoriteCafeRemote(userId: String, cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+
+        runCatching { refreshFavoriteCafeIds(userId) }
+        runCatching { refreshFavoriteUserIds(cafeId) }
+
+        val favoriteId = buildCafeFavoriteDocumentId(userId = userId, cafeId = cafeId)
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_FAVORITES}/$favoriteId"
+        val createdAt = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "createdAt" to firestoreString(createdAt)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        val favoriteCafeSet = favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
+        val favoriteUserSet = favoriteUserIdsByCafeId.getOrPut(cafeId) { mutableSetOf() }
+
+        favoriteCafeSet.add(cafeId)
+        favoriteUserSet.add(userId)
+    }
+
+    suspend fun unfavoriteCafeRemote(userId: String, cafeId: String) {
+        val idToken = tokenProvider.getIdToken()
+
+        runCatching { refreshFavoriteCafeIds(userId) }
+        runCatching { refreshFavoriteUserIds(cafeId) }
+
+        val favoriteId = buildCafeFavoriteDocumentId(userId = userId, cafeId = cafeId)
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_FAVORITES}/$favoriteId"
+
+        runCatching {
+            restApi.delete(path, idToken)
+        }
+        val favoriteCafeSet = favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
+        val favoriteUserSet = favoriteUserIdsByCafeId.getOrPut(cafeId) { mutableSetOf() }
+
+        favoriteCafeSet.remove(cafeId)
+        favoriteUserSet.remove(userId)
     }
 
     suspend fun hasReviewForVisitRemote(visitId: String): Boolean {
@@ -2332,6 +2428,12 @@ class FirestoreConCafeDataSource(
         val normalizedUserId = userId.replace("/", "_")
         val normalizedCastId = castId.replace("/", "_")
         return "${normalizedUserId}_$normalizedCastId"
+    }
+
+    private fun buildCafeFavoriteDocumentId(userId: String, cafeId: String): String {
+        val normalizedUserId = userId.replace("/", "_")
+        val normalizedCafeId = cafeId.replace("/", "_")
+        return "${normalizedUserId}_$normalizedCafeId"
     }
 
     private suspend fun loadCollectionDocuments(
