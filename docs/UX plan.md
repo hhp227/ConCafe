@@ -33,6 +33,13 @@
 - 지도는 Android(Compose GoogleMap), iOS(Apple Map), Desktop(Google Maps JavaScript WebView)로 분기 구현되어 있다.
 - `운영관리`의 승인 대기 목록은 Firestore pending claim 조회 경로를 사용한다.
 
+### 구현 정합성 메모 (2026-03-26)
+- 카페 상세/리뷰 탭의 고비용 N+1 집계를 축소했다.
+- 카페 상세의 근무 캐스트 판별은 `castSchedules` 단건 반복 조회 대신 `카페+날짜` 기준 1회 조회로 정리했다.
+- 리뷰 리스트의 방문인증 뱃지는 백엔드가 유지하는 `reviews.visitVerified` 필드를 우선 사용한다.
+- 리뷰/공지 탭은 최초 미캐시 진입 시에만 원격 동기화를 수행하고, 탭 재진입 시 불필요한 전체 재조회는 하지 않는다.
+- iOS/Compose 카페 상세에서 리뷰 이벤트 발생 시 전체 상세 재조회 대신 리뷰 섹션 갱신 중심으로 동작한다.
+
 ---
 
 # 1️⃣ 🏠 홈 (Home)

@@ -111,13 +111,15 @@ cafes/{cafeId}/goods/{goodsId}
 ├─ createdAt
 └─ updatedAt
 
-cafes/{cafeId}/reviews/{reviewId}
+reviews/{reviewId}
 ├─ userId
+├─ cafeId
 ├─ visitId
 ├─ rating
 ├─ content
-├─ images[]
+├─ imageUrls[]
 ├─ taggedCastIds[]
+├─ visitVerified
 ├─ likeCount
 └─ createdAt
 
@@ -126,6 +128,8 @@ cafes/{cafeId}/reviews/{reviewId}
 - 리뷰 작성 시 같은 카페에 소속된 캐스트를 선택적으로 태그할 수 있다.
 - `taggedCastIds[]`는 캐스트 전용 리뷰를 의미하지 않고, 카페 리뷰 안에서 함께 언급된 캐스트 연결 정보로만 사용한다.
 - 캐스트 상세 화면에서는 `taggedCastIds[]`에 현재 캐스트 id가 포함된 카페 리뷰만 `함께 언급된 후기`로 노출한다.
+- `visitVerified`는 리뷰 작성자 기준 카페 방문인증 여부를 백엔드 집계로 동기화한 필드다.
+- 동기화 트리거: `onReviewWrittenSyncReviewVisitVerified`, `onVisitWrittenSyncReviewVisitVerified`.
 
 cafes/{cafeId}/notices/{noticeId}
 ├─ title
@@ -249,6 +253,15 @@ cafeRegistrationClaims/{claimId}
 구현 정합성 메모 (2026-03-23)
 - 리뷰 쓰기(create/update/delete) 이후 카페 집계(`cafes/{cafeId}.stats.reviewCount`, `stats.ratingAvg`)는 Cloud Functions 트리거(`onReviewWrittenSyncCafeAggregate`)에서 계산/반영한다.
 - `castFollows` 규칙은 로그인 사용자 read, 본인 문서 create/delete 허용, update 금지로 운영한다.
+
+구현 정합성 메모 (2026-03-26)
+- Functions 초기화는 lazy 방식으로 전환해 배포 시 코드 분석 단계 타임아웃 위험을 줄였다.
+- 캐스트 방문인증 집계 동기화 트리거:
+  - `onReviewWrittenSyncCastVisitCertificationCount`
+  - `onVisitWrittenSyncCastVisitCertificationCount`
+- 리뷰 방문인증 동기화 트리거:
+  - `onReviewWrittenSyncReviewVisitVerified`
+  - `onVisitWrittenSyncReviewVisitVerified`
 
 공지/이벤트 관리 메모
 - `cafes/{cafeId}/notices`, `cafes/{cafeId}/events`는 카페별 페이지네이션 조회를 사용하며 현재 페이지 크기는 15개다.
