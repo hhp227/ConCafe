@@ -75,8 +75,8 @@ struct AppNavigationView: View {
                 InquiryView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
-            case .main:
-                MainView(onNavigationAction: viewModel.onAction)
+            case .main(let initialTab):
+                MainView(initialTab: initialTab, onNavigationAction: viewModel.onAction)
             case .entry:
                 EmptyView()
             }
@@ -87,6 +87,7 @@ struct AppNavigationView: View {
                 switch route {
                 case .main(let initialTab):
                     currentRoute = .main(initialTab: initialTab)
+
                     path.removeAll()
                 case .entry:
                     currentRoute = .entry
@@ -104,12 +105,12 @@ struct AppNavigationView: View {
     @ViewBuilder
     private var rootContent: some View {
         switch currentRoute {
-        case .main:
-            MainView(onNavigationAction: viewModel.onAction)
+        case .main(let initialTab):
+            MainView(initialTab: initialTab, onNavigationAction: viewModel.onAction)
         case .entry:
             ProgressView()
         default:
-            MainView(onNavigationAction: viewModel.onAction)
+            MainView(initialTab: "home", onNavigationAction: viewModel.onAction)
         }
     }
 

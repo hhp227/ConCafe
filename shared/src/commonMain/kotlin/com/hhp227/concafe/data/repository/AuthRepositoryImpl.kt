@@ -167,6 +167,7 @@ class AuthRepositoryImpl(
 
         if (remoteUser != null) {
             val replaced = authDataSource.replaceUser(remoteUser)
+
             if (!replaced) {
                 authDataSource.addUser(remoteUser)
             }
@@ -178,7 +179,6 @@ class AuthRepositoryImpl(
         if (foundByEmail != null) {
             val migratedUser = foundByEmail.copy(id = userId, email = email)
             val replaced = authDataSource.replaceUser(migratedUser)
-
             return if (replaced) {
                 migratedUser
             } else {

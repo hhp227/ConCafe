@@ -12,6 +12,7 @@ class CafeDashboardRepositoryImpl(
 ) : CafeDashboardRepository {
     override suspend fun getCafeDashboardData(cafeId: String, ownerUserId: String?): CafeDashboardData {
         val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+
         if (ownerUserId != null && !cafeDataSource.ownedCafeIdsByUser[ownerUserId].orEmpty().contains(cafeId)) {
             if (firestoreDataSource != null) {
                 runCatching {
@@ -44,7 +45,6 @@ class CafeDashboardRepositoryImpl(
                     isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
                 )
             }
-
         val homeBannerPreview = cafeDataSource.cafeHomeBannerPreviewByCafeId[cafeId]
             ?: CafeDashboardData.HomeBannerPreview(
                 title = "홈 배너를 등록해보세요",
@@ -52,7 +52,6 @@ class CafeDashboardRepositoryImpl(
                 statusLabel = "미등록",
                 imageUrl = null
             )
-
         return CafeDashboardData(
             id = cafe.id,
             name = cafe.name,
