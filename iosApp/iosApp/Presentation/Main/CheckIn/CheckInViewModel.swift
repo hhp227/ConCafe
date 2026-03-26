@@ -67,30 +67,76 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
-    private func loadUserFeed() {
-        tasks[.userFeed]?.cancel()
-        tasks[.userFeed] = Task {
+    private func loadRecentVisitPage(cursor: String?, append: Bool) {
+        tasks[.recentVisitPage]?.cancel()
+        tasks[.recentVisitPage] = Task {
+            uiState.isLoadingMoreRecentVisits = append
+
             do {
-                let result = try await getCheckInUserFeedUseCase.invoke()
+                let result = try await getCheckInUserFeedUseCase.invoke(cursor: cursor, pageSize: Self.recentVisitPageSize)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let feed = success.data as? Shared.CheckInUserFeed {
-                    uiState.todayVisits = feed.todayVisits
-                    uiState.recentVisits = feed.recentVisits
+                    let loadedRecentVisits = feed.recentVisits
+                    var nextState = uiState
+                    let mergedRecentVisits = append ? (nextState.recentVisits + loadedRecentVisits) : loadedRecentVisits
+                    let mergedTodayVisits = mergedRecentVisits
+                        .filter { $0.visitedAt.hasPrefix(TimeUtils.currentIsoDate()) }
+                        .prefix(Self.todayVisitLimit)
+
+                    nextState.todayVisits = Array(mergedTodayVisits)
+                    nextState.recentVisits = mergedRecentVisits
+                    nextState.recentVisitsNextCursor = feed.recentVisitsNextCursor
+                    nextState.canLoadMoreRecentVisits = feed.canLoadMoreRecentVisits
+                    nextState.isLoadingMoreRecentVisits = false
+                    uiState = nextState
                 } else if let failure = result as? AppResultFailure {
-                    uiState.todayVisits = []
-                    uiState.recentVisits = []
-                    uiState.errorMessage = "\(failure.error)"
+                    var nextState = uiState
+                    nextState.isLoadingMoreRecentVisits = false
+                    nextState.errorMessage = "\(failure.error)"
+                    if !append {
+                        nextState.todayVisits = []
+                        nextState.recentVisits = []
+                        nextState.recentVisitsNextCursor = nil
+                        nextState.canLoadMoreRecentVisits = false
+                    }
+                    uiState = nextState
                 } else {
-                    uiState.todayVisits = []
-                    uiState.recentVisits = []
+                    var nextState = uiState
+                    nextState.isLoadingMoreRecentVisits = false
+                    if !append {
+                        nextState.todayVisits = []
+                        nextState.recentVisits = []
+                        nextState.recentVisitsNextCursor = nil
+                        nextState.canLoadMoreRecentVisits = false
+                    }
+                    uiState = nextState
                 }
             } catch {
                 if Task.isCancelled { return }
-                uiState.todayVisits = []
-                uiState.recentVisits = []
-                uiState.errorMessage = error.localizedDescription
+                var nextState = uiState
+                nextState.isLoadingMoreRecentVisits = false
+                nextState.errorMessage = error.localizedDescription
+                if !append {
+                    nextState.todayVisits = []
+                    nextState.recentVisits = []
+                    nextState.recentVisitsNextCursor = nil
+                    nextState.canLoadMoreRecentVisits = false
+                }
+                uiState = nextState
             }
+        }
+    }
+
+    private func refreshRecentVisitPage() {
+        loadRecentVisitPage(cursor: nil, append: false)
+    }
+
+    private func loadMoreRecentVisitPage() {
+        if uiState.canLoadMoreRecentVisits,
+           !uiState.isLoadingMoreRecentVisits,
+           let cursor = uiState.recentVisitsNextCursor {
+            loadRecentVisitPage(cursor: cursor, append: true)
         }
     }
 
@@ -107,8 +153,11 @@ final class CheckInViewModel: ObservableObject {
                         self.uiState.reviewPrompt = nil
                         self.uiState.todayVisits = []
                         self.uiState.recentVisits = []
+                        self.uiState.recentVisitsNextCursor = nil
+                        self.uiState.canLoadMoreRecentVisits = false
+                        self.uiState.isLoadingMoreRecentVisits = false
                     } else {
-                        self.loadUserFeed()
+                        self.refreshRecentVisitPage()
                     }
                 }
             } catch {
@@ -120,42 +169,39 @@ final class CheckInViewModel: ObservableObject {
     private func submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if cafeId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             uiState.errorMessage = "카페를 선택해 주세요."
-            return
-        }
-        if visitedAt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        } else if visitedAt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             uiState.errorMessage = "방문 시간을 입력해 주세요."
-            return
-        }
+        } else {
+            uiState.errorMessage = nil
 
-        uiState.errorMessage = nil
+            tasks[.submitVisit]?.cancel()
+            tasks[.submitVisit] = Task {
+                do {
+                    let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        tasks[.submitVisit]?.cancel()
-        tasks[.submitVisit] = Task {
-            do {
-                let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let result = try await createVisitUseCase.invoke(
+                        cafeId: cafeId,
+                        visitedAt: visitedAt,
+                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
+                    )
 
-                let result = try await createVisitUseCase.invoke(
-                    cafeId: cafeId,
-                    visitedAt: visitedAt,
-                    memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
-                )
-
-                if result is AppResultSuccess<AnyObject> {
-                    uiState.isNewVisitSheetVisible = false
-                    uiState.errorMessage = nil
-                    loadUserFeed()
-                    if let success = result as? AppResultSuccess<AnyObject>,
-                       let visit = success.data as? Visit {
-                        await maybeShowReviewPrompt(visit: visit)
+                    if result is AppResultSuccess<AnyObject> {
+                        uiState.isNewVisitSheetVisible = false
+                        uiState.errorMessage = nil
+                        refreshRecentVisitPage()
+                        if let success = result as? AppResultSuccess<AnyObject>,
+                           let visit = success.data as? Visit {
+                            await maybeShowReviewPrompt(visit: visit)
+                        }
+                    } else if let failure = result as? AppResultFailure {
+                        uiState.errorMessage = "\(failure.error)"
+                    } else {
+                        uiState.errorMessage = "체크인 저장에 실패했습니다."
                     }
-                } else if let failure = result as? AppResultFailure {
-                    uiState.errorMessage = "\(failure.error)"
-                } else {
-                    uiState.errorMessage = "체크인 저장에 실패했습니다."
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.errorMessage = error.localizedDescription
                 }
-            } catch {
-                if Task.isCancelled { return }
-                uiState.errorMessage = error.localizedDescription
             }
         }
     }
@@ -228,9 +274,9 @@ final class CheckInViewModel: ObservableObject {
                 for try await event in asyncSequence(for: visitEventPublisher.events) {
                     switch event {
                     case let _ as Shared.VisitEvent.Created:
-                        loadUserFeed()
+                        refreshRecentVisitPage()
                     case let _ as Shared.VisitEvent.Deleted:
-                        loadUserFeed()
+                        refreshRecentVisitPage()
                     default:
                         break
                     }
@@ -276,6 +322,38 @@ final class CheckInViewModel: ObservableObject {
                 profileImage: item.profileImage,
                 todayVisit: item.todayVisit
             )
+        }
+        uiState.recentVisits = uiState.recentVisits.map { item in
+            if item.cafeId == cafe.id {
+                return CheckInVisitEntry(
+                    id: item.id,
+                    cafeId: item.cafeId,
+                    cafeName: cafe.name,
+                    cafeImage: cafe.thumbnailImage ?? "",
+                    visitedAt: item.visitedAt,
+                    visitedLabel: item.visitedLabel,
+                    memo: item.memo,
+                    verified: item.verified
+                )
+            } else {
+                return item
+            }
+        }
+        uiState.todayVisits = uiState.todayVisits.map { item in
+            if item.cafeId == cafe.id {
+                return CheckInVisitEntry(
+                    id: item.id,
+                    cafeId: item.cafeId,
+                    cafeName: cafe.name,
+                    cafeImage: cafe.thumbnailImage ?? "",
+                    visitedAt: item.visitedAt,
+                    visitedLabel: item.visitedLabel,
+                    memo: item.memo,
+                    verified: item.verified
+                )
+            } else {
+                return item
+            }
         }
         if let prompt = uiState.reviewPrompt, prompt.cafeId == cafe.id {
             uiState.reviewPrompt = CheckInUiState.ReviewPrompt(
@@ -353,6 +431,8 @@ final class CheckInViewModel: ObservableObject {
             dismissReviewPrompt()
         case .writeReviewPromptTapped:
             writeReviewPrompt()
+        case .loadMoreRecentVisits:
+            loadMoreRecentVisitPage()
         case .submitNewVisit(let cafeId, let visitedAt, let memo):
             submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
         }
@@ -393,7 +473,7 @@ final class CheckInViewModel: ObservableObject {
 
     private enum TaskKey {
         case guestFeed
-        case userFeed
+        case recentVisitPage
         case submitVisit
         case session
         case cafeDetailEvent
@@ -401,4 +481,8 @@ final class CheckInViewModel: ObservableObject {
         case visitEvent
         case reviewPromptAction
     }
+
+    private static let todayVisitLimit = 4
+
+    private static let recentVisitPageSize: Int32 = 12
 }

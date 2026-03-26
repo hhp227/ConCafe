@@ -193,7 +193,12 @@ private struct CheckInUserContentView: View {
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
-                CheckInTimelineList(visits: uiState.recentVisits)
+                CheckInTimelineList(
+                    visits: uiState.recentVisits,
+                    canLoadMore: uiState.canLoadMoreRecentVisits,
+                    isLoadingMore: uiState.isLoadingMoreRecentVisits,
+                    onLoadMore: { onAction(.loadMoreRecentVisits) }
+                )
             }
         }
     }
@@ -597,6 +602,12 @@ private struct CheckInPrimaryButton: View {
 private struct CheckInTimelineList: View {
     let visits: [CheckInVisitEntry]
 
+    let canLoadMore: Bool
+
+    let isLoadingMore: Bool
+
+    let onLoadMore: () -> Void
+
     var body: some View {
         if visits.isEmpty {
             CheckInEmptyState(
@@ -610,6 +621,18 @@ private struct CheckInTimelineList: View {
                         visit: visit,
                         showsConnector: index < visits.count - 1
                     )
+                }
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                } else if canLoadMore {
+                    Button("최근 방문 더 보기") {
+                        onLoadMore()
+                    }
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
                 }
             }
             .padding(.horizontal, 16)

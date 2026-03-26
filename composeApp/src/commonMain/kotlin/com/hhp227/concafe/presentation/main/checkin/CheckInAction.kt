@@ -19,6 +19,8 @@ sealed interface CheckInAction {
 
     data object ClickWriteReviewPrompt : CheckInAction
 
+    data object LoadMoreRecentVisits : CheckInAction
+
     data class SubmitNewVisit(
         val cafeId: String,
         val visitedAt: String,

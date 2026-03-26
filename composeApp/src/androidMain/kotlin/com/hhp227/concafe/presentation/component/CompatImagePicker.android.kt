@@ -92,7 +92,7 @@ actual fun CompatImageDisplay(
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
             .data(imageUrl)
-            .size(600, 300)
+            .size(800, 400)
             .crossfade(true)
             .build()
     )

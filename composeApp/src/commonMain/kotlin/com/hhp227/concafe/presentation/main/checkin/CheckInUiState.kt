@@ -15,6 +15,9 @@ data class CheckInUiState(
     val popularCasts: List<CheckInCastSummary> = emptyList(),
     val todayVisits: List<CheckInVisitEntry> = emptyList(),
     val recentVisits: List<CheckInVisitEntry> = emptyList(),
+    val recentVisitsNextCursor: String? = null,
+    val canLoadMoreRecentVisits: Boolean = false,
+    val isLoadingMoreRecentVisits: Boolean = false,
     val isLoginPromptVisible: Boolean = false,
     val isNewVisitSheetVisible: Boolean = false,
     val reviewPrompt: ReviewPrompt? = null

@@ -18,6 +18,9 @@ struct CheckInUiState {
     var popularCasts: [CheckInCastSummary]
     var todayVisits: [CheckInVisitEntry]
     var recentVisits: [CheckInVisitEntry]
+    var recentVisitsNextCursor: String?
+    var canLoadMoreRecentVisits: Bool
+    var isLoadingMoreRecentVisits: Bool
     var isLoginPromptVisible: Bool
     var isNewVisitSheetVisible: Bool
     var reviewPrompt: ReviewPrompt?
@@ -32,6 +35,9 @@ struct CheckInUiState {
         popularCasts: [],
         todayVisits: [],
         recentVisits: [],
+        recentVisitsNextCursor: nil,
+        canLoadMoreRecentVisits: false,
+        isLoadingMoreRecentVisits: false,
         isLoginPromptVisible: false,
         isNewVisitSheetVisible: false,
         reviewPrompt: nil

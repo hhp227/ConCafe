@@ -37,11 +37,23 @@ class VisitRepositoryImpl(
                 visitedAt = visitedAt,
                 memo = memo
             )
-
-            runCatching {
+            val refreshedVisit = runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
+                visitDataSource.visits.firstOrNull { visit -> visit.id == createdVisit.id }
+            }.getOrNull()
+
+            if (refreshedVisit == null) {
+                val existingIndex = visitDataSource.visits.indexOfFirst { visit -> visit.id == createdVisit.id }
+
+                if (existingIndex < 0) {
+                    visitDataSource.visits.add(createdVisit)
+                } else {
+                    visitDataSource.visits[existingIndex] = createdVisit
+                }
+                return createdVisit
+            } else {
+                return refreshedVisit
             }
-            return createdVisit
         } else {
             val localVisit = Visit(
                 id = nextEntityId("visit"),
@@ -115,9 +127,10 @@ class VisitRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Visit> {
-        val items = visitDataSource.visits.filter { visit ->
-            visit.userId == userId
-        }
+        val items = visitDataSource.visits
+            .filter { visit -> visit.userId == userId }
+            .sortedByDescending { visit -> visit.visitedAt }
+
         return pagingDataSource.toPaged(items, cursor, pageSize)
     }
 }

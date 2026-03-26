@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.main.checkin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.core.util.TimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,66 +92,110 @@ class CheckInViewModel(
                     _uiState.update {
                         it.copy(
                             todayVisits = emptyList(),
-                            recentVisits = emptyList()
+                            recentVisits = emptyList(),
+                            recentVisitsNextCursor = null,
+                            canLoadMoreRecentVisits = false,
+                            isLoadingMoreRecentVisits = false
                         )
                     }
                 } else {
-                    loadUserFeed()
+                    refreshRecentVisitPage()
                 }
             }
         }
     }
 
-    private fun loadUserFeed() {
-        jobs[TaskKey.LOAD_USER_FEED]?.cancel()
-        jobs[TaskKey.LOAD_USER_FEED] = viewModelScope.launch {
-            when (val result = getCheckInUserFeedUseCase.invoke()) {
+    private fun loadRecentVisitPage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.LOAD_USER_VISIT_PAGE]?.cancel()
+        jobs[TaskKey.LOAD_USER_VISIT_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMoreRecentVisits = append) }
+
+            when (val result = getCheckInUserFeedUseCase.invoke(cursor = cursor)) {
                 is AppResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            todayVisits = result.data.todayVisits,
-                            recentVisits = result.data.recentVisits
+                    _uiState.update { state ->
+                        val mergedRecentVisits = if (append) {
+                            state.recentVisits + result.data.recentVisits
+                        } else {
+                            result.data.recentVisits
+                        }
+                        val mergedTodayVisits = mergedRecentVisits
+                            .filter { visit -> visit.visitedAt.startsWith(TimeUtils.currentIsoDate()) }
+                            .take(TODAY_VISIT_LIMIT)
+
+                        state.copy(
+                            todayVisits = mergedTodayVisits,
+                            recentVisits = mergedRecentVisits,
+                            recentVisitsNextCursor = result.data.recentVisitsNextCursor,
+                            canLoadMoreRecentVisits = result.data.canLoadMoreRecentVisits,
+                            isLoadingMoreRecentVisits = false
                         )
                     }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            todayVisits = emptyList(),
-                            recentVisits = emptyList(),
-                            errorMessage = result.error.toString()
-                        )
+                    _uiState.update { state ->
+                        if (append) {
+                            state.copy(
+                                isLoadingMoreRecentVisits = false,
+                                errorMessage = result.error.toString()
+                            )
+                        } else {
+                            state.copy(
+                                todayVisits = emptyList(),
+                                recentVisits = emptyList(),
+                                recentVisitsNextCursor = null,
+                                canLoadMoreRecentVisits = false,
+                                isLoadingMoreRecentVisits = false,
+                                errorMessage = result.error.toString()
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private fun refreshRecentVisitPage() {
+        loadRecentVisitPage(cursor = null, append = false)
+    }
+
+    private fun loadMoreRecentVisitPage() {
+        val currentState = _uiState.value
+        val cursor = currentState.recentVisitsNextCursor
+
+        if (
+            currentState.isLoadingMoreRecentVisits ||
+            !currentState.canLoadMoreRecentVisits ||
+            cursor == null
+        ) {
+            Unit
+        } else {
+            loadRecentVisitPage(cursor = cursor, append = true)
         }
     }
 
     private fun submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if (cafeId.isBlank()) {
             _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
-            return
-        }
-        if (visitedAt.isBlank()) {
+        } else if (visitedAt.isBlank()) {
             _uiState.update { it.copy(errorMessage = "방문 시간을 입력해 주세요.") }
-            return
-        }
-        _uiState.update { it.copy(errorMessage = null) }
+        } else {
+            _uiState.update { it.copy(errorMessage = null) }
 
-        jobs[TaskKey.SUBMIT_VISIT]?.cancel()
-        jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
-            when (val result = createVisitUseCase.invoke(
-                cafeId = cafeId,
-                visitedAt = visitedAt,
-                memo = memo
-            )) {
-                is AppResult.Success -> {
-                    _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
-                    loadUserFeed()
-                    maybeShowReviewPrompt(result.data)
-                }
-                is AppResult.Failure -> {
-                    _uiState.update { it.copy(errorMessage = result.error.toString()) }
+            jobs[TaskKey.SUBMIT_VISIT]?.cancel()
+            jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
+                when (val result = createVisitUseCase.invoke(
+                    cafeId = cafeId,
+                    visitedAt = visitedAt,
+                    memo = memo
+                )) {
+                    is AppResult.Success -> {
+                        _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
+                        refreshRecentVisitPage()
+                        maybeShowReviewPrompt(result.data)
+                    }
+                    is AppResult.Failure -> {
+                        _uiState.update { it.copy(errorMessage = result.error.toString()) }
+                    }
                 }
             }
         }
@@ -185,8 +230,8 @@ class CheckInViewModel(
         jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
             visitEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is VisitEvent.Created -> loadUserFeed()
-                    is VisitEvent.Deleted -> loadUserFeed() // 추후 로컬 업데이트로 개선
+                    is VisitEvent.Created -> refreshRecentVisitPage()
+                    is VisitEvent.Deleted -> refreshRecentVisitPage()
                 }
             }
         }
@@ -211,6 +256,12 @@ class CheckInViewModel(
                 },
                 popularCasts = state.popularCasts.map { item ->
                     if (item.cafeId == cafe.id) item.copy(cafeName = cafe.name) else item
+                },
+                recentVisits = state.recentVisits.map { item ->
+                    if (item.cafeId == cafe.id) item.copy(cafeName = cafe.name, cafeImage = cafe.thumbnailImage.orEmpty()) else item
+                },
+                todayVisits = state.todayVisits.map { item ->
+                    if (item.cafeId == cafe.id) item.copy(cafeName = cafe.name, cafeImage = cafe.thumbnailImage.orEmpty()) else item
                 },
                 reviewPrompt = state.reviewPrompt?.let { prompt ->
                     if (prompt.cafeId == cafe.id) prompt.copy(cafeName = cafe.name) else prompt
@@ -342,6 +393,7 @@ class CheckInViewModel(
                 }
                 CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
                 CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
+                CheckInAction.LoadMoreRecentVisits -> loadMoreRecentVisitPage()
                 is CheckInAction.SubmitNewVisit -> {
                     submitNewVisit(
                         cafeId = action.cafeId,
@@ -370,11 +422,15 @@ class CheckInViewModel(
     private enum class TaskKey {
         LOAD_GUEST_FEED,
         OBSERVE_SESSION,
-        LOAD_USER_FEED,
+        LOAD_USER_VISIT_PAGE,
         SUBMIT_VISIT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,
         REVIEW_PROMPT_ACTION
+    }
+
+    private companion object {
+        private const val TODAY_VISIT_LIMIT = 4
     }
 }

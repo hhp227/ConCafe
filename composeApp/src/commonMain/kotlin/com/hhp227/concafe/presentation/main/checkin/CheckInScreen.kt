@@ -5,6 +5,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -308,32 +310,77 @@ private fun CheckInUserScreen(
     uiState: CheckInUiState,
     onAction: (CheckInAction) -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
-            .verticalScroll(rememberScrollState()),
+            .background(Color(0xFFFFFBFD)),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CafeMapSection(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-            currentLocationLabel = uiState.currentLocationLabel,
-            mapCafes = uiState.mapCafes,
-            onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
-            onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInButton(
-            onClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInSectionTitle("오늘의 방문", TimeUtils.currentMonthDayLabelKorean())
-        TodayVisitsRow(
-            visits = uiState.todayVisits
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        CheckInSectionTitle("최근 타임라인", "🕘")
-        TimelineList(
-            visits = uiState.recentVisits
-        )
+        item {
+            CafeMapSection(
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                currentLocationLabel = uiState.currentLocationLabel,
+                mapCafes = uiState.mapCafes,
+                onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+            )
+        }
+        item {
+            CheckInButton(
+                onClick = { onAction(CheckInAction.ClickCheckIn) }
+            )
+        }
+        item {
+            CheckInSectionTitle("오늘의 방문", TimeUtils.currentMonthDayLabelKorean())
+        }
+        item {
+            TodayVisitsRow(
+                visits = uiState.todayVisits
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        item {
+            CheckInSectionTitle("최근 타임라인", "🕘")
+        }
+        if (uiState.recentVisits.isEmpty()) {
+            item {
+                EmptyVisitState(
+                    title = "최근 타임라인이 비어 있어요",
+                    description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
+                )
+            }
+        } else {
+            itemsIndexed(
+                items = uiState.recentVisits,
+                key = { _, visit -> visit.id }
+            ) { _, visit ->
+                TimelineItem(visit)
+            }
+            item {
+                if (uiState.isLoadingMoreRecentVisits) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else if (uiState.canLoadMoreRecentVisits) {
+                    TextButton(
+                        onClick = { onAction(CheckInAction.LoadMoreRecentVisits) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("최근 방문 더 보기")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1047,29 +1094,6 @@ private fun CheckInButton(
         Icon(Icons.Default.Add, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
         Text("새 방문 체크인", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-    }
-}
-
-@Composable
-private fun TimelineList(
-    visits: List<CheckInVisitEntry>
-) {
-    if (visits.isEmpty()) {
-        EmptyVisitState(
-            title = "최근 타임라인이 비어 있어요",
-            description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
-        )
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            visits.forEach { visit ->
-                TimelineItem(visit)
-            }
-        }
     }
 }
 
