@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +20,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.skia.Image
 import java.awt.GraphicsEnvironment
 import java.io.File
@@ -43,13 +47,21 @@ actual fun CompatImageDisplay(
     modifier: Modifier,
     applyRoundedClip: Boolean
 ) {
-    val imageBitmap = imageUrl?.let { decodeImageBitmap(it) }
+    val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
+    val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = normalizedImageUrl) {
+        value = if (normalizedImageUrl == null) {
+            null
+        } else {
+            decodeImageBitmap(normalizedImageUrl)
+        }
+    }
+    val resolvedImageBitmap = imageBitmap
 
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        if (imageBitmap == null) {
+        if (resolvedImageBitmap == null) {
             Icon(
                 painter = rememberVectorPainter(Icons.Default.Image),
                 contentDescription = null,
@@ -73,7 +85,7 @@ actual fun CompatImageDisplay(
                 Modifier.fillMaxSize()
             }
             Image(
-                bitmap = imageBitmap,
+                bitmap = resolvedImageBitmap,
                 contentDescription = null,
                 modifier = imageModifier,
                 contentScale = ContentScale.Crop
@@ -106,22 +118,23 @@ private fun chooseImageFile(): String? {
     }
 }
 
-private fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
+private suspend fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
     JvmImageBitmapMemoryCache.get(imageUrl)?.let { cached ->
         return cached
     }
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                URL(imageUrl).readBytes()
+            } else {
+                File(imageUrl).readBytes()
+            }
+            val decoded = Image.makeFromEncoded(bytes).asImageBitmap()
 
-    return runCatching {
-        val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-            URL(imageUrl).readBytes()
-        } else {
-            File(imageUrl).readBytes()
-        }
-
-        val decoded = Image.makeFromEncoded(bytes).asImageBitmap()
-        JvmImageBitmapMemoryCache.put(imageUrl, decoded)
-        decoded
-    }.getOrNull()
+            JvmImageBitmapMemoryCache.put(imageUrl, decoded)
+            decoded
+        }.getOrNull()
+    }
 }
 
 private object JvmImageBitmapMemoryCache {
