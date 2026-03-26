@@ -502,6 +502,84 @@ class FirestoreConCafeDataSource(
         visits.addAll(refreshedVisits)
     }
 
+    suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
+        val idToken = tokenProvider.getIdToken()
+        val visitDocuments = runCatching {
+            runVerifiedVisitUserQuery(cafeId = cafeId, idToken = idToken)
+        }.recoverCatching {
+            runVerifiedVisitUserQuery(cafeId = cafeId, idToken = null)
+        }.getOrElse {
+            emptyList()
+        }
+        val parsedVisits = visitDocuments.mapNotNull { document ->
+            parseVisitDocument(document)
+        }
+
+        parsedVisits.forEach { visit ->
+            visits.removeAll { current -> current.id == visit.id }
+            visits.add(visit)
+        }
+        return parsedVisits
+            .asSequence()
+            .filter { visit -> visit.verified && visit.cafeId == cafeId }
+            .map { visit -> visit.userId }
+            .toSet()
+    }
+
+    suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean {
+        val idToken = tokenProvider.getIdToken()
+        val visitDocuments = runCatching {
+            runVerifiedVisitByUserCafeQuery(userId = userId, cafeId = cafeId, idToken = idToken)
+        }.recoverCatching {
+            runVerifiedVisitByUserCafeQuery(userId = userId, cafeId = cafeId, idToken = null)
+        }.getOrElse {
+            emptyList()
+        }
+        val parsedVisits = visitDocuments.mapNotNull { document ->
+            parseVisitDocument(document)
+        }
+
+        parsedVisits.forEach { visit ->
+            visits.removeAll { current -> current.id == visit.id }
+            visits.add(visit)
+        }
+        return parsedVisits.any { visit ->
+            visit.userId == userId && visit.cafeId == cafeId && visit.verified
+        }
+    }
+
+    suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
+        val idToken = tokenProvider.getIdToken()
+        val scheduleDocuments = runCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = idToken)
+        }.recoverCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = null)
+        }.getOrElse {
+            emptyList()
+        }
+        val parsedSchedules = scheduleDocuments.mapNotNull { document ->
+            parseCastScheduleDocument(document)
+        }.filter { entry ->
+            entry.cafeId == cafeId && entry.date == date && entry.status == CastScheduleStatus.WORK
+        }
+
+        parsedSchedules.forEach { entry ->
+            delegate.updateCastSchedule(
+                CastScheduleUpdate(
+                    castId = entry.castId,
+                    date = entry.date,
+                    status = CastScheduleStatus.WORK,
+                    startTime = entry.startTime,
+                    endTime = entry.endTime
+                )
+            )
+        }
+        return parsedSchedules
+            .asSequence()
+            .map { entry -> entry.castId }
+            .toSet()
+    }
+
     suspend fun createVisitRemote(
         userId: String,
         cafeId: String,
@@ -622,6 +700,7 @@ class FirestoreConCafeDataSource(
                 "content" to firestoreString(content.trim()),
                 "imageUrls" to firestoreStringArray(imageUrls),
                 "taggedCastIds" to firestoreStringArray(taggedCastIds),
+                "visitVerified" to firestoreBoolean(false),
                 "likeCount" to firestoreLong(0L),
                 "createdAt" to firestoreString(createdAt),
                 "updatedAt" to firestoreString(createdAt)
@@ -640,7 +719,8 @@ class FirestoreConCafeDataSource(
             imageUrls = imageUrls,
             taggedCastIds = taggedCastIds,
             likeCount = 0,
-            createdAt = createdAt
+            createdAt = createdAt,
+            visitVerified = false
         )
         reviews.removeAll { review -> review.id == reviewId }
         reviews.add(created)
@@ -2036,6 +2116,148 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runVerifiedVisitUserQuery(
+        cafeId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.VISITS}" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "cafeId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(cafeId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "verified" },
+                          "op": "EQUAL",
+                          "value": { "booleanValue": true }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runWorkingCastScheduleQuery(
+        cafeId: String,
+        date: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.CAST_SCHEDULES}" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "cafeId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(cafeId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "date" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(date)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "status" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${CastScheduleStatus.WORK.name}" }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runVerifiedVisitByUserCafeQuery(
+        userId: String,
+        cafeId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.VISITS}" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "userId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "cafeId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(cafeId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "verified" },
+                          "op": "EQUAL",
+                          "value": { "booleanValue": true }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
 
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
@@ -2060,7 +2282,6 @@ class FirestoreConCafeDataSource(
             reviews.removeAll { review -> review.id == parsed.id }
             reviews.add(parsed)
         }
-
         return parsed
     }
 
@@ -2082,7 +2303,6 @@ class FirestoreConCafeDataSource(
             visits.removeAll { visit -> visit.id == parsed.id }
             visits.add(parsed)
         }
-
         return parsed
     }
 
@@ -2111,7 +2331,6 @@ class FirestoreConCafeDataSource(
     private fun buildCastFollowDocumentId(userId: String, castId: String): String {
         val normalizedUserId = userId.replace("/", "_")
         val normalizedCastId = castId.replace("/", "_")
-
         return "${normalizedUserId}_$normalizedCastId"
     }
 
@@ -2923,7 +3142,8 @@ class FirestoreConCafeDataSource(
             imageUrls = fields.getFirestoreStringList("imageUrls"),
             taggedCastIds = fields.getFirestoreStringList("taggedCastIds"),
             likeCount = fields.getFirestoreLong("likeCount")?.toInt() ?: 0,
-            createdAt = fields.getFirestoreString("createdAt").orEmpty()
+            createdAt = fields.getFirestoreString("createdAt").orEmpty(),
+            visitVerified = fields.getFirestoreBoolean("visitVerified") ?: false
         )
     }
 

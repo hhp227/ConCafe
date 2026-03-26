@@ -33,6 +33,8 @@ interface CastRepository {
         toDate: String
     ): Map<String, CastScheduleStatus>
 
+    suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String>
+
     suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule?
 
     suspend fun isFollowing(userId: String, castId: String): Boolean

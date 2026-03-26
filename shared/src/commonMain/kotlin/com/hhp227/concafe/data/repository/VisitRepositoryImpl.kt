@@ -133,6 +133,24 @@ class VisitRepositoryImpl(
 
         return pagingDataSource.toPaged(items, cursor, pageSize)
     }
+
+    override suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
+        val firestoreDataSource = visitDataSource as? FirestoreConCafeDataSource
+        return firestoreDataSource?.getVerifiedVisitUserIdsByCafe(cafeId)
+            ?: visitDataSource.visits
+                .asSequence()
+                .filter { visit -> visit.cafeId == cafeId && visit.verified }
+                .map { visit -> visit.userId }
+                .toSet()
+    }
+
+    override suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean {
+        val firestoreDataSource = visitDataSource as? FirestoreConCafeDataSource
+        return firestoreDataSource?.hasVerifiedVisitAtCafe(userId = userId, cafeId = cafeId)
+            ?: visitDataSource.visits.any { visit ->
+                visit.userId == userId && visit.cafeId == cafeId && visit.verified
+            }
+    }
 }
 
 private fun nextEntityId(prefix: String): String {

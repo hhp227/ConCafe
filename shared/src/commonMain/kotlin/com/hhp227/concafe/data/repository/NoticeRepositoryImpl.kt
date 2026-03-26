@@ -31,9 +31,14 @@ class NoticeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeNoticeManagementItem> {
-        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+        val hasCachedNotices = noticeDataSource.cafeNoticeManagementItems.any { item -> item.cafeId == cafeId }
+        val shouldRefresh = cursor == null && !hasCachedNotices
+
+        if (shouldRefresh) {
+            (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+                runCatching {
+                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+                }
             }
         }
         val normalizedQuery = query.trim()
@@ -56,9 +61,14 @@ class NoticeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeEventManagementItem> {
-        (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+        val hasCachedEvents = noticeDataSource.cafeEventManagementItems.any { item -> item.cafeId == cafeId }
+        val shouldRefresh = cursor == null && !hasCachedEvents
+
+        if (shouldRefresh) {
+            (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+                runCatching {
+                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
+                }
             }
         }
         val normalizedQuery = query.trim()

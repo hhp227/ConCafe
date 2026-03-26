@@ -19,9 +19,14 @@ class ReviewRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Review> {
-        (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCafeReviews(cafeId)
+        val hasCachedReviews = reviewDataSource.reviews.any { review -> review.cafeId == cafeId }
+        val shouldRefresh = cursor == null && !hasCachedReviews
+
+        if (shouldRefresh) {
+            (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+                runCatching {
+                    firestoreDataSource.refreshCafeReviews(cafeId)
+                }
             }
         }
         val items = reviewDataSource.reviews

@@ -69,14 +69,29 @@ final class CafeViewModel: ObservableObject {
                         if created.cafeId == cafeId && self.uiState.selectedTab == .reviews {
                             await MainActor.run {
                                 self.uiState.shouldScrollToTopOnReturn = true
+                                if let detail = self.uiState.detail {
+                                    self.uiState.detail = detail.copy(
+                                        cafe: detail.cafe.copy(
+                                            reviewCount: Int32(detail.cafe.reviewCount + 1)
+                                        )
+                                    )
+                                }
                             }
-                            self.loadCafeDetail()
+                            self.refreshReviewPage()
                         }
                     case let deleted as ReviewEvent.Deleted:
                         if deleted.cafeId == cafeId && self.uiState.selectedTab == .reviews {
                             await MainActor.run {
                                 self.uiState.reviews.removeAll {
                                     $0.id == deleted.reviewId
+                                }
+                                if let detail = self.uiState.detail {
+                                    let nextCount = max(0, Int(detail.cafe.reviewCount) - 1)
+                                    self.uiState.detail = detail.copy(
+                                        cafe: detail.cafe.copy(
+                                            reviewCount: Int32(nextCount)
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -257,13 +272,16 @@ final class CafeViewModel: ObservableObject {
             do {
                 let result = try await toggleFavoriteCafeUseCase.invoke(cafeId: cafeId)
 
-                if let failure = result as? AppResultFailure {
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let isFavorite = success.data as? NSNumber {
+                    uiState.isFavorite = isFavorite.boolValue
+                    uiState.isLoggedIn = true
+                } else if let failure = result as? AppResultFailure {
                     if failure.error is AppErrorUnauthorized {
                         event.send(.navigateToSignIn)
                     }
                 } else {
                     uiState.isLoggedIn = true
-                    loadCafeDetail()
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -288,7 +306,7 @@ final class CafeViewModel: ObservableObject {
             if tab == .notices, uiState.notices.isEmpty {
                 refreshNoticePage()
             }
-            if tab == .reviews {
+            if tab == .reviews, uiState.reviews.isEmpty {
                 refreshReviewPage()
             }
         case .maidTapped(let id):

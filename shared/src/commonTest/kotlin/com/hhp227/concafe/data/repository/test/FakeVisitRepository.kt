@@ -50,4 +50,18 @@ class FakeVisitRepository(
         val items = dataSource.visits.filter { it.userId == userId }.sortedByDescending { it.visitedAt }
         return dataSource.toPaged(items, cursor, pageSize)
     }
+
+    override suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
+        return dataSource.visits
+            .asSequence()
+            .filter { visit -> visit.cafeId == cafeId && visit.verified }
+            .map { visit -> visit.userId }
+            .toSet()
+    }
+
+    override suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean {
+        return dataSource.visits.any { visit ->
+            visit.userId == userId && visit.cafeId == cafeId && visit.verified
+        }
+    }
 }

@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.ScheduleStatusDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.FirestoreCacheDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
@@ -140,6 +141,25 @@ class CastRepositoryImpl(
             }
         }
         return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
+    }
+
+    override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
+        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            return firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = date)
+        }
+        val scheduleStatusDataSource = castDataSource as? ScheduleStatusDataSource
+        val cafeCastIds = castDataSource.casts
+            .asSequence()
+            .filter { cast -> cast.cafeId == cafeId }
+            .map { cast -> cast.id }
+            .toSet()
+        return scheduleStatusDataSource?.castScheduleStatusByCastId
+            ?.asSequence()
+            ?.filter { (castId, _) -> cafeCastIds.contains(castId) }
+            ?.filter { (_, statuses) -> statuses[date] == CastScheduleStatus.WORK }
+            ?.map { (castId, _) -> castId }
+            ?.toSet()
+            .orEmpty()
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {

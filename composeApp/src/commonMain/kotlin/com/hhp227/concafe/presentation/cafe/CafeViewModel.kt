@@ -65,14 +65,28 @@ class CafeViewModel(
                 when (event) {
                     is ReviewEvent.Created -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
-                            _uiState.update { it.copy(shouldScrollToTopOnReturn = true) }
-                            loadCafeDetail()
+                            _uiState.update { state ->
+                                state.copy(
+                                    shouldScrollToTopOnReturn = true,
+                                    detail = state.detail?.let { detail ->
+                                        detail.copy(cafe = detail.cafe.copy(reviewCount = detail.cafe.reviewCount + 1))
+                                    }
+                                )
+                            }
+                            refreshReviewPage()
                         }
                     }
                     is ReviewEvent.Deleted -> {
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                             _uiState.update { state ->
                                 state.copy(
+                                    detail = state.detail?.let { detail ->
+                                        detail.copy(
+                                            cafe = detail.cafe.copy(
+                                                reviewCount = (detail.cafe.reviewCount - 1).coerceAtLeast(0)
+                                            )
+                                        )
+                                    },
                                     reviews = state.reviews.filterNot { review -> review.id == event.reviewId }
                                 )
                             }
@@ -271,7 +285,7 @@ class CafeViewModel(
                     if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                         refreshNoticePage()
                     }
-                    if (action.tab == CafeUiState.TabType.REVIEWS) {
+                    if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
                         refreshReviewPage()
                     }
                 }

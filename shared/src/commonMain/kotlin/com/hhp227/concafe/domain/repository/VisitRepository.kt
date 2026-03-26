@@ -14,4 +14,8 @@ interface VisitRepository {
     suspend fun deleteVisit(visitId: String, userId: String)
 
     suspend fun getVisits(userId: String, cursor: String?, pageSize: Int): PagedResult<Visit>
+
+    suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String>
+
+    suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean
 }

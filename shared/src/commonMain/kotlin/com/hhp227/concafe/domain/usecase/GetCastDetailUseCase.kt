@@ -9,6 +9,11 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 class GetCastDetailUseCase(
     private val authRepository: AuthRepository,
@@ -85,11 +90,18 @@ class GetCastDetailUseCase(
 
 private fun String.toRelativeDateLabel(): String {
     val date = take(10)
+    val currentDate = Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .date
+    val today = currentDate.toString()
+    val oneDayAgo = (currentDate + DatePeriod(days = -1)).toString()
+    val twoDaysAgo = (currentDate + DatePeriod(days = -2)).toString()
+    val threeDaysAgo = (currentDate + DatePeriod(days = -3)).toString()
     return when (date) {
-        "2026-03-09" -> "오늘"
-        "2026-03-08" -> "1일 전"
-        "2026-03-07" -> "2일 전"
-        "2026-03-06" -> "3일 전"
+        today -> "오늘"
+        oneDayAgo -> "1일 전"
+        twoDaysAgo -> "2일 전"
+        threeDaysAgo -> "3일 전"
         else -> date
     }
 }

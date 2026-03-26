@@ -113,6 +113,17 @@ class FakeCastRepository(
         return dataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
+    override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
+        return dataSource.casts
+            .asSequence()
+            .filter { cast -> cast.cafeId == cafeId }
+            .filter { cast ->
+                dataSource.castScheduleStatuses(cast.id, date, date)[date] == CastScheduleStatus.WORK
+            }
+            .map { cast -> cast.id }
+            .toSet()
+    }
+
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
         return dataSource.updateCastSchedule(update)
     }

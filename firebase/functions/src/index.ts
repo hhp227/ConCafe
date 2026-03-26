@@ -20,9 +20,11 @@ function db() {
 }
 
 type ReviewLike = {
+  id?: unknown;
   cafeId?: unknown;
   userId?: unknown;
   taggedCastIds?: unknown;
+  visitVerified?: unknown;
 };
 
 type VisitLike = {
@@ -129,6 +131,70 @@ async function syncCastVisitCertificationAggregate(cafeId: string, castId: strin
       },
       {merge: true}
     );
+}
+
+async function hasVerifiedVisitAtCafe(cafeId: string, userId: string): Promise<boolean> {
+  const snapshot = await db()
+    .collection("visits")
+    .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
+    .where("verified", "==", true)
+    .limit(1)
+    .select("userId")
+    .get();
+  return !snapshot.empty;
+}
+
+async function syncSingleReviewVisitVerified(reviewId: string, review: ReviewLike | undefined): Promise<void> {
+  const cafeId = asNonBlankString(review?.cafeId);
+  const userId = asNonBlankString(review?.userId);
+
+  if (cafeId == null || userId == null || reviewId.trim().length == 0) {
+    return;
+  }
+  const verified = await hasVerifiedVisitAtCafe(cafeId, userId);
+  const currentValue = review?.visitVerified === true;
+
+  if (currentValue === verified) {
+    return;
+  }
+
+  await db()
+    .collection("reviews")
+    .doc(reviewId)
+    .set(
+      {
+        visitVerified: verified,
+      },
+      {merge: true}
+    );
+}
+
+async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string): Promise<void> {
+  const verified = await hasVerifiedVisitAtCafe(cafeId, userId);
+  const reviewsSnapshot = await db()
+    .collection("reviews")
+    .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
+    .select("userId")
+    .get();
+
+  if (reviewsSnapshot.empty) {
+    return;
+  }
+  const writeBatch = db().batch();
+
+  reviewsSnapshot.docs.forEach((doc) => {
+    writeBatch.set(
+      doc.ref,
+      {
+        visitVerified: verified,
+      },
+      {merge: true}
+    );
+  });
+
+  await writeBatch.commit();
 }
 
 function collectCastTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
@@ -316,6 +382,22 @@ export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
   }
 );
 
+export const onReviewWrittenSyncReviewVisitVerified = onDocumentWritten(
+  "reviews/{reviewId}",
+  async (event) => {
+    const reviewId = asNonBlankString(event.params.reviewId);
+    const afterData = event.data?.after.data() as ReviewLike | undefined;
+
+    if (reviewId == null || afterData == null) {
+      return;
+    }
+    await syncSingleReviewVisitVerified(reviewId, afterData);
+    logger.info("Synced review visitVerified from review write.", {
+      reviewId: reviewId,
+    });
+  }
+);
+
 export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
   "visits/{visitId}",
   async (event) => {
@@ -383,6 +465,43 @@ export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
     logger.info("Synced cast visit certification aggregate from visit write.", {
       visitId: event.params.visitId,
       targets: Array.from(targetPairs),
+    });
+  }
+);
+
+export const onVisitWrittenSyncReviewVisitVerified = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+    const sourcePairs = new Set<string>();
+    const visitSources = [beforeData, afterData];
+
+    visitSources.forEach((visit) => {
+      const cafeId = asNonBlankString(visit?.cafeId);
+      const userId = asNonBlankString(visit?.userId);
+
+      if (cafeId == null || userId == null) {
+        return;
+      }
+      sourcePairs.add(userCafeKey(cafeId, userId));
+    });
+
+    if (sourcePairs.size == 0) {
+      return;
+    }
+    await Promise.all(Array.from(sourcePairs).map(async (sourcePair) => {
+      const parsed = parseUserCafeKey(sourcePair);
+
+      if (parsed.cafeId.length == 0 || parsed.userId.length == 0) {
+        return;
+      }
+      await syncUserCafeReviewsVisitVerified(parsed.cafeId, parsed.userId);
+    }));
+
+    logger.info("Synced review visitVerified from visit write.", {
+      visitId: event.params.visitId,
+      targets: Array.from(sourcePairs),
     });
   }
 );

@@ -7,13 +7,11 @@ import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
-import com.hhp227.concafe.domain.repository.VisitRepository
 
 class GetCafeReviewPageUseCase(
     private val cafeRepository: CafeRepository,
     private val reviewRepository: ReviewRepository,
-    private val userRepository: UserRepository,
-    private val visitRepository: VisitRepository
+    private val userRepository: UserRepository
 ) {
     suspend operator fun invoke(
         cafeId: String,
@@ -28,17 +26,16 @@ class GetCafeReviewPageUseCase(
                 cursor = cursor,
                 pageSize = pageSize
             )
+            val reviewUsersById = reviews.items
+                .map { review -> review.userId }
+                .distinct()
+                .associateWith { userId -> userRepository.getUser(userId) }
 
             AppResult.Success(
                 PagedResult(
                     items = reviews.items.map { review ->
-                        val user = userRepository.getUser(review.userId)
-                        val visits = visitRepository.getVisits(
-                            userId = review.userId,
-                            cursor = null,
-                            pageSize = 20
-                        ).items
-                        val verified = visits.any { it.cafeId == cafeId && it.verified }
+                        val user = reviewUsersById[review.userId] ?: userRepository.getUser(review.userId)
+                        val verified = review.visitVerified
                         val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                         CafeDetailReview(

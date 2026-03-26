@@ -147,7 +147,7 @@ val useCaseModule = module {
     factory { GetExploreCastPageUseCase(get()) }
     factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetCafeNoticePageUseCase(get()) }
-    factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }
+    factory { GetCafeReviewPageUseCase(get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }
