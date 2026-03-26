@@ -426,6 +426,51 @@ class FirestoreConCafeDataSource(
         refreshReviewProjections(cafeId = cafeId, taggedCastIds = emptyList())
     }
 
+    suspend fun getRecentTaggedReviews(
+        cafeId: String,
+        castId: String,
+        limit: Int
+    ): List<Review> {
+        val safeLimit = if (limit > 0) limit else 1
+        val idToken = tokenProvider.getIdToken()
+        val reviewDocuments: List<JsonObject> = runCatching {
+            runRecentTaggedReviewQuery(
+                cafeId = cafeId,
+                castId = castId,
+                limit = safeLimit,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runRecentTaggedReviewQuery(
+                cafeId = cafeId,
+                castId = castId,
+                limit = safeLimit,
+                idToken = null
+            )
+        }.getOrElse {
+            emptyList()
+        }
+        val parsedReviews = if (reviewDocuments.isNotEmpty()) {
+            reviewDocuments.mapNotNull { document ->
+                parseReviewDocument(document)
+            }.sortedByDescending { review ->
+                review.createdAt
+            }.take(safeLimit)
+        } else {
+            reviews.filter { review ->
+                review.cafeId == cafeId && review.taggedCastIds.contains(castId)
+            }.sortedByDescending { review ->
+                review.createdAt
+            }.take(safeLimit)
+        }
+
+        parsedReviews.forEach { review ->
+            reviews.removeAll { current -> current.id == review.id }
+            reviews.add(review)
+        }
+        return parsedReviews
+    }
+
     suspend fun refreshVisitsByUserRemote(userId: String) {
         if (userId.isBlank()) {
             return
@@ -986,10 +1031,22 @@ class FirestoreConCafeDataSource(
         require(castId.isNotBlank()) { "castId is required" }
         val idToken = tokenProvider.getIdToken()
         val schedulesDocuments = runCatching {
-            loadCollectionDocuments(FirestorePaths.CAST_SCHEDULES, idToken)
+            runCastScheduleRangeQuery(
+                castId = castId,
+                fromDate = fromDate,
+                toDate = toDate,
+                idToken = idToken
+            )
         }.recoverCatching {
-            loadCollectionDocuments(FirestorePaths.CAST_SCHEDULES, null)
-        }.getOrElse { emptyList() }
+            runCastScheduleRangeQuery(
+                castId = castId,
+                fromDate = fromDate,
+                toDate = toDate,
+                idToken = null
+            )
+        }.getOrElse {
+            emptyList()
+        }
 
         val remoteSchedulesByDate = schedulesDocuments.mapNotNull { document ->
             parseCastScheduleDocument(document)
@@ -1028,20 +1085,7 @@ class FirestoreConCafeDataSource(
     suspend fun refreshCastDetailRemote(castId: String) {
         require(castId.isNotBlank()) { "castId is required" }
         val idToken = tokenProvider.getIdToken()
-
-        if (cafes.isEmpty()) {
-            runCatching { loadCafes(idToken = null) }
-        }
-        val cachedCafeId = casts.firstOrNull { cast -> cast.id == castId }?.cafeId
-        val resolvedCafeId = cachedCafeId ?: resolveCafeIdByCastId(castId, idToken)
-            ?: throw NoSuchElementException("cast detail not found")
-
-        refreshCafeDetail(resolvedCafeId)
-        runCatching { loadVisits(idToken) }
-            .recoverCatching { loadVisits(idToken = null) }
-            .getOrElse { throwable ->
-                throw IllegalStateException("Failed to refresh visits for cast detail", throwable)
-            }
+        refreshCastSummaryRemote(castId = castId, idToken = idToken)
         val currentDate = Clock.System.now()
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
@@ -1883,6 +1927,121 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runCastScheduleRangeQuery(
+        castId: String,
+        fromDate: String,
+        toDate: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.CAST_SCHEDULES}" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "castId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(castId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "date" },
+                          "op": "GREATER_THAN_OR_EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(fromDate)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "date" },
+                          "op": "LESS_THAN_OR_EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(toDate)}" }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "date" },
+                    "direction": "ASCENDING"
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runRecentTaggedReviewQuery(
+        cafeId: String,
+        castId: String,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.REVIEWS}" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "cafeId" },
+                          "op": "EQUAL",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(cafeId)}" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "taggedCastIds" },
+                          "op": "ARRAY_CONTAINS",
+                          "value": { "stringValue": "${escapeFirestoreQueryString(castId)}" }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ],
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun resolveReviewById(reviewId: String, idToken: String?): Review? {
         val cached = reviews.firstOrNull { review -> review.id == reviewId }
 
@@ -2011,6 +2170,98 @@ class FirestoreConCafeDataSource(
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId"
         val response = restApi.get(path, idToken)
         return Json.parseToJsonElement(response).jsonObject
+    }
+
+    private suspend fun loadCafeCastDocument(
+        cafeId: String,
+        castId: String,
+        idToken: String?
+    ): JsonObject {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_CASTS}/$castId"
+        val response = restApi.get(path, idToken)
+        return Json.parseToJsonElement(response).jsonObject
+    }
+
+    private suspend fun refreshCastSummaryRemote(castId: String, idToken: String?) {
+        val cachedCast = casts.firstOrNull { cast ->
+            cast.id == castId
+        }
+        val cachedCafeId = cachedCast?.cafeId
+        val resolvedCafeId = if (cachedCafeId != null) {
+            cachedCafeId
+        } else {
+            resolveCafeIdByCastId(castId = castId, idToken = idToken)
+                ?: throw NoSuchElementException("cast detail not found")
+        }
+        val castDocument = runCatching {
+            loadCafeCastDocument(cafeId = resolvedCafeId, castId = castId, idToken = idToken)
+        }.recoverCatching {
+            loadCafeCastDocument(cafeId = resolvedCafeId, castId = castId, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load cast document for $castId", throwable)
+        }
+        val parsedCast = parseCastDocument(cafeId = resolvedCafeId, document = castDocument)
+            ?: throw NoSuchElementException("cast detail not found")
+        val cachedCafe = cafes.firstOrNull { cafe ->
+            cafe.id == resolvedCafeId
+        }
+        val parsedCafe = if (cachedCafe != null) {
+            cachedCafe
+        } else {
+            val cafeDocument = runCatching {
+                loadCafeDocument(cafeId = resolvedCafeId, idToken = idToken)
+            }.recoverCatching {
+                loadCafeDocument(cafeId = resolvedCafeId, idToken = null)
+            }.getOrElse { throwable ->
+                throw IllegalStateException("Failed to load cafe document for $resolvedCafeId", throwable)
+            }
+            parseCafeDocument(cafeDocument) ?: throw NoSuchElementException("cafe not found")
+        }
+        val cafeIndex = cafes.indexOfFirst { cafe ->
+            cafe.id == parsedCafe.id
+        }
+        val castIndex = delegate.casts.indexOfFirst { cast ->
+            cast.id == parsedCast.id
+        }
+        val nextCafeCasts = delegate.casts
+            .filter { cast ->
+                cast.cafeId == parsedCafe.id && cast.id != parsedCast.id
+            }.plus(parsedCast)
+            .sortedBy { cast ->
+                cast.name
+            }
+        val existingDetail = delegate.cafeDetailsById[parsedCafe.id]
+        val nextDetail = if (existingDetail != null) {
+            existingDetail.copy(
+                cafe = parsedCafe,
+                casts = nextCafeCasts
+            )
+        } else {
+            CafeDetail(
+                cafe = parsedCafe,
+                images = listOfNotNull(parsedCafe.thumbnailImage),
+                casts = nextCafeCasts,
+                menus = emptyList(),
+                goods = emptyList(),
+                notices = notices
+                    .filter { notice -> notice.cafeId == parsedCafe.id }
+                    .sortedByDescending { notice -> notice.createdAt },
+                businessHours = "운영시간 정보 준비중",
+                phoneNumber = "연락처 정보 준비중"
+            )
+        }
+
+        if (cafeIndex >= 0) {
+            cafes[cafeIndex] = parsedCafe
+        } else {
+            cafes.add(parsedCafe)
+        }
+        if (castIndex >= 0) {
+            delegate.casts[castIndex] = parsedCast
+        } else {
+            delegate.casts.add(parsedCast)
+        }
+        delegate.cafeDetailsById[parsedCafe.id] = nextDetail
     }
 
     private suspend fun loadCafeSubCollectionDocuments(
@@ -2564,7 +2815,10 @@ class FirestoreConCafeDataSource(
             followerCount = fields.getFirestoreLong("followerCount")?.toInt() ?: 0,
             rating = fields.getFirestoreDouble("rating")
                 ?: fields.getFirestoreLong("rating")?.toDouble()
-                ?: 0.0
+                ?: 0.0,
+            visitCertificationCount = fields.getFirestoreLong("visitCertificationCount")?.toInt()
+                ?: fields.getFirestoreMap("stats")?.getFirestoreInt("visitCertificationCount")
+                ?: 0
         )
     }
 

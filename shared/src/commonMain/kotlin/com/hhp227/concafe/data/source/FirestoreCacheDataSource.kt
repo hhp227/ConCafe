@@ -345,7 +345,7 @@ class FirestoreCacheDataSource :
             cafe = cafe,
             images = castImagesById[cast.id].orEmpty(),
             schedule = castSchedulesByCastId[cast.id].orEmpty(),
-            visitCertificationCount = visits.count { visit -> visit.cafeId == cafe.id }
+            visitCertificationCount = cast.visitCertificationCount
         )
     }
 
@@ -435,7 +435,8 @@ class FirestoreCacheDataSource :
             birthday = normalizedBirthday,
             conceptRole = update.conceptRole.trim(),
             followerCount = existingCast?.followerCount ?: 0,
-            rating = existingCast?.rating ?: 0.0
+            rating = existingCast?.rating ?: 0.0,
+            visitCertificationCount = existingCast?.visitCertificationCount ?: 0
         )
         val existingIndex = casts.indexOfFirst { it.id == castId }
 
@@ -475,7 +476,7 @@ class FirestoreCacheDataSource :
             cafe = targetCafe,
             images = castImagesById[castId].orEmpty(),
             schedule = castSchedulesByCastId[castId].orEmpty(),
-            visitCertificationCount = visits.count { visit -> visit.cafeId == targetCafe.id }
+            visitCertificationCount = nextCast.visitCertificationCount
         )
     }
 

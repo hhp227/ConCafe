@@ -30,6 +30,22 @@ class ReviewRepositoryImpl(
         return pagingDataSource.toPaged(items, cursor, pageSize)
     }
 
+    override suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review> {
+        val safeLimit = if (limit > 0) limit else 1
+        return (reviewDataSource as? FirestoreConCafeDataSource)?.getRecentTaggedReviews(
+            cafeId = cafeId,
+            castId = castId,
+            limit = safeLimit
+        ) ?: reviewDataSource.reviews
+            .filter { review ->
+                review.cafeId == cafeId && review.taggedCastIds.contains(castId)
+            }
+            .sortedByDescending { review ->
+                review.createdAt
+            }
+            .take(safeLimit)
+    }
+
     override suspend fun createReview(
         userId: String,
         cafeId: String,
