@@ -137,6 +137,7 @@ private struct CastHeroSection: View {
     let topSafeArea: CGFloat
 
     var body: some View {
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
         let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
         let heroImages = resolveHeroImages(
             images: detail.images,
@@ -188,6 +189,8 @@ private struct CastHeroSection: View {
             }
         }
         .frame(height: 230 + topSafeArea)
+        .scaleEffect(stretchScale, anchor: .top)
+        .offset(y: -pullDownOffset)
         .background(Color.black)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))

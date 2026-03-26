@@ -164,6 +164,7 @@ private struct CafeContentView: View {
     }
 
     private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
         let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
         let heroImages: [String] = {
             let normalized = detail.images
@@ -194,11 +195,12 @@ private struct CafeContentView: View {
                     }
                 }
                 .frame(height: 230 + topSafeArea)
-                .scaleEffect(stretchScale, anchor: .top)
                 .clipped()
             }
         }
         .frame(height: 230 + topSafeArea)
+        .scaleEffect(stretchScale, anchor: .top)
+        .offset(y: -pullDownOffset)
         .background(Color.black)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
