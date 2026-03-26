@@ -140,7 +140,7 @@ fun MainScreen(
     ) { innerPadding ->
         NavHost(
             navController = bottomNavController,
-            startDestination = initialTab.orEmpty(),
+            startDestination = if (initialTab.isNullOrBlank()) MainNavigationTab.HOME.route else initialTab,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(MainNavigationTab.HOME.route) {
