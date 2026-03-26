@@ -33,6 +33,25 @@ type VisitLike = {
   verified?: unknown;
 };
 
+type CafeFavoriteLike = {
+  cafeId?: unknown;
+  userId?: unknown;
+};
+
+function asPlainObject(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== "object" || value == null || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asNonNegativeInt(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  return Math.max(0, Math.floor(value));
+}
+
 function asNonBlankString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
@@ -195,6 +214,67 @@ async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string):
   });
 
   await writeBatch.commit();
+}
+
+async function syncUserVisitCountAggregate(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
+    return;
+  }
+  const userRef = db().collection("users").doc(userId);
+
+  await db().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    const userData = snapshot.data();
+    const statsRaw = asPlainObject(userData?.stats);
+    const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentVisitCount = asNonNegativeInt(stats.visitCount)
+      ?? asNonNegativeInt(userData?.visitCount)
+      ?? 0;
+    const nextVisitCount = Math.max(0, currentVisitCount + delta);
+    const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
+
+    stats.visitCount = nextVisitCount;
+    stats.level = nextLevel;
+
+    transaction.set(
+      userRef,
+      {
+        stats: stats,
+        visitCount: nextVisitCount,
+        level: nextLevel,
+      },
+      {merge: true}
+    );
+  });
+}
+
+async function syncUserFavoriteCountAggregate(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
+    return;
+  }
+  const userRef = db().collection("users").doc(userId);
+
+  await db().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    const userData = snapshot.data();
+    const statsRaw = asPlainObject(userData?.stats);
+    const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentFavoriteCount = asNonNegativeInt(stats.favoritesCount)
+      ?? asNonNegativeInt(userData?.favoritesCount)
+      ?? 0;
+    const nextFavoriteCount = Math.max(0, currentFavoriteCount + delta);
+
+    stats.favoritesCount = nextFavoriteCount;
+
+    transaction.set(
+      userRef,
+      {
+        stats: stats,
+        favoritesCount: nextFavoriteCount,
+      },
+      {merge: true}
+    );
+  });
 }
 
 function collectCastTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
@@ -502,6 +582,72 @@ export const onVisitWrittenSyncReviewVisitVerified = onDocumentWritten(
     logger.info("Synced review visitVerified from visit write.", {
       visitId: event.params.visitId,
       targets: Array.from(sourcePairs),
+    });
+  }
+);
+
+export const onVisitWrittenSyncUserVisitStats = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+    const beforeUserId = asNonBlankString(beforeData?.userId);
+    const afterUserId = asNonBlankString(afterData?.userId);
+    const deltaByUserId = new Map<string, number>();
+
+    if (beforeUserId != null) {
+      deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
+    }
+    if (afterUserId != null) {
+      deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
+    }
+
+    const targetEntries = Array.from(deltaByUserId.entries())
+      .filter(([userId, delta]) => userId.length > 0 && delta != 0);
+    if (targetEntries.length == 0) {
+      return;
+    }
+
+    await Promise.all(targetEntries.map(async ([userId, delta]) => {
+      await syncUserVisitCountAggregate(userId, delta);
+    }));
+
+    logger.info("Synced user visitCount aggregate from visit write.", {
+      visitId: event.params.visitId,
+      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
+    });
+  }
+);
+
+export const onCafeFavoriteWrittenSyncUserFavoriteStats = onDocumentWritten(
+  "cafeFavorites/{favoriteId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as CafeFavoriteLike | undefined;
+    const afterData = event.data?.after.data() as CafeFavoriteLike | undefined;
+    const beforeUserId = asNonBlankString(beforeData?.userId);
+    const afterUserId = asNonBlankString(afterData?.userId);
+    const deltaByUserId = new Map<string, number>();
+
+    if (beforeUserId != null) {
+      deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
+    }
+    if (afterUserId != null) {
+      deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
+    }
+
+    const targetEntries = Array.from(deltaByUserId.entries())
+      .filter(([userId, delta]) => userId.length > 0 && delta != 0);
+    if (targetEntries.length == 0) {
+      return;
+    }
+
+    await Promise.all(targetEntries.map(async ([userId, delta]) => {
+      await syncUserFavoriteCountAggregate(userId, delta);
+    }));
+
+    logger.info("Synced user favoritesCount aggregate from favorite write.", {
+      favoriteId: event.params.favoriteId,
+      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
     });
   }
 );

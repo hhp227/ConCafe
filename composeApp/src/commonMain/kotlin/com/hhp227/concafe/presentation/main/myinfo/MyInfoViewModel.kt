@@ -16,18 +16,22 @@ import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.VisitEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoEvent.*
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoUiState.Companion.empty
+import kotlin.math.max
 
 class MyInfoViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val visitEventPublisher: VisitEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
@@ -89,8 +93,30 @@ class MyInfoViewModel(
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_DETAIL_EVENT] = viewModelScope.launch {
             cafeDetailEventPublisher.events.collectLatest { event ->
-                if (event is CafeDetailEvent.CafeInfoUpdated) {
-                    patchCafe(event.cafe)
+                when (event) {
+                    is CafeDetailEvent.CafeInfoUpdated -> patchCafe(event.cafe)
+                    is CafeDetailEvent.FavoriteToggled -> applyFavoriteToggle(
+                        cafeId = event.cafeId,
+                        isFavorite = event.isFavorite
+                    )
+                    is CafeDetailEvent.MenuCreated,
+                    is CafeDetailEvent.MenuUpdated,
+                    is CafeDetailEvent.MenuDeleted,
+                    is CafeDetailEvent.GoodsCreated,
+                    is CafeDetailEvent.GoodsUpdated,
+                    is CafeDetailEvent.GoodsDeleted -> Unit
+                }
+            }
+        }
+    }
+
+    private fun observeVisitEvent() {
+        jobs[TaskKey.OBSERVE_VISIT_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
+            visitEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is VisitEvent.Created -> applyVisitCountDelta(1)
+                    is VisitEvent.Deleted -> applyVisitCountDelta(-1)
                 }
             }
         }
@@ -193,6 +219,50 @@ class MyInfoViewModel(
         }
     }
 
+    private fun applyFavoriteToggle(cafeId: String, isFavorite: Boolean) {
+        _uiState.update { state ->
+            val summary = state.summary
+            val updatedSummary = if (summary != null) {
+                val nextCount = if (isFavorite) {
+                    summary.favoritesCount + 1
+                } else {
+                    max(summary.favoritesCount - 1, 0)
+                }
+                summary.copy(favoritesCount = nextCount)
+            } else {
+                null
+            }
+            val updatedFavorites = if (isFavorite) {
+                state.favorites
+            } else {
+                state.favorites.filterNot { item -> item.id == cafeId }
+            }
+            state.copy(
+                summary = updatedSummary,
+                favorites = updatedFavorites
+            )
+        }
+    }
+
+    private fun applyVisitCountDelta(delta: Int) {
+        if (delta == 0) return
+        _uiState.update { state ->
+            val summary = state.summary
+            if (summary == null) {
+                state
+            } else {
+                val nextVisitCount = max(summary.totalVisits + delta, 0)
+                val nextLevel = max(1, 1 + (nextVisitCount / 5))
+                state.copy(
+                    summary = summary.copy(
+                        totalVisits = nextVisitCount,
+                        level = nextLevel
+                    )
+                )
+            }
+        }
+    }
+
     fun onAction(action: MyInfoAction) {
         when (action) {
             is MyInfoAction.ClickCafe -> viewModelScope.launch {
@@ -226,6 +296,7 @@ class MyInfoViewModel(
     init {
         observeCafeDetailEvent()
         observeCastEvent()
+        observeVisitEvent()
         observeSession()
     }
 
@@ -237,7 +308,8 @@ class MyInfoViewModel(
 
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAST_EVENT
+        OBSERVE_CAST_EVENT,
+        OBSERVE_VISIT_EVENT
     }
 
     private fun normalizeCafes(items: List<Cafe>, maxCount: Int): List<Cafe> {

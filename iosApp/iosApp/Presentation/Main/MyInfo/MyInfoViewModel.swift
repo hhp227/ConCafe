@@ -20,6 +20,8 @@ final class MyInfoViewModel: ObservableObject {
 
     private let castEventPublisher: CastEventPublisher
 
+    private let visitEventPublisher: VisitEventPublisher
+
     @Published private(set) var uiState = MyInfoUiState.empty
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
@@ -93,6 +95,28 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
                     if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                         self.patchCafe(updated.cafe)
+                    } else if let favorite = event as? CafeDetailEvent.FavoriteToggled {
+                        self.applyFavoriteToggle(cafeId: favorite.cafeId, isFavorite: favorite.isFavorite)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeVisitEvent() {
+        tasks[.visitEvent]?.cancel()
+        tasks[.visitEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: visitEventPublisher.events) {
+                    switch event {
+                    case is VisitEvent.Created:
+                        self.applyVisitCountDelta(1)
+                    case is VisitEvent.Deleted:
+                        self.applyVisitCountDelta(-1)
+                    default:
+                        break
                     }
                 }
             } catch {
@@ -214,6 +238,40 @@ final class MyInfoViewModel: ObservableObject {
         return result
     }
 
+    private func applyFavoriteToggle(cafeId: String, isFavorite: Bool) {
+        if let summary = uiState.summary {
+            let nextCount = isFavorite
+                ? Int(summary.favoritesCount) + 1
+                : max(Int(summary.favoritesCount) - 1, 0)
+            uiState.summary = MyPageSummary(
+                userId: summary.userId,
+                totalVisits: summary.totalVisits,
+                favoritesCount: Int32(nextCount),
+                followedCastsCount: summary.followedCastsCount,
+                badgesCount: summary.badgesCount,
+                level: summary.level
+            )
+        }
+        if !isFavorite {
+            uiState.favorites.removeAll { $0.id == cafeId }
+        }
+    }
+
+    private func applyVisitCountDelta(_ delta: Int) {
+        guard delta != 0, let summary = uiState.summary else { return }
+
+        let nextVisitCount = max(Int(summary.totalVisits) + delta, 0)
+        let nextLevel = max(1, 1 + (nextVisitCount / 5))
+        uiState.summary = MyPageSummary(
+            userId: summary.userId,
+            totalVisits: Int32(nextVisitCount),
+            favoritesCount: summary.favoritesCount,
+            followedCastsCount: summary.followedCastsCount,
+            badgesCount: summary.badgesCount,
+            level: Int32(nextLevel)
+        )
+    }
+
     func onAction(_ action: MyInfoAction) {
         switch action {
         case .cafeTapped(let id):
@@ -244,16 +302,19 @@ final class MyInfoViewModel: ObservableObject {
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.visitEventPublisher = visitEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeVisitEvent()
     }
 
     deinit {
@@ -265,6 +326,7 @@ final class MyInfoViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case castEvent
+        case visitEvent
     }
 
     private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {

@@ -166,8 +166,21 @@ class GetMyInfoUseCase(
     }
 
     private suspend fun fetchCafesByIdsInOrder(cafeIds: List<String>): List<Cafe> {
-        val cafes = cafeRepository.getCafesByIds(cafeIds)
-        val cafeById = cafes.associateBy { it.id }
+        if (cafeIds.isEmpty()) {
+            return emptyList()
+        }
+        val uniqueCafeIds = cafeIds.distinct()
+        val cafeById = coroutineScope {
+            uniqueCafeIds.associateWith { cafeId ->
+                async {
+                    runCatching {
+                        cafeRepository.getCafeDetail(cafeId).cafe
+                    }.getOrNull()
+                }
+            }.mapValues { (_, deferredCafe) ->
+                deferredCafe.await()
+            }
+        }
         return cafeIds.mapNotNull { cafeId -> cafeById[cafeId] }
     }
 }

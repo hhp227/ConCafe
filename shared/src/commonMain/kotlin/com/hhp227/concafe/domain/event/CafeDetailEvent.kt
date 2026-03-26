@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.model.Goods
 
 sealed class CafeDetailEvent {
     data class CafeInfoUpdated(val cafeId: String, val cafe: Cafe) : CafeDetailEvent()
+    data class FavoriteToggled(val cafeId: String, val isFavorite: Boolean) : CafeDetailEvent()
 
     data class MenuCreated(
         val cafeId: String,

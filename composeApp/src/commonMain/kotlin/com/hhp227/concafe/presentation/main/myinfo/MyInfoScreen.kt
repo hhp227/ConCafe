@@ -466,6 +466,7 @@ private fun ProfileMyInfoScreen(
                                         name = cafe.name,
                                         rating = "${cafe.ratingAvg}",
                                         location = cafe.region.city,
+                                        thumbnailImage = cafe.thumbnailImage,
                                         onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
                                     )
                                 }

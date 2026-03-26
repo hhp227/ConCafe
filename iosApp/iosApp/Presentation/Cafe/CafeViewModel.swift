@@ -42,6 +42,10 @@ final class CafeViewModel: ObservableObject {
                     switch event {
                     case is CafeDetailEvent.CafeInfoUpdated:
                         self.loadCafeDetail()
+                    case let favorite as CafeDetailEvent.FavoriteToggled:
+                        if favorite.cafeId == self.cafeId {
+                            self.uiState.isFavorite = favorite.isFavorite
+                        }
                     case is CafeDetailEvent.GoodsCreated,
                         is CafeDetailEvent.GoodsDeleted,
                         is CafeDetailEvent.GoodsUpdated,

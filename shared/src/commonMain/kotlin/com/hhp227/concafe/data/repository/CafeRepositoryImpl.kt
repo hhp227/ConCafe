@@ -114,11 +114,21 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
+        (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFavoriteCafeIds(userId)
+            }
+        }
         val set = socialDataSource.favoriteCafeIdsByUser[userId]
         return set?.contains(cafeId) ?: false
     }
 
     override suspend fun getFavoriteCafeIds(userId: String): List<String> {
+        (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFavoriteCafeIds(userId)
+            }
+        }
         return socialDataSource.favoriteCafeIdsByUser[userId]
             ?.toList()
             .orEmpty()
@@ -126,14 +136,54 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {
+        if (cafeIds.isEmpty()) {
+            return emptyList()
+        }
+        val requestedIds = cafeIds.toSet()
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+        val cachedIds = cafeDataSource.cafes
+            .asSequence()
+            .map { cafe -> cafe.id }
+            .toSet()
+        val missingIds = requestedIds - cachedIds
+
+        if (firestoreDataSource != null && missingIds.isNotEmpty()) {
+            missingIds.forEach { cafeId ->
+                runCatching {
+                    firestoreDataSource.refreshCafeDetail(cafeId)
+                }
+            }
+        }
+
         val idSet = cafeIds.toSet()
-        return cafeDataSource.cafes
+        val cafeById = cafeDataSource.cafes
             .asSequence()
             .filter { cafe -> cafe.approved && idSet.contains(cafe.id) }
-            .toList()
+            .associateBy { cafe -> cafe.id }
+        return cafeIds.distinct().mapNotNull { cafeId -> cafeById[cafeId] }
     }
 
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
+        (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
+            runCatching {
+                firestoreDataSource.refreshFavoriteCafeIds(userId)
+            }
+            val favoriteSet = socialDataSource.favoriteCafeIdsByUser[userId]
+            val isFavorite = favoriteSet?.contains(cafeId) == true
+
+            if (isFavorite) {
+                firestoreDataSource.unfavoriteCafeRemote(
+                    userId = userId,
+                    cafeId = cafeId
+                )
+            } else {
+                firestoreDataSource.favoriteCafeRemote(
+                    userId = userId,
+                    cafeId = cafeId
+                )
+            }
+            return !isFavorite
+        }
         val set = socialDataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
         return if (set.contains(cafeId)) {
             set.remove(cafeId)
