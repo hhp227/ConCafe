@@ -19,6 +19,7 @@ import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
+import com.hhp227.concafe.domain.model.AdminOperationsMetrics
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -1824,6 +1825,41 @@ class FirestoreConCafeDataSource(
         return preview
     }
 
+    override suspend fun fetchAdminOperationsMetrics(): AdminOperationsMetrics {
+        val idToken = tokenProvider.getIdToken()
+        val totalUsersCount = loadCollectionDocumentCount(
+            collectionId = FirestorePaths.USERS,
+            idToken = idToken
+        )
+        val totalCafesCount = loadCollectionDocumentCount(
+            collectionId = FirestorePaths.CAFES,
+            idToken = idToken
+        )
+        val approvedCafesCount = loadCollectionDocumentCount(
+            collectionId = FirestorePaths.CAFES,
+            idToken = idToken,
+            equalsFilterFieldPath = "approved",
+            equalsFilterValue = firestoreBoolean(true)
+        )
+        val reportItemsCount = runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.REPORTS,
+                idToken = idToken
+            )
+        }.getOrElse { 0 }
+        val activeCafesCount = if (approvedCafesCount == 0 && totalCafesCount > 0) {
+            totalCafesCount
+        } else {
+            approvedCafesCount
+        }
+
+        return AdminOperationsMetrics(
+            totalUsersCount = totalUsersCount,
+            activeCafesCount = activeCafesCount,
+            reportItemsCount = reportItemsCount
+        )
+    }
+
     private suspend fun loadUsers(idToken: String?) {
         val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.USERS}", idToken)
         val parsed = Json.parseToJsonElement(response).jsonObject
@@ -2445,6 +2481,26 @@ class FirestoreConCafeDataSource(
         return parsed["documents"]?.jsonArray.orEmpty().map { element ->
             element.jsonObject
         }
+    }
+
+    private suspend fun loadCollectionDocumentCount(
+        collectionId: String,
+        idToken: String?,
+        equalsFilterFieldPath: String? = null,
+        equalsFilterValue: JsonObject? = null
+    ): Int {
+        val requestBody = buildCountAggregationQueryBody(
+            collectionId = collectionId,
+            equalsFilterFieldPath = equalsFilterFieldPath,
+            equalsFilterValue = equalsFilterValue
+        )
+        val response = restApi.post(
+            path = "${config.documentBasePath()}:runAggregationQuery",
+            body = requestBody,
+            idToken = idToken
+        )
+
+        return parseCountAggregationResponse(response)
     }
 
     private suspend fun resolveCafeIdByCastId(
@@ -3487,6 +3543,104 @@ private data class CastScheduleDocumentEntry(
     val startTime: String?,
     val endTime: String?
 )
+
+private fun buildCountAggregationQueryBody(
+    collectionId: String,
+    equalsFilterFieldPath: String?,
+    equalsFilterValue: JsonObject?
+): String {
+    val escapedCollectionId = escapeFirestoreQueryString(collectionId)
+    val whereClause = if (equalsFilterFieldPath.isNullOrBlank() || equalsFilterValue == null) {
+        ""
+    } else {
+        val escapedFieldPath = escapeFirestoreQueryString(equalsFilterFieldPath)
+        """,
+                    "where":{
+                        "fieldFilter":{
+                            "field":{"fieldPath":"$escapedFieldPath"},
+                            "op":"EQUAL",
+                            "value":$equalsFilterValue
+                        }
+                    }"""
+    }
+
+    return """
+        {
+            "structuredAggregationQuery":{
+                "aggregations":[
+                    {
+                        "alias":"count",
+                        "count":{}
+                    }
+                ],
+                "structuredQuery":{
+                    "from":[
+                        {
+                            "collectionId":"$escapedCollectionId"
+                        }
+                    ]$whereClause
+                }
+            }
+        }
+    """.trimIndent()
+}
+
+private fun parseCountAggregationResponse(response: String): Int {
+    val trimmedResponse = response.trim()
+
+    if (trimmedResponse.isEmpty()) {
+        return 0
+    }
+    val parsedElement = runCatching {
+        Json.parseToJsonElement(trimmedResponse)
+    }.getOrNull()
+
+    if (parsedElement != null) {
+        val parsedCount = when (parsedElement) {
+            is JsonObject -> extractCountFromAggregationItem(parsedElement)
+            is kotlinx.serialization.json.JsonArray -> parsedElement
+                .mapNotNull { item -> extractCountFromAggregationItem(item.jsonObject) }
+                .firstOrNull()
+            else -> null
+        }
+
+        if (parsedCount != null) {
+            return parsedCount
+        }
+    }
+
+    val fallbackCount = trimmedResponse
+        .lineSequence()
+        .map { line -> line.trim() }
+        .filter { line -> line.startsWith("{") && line.endsWith("}") }
+        .mapNotNull { line ->
+            runCatching { Json.parseToJsonElement(line).jsonObject }.getOrNull()
+        }
+        .mapNotNull { item -> extractCountFromAggregationItem(item) }
+        .firstOrNull()
+
+    return fallbackCount ?: 0
+}
+
+private fun extractCountFromAggregationItem(item: JsonObject): Int? {
+    val result = item["result"]?.jsonObject ?: return null
+    val aggregateFields = result["aggregateFields"]?.jsonObject ?: return null
+    val aliasField = aggregateFields["count"]?.jsonObject
+        ?: aggregateFields.values.firstOrNull()?.jsonObject
+        ?: return null
+    val integerValue = aliasField["integerValue"]?.jsonPrimitive?.longOrNull
+    val doubleValue = aliasField["doubleValue"]?.jsonPrimitive?.doubleOrNull
+
+    if (integerValue != null) {
+        return integerValue.toInt()
+    } else {
+        if (doubleValue != null) {
+            return doubleValue.toInt()
+        }
+    }
+
+    return null
+}
 
 private fun parseCastScheduleStatus(raw: String?): CastScheduleStatus? {
     return when (raw?.trim()?.uppercase()) {

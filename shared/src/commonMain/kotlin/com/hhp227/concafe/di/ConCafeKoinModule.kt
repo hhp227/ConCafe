@@ -1,6 +1,7 @@
 package com.hhp227.concafe.di
 
 import com.hhp227.concafe.data.repository.AuthRepositoryImpl
+import com.hhp227.concafe.data.repository.AdminOperationsRepositoryImpl
 import com.hhp227.concafe.data.repository.BannerRepositoryImpl
 import com.hhp227.concafe.data.repository.CafeDashboardRepositoryImpl
 import com.hhp227.concafe.data.repository.CafeManagementRepositoryImpl
@@ -81,6 +82,7 @@ val dataSourceModule = module {
 
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
+    single<AdminOperationsRepository> { AdminOperationsRepositoryImpl(get()) }
     single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
     single<BannerRepository> { BannerRepositoryImpl(get(), get(), get()) }
     single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
@@ -115,6 +117,7 @@ val eventModule = module {
 
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }

@@ -9,7 +9,15 @@ import Foundation
 import Shared
 
 struct AdminOperationsUiState {
-    var metrics: [AdminMetricCard] = buildAdminMetrics(pendingCount: 0)
+    var totalUsersCount: Int = 0
+    var activeCafesCount: Int = 0
+    var reportItemsCount: Int = 0
+    var metrics: [AdminMetricCard] = buildAdminMetrics(
+        totalUsersCount: 0,
+        activeCafesCount: 0,
+        pendingCount: 0,
+        reportItemsCount: 0
+    )
     var selectedPendingFilter: PendingFilter = .cafeRegistration
     var pendingCafeRegistrationClaims: [PendingCafeRegistrationClaimPreview] = []
     var pendingCafeOwnerClaims: [PendingCafeOwnerClaimPreview] = []
@@ -91,12 +99,17 @@ enum QuickMenuAccent {
     case blue
 }
 
-func buildAdminMetrics(pendingCount: Int) -> [AdminMetricCard] {
+func buildAdminMetrics(
+    totalUsersCount: Int,
+    activeCafesCount: Int,
+    pendingCount: Int,
+    reportItemsCount: Int
+) -> [AdminMetricCard] {
     [
-        AdminMetricCard(title: "전체 사용자", value: "12,540", delta: "1.2%", icon: .users, trend: .up),
-        AdminMetricCard(title: "활성 카페", value: "842", delta: "0.5%", icon: .cafe, trend: .up),
+        AdminMetricCard(title: "전체 사용자", value: "\(totalUsersCount)", delta: "실시간", icon: .users, trend: .up),
+        AdminMetricCard(title: "활성 카페", value: "\(activeCafesCount)", delta: "실시간", icon: .cafe, trend: .up),
         AdminMetricCard(title: "승인 대기", value: "\(pendingCount)", delta: "\(pendingCount)건 대기", icon: .pending, trend: .new),
-        AdminMetricCard(title: "신고 항목", value: "32", delta: "8%", icon: .report, trend: .down)
+        AdminMetricCard(title: "신고 항목", value: "\(reportItemsCount)", delta: "실시간", icon: .report, trend: .down)
     ]
 }
 
