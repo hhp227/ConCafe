@@ -57,7 +57,7 @@ final class MyInfoViewModel: ObservableObject {
                     )
                     let normalizedFavorites = normalizeCafes(
                         feed.favorites,
-                        maxCount: Int(feed.summary?.favoritesCount ?? 0)
+                        maxCount: feed.favorites.count
                     )
                     uiState = MyInfoUiState(
                         isLoading: false,

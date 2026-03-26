@@ -61,7 +61,7 @@ class MyInfoViewModel(
                     )
                     val normalizedFavorites = normalizeCafes(
                         items = result.data.favorites,
-                        maxCount = result.data.summary?.favoritesCount ?: 0
+                        maxCount = result.data.favorites.size
                     )
                     _uiState.value = MyInfoUiState(
                         isLoading = false,
