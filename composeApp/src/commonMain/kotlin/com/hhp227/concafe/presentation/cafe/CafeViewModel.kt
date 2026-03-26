@@ -67,10 +67,7 @@ class CafeViewModel(
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                             _uiState.update { state ->
                                 state.copy(
-                                    shouldScrollToTopOnReturn = true,
-                                    detail = state.detail?.let { detail ->
-                                        detail.copy(cafe = detail.cafe.copy(reviewCount = detail.cafe.reviewCount + 1))
-                                    }
+                                    shouldScrollToTopOnReturn = true
                                 )
                             }
                             refreshReviewPage()
@@ -80,13 +77,6 @@ class CafeViewModel(
                         if (event.cafeId == cafeId && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                             _uiState.update { state ->
                                 state.copy(
-                                    detail = state.detail?.let { detail ->
-                                        detail.copy(
-                                            cafe = detail.cafe.copy(
-                                                reviewCount = (detail.cafe.reviewCount - 1).coerceAtLeast(0)
-                                            )
-                                        )
-                                    },
                                     reviews = state.reviews.filterNot { review -> review.id == event.reviewId }
                                 )
                             }

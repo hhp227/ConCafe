@@ -69,13 +69,6 @@ final class CafeViewModel: ObservableObject {
                         if created.cafeId == cafeId && self.uiState.selectedTab == .reviews {
                             await MainActor.run {
                                 self.uiState.shouldScrollToTopOnReturn = true
-                                if let detail = self.uiState.detail {
-                                    self.uiState.detail = detail.copy(
-                                        cafe: detail.cafe.copy(
-                                            reviewCount: Int32(detail.cafe.reviewCount + 1)
-                                        )
-                                    )
-                                }
                             }
                             self.refreshReviewPage()
                         }
@@ -84,14 +77,6 @@ final class CafeViewModel: ObservableObject {
                             await MainActor.run {
                                 self.uiState.reviews.removeAll {
                                     $0.id == deleted.reviewId
-                                }
-                                if let detail = self.uiState.detail {
-                                    let nextCount = max(0, Int(detail.cafe.reviewCount) - 1)
-                                    self.uiState.detail = detail.copy(
-                                        cafe: detail.cafe.copy(
-                                            reviewCount: Int32(nextCount)
-                                        )
-                                    )
                                 }
                             }
                         }
