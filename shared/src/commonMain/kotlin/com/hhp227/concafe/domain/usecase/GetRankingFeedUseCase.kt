@@ -123,4 +123,4 @@ class GetRankingFeedUseCase(
     }
 }
 
-private const val RANKING_FETCH_LIMIT = 30
+private const val RANKING_FETCH_LIMIT = 50

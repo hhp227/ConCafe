@@ -127,6 +127,8 @@ class FirestoreConCafeDataSource(
             .onFailure { throwable -> println("Firestore bootstrap loadHomeBanners failed: ${throwable.message}") }
         runCatching { loadCafes(idToken = null) }
             .onFailure { throwable -> println("Firestore bootstrap loadCafes failed: ${throwable.message}") }
+        runCatching { loadNotices(idToken = null) }
+            .onFailure { throwable -> println("Firestore bootstrap loadNotices failed: ${throwable.message}") }
     }
 
     override fun cafeDetail(cafeId: String): CafeDetail? {
@@ -403,6 +405,116 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    suspend fun getCafeNoticePageRemote(
+        cafeId: String,
+        query: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeNoticeManagementItem> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val normalizedQuery = query.trim()
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val documents = runCatching {
+            runCafeNoticePageQuery(
+                cafeId = cafeId,
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runCafeNoticePageQuery(
+                cafeId = cafeId,
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = null
+            )
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load cafe notice page: $cafeId", throwable)
+        }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()?.toNoticeQueryCursor()
+        } else {
+            null
+        }
+        val pageItems = pageDocuments.mapNotNull { document ->
+            parseNoticeManagementDocument(
+                cafeId = cafeId,
+                document = document
+            )
+        }.filter { item ->
+            normalizedQuery.isBlank() ||
+                item.title.contains(normalizedQuery, ignoreCase = true) ||
+                item.content.contains(normalizedQuery, ignoreCase = true)
+        }
+
+        cafeNoticeManagementItems.removeAll { item -> item.cafeId == cafeId }
+        cafeNoticeManagementItems.addAll(pageItems)
+        return PagedResult(
+            items = pageItems,
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
+    }
+
+    suspend fun getCafeEventPageRemote(
+        cafeId: String,
+        query: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val normalizedQuery = query.trim()
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val documents = runCatching {
+            runCafeEventPageQuery(
+                cafeId = cafeId,
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runCafeEventPageQuery(
+                cafeId = cafeId,
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = null
+            )
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load cafe event page: $cafeId", throwable)
+        }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()?.toEventQueryCursor()
+        } else {
+            null
+        }
+        val pageItems = pageDocuments.mapNotNull { document ->
+            parseEventManagementDocument(
+                cafeId = cafeId,
+                document = document
+            )
+        }.filter { item ->
+            normalizedQuery.isBlank() ||
+                item.title.contains(normalizedQuery, ignoreCase = true) ||
+                item.content.contains(normalizedQuery, ignoreCase = true)
+        }
+
+        cafeEventManagementItems.removeAll { item -> item.cafeId == cafeId }
+        cafeEventManagementItems.addAll(pageItems)
+        return PagedResult(
+            items = pageItems,
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
+    }
+
     suspend fun refreshCafeReviews(cafeId: String) {
         val idToken = tokenProvider.getIdToken()
         val reviewDocuments = runCatching {
@@ -434,16 +546,50 @@ class FirestoreConCafeDataSource(
         refreshReviewProjections(cafeId = cafeId, taggedCastIds = emptyList())
     }
 
+    suspend fun getRecentNoticesRemote(limit: Int): List<Notice> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val noticeDocuments = runCatching {
+            runRecentNoticeFeedQuery(limit = safeLimit, idToken = idToken)
+        }.recoverCatching {
+            runRecentNoticeFeedQuery(limit = safeLimit, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load recent notices", throwable)
+        }
+        val parsedNotices = noticeDocuments.mapNotNull { document ->
+            val documentName = document["name"]?.jsonPrimitive?.contentOrNull
+            val cafeId = documentName?.toCafeIdFromNoticeDocumentName() ?: return@mapNotNull null
+            val cafeName = cafes.firstOrNull { cafe -> cafe.id == cafeId }?.name ?: cafeId
+
+            parseNoticeDocument(
+                cafeId = cafeId,
+                cafeName = cafeName,
+                document = document
+            )
+        }.sortedByDescending { notice ->
+            notice.createdAt
+        }.take(safeLimit)
+
+        parsedNotices.forEach { notice ->
+            notices.removeAll { cached -> cached.id == notice.id && cached.cafeId == notice.cafeId }
+            notices.add(notice)
+        }
+        notices.sortByDescending { notice -> notice.createdAt }
+        return parsedNotices
+    }
+
     suspend fun getCafeReviewsPageRemote(
         cafeId: String,
         cursor: String?,
         pageSize: Int
     ): PagedResult<Review> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            1
-        }
+        val safePageSize = if (pageSize > 0) pageSize else 1
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
@@ -461,8 +607,8 @@ class FirestoreConCafeDataSource(
                 limit = safePageSize + 1,
                 idToken = null
             )
-        }.getOrElse {
-            emptyList()
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load cafe review page: $cafeId", throwable)
         }
         val pageDocuments = reviewDocuments.take(safePageSize)
         val hasNext = reviewDocuments.size > safePageSize
@@ -674,12 +820,10 @@ class FirestoreConCafeDataSource(
             memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() },
             verified = false
         )
-
         val refreshedVisit = runCatching {
             refreshVisitsByUserRemote(userId)
             visits.firstOrNull { visit -> visit.id == visitId }
         }.getOrNull()
-
         return refreshedVisit ?: createdVisit
     }
 
@@ -714,12 +858,10 @@ class FirestoreConCafeDataSource(
             visitedAt = visitedAt,
             memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() }
         )
-
         val refreshedVisit = runCatching {
             refreshVisitsByUserRemote(existing.userId)
             visits.firstOrNull { visit -> visit.id == visitId }
         }.getOrNull()
-
         return refreshedVisit ?: fallbackUpdated
     }
 
@@ -788,10 +930,10 @@ class FirestoreConCafeDataSource(
             visitVerified = false,
             userNickname = userNickname
         )
+
         reviews.removeAll { review -> review.id == reviewId }
         reviews.add(created)
         refreshReviewProjections(cafeId = cafeId, taggedCastIds = taggedCastIds)
-
         return created
     }
 
@@ -843,7 +985,6 @@ class FirestoreConCafeDataSource(
             reviews.add(updated)
         }
         refreshReviewProjections(cafeId = updated.cafeId, taggedCastIds = updated.taggedCastIds)
-
         return updated
     }
 
@@ -1147,7 +1288,6 @@ class FirestoreConCafeDataSource(
             readCastClaimSyncUpdatedAt(cafeId = cafeId, idToken = null)
         }.getOrNull()
         val localUpdatedAt = castClaimSyncUpdatedAtByCafeId[cafeId]
-
         return if (remoteUpdatedAt == null) {
             if (localUpdatedAt == CAST_CLAIM_SYNC_META_MISSING_MARKER) {
                 false
@@ -1374,7 +1514,6 @@ class FirestoreConCafeDataSource(
             reviews.removeAll { review -> review.id == first.id }
             reviews.add(first)
         }
-
         return parsedReviews.isNotEmpty()
     }
 
@@ -1486,6 +1625,7 @@ class FirestoreConCafeDataSource(
                 "conceptRole" to firestoreString(normalizedConceptRole),
                 "followerCount" to firestoreLong((existingCast?.followerCount ?: 0).toLong()),
                 "rating" to firestoreDouble(existingCast?.rating ?: 0.0),
+                "visitCertificationCount" to firestoreLong((existingCast?.visitCertificationCount ?: 0).toLong()),
                 "galleryImages" to firestoreStringArray(normalizedGalleryImages)
             )
         )
@@ -1516,11 +1656,7 @@ class FirestoreConCafeDataSource(
         dayOfMonth: Int,
         limit: Int
     ): List<Cast> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val birthdayKey = monthDayToBirthdayKey(
             month = month,
             dayOfMonth = dayOfMonth
@@ -1565,14 +1701,114 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        return searchCastsRemote(
-            query = null,
-            country = null,
-            city = null,
-            sort = CastSort.POPULAR,
-            cursor = cursor,
-            pageSize = pageSize
-        )
+        val safePageSize = if (pageSize > 0) {
+            pageSize
+        } else {
+            1
+        }
+        val popularPage = runCatching {
+            searchCastsRemote(
+                query = null,
+                country = null,
+                city = null,
+                sort = CastSort.POPULAR,
+                cursor = cursor,
+                pageSize = safePageSize
+            )
+        }.getOrNull()
+        return if (popularPage != null && (popularPage.items.isNotEmpty() || !cursor.isNullOrBlank())) {
+            popularPage
+        } else {
+            val latestPage = runCatching {
+                searchCastsRemote(
+                    query = null,
+                    country = null,
+                    city = null,
+                    sort = CastSort.LATEST,
+                    cursor = null,
+                    pageSize = safePageSize
+                )
+            }.getOrNull()
+            if (latestPage != null && latestPage.items.isNotEmpty()) {
+                PagedResult(
+                    items = latestPage.items.sortedByDescending { cast -> cast.followerCount },
+                    nextCursor = latestPage.nextCursor,
+                    hasNext = latestPage.hasNext
+                )
+            } else {
+                val fallbackPoolSize = safePageSize.coerceAtLeast(HOME_POPULAR_CAST_FALLBACK_POOL_SIZE)
+                val cacheSeed = if (delegate.casts.isNotEmpty()) {
+                    delegate.casts
+                } else {
+                    loadCastsFromCafeSubCollections(
+                        maxCafeCount = HOME_POPULAR_CAST_FALLBACK_MAX_CAFE_COUNT,
+                        perCafeLimit = HOME_POPULAR_CAST_FALLBACK_PER_CAFE_LIMIT
+                    )
+                }
+                val sortedFallback = cacheSeed
+                    .sortedByDescending { cast -> cast.followerCount }
+                    .take(fallbackPoolSize)
+                val pageItems = sortedFallback.take(safePageSize)
+
+                PagedResult(
+                    items = pageItems,
+                    nextCursor = null,
+                    hasNext = sortedFallback.size > safePageSize
+                )
+            }
+        }
+    }
+
+    private suspend fun loadCastsFromCafeSubCollections(
+        maxCafeCount: Int,
+        perCafeLimit: Int
+    ): List<Cast> {
+        val safeCafeCount = if (maxCafeCount > 0) {
+            maxCafeCount
+        } else {
+            1
+        }
+        val safePerCafeLimit = if (perCafeLimit > 0) {
+            perCafeLimit
+        } else {
+            1
+        }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val aggregated = mutableListOf<Cast>()
+        val targetCafes = cafes
+            .asSequence()
+            .filter { cafe -> cafe.approved }
+            .take(safeCafeCount)
+            .toList()
+
+        targetCafes.forEach { cafe ->
+            val castDocuments = runCatching {
+                runCafeCastQuery(
+                    cafeId = cafe.id,
+                    cursor = null,
+                    limit = safePerCafeLimit,
+                    idToken = idToken
+                )
+            }.recoverCatching {
+                runCafeCastQuery(
+                    cafeId = cafe.id,
+                    cursor = null,
+                    limit = safePerCafeLimit,
+                    idToken = null
+                )
+            }.getOrElse {
+                emptyList()
+            }
+            val parsed = castDocuments.mapNotNull { document ->
+                parseCastDocument(cafeId = cafe.id, document = document)
+            }
+
+            aggregated.addAll(parsed)
+        }
+        upsertCastSummariesIntoCache(aggregated)
+        return aggregated
     }
 
     suspend fun searchCafesRemote(
@@ -1583,11 +1819,7 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cafe> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            1
-        }
+        val safePageSize = if (pageSize > 0) pageSize else 1
         val normalizedQuery = query?.trim()?.takeIf { value -> value.isNotEmpty() }
         val normalizedCountry = country?.trim()?.takeIf { value -> value.isNotEmpty() }
         val normalizedCity = city?.trim()?.takeIf { value -> value.isNotEmpty() }
@@ -1647,11 +1879,7 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            1
-        }
+        val safePageSize = if (pageSize > 0) pageSize else 1
         val normalizedQuery = query?.trim()?.takeIf { value -> value.isNotEmpty() }
         val normalizedCountry = country?.trim()?.takeIf { value -> value.isNotEmpty() }
         val normalizedCity = city?.trim()?.takeIf { value -> value.isNotEmpty() }
@@ -1696,11 +1924,7 @@ class FirestoreConCafeDataSource(
                 } else {
                     cast.name.contains(normalizedQuery, ignoreCase = true)
                 }
-                val matchesCafe = if (targetCafeIds == null) {
-                    true
-                } else {
-                    targetCafeIds.contains(cast.cafeId)
-                }
+                val matchesCafe = targetCafeIds?.contains(cast.cafeId) ?: true
                 matchesQuery && matchesCafe
             }
             val remaining = safePageSize - aggregated.size
@@ -1722,11 +1946,7 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            1
-        }
+        val safePageSize = if (pageSize > 0) pageSize else 1
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
@@ -2033,7 +2253,6 @@ class FirestoreConCafeDataSource(
         if (!deleted) {
             throw NoSuchElementException("menu goods item not found")
         }
-
         refreshCafeDetail(cafeId)
         return delegate.cafeDetailsById[cafeId]
             ?: throw NoSuchElementException("cafe detail not found")
@@ -2855,7 +3074,6 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
-
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
@@ -2900,7 +3118,6 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
-
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
@@ -2958,7 +3175,6 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
-
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
@@ -2970,11 +3186,7 @@ class FirestoreConCafeDataSource(
         limit: Int,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val path = "${config.documentBasePath()}:runQuery"
         val body = """
             {
@@ -3135,7 +3347,6 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
-
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
@@ -3178,11 +3389,7 @@ class FirestoreConCafeDataSource(
         idToken: String?,
         limit: Int
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val path = "${config.documentBasePath()}:runQuery"
         val body = """
             {
@@ -3224,11 +3431,7 @@ class FirestoreConCafeDataSource(
         cafeIds: List<String>?,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val isLatestSort = sort == CastSort.LATEST
         val orderFieldPath = if (isLatestSort) "__name__" else "followerCount"
         val tieBreakerOrderBy = if (isLatestSort) {
@@ -3311,11 +3514,7 @@ class FirestoreConCafeDataSource(
         city: String?,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val isLatestSort = sort == CafeSort.LATEST
         val orderFieldPath = if (isLatestSort) {
             "__name__"
@@ -3421,11 +3620,7 @@ class FirestoreConCafeDataSource(
         limit: Int,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val startAfterSection = cursor.toCafeCastStartAfterSection()
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
         val body = """
@@ -3463,11 +3658,7 @@ class FirestoreConCafeDataSource(
         limit: Int,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val startAfterSection = cursor.toReviewStartAfterSection()
         val path = "${config.documentBasePath()}:runQuery"
         val body = """
@@ -3495,6 +3686,118 @@ class FirestoreConCafeDataSource(
                     "direction": "ASCENDING"
                   }
                 ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCafeNoticePageQuery(
+        cafeId: String,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_NOTICES}"
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
+                  }
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCafeEventPageQuery(
+        cafeId: String,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_EVENTS}"
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "startDate" },
+                    "direction": "DESCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
+                  }
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runRecentNoticeFeedQuery(
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_NOTICES}",
+                    "allDescendants": true
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ],
                 "limit": $safeLimit
               }
             }
@@ -3630,7 +3933,6 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
-
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
@@ -3681,18 +3983,13 @@ class FirestoreConCafeDataSource(
         val response = runCatching {
             restApi.get(path, idToken)
         }.getOrNull()
-
-        if (response == null) {
-            return null
+        return if (response == null) {
+            null
         } else {
             val document = Json.parseToJsonElement(response).jsonObject
             val fields = document["fields"]?.jsonObject
 
-            if (fields == null) {
-                return null
-            } else {
-                return fields.getFirestoreString("updatedAt")
-            }
+            fields?.getFirestoreString("updatedAt")
         }
     }
 
@@ -3721,17 +4018,16 @@ class FirestoreConCafeDataSource(
         val response = runCatching {
             restApi.get(path, idToken)
         }.getOrNull()
-
-        if (response == null) {
-            return null
+        return if (response == null) {
+            null
         } else {
             val document = Json.parseToJsonElement(response).jsonObject
             val fields = document["fields"]?.jsonObject
 
             if (fields == null) {
-                return null
+                null
             } else {
-                return fields.getFirestoreString("updatedAt")
+                fields.getFirestoreString("updatedAt")
             }
         }
     }
@@ -3748,7 +4044,6 @@ class FirestoreConCafeDataSource(
             readGlobalClaimSyncUpdatedAt(collectionId = collectionId, idToken = null)
         }.getOrNull()
         val localUpdatedAt = cache[key]
-
         return if (remoteUpdatedAt == null) {
             if (localUpdatedAt == CLAIM_SYNC_META_MISSING_MARKER) {
                 false
@@ -3931,7 +4226,6 @@ class FirestoreConCafeDataSource(
             body = requestBody,
             idToken = idToken
         )
-
         return parseCountAggregationResponse(response)
     }
 
@@ -3996,12 +4290,9 @@ class FirestoreConCafeDataSource(
             cast.id == castId
         }
         val cachedCafeId = cachedCast?.cafeId
-        val resolvedCafeId = if (cachedCafeId != null) {
-            cachedCafeId
-        } else {
-            resolveCafeIdByCastId(castId = castId, idToken = idToken)
-                ?: throw NoSuchElementException("cast detail not found")
-        }
+        val resolvedCafeId = cachedCafeId
+            ?: (resolveCafeIdByCastId(castId = castId, idToken = idToken)
+                ?: throw NoSuchElementException("cast detail not found"))
         val castDocument = runCatching {
             loadCafeCastDocument(cafeId = resolvedCafeId, castId = castId, idToken = idToken)
         }.recoverCatching {
@@ -4040,13 +4331,11 @@ class FirestoreConCafeDataSource(
                 cast.name
             }
         val existingDetail = delegate.cafeDetailsById[parsedCafe.id]
-        val nextDetail = if (existingDetail != null) {
-            existingDetail.copy(
-                cafe = parsedCafe,
-                casts = nextCafeCasts
-            )
-        } else {
-            CafeDetail(
+        val nextDetail = existingDetail?.copy(
+            cafe = parsedCafe,
+            casts = nextCafeCasts
+        )
+            ?: CafeDetail(
                 cafe = parsedCafe,
                 images = listOfNotNull(parsedCafe.thumbnailImage),
                 casts = nextCafeCasts,
@@ -4058,7 +4347,6 @@ class FirestoreConCafeDataSource(
                 businessHours = "운영시간 정보 준비중",
                 phoneNumber = "연락처 정보 준비중"
             )
-        }
 
         if (cafeIndex >= 0) {
             cafes[cafeIndex] = parsedCafe
@@ -4458,19 +4746,17 @@ class FirestoreConCafeDataSource(
         this.notices.removeAll { notice -> notice.cafeId == cafe.id }
         this.notices.addAll(notices)
         val cachedDetail = delegate.cafeDetailsById[cafe.id]
-        val detail = if (cachedDetail != null) {
-            cachedDetail.copy(
-                cafe = cafe,
-                casts = casts,
-                images = images ?: cachedDetail.images,
-                menus = menus ?: cachedDetail.menus,
-                goods = goods ?: cachedDetail.goods,
-                notices = notices,
-                businessHours = businessHours ?: cachedDetail.businessHours,
-                phoneNumber = phoneNumber ?: cachedDetail.phoneNumber
-            )
-        } else {
-            CafeDetail(
+        val detail = cachedDetail?.copy(
+            cafe = cafe,
+            casts = casts,
+            images = images ?: cachedDetail.images,
+            menus = menus ?: cachedDetail.menus,
+            goods = goods ?: cachedDetail.goods,
+            notices = notices,
+            businessHours = businessHours ?: cachedDetail.businessHours,
+            phoneNumber = phoneNumber ?: cachedDetail.phoneNumber
+        )
+            ?: CafeDetail(
                 cafe = cafe,
                 images = images ?: listOfNotNull(cafe.thumbnailImage),
                 casts = casts,
@@ -4480,7 +4766,6 @@ class FirestoreConCafeDataSource(
                 businessHours = businessHours ?: "운영시간 정보 준비중",
                 phoneNumber = phoneNumber ?: "연락처 정보 준비중"
             )
-        }
         delegate.cafeDetailsById[cafe.id] = detail
     }
 
@@ -4549,7 +4834,7 @@ class FirestoreConCafeDataSource(
             ?.trim()
             ?.takeIf { value -> value.isNotEmpty() }
         return CafeDetailMetadata(
-            images = if (images.isEmpty()) null else images,
+            images = images.ifEmpty { null },
             businessHours = normalizedBusinessHours,
             phoneNumber = normalizedPhoneNumber
         )
@@ -4794,7 +5079,6 @@ class FirestoreConCafeDataSource(
             CastClaimStatus.REJECTED.name -> CastClaimStatus.REJECTED
             else -> CastClaimStatus.PENDING
         }
-
         return CastClaim(
             id = claimId,
             userId = userId,
@@ -4822,7 +5106,6 @@ class FirestoreConCafeDataSource(
         val ratingValue = fields.getFirestoreDouble("rating")
             ?: fields.getFirestoreLong("rating")?.toDouble()
             ?: 0.0
-
         return Review(
             id = reviewId,
             userId = userId,
@@ -5110,7 +5393,6 @@ private fun buildCountAggregationQueryBody(
                         }
                     }"""
     }
-
     return """
         {
             "structuredAggregationQuery":{
@@ -5145,9 +5427,11 @@ private fun parseCountAggregationResponse(response: String): Int {
     if (parsedElement != null) {
         val parsedCount = when (parsedElement) {
             is JsonObject -> extractCountFromAggregationItem(parsedElement)
-            is kotlinx.serialization.json.JsonArray -> parsedElement
-                .mapNotNull { item -> extractCountFromAggregationItem(item.jsonObject) }
-                .firstOrNull()
+            is kotlinx.serialization.json.JsonArray -> parsedElement.firstNotNullOfOrNull { item ->
+                extractCountFromAggregationItem(
+                    item.jsonObject
+                )
+            }
             else -> null
         }
 
@@ -5165,7 +5449,6 @@ private fun parseCountAggregationResponse(response: String): Int {
         }
         .mapNotNull { item -> extractCountFromAggregationItem(item) }
         .firstOrNull()
-
     return fallbackCount ?: 0
 }
 
@@ -5185,7 +5468,6 @@ private fun extractCountFromAggregationItem(item: JsonObject): Int? {
             return doubleValue.toInt()
         }
     }
-
     return null
 }
 
@@ -5421,18 +5703,22 @@ private fun JsonObject.toCastQueryCursor(sort: CastSort): String? {
 private fun JsonObject.toCafeQueryCursor(sort: CafeSort): String? {
     val fields = this["fields"]?.jsonObject ?: return null
     val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
-    return if (sort == CafeSort.LATEST) {
-        documentName
-    } else if (sort == CafeSort.POPULAR) {
-        val score = fields.getFirestoreLong("reviewCount")?.toString()
-            ?: fields.getFirestoreDouble("reviewCount")?.toString()
-            ?: "0"
-        "$score|$documentName"
-    } else {
-        val score = fields.getFirestoreDouble("ratingAvg")?.toString()
-            ?: fields.getFirestoreLong("ratingAvg")?.toString()
-            ?: "0"
-        "$score|$documentName"
+    return when (sort) {
+        CafeSort.LATEST -> {
+            documentName
+        }
+        CafeSort.POPULAR -> {
+            val score = fields.getFirestoreLong("reviewCount")?.toString()
+                ?: fields.getFirestoreDouble("reviewCount")?.toString()
+                ?: "0"
+            "$score|$documentName"
+        }
+        else -> {
+            val score = fields.getFirestoreDouble("ratingAvg")?.toString()
+                ?: fields.getFirestoreLong("ratingAvg")?.toString()
+                ?: "0"
+            "$score|$documentName"
+        }
     }
 }
 
@@ -5444,8 +5730,21 @@ private fun JsonObject.toReviewQueryCursor(): String? {
     val fields = this["fields"]?.jsonObject ?: return null
     val createdAt = fields.getFirestoreString("createdAt") ?: return null
     val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
-
     return "$createdAt|$documentName"
+}
+
+private fun JsonObject.toNoticeQueryCursor(): String? {
+    val fields = this["fields"]?.jsonObject ?: return null
+    val createdAt = fields.getFirestoreString("createdAt") ?: return null
+    val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+    return "$createdAt|$documentName"
+}
+
+private fun JsonObject.toEventQueryCursor(): String? {
+    val fields = this["fields"]?.jsonObject ?: return null
+    val startDate = fields.getFirestoreString("startDate") ?: return null
+    val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+    return "$startDate|$documentName"
 }
 
 private fun String?.toStartAfterSection(latestSort: Boolean): String {
@@ -5500,7 +5799,6 @@ private fun String?.toCafeCastStartAfterSection(): String {
         return ""
     }
     val escapedDocumentName = escapeFirestoreQueryString(cursorValue)
-
     return """,
                 "startAt": {
                   "values": [
@@ -5523,7 +5821,6 @@ private fun String?.toReviewStartAfterSection(): String {
     val documentName = cursorValue.substring(delimiterIndex + 1)
     val escapedCreatedAt = escapeFirestoreQueryString(createdAt)
     val escapedDocumentName = escapeFirestoreQueryString(documentName)
-
     return """,
                 "startAt": {
                   "values": [
@@ -5534,10 +5831,32 @@ private fun String?.toReviewStartAfterSection(): String {
                 }"""
 }
 
+private fun String?.toStringFieldStartAfterSection(): String {
+    val cursorValue = this
+    if (cursorValue.isNullOrBlank()) {
+        return ""
+    }
+    val delimiterIndex = cursorValue.indexOf("|")
+    if (delimiterIndex <= 0 || delimiterIndex >= cursorValue.length - 1) {
+        return ""
+    }
+    val fieldValue = cursorValue.substring(0, delimiterIndex)
+    val documentName = cursorValue.substring(delimiterIndex + 1)
+    val escapedFieldValue = escapeFirestoreQueryString(fieldValue)
+    val escapedDocumentName = escapeFirestoreQueryString(documentName)
+    return """,
+                "startAt": {
+                  "values": [
+                    { "stringValue": "$escapedFieldValue" },
+                    { "referenceValue": "$escapedDocumentName" }
+                  ],
+                  "before": false
+                }"""
+}
+
 private fun monthDayToBirthdayKey(month: Int, dayOfMonth: Int): String {
     val normalizedMonth = month.coerceIn(1, 12).toString().padStart(2, '0')
     val normalizedDay = dayOfMonth.coerceIn(1, 31).toString().padStart(2, '0')
-
     return "$normalizedMonth-$normalizedDay"
 }
 
@@ -5552,12 +5871,7 @@ private fun String?.toBirthdayKeyOrNull(): String? {
     }
     val month = parts[1].toIntOrNull()
     val day = parts[2].toIntOrNull()
-
-    if (month == null || day == null) {
-        return null
-    } else {
-        return monthDayToBirthdayKey(month = month, dayOfMonth = day)
-    }
+    return if (month == null || day == null) null else monthDayToBirthdayKey(month = month, dayOfMonth = day)
 }
 
 private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
@@ -5571,7 +5885,6 @@ private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
     }
     val birthMonth = parts[1].toIntOrNull()
     val birthDay = parts[2].toIntOrNull()
-
     return birthMonth == month && birthDay == dayOfMonth
 }
 
@@ -5584,11 +5897,19 @@ private fun String.toCafeIdFromCastDocumentName(): String? {
     if (castsIndex <= 1 || cafeCollectionIndex < 0 || cafeSegmentIndex < 0) {
         return null
     }
-    if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) {
+    return if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) null else segments[cafeSegmentIndex].takeIf { value -> value.isNotBlank() }
+}
+
+private fun String.toCafeIdFromNoticeDocumentName(): String? {
+    val segments = split("/")
+    val noticesIndex = segments.indexOf(FirestorePaths.CAFE_NOTICES)
+    val cafeSegmentIndex = noticesIndex - 1
+    val cafeCollectionIndex = noticesIndex - 2
+
+    if (noticesIndex <= 1 || cafeCollectionIndex < 0 || cafeSegmentIndex < 0) {
         return null
-    } else {
-        return segments[cafeSegmentIndex].takeIf { value -> value.isNotBlank() }
     }
+    return if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) null else segments[cafeSegmentIndex].takeIf { value -> value.isNotBlank() }
 }
 
 private fun nextFirestoreEntityId(prefix: String): String {
@@ -5601,3 +5922,6 @@ private const val CAST_CLAIM_SYNC_META_DOC_ID = "sync"
 private const val CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
 private const val GLOBAL_CLAIM_SYNC_META_DOC_ID = "sync"
 private const val MAX_FIRESTORE_IN_FILTER_VALUES = 30
+private const val HOME_POPULAR_CAST_FALLBACK_POOL_SIZE = 50
+private const val HOME_POPULAR_CAST_FALLBACK_MAX_CAFE_COUNT = 20
+private const val HOME_POPULAR_CAST_FALLBACK_PER_CAFE_LIMIT = 10

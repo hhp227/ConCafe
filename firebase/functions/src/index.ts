@@ -402,6 +402,7 @@ async function syncCastFollowerAggregate(cafeId: string, castId: string): Promis
     );
 }
 
+
 export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
   "reviews/{reviewId}",
   async (event) => {
