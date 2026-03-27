@@ -108,10 +108,12 @@ private struct HomeContentView: View {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        HomeBannerItem(banner: banner)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        HomeBannerItem(
+                            banner: banner,
+                            height: bannerHeight
+                        )
+                            .frame(maxWidth: .infinity)
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 5)
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
                             }
@@ -316,10 +318,12 @@ private struct HomeContentView: View {
 private struct HomeBannerItem: View {
     let banner: Shared.HomeBanner
 
+    let height: CGFloat
+
     private let cardShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack {
             LinearGradient(
                 colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
                 startPoint: .topLeading,
@@ -332,30 +336,34 @@ private struct HomeBannerItem: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
-                .clipShape(cardShape)
                 LinearGradient(
                     colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
             }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(banner.title)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
+                    .shadow(color: Color.black.opacity(0.35), radius: 2, x: 0, y: 1)
                 if let subtitle = trimmedSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.92))
                         .lineLimit(2)
+                        .shadow(color: Color.black.opacity(0.3), radius: 1.5, x: 0, y: 1)
                 }
             }
             .padding(18)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .compositingGroup()
         .clipShape(cardShape)
         .contentShape(cardShape)
+        .clipped()
     }
 
     private var trimmedSubtitle: String? {
