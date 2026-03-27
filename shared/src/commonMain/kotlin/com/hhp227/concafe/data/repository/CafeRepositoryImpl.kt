@@ -30,21 +30,15 @@ class CafeRepositoryImpl(
     ): PagedResult<Cafe> {
         val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_CAFE_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.searchCafesRemote(
-                    query = query,
-                    country = country,
-                    city = city,
-                    sort = sort,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.searchCafesRemote(
+                query = query,
+                country = country,
+                city = city,
+                sort = sort,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         return searchCafesFromCache(
             query = query,
@@ -251,5 +245,3 @@ class CafeRepositoryImpl(
         return pagingDataSource.toPaged(filtered, cursor, pageSize)
     }
 }
-
-private const val REMOTE_CAFE_PAGE_LIMIT = 100

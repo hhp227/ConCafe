@@ -1701,114 +1701,14 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            1
-        }
-        val popularPage = runCatching {
-            searchCastsRemote(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.POPULAR,
-                cursor = cursor,
-                pageSize = safePageSize
-            )
-        }.getOrNull()
-        return if (popularPage != null && (popularPage.items.isNotEmpty() || !cursor.isNullOrBlank())) {
-            popularPage
-        } else {
-            val latestPage = runCatching {
-                searchCastsRemote(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CastSort.LATEST,
-                    cursor = null,
-                    pageSize = safePageSize
-                )
-            }.getOrNull()
-            if (latestPage != null && latestPage.items.isNotEmpty()) {
-                PagedResult(
-                    items = latestPage.items.sortedByDescending { cast -> cast.followerCount },
-                    nextCursor = latestPage.nextCursor,
-                    hasNext = latestPage.hasNext
-                )
-            } else {
-                val fallbackPoolSize = safePageSize.coerceAtLeast(HOME_POPULAR_CAST_FALLBACK_POOL_SIZE)
-                val cacheSeed = if (delegate.casts.isNotEmpty()) {
-                    delegate.casts
-                } else {
-                    loadCastsFromCafeSubCollections(
-                        maxCafeCount = HOME_POPULAR_CAST_FALLBACK_MAX_CAFE_COUNT,
-                        perCafeLimit = HOME_POPULAR_CAST_FALLBACK_PER_CAFE_LIMIT
-                    )
-                }
-                val sortedFallback = cacheSeed
-                    .sortedByDescending { cast -> cast.followerCount }
-                    .take(fallbackPoolSize)
-                val pageItems = sortedFallback.take(safePageSize)
-
-                PagedResult(
-                    items = pageItems,
-                    nextCursor = null,
-                    hasNext = sortedFallback.size > safePageSize
-                )
-            }
-        }
-    }
-
-    private suspend fun loadCastsFromCafeSubCollections(
-        maxCafeCount: Int,
-        perCafeLimit: Int
-    ): List<Cast> {
-        val safeCafeCount = if (maxCafeCount > 0) {
-            maxCafeCount
-        } else {
-            1
-        }
-        val safePerCafeLimit = if (perCafeLimit > 0) {
-            perCafeLimit
-        } else {
-            1
-        }
-        val idToken = runCatching {
-            tokenProvider.getIdToken()
-        }.getOrNull()
-        val aggregated = mutableListOf<Cast>()
-        val targetCafes = cafes
-            .asSequence()
-            .filter { cafe -> cafe.approved }
-            .take(safeCafeCount)
-            .toList()
-
-        targetCafes.forEach { cafe ->
-            val castDocuments = runCatching {
-                runCafeCastQuery(
-                    cafeId = cafe.id,
-                    cursor = null,
-                    limit = safePerCafeLimit,
-                    idToken = idToken
-                )
-            }.recoverCatching {
-                runCafeCastQuery(
-                    cafeId = cafe.id,
-                    cursor = null,
-                    limit = safePerCafeLimit,
-                    idToken = null
-                )
-            }.getOrElse {
-                emptyList()
-            }
-            val parsed = castDocuments.mapNotNull { document ->
-                parseCastDocument(cafeId = cafe.id, document = document)
-            }
-
-            aggregated.addAll(parsed)
-        }
-        upsertCastSummariesIntoCache(aggregated)
-        return aggregated
+        return searchCastsRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CastSort.POPULAR,
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     suspend fun searchCafesRemote(
@@ -5922,6 +5822,3 @@ private const val CAST_CLAIM_SYNC_META_DOC_ID = "sync"
 private const val CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
 private const val GLOBAL_CLAIM_SYNC_META_DOC_ID = "sync"
 private const val MAX_FIRESTORE_IN_FILTER_VALUES = 30
-private const val HOME_POPULAR_CAST_FALLBACK_POOL_SIZE = 50
-private const val HOME_POPULAR_CAST_FALLBACK_MAX_CAFE_COUNT = 20
-private const val HOME_POPULAR_CAST_FALLBACK_PER_CAFE_LIMIT = 10

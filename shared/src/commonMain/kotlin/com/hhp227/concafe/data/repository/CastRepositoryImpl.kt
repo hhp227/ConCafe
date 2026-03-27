@@ -40,21 +40,15 @@ class CastRepositoryImpl(
     ): PagedResult<Cast> {
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_CAST_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.searchCastsRemote(
-                    query = query,
-                    country = country,
-                    city = city,
-                    sort = sort,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.searchCastsRemote(
+                query = query,
+                country = country,
+                city = city,
+                sort = sort,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         return searchCastsFromCache(
             query = query,
@@ -70,16 +64,10 @@ class CastRepositoryImpl(
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
         if (firestoreDataSource != null) {
-            val remoteResult = runCatching {
-                firestoreDataSource.getHomePopularCastPageRemote(
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+            return firestoreDataSource.getHomePopularCastPageRemote(
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         val sorted = castDataSource.casts
             .sortedByDescending { it.followerCount }
@@ -140,13 +128,11 @@ class CastRepositoryImpl(
         val workingCastIds = resolveWorkingCastIds(cafeId)
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
         val page = if (firestoreDataSource != null) {
-            runCatching {
-                firestoreDataSource.getCafeCastPageRemote(
-                    cafeId = cafeId,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
+            firestoreDataSource.getCafeCastPageRemote(
+                cafeId = cafeId,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         } else {
             null
         }
@@ -183,13 +169,11 @@ class CastRepositoryImpl(
         val workingCastIds = resolveWorkingCastIds(cafeId)
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
         val page = if (firestoreDataSource != null) {
-            runCatching {
-                firestoreDataSource.getCafeCastPageRemote(
-                    cafeId = cafeId,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
+            firestoreDataSource.getCafeCastPageRemote(
+                cafeId = cafeId,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         } else {
             null
         }
@@ -489,5 +473,3 @@ private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
 
     return birthMonth == month && birthDay == dayOfMonth
 }
-
-private const val REMOTE_CAST_PAGE_LIMIT = 100
