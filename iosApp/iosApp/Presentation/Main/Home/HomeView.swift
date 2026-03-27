@@ -332,7 +332,7 @@ private struct HomeBannerItem: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
-                .clipShape(cardShape)
+                .mask(cardShape)
                 LinearGradient(
                     colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
                     startPoint: .top,
@@ -353,8 +353,9 @@ private struct HomeBannerItem: View {
             .padding(18)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .compositingGroup()
-        .clipShape(cardShape)
+        .mask(cardShape)
         .contentShape(cardShape)
     }
 
