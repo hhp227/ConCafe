@@ -80,7 +80,7 @@ class CastClaimRepositoryImpl(
             val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
             val lastRefreshEpochMillis = lastUserClaimsRefreshEpochMillisByUserId[userId] ?: 0L
 
-            if (nowEpochMillis - lastRefreshEpochMillis >= CLAIMS_REFRESH_INTERVAL_MILLIS) {
+            if (nowEpochMillis - lastRefreshEpochMillis >= USER_CLAIMS_REFRESH_INTERVAL_MILLIS) {
                 runCatching {
                     firestoreDataSource.refreshCastClaimsForUser(userId)
                 }.onSuccess {
@@ -97,10 +97,18 @@ class CastClaimRepositoryImpl(
             val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
             val lastRefreshEpochMillis = lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] ?: 0L
 
-            if (nowEpochMillis - lastRefreshEpochMillis >= CLAIMS_REFRESH_INTERVAL_MILLIS) {
-                runCatching {
-                    firestoreDataSource.refreshCastClaimsForCafe(cafeId)
-                }.onSuccess {
+            if (nowEpochMillis - lastRefreshEpochMillis >= CAFE_CLAIMS_REFRESH_INTERVAL_MILLIS) {
+                val isChanged = runCatching {
+                    firestoreDataSource.hasCastClaimCafeSyncChanged(cafeId)
+                }.getOrDefault(true)
+
+                if (isChanged) {
+                    runCatching {
+                        firestoreDataSource.refreshCastClaimsForCafe(cafeId)
+                    }.onSuccess {
+                        lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
+                    }
+                } else {
                     lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
                 }
             }
@@ -112,7 +120,11 @@ class CastClaimRepositoryImpl(
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
 
         refreshAffiliatedCafeCasts(affiliatedCafeId)
-        refreshClaimsForUser(userId)
+        if (affiliatedCafeId != null) {
+            refreshClaimsForCafe(affiliatedCafeId)
+        } else {
+            refreshClaimsForUser(userId)
+        }
 
         val affiliatedCafe = affiliatedCafeId?.let { cafeId ->
             cafeDataSource.cafes.firstOrNull { it.id == cafeId }
@@ -158,15 +170,15 @@ class CastClaimRepositoryImpl(
         return castClaimDataSource.castClaims
             .filter { it.cafeId == cafeId && it.status == CastClaimStatus.PENDING }
             .sortedByDescending { it.createdAt }
-            .mapNotNull { claim ->
-                val requester = authDataSource.findUserById(claim.userId) ?: return@mapNotNull null
-                val cast = castDataSource.casts.firstOrNull { it.id == claim.castId } ?: return@mapNotNull null
+            .map { claim ->
+                val requester = authDataSource.findUserById(claim.userId)
+                val cast = castDataSource.casts.firstOrNull { it.id == claim.castId }
                 PendingCastClaimPreview(
                     claimId = claim.id,
-                    requesterUserId = requester.id,
-                    requesterNickname = requester.nickname,
-                    castId = cast.id,
-                    castName = cast.name,
+                    requesterUserId = claim.userId,
+                    requesterNickname = requester?.nickname ?: "알 수 없음",
+                    castId = claim.castId,
+                    castName = cast?.name ?: claim.castName.ifBlank { claim.castId },
                     requestedAtLabel = claim.createdAtLabel,
                     message = claim.message
                 )
@@ -202,6 +214,7 @@ class CastClaimRepositoryImpl(
                 userId = userId,
                 cafeId = cafeId,
                 castId = castId,
+                castName = cast.name,
                 status = CastClaimStatus.PENDING,
                 message = message?.takeIf { it.isNotBlank() },
                 createdAt = nowIsoUtc(),
@@ -269,4 +282,5 @@ private fun nowIsoUtc(): String {
 }
 
 private const val CAFE_CASTS_REFRESH_INTERVAL_MILLIS = 30_000L
-private const val CLAIMS_REFRESH_INTERVAL_MILLIS = 30_000L
+private const val USER_CLAIMS_REFRESH_INTERVAL_MILLIS = 30_000L
+private const val CAFE_CLAIMS_REFRESH_INTERVAL_MILLIS = 5_000L

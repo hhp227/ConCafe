@@ -5,6 +5,7 @@ data class CastClaim(
     val userId: String,
     val cafeId: String,
     val castId: String,
+    val castName: String = "",
     val status: CastClaimStatus,
     val message: String?,
     val evidenceImageUrls: List<String> = emptyList(),

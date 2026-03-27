@@ -133,6 +133,7 @@ service cloud.firestore {
       return request.resource.data.userId is string
         && request.resource.data.cafeId is string
         && request.resource.data.castId is string
+        && request.resource.data.castName is string
         && request.resource.data.status is string
         && request.resource.data.status == "PENDING"
         && request.resource.data.createdAt is string
@@ -149,10 +150,7 @@ service cloud.firestore {
       return request.resource.data.userId == resource.data.userId
         && request.resource.data.cafeId == resource.data.cafeId
         && request.resource.data.castId == resource.data.castId
-        && request.resource.data.message == resource.data.message
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.createdAtLabel == resource.data.createdAtLabel
-        && request.resource.data.evidenceImageUrls == resource.data.evidenceImageUrls
         && request.resource.data.status is string
         && isValidCastClaimStatus(request.resource.data.status)
         && request.resource.data.reviewedBy is string
@@ -162,6 +160,13 @@ service cloud.firestore {
           "reviewedBy",
           "reviewedAt"
         ]);
+    }
+
+    function isValidCastClaimSyncMetaWrite(cafeId) {
+      return request.resource.data.cafeId == cafeId
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy == request.auth.uid;
     }
 
     function isVisitOwnerEditableUpdate() {
@@ -224,6 +229,18 @@ service cloud.firestore {
       match /events/{eventId} {
         allow read: if true;
         allow write: if canManageCafe(cafeId);
+      }
+
+      match /castClaims/{metaId} {
+        allow create, update: if isSignedIn()
+          && metaId == "sync"
+          && isValidCastClaimSyncMetaWrite(cafeId);
+        allow read: if isSignedIn()
+          && (
+            isAdmin()
+            || canManageCafe(cafeId)
+          );
+        allow delete: if false;
       }
 
       match /menus/{menuId} {

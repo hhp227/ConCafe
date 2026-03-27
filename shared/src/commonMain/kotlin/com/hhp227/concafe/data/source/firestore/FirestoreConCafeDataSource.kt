@@ -99,6 +99,7 @@ class FirestoreConCafeDataSource(
     PagingDataSource by delegate,
     FirestoreSyncDataSource {
     private val hydratedCafeDetailIds = mutableSetOf<String>()
+    private val castClaimSyncUpdatedAtByCafeId = mutableMapOf<String, String>()
 
     fun isCafeDetailHydrated(cafeId: String): Boolean {
         return hydratedCafeDetailIds.contains(cafeId)
@@ -1036,12 +1037,39 @@ class FirestoreConCafeDataSource(
         castClaims.addAll(parsedClaims)
     }
 
+    suspend fun hasCastClaimCafeSyncChanged(cafeId: String): Boolean {
+        val idToken = tokenProvider.getIdToken()
+        val remoteUpdatedAt = runCatching {
+            readCastClaimSyncUpdatedAt(cafeId = cafeId, idToken = idToken)
+        }.recoverCatching {
+            readCastClaimSyncUpdatedAt(cafeId = cafeId, idToken = null)
+        }.getOrNull()
+        val localUpdatedAt = castClaimSyncUpdatedAtByCafeId[cafeId]
+
+        return if (remoteUpdatedAt == null) {
+            if (localUpdatedAt == CAST_CLAIM_SYNC_META_MISSING_MARKER) {
+                false
+            } else {
+                castClaimSyncUpdatedAtByCafeId[cafeId] = CAST_CLAIM_SYNC_META_MISSING_MARKER
+                true
+            }
+        } else if (localUpdatedAt == remoteUpdatedAt) {
+            false
+        } else {
+            castClaimSyncUpdatedAtByCafeId[cafeId] = remoteUpdatedAt
+            true
+        }
+    }
+
     suspend fun createCastClaimRemote(
         userId: String,
         cafeId: String,
         castId: String,
         message: String?
     ): CastClaim {
+        val castName = casts.firstOrNull { cast -> cast.id == castId && cast.cafeId == cafeId }
+            ?.name
+            ?: castId
         val idToken = tokenProvider.getIdToken()
         val claimId = nextFirestoreEntityId("cast-claim")
         val createdAt = Clock.System.now().toString()
@@ -1052,6 +1080,7 @@ class FirestoreConCafeDataSource(
                 "userId" to firestoreString(userId),
                 "cafeId" to firestoreString(cafeId),
                 "castId" to firestoreString(castId),
+                "castName" to firestoreString(castName),
                 "status" to firestoreString(CastClaimStatus.PENDING.name),
                 "message" to firestoreNullableString(normalizedMessage),
                 "evidenceImageUrls" to firestoreStringArray(emptyList()),
@@ -1061,11 +1090,15 @@ class FirestoreConCafeDataSource(
         )
 
         restApi.patch(path, body, idToken)
+        runCatching {
+            touchCastClaimSyncMetaRemote(cafeId = cafeId, updatedBy = userId, idToken = idToken)
+        }
         val claim = CastClaim(
             id = claimId,
             userId = userId,
             cafeId = cafeId,
             castId = castId,
+            castName = castName,
             status = CastClaimStatus.PENDING,
             message = normalizedMessage,
             evidenceImageUrls = emptyList(),
@@ -1103,6 +1136,9 @@ class FirestoreConCafeDataSource(
         )
 
         restApi.patch(path, body, idToken)
+        runCatching {
+            touchCastClaimSyncMetaRemote(cafeId = existing.cafeId, updatedBy = reviewedBy, idToken = idToken)
+        }
         if (status == CastClaimStatus.APPROVED) {
             updateCastLinkedUserRemote(
                 cafeId = existing.cafeId,
@@ -2658,6 +2694,45 @@ class FirestoreConCafeDataSource(
         return parsed
     }
 
+    private suspend fun touchCastClaimSyncMetaRemote(
+        cafeId: String,
+        updatedBy: String,
+        idToken: String?
+    ) {
+        val updatedAt = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAST_CLAIMS}/$CAST_CLAIM_SYNC_META_DOC_ID"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "cafeId" to firestoreString(cafeId),
+                "updatedAt" to firestoreString(updatedAt),
+                "updatedBy" to firestoreString(updatedBy)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        castClaimSyncUpdatedAtByCafeId[cafeId] = updatedAt
+    }
+
+    private suspend fun readCastClaimSyncUpdatedAt(cafeId: String, idToken: String?): String? {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAST_CLAIMS}/$CAST_CLAIM_SYNC_META_DOC_ID"
+        val response = runCatching {
+            restApi.get(path, idToken)
+        }.getOrNull()
+
+        if (response == null) {
+            return null
+        } else {
+            val document = Json.parseToJsonElement(response).jsonObject
+            val fields = document["fields"]?.jsonObject
+
+            if (fields == null) {
+                return null
+            } else {
+                return fields.getFirestoreString("updatedAt")
+            }
+        }
+    }
+
     private suspend fun resolveCastClaimById(claimId: String, idToken: String?): CastClaim? {
         val cached = castClaims.firstOrNull { claim -> claim.id == claimId }
 
@@ -3592,6 +3667,7 @@ class FirestoreConCafeDataSource(
         val userId = fields.getFirestoreString("userId") ?: return null
         val cafeId = fields.getFirestoreString("cafeId") ?: return null
         val castId = fields.getFirestoreString("castId") ?: return null
+        val castName = fields.getFirestoreString("castName").orEmpty()
         val status = when (fields.getFirestoreString("status")?.uppercase()) {
             CastClaimStatus.APPROVED.name -> CastClaimStatus.APPROVED
             CastClaimStatus.REJECTED.name -> CastClaimStatus.REJECTED
@@ -3603,6 +3679,7 @@ class FirestoreConCafeDataSource(
             userId = userId,
             cafeId = cafeId,
             castId = castId,
+            castName = castName,
             status = status,
             message = fields.getFirestoreString("message"),
             evidenceImageUrls = fields.getFirestoreStringList("evidenceImageUrls"),
@@ -4182,3 +4259,6 @@ private fun nextFirestoreEntityId(prefix: String): String {
     val now = Clock.System.now().toEpochMilliseconds()
     return "$prefix-$now"
 }
+
+private const val CAST_CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
+private const val CAST_CLAIM_SYNC_META_DOC_ID = "sync"

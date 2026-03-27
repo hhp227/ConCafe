@@ -502,6 +502,26 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func startCastClaimPolling() {
+        let pollingIntervalNanoseconds = castClaimPollingIntervalNanoseconds
+        tasks[.castClaimPolling]?.cancel()
+        tasks[.castClaimPolling] = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: pollingIntervalNanoseconds)
+                } catch {
+                    break
+                }
+
+                if Task.isCancelled {
+                    break
+                } else if let self {
+                    await self.refreshClaimData(resetMessage: false)
+                }
+            }
+        }
+    }
+
     func onAction(_ action: CafeDashboardAction) {
         switch action {
         case .clickBack:
@@ -574,6 +594,7 @@ final class CafeDashboardViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        startCastClaimPolling()
         loadExternalLinks()
         loadCafeDashboard()
     }
@@ -588,5 +609,8 @@ final class CafeDashboardViewModel: ObservableObject {
         case cafeDetailEvent
         case castClaimEvent
         case castEvent
+        case castClaimPolling
     }
+
+    private let castClaimPollingIntervalNanoseconds: UInt64 = 5_000_000_000
 }
