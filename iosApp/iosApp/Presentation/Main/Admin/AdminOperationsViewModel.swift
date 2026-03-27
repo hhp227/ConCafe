@@ -226,7 +226,7 @@ final class AdminOperationsViewModel: ObservableObject {
             handlePendingResult(id: id, approved: false)
         case .clickQuickMenu(let id):
             if id == adminBannerMenuId {
-                event.send(.navigateToBannerEdit)
+                event.send(.navigateToBanner)
             } else {
                 let label = uiState.quickMenus.first(where: { $0.id == id })?.title ?? "메뉴"
                 uiState.infoMessage = "\(label) 연결은 다음 단계에서 이어집니다."

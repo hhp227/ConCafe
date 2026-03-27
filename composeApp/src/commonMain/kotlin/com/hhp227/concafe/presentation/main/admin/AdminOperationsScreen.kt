@@ -45,6 +45,9 @@ fun AdminOperationsScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
+                AdminOperationsEvent.NavigateToBanner -> {
+                    onNavigationAction(NavigationAction.NavigateToBanner())
+                }
                 AdminOperationsEvent.NavigateToBannerEdit -> {
                     onNavigationAction(NavigationAction.NavigateToBannerEdit())
                 }

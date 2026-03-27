@@ -262,7 +262,7 @@ class AdminOperationsViewModel(
             is AdminOperationsAction.ClickQuickMenu -> {
                 if (action.id == ADMIN_BANNER_MENU_ID) {
                     viewModelScope.launch {
-                        _event.emit(AdminOperationsEvent.NavigateToBannerEdit)
+                        _event.emit(AdminOperationsEvent.NavigateToBanner)
                     }
                 } else {
                     val label = _uiState.value.quickMenus.firstOrNull { it.id == action.id }?.title ?: "메뉴"

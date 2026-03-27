@@ -140,6 +140,7 @@ fun HomeContentScreen(
                                 pageSpacing = 12.dp
                             ) { page ->
                                 val banner = uiState.banners[page]
+
                                 HomeBannerItem(
                                     banner = banner,
                                     modifier = Modifier.fillMaxSize(),
@@ -152,108 +153,6 @@ fun HomeContentScreen(
                         }
                     }
                 }
-
-
-
-
-
-                /*Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (uiState.banners.isNotEmpty()) {
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            pageSpacing = 12.dp
-                        ) { page ->
-                            val banner = uiState.banners[page]
-                            val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
-                            val subtitle = banner.subtitle.trim().takeUnless { it.isEmpty() }
-
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onAction(HomeAction.ClickBanner(banner)) },
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(
-                                            Brush.linearGradient(
-                                                listOf(
-                                                    colorFromHex(banner.startColorHex),
-                                                    colorFromHex(banner.endColorHex)
-                                                )
-                                            )
-                                        ),
-                                    contentAlignment = Alignment.BottomStart
-                                ) {
-                                    if (imageUrl != null) {
-                                        CompatImageDisplay(
-                                            imageUrl = imageUrl,
-                                            modifier = Modifier.matchParentSize()
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        colors = listOf(
-                                                            Color.Black.copy(alpha = 0.1f),
-                                                            Color.Black.copy(alpha = 0.45f)
-                                                        )
-                                                    )
-                                                )
-                                        )
-                                    }
-                                    Column(
-                                        modifier = Modifier.padding(18.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            text = banner.title,
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.titleLarge
-                                        )
-                                        if (subtitle != null) {
-                                            Text(
-                                                text = subtitle,
-                                                color = Color.White.copy(alpha = 0.92f),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        HomeBannerPlaceholderCard()
-                    }
-                    if (uiState.banners.size > 1) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(uiState.banners.size) { page ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 3.dp)
-                                        .size(width = if (pagerState.currentPage == page) 18.dp else 8.dp, height = 8.dp)
-                                        .clip(RoundedCornerShape(999.dp))
-                                        .background(
-                                            if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                            else Color(0xFFD8D8D8)
-                                        )
-                                )
-                            }
-                        }
-                    }
-                }*/
             }
         item {
             SectionTitle(

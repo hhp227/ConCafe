@@ -1215,10 +1215,20 @@ class FirestoreConCafeDataSource(
                 idToken = idToken
             )
         }.recoverCatching {
+            runCastScheduleByCastIdQuery(
+                castId = castId,
+                idToken = idToken
+            )
+        }.recoverCatching {
             runCastScheduleRangeQuery(
                 castId = castId,
                 fromDate = fromDate,
                 toDate = toDate,
+                idToken = null
+            )
+        }.recoverCatching {
+            runCastScheduleByCastIdQuery(
+                castId = castId,
                 idToken = null
             )
         }.getOrElse {
@@ -2340,6 +2350,35 @@ class FirestoreConCafeDataSource(
         """.trimIndent()
         val response = restApi.post(path = path, body = body, idToken = idToken)
         val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCastScheduleByCastIdQuery(
+        castId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.CAST_SCHEDULES}" }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "castId" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(castId)}" }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+
         return parsed.mapNotNull { element ->
             element.jsonObject["document"]?.jsonObject
         }
