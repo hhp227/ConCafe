@@ -110,7 +110,6 @@ private struct HomeContentView: View {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
                         HomeBannerItem(banner: banner)
                             .padding(.horizontal, 16)
-                            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
                             }
@@ -311,6 +310,8 @@ private struct HomeContentView: View {
 private struct HomeBannerItem: View {
     let banner: Shared.HomeBanner
 
+    private let cardShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             LinearGradient(
@@ -325,6 +326,7 @@ private struct HomeBannerItem: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
+                .clipShape(cardShape)
                 LinearGradient(
                     colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
                     startPoint: .top,
@@ -344,7 +346,9 @@ private struct HomeBannerItem: View {
             }
             .padding(18)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .compositingGroup()
+        .clipShape(cardShape)
+        .contentShape(cardShape)
     }
 
     private var trimmedSubtitle: String? {
