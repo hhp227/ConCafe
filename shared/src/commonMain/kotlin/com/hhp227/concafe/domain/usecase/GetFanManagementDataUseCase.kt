@@ -7,6 +7,14 @@ import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.UserRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 class GetFanManagementDataUseCase(
     private val authRepository: AuthRepository,
@@ -24,11 +32,20 @@ class GetFanManagementDataUseCase(
                 val castId = castRepository.getCastByLinkedUserId(currentUser.id)
                     ?.id
                     ?: return AppResult.Failure(AppError.NotFound)
+                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                val weekStart = today.toWeekStart()
+                val weekEnd = weekStart.plus(DatePeriod(days = 6))
+                val detail = castRepository.getCastDetail(castId)
+                val weekSchedules = castRepository.getCastSchedules(
+                    castId = castId,
+                    fromDate = weekStart.toString(),
+                    toDate = weekEnd.toString()
+                )
 
                 AppResult.Success(
                     FanManagementData(
                         user = currentUser,
-                        detail = castRepository.getCastDetail(castId),
+                        detail = detail.copy(schedule = weekSchedules),
                         followers = castRepository.getFollowerUserIds(castId).map { userId ->
                             userRepository.getUser(userId)
                         }
@@ -43,4 +60,9 @@ class GetFanManagementDataUseCase(
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }
+}
+
+private fun LocalDate.toWeekStart(): LocalDate {
+    val daysFromSunday = dayOfWeek.isoDayNumber % 7
+    return minus(DatePeriod(days = daysFromSunday))
 }

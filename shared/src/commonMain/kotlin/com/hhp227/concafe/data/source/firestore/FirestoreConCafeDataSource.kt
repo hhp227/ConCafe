@@ -1411,7 +1411,7 @@ class FirestoreConCafeDataSource(
     ) {
         require(castId.isNotBlank()) { "castId is required" }
         val idToken = tokenProvider.getIdToken()
-        val schedulesDocuments = runCatching {
+        val schedulesDocumentsResult = runCatching {
             runCastScheduleRangeQuery(
                 castId = castId,
                 fromDate = fromDate,
@@ -1435,41 +1435,44 @@ class FirestoreConCafeDataSource(
                 castId = castId,
                 idToken = null
             )
-        }.getOrElse {
-            emptyList()
         }
 
-        val remoteSchedulesByDate = schedulesDocuments.mapNotNull { document ->
-            parseCastScheduleDocument(document)
-        }.filter { scheduleEntry ->
-            scheduleEntry.castId == castId && scheduleEntry.date >= fromDate && scheduleEntry.date <= toDate
-        }.associateBy { scheduleEntry -> scheduleEntry.date }
+        if (schedulesDocumentsResult.isSuccess) {
+            val schedulesDocuments = schedulesDocumentsResult.getOrNull().orEmpty()
+            val remoteSchedulesByDate = schedulesDocuments.mapNotNull { document ->
+                parseCastScheduleDocument(document)
+            }.filter { scheduleEntry ->
+                scheduleEntry.castId == castId && scheduleEntry.date >= fromDate && scheduleEntry.date <= toDate
+            }.associateBy { scheduleEntry -> scheduleEntry.date }
 
-        enumerateDates(fromDate, toDate).forEach { date ->
-            val scheduleEntry = remoteSchedulesByDate[date]
-            val status = scheduleEntry?.status ?: CastScheduleStatus.OFF
-            val update = if (
-                status == CastScheduleStatus.WORK &&
-                scheduleEntry?.startTime != null &&
-                scheduleEntry.endTime != null
-            ) {
-                CastScheduleUpdate(
-                    castId = castId,
-                    date = date,
-                    status = CastScheduleStatus.WORK,
-                    startTime = scheduleEntry.startTime,
-                    endTime = scheduleEntry.endTime
-                )
-            } else {
-                CastScheduleUpdate(
-                    castId = castId,
-                    date = date,
-                    status = if (status == CastScheduleStatus.WORK) CastScheduleStatus.OFF else status,
-                    startTime = null,
-                    endTime = null
-                )
+            enumerateDates(fromDate, toDate).forEach { date ->
+                val scheduleEntry = remoteSchedulesByDate[date]
+                val status = scheduleEntry?.status ?: CastScheduleStatus.OFF
+                val update = if (
+                    status == CastScheduleStatus.WORK &&
+                    scheduleEntry?.startTime != null &&
+                    scheduleEntry.endTime != null
+                ) {
+                    CastScheduleUpdate(
+                        castId = castId,
+                        date = date,
+                        status = CastScheduleStatus.WORK,
+                        startTime = scheduleEntry.startTime,
+                        endTime = scheduleEntry.endTime
+                    )
+                } else {
+                    CastScheduleUpdate(
+                        castId = castId,
+                        date = date,
+                        status = if (status == CastScheduleStatus.WORK) CastScheduleStatus.OFF else status,
+                        startTime = null,
+                        endTime = null
+                    )
+                }
+                delegate.updateCastSchedule(update)
             }
-            delegate.updateCastSchedule(update)
+        } else {
+            Unit
         }
     }
 

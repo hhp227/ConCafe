@@ -22,6 +22,9 @@ struct FanManagementView: View {
         )
         .navigationTitle("팬 관리")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            viewModel.onAction(.refresh)
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .showMessage(let message):

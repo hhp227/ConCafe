@@ -20,11 +20,10 @@ object TimeUtils {
     }
 
     fun epochDayFromIsoDateOrNull(value: String): Long? {
-        if (value.length != 10 || value[4] != '-' || value[7] != '-') return null
-
-        val year = value.substring(0, 4).toIntOrNull() ?: return null
-        val month = value.substring(5, 7).toIntOrNull() ?: return null
-        val day = value.substring(8, 10).toIntOrNull() ?: return null
+        val normalized = normalizeDateOnlyOrNull(value) ?: return null
+        val year = normalized.substring(0, 4).toIntOrNull() ?: return null
+        val month = normalized.substring(5, 7).toIntOrNull() ?: return null
+        val day = normalized.substring(8, 10).toIntOrNull() ?: return null
         if (month !in 1..12 || day !in 1..31) return null
 
         val adjustedYear = year - if (month <= 2) 1 else 0
@@ -179,7 +178,8 @@ object TimeUtils {
     }
 
     private fun dayOfWeekIndexFromIsoDateOrNull(date: String): Int? {
-        val parts = date.split("-")
+        val normalized = normalizeDateOnlyOrNull(date) ?: return null
+        val parts = normalized.split("-")
         if (parts.size != 3) return null
         val year = parts[0].toIntOrNull() ?: return null
         val month = parts[1].toIntOrNull() ?: return null
@@ -213,6 +213,16 @@ object TimeUtils {
         val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
         return hour * 60 + minute
+    }
+
+    private fun normalizeDateOnlyOrNull(value: String): String? {
+        val candidate = value.trim()
+        val regex = Regex("""(\d{4})[-./](\d{2})[-./](\d{2})""")
+        val match = regex.find(candidate) ?: return null
+        val year = match.groupValues.getOrNull(1) ?: return null
+        val month = match.groupValues.getOrNull(2) ?: return null
+        val day = match.groupValues.getOrNull(3) ?: return null
+        return "$year-$month-$day"
     }
 
 }

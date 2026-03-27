@@ -19,7 +19,8 @@ final class TimeUtils {
     }
 
     static func epochDay(fromIsoDate value: String) -> Int? {
-        let parts = value.split(separator: "-")
+        guard let normalized = normalizeDateOnly(value) else { return nil }
+        let parts = normalized.split(separator: "-")
         guard parts.count == 3,
               let year = Int(parts[0]),
               let month = Int(parts[1]),
@@ -209,7 +210,8 @@ final class TimeUtils {
     }
 
     private static func dayOfWeekIndex(fromIsoDate date: String) -> Int? {
-        let parts = date.split(separator: "-")
+        guard let normalized = normalizeDateOnly(date) else { return nil }
+        let parts = normalized.split(separator: "-")
         guard parts.count == 3,
               let year = Int(parts[0]),
               let month = Int(parts[1]),
@@ -245,5 +247,22 @@ final class TimeUtils {
         let hour = Int(parts.first ?? "0") ?? 0
         let minute = Int(parts.dropFirst().first ?? "0") ?? 0
         return hour * 60 + minute
+    }
+
+    private static func normalizeDateOnly(_ value: String) -> String? {
+        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pattern = #"(\d{4})[-./](\d{2})[-./](\d{2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(location: 0, length: text.utf16.count)
+        guard let match = regex.firstMatch(in: text, range: range),
+              let yearRange = Range(match.range(at: 1), in: text),
+              let monthRange = Range(match.range(at: 2), in: text),
+              let dayRange = Range(match.range(at: 3), in: text) else {
+            return nil
+        }
+        let year = text[yearRange]
+        let month = text[monthRange]
+        let day = text[dayRange]
+        return "\(year)-\(month)-\(day)"
     }
 }

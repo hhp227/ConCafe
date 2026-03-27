@@ -420,6 +420,7 @@ class FanManagementViewModel(
 
     fun onAction(action: FanManagementAction) {
         when (action) {
+            FanManagementAction.Refresh -> loadFanManagement()
             FanManagementAction.ClickClaimProfile -> clickClaimProfile()
             FanManagementAction.LoadMoreClaimCandidates -> loadMoreClaimCandidates()
             is FanManagementAction.SelectClaimCandidate -> selectClaimCandidate(action.castId)

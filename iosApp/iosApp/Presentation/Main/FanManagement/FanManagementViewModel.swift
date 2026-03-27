@@ -640,6 +640,8 @@ final class FanManagementViewModel: ObservableObject {
 
     func onAction(_ action: FanManagementAction) {
         switch action {
+        case .refresh:
+            loadFanManagement()
         case .clickClaimProfile:
             clickClaimProfile()
         case .loadMoreClaimCandidates:

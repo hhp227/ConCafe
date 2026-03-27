@@ -84,6 +84,7 @@ fun FanManagementScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
+        viewModel.onAction(FanManagementAction.Refresh)
         viewModel.event.collect { event ->
             when (event) {
                 is FanManagementEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
