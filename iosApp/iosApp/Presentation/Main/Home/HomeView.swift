@@ -108,9 +108,11 @@ private struct HomeContentView: View {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        HomeBannerItem(banner: banner)
+                        HomeBannerItem(
+                            banner: banner,
+                            height: bannerHeight
+                        )
                             .frame(maxWidth: .infinity)
-                            .frame(height: bannerHeight)
                             .padding(.horizontal, 16)
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
@@ -316,10 +318,12 @@ private struct HomeContentView: View {
 private struct HomeBannerItem: View {
     let banner: Shared.HomeBanner
 
+    let height: CGFloat
+
     private let cardShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack {
             LinearGradient(
                 colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
                 startPoint: .topLeading,
@@ -338,6 +342,10 @@ private struct HomeBannerItem: View {
                     endPoint: .bottom
                 )
             }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(banner.title)
                     .font(.title3.weight(.bold))
@@ -353,9 +361,9 @@ private struct HomeBannerItem: View {
             }
             .padding(18)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(cardShape)
         .contentShape(cardShape)
+        .clipped()
     }
 
     private var trimmedSubtitle: String? {
