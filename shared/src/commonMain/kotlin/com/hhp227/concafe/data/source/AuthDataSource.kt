@@ -16,6 +16,8 @@ interface AuthDataSource {
 
     fun addUser(user: User)
 
+    fun removeUser(userId: String): Boolean
+
     fun replaceUser(user: User): Boolean
 
     fun replaceAllUsers(users: List<User>)

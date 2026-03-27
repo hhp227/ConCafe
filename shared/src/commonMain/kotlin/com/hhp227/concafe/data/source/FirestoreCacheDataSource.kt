@@ -88,12 +88,43 @@ class FirestoreCacheDataSource :
         users.add(user)
     }
 
+    override fun removeUser(userId: String): Boolean {
+        val removed = users.removeAll { user -> user.id == userId }
+
+        if (!removed) {
+            return false
+        }
+        if (currentUserId == userId) {
+            currentUserId = null
+        }
+        favoriteCafeIdsByUser.remove(userId)
+        followedCastIdsByUser.remove(userId)
+        dismissedReviewPromptVisitIdsByUser.remove(userId)
+        ownedCafeIdsByUser.remove(userId)
+        pendingCafeClaimsByUser.remove(userId)
+        pendingCafeRegistrationClaimsByUser.remove(userId)
+        affiliatedCafeIdByUser.remove(userId)
+        favoriteUserIdsByCafeId.values.forEach { userIds ->
+            userIds.remove(userId)
+        }
+        followerUserIdsByCastId.values.forEach { userIds ->
+            userIds.remove(userId)
+        }
+        notifications.removeAll { notification -> notification.userId == userId }
+        inquiries.removeAll { inquiry -> inquiry.userId == userId }
+        visits.removeAll { visit -> visit.userId == userId }
+        reviews.removeAll { review -> review.userId == userId }
+        stamps.removeAll { stamp -> stamp.userId == userId }
+        castClaims.removeAll { claim -> claim.userId == userId }
+        return true
+    }
+
     override fun replaceUser(user: User): Boolean {
         val index = users.indexOfFirst { it.id == user.id }
+
         if (index == -1) {
             return false
         }
-
         users[index] = user
         return true
     }
