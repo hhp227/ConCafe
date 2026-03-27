@@ -111,14 +111,14 @@ private struct HomeContentView: View {
                         HomeBannerItem(banner: banner)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 1)
+                            .padding(.vertical, 3)
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
                             }
                             .tag(index)
                     }
                 }
-                .frame(height: bannerHeight)
+                .frame(height: bannerTabViewHeight)
                 .tabViewStyle(.page(indexDisplayMode: .never))
             } else {
                 HomeBannerPlaceholderCard(height: bannerHeight)
@@ -137,6 +137,10 @@ private struct HomeContentView: View {
 
     private var bannerHeight: CGFloat {
         min(max(UIScreen.main.bounds.width * 0.3, 180), 360)
+    }
+
+    private var bannerTabViewHeight: CGFloat {
+        bannerHeight + 6
     }
 
     private var popularCastSection: some View {
