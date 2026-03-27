@@ -332,7 +332,6 @@ private struct HomeBannerItem: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
-                .mask(cardShape)
                 LinearGradient(
                     colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
                     startPoint: .top,
@@ -343,19 +342,19 @@ private struct HomeBannerItem: View {
                 Text(banner.title)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
+                    .shadow(color: Color.black.opacity(0.35), radius: 2, x: 0, y: 1)
                 if let subtitle = trimmedSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.92))
                         .lineLimit(2)
+                        .shadow(color: Color.black.opacity(0.3), radius: 1.5, x: 0, y: 1)
                 }
             }
             .padding(18)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
-        .compositingGroup()
-        .mask(cardShape)
+        .clipShape(cardShape)
         .contentShape(cardShape)
     }
 
