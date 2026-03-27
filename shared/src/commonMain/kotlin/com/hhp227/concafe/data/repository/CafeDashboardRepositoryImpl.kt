@@ -5,6 +5,9 @@ import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.repository.CafeDashboardRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class CafeDashboardRepositoryImpl(
     private val cafeDataSource: CafeDataSource,
@@ -36,13 +39,27 @@ class CafeDashboardRepositoryImpl(
             throw NoSuchElementException("cafe dashboard not found")
         }
 
+        val todayDate = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .toString()
+        val workingCastIds = if (firestoreDataSource != null) {
+            runCatching {
+                firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
+            }.getOrElse {
+                cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
+            }
+        } else {
+            cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
+        }
+
         val castPreviews = castDataSource.casts
             .filter { it.cafeId == cafeId }
             .map { cast ->
                 CafeDashboardData.CastPreview(
                     id = cast.id,
                     name = cast.name,
-                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isOnShift = workingCastIds.contains(cast.id)
                 )
             }
         val homeBannerPreview = cafeDataSource.cafeHomeBannerPreviewByCafeId[cafeId]

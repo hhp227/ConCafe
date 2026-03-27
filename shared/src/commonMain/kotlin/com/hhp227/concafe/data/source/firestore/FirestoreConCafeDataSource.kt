@@ -1201,6 +1201,13 @@ class FirestoreConCafeDataSource(
                 idToken = idToken
             )
             affiliatedCafeIdByUser[existing.userId] = existing.cafeId
+            runCatching {
+                removeSelfFollowForApprovedCastClaim(
+                    userId = existing.userId,
+                    castId = existing.castId,
+                    idToken = idToken
+                )
+            }
         }
         val updated = existing.copy(
             status = status,
@@ -1211,6 +1218,26 @@ class FirestoreConCafeDataSource(
         castClaims.removeAll { claim -> claim.id == updated.id }
         castClaims.add(0, updated)
         return updated
+    }
+
+    private suspend fun removeSelfFollowForApprovedCastClaim(
+        userId: String,
+        castId: String,
+        idToken: String?
+    ) {
+        val followId = buildCastFollowDocumentId(userId = userId, castId = castId)
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_FOLLOWS}/$followId"
+        runCatching {
+            restApi.delete(path, idToken)
+        }
+        val followedSet = followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
+        val followerSet = followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
+        val didRemoveFollowed = followedSet.remove(castId)
+        val didRemoveFollower = followerSet.remove(userId)
+
+        if (didRemoveFollowed || didRemoveFollower) {
+            syncCastFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+        }
     }
 
     suspend fun favoriteCafeRemote(userId: String, cafeId: String) {

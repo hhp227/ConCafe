@@ -20,6 +20,9 @@ import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class CastRepositoryImpl(
     private val castDataSource: CastDataSource,
@@ -75,17 +78,18 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
+        val workingCastIds = resolveWorkingCastIds(cafeId)
         val sorted = castDataSource.casts
             .filter { it.cafeId == cafeId }
             .sortedWith(
-                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                compareByDescending<Cast> { workingCastIds.contains(it.id) }
                     .thenBy { it.name }
             )
             .map { cast ->
                 CafeCastPreview(
                     id = cast.id,
                     name = cast.name,
-                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id),
+                    isOnShift = workingCastIds.contains(cast.id),
                     profileImage = cast.profileImage
                 )
             }
@@ -93,16 +97,17 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
+        val workingCastIds = resolveWorkingCastIds(cafeId)
         val sorted = castDataSource.casts
             .filter { it.cafeId == cafeId }
             .sortedWith(
-                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                compareByDescending<Cast> { workingCastIds.contains(it.id) }
                     .thenBy { it.name }
             )
             .map { cast ->
                 CafeDetailCast(
                     cast = cast,
-                    isWorking = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isWorking = workingCastIds.contains(cast.id)
                 )
             }
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
@@ -168,6 +173,24 @@ class CastRepositoryImpl(
             return firestoreDataSource.updateCastScheduleRemote(update)
         }
         return castDataSource.updateCastSchedule(update)
+    }
+
+    private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
+        val todayDate = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .toString()
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return runCatching {
+                firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
+            }.getOrElse {
+                cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
+            }
+        } else {
+            return cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
+        }
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
