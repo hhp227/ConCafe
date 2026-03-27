@@ -34,6 +34,7 @@ import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.CastDetail
@@ -74,6 +75,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import com.hhp227.concafe.domain.common.PagedResult
 
 class FirestoreConCafeDataSource(
     private val config: FirestoreConfig,
@@ -1416,6 +1418,7 @@ class FirestoreConCafeDataSource(
         val normalizedConceptRole = update.conceptRole.trim()
         val normalizedIntroduction = update.introduction.trim()
         val normalizedBirthday = update.birthday?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val normalizedBirthdayKey = normalizedBirthday.toBirthdayKeyOrNull()
         val normalizedProfileImage = update.profileImage
             ?.trim()
             ?.takeIf { value -> value.isNotEmpty() }
@@ -1433,6 +1436,7 @@ class FirestoreConCafeDataSource(
                 "profileImage" to firestoreNullableString(normalizedProfileImage),
                 "desc" to firestoreString(normalizedIntroduction),
                 "birthday" to firestoreNullableString(normalizedBirthday),
+                BIRTHDAY_KEY_FIELD to firestoreNullableString(normalizedBirthdayKey),
                 "conceptRole" to firestoreString(normalizedConceptRole),
                 "followerCount" to firestoreLong((existingCast?.followerCount ?: 0).toLong()),
                 "rating" to firestoreDouble(existingCast?.rating ?: 0.0),
@@ -1459,6 +1463,175 @@ class FirestoreConCafeDataSource(
         )
         hydratedCafeDetailIds.add(targetCafeId)
         return cached
+    }
+
+    suspend fun fetchBirthdayCastsRemote(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val birthdayKey = monthDayToBirthdayKey(
+            month = month,
+            dayOfMonth = dayOfMonth
+        )
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val primaryDocuments = runCatching {
+            runCastByBirthdayKeyQuery(
+                birthdayKey = birthdayKey,
+                idToken = idToken,
+                limit = safeLimit
+            )
+        }.getOrElse {
+            emptyList()
+        }
+        val primaryCasts = parseCollectionGroupCastDocuments(primaryDocuments)
+
+        if (primaryCasts.size >= safeLimit) {
+            return primaryCasts.take(safeLimit)
+        } else {
+            val fallbackDocuments = runCatching {
+                runCastWithBirthdayFieldQuery(idToken = idToken)
+            }.getOrElse {
+                emptyList()
+            }
+            val fallbackCasts = parseCollectionGroupCastDocuments(fallbackDocuments)
+                .filter { cast ->
+                    cast.birthday.matchesMonthAndDay(month = month, dayOfMonth = dayOfMonth)
+                }
+            val merged = (primaryCasts + fallbackCasts)
+                .distinctBy { cast -> cast.id }
+                .sortedByDescending { cast -> cast.id }
+                .take(safeLimit)
+
+            upsertCastSummariesIntoCache(merged)
+            return merged
+        }
+    }
+
+    suspend fun getHomePopularCastPageRemote(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cast> {
+        return searchCastsRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CastSort.POPULAR,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+    }
+
+    suspend fun searchCastsRemote(
+        query: String?,
+        country: String?,
+        city: String?,
+        sort: CastSort,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cast> {
+        val safePageSize = if (pageSize > 0) {
+            pageSize
+        } else {
+            1
+        }
+        val normalizedQuery = query?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val normalizedCountry = country?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val normalizedCity = city?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val cursorOffset = cursor?.toIntOrNull() ?: 0
+        val queryBatchSize = safePageSize.coerceAtMost(50) * 3
+        var nextOffset = cursorOffset
+        var exhausted = false
+        val aggregated = mutableListOf<Cast>()
+        val targetCafeIds = resolveCafeIdsByRegion(
+            country = normalizedCountry,
+            city = normalizedCity
+        )
+        if (targetCafeIds != null && targetCafeIds.isEmpty()) {
+            return PagedResult(
+                items = emptyList(),
+                nextCursor = null,
+                hasNext = false
+            )
+        }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+
+        while (aggregated.size < safePageSize && !exhausted) {
+            val documents = runCastCollectionGroupQuery(
+                sort = sort,
+                offset = nextOffset,
+                limit = queryBatchSize,
+                idToken = idToken
+            )
+            val parsed = parseCollectionGroupCastDocuments(documents)
+            val filtered = parsed.filter { cast ->
+                val matchesQuery = if (normalizedQuery == null) {
+                    true
+                } else {
+                    cast.name.contains(normalizedQuery, ignoreCase = true)
+                }
+                val matchesCafe = if (targetCafeIds == null) {
+                    true
+                } else {
+                    targetCafeIds.contains(cast.cafeId)
+                }
+                matchesQuery && matchesCafe
+            }
+            val remaining = safePageSize - aggregated.size
+
+            aggregated.addAll(filtered.take(remaining))
+            nextOffset += parsed.size
+            exhausted = parsed.size < queryBatchSize
+        }
+        upsertCastSummariesIntoCache(aggregated)
+        return PagedResult(
+            items = aggregated,
+            nextCursor = if (aggregated.isEmpty() && exhausted) null else if (exhausted) null else nextOffset.toString(),
+            hasNext = !exhausted
+        )
+    }
+
+    suspend fun getCafeCastPageRemote(
+        cafeId: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cast> {
+        val safePageSize = if (pageSize > 0) {
+            pageSize
+        } else {
+            1
+        }
+        val offset = cursor?.toIntOrNull() ?: 0
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val documents = runCafeCastQuery(
+            cafeId = cafeId,
+            offset = offset,
+            limit = safePageSize + 1,
+            idToken = idToken
+        )
+        val parsed = documents.mapNotNull { document ->
+            parseCastDocument(cafeId = cafeId, document = document)
+        }
+        val hasNext = parsed.size > safePageSize
+        val items = parsed.take(safePageSize)
+
+        upsertCastSummariesIntoCache(items)
+        return PagedResult(
+            items = items,
+            nextCursor = if (hasNext) (offset + safePageSize).toString() else null,
+            hasNext = hasNext
+        )
     }
 
     suspend fun deleteCastRemote(castId: String): Cast {
@@ -2879,6 +3052,185 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runCastByBirthdayKeyQuery(
+        birthdayKey: String,
+        idToken: String?,
+        limit: Int
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
+                    "allDescendants": true
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "$BIRTHDAY_KEY_FIELD" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(birthdayKey)}" }
+                  }
+                },
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "name" },
+                    "direction": "ASCENDING"
+                  }
+                ],
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCastCollectionGroupQuery(
+        sort: CastSort,
+        offset: Int,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeOffset = offset.coerceAtLeast(0)
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val isLatestSort = sort == CastSort.LATEST
+        val orderFieldPath = if (isLatestSort) {
+            "__name__"
+        } else {
+            "followerCount"
+        }
+        val orderDirection = "DESCENDING"
+        val tieBreakerOrderBy = if (isLatestSort) {
+            ""
+        } else {
+            """
+                  ,
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
+                  }
+            """.trimIndent()
+        }
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
+                    "allDescendants": true
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "$orderFieldPath" },
+                    "direction": "$orderDirection"
+                  }$tieBreakerOrderBy
+                ],
+                "offset": $safeOffset,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCafeCastQuery(
+        cafeId: String,
+        offset: Int,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeOffset = offset.coerceAtLeast(0)
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}"
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "name" },
+                    "direction": "ASCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
+                  }
+                ],
+                "offset": $safeOffset,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCastWithBirthdayFieldQuery(idToken: String?): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
+                    "allDescendants": true
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "birthday" },
+                    "op": "GREATER_THAN",
+                    "value": { "stringValue": "0000-00-00" }
+                  }
+                },
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "birthday" },
+                    "direction": "ASCENDING"
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runCastFollowerQuery(
         castId: String,
         idToken: String?,
@@ -3410,6 +3762,56 @@ class FirestoreConCafeDataSource(
             delegate.casts.add(parsedCast)
         }
         delegate.cafeDetailsById[parsedCafe.id] = nextDetail
+    }
+
+    private fun parseCollectionGroupCastDocuments(documents: List<JsonObject>): List<Cast> {
+        return documents.mapNotNull { document ->
+            val documentName = document["name"]?.jsonPrimitive?.contentOrNull
+            val cafeId = documentName?.toCafeIdFromCastDocumentName()
+
+            if (cafeId == null) {
+                null
+            } else {
+                parseCastDocument(cafeId = cafeId, document = document)
+            }
+        }
+    }
+
+    private fun upsertCastSummariesIntoCache(casts: List<Cast>) {
+        casts.forEach { cast ->
+            val castIndex = delegate.casts.indexOfFirst { cached -> cached.id == cast.id }
+
+            if (castIndex >= 0) {
+                delegate.casts[castIndex] = cast
+            } else {
+                delegate.casts.add(cast)
+            }
+        }
+    }
+
+    private fun resolveCafeIdsByRegion(
+        country: String?,
+        city: String?
+    ): Set<String>? {
+        if (country.isNullOrBlank() && city.isNullOrBlank()) {
+            return null
+        }
+        return cafes.asSequence()
+            .filter { cafe ->
+                val countryMatched = if (country.isNullOrBlank()) {
+                    true
+                } else {
+                    cafe.region.country.equals(country, ignoreCase = true)
+                }
+                val cityMatched = if (city.isNullOrBlank()) {
+                    true
+                } else {
+                    cafe.region.city.equals(city, ignoreCase = true)
+                }
+                countryMatched && cityMatched
+            }
+            .map { cafe -> cafe.id }
+            .toSet()
     }
 
     private suspend fun loadCafeSubCollectionDocuments(
@@ -4349,6 +4751,7 @@ class FirestoreConCafeDataSource(
         const val DEFAULT_OWNER_CLAIM_STATUS = "승인 대기 중"
         const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
         const val RECENT_FOLLOWER_FETCH_LIMIT = 30
+        const val BIRTHDAY_KEY_FIELD = "birthdayKey"
     }
 }
 
@@ -4679,6 +5082,63 @@ private fun String.isPendingClaimStatus(): Boolean {
 
 private fun escapeFirestoreQueryString(value: String): String {
     return value.replace("\\", "\\\\").replace("\"", "\\\"")
+}
+
+private fun monthDayToBirthdayKey(month: Int, dayOfMonth: Int): String {
+    val normalizedMonth = month.coerceIn(1, 12).toString().padStart(2, '0')
+    val normalizedDay = dayOfMonth.coerceIn(1, 31).toString().padStart(2, '0')
+
+    return "$normalizedMonth-$normalizedDay"
+}
+
+private fun String?.toBirthdayKeyOrNull(): String? {
+    val birthdayValue = this
+    if (birthdayValue == null) {
+        return null
+    }
+    val parts = birthdayValue.split("-")
+    if (parts.size != 3) {
+        return null
+    }
+    val month = parts[1].toIntOrNull()
+    val day = parts[2].toIntOrNull()
+
+    if (month == null || day == null) {
+        return null
+    } else {
+        return monthDayToBirthdayKey(month = month, dayOfMonth = day)
+    }
+}
+
+private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
+    val birthdayValue = this
+    if (birthdayValue == null) {
+        return false
+    }
+    val parts = birthdayValue.split("-")
+    if (parts.size != 3) {
+        return false
+    }
+    val birthMonth = parts[1].toIntOrNull()
+    val birthDay = parts[2].toIntOrNull()
+
+    return birthMonth == month && birthDay == dayOfMonth
+}
+
+private fun String.toCafeIdFromCastDocumentName(): String? {
+    val segments = split("/")
+    val castsIndex = segments.indexOf(FirestorePaths.CAFE_CASTS)
+    val cafeSegmentIndex = castsIndex - 1
+    val cafeCollectionIndex = castsIndex - 2
+
+    if (castsIndex <= 1 || cafeCollectionIndex < 0 || cafeSegmentIndex < 0) {
+        return null
+    }
+    if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) {
+        return null
+    } else {
+        return segments[cafeSegmentIndex].takeIf { value -> value.isNotBlank() }
+    }
 }
 
 private fun nextFirestoreEntityId(prefix: String): String {

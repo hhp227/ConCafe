@@ -38,31 +38,90 @@ class CastRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        var filtered = castDataSource.casts
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
-        if (!query.isNullOrBlank()) {
-            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        if (firestoreDataSource != null && pageSize <= REMOTE_CAST_PAGE_LIMIT) {
+            val remoteResult = runCatching {
+                firestoreDataSource.searchCastsRemote(
+                    query = query,
+                    country = country,
+                    city = city,
+                    sort = sort,
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+
+            if (remoteResult != null) {
+                return remoteResult
+            }
         }
-        if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
-            val validCafeIds = cafeDataSource.cafes.filter { cafe ->
-                val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
-                val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
-                countryMatched && cityMatched
-            }.map { it.id }.toSet()
-            filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
-        }
-        filtered = when (sort) {
-            CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
-            CastSort.LATEST -> filtered.sortedByDescending { it.id }
-            CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
-        }
-        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+        return searchCastsFromCache(
+            query = query,
+            country = country,
+            city = city,
+            sort = sort,
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            val remoteResult = runCatching {
+                firestoreDataSource.getHomePopularCastPageRemote(
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+
+            if (remoteResult != null) {
+                return remoteResult
+            }
+        }
         val sorted = castDataSource.casts
             .sortedByDescending { it.followerCount }
         return pagingDataSource.toPaged(sorted, cursor, pageSize)
+    }
+
+    override suspend fun getBirthdayCasts(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            val remoteCasts = runCatching {
+                firestoreDataSource.fetchBirthdayCastsRemote(
+                    month = month,
+                    dayOfMonth = dayOfMonth,
+                    limit = safeLimit
+                )
+            }.getOrElse {
+                emptyList()
+            }
+
+            if (remoteCasts.isNotEmpty()) {
+                return remoteCasts.take(safeLimit)
+            }
+        }
+
+        return castDataSource.casts
+            .asSequence()
+            .filter { cast ->
+                cast.birthday.matchesMonthAndDay(month = month, dayOfMonth = dayOfMonth)
+            }
+            .sortedByDescending { cast -> cast.id }
+            .take(safeLimit)
+            .toList()
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
@@ -79,8 +138,24 @@ class CastRepositoryImpl(
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
         val workingCastIds = resolveWorkingCastIds(cafeId)
-        val sorted = castDataSource.casts
-            .filter { it.cafeId == cafeId }
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+        val page = if (firestoreDataSource != null) {
+            runCatching {
+                firestoreDataSource.getCafeCastPageRemote(
+                    cafeId = cafeId,
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+        } else {
+            null
+        }
+        val source = if (page != null) {
+            page.items
+        } else {
+            castDataSource.casts.filter { it.cafeId == cafeId }
+        }
+        val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
                     .thenBy { it.name }
@@ -93,13 +168,37 @@ class CastRepositoryImpl(
                     profileImage = cast.profileImage
                 )
             }
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return if (page != null) {
+            PagedResult(
+                items = sorted,
+                nextCursor = page.nextCursor,
+                hasNext = page.hasNext
+            )
+        } else {
+            pagingDataSource.toPaged(sorted, cursor, pageSize)
+        }
     }
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
         val workingCastIds = resolveWorkingCastIds(cafeId)
-        val sorted = castDataSource.casts
-            .filter { it.cafeId == cafeId }
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+        val page = if (firestoreDataSource != null) {
+            runCatching {
+                firestoreDataSource.getCafeCastPageRemote(
+                    cafeId = cafeId,
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+        } else {
+            null
+        }
+        val source = if (page != null) {
+            page.items
+        } else {
+            castDataSource.casts.filter { it.cafeId == cafeId }
+        }
+        val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
                     .thenBy { it.name }
@@ -110,7 +209,15 @@ class CastRepositoryImpl(
                     isWorking = workingCastIds.contains(cast.id)
                 )
             }
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return if (page != null) {
+            PagedResult(
+                items = sorted,
+                nextCursor = page.nextCursor,
+                hasNext = page.hasNext
+            )
+        } else {
+            pagingDataSource.toPaged(sorted, cursor, pageSize)
+        }
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
@@ -337,4 +444,50 @@ class CastRepositoryImpl(
             )
         }
     }
+
+    private fun searchCastsFromCache(
+        query: String?,
+        country: String?,
+        city: String?,
+        sort: CastSort,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cast> {
+        var filtered = castDataSource.casts
+
+        if (!query.isNullOrBlank()) {
+            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        }
+        if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
+            val validCafeIds = cafeDataSource.cafes.filter { cafe ->
+                val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
+                val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
+                countryMatched && cityMatched
+            }.map { it.id }.toSet()
+            filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
+        }
+        filtered = when (sort) {
+            CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
+            CastSort.LATEST -> filtered.sortedByDescending { it.id }
+            CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
+        }
+        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+    }
 }
+
+private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
+    val birthdayValue = this
+    if (birthdayValue == null) {
+        return false
+    }
+    val parts = birthdayValue.split("-")
+    if (parts.size != 3) {
+        return false
+    }
+    val birthMonth = parts[1].toIntOrNull()
+    val birthDay = parts[2].toIntOrNull()
+
+    return birthMonth == month && birthDay == dayOfMonth
+}
+
+private const val REMOTE_CAST_PAGE_LIMIT = 100

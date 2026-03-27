@@ -54,6 +54,38 @@ class FakeCastRepository(
         return dataSource.homePopularCastPage(cursor, pageSize)
     }
 
+    override suspend fun getBirthdayCasts(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        return dataSource.casts
+            .asSequence()
+            .filter { cast ->
+                val birthday = cast.birthday
+                if (birthday == null) {
+                    false
+                } else {
+                    val parts = birthday.split("-")
+                    if (parts.size != 3) {
+                        false
+                    } else {
+                        val birthMonth = parts[1].toIntOrNull()
+                        val birthDay = parts[2].toIntOrNull()
+                        birthMonth == month && birthDay == dayOfMonth
+                    }
+                }
+            }
+            .sortedByDescending { cast -> cast.id }
+            .take(safeLimit)
+            .toList()
+    }
+
     override suspend fun getCastDetail(castId: String): CastDetail {
         return dataSource.castDetail(castId)
             ?: throw NoSuchElementException("cast detail not found")
