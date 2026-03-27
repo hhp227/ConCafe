@@ -2,33 +2,33 @@ package com.hhp227.concafe.presentation.castedit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.usecase.DeleteImageUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class CastEditViewModel(
     private val cafeId: String? = null,
     private val castId: String? = null,
     private val getCastDetailUseCase: GetCastDetailUseCase,
     private val upsertCastUseCase: UpsertCastUseCase,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val deleteImageUseCase: DeleteImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CastEditUiState())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<CastEditEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private val pendingDeletedGalleryImageUrls = mutableSetOf<String>()
+    private var pendingDeletedProfileImageUrl: String? = null
 
     private fun clickBack() {
         viewModelScope.launch {
@@ -57,6 +57,9 @@ class CastEditViewModel(
 
     private fun clickSave() {
         val currentState = _uiState.value
+        val removedGalleryImageUrls = pendingDeletedGalleryImageUrls.toList()
+        val removedProfileImageUrl = pendingDeletedProfileImageUrl
+
         if (currentState.castName.isBlank()) {
             _uiState.update { it.copy(infoMessage = "캐스트 이름을 입력해주세요.") }
             return
@@ -69,14 +72,12 @@ class CastEditViewModel(
             _uiState.update { it.copy(isImageRequiredAlertVisible = true) }
             return
         }
-
         _uiState.update {
             it.copy(
                 isSaving = true,
                 infoMessage = null
             )
         }
-
         viewModelScope.launch {
             val uploadedProfileImage = uploadImage(currentState.profileImageUrl, folder = "casts/profile")
                 ?: return@launch
@@ -102,6 +103,11 @@ class CastEditViewModel(
                 )
             ) {
                 is AppResult.Success -> {
+                    deleteImages(listOfNotNull(removedProfileImageUrl) + removedGalleryImageUrls)
+                    pendingDeletedGalleryImageUrls.removeAll(removedGalleryImageUrls.toSet())
+                    if (pendingDeletedProfileImageUrl == removedProfileImageUrl) {
+                        pendingDeletedProfileImageUrl = null
+                    }
                     _uiState.update { it.copy(isSaving = false) }
                     _event.emit(CastEditEvent.NavigateBack)
                 }
@@ -132,6 +138,8 @@ class CastEditViewModel(
             when (val result = getCastDetailUseCase.invoke(targetCastId)) {
                 is AppResult.Success -> {
                     val detail = result.data.detail
+                    pendingDeletedGalleryImageUrls.clear()
+                    pendingDeletedProfileImageUrl = null
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
@@ -161,12 +169,34 @@ class CastEditViewModel(
         when (action) {
             CastEditAction.ClickBack -> clickBack()
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
-            is CastEditAction.SelectProfilePhoto -> _uiState.update {
-                it.copy(
-                    profileImageUrl = action.imageUrl,
-                    infoMessage = null,
-                    isImageRequiredAlertVisible = false
-                )
+            is CastEditAction.SelectProfilePhoto -> {
+                val nextImageUrl = action.imageUrl
+                val currentState = _uiState.value
+                val previousProfileImageUrl = currentState.profileImageUrl
+                val nextGalleryImages = if (currentState.galleryImages.isEmpty()) {
+                    listOf(nextImageUrl)
+                } else {
+                    currentState.galleryImages.toMutableList().apply {
+                        this[0] = nextImageUrl
+                    }.toList()
+                }
+
+                if (
+                    !previousProfileImageUrl.isNullOrBlank() &&
+                    previousProfileImageUrl != nextImageUrl &&
+                    (previousProfileImageUrl.startsWith("http://") || previousProfileImageUrl.startsWith("https://")) &&
+                    !nextGalleryImages.drop(1).contains(previousProfileImageUrl)
+                ) {
+                    pendingDeletedProfileImageUrl = previousProfileImageUrl
+                }
+                _uiState.update {
+                    it.copy(
+                        profileImageUrl = nextImageUrl,
+                        galleryImages = nextGalleryImages,
+                        infoMessage = null,
+                        isImageRequiredAlertVisible = false
+                    )
+                }
             }
             is CastEditAction.AddGalleryImage -> {
                 val imageUrl = action.imageUrl
@@ -174,13 +204,29 @@ class CastEditViewModel(
                 val galleryImages = _uiState.value.galleryImages
                 val galleryMaxCount = _uiState.value.galleryMaxCount
                 if (galleryImages.size >= galleryMaxCount) {
-                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
+                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount - 1}장까지 등록할 수 있습니다.") }
                 } else {
                     _uiState.update {
                         it.copy(
                             galleryImages = galleryImages + imageUrl,
                             infoMessage = null,
                             isImageRequiredAlertVisible = false
+                        )
+                    }
+                }
+            }
+            is CastEditAction.RemoveGalleryImage -> {
+                val index = action.index
+                val galleryImages = _uiState.value.galleryImages
+                if (index in galleryImages.indices) {
+                    val removedImageUrl = galleryImages[index]
+                    if (removedImageUrl.startsWith("http://") || removedImageUrl.startsWith("https://")) {
+                        pendingDeletedGalleryImageUrls.add(removedImageUrl)
+                    }
+                    _uiState.update {
+                        it.copy(
+                            galleryImages = galleryImages.filterIndexed { imageIndex, _ -> imageIndex != index },
+                            infoMessage = null
                         )
                     }
                 }
@@ -210,6 +256,12 @@ class CastEditViewModel(
                 }
                 null
             }
+        }
+    }
+
+    private suspend fun deleteImages(imageUrls: List<String>) {
+        imageUrls.forEach { imageUrl ->
+            deleteImageUseCase.invoke(imageUrl)
         }
     }
 

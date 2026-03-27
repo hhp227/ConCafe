@@ -1128,6 +1128,15 @@ class FirestoreConCafeDataSource(
         val claimId = nextFirestoreEntityId("cast-claim")
         val createdAt = Clock.System.now().toString()
         val normalizedMessage = message?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val requester = findUserById(userId) ?: runCatching {
+            val userDocument = loadUserDocument(userId = userId, idToken = idToken)
+            parseUserDocument(userDocument)
+        }.recoverCatching {
+            val userDocument = loadUserDocument(userId = userId, idToken = null)
+            parseUserDocument(userDocument)
+        }.getOrNull()
+        val requesterNickname = requester?.nickname?.trim()?.takeIf { value -> value.isNotEmpty() }
+        val requesterProfileImage = requester?.profileImage?.trim()?.takeIf { value -> value.isNotEmpty() }
         val path = "${config.documentBasePath()}/${FirestorePaths.CAST_CLAIMS}/$claimId"
         val body = firestoreDocumentBody(
             mapOf(
@@ -1135,6 +1144,8 @@ class FirestoreConCafeDataSource(
                 "cafeId" to firestoreString(cafeId),
                 "castId" to firestoreString(castId),
                 "castName" to firestoreString(castName),
+                "requesterNickname" to firestoreNullableString(requesterNickname),
+                "requesterProfileImage" to firestoreNullableString(requesterProfileImage),
                 "status" to firestoreString(CastClaimStatus.PENDING.name),
                 "message" to firestoreNullableString(normalizedMessage),
                 "evidenceImageUrls" to firestoreStringArray(emptyList()),
@@ -1153,6 +1164,8 @@ class FirestoreConCafeDataSource(
             cafeId = cafeId,
             castId = castId,
             castName = castName,
+            requesterNickname = requesterNickname,
+            requesterProfileImage = requesterProfileImage,
             status = CastClaimStatus.PENDING,
             message = normalizedMessage,
             evidenceImageUrls = emptyList(),
@@ -4065,6 +4078,8 @@ class FirestoreConCafeDataSource(
             cafeId = cafeId,
             castId = castId,
             castName = castName,
+            requesterNickname = fields.getFirestoreString("requesterNickname"),
+            requesterProfileImage = fields.getFirestoreString("requesterProfileImage"),
             status = status,
             message = fields.getFirestoreString("message"),
             evidenceImageUrls = fields.getFirestoreStringList("evidenceImageUrls"),

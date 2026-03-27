@@ -256,13 +256,18 @@ private struct CastEditContentView: View {
     }
 
     private var gallerySection: some View {
+        let editableGalleryItems = Array(uiState.galleryImages.enumerated().dropFirst()).map { entry in
+            EditableGalleryItem(sourceIndex: entry.offset, imageUrl: entry.element)
+        }
+        let editableGalleryMaxCount = max(uiState.galleryMaxCount - 1, 0)
+        let editableGalleryLimitText = "\(editableGalleryItems.count) / \(editableGalleryMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("갤러리 사진")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 Spacer()
-                Text(uiState.galleryLimitText)
+                Text(editableGalleryLimitText)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
@@ -274,18 +279,21 @@ private struct CastEditContentView: View {
                 ],
                 spacing: 12
             ) {
-                ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
+                ForEach(editableGalleryItems, id: \.sourceIndex) { item in
                     castGalleryItem(
-                        label: "이미지 \(index + 1)",
-                        imageUrl: imageUrl,
-                        index: index
+                        label: "이미지 \(item.sourceIndex + 1)",
+                        imageUrl: item.imageUrl,
+                        index: item.sourceIndex,
+                        onRemoveTap: {
+                            onAction(.removeGalleryImage(item.sourceIndex))
+                        }
                     )
                 }
-                if uiState.galleryImages.count < uiState.galleryMaxCount {
+                if editableGalleryItems.count < editableGalleryMaxCount {
                     addGalleryItem
                 }
             }
-            Text("캐스트 갤러리에는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+            Text("캐스트 갤러리에는 최대 \(max(uiState.galleryMaxCount - 1, 0))장까지 등록할 수 있습니다.")
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -295,7 +303,8 @@ private struct CastEditContentView: View {
     private func castGalleryItem(
         label: String,
         imageUrl: String,
-        index: Int
+        index: Int,
+        onRemoveTap: @escaping () -> Void
     ) -> some View {
         let gradients = [
             ("FFE6EE", "F7C9D8"),
@@ -304,47 +313,62 @@ private struct CastEditContentView: View {
         ]
         let colors = gradients[index % gradients.count]
         return GeometryReader { proxy in
-            ZStack(alignment: .bottomLeading) {
-                if !imageUrl.isEmpty {
-                    CastEditImageView(
-                        imageUrl: imageUrl,
-                        placeholder: {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+            ZStack(alignment: .topTrailing) {
+                ZStack(alignment: .bottomLeading) {
+                    if !imageUrl.isEmpty {
+                        CastEditImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                        }
-                    )
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            }
                         )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    Text(label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.32))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.black.opacity(0.32))
-                    .clipShape(Capsule())
-                    .padding(10)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Button {
+                    onRemoveTap()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(.black.opacity(0.52))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: 6, y: -6)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .aspectRatio(1, contentMode: .fit)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {
@@ -573,4 +597,10 @@ struct CastEditView_Previews: PreviewProvider {
             CastEditView(castId: nil, onNavigationAction: { _ in })
         }
     }
+}
+
+private struct EditableGalleryItem {
+    let sourceIndex: Int
+
+    let imageUrl: String
 }

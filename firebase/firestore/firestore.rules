@@ -54,6 +54,21 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId == request.auth.uid;
     }
 
+    function isLinkedCastEditableUpdate(cafeId, castId) {
+      return isLinkedCastUser(cafeId, castId)
+        && request.resource.data.linkedUserId == resource.data.linkedUserId
+        && request.resource.data.followerCount == resource.data.followerCount
+        && request.resource.data.rating == resource.data.rating
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "name",
+          "profileImage",
+          "desc",
+          "birthday",
+          "conceptRole",
+          "galleryImages"
+        ]);
+    }
+
     function isValidScheduleStatus(status) {
       return status == "WORK" || status == "OFF" || status == "VACATION";
     }
@@ -231,7 +246,9 @@ service cloud.firestore {
 
       match /casts/{castId} {
         allow read: if true;
-        allow write: if canManageCafe(cafeId);
+        allow create, delete: if canManageCafe(cafeId);
+        allow update: if canManageCafe(cafeId)
+          || isLinkedCastEditableUpdate(cafeId, castId);
       }
 
       match /notices/{noticeId} {

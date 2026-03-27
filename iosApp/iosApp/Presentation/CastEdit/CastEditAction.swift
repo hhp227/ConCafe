@@ -12,6 +12,7 @@ enum CastEditAction {
     case clickProfilePhoto
     case selectProfilePhoto(String)
     case addGalleryImage(String)
+    case removeGalleryImage(Int)
     case changeCastName(String)
     case changeConceptRole(String)
     case changeBirthday(String)

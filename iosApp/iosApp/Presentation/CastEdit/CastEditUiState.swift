@@ -8,7 +8,7 @@
 import Foundation
 
 struct CastEditUiState {
-    let galleryMaxCount = 3
+    let galleryMaxCount = 4
 
     var isLoading = false
     var isSaving = false

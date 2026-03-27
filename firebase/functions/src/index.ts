@@ -43,6 +43,8 @@ type CastClaimLike = {
   cafeId?: unknown;
   userId?: unknown;
   status?: unknown;
+  requesterNickname?: unknown;
+  requesterProfileImage?: unknown;
 };
 
 function asPlainObject(value: unknown): Record<string, unknown> | null {
@@ -107,6 +109,34 @@ function buildCastFollowDocumentId(userId: string, castId: string): string {
   const normalizedUserId = userId.replace(/\//g, "_");
   const normalizedCastId = castId.replace(/\//g, "_");
   return `${normalizedUserId}_${normalizedCastId}`;
+}
+
+async function syncCastClaimRequesterSnapshot(claimId: string, claim: CastClaimLike | undefined): Promise<void> {
+  const userId = asNonBlankString(claim?.userId);
+  const requesterNickname = asNonBlankString(claim?.requesterNickname);
+  const requesterProfileImage = asNonBlankString(claim?.requesterProfileImage);
+
+  if (claimId.trim().length == 0 || userId == null) {
+    return;
+  } else if (requesterNickname != null && requesterProfileImage != null) {
+    return;
+  }
+
+  const userSnapshot = await db().collection("users").doc(userId).get();
+  const userNickname = asNonBlankString(userSnapshot.get("nickname"));
+  const userProfileImage = asNonBlankString(userSnapshot.get("profileImage"));
+
+  if (userNickname == null && userProfileImage == null) {
+    return;
+  }
+
+  await db().collection("castClaims").doc(claimId).set(
+    {
+      requesterNickname: userNickname ?? null,
+      requesterProfileImage: userProfileImage ?? null,
+    },
+    {merge: true}
+  );
 }
 
 async function syncCastVisitCertificationAggregate(cafeId: string, castId: string): Promise<void> {
@@ -439,6 +469,23 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         castId: castId,
         cafeId: cafeId,
       })),
+    });
+  }
+);
+
+export const onCastClaimWrittenSyncRequesterSnapshot = onDocumentWritten(
+  "castClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const afterData = event.data?.after.data() as CastClaimLike | undefined;
+
+    if (claimId == null || afterData == null) {
+      return;
+    }
+
+    await syncCastClaimRequesterSnapshot(claimId, afterData);
+    logger.info("Synced cast claim requester snapshot.", {
+      claimId: claimId,
     });
   }
 );

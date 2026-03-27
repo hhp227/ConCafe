@@ -190,6 +190,7 @@ val useCaseModule = module {
     factory { UpsertCastUseCase(get(), get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
     factory { UploadImageUseCase(get(), get()) }
+    factory { DeleteImageUseCase(get()) }
 }
 
 val concafeModules = listOf(

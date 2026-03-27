@@ -25,6 +25,11 @@ final class CastEditViewModel: ObservableObject {
 
     private let uploadImageUseCase: UploadImageUseCase
 
+    private let deleteImageUseCase: DeleteImageUseCase
+
+    private var pendingDeletedGalleryImageUrls: Set<String> = []
+    private var pendingDeletedProfileImageUrl: String? = nil
+
     private func clickProfilePhoto() {
         uiState.infoMessage = nil
     }
@@ -42,6 +47,8 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func clickSave() {
+        let removedGalleryImageUrls = Array(pendingDeletedGalleryImageUrls)
+        let removedProfileImageUrl = pendingDeletedProfileImageUrl
         guard !uiState.castName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             uiState.infoMessage = "캐스트 이름을 입력해주세요."
             return
@@ -84,6 +91,11 @@ final class CastEditViewModel: ObservableObject {
                 )
 
                 if result is AppResultSuccess<AnyObject> {
+                    await deleteImagesIfNeeded((removedProfileImageUrl.map { [$0] } ?? []) + removedGalleryImageUrls)
+                    self.pendingDeletedGalleryImageUrls.subtract(removedGalleryImageUrls)
+                    if self.pendingDeletedProfileImageUrl == removedProfileImageUrl {
+                        self.pendingDeletedProfileImageUrl = nil
+                    }
                     uiState.isSaving = false
                     event.send(.navigateBack)
                 } else {
@@ -110,6 +122,8 @@ final class CastEditViewModel: ObservableObject {
                    let feed = success.data as? CastDetailFeed {
                     let detail = feed.detail
                     var nextState = uiState
+                    pendingDeletedGalleryImageUrls.removeAll()
+                    pendingDeletedProfileImageUrl = nil
                     nextState.isLoading = false
                     nextState.profileImageUrl = detail.cast.profileImage
                     nextState.castName = detail.cast.name
@@ -138,18 +152,42 @@ final class CastEditViewModel: ObservableObject {
         case .clickProfilePhoto:
             clickProfilePhoto()
         case .selectProfilePhoto(let imageUrl):
+            let previousProfileImageUrl = uiState.profileImageUrl
+            var nextGalleryImages = uiState.galleryImages
+            if nextGalleryImages.isEmpty {
+                nextGalleryImages = [imageUrl]
+            } else {
+                nextGalleryImages[0] = imageUrl
+            }
+            if let previousProfileImageUrl,
+               !previousProfileImageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               previousProfileImageUrl != imageUrl,
+               (previousProfileImageUrl.hasPrefix("http://") || previousProfileImageUrl.hasPrefix("https://")),
+               !nextGalleryImages.dropFirst().contains(previousProfileImageUrl) {
+                pendingDeletedProfileImageUrl = previousProfileImageUrl
+            }
             uiState.profileImageUrl = imageUrl
+            uiState.galleryImages = nextGalleryImages
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
         case .addGalleryImage(let imageUrl):
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
-                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
+                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount - 1)장까지 등록할 수 있습니다."
                 return
             }
             if imageUrl.isEmpty { return }
             uiState.galleryImages.append(imageUrl)
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
+        case .removeGalleryImage(let index):
+            if uiState.galleryImages.indices.contains(index) {
+                let removedImageUrl = uiState.galleryImages[index]
+                if removedImageUrl.hasPrefix("http://") || removedImageUrl.hasPrefix("https://") {
+                    pendingDeletedGalleryImageUrls.insert(removedImageUrl)
+                }
+                uiState.galleryImages.remove(at: index)
+                uiState.infoMessage = nil
+            }
         case .changeCastName(let value):
             uiState.castName = value
         case .changeConceptRole(let value):
@@ -176,13 +214,15 @@ final class CastEditViewModel: ObservableObject {
         castId: String? = nil,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         upsertCastUseCase: UpsertCastUseCase = KoinInitializerKt.resolveUpsertCastUseCase(),
-        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase(),
+        deleteImageUseCase: DeleteImageUseCase = KoinInitializerKt.resolveDeleteImageUseCase()
     ) {
         self.cafeId = cafeId
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.upsertCastUseCase = upsertCastUseCase
         self.uploadImageUseCase = uploadImageUseCase
+        self.deleteImageUseCase = deleteImageUseCase
 
         if let castId, !castId.isEmpty {
             uiState.screenTitle = "캐스트 프로필 수정"
@@ -216,6 +256,12 @@ private extension CastEditViewModel {
             }
         }
         return results
+    }
+
+    func deleteImagesIfNeeded(_ imageUrls: [String]) async {
+        for imageUrl in imageUrls where !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            _ = try? await deleteImageUseCase.invoke(imageUrl: imageUrl)
+        }
     }
 }
 

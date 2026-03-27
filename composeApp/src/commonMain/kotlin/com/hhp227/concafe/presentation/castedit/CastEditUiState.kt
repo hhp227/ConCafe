@@ -1,7 +1,7 @@
 package com.hhp227.concafe.presentation.castedit
 
 data class CastEditUiState(
-    val galleryMaxCount: Int = 3,
+    val galleryMaxCount: Int = 4,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val screenTitle: String = "캐스트 프로필 수정",

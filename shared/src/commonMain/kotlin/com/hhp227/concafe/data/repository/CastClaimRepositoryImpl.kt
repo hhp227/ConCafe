@@ -189,10 +189,13 @@ class CastClaimRepositoryImpl(
             .map { claim ->
                 val requester = authDataSource.findUserById(claim.userId)
                 val cast = castDataSource.casts.firstOrNull { it.id == claim.castId }
+                val requesterNickname = claim.requesterNickname
+                    ?: requester?.nickname
+                    ?: "알 수 없음"
                 PendingCastClaimPreview(
                     claimId = claim.id,
                     requesterUserId = claim.userId,
-                    requesterNickname = requester?.nickname ?: "알 수 없음",
+                    requesterNickname = requesterNickname,
                     castId = claim.castId,
                     castName = cast?.name ?: claim.castName.ifBlank { claim.castId },
                     requestedAtLabel = claim.createdAtLabel,
@@ -225,12 +228,15 @@ class CastClaimRepositoryImpl(
                 message = message
             )
         } else {
+            val requester = authDataSource.findUserById(userId)
             val claim = CastClaim(
                 id = nextEntityId("cast-claim"),
                 userId = userId,
                 cafeId = cafeId,
                 castId = castId,
                 castName = cast.name,
+                requesterNickname = requester?.nickname,
+                requesterProfileImage = requester?.profileImage,
                 status = CastClaimStatus.PENDING,
                 message = message?.takeIf { it.isNotBlank() },
                 createdAt = nowIsoUtc(),

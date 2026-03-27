@@ -5,6 +5,7 @@ sealed interface CastEditAction {
     data object ClickProfilePhoto : CastEditAction
     data class SelectProfilePhoto(val imageUrl: String) : CastEditAction
     data class AddGalleryImage(val imageUrl: String) : CastEditAction
+    data class RemoveGalleryImage(val index: Int) : CastEditAction
     data class ChangeCastName(val value: String) : CastEditAction
     data class ChangeConceptRole(val value: String) : CastEditAction
     data class ChangeBirthday(val value: String) : CastEditAction
