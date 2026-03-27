@@ -49,11 +49,7 @@ actual fun CompatImageDisplay(
 ) {
     val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
     val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = normalizedImageUrl) {
-        value = if (normalizedImageUrl == null) {
-            null
-        } else {
-            decodeImageBitmap(normalizedImageUrl)
-        }
+        value = if (normalizedImageUrl == null) null else decodeImageBitmap(normalizedImageUrl)
     }
     val resolvedImageBitmap = imageBitmap
 
@@ -95,26 +91,26 @@ actual fun CompatImageDisplay(
 }
 
 private fun chooseImageFile(): String? {
-    if (GraphicsEnvironment.isHeadless()) {
-        return null
-    }
-
-    val chooser = JFileChooser().apply {
-        dialogTitle = "이미지 선택"
-        fileSelectionMode = JFileChooser.FILES_ONLY
-        isAcceptAllFileFilterUsed = false
-        fileFilter = FileNameExtensionFilter(
-            "이미지 파일 (JPG, JPEG, PNG, WEBP)",
-            "jpg",
-            "jpeg",
-            "png",
-            "webp"
-        )
-    }
-    return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        chooser.selectedFile?.let { File(it.absolutePath).absolutePath }
+    if (!GraphicsEnvironment.isHeadless()) {
+        val chooser = JFileChooser().apply {
+            dialogTitle = "이미지 선택"
+            fileSelectionMode = JFileChooser.FILES_ONLY
+            isAcceptAllFileFilterUsed = false
+            fileFilter = FileNameExtensionFilter(
+                "이미지 파일 (JPG, JPEG, PNG, WEBP)",
+                "jpg",
+                "jpeg",
+                "png",
+                "webp"
+            )
+        }
+        return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            chooser.selectedFile?.let { File(it.absolutePath).absolutePath }
+        } else {
+            null
+        }
     } else {
-        null
+        return null
     }
 }
 
