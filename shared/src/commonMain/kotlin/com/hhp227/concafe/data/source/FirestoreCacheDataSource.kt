@@ -460,7 +460,7 @@ class FirestoreCacheDataSource :
             id = castId,
             cafeId = targetCafeId,
             name = update.name.trim(),
-            linkedUserId = existingCast?.linkedUserId ?: currentUserId,
+            linkedUserId = existingCast?.linkedUserId,
             profileImage = normalizedProfileImage,
             desc = update.introduction.trim(),
             birthday = normalizedBirthday,

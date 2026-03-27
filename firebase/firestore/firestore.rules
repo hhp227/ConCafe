@@ -125,6 +125,45 @@ service cloud.firestore {
         && request.resource.data.verified is bool;
     }
 
+    function isValidCastClaimStatus(status) {
+      return status == "PENDING" || status == "APPROVED" || status == "REJECTED";
+    }
+
+    function isValidCastClaimCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string
+        && request.resource.data.evidenceImageUrls is list
+        && (
+          !("message" in request.resource.data)
+          || request.resource.data.message is string
+          || request.resource.data.message == null
+        );
+    }
+
+    function isCastClaimReviewUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.castId == resource.data.castId
+        && request.resource.data.message == resource.data.message
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdAtLabel == resource.data.createdAtLabel
+        && request.resource.data.evidenceImageUrls == resource.data.evidenceImageUrls
+        && request.resource.data.status is string
+        && isValidCastClaimStatus(request.resource.data.status)
+        && request.resource.data.reviewedBy is string
+        && request.resource.data.reviewedAt is string
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "status",
+          "reviewedBy",
+          "reviewedAt"
+        ]);
+    }
+
     function isVisitOwnerEditableUpdate() {
       return request.auth.uid == resource.data.userId
         && request.resource.data.userId == resource.data.userId
@@ -231,6 +270,31 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && (resource.data.userId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /castClaims/{claimId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidCastClaimCreateData();
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        )
+        && isCastClaimReviewUpdate();
       allow delete: if false;
     }
 

@@ -5,6 +5,7 @@ import com.hhp227.concafe.data.source.CastClaimDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastClaim
@@ -22,6 +23,29 @@ class CastClaimRepositoryImpl(
     private val cafeDataSource: CafeDataSource,
     private val pagingDataSource: PagingDataSource
 ) : CastClaimRepository {
+    private val lastCafeCastsRefreshEpochMillisByCafeId = mutableMapOf<String, Long>()
+    private val lastUserClaimsRefreshEpochMillisByUserId = mutableMapOf<String, Long>()
+    private val lastCafeClaimsRefreshEpochMillisByCafeId = mutableMapOf<String, Long>()
+
+    private suspend fun refreshAffiliatedCafeCasts(affiliatedCafeId: String?) {
+        if (!affiliatedCafeId.isNullOrBlank()) {
+            val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+            if (firestoreDataSource != null) {
+                val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
+                val lastRefreshEpochMillis = lastCafeCastsRefreshEpochMillisByCafeId[affiliatedCafeId] ?: 0L
+
+                if (nowEpochMillis - lastRefreshEpochMillis >= CAFE_CASTS_REFRESH_INTERVAL_MILLIS) {
+                    runCatching {
+                        firestoreDataSource.refreshCafeCastsRemote(affiliatedCafeId)
+                    }.onSuccess {
+                        lastCafeCastsRefreshEpochMillisByCafeId[affiliatedCafeId] = nowEpochMillis
+                    }
+                }
+            }
+        }
+    }
+
     private fun resolveAffiliatedCafeId(userId: String, linkedCast: Cast?): String? {
         val mappedAffiliatedCafeId = castDataSource.affiliatedCafeIdByUser[userId]
 
@@ -36,7 +60,6 @@ class CastClaimRepositoryImpl(
                 .map { cast -> cast.cafeId }
                 .distinct()
                 .toList()
-
             return if (requestableCafeIds.size == 1) {
                 requestableCafeIds.first()
             } else {
@@ -50,9 +73,47 @@ class CastClaimRepositoryImpl(
         return resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
     }
 
+    private suspend fun refreshClaimsForUser(userId: String) {
+        val firestoreDataSource = castClaimDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
+            val lastRefreshEpochMillis = lastUserClaimsRefreshEpochMillisByUserId[userId] ?: 0L
+
+            if (nowEpochMillis - lastRefreshEpochMillis >= CLAIMS_REFRESH_INTERVAL_MILLIS) {
+                runCatching {
+                    firestoreDataSource.refreshCastClaimsForUser(userId)
+                }.onSuccess {
+                    lastUserClaimsRefreshEpochMillisByUserId[userId] = nowEpochMillis
+                }
+            }
+        }
+    }
+
+    private suspend fun refreshClaimsForCafe(cafeId: String) {
+        val firestoreDataSource = castClaimDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
+            val lastRefreshEpochMillis = lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] ?: 0L
+
+            if (nowEpochMillis - lastRefreshEpochMillis >= CLAIMS_REFRESH_INTERVAL_MILLIS) {
+                runCatching {
+                    firestoreDataSource.refreshCastClaimsForCafe(cafeId)
+                }.onSuccess {
+                    lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
+                }
+            }
+        }
+    }
+
     override suspend fun getMyCastClaimStatus(userId: String): MyCastClaimStatus {
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
+
+        refreshAffiliatedCafeCasts(affiliatedCafeId)
+        refreshClaimsForUser(userId)
+
         val affiliatedCafe = affiliatedCafeId?.let { cafeId ->
             cafeDataSource.cafes.firstOrNull { it.id == cafeId }
         }
@@ -80,6 +141,8 @@ class CastClaimRepositoryImpl(
     ): PagedResult<CastClaimCandidate> {
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
+
+        refreshAffiliatedCafeCasts(affiliatedCafeId)
         if (linkedCast != null || affiliatedCafeId == null) {
             return PagedResult(emptyList(), nextCursor = null, hasNext = false)
         }
@@ -91,6 +154,7 @@ class CastClaimRepositoryImpl(
     }
 
     override suspend fun getPendingCastClaimsForCafe(cafeId: String): List<PendingCastClaimPreview> {
+        refreshClaimsForCafe(cafeId)
         return castClaimDataSource.castClaims
             .filter { it.cafeId == cafeId && it.status == CastClaimStatus.PENDING }
             .sortedByDescending { it.createdAt }
@@ -110,6 +174,8 @@ class CastClaimRepositoryImpl(
     }
 
     override suspend fun createCastClaim(userId: String, cafeId: String, castId: String, message: String?): CastClaim {
+        refreshClaimsForUser(userId)
+
         val cast = castDataSource.casts.firstOrNull { it.id == castId && it.cafeId == cafeId }
             ?: throw NoSuchElementException("cast not found")
         if (cast.linkedUserId != null) {
@@ -122,19 +188,29 @@ class CastClaimRepositoryImpl(
             throw IllegalArgumentException("이미 승인 대기 중인 요청이 있습니다.")
         }
 
-        val claim = CastClaim(
-            id = nextEntityId("cast-claim"),
-            userId = userId,
-            cafeId = cafeId,
-            castId = castId,
-            status = CastClaimStatus.PENDING,
-            message = message?.takeIf { it.isNotBlank() },
-            createdAt = nowIsoUtc(),
-            createdAtLabel = "방금 전"
-        )
-        castClaimDataSource.castClaims.add(0, claim)
-        castDataSource.affiliatedCafeIdByUser[userId] = cafeId
-        return claim
+        val firestoreDataSource = castClaimDataSource as? FirestoreConCafeDataSource
+        return if (firestoreDataSource != null) {
+            firestoreDataSource.createCastClaimRemote(
+                userId = userId,
+                cafeId = cafeId,
+                castId = castId,
+                message = message
+            )
+        } else {
+            val claim = CastClaim(
+                id = nextEntityId("cast-claim"),
+                userId = userId,
+                cafeId = cafeId,
+                castId = castId,
+                status = CastClaimStatus.PENDING,
+                message = message?.takeIf { it.isNotBlank() },
+                createdAt = nowIsoUtc(),
+                createdAtLabel = "방금 전"
+            )
+            castClaimDataSource.castClaims.add(0, claim)
+            castDataSource.affiliatedCafeIdByUser[userId] = cafeId
+            claim
+        }
     }
 
     override suspend fun approveCastClaim(claimId: String, reviewedBy: String): CastClaim {
@@ -145,11 +221,20 @@ class CastClaimRepositoryImpl(
         return updateCastClaimStatus(claimId, reviewedBy, CastClaimStatus.REJECTED)
     }
 
-    private fun updateCastClaimStatus(
+    private suspend fun updateCastClaimStatus(
         claimId: String,
         reviewedBy: String,
         status: CastClaimStatus
     ): CastClaim {
+        val firestoreDataSource = castClaimDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.updateCastClaimStatusRemote(
+                claimId = claimId,
+                reviewedBy = reviewedBy,
+                status = status
+            )
+        }
         val index = castClaimDataSource.castClaims.indexOfFirst { it.id == claimId }
         if (index == -1) {
             throw NoSuchElementException("claim not found")
@@ -182,3 +267,6 @@ private fun nextEntityId(prefix: String): String {
 private fun nowIsoUtc(): String {
     return Clock.System.now().toString()
 }
+
+private const val CAFE_CASTS_REFRESH_INTERVAL_MILLIS = 30_000L
+private const val CLAIMS_REFRESH_INTERVAL_MILLIS = 30_000L
