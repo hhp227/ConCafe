@@ -131,7 +131,11 @@ final class CastEditViewModel: ObservableObject {
                     nextState.birthday = detail.cast.birthday ?? ""
                     nextState.introduction = detail.cast.desc
                     nextState.selectedWorkingDays = workingDays(from: detail.schedule)
-                    nextState.galleryImages = Array(detail.images.filter { !$0.isEmpty }.prefix(nextState.galleryMaxCount))
+                    nextState.galleryImages = Array(
+                        detail.images
+                            .filter { !$0.isEmpty && $0 != detail.cast.profileImage }
+                            .prefix(nextState.galleryMaxCount)
+                    )
                     uiState = nextState
                 } else {
                     uiState.isLoading = false
@@ -153,26 +157,19 @@ final class CastEditViewModel: ObservableObject {
             clickProfilePhoto()
         case .selectProfilePhoto(let imageUrl):
             let previousProfileImageUrl = uiState.profileImageUrl
-            var nextGalleryImages = uiState.galleryImages
-            if nextGalleryImages.isEmpty {
-                nextGalleryImages = [imageUrl]
-            } else {
-                nextGalleryImages[0] = imageUrl
-            }
             if let previousProfileImageUrl,
                !previousProfileImageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                previousProfileImageUrl != imageUrl,
                (previousProfileImageUrl.hasPrefix("http://") || previousProfileImageUrl.hasPrefix("https://")),
-               !nextGalleryImages.dropFirst().contains(previousProfileImageUrl) {
+               previousProfileImageUrl != pendingDeletedProfileImageUrl {
                 pendingDeletedProfileImageUrl = previousProfileImageUrl
             }
             uiState.profileImageUrl = imageUrl
-            uiState.galleryImages = nextGalleryImages
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
         case .addGalleryImage(let imageUrl):
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
-                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount - 1)장까지 등록할 수 있습니다."
+                uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
                 return
             }
             if imageUrl.isEmpty { return }

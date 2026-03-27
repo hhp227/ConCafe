@@ -8,8 +8,7 @@
 import Foundation
 
 struct CastEditUiState {
-    let galleryMaxCount = 4
-
+    let galleryMaxCount = 3
     var isLoading = false
     var isSaving = false
     var screenTitle = "캐스트 프로필 수정"

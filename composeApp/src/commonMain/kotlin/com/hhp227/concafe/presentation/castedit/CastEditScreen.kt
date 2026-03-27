@@ -401,16 +401,8 @@ private fun GallerySection(
     onAddClick: () -> Unit,
     onRemoveClick: (Int) -> Unit
 ) {
-    val editableGalleryItems = galleryImages
-        .drop(1)
-        .mapIndexed { displayIndex, imageUrl ->
-            EditableGalleryItem(
-                sourceIndex = displayIndex + 1,
-                imageUrl = imageUrl
-            )
-        }
-    val editableGalleryMaxCount = (galleryMaxCount - 1).coerceAtLeast(0)
-    val editableGalleryLimitText = "${editableGalleryItems.size} / $editableGalleryMaxCount"
+    val galleryLimitText = "${galleryImages.size} / $galleryMaxCount"
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -418,16 +410,16 @@ private fun GallerySection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("갤러리 사진", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
-            Text(editableGalleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
+            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
         }
         CastGalleryGrid(
-            galleryItems = editableGalleryItems,
+            galleryImages = galleryImages,
             galleryMaxCount = galleryMaxCount,
             onAddClick = onAddClick,
             onRemoveClick = onRemoveClick
         )
         Text(
-            text = "캐스트 갤러리에는 최대 ${(galleryMaxCount - 1).coerceAtLeast(0)}장까지 등록할 수 있습니다.",
+            text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF8A8088)
         )
@@ -437,7 +429,7 @@ private fun GallerySection(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CastGalleryGrid(
-    galleryItems: List<EditableGalleryItem>,
+    galleryImages: List<String>,
     galleryMaxCount: Int,
     onAddClick: () -> Unit,
     onRemoveClick: (Int) -> Unit
@@ -447,15 +439,15 @@ private fun CastGalleryGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         maxItemsInEachRow = 3
     ) {
-        galleryItems.forEach { item ->
+        galleryImages.forEachIndexed { index, imageUrl ->
             CastGalleryImageTile(
-                label = "이미지 ${item.sourceIndex + 1}",
-                imageUrl = item.imageUrl,
-                index = item.sourceIndex,
-                onRemoveClick = { onRemoveClick(item.sourceIndex) }
+                label = "이미지 ${index + 1}",
+                imageUrl = imageUrl,
+                index = index,
+                onRemoveClick = { onRemoveClick(index) }
             )
         }
-        if (galleryItems.size < (galleryMaxCount - 1).coerceAtLeast(0)) {
+        if (galleryImages.size < galleryMaxCount) {
             Box(
                 modifier = Modifier
                     .size(96.dp)
@@ -534,11 +526,6 @@ private fun CastGalleryImageTile(
         }
     }
 }
-
-private data class EditableGalleryItem(
-    val sourceIndex: Int,
-    val imageUrl: String
-)
 
 @Composable
 private fun InfoBanner(

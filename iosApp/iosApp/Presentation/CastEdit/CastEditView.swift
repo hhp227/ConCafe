@@ -256,18 +256,14 @@ private struct CastEditContentView: View {
     }
 
     private var gallerySection: some View {
-        let editableGalleryItems = Array(uiState.galleryImages.enumerated().dropFirst()).map { entry in
-            EditableGalleryItem(sourceIndex: entry.offset, imageUrl: entry.element)
-        }
-        let editableGalleryMaxCount = max(uiState.galleryMaxCount - 1, 0)
-        let editableGalleryLimitText = "\(editableGalleryItems.count) / \(editableGalleryMaxCount)"
+        let galleryLimitText = "\(uiState.galleryImages.count) / \(uiState.galleryMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("갤러리 사진")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 Spacer()
-                Text(editableGalleryLimitText)
+                Text(galleryLimitText)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
@@ -279,21 +275,21 @@ private struct CastEditContentView: View {
                 ],
                 spacing: 12
             ) {
-                ForEach(editableGalleryItems, id: \.sourceIndex) { item in
+                ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
                     castGalleryItem(
-                        label: "이미지 \(item.sourceIndex + 1)",
-                        imageUrl: item.imageUrl,
-                        index: item.sourceIndex,
+                        label: "이미지 \(index + 1)",
+                        imageUrl: imageUrl,
+                        index: index,
                         onRemoveTap: {
-                            onAction(.removeGalleryImage(item.sourceIndex))
+                            onAction(.removeGalleryImage(index))
                         }
                     )
                 }
-                if editableGalleryItems.count < editableGalleryMaxCount {
+                if uiState.galleryImages.count < uiState.galleryMaxCount {
                     addGalleryItem
                 }
             }
-            Text("캐스트 갤러리에는 최대 \(max(uiState.galleryMaxCount - 1, 0))장까지 등록할 수 있습니다.")
+            Text("캐스트 갤러리에는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -597,10 +593,4 @@ struct CastEditView_Previews: PreviewProvider {
             CastEditView(castId: nil, onNavigationAction: { _ in })
         }
     }
-}
-
-private struct EditableGalleryItem {
-    let sourceIndex: Int
-
-    let imageUrl: String
 }

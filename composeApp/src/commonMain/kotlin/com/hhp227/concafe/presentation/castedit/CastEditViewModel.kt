@@ -149,7 +149,9 @@ class CastEditViewModel(
                             birthday = detail.cast.birthday.orEmpty(),
                             introduction = detail.cast.desc,
                             selectedWorkingDays = detail.schedule.toWorkingDays(),
-                            galleryImages = detail.images.filter { it.isNotBlank() }.take(state.galleryMaxCount)
+                            galleryImages = detail.images
+                                .filter { image -> image.isNotBlank() && image != detail.cast.profileImage }
+                                .take(state.galleryMaxCount)
                         )
                     }
                 }
@@ -171,28 +173,19 @@ class CastEditViewModel(
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
             is CastEditAction.SelectProfilePhoto -> {
                 val nextImageUrl = action.imageUrl
-                val currentState = _uiState.value
-                val previousProfileImageUrl = currentState.profileImageUrl
-                val nextGalleryImages = if (currentState.galleryImages.isEmpty()) {
-                    listOf(nextImageUrl)
-                } else {
-                    currentState.galleryImages.toMutableList().apply {
-                        this[0] = nextImageUrl
-                    }.toList()
-                }
+                val previousProfileImageUrl = _uiState.value.profileImageUrl
 
                 if (
                     !previousProfileImageUrl.isNullOrBlank() &&
                     previousProfileImageUrl != nextImageUrl &&
                     (previousProfileImageUrl.startsWith("http://") || previousProfileImageUrl.startsWith("https://")) &&
-                    !nextGalleryImages.drop(1).contains(previousProfileImageUrl)
+                    previousProfileImageUrl != pendingDeletedProfileImageUrl
                 ) {
                     pendingDeletedProfileImageUrl = previousProfileImageUrl
                 }
                 _uiState.update {
                     it.copy(
                         profileImageUrl = nextImageUrl,
-                        galleryImages = nextGalleryImages,
                         infoMessage = null,
                         isImageRequiredAlertVisible = false
                     )
@@ -204,7 +197,7 @@ class CastEditViewModel(
                 val galleryImages = _uiState.value.galleryImages
                 val galleryMaxCount = _uiState.value.galleryMaxCount
                 if (galleryImages.size >= galleryMaxCount) {
-                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount - 1}장까지 등록할 수 있습니다.") }
+                    _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
                 } else {
                     _uiState.update {
                         it.copy(
