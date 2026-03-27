@@ -201,6 +201,11 @@ castClaims/{claimId}
 ├─ reviewedAt
 └─ createdAt
 
+cafes/{cafeId}/castClaims/sync
+├─ cafeId
+├─ updatedAt
+└─ updatedBy
+
 캐스트 Claim 정책 메모
 - `castClaims`는 캐스트 회원가입 자체가 아니라 `팬관리에서 보내는 기존 캐스트 프로필 연결 요청`을 의미한다.
 - 캐스트는 가입 시 선택한 `소속 카페` 기준으로 해당 카페의 캐스트 프로필에 연결 요청을 보낸다.
@@ -223,6 +228,10 @@ cafeOwnerClaims/{claimId}
 ├─ requestedAt
 └─ createdAt (legacy)
 
+cafeOwnerClaims/sync
+├─ updatedAt
+└─ updatedBy
+
 cafeRegistrationClaims/{claimId}
 ├─ userId
 ├─ cafeName
@@ -244,6 +253,10 @@ cafeRegistrationClaims/{claimId}
 ├─ reviewedAt
 └─ createdAt (legacy)
 
+cafeRegistrationClaims/sync
+├─ updatedAt
+└─ updatedBy
+
 구현 정합성 메모 (2026-03-22)
 - Admin 운영관리의 pending claim 목록은 Firestore 직접 조회를 사용한다.
 - `cafeRegistrationClaims`는 현재 `draft` 중첩 객체가 아니라 평탄 필드(`cafeName`, `description`, `region` 등)로 저장한다.
@@ -262,6 +275,12 @@ cafeRegistrationClaims/{claimId}
 - 리뷰 방문인증 동기화 트리거:
   - `onReviewWrittenSyncReviewVisitVerified`
   - `onVisitWrittenSyncReviewVisitVerified`
+
+구현 정합성 메모 (2026-03-27)
+- `castClaims`는 목록 동기화 메타를 루트가 아니라 `cafes/{cafeId}/castClaims/sync`에 둔다.
+- `cafeOwnerClaims`, `cafeRegistrationClaims`는 각 루트 컬렉션의 `sync` 문서를 메타로 사용한다.
+- 클라이언트는 메타(`sync.updatedAt`) 기준으로 변경 여부를 먼저 확인하고, 변경된 경우에만 pending 목록 본문을 재조회한다.
+- 승인/반려/생성 시 메타 문서를 함께 갱신해 다른 클라이언트의 화면 동기화를 트리거한다.
 
 공지/이벤트 관리 메모
 - `cafes/{cafeId}/notices`, `cafes/{cafeId}/events`는 카페별 페이지네이션 조회를 사용하며 현재 페이지 크기는 15개다.

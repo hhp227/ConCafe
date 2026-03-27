@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -70,8 +71,12 @@ private fun SignUpContentScreen(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
+    val density = LocalDensity.current
+    val imeBottomPadding = with(density) { WindowInsets.ime.getBottom(this).toDp() }
+
     Scaffold(
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -85,15 +90,12 @@ private fun SignUpContentScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .consumeWindowInsets(innerPadding)
-                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-                    .imePadding(),
+                    .padding(innerPadding),
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     top = 76.dp,
                     end = 20.dp,
-                    bottom = 32.dp
+                    bottom = 32.dp + imeBottomPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {

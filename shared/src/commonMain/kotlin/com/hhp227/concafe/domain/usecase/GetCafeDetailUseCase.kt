@@ -58,18 +58,17 @@ class GetCafeDetailUseCase(
                 false
             }
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
-            val reviewUsersById = reviewPage.items
-                .map { review -> review.userId }
-                .distinct()
-                .associateWith { userId -> userRepository.getUser(userId) }
             val reviewItems = reviewPage.items.map { review ->
-                val user = reviewUsersById[review.userId] ?: userRepository.getUser(review.userId)
+                val userNickname = review.userNickname
+                    .takeIf { nickname -> nickname.isNotBlank() }
+                    ?: runCatching { userRepository.getUser(review.userId) }.getOrNull()?.nickname
+                    ?: UNKNOWN_USER_NICKNAME
                 val verified = review.visitVerified
                 val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                 CafeDetailReview(
                     id = review.id,
-                    userNickname = user.nickname,
+                    userNickname = userNickname,
                     rating = review.rating,
                     content = review.content,
                     taggedCastNames = taggedCastNames,
@@ -114,5 +113,6 @@ class GetCafeDetailUseCase(
 
     companion object {
         private const val INITIAL_REVIEW_PAGE_SIZE = 15
+        private const val UNKNOWN_USER_NICKNAME = "알 수 없음"
     }
 }

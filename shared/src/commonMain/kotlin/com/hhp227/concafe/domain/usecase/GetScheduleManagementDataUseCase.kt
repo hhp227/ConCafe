@@ -3,7 +3,6 @@ package com.hhp227.concafe.domain.usecase
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CastScheduleStatus
-import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
@@ -32,16 +31,9 @@ class GetScheduleManagementDataUseCase(
                 if (currentUser.role != UserRole.CAST) {
                     return AppResult.Failure(AppError.PermissionDenied)
                 }
-                castRepository.searchCasts(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CastSort.FOLLOWERS,
-                    cursor = null,
-                    pageSize = 100
-                ).items.firstOrNull { cast ->
-                    cast.linkedUserId == currentUser.id
-                }?.id ?: return AppResult.Failure(AppError.NotFound)
+                castRepository.getCastByLinkedUserId(currentUser.id)
+                    ?.id
+                    ?: return AppResult.Failure(AppError.NotFound)
             }
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val weekStart = today.toWeekStart()

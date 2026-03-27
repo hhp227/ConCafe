@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
@@ -234,11 +235,13 @@ private fun CastEditContentScreen(
                         ) { launchImagePicker ->
                             GallerySection(
                                 galleryImages = uiState.galleryImages,
-                                galleryLimitText = uiState.galleryLimitText,
                                 galleryMaxCount = uiState.galleryMaxCount,
                                 onAddClick = {
                                     onAction(CastEditAction.ClickAddGalleryPhoto)
                                     launchImagePicker()
+                                },
+                                onRemoveClick = { index ->
+                                    onAction(CastEditAction.RemoveGalleryImage(index))
                                 }
                             )
                         }
@@ -394,10 +397,12 @@ private fun ProfilePhotoSection(
 @Composable
 private fun GallerySection(
     galleryImages: List<String>,
-    galleryLimitText: String,
     galleryMaxCount: Int,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
+    val galleryLimitText = "${galleryImages.size} / $galleryMaxCount"
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -410,7 +415,8 @@ private fun GallerySection(
         CastGalleryGrid(
             galleryImages = galleryImages,
             galleryMaxCount = galleryMaxCount,
-            onAddClick = onAddClick
+            onAddClick = onAddClick,
+            onRemoveClick = onRemoveClick
         )
         Text(
             text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
@@ -425,7 +431,8 @@ private fun GallerySection(
 private fun CastGalleryGrid(
     galleryImages: List<String>,
     galleryMaxCount: Int,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -436,7 +443,8 @@ private fun CastGalleryGrid(
             CastGalleryImageTile(
                 label = "이미지 ${index + 1}",
                 imageUrl = imageUrl,
-                index = index
+                index = index,
+                onRemoveClick = { onRemoveClick(index) }
             )
         }
         if (galleryImages.size < galleryMaxCount) {
@@ -459,7 +467,8 @@ private fun CastGalleryGrid(
 private fun CastGalleryImageTile(
     label: String,
     imageUrl: String,
-    index: Int
+    index: Int,
+    onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
         listOf(Color(0xFFFFE6EE), Color(0xFFF7C9D8)),
@@ -471,26 +480,48 @@ private fun CastGalleryImageTile(
     Box(
         modifier = Modifier
             .size(96.dp)
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(colors)),
-        contentAlignment = Alignment.BottomStart
+            .aspectRatio(1f),
+        contentAlignment = Alignment.TopEnd
     ) {
-        CompatImageDisplay(
-            imageUrl = imageUrl,
-            modifier = Modifier.fillMaxSize()
-        )
-        Surface(
-            modifier = Modifier.padding(10.dp),
-            shape = RoundedCornerShape(999.dp),
-            color = Color.Black.copy(alpha = 0.32f)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.linearGradient(colors)),
+            contentAlignment = Alignment.BottomStart
         ) {
-            Text(
-                text = label,
-                color = Color.White,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            CompatImageDisplay(
+                imageUrl = imageUrl,
+                modifier = Modifier.fillMaxSize()
+            )
+            Surface(
+                modifier = Modifier.padding(10.dp),
+                shape = RoundedCornerShape(999.dp),
+                color = Color.Black.copy(alpha = 0.32f)
+            ) {
+                Text(
+                    text = label,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .offset(x = 6.dp, y = (-6).dp),
+            shape = CircleShape,
+            color = Color.Black.copy(alpha = 0.52f),
+            onClick = onRemoveClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "이미지 삭제",
+                tint = Color.White,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .size(12.dp)
             )
         }
     }

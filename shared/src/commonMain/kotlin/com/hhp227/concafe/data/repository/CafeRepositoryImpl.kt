@@ -28,23 +28,32 @@ class CafeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cafe> {
-        var filtered = cafeDataSource.cafes.filter { it.approved }
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
 
-        if (!query.isNullOrBlank()) {
-            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        if (firestoreDataSource != null && pageSize <= REMOTE_CAFE_PAGE_LIMIT) {
+            val remoteResult = runCatching {
+                firestoreDataSource.searchCafesRemote(
+                    query = query,
+                    country = country,
+                    city = city,
+                    sort = sort,
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+
+            if (remoteResult != null) {
+                return remoteResult
+            }
         }
-        if (!country.isNullOrBlank()) {
-            filtered = filtered.filter { it.region.country.equals(country, ignoreCase = true) }
-        }
-        if (!city.isNullOrBlank()) {
-            filtered = filtered.filter { it.region.city.equals(city, ignoreCase = true) }
-        }
-        filtered = when (sort) {
-            CafeSort.POPULAR -> filtered.sortedByDescending { it.reviewCount }
-            CafeSort.LATEST -> filtered.sortedByDescending { it.id }
-            CafeSort.RATING -> filtered.sortedByDescending { it.ratingAvg }
-        }
-        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+        return searchCafesFromCache(
+            query = query,
+            country = country,
+            city = city,
+            sort = sort,
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
@@ -214,4 +223,33 @@ class CafeRepositoryImpl(
                 )
             }
     }
+
+    private fun searchCafesFromCache(
+        query: String?,
+        country: String?,
+        city: String?,
+        sort: CafeSort,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cafe> {
+        var filtered = cafeDataSource.cafes.filter { it.approved }
+
+        if (!query.isNullOrBlank()) {
+            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        }
+        if (!country.isNullOrBlank()) {
+            filtered = filtered.filter { it.region.country.equals(country, ignoreCase = true) }
+        }
+        if (!city.isNullOrBlank()) {
+            filtered = filtered.filter { it.region.city.equals(city, ignoreCase = true) }
+        }
+        filtered = when (sort) {
+            CafeSort.POPULAR -> filtered.sortedByDescending { it.reviewCount }
+            CafeSort.LATEST -> filtered.sortedByDescending { it.id }
+            CafeSort.RATING -> filtered.sortedByDescending { it.ratingAvg }
+        }
+        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+    }
 }
+
+private const val REMOTE_CAFE_PAGE_LIMIT = 100

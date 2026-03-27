@@ -36,13 +36,18 @@ class GetCastDetailUseCase(
             val taggedCastNamesById = castRepository.getCastsByIds(taggedCastIds)
                 .associate { cast -> cast.id to cast.name }
             val recentReviews = taggedReviews.map { review ->
-                val user = userRepository.getUser(review.userId)
+                val userNickname = review.userNickname
+                    .takeIf { nickname -> nickname.isNotBlank() }
+                    ?: runCatching { userRepository.getUser(review.userId) }
+                    .getOrNull()
+                    ?.nickname
+                    ?: CAST_UNKNOWN_USER_NICKNAME
                 val taggedCastNames = review.taggedCastIds.mapNotNull { taggedCastId ->
                     taggedCastNamesById[taggedCastId]
                 }
                 return@map CastRecentReview(
                     id = review.id,
-                    userNickname = user.nickname,
+                    userNickname = userNickname,
                     rating = review.rating,
                     content = review.content,
                     taggedCastNames = taggedCastNames,
@@ -87,6 +92,8 @@ class GetCastDetailUseCase(
         return detail.copy(images = normalizedImages)
     }
 }
+
+private const val CAST_UNKNOWN_USER_NICKNAME = "알 수 없음"
 
 private fun String.toRelativeDateLabel(): String {
     val date = take(10)

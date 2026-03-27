@@ -256,13 +256,14 @@ private struct CastEditContentView: View {
     }
 
     private var gallerySection: some View {
+        let galleryLimitText = "\(uiState.galleryImages.count) / \(uiState.galleryMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("갤러리 사진")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 Spacer()
-                Text(uiState.galleryLimitText)
+                Text(galleryLimitText)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
@@ -278,7 +279,10 @@ private struct CastEditContentView: View {
                     castGalleryItem(
                         label: "이미지 \(index + 1)",
                         imageUrl: imageUrl,
-                        index: index
+                        index: index,
+                        onRemoveTap: {
+                            onAction(.removeGalleryImage(index))
+                        }
                     )
                 }
                 if uiState.galleryImages.count < uiState.galleryMaxCount {
@@ -295,7 +299,8 @@ private struct CastEditContentView: View {
     private func castGalleryItem(
         label: String,
         imageUrl: String,
-        index: Int
+        index: Int,
+        onRemoveTap: @escaping () -> Void
     ) -> some View {
         let gradients = [
             ("FFE6EE", "F7C9D8"),
@@ -304,47 +309,62 @@ private struct CastEditContentView: View {
         ]
         let colors = gradients[index % gradients.count]
         return GeometryReader { proxy in
-            ZStack(alignment: .bottomLeading) {
-                if !imageUrl.isEmpty {
-                    CastEditImageView(
-                        imageUrl: imageUrl,
-                        placeholder: {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+            ZStack(alignment: .topTrailing) {
+                ZStack(alignment: .bottomLeading) {
+                    if !imageUrl.isEmpty {
+                        CastEditImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                        }
-                    )
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            }
                         )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    Text(label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.32))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.black.opacity(0.32))
-                    .clipShape(Capsule())
-                    .padding(10)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Button {
+                    onRemoveTap()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(.black.opacity(0.52))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: 6, y: -6)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .aspectRatio(1, contentMode: .fit)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {

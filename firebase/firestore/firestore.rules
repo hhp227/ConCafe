@@ -47,6 +47,28 @@ service cloud.firestore {
       return isAdmin() || isCafeOwner(cafeId);
     }
 
+    function isLinkedCastUser(cafeId, castId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId))
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId is string
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId == request.auth.uid;
+    }
+
+    function isLinkedCastEditableUpdate(cafeId, castId) {
+      return isLinkedCastUser(cafeId, castId)
+        && request.resource.data.linkedUserId == resource.data.linkedUserId
+        && request.resource.data.followerCount == resource.data.followerCount
+        && request.resource.data.rating == resource.data.rating
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "name",
+          "profileImage",
+          "desc",
+          "birthday",
+          "conceptRole",
+          "galleryImages"
+        ]);
+    }
+
     function isValidScheduleStatus(status) {
       return status == "WORK" || status == "OFF" || status == "VACATION";
     }
@@ -70,6 +92,7 @@ service cloud.firestore {
 
     function isValidReviewCreateData() {
       return request.resource.data.userId is string
+        && request.resource.data.userNickname is string
         && request.resource.data.cafeId is string
         && request.resource.data.visitId is string
         && request.resource.data.rating is number
@@ -124,6 +147,56 @@ service cloud.firestore {
         && request.resource.data.verified is bool;
     }
 
+    function isValidCastClaimStatus(status) {
+      return status == "PENDING" || status == "APPROVED" || status == "REJECTED";
+    }
+
+    function isValidCastClaimCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.castName is string
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string
+        && request.resource.data.evidenceImageUrls is list
+        && (
+          !("message" in request.resource.data)
+          || request.resource.data.message is string
+          || request.resource.data.message == null
+        );
+    }
+
+    function isCastClaimReviewUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.castId == resource.data.castId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status is string
+        && isValidCastClaimStatus(request.resource.data.status)
+        && request.resource.data.reviewedBy is string
+        && request.resource.data.reviewedAt is string
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "status",
+          "reviewedBy",
+          "reviewedAt"
+        ]);
+    }
+
+    function isValidCastClaimSyncMetaWrite(cafeId) {
+      return request.resource.data.cafeId == cafeId
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    function isValidGlobalClaimSyncMetaWrite() {
+      return request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
     function isVisitOwnerEditableUpdate() {
       return request.auth.uid == resource.data.userId
         && request.resource.data.userId == resource.data.userId
@@ -173,7 +246,9 @@ service cloud.firestore {
 
       match /casts/{castId} {
         allow read: if true;
-        allow write: if canManageCafe(cafeId);
+        allow create, delete: if canManageCafe(cafeId);
+        allow update: if canManageCafe(cafeId)
+          || isLinkedCastEditableUpdate(cafeId, castId);
       }
 
       match /notices/{noticeId} {
@@ -184,6 +259,18 @@ service cloud.firestore {
       match /events/{eventId} {
         allow read: if true;
         allow write: if canManageCafe(cafeId);
+      }
+
+      match /castClaims/{metaId} {
+        allow create, update: if isSignedIn()
+          && metaId == "sync"
+          && isValidCastClaimSyncMetaWrite(cafeId);
+        allow read: if isSignedIn()
+          && (
+            isAdmin()
+            || canManageCafe(cafeId)
+          );
+        allow delete: if false;
       }
 
       match /menus/{menuId} {
@@ -217,19 +304,74 @@ service cloud.firestore {
 
     match /cafeRegistrationClaims/{claimId} {
       allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid;
+        && (
+          (
+            claimId == "sync"
+            && isValidGlobalClaimSyncMetaWrite()
+          )
+          || request.resource.data.userId == request.auth.uid
+        );
       allow read: if isSignedIn()
-        && (resource.data.userId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
+        && (
+          claimId == "sync"
+          || resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && claimId == "sync"
+          && isValidGlobalClaimSyncMetaWrite()
+        );
       allow delete: if false;
     }
 
     match /cafeOwnerClaims/{claimId} {
       allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid;
+        && (
+          (
+            claimId == "sync"
+            && isValidGlobalClaimSyncMetaWrite()
+          )
+          || request.resource.data.userId == request.auth.uid
+        );
       allow read: if isSignedIn()
-        && (resource.data.userId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
+        && (
+          claimId == "sync"
+          || resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && claimId == "sync"
+          && isValidGlobalClaimSyncMetaWrite()
+        );
+      allow delete: if false;
+    }
+
+    match /castClaims/{claimId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidCastClaimCreateData();
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        )
+        && isCastClaimReviewUpdate();
       allow delete: if false;
     }
 
@@ -237,14 +379,24 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isSignedIn()
         && isValidCastScheduleWriteData()
-        && canManageCafe(request.resource.data.cafeId)
+        && (
+          canManageCafe(request.resource.data.cafeId)
+          || (
+            request.resource.data.cafeId is string
+            && request.resource.data.castId is string
+            && isLinkedCastUser(request.resource.data.cafeId, request.resource.data.castId)
+          )
+        )
         && exists(
           /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
         );
       allow delete: if isSignedIn()
         && resource.data.cafeId is string
         && resource.data.castId is string
-        && canManageCafe(resource.data.cafeId)
+        && (
+          canManageCafe(resource.data.cafeId)
+          || isLinkedCastUser(resource.data.cafeId, resource.data.castId)
+        )
         && exists(
           /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
         );

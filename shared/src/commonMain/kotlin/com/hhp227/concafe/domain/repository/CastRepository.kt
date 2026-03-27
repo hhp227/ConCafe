@@ -15,6 +15,12 @@ interface CastRepository {
 
     suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast>
 
+    suspend fun getBirthdayCasts(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast>
+
     suspend fun getCastDetail(castId: String): CastDetail
 
     suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview>
@@ -50,6 +56,8 @@ interface CastRepository {
     suspend fun unfollowCast(userId: String, castId: String)
 
     suspend fun getFollowerUserIds(castId: String): List<String>
+
+    suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot>
 
     suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary>
 }

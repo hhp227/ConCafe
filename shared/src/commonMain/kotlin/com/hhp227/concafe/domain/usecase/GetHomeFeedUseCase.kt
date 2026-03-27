@@ -8,7 +8,6 @@ import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.NoticeRepository
 import com.hhp227.concafe.domain.model.CafeSort
-import com.hhp227.concafe.domain.model.CastSort
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -44,26 +43,11 @@ class GetHomeFeedUseCase(
                     runCatching { cafeRepository.getCafeDetail(cafeId).cafe.name }
                         .getOrElse { cafeId }
                 }
-            val birthdayCasts = castRepository.searchCasts(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.LATEST,
-                cursor = null,
-                pageSize = HOME_FEED_LIMIT * 3
-            ).items
-                .filter { cast ->
-                    cast.birthday
-                        ?.split("-")
-                        ?.takeIf { it.size == 3 }
-                        ?.let { parts ->
-                            val birthMonth = parts[1].toIntOrNull()
-                            val birthDay = parts[2].toIntOrNull()
-
-                            birthMonth == today.monthNumber && birthDay == today.dayOfMonth
-                        } == true
-                }
-                .take(HOME_FEED_LIMIT)
+            val birthdayCasts = castRepository.getBirthdayCasts(
+                month = today.monthNumber,
+                dayOfMonth = today.dayOfMonth,
+                limit = HOME_FEED_LIMIT
+            )
             val notices = noticeRepository.getRecentNotices(HOME_FEED_LIMIT)
 
             AppResult.Success(

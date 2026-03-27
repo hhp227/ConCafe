@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
@@ -366,12 +366,15 @@ private fun CompactOwnedCafeCard(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         onClick = onClick
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1.8f)
-                .clip(RoundedCornerShape(24.dp))
-        ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val dynamicHeight = (maxWidth / 1.8f).coerceIn(220.dp, 500.dp)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dynamicHeight)
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -433,6 +436,7 @@ private fun CompactOwnedCafeCard(
                     contentDescription = "카페 상세로 이동",
                     tint = Color.White
                 )
+            }
             }
         }
     }

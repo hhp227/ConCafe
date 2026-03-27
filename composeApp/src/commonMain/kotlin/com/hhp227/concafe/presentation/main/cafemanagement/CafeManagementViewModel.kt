@@ -3,12 +3,14 @@ package com.hhp227.concafe.presentation.main.cafemanagement
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
@@ -69,6 +71,28 @@ class CafeManagementViewModel(
         }
     }
 
+    private fun refreshPendingClaims(resetMessage: Boolean = true) {
+        viewModelScope.launch {
+            when (val result = getCafeManagementUseCase.invoke()) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            pendingClaims = result.data.pendingClaims,
+                            infoMessage = if (resetMessage) null else state.infoMessage
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            infoMessage = if (resetMessage) result.error.toString() else state.infoMessage
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun clickCafe(cafeId: String) {
         viewModelScope.launch {
             _event.emit(CafeManagementEvent.NavigateToCafeDashboard(cafeId))
@@ -95,7 +119,7 @@ class CafeManagementViewModel(
         viewModelScope.launch {
             when (val result = createCafeOwnerClaimUseCase.invoke(cafeId)) {
                 is AppResult.Success -> {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
                     _uiState.update {
                         it.copy(infoMessage = "$cafeName 운영자 신청을 등록했습니다.")
                     }
@@ -161,7 +185,20 @@ class CafeManagementViewModel(
                     is CafeRegistrationClaimEvent.Rejected -> claimEvent.requesterUserId == userId
                 }
                 if (shouldRefresh) {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
+                }
+            }
+        }
+    }
+
+    private fun startClaimPolling() {
+        jobs[TaskKey.POLL_CLAIM]?.cancel()
+        jobs[TaskKey.POLL_CLAIM] = viewModelScope.launch {
+            while (isActive) {
+                delay(CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    refreshPendingClaims(resetMessage = false)
                 }
             }
         }
@@ -211,6 +248,7 @@ class CafeManagementViewModel(
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
+        startClaimPolling()
         loadCafeManagement()
     }
 
@@ -223,6 +261,9 @@ class CafeManagementViewModel(
     private enum class TaskKey {
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
+        POLL_CLAIM
     }
 }
+
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L

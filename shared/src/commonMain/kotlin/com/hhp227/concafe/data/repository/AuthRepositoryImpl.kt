@@ -62,13 +62,13 @@ class AuthRepositoryImpl(
             throw IllegalArgumentException("email already exists")
         }
 
-        val firebaseUserId = if (authTokenProvider.supportsEmailPasswordAuth()) {
-            authTokenProvider.signUpWithEmailPassword(email, password)?.userId
+        val signUpSession = if (authTokenProvider.supportsEmailPasswordAuth()) {
+            authTokenProvider.signUpWithEmailPassword(email, password)
         } else {
             null
         }
         val user = User(
-            id = firebaseUserId ?: nextEntityId("user"),
+            id = signUpSession?.userId ?: nextEntityId("user"),
             email = email,
             nickname = nickname,
             profileImage = null,
@@ -81,11 +81,28 @@ class AuthRepositoryImpl(
         if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
             castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
         }
+        val pushResult = runCatching { firestoreSyncDataSource.pushUser(user) }
 
-        runCatching { firestoreSyncDataSource.pushUser(user) }
+        if (pushResult.isFailure) {
+            authDataSource.removeUser(user.id)
+
+            if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+                castDataSource.affiliatedCafeIdByUser.remove(user.id)
+            }
+            if (signUpSession != null) {
+                runCatching {
+                    authTokenProvider.deleteCurrentUser(
+                        signUpSession.idToken ?: authTokenProvider.getIdToken()
+                    )
+                }
+                runCatching { authTokenProvider.signOut() }
+            }
+            throw IllegalStateException(
+                pushResult.exceptionOrNull()?.message ?: "failed to persist signup profile"
+            )
+        }
 
         authDataSource.currentUserId = user.id
-
         return user
     }
 
@@ -148,11 +165,7 @@ class AuthRepositoryImpl(
 
     override fun observeCurrentUser(): Flow<User?> {
         return authDataSource.currentUserIdFlow.map { userId ->
-            if (userId == null) {
-                null
-            } else {
-                resolveCurrentUser()
-            }
+            if (userId == null) null else resolveCurrentUser()
         }
     }
 

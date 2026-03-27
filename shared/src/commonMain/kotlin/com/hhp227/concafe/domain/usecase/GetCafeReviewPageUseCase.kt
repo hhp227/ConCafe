@@ -26,21 +26,20 @@ class GetCafeReviewPageUseCase(
                 cursor = cursor,
                 pageSize = pageSize
             )
-            val reviewUsersById = reviews.items
-                .map { review -> review.userId }
-                .distinct()
-                .associateWith { userId -> userRepository.getUser(userId) }
 
             AppResult.Success(
                 PagedResult(
                     items = reviews.items.map { review ->
-                        val user = reviewUsersById[review.userId] ?: userRepository.getUser(review.userId)
+                        val userNickname = review.userNickname
+                            .takeIf { nickname -> nickname.isNotBlank() }
+                            ?: runCatching { userRepository.getUser(review.userId) }.getOrNull()?.nickname
+                            ?: UNKNOWN_USER_NICKNAME
                         val verified = review.visitVerified
                         val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                         CafeDetailReview(
                             id = review.id,
-                            userNickname = user.nickname,
+                            userNickname = userNickname,
                             rating = review.rating,
                             content = review.content,
                             taggedCastNames = taggedCastNames,
@@ -64,5 +63,6 @@ class GetCafeReviewPageUseCase(
 
     companion object {
         const val DEFAULT_PAGE_SIZE = 15
+        private const val UNKNOWN_USER_NICKNAME = "알 수 없음"
     }
 }

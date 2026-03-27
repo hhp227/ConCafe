@@ -22,6 +22,9 @@ struct FanManagementView: View {
         )
         .navigationTitle("팬 관리")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            viewModel.onAction(.refresh)
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .showMessage(let message):
@@ -249,14 +252,8 @@ private struct FanManagementContentView: View {
                     HStack(spacing: 14) {
                         ForEach(Array(followers.enumerated()), id: \.element.id) { index, follower in
                             let accent = index == 0
-                            let joinedLabel: String = {
-                                switch index {
-                                case 0: return "방금 전"
-                                case 1: return "2시간 전"
-                                case 2: return "5시간 전"
-                                default: return "최근"
-                                }
-                            }()
+                            let joinedLabel = relativeFollowerTimeLabel(follower.followedAt)
+
                             Button {
                                 onAction(.clickRecentFollower(id: follower.id))
                             } label: {
@@ -297,7 +294,6 @@ private struct FanManagementContentView: View {
 
     private var weeklyScheduleSection: some View {
         let weeklyStatus = weeklySchedule(from: uiState.fanManagementData?.detail.schedule ?? [])
-
         return sectionContainer(title: "주간 출근") {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
@@ -503,5 +499,24 @@ private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleIt
     let workingDays = Set(schedules.compactMap { TimeUtils.weekdayLabel(fromIsoDate: $0.date) })
     return ["월", "화", "수", "목", "금", "토", "일"].map { dayLabel in
         WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
+    }
+}
+
+private func relativeFollowerTimeLabel(_ followedAt: String) -> String {
+    let formatter = ISO8601DateFormatter()
+    guard let date = formatter.date(from: followedAt) else {
+        return "최근"
+    }
+    let diff = max(Int(Date().timeIntervalSince(date)), 0)
+    if diff < 60 {
+        return "방금 전"
+    } else if diff < 3600 {
+        return "\(diff / 60)분 전"
+    } else if diff < 86_400 {
+        return "\(diff / 3600)시간 전"
+    } else if diff < 2_592_000 {
+        return "\(diff / 86_400)일 전"
+    } else {
+        return "오래 전"
     }
 }

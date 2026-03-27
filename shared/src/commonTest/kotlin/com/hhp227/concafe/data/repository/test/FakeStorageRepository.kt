@@ -21,6 +21,10 @@ class FakeStorageRepository : StorageRepository {
         return buildMockUrl(folder = folder, fileToken = token)
     }
 
+    override suspend fun deleteImageByUrl(imageUrl: String) {
+        require(imageUrl.trim().isNotEmpty()) { "image url is required" }
+    }
+
     private fun buildMockUrl(folder: String, fileToken: String): String {
         val safeFolder = folder.trim().ifEmpty { "uploads" }
         val normalizedToken = fileToken

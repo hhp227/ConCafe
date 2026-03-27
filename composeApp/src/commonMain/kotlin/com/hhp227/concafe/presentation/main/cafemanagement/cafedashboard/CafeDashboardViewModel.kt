@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.BannerEvent
@@ -533,6 +535,19 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun startCastClaimPolling() {
+        jobs[TaskKey.POLL_CAST_CLAIM]?.cancel()
+        jobs[TaskKey.POLL_CAST_CLAIM] = viewModelScope.launch {
+            while (isActive) {
+                delay(CAST_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    refreshClaimData(resetMessage = false)
+                }
+            }
+        }
+    }
+
     fun onAction(action: CafeDashboardAction) {
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
@@ -561,6 +576,7 @@ class CafeDashboardViewModel(
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        startCastClaimPolling()
         loadExternalLinks()
         loadCafeDashboard()
     }
@@ -575,6 +591,9 @@ class CafeDashboardViewModel(
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
-        OBSERVE_CAST_CLAIM_EVENT
+        OBSERVE_CAST_CLAIM_EVENT,
+        POLL_CAST_CLAIM
     }
 }
+
+private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L

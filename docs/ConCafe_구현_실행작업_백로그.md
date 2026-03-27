@@ -57,6 +57,16 @@
   - `onVisitWrittenSyncReviewVisitVerified`
 - 함수 로딩 타임아웃 이슈를 줄이기 위해 Functions의 Firestore 초기화를 lazy 초기화로 변경했다.
 
+## 최근 반영 (2026-03-27)
+- 캐스트 프로필 연결 Claim(`castClaims`)은 `cafes/{cafeId}/castClaims/sync` 메타 문서 기준으로 동기화를 판단하고, 변경 감지 시에만 본문 목록을 재조회하도록 조정했다.
+- Admin Claim(`cafeOwnerClaims`, `cafeRegistrationClaims`)은 각 루트 컬렉션의 `sync` 문서를 메타로 사용해 변경 여부를 확인하고, 변경이 없으면 목록 전체 재조회 없이 캐시를 재사용한다.
+- `팬관리` 화면은 Claim 상태 전용 경량 동기화 경로를 추가했다.
+  - 앱 내부 이벤트 + 주기 동기화(5초) 조합으로 클라이언트 간 상태 반영을 맞췄다.
+  - claim 상태 갱신 시 팬 데이터 전체 재조회 대신 Claim UI 섹션만 갱신한다.
+- `운영관리(Admin)` 및 `카페관리` 화면도 주기 동기화(5초)를 추가해 다른 클라이언트에서 발생한 Claim 생성/승인/반려를 실행 중 화면에서 반영한다.
+- 캐스트 Claim 상태 계산 시 `affiliatedCafeId` 캐시만 보지 않고 사용자 claim 이력(`PENDING` 우선, 최신 claim fallback)을 함께 사용하도록 보강했다.
+- 카페 Claim 생성(`owner`, `registration`) 전에 `refreshCafeManagementData(userId)`를 선행해 stale 캐시로 인한 중복/상태 오판을 줄였다.
+
 ## A. 사전 확정 작업 (P0)
 
 ### A-01. 도메인 enum/스키마 최종 확정
