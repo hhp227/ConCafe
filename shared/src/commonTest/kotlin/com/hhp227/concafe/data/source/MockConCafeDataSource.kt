@@ -175,6 +175,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         users.add(user)
     }
 
+    override fun removeUser(userId: String): Boolean {
+        return users.removeAll { user -> user.id == userId }
+    }
+
     override fun replaceUser(user: User): Boolean {
         val index = users.indexOfFirst { it.id == user.id }
         if (index == -1) {

@@ -13,10 +13,10 @@ struct HomeView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = HomeViewModel()
-    
+
     @State private var currentBannerPage = 0
-    
-    private let bannerTimer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
+
+    private let bannerTimer = Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HomeContentView(
@@ -72,11 +72,11 @@ struct HomeView: View {
 
 private struct HomeContentView: View {
     var uiState: HomeUiState
-    
+
     @Binding var currentBannerPage: Int
-    
+
     let onAction: (HomeAction) -> Void
-    
+
     var body: some View {
         if !uiState.isLoading {
             ScrollView {
@@ -108,52 +108,20 @@ private struct HomeContentView: View {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        GeometryReader { proxy in
-                            ZStack(alignment: .bottomLeading) {
-                                let trimmedImageUrl = banner.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-                                if let imageUrl = URL(string: trimmedImageUrl), !trimmedImageUrl.isEmpty {
-                                    CachedAsyncImage(
-                                        url: imageUrl,
-                                        placeholder: LinearGradient(
-                                            colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: proxy.size.width, height: proxy.size.height)
-                                    .clipped()
-                                } else {
-                                    LinearGradient(
-                                        colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                }
-                                LinearGradient(
-                                    colors: [Color.black.opacity(0.12), Color.black.opacity(0.45)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                                Text(banner.title)
-                                    .font(.title3.weight(.bold))
-                                    .foregroundColor(.white)
-                                    .padding(16)
+                        HomeBannerItem(banner: banner)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 5)
+                            .onTapGesture {
+                                onAction(.bannerTapped(banner))
                             }
-                        }
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .padding(.horizontal, 16)
-                        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .onTapGesture {
-                            onAction(.bannerTapped(banner))
-                        }
-                        .tag(index)
+                            .tag(index)
                     }
                 }
-                .frame(height: 190)
+                .frame(height: bannerTabViewHeight)
                 .tabViewStyle(.page(indexDisplayMode: .never))
             } else {
-                HomeBannerPlaceholderCard()
+                HomeBannerPlaceholderCard(height: bannerHeight)
             }
             if uiState.banners.count > 1 {
                 HStack(spacing: 6) {
@@ -165,6 +133,14 @@ private struct HomeContentView: View {
                 }
             }
         }
+    }
+
+    private var bannerHeight: CGFloat {
+        min(max(UIScreen.main.bounds.width * 0.3, 180), 360)
+    }
+
+    private var bannerTabViewHeight: CGFloat {
+        bannerHeight + 10
     }
 
     private var popularCastSection: some View {
@@ -337,7 +313,69 @@ private struct HomeContentView: View {
     }
 }
 
+private struct HomeBannerItem: View {
+    let banner: Shared.HomeBanner
+
+    private let cardShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            LinearGradient(
+                colors: [Color(hex: banner.startColorHex), Color(hex: banner.endColorHex)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            if let imageUrl = resolvedRemoteImageUrl(banner.imageUrl) {
+                CachedAsyncImage(
+                    url: imageUrl,
+                    placeholder: Color.clear
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .clipShape(cardShape)
+                LinearGradient(
+                    colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(banner.title)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                if let subtitle = trimmedSubtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(2)
+                }
+            }
+            .padding(18)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .compositingGroup()
+        .clipShape(cardShape)
+        .contentShape(cardShape)
+    }
+
+    private var trimmedSubtitle: String? {
+        banner.subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if trimmed.isEmpty {
+            return nil
+        } else {
+            return URL(string: trimmed)
+        }
+    }
+}
+
 private struct HomeBannerPlaceholderCard: View {
+    let height: CGFloat
+
     var body: some View {
         ZStack(alignment: .leading) {
             LinearGradient(
@@ -357,12 +395,13 @@ private struct HomeBannerPlaceholderCard: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 16)
-        .frame(height: 190)
+        .frame(height: height)
     }
 }
 
 private struct HomeSectionPlaceholderCard: View {
     let title: String
+
     let description: String
 
     var body: some View {

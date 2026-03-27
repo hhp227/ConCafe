@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.source.firestore
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
+import com.hhp227.concafe.domain.model.AdminOperationsMetrics
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
@@ -60,4 +61,6 @@ interface FirestoreSyncDataSource {
         claimId: String,
         reviewedBy: String
     ): PendingCafeRegistrationClaimPreview
+
+    suspend fun fetchAdminOperationsMetrics(): AdminOperationsMetrics
 }

@@ -8,7 +8,6 @@
 import SwiftUI
 import Shared
 
-private let castCurrentDate = "2026-03-08"
 private let castSummaryTitleTriggerOffset: CGFloat = 22
 
 struct CastView: View {
@@ -298,7 +297,8 @@ private struct CastTodaySection: View {
     let detail: CastDetail
 
     var body: some View {
-        let todaySchedule = detail.schedule.first(where: { $0.date == castCurrentDate })
+        let currentDate = TimeUtils.currentIsoDate()
+        let todaySchedule = detail.schedule.first(where: { $0.date == currentDate })
 
         VStack(alignment: .leading, spacing: 6) {
             Text("오늘의 출근 상태")

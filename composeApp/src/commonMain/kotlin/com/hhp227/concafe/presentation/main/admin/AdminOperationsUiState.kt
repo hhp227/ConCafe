@@ -4,7 +4,15 @@ import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 
 data class AdminOperationsUiState(
-    val metrics: List<AdminMetricCard> = buildAdminMetrics(0),
+    val totalUsersCount: Int = 0,
+    val activeCafesCount: Int = 0,
+    val reportItemsCount: Int = 0,
+    val metrics: List<AdminMetricCard> = buildAdminMetrics(
+        totalUsersCount = 0,
+        activeCafesCount = 0,
+        pendingCount = 0,
+        reportItemsCount = 0
+    ),
     val selectedPendingFilter: PendingFilter = PendingFilter.CAFE_REGISTRATION,
     val pendingCafeRegistrationClaims: List<PendingCafeRegistrationClaimPreview> = emptyList(),
     val pendingCafeOwnerClaims: List<PendingCafeOwnerClaimPreview> = emptyList(),
@@ -79,11 +87,16 @@ enum class QuickMenuAccent {
     BLUE
 }
 
-internal fun buildAdminMetrics(pendingCount: Int) = listOf(
-    AdminMetricCard("전체 사용자", "12,540", "1.2%", AdminMetricIcon.USERS, MetricTrend.UP),
-    AdminMetricCard("활성 카페", "842", "0.5%", AdminMetricIcon.CAFE, MetricTrend.UP),
+internal fun buildAdminMetrics(
+    totalUsersCount: Int,
+    activeCafesCount: Int,
+    pendingCount: Int,
+    reportItemsCount: Int
+) = listOf(
+    AdminMetricCard("전체 사용자", totalUsersCount.toString(), "실시간", AdminMetricIcon.USERS, MetricTrend.UP),
+    AdminMetricCard("활성 카페", activeCafesCount.toString(), "실시간", AdminMetricIcon.CAFE, MetricTrend.UP),
     AdminMetricCard("승인 대기", pendingCount.toString(), "${pendingCount}건 대기", AdminMetricIcon.PENDING, MetricTrend.NEW),
-    AdminMetricCard("신고 항목", "32", "8%", AdminMetricIcon.REPORT, MetricTrend.DOWN)
+    AdminMetricCard("신고 항목", reportItemsCount.toString(), "실시간", AdminMetricIcon.REPORT, MetricTrend.DOWN)
 )
 
 private val defaultQuickMenus = listOf(

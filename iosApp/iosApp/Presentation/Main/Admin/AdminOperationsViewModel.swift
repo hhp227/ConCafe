@@ -20,6 +20,8 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private let getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase
 
+    private let getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase
+
     private let approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase
 
     private let approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase
@@ -37,24 +39,45 @@ final class AdminOperationsViewModel: ObservableObject {
             do {
                 let registration = try await getPendingCafeRegistrationClaimsUseCase.invoke()
                 let roleClaimsResult = try await getPendingCafeOwnerClaimsUseCase.invoke()
+                let adminMetricsResult = try await getAdminOperationsMetricsUseCase.invoke()
 
                 if let registrationSuccess = registration as? AppResultSuccess<AnyObject>,
                    let registrationClaims = registrationSuccess.data as? [PendingCafeRegistrationClaimPreview],
                    let roleClaimSuccess = roleClaimsResult as? AppResultSuccess<AnyObject>,
-                   let roleClaims = roleClaimSuccess.data as? [PendingCafeOwnerClaimPreview] {
+                   let roleClaims = roleClaimSuccess.data as? [PendingCafeOwnerClaimPreview],
+                   let metricsSuccess = adminMetricsResult as? AppResultSuccess<AnyObject>,
+                   let metrics = metricsSuccess.data as? AdminOperationsMetrics {
                     let sortedRegistrations = registrationClaims.sorted { $0.requestedAt > $1.requestedAt }
                     let sortedOwnerClaims = roleClaims.sorted { $0.requestedAt > $1.requestedAt }
+                    let pendingCount = sortedRegistrations.count + sortedOwnerClaims.count
+                    let totalUsersCount = Int(metrics.totalUsersCount)
+                    let activeCafesCount = Int(metrics.activeCafesCount)
+                    let reportItemsCount = Int(metrics.reportItemsCount)
+
+                    uiState.totalUsersCount = totalUsersCount
+                    uiState.activeCafesCount = activeCafesCount
+                    uiState.reportItemsCount = reportItemsCount
                     uiState.pendingCafeRegistrationClaims = sortedRegistrations
                     uiState.pendingCafeOwnerClaims = sortedOwnerClaims
-                    uiState.metrics = buildAdminMetrics(pendingCount: sortedRegistrations.count + sortedOwnerClaims.count)
+                    uiState.metrics = buildAdminMetrics(
+                        totalUsersCount: totalUsersCount,
+                        activeCafesCount: activeCafesCount,
+                        pendingCount: pendingCount,
+                        reportItemsCount: reportItemsCount
+                    )
                     uiState.infoMessage = nil
                     AdminPendingCache.snapshot = AdminPendingSnapshot(
                         registrationClaims: sortedRegistrations,
-                        ownerClaims: sortedOwnerClaims
+                        ownerClaims: sortedOwnerClaims,
+                        totalUsersCount: totalUsersCount,
+                        activeCafesCount: activeCafesCount,
+                        reportItemsCount: reportItemsCount
                     )
                 } else if let failure = registration as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
                 } else if let failure = roleClaimsResult as? AppResultFailure {
+                    uiState.infoMessage = "\(failure.error)"
+                } else if let failure = adminMetricsResult as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
                 }
             } catch {
@@ -65,10 +88,17 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private func showCachedPendingRequests() {
         guard let snapshot = AdminPendingCache.snapshot else { return }
+        let pendingCount = snapshot.registrationClaims.count + snapshot.ownerClaims.count
+        uiState.totalUsersCount = snapshot.totalUsersCount
+        uiState.activeCafesCount = snapshot.activeCafesCount
+        uiState.reportItemsCount = snapshot.reportItemsCount
         uiState.pendingCafeRegistrationClaims = snapshot.registrationClaims
         uiState.pendingCafeOwnerClaims = snapshot.ownerClaims
         uiState.metrics = buildAdminMetrics(
-            pendingCount: snapshot.registrationClaims.count + snapshot.ownerClaims.count
+            totalUsersCount: snapshot.totalUsersCount,
+            activeCafesCount: snapshot.activeCafesCount,
+            pendingCount: pendingCount,
+            reportItemsCount: snapshot.reportItemsCount
         )
     }
 
@@ -96,24 +126,42 @@ final class AdminOperationsViewModel: ObservableObject {
     }
 
     private func removeRegistrationClaimLocally(claimId: String) {
+        let totalUsersCount = uiState.totalUsersCount
+        let activeCafesCount = uiState.activeCafesCount
+        let reportItemsCount = uiState.reportItemsCount
         uiState.pendingCafeRegistrationClaims.removeAll { $0.claimId == claimId }
         uiState.metrics = buildAdminMetrics(
-            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: activeCafesCount,
+            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count,
+            reportItemsCount: reportItemsCount
         )
         AdminPendingCache.snapshot = AdminPendingSnapshot(
             registrationClaims: uiState.pendingCafeRegistrationClaims,
-            ownerClaims: uiState.pendingCafeOwnerClaims
+            ownerClaims: uiState.pendingCafeOwnerClaims,
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: activeCafesCount,
+            reportItemsCount: reportItemsCount
         )
     }
 
     private func removeOwnerClaimLocally(claimId: String) {
+        let totalUsersCount = uiState.totalUsersCount
+        let activeCafesCount = uiState.activeCafesCount
+        let reportItemsCount = uiState.reportItemsCount
         uiState.pendingCafeOwnerClaims.removeAll { $0.claimId == claimId }
         uiState.metrics = buildAdminMetrics(
-            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: activeCafesCount,
+            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count,
+            reportItemsCount: reportItemsCount
         )
         AdminPendingCache.snapshot = AdminPendingSnapshot(
             registrationClaims: uiState.pendingCafeRegistrationClaims,
-            ownerClaims: uiState.pendingCafeOwnerClaims
+            ownerClaims: uiState.pendingCafeOwnerClaims,
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: activeCafesCount,
+            reportItemsCount: reportItemsCount
         )
     }
 
@@ -178,7 +226,7 @@ final class AdminOperationsViewModel: ObservableObject {
             handlePendingResult(id: id, approved: false)
         case .clickQuickMenu(let id):
             if id == adminBannerMenuId {
-                event.send(.navigateToBannerEdit)
+                event.send(.navigateToBanner)
             } else {
                 let label = uiState.quickMenus.first(where: { $0.id == id })?.title ?? "메뉴"
                 uiState.infoMessage = "\(label) 연결은 다음 단계에서 이어집니다."
@@ -191,6 +239,7 @@ final class AdminOperationsViewModel: ObservableObject {
     init(
         getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeRegistrationClaimsUseCase(),
         getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeOwnerClaimsUseCase(),
+        getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase = KoinInitializerKt.resolveGetAdminOperationsMetricsUseCase(),
         approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase = KoinInitializerKt.resolveApproveCafeRegistrationClaimUseCase(),
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
         rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
@@ -199,6 +248,7 @@ final class AdminOperationsViewModel: ObservableObject {
     ) {
         self.getPendingCafeRegistrationClaimsUseCase = getPendingCafeRegistrationClaimsUseCase
         self.getPendingCafeOwnerClaimsUseCase = getPendingCafeOwnerClaimsUseCase
+        self.getAdminOperationsMetricsUseCase = getAdminOperationsMetricsUseCase
         self.approveCafeRegistrationClaimUseCase = approveCafeRegistrationClaimUseCase
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
         self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
@@ -224,6 +274,9 @@ private let adminBannerMenuId = "banner"
 private struct AdminPendingSnapshot {
     let registrationClaims: [PendingCafeRegistrationClaimPreview]
     let ownerClaims: [PendingCafeOwnerClaimPreview]
+    let totalUsersCount: Int
+    let activeCafesCount: Int
+    let reportItemsCount: Int
 }
 
 private enum AdminPendingCache {

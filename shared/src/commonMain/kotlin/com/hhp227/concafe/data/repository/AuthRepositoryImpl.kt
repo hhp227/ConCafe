@@ -132,7 +132,7 @@ class AuthRepositoryImpl(
 
         firestoreSyncDataSource.deleteUser(currentUserId)
         authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
-
+        authDataSource.removeUser(currentUserId)
         authDataSource.currentUserId = null
     }
 

@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -80,7 +81,7 @@ fun HomeScreen(
             pagerState.scrollToPage(normalizedPage)
             if (uiState.banners.size != 1) {
                 while (true) {
-                    delay(3000)
+                    delay(4000)
                     val nextPage = (pagerState.settledPage + 1) % uiState.banners.size
                     pagerState.animateScrollToPage(nextPage)
                 }
@@ -125,86 +126,30 @@ fun HomeContentScreen(
             contentPadding = PaddingValues(vertical = 20.dp)
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (uiState.banners.isNotEmpty()) {
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            pageSpacing = 12.dp
-                        ) { page ->
-                            val banner = uiState.banners[page]
-                            val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val dynamicHeight = (maxWidth * 0.3f).coerceIn(180.dp, 360.dp)
 
-                            Card(
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        if (uiState.banners.isNotEmpty()) {
+                            HorizontalPager(
+                                state = pagerState,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onAction(HomeAction.ClickBanner(banner)) },
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(
-                                            Brush.linearGradient(
-                                                listOf(
-                                                    colorFromHex(banner.startColorHex),
-                                                    colorFromHex(banner.endColorHex)
-                                                )
-                                            )
-                                        ),
-                                    contentAlignment = Alignment.BottomStart
-                                ) {
-                                    if (imageUrl != null) {
-                                        CompatImageDisplay(
-                                            imageUrl = imageUrl,
-                                            modifier = Modifier.matchParentSize()
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        colors = listOf(
-                                                            Color.Black.copy(alpha = 0.1f),
-                                                            Color.Black.copy(alpha = 0.45f)
-                                                        )
-                                                    )
-                                                )
-                                        )
-                                    }
-                                    Text(
-                                        text = banner.title,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        modifier = Modifier.padding(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        HomeBannerPlaceholderCard()
-                    }
-                    if (uiState.banners.size > 1) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(uiState.banners.size) { page ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 3.dp)
-                                        .size(width = if (pagerState.currentPage == page) 18.dp else 8.dp, height = 8.dp)
-                                        .clip(RoundedCornerShape(999.dp))
-                                        .background(
-                                            if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                            else Color(0xFFD8D8D8)
-                                        )
+                                    .height(dynamicHeight),
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                pageSpacing = 12.dp
+                            ) { page ->
+                                val banner = uiState.banners[page]
+
+                                HomeBannerItem(
+                                    banner = banner,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onClick = { onAction(HomeAction.ClickBanner(banner)) }
                                 )
                             }
+                        } else {
+                            // 플레이스홀더에도 동일한 높이 적용
+                            HomeBannerPlaceholderCard(dynamicHeight)
                         }
                     }
                 }
@@ -372,6 +317,74 @@ fun HomeContentScreen(
 }
 
 @Composable
+private fun HomeBannerItem(
+    banner: HomeBanner,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+    val subtitle = banner.subtitle.trim().takeUnless { it.isEmpty() }
+
+    Card(
+        modifier = modifier.clickable { onClick() },
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            colorFromHex(banner.startColorHex),
+                            colorFromHex(banner.endColorHex)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            if (imageUrl != null) {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier.matchParentSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.04f),
+                                    Color.Black.copy(alpha = 0.34f)
+                                )
+                            )
+                        )
+                )
+            }
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = banner.title,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        color = Color.White.copy(alpha = 0.92f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun HomeSectionPlaceholderCard(
     title: String,
     description: String,
@@ -404,11 +417,11 @@ private fun HomeSectionPlaceholderCard(
 }
 
 @Composable
-private fun HomeBannerPlaceholderCard() {
+private fun HomeBannerPlaceholderCard(height: Dp) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(height)
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp)
     ) {

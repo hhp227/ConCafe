@@ -65,7 +65,6 @@ import kotlin.text.toIntOrNull
 import kotlin.text.toSet
 import kotlin.text.uppercase
 
-private const val CURRENT_DATE = "2026-03-08"
 private val SummaryTitleTriggerOffset = 22.dp
 
 @Composable
@@ -446,7 +445,8 @@ private fun CastSummarySection(
 
 @Composable
 private fun CastTodaySection(detail: CastDetail) {
-    val todaySchedule = detail.schedule.firstOrNull { it.date == CURRENT_DATE }
+    val currentDate = TimeUtils.currentIsoDate()
+    val todaySchedule = detail.schedule.firstOrNull { it.date == currentDate }
 
     Surface(
         shape = RoundedCornerShape(24.dp),

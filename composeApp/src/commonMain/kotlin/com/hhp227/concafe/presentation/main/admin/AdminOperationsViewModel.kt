@@ -9,6 +9,7 @@ import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 class AdminOperationsViewModel(
     private val getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase,
     private val getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase,
+    private val getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase,
     private val approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase,
     private val approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase,
     private val rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase,
@@ -44,22 +46,41 @@ class AdminOperationsViewModel(
         viewModelScope.launch {
             val registrationResult = getPendingCafeRegistrationClaimsUseCase.invoke()
             val ownerClaimResult = getPendingCafeOwnerClaimsUseCase.invoke()
+            val adminMetricsResult = getAdminOperationsMetricsUseCase.invoke()
 
             when {
-                registrationResult is AppResult.Success && ownerClaimResult is AppResult.Success -> {
+                registrationResult is AppResult.Success
+                    && ownerClaimResult is AppResult.Success
+                    && adminMetricsResult is AppResult.Success -> {
                     val registrationClaims = registrationResult.data.sortedByDescending { it.requestedAt }
                     val ownerClaims = ownerClaimResult.data.sortedByDescending { it.requestedAt }
+                    val totalUsersCount = adminMetricsResult.data.totalUsersCount
+                    val activeCafesCount = adminMetricsResult.data.activeCafesCount
+                    val reportItemsCount = adminMetricsResult.data.reportItemsCount
+                    val pendingCount = registrationClaims.size + ownerClaims.size
+
                     _uiState.update { state ->
                         state.copy(
+                            totalUsersCount = totalUsersCount,
+                            activeCafesCount = activeCafesCount,
+                            reportItemsCount = reportItemsCount,
                             pendingCafeRegistrationClaims = registrationClaims,
                             pendingCafeOwnerClaims = ownerClaims,
-                            metrics = buildAdminMetrics(registrationClaims.size + ownerClaims.size),
+                            metrics = buildAdminMetrics(
+                                totalUsersCount = totalUsersCount,
+                                activeCafesCount = activeCafesCount,
+                                pendingCount = pendingCount,
+                                reportItemsCount = reportItemsCount
+                            ),
                             infoMessage = null
                         )
                     }
                     AdminPendingCache.snapshot = AdminPendingSnapshot(
                         registrationClaims = registrationClaims,
-                        ownerClaims = ownerClaims
+                        ownerClaims = ownerClaims,
+                        totalUsersCount = totalUsersCount,
+                        activeCafesCount = activeCafesCount,
+                        reportItemsCount = reportItemsCount
                     )
                 }
                 registrationResult is AppResult.Failure -> {
@@ -68,6 +89,9 @@ class AdminOperationsViewModel(
                 ownerClaimResult is AppResult.Failure -> {
                     _uiState.update { state -> state.copy(infoMessage = ownerClaimResult.error.toString()) }
                 }
+                adminMetricsResult is AppResult.Failure -> {
+                    _uiState.update { state -> state.copy(infoMessage = adminMetricsResult.error.toString()) }
+                }
             }
         }
     }
@@ -75,10 +99,19 @@ class AdminOperationsViewModel(
     private fun showCachedPendingRequests() {
         val snapshot = AdminPendingCache.snapshot ?: return
         _uiState.update { state ->
+            val pendingCount = snapshot.registrationClaims.size + snapshot.ownerClaims.size
             state.copy(
+                totalUsersCount = snapshot.totalUsersCount,
+                activeCafesCount = snapshot.activeCafesCount,
+                reportItemsCount = snapshot.reportItemsCount,
                 pendingCafeRegistrationClaims = snapshot.registrationClaims,
                 pendingCafeOwnerClaims = snapshot.ownerClaims,
-                metrics = buildAdminMetrics(snapshot.registrationClaims.size + snapshot.ownerClaims.size)
+                metrics = buildAdminMetrics(
+                    totalUsersCount = snapshot.totalUsersCount,
+                    activeCafesCount = snapshot.activeCafesCount,
+                    pendingCount = pendingCount,
+                    reportItemsCount = snapshot.reportItemsCount
+                )
             )
         }
     }
@@ -100,14 +133,23 @@ class AdminOperationsViewModel(
         _uiState.update { state ->
             val nextRegistrationClaims = state.pendingCafeRegistrationClaims.filterNot { it.claimId == claimId }
             val nextOwnerClaims = state.pendingCafeOwnerClaims
+            val pendingCount = nextRegistrationClaims.size + nextOwnerClaims.size
             val nextState = state.copy(
                 pendingCafeRegistrationClaims = nextRegistrationClaims,
                 pendingCafeOwnerClaims = nextOwnerClaims,
-                metrics = buildAdminMetrics(nextRegistrationClaims.size + nextOwnerClaims.size)
+                metrics = buildAdminMetrics(
+                    totalUsersCount = state.totalUsersCount,
+                    activeCafesCount = state.activeCafesCount,
+                    pendingCount = pendingCount,
+                    reportItemsCount = state.reportItemsCount
+                )
             )
             AdminPendingCache.snapshot = AdminPendingSnapshot(
                 registrationClaims = nextRegistrationClaims,
-                ownerClaims = nextOwnerClaims
+                ownerClaims = nextOwnerClaims,
+                totalUsersCount = state.totalUsersCount,
+                activeCafesCount = state.activeCafesCount,
+                reportItemsCount = state.reportItemsCount
             )
             nextState
         }
@@ -117,14 +159,23 @@ class AdminOperationsViewModel(
         _uiState.update { state ->
             val nextRegistrationClaims = state.pendingCafeRegistrationClaims
             val nextOwnerClaims = state.pendingCafeOwnerClaims.filterNot { it.claimId == claimId }
+            val pendingCount = nextRegistrationClaims.size + nextOwnerClaims.size
             val nextState = state.copy(
                 pendingCafeRegistrationClaims = nextRegistrationClaims,
                 pendingCafeOwnerClaims = nextOwnerClaims,
-                metrics = buildAdminMetrics(nextRegistrationClaims.size + nextOwnerClaims.size)
+                metrics = buildAdminMetrics(
+                    totalUsersCount = state.totalUsersCount,
+                    activeCafesCount = state.activeCafesCount,
+                    pendingCount = pendingCount,
+                    reportItemsCount = state.reportItemsCount
+                )
             )
             AdminPendingCache.snapshot = AdminPendingSnapshot(
                 registrationClaims = nextRegistrationClaims,
-                ownerClaims = nextOwnerClaims
+                ownerClaims = nextOwnerClaims,
+                totalUsersCount = state.totalUsersCount,
+                activeCafesCount = state.activeCafesCount,
+                reportItemsCount = state.reportItemsCount
             )
             nextState
         }
@@ -211,7 +262,7 @@ class AdminOperationsViewModel(
             is AdminOperationsAction.ClickQuickMenu -> {
                 if (action.id == ADMIN_BANNER_MENU_ID) {
                     viewModelScope.launch {
-                        _event.emit(AdminOperationsEvent.NavigateToBannerEdit)
+                        _event.emit(AdminOperationsEvent.NavigateToBanner)
                     }
                 } else {
                     val label = _uiState.value.quickMenus.firstOrNull { it.id == action.id }?.title ?: "메뉴"
@@ -245,7 +296,10 @@ private const val ADMIN_BANNER_MENU_ID = "banner"
 
 private data class AdminPendingSnapshot(
     val registrationClaims: List<PendingCafeRegistrationClaimPreview>,
-    val ownerClaims: List<PendingCafeOwnerClaimPreview>
+    val ownerClaims: List<PendingCafeOwnerClaimPreview>,
+    val totalUsersCount: Int,
+    val activeCafesCount: Int,
+    val reportItemsCount: Int
 )
 
 private object AdminPendingCache {
