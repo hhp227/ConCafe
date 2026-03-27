@@ -151,6 +151,28 @@ fun HomeContentScreen(
                             // 플레이스홀더에도 동일한 높이 적용
                             HomeBannerPlaceholderCard(dynamicHeight)
                         }
+                        if (uiState.banners.size > 1) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                repeat(uiState.banners.size) { page ->
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(horizontal = 3.dp)
+                                            .size(
+                                                width = if (pagerState.currentPage == page) 18.dp else 8.dp,
+                                                height = 8.dp
+                                            )
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(
+                                                if (pagerState.currentPage == page) Color(0xFFEF6797)
+                                                else Color(0xFFD8D8D8)
+                                            )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
