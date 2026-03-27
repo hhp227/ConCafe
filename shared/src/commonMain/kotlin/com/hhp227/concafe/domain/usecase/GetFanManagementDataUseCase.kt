@@ -2,7 +2,6 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
@@ -22,16 +21,9 @@ class GetFanManagementDataUseCase(
             if (currentUser.role != UserRole.CAST) {
                 AppResult.Failure(AppError.PermissionDenied)
             } else {
-                val castId = castRepository.searchCasts(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CastSort.FOLLOWERS,
-                    cursor = null,
-                    pageSize = 100
-                ).items.firstOrNull { cast ->
-                    cast.linkedUserId == currentUser.id
-                }?.id ?: return AppResult.Failure(AppError.NotFound)
+                val castId = castRepository.getCastByLinkedUserId(currentUser.id)
+                    ?.id
+                    ?: return AppResult.Failure(AppError.NotFound)
 
                 AppResult.Success(
                     FanManagementData(

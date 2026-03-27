@@ -71,6 +71,28 @@ class CafeManagementViewModel(
         }
     }
 
+    private fun refreshPendingClaims(resetMessage: Boolean = true) {
+        viewModelScope.launch {
+            when (val result = getCafeManagementUseCase.invoke()) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            pendingClaims = result.data.pendingClaims,
+                            infoMessage = if (resetMessage) null else state.infoMessage
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            infoMessage = if (resetMessage) result.error.toString() else state.infoMessage
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun clickCafe(cafeId: String) {
         viewModelScope.launch {
             _event.emit(CafeManagementEvent.NavigateToCafeDashboard(cafeId))
@@ -97,7 +119,7 @@ class CafeManagementViewModel(
         viewModelScope.launch {
             when (val result = createCafeOwnerClaimUseCase.invoke(cafeId)) {
                 is AppResult.Success -> {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
                     _uiState.update {
                         it.copy(infoMessage = "$cafeName 운영자 신청을 등록했습니다.")
                     }
@@ -163,7 +185,7 @@ class CafeManagementViewModel(
                     is CafeRegistrationClaimEvent.Rejected -> claimEvent.requesterUserId == userId
                 }
                 if (shouldRefresh) {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
                 }
             }
         }
@@ -176,7 +198,7 @@ class CafeManagementViewModel(
                 delay(CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS)
 
                 if (isActive) {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
                 }
             }
         }

@@ -58,6 +58,30 @@ final class CafeManagementViewModel: ObservableObject {
         }
     }
 
+    private func refreshPendingClaims(resetMessage: Bool = true) {
+        Task {
+            do {
+                let result = try await getCafeManagementUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let data = success.data as? CafeManagementData {
+                    uiState.pendingClaims = data.pendingClaims
+                    if resetMessage {
+                        uiState.infoMessage = nil
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    if resetMessage {
+                        uiState.infoMessage = "\(failure.error)"
+                    }
+                }
+            } catch {
+                if resetMessage {
+                    uiState.infoMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
     private func clickCafe(_ cafeId: String) {
         event.send(.navigateToCafeDashboard(cafeId: cafeId))
     }
@@ -78,7 +102,7 @@ final class CafeManagementViewModel: ObservableObject {
                 let result = try await createCafeOwnerClaimUseCase.invoke(cafeId: cafeId)
 
                 if result is AppResultSuccess<AnyObject> {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage: false)
                     uiState.infoMessage = "\(cafeName) 운영자 신청을 등록했습니다."
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
@@ -148,7 +172,7 @@ final class CafeManagementViewModel: ObservableObject {
                         shouldRefresh = false
                     }
                     if shouldRefresh {
-                        self.loadCafeManagement()
+                        self.refreshPendingClaims(resetMessage: false)
                     }
                 }
             } catch {
@@ -171,7 +195,7 @@ final class CafeManagementViewModel: ObservableObject {
                 if Task.isCancelled {
                     break
                 } else {
-                    self?.loadCafeManagement()
+                    self?.refreshPendingClaims(resetMessage: false)
                 }
             }
         }

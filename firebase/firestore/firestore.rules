@@ -47,6 +47,13 @@ service cloud.firestore {
       return isAdmin() || isCafeOwner(cafeId);
     }
 
+    function isLinkedCastUser(cafeId, castId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId))
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId is string
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId == request.auth.uid;
+    }
+
     function isValidScheduleStatus(status) {
       return status == "WORK" || status == "OFF" || status == "VACATION";
     }
@@ -355,14 +362,24 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isSignedIn()
         && isValidCastScheduleWriteData()
-        && canManageCafe(request.resource.data.cafeId)
+        && (
+          canManageCafe(request.resource.data.cafeId)
+          || (
+            request.resource.data.cafeId is string
+            && request.resource.data.castId is string
+            && isLinkedCastUser(request.resource.data.cafeId, request.resource.data.castId)
+          )
+        )
         && exists(
           /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
         );
       allow delete: if isSignedIn()
         && resource.data.cafeId is string
         && resource.data.castId is string
-        && canManageCafe(resource.data.cafeId)
+        && (
+          canManageCafe(resource.data.cafeId)
+          || isLinkedCastUser(resource.data.cafeId, resource.data.castId)
+        )
         && exists(
           /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
         );
