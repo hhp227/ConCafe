@@ -100,6 +100,14 @@ class FirestoreConCafeDataSource(
     FirestoreSyncDataSource {
     private val hydratedCafeDetailIds = mutableSetOf<String>()
     private val castClaimSyncUpdatedAtByCafeId = mutableMapOf<String, String>()
+    private val adminCafeOwnerClaimSyncUpdatedAt = mutableMapOf<String, String>()
+    private val adminCafeRegistrationClaimSyncUpdatedAt = mutableMapOf<String, String>()
+    private val adminPendingCafeOwnerClaimCache = mutableListOf<PendingCafeOwnerClaimPreview>()
+    private val adminPendingCafeRegistrationClaimCache = mutableListOf<PendingCafeRegistrationClaimPreview>()
+    private var isAdminCafeOwnerClaimCacheInitialized = false
+    private var isAdminCafeRegistrationClaimCacheInitialized = false
+    private val lastCafeOwnerClaimSyncUpdatedAtByUserId = mutableMapOf<String, String>()
+    private val lastCafeRegistrationClaimSyncUpdatedAtByUserId = mutableMapOf<String, String>()
 
     fun isCafeDetailHydrated(cafeId: String): Boolean {
         return hydratedCafeDetailIds.contains(cafeId)
@@ -1725,6 +1733,15 @@ class FirestoreConCafeDataSource(
             )
         )
         restApi.patch(path, body, idToken)
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                updatedBy = requesterUserId,
+                idToken = idToken
+            )
+        }
+        adminCafeRegistrationClaimSyncUpdatedAt.clear()
+        isAdminCafeRegistrationClaimCacheInitialized = false
     }
 
     override suspend fun pushCafeOwnerClaim(
@@ -1748,6 +1765,15 @@ class FirestoreConCafeDataSource(
             )
         )
         restApi.patch(path, body, idToken)
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                updatedBy = requesterUserId,
+                idToken = idToken
+            )
+        }
+        adminCafeOwnerClaimSyncUpdatedAt.clear()
+        isAdminCafeOwnerClaimCacheInitialized = false
     }
 
     override suspend fun pushHomeBanner(banner: HomeBanner) {
@@ -1788,6 +1814,22 @@ class FirestoreConCafeDataSource(
 
     override suspend fun refreshCafeManagementData(userId: String) {
         val idToken = tokenProvider.getIdToken()
+        val ownerSyncChanged = hasGlobalClaimSyncChangedForUser(
+            userId = userId,
+            collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+            cache = lastCafeOwnerClaimSyncUpdatedAtByUserId,
+            idToken = idToken
+        )
+        val registrationSyncChanged = hasGlobalClaimSyncChangedForUser(
+            userId = userId,
+            collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+            cache = lastCafeRegistrationClaimSyncUpdatedAtByUserId,
+            idToken = idToken
+        )
+
+        if (!ownerSyncChanged && !registrationSyncChanged) {
+            return
+        }
         val ownerClaimDocuments = runUserScopedQuery(
             collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
             userId = userId,
@@ -1878,6 +1920,16 @@ class FirestoreConCafeDataSource(
 
     override suspend fun fetchPendingCafeOwnerClaimsForAdmin(): List<PendingCafeOwnerClaimPreview> {
         val idToken = tokenProvider.getIdToken()
+        val hasChanged = hasGlobalClaimSyncChangedForAdmin(
+            key = FirestorePaths.CAFE_OWNER_CLAIMS,
+            collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+            cache = adminCafeOwnerClaimSyncUpdatedAt,
+            idToken = idToken
+        )
+
+        if (!hasChanged && isAdminCafeOwnerClaimCacheInitialized) {
+            return adminPendingCafeOwnerClaimCache.toList()
+        }
         val documents = loadCollectionDocuments(
             collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
             idToken = idToken
@@ -1891,11 +1943,25 @@ class FirestoreConCafeDataSource(
                 previews.add(preview)
             }
         }
-        return previews.sortedByDescending { it.requestedAt }
+        val sorted = previews.sortedByDescending { it.requestedAt }
+        adminPendingCafeOwnerClaimCache.clear()
+        adminPendingCafeOwnerClaimCache.addAll(sorted)
+        isAdminCafeOwnerClaimCacheInitialized = true
+        return sorted
     }
 
     override suspend fun fetchPendingCafeRegistrationClaimsForAdmin(): List<PendingCafeRegistrationClaimPreview> {
         val idToken = tokenProvider.getIdToken()
+        val hasChanged = hasGlobalClaimSyncChangedForAdmin(
+            key = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+            collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+            cache = adminCafeRegistrationClaimSyncUpdatedAt,
+            idToken = idToken
+        )
+
+        if (!hasChanged && isAdminCafeRegistrationClaimCacheInitialized) {
+            return adminPendingCafeRegistrationClaimCache.toList()
+        }
         val documents = loadCollectionDocuments(
             collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
             idToken = idToken
@@ -1909,7 +1975,11 @@ class FirestoreConCafeDataSource(
                 previews.add(preview)
             }
         }
-        return previews.sortedByDescending { it.requestedAt }
+        val sorted = previews.sortedByDescending { it.requestedAt }
+        adminPendingCafeRegistrationClaimCache.clear()
+        adminPendingCafeRegistrationClaimCache.addAll(sorted)
+        isAdminCafeRegistrationClaimCacheInitialized = true
+        return sorted
     }
 
     override suspend fun approveCafeOwnerClaimForAdmin(
@@ -1934,6 +2004,13 @@ class FirestoreConCafeDataSource(
             message = "관리자 승인으로 운영 카페에 연결되었습니다.",
             idToken = idToken
         )
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                updatedBy = reviewedBy,
+                idToken = idToken
+            )
+        }
         appendOwnerMapping(
             userId = preview.requesterUserId,
             cafeId = preview.cafeId,
@@ -1944,6 +2021,7 @@ class FirestoreConCafeDataSource(
             idToken = idToken
         )
         applyApprovedOwnerClaimToCache(preview)
+        adminPendingCafeOwnerClaimCache.removeAll { existing -> existing.claimId == claimId }
         return preview
     }
 
@@ -1969,7 +2047,15 @@ class FirestoreConCafeDataSource(
             message = "관리자 검토 결과 반려되었습니다.",
             idToken = idToken
         )
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                updatedBy = reviewedBy,
+                idToken = idToken
+            )
+        }
         applyRejectedOwnerClaimToCache(preview)
+        adminPendingCafeOwnerClaimCache.removeAll { existing -> existing.claimId == claimId }
         return preview
     }
 
@@ -2004,6 +2090,13 @@ class FirestoreConCafeDataSource(
             approvedCafeId = newCafeId,
             idToken = idToken
         )
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                updatedBy = reviewedBy,
+                idToken = idToken
+            )
+        }
         appendOwnerMapping(
             userId = preview.requesterUserId,
             cafeId = newCafeId,
@@ -2018,6 +2111,7 @@ class FirestoreConCafeDataSource(
             claim = claim,
             newCafeId = newCafeId
         )
+        adminPendingCafeRegistrationClaimCache.removeAll { existing -> existing.claimId == claimId }
         return preview
     }
 
@@ -2044,10 +2138,18 @@ class FirestoreConCafeDataSource(
             approvedCafeId = null,
             idToken = idToken
         )
+        runCatching {
+            touchGlobalClaimSyncMetaRemote(
+                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                updatedBy = reviewedBy,
+                idToken = idToken
+            )
+        }
         applyRejectedRegistrationClaimToCache(
             preview = preview,
             claimId = claimId
         )
+        adminPendingCafeRegistrationClaimCache.removeAll { existing -> existing.claimId == claimId }
         return preview
     }
 
@@ -2730,6 +2832,102 @@ class FirestoreConCafeDataSource(
             } else {
                 return fields.getFirestoreString("updatedAt")
             }
+        }
+    }
+
+    private suspend fun touchGlobalClaimSyncMetaRemote(
+        collectionId: String,
+        updatedBy: String,
+        idToken: String?
+    ) {
+        val updatedAt = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/$collectionId/$GLOBAL_CLAIM_SYNC_META_DOC_ID"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "updatedAt" to firestoreString(updatedAt),
+                "updatedBy" to firestoreString(updatedBy)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+    }
+
+    private suspend fun readGlobalClaimSyncUpdatedAt(
+        collectionId: String,
+        idToken: String?
+    ): String? {
+        val path = "${config.documentBasePath()}/$collectionId/$GLOBAL_CLAIM_SYNC_META_DOC_ID"
+        val response = runCatching {
+            restApi.get(path, idToken)
+        }.getOrNull()
+
+        if (response == null) {
+            return null
+        } else {
+            val document = Json.parseToJsonElement(response).jsonObject
+            val fields = document["fields"]?.jsonObject
+
+            if (fields == null) {
+                return null
+            } else {
+                return fields.getFirestoreString("updatedAt")
+            }
+        }
+    }
+
+    private suspend fun hasGlobalClaimSyncChangedForAdmin(
+        key: String,
+        collectionId: String,
+        cache: MutableMap<String, String>,
+        idToken: String?
+    ): Boolean {
+        val remoteUpdatedAt = runCatching {
+            readGlobalClaimSyncUpdatedAt(collectionId = collectionId, idToken = idToken)
+        }.recoverCatching {
+            readGlobalClaimSyncUpdatedAt(collectionId = collectionId, idToken = null)
+        }.getOrNull()
+        val localUpdatedAt = cache[key]
+
+        return if (remoteUpdatedAt == null) {
+            if (localUpdatedAt == CLAIM_SYNC_META_MISSING_MARKER) {
+                false
+            } else {
+                cache[key] = CLAIM_SYNC_META_MISSING_MARKER
+                true
+            }
+        } else if (localUpdatedAt == remoteUpdatedAt) {
+            false
+        } else {
+            cache[key] = remoteUpdatedAt
+            true
+        }
+    }
+
+    private suspend fun hasGlobalClaimSyncChangedForUser(
+        userId: String,
+        collectionId: String,
+        cache: MutableMap<String, String>,
+        idToken: String?
+    ): Boolean {
+        val remoteUpdatedAt = runCatching {
+            readGlobalClaimSyncUpdatedAt(collectionId = collectionId, idToken = idToken)
+        }.recoverCatching {
+            readGlobalClaimSyncUpdatedAt(collectionId = collectionId, idToken = null)
+        }.getOrNull()
+        val localUpdatedAt = cache[userId]
+
+        return if (remoteUpdatedAt == null) {
+            if (localUpdatedAt == CLAIM_SYNC_META_MISSING_MARKER) {
+                false
+            } else {
+                cache[userId] = CLAIM_SYNC_META_MISSING_MARKER
+                true
+            }
+        } else if (localUpdatedAt == remoteUpdatedAt) {
+            false
+        } else {
+            cache[userId] = remoteUpdatedAt
+            true
         }
     }
 
@@ -4262,3 +4460,5 @@ private fun nextFirestoreEntityId(prefix: String): String {
 
 private const val CAST_CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
 private const val CAST_CLAIM_SYNC_META_DOC_ID = "sync"
+private const val CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
+private const val GLOBAL_CLAIM_SYNC_META_DOC_ID = "sync"

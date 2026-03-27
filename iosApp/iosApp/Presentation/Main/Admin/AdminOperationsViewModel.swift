@@ -86,6 +86,37 @@ final class AdminOperationsViewModel: ObservableObject {
         }
     }
 
+    private func refreshPendingClaimsOnly() {
+        Task { @MainActor in
+            do {
+                let registration = try await getPendingCafeRegistrationClaimsUseCase.invoke()
+                let roleClaimsResult = try await getPendingCafeOwnerClaimsUseCase.invoke()
+
+                if let registrationSuccess = registration as? AppResultSuccess<AnyObject>,
+                   let registrationClaims = registrationSuccess.data as? [PendingCafeRegistrationClaimPreview],
+                   let roleClaimSuccess = roleClaimsResult as? AppResultSuccess<AnyObject>,
+                   let roleClaims = roleClaimSuccess.data as? [PendingCafeOwnerClaimPreview] {
+                    let sortedRegistrations = registrationClaims.sorted { $0.requestedAt > $1.requestedAt }
+                    let sortedOwnerClaims = roleClaims.sorted { $0.requestedAt > $1.requestedAt }
+                    let pendingCount = sortedRegistrations.count + sortedOwnerClaims.count
+                    let totalUsersCount = uiState.totalUsersCount
+                    let activeCafesCount = uiState.activeCafesCount
+                    let reportItemsCount = uiState.reportItemsCount
+
+                    uiState.pendingCafeRegistrationClaims = sortedRegistrations
+                    uiState.pendingCafeOwnerClaims = sortedOwnerClaims
+                    uiState.metrics = buildAdminMetrics(
+                        totalUsersCount: totalUsersCount,
+                        activeCafesCount: activeCafesCount,
+                        pendingCount: pendingCount,
+                        reportItemsCount: reportItemsCount
+                    )
+                }
+            } catch {
+            }
+        }
+    }
+
     private func showCachedPendingRequests() {
         guard let snapshot = AdminPendingCache.snapshot else { return }
         let pendingCount = snapshot.registrationClaims.count + snapshot.ownerClaims.count
@@ -110,7 +141,7 @@ final class AdminOperationsViewModel: ObservableObject {
                     switch event {
                     case let created as CafeRegistrationClaimEvent.Created:
                         _ = created
-                        self.loadPendingRequests()
+                        self.refreshPendingClaimsOnly()
                     case let approved as CafeRegistrationClaimEvent.Approved:
                         self.removeRegistrationClaimLocally(claimId: approved.claimId)
                     case let rejected as CafeRegistrationClaimEvent.Rejected:
@@ -121,6 +152,26 @@ final class AdminOperationsViewModel: ObservableObject {
                 }
             } catch {
                 print("Error: \(error)")
+            }
+        }
+    }
+
+    private func startClaimPolling() {
+        let pollingIntervalNanoseconds = claimPollingIntervalNanoseconds
+        tasks[.claimPolling]?.cancel()
+        tasks[.claimPolling] = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: pollingIntervalNanoseconds)
+                } catch {
+                    break
+                }
+
+                if Task.isCancelled {
+                    break
+                } else {
+                    self?.refreshPendingClaimsOnly()
+                }
             }
         }
     }
@@ -256,6 +307,7 @@ final class AdminOperationsViewModel: ObservableObject {
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         showCachedPendingRequests()
         observeClaimEvents()
+        startClaimPolling()
         loadPendingRequests()
     }
 
@@ -266,10 +318,12 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private enum TaskKey {
         case claimEvent
+        case claimPolling
     }
 }
 
 private let adminBannerMenuId = "banner"
+private let claimPollingIntervalNanoseconds: UInt64 = 5_000_000_000
 
 private struct AdminPendingSnapshot {
     let registrationClaims: [PendingCafeRegistrationClaimPreview]

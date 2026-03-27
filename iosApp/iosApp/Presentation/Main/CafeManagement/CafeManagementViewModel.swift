@@ -157,6 +157,26 @@ final class CafeManagementViewModel: ObservableObject {
         }
     }
 
+    private func startClaimPolling() {
+        let pollingIntervalNanoseconds = cafeManagementClaimPollingIntervalNanoseconds
+        tasks[.claimPolling]?.cancel()
+        tasks[.claimPolling] = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: pollingIntervalNanoseconds)
+                } catch {
+                    break
+                }
+
+                if Task.isCancelled {
+                    break
+                } else {
+                    self?.loadCafeManagement()
+                }
+            }
+        }
+    }
+
     private func patchCafeInfo(_ cafe: Cafe) {
         uiState.ownedCafes = uiState.ownedCafes.map { item in
             guard item.id == cafe.id else { return item }
@@ -220,6 +240,7 @@ final class CafeManagementViewModel: ObservableObject {
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
+        startClaimPolling()
         loadCafeManagement()
     }
 
@@ -232,5 +253,8 @@ final class CafeManagementViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case cafeRegistrationClaimEvent
+        case claimPolling
     }
 }
+
+private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 5_000_000_000

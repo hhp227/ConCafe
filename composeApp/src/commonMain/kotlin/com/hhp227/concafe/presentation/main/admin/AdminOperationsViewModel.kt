@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class AdminOperationsViewModel(
@@ -96,6 +98,32 @@ class AdminOperationsViewModel(
         }
     }
 
+    private fun refreshPendingClaimsOnly() {
+        viewModelScope.launch {
+            val registrationResult = getPendingCafeRegistrationClaimsUseCase.invoke()
+            val ownerClaimResult = getPendingCafeOwnerClaimsUseCase.invoke()
+
+            if (registrationResult is AppResult.Success && ownerClaimResult is AppResult.Success) {
+                val registrationClaims = registrationResult.data.sortedByDescending { it.requestedAt }
+                val ownerClaims = ownerClaimResult.data.sortedByDescending { it.requestedAt }
+
+                _uiState.update { state ->
+                    val pendingCount = registrationClaims.size + ownerClaims.size
+                    state.copy(
+                        pendingCafeRegistrationClaims = registrationClaims,
+                        pendingCafeOwnerClaims = ownerClaims,
+                        metrics = buildAdminMetrics(
+                            totalUsersCount = state.totalUsersCount,
+                            activeCafesCount = state.activeCafesCount,
+                            pendingCount = pendingCount,
+                            reportItemsCount = state.reportItemsCount
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private fun showCachedPendingRequests() {
         val snapshot = AdminPendingCache.snapshot ?: return
         _uiState.update { state ->
@@ -121,9 +149,22 @@ class AdminOperationsViewModel(
         jobs[TaskKey.CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { claimEvent ->
                 when (claimEvent) {
-                    is CafeRegistrationClaimEvent.Created -> loadPendingRequests()
+                    is CafeRegistrationClaimEvent.Created -> refreshPendingClaimsOnly()
                     is CafeRegistrationClaimEvent.Approved -> removeRegistrationClaimLocally(claimEvent.claimId)
                     is CafeRegistrationClaimEvent.Rejected -> removeRegistrationClaimLocally(claimEvent.claimId)
+                }
+            }
+        }
+    }
+
+    private fun startClaimPolling() {
+        jobs[TaskKey.CLAIM_POLLING]?.cancel()
+        jobs[TaskKey.CLAIM_POLLING] = viewModelScope.launch {
+            while (isActive) {
+                delay(ADMIN_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    refreshPendingClaimsOnly()
                 }
             }
         }
@@ -278,6 +319,7 @@ class AdminOperationsViewModel(
     init {
         showCachedPendingRequests()
         observeClaimEvents()
+        startClaimPolling()
         loadPendingRequests()
     }
 
@@ -288,9 +330,12 @@ class AdminOperationsViewModel(
     }
 
     private enum class TaskKey {
-        CLAIM_EVENT
+        CLAIM_EVENT,
+        CLAIM_POLLING
     }
 }
+
+private const val ADMIN_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L
 
 private const val ADMIN_BANNER_MENU_ID = "banner"
 

@@ -3,12 +3,14 @@ package com.hhp227.concafe.presentation.main.cafemanagement
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
@@ -167,6 +169,19 @@ class CafeManagementViewModel(
         }
     }
 
+    private fun startClaimPolling() {
+        jobs[TaskKey.POLL_CLAIM]?.cancel()
+        jobs[TaskKey.POLL_CLAIM] = viewModelScope.launch {
+            while (isActive) {
+                delay(CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    loadCafeManagement()
+                }
+            }
+        }
+    }
+
     private fun patchCafeInfo(cafe: Cafe) {
         _uiState.update { state ->
             state.copy(
@@ -211,6 +226,7 @@ class CafeManagementViewModel(
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
+        startClaimPolling()
         loadCafeManagement()
     }
 
@@ -223,6 +239,9 @@ class CafeManagementViewModel(
     private enum class TaskKey {
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
+        POLL_CLAIM
     }
 }
+
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L
