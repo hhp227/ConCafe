@@ -22,14 +22,37 @@ class CastClaimRepositoryImpl(
     private val cafeDataSource: CafeDataSource,
     private val pagingDataSource: PagingDataSource
 ) : CastClaimRepository {
+    private fun resolveAffiliatedCafeId(userId: String, linkedCast: Cast?): String? {
+        val mappedAffiliatedCafeId = castDataSource.affiliatedCafeIdByUser[userId]
+
+        if (!mappedAffiliatedCafeId.isNullOrBlank()) {
+            return mappedAffiliatedCafeId
+        } else if (linkedCast != null) {
+            return linkedCast.cafeId
+        } else {
+            val requestableCafeIds = castDataSource.casts
+                .asSequence()
+                .filter { cast -> cast.linkedUserId == null }
+                .map { cast -> cast.cafeId }
+                .distinct()
+                .toList()
+
+            return if (requestableCafeIds.size == 1) {
+                requestableCafeIds.first()
+            } else {
+                null
+            }
+        }
+    }
+
     override suspend fun getAffiliatedCafeId(userId: String): String? {
-        return castDataSource.affiliatedCafeIdByUser[userId]
-            ?: castDataSource.casts.firstOrNull { it.linkedUserId == userId }?.cafeId
+        val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
+        return resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
     }
 
     override suspend fun getMyCastClaimStatus(userId: String): MyCastClaimStatus {
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
-        val affiliatedCafeId = castDataSource.affiliatedCafeIdByUser[userId] ?: linkedCast?.cafeId
+        val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
         val affiliatedCafe = affiliatedCafeId?.let { cafeId ->
             cafeDataSource.cafes.firstOrNull { it.id == cafeId }
         }
@@ -56,7 +79,7 @@ class CastClaimRepositoryImpl(
         pageSize: Int
     ): PagedResult<CastClaimCandidate> {
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
-        val affiliatedCafeId = castDataSource.affiliatedCafeIdByUser[userId] ?: linkedCast?.cafeId
+        val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
         if (linkedCast != null || affiliatedCafeId == null) {
             return PagedResult(emptyList(), nextCursor = null, hasNext = false)
         }

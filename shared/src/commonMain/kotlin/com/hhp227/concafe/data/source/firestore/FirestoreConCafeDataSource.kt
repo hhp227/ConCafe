@@ -1444,7 +1444,15 @@ class FirestoreConCafeDataSource(
         return runCatching {
             val response = restApi.get(path, idToken)
             val parsed = Json.parseToJsonElement(response).jsonObject
-            parseUserDocument(parsed)
+            val user = parseUserDocument(parsed)
+            val affiliatedCafeId = parseUserAffiliatedCafeId(parsed)
+
+            if (user != null && !affiliatedCafeId.isNullOrBlank()) {
+                delegate.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+            } else if (user != null) {
+                delegate.affiliatedCafeIdByUser.remove(user.id)
+            }
+            user
         }.getOrNull()
     }
 
@@ -1461,6 +1469,7 @@ class FirestoreConCafeDataSource(
     override suspend fun pushUser(user: User) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/${user.id}"
+        val affiliatedCafeId = delegate.affiliatedCafeIdByUser[user.id]
         val body = firestoreDocumentBody(
             mapOf(
                 "email" to firestoreString(user.email),
@@ -1468,7 +1477,8 @@ class FirestoreConCafeDataSource(
                 "profileImage" to firestoreNullableString(user.profileImage),
                 "role" to firestoreString(user.role.name),
                 "banned" to firestoreBoolean(user.banned),
-                "createdAt" to firestoreString(user.createdAt)
+                "createdAt" to firestoreString(user.createdAt),
+                "affiliatedCafeId" to firestoreNullableString(affiliatedCafeId)
             )
         )
         restApi.patch(path, body, idToken)
@@ -1877,11 +1887,21 @@ class FirestoreConCafeDataSource(
         val response = restApi.get("${config.documentBasePath()}/${FirestorePaths.USERS}", idToken)
         val parsed = Json.parseToJsonElement(response).jsonObject
         val documents = parsed["documents"]?.jsonArray.orEmpty()
+        val affiliatedCafeByUser = mutableMapOf<String, String>()
         val users = documents.mapNotNull { element ->
-            parseUserDocument(element.jsonObject)
+            val document = element.jsonObject
+            val user = parseUserDocument(document) ?: return@mapNotNull null
+            val affiliatedCafeId = parseUserAffiliatedCafeId(document)
+
+            if (!affiliatedCafeId.isNullOrBlank()) {
+                affiliatedCafeByUser[user.id] = affiliatedCafeId
+            }
+            user
         }
 
         replaceAllUsers(users)
+        delegate.affiliatedCafeIdByUser.clear()
+        delegate.affiliatedCafeIdByUser.putAll(affiliatedCafeByUser)
     }
 
     private suspend fun loadHomeBanners(idToken: String?) {
@@ -3154,6 +3174,13 @@ class FirestoreConCafeDataSource(
             banned = banned,
             createdAt = createdAt
         )
+    }
+
+    private fun parseUserAffiliatedCafeId(document: JsonObject): String? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        return fields.getFirestoreString("affiliatedCafeId")
+            ?.trim()
+            ?.takeIf { value -> value.isNotEmpty() }
     }
 
     private fun parseHomeBannerDocument(document: JsonObject): HomeBanner? {
