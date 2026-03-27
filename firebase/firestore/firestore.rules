@@ -70,6 +70,7 @@ service cloud.firestore {
 
     function isValidReviewCreateData() {
       return request.resource.data.userId is string
+        && request.resource.data.userNickname is string
         && request.resource.data.cafeId is string
         && request.resource.data.visitId is string
         && request.resource.data.rating is number

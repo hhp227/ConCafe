@@ -689,12 +689,14 @@ class FirestoreConCafeDataSource(
         taggedCastIds: List<String>
     ): Review {
         val idToken = tokenProvider.getIdToken()
+        val userNickname = delegate.findUserById(userId)?.nickname.orEmpty()
         val reviewId = nextFirestoreEntityId("review")
         val createdAt = Clock.System.now().toString()
         val path = "${config.documentBasePath()}/${FirestorePaths.REVIEWS}/$reviewId"
         val body = firestoreDocumentBody(
             mapOf(
                 "userId" to firestoreString(userId),
+                "userNickname" to firestoreString(userNickname),
                 "cafeId" to firestoreString(cafeId),
                 "visitId" to firestoreString(visitId),
                 "rating" to firestoreDouble(rating.toDouble()),
@@ -721,7 +723,8 @@ class FirestoreConCafeDataSource(
             taggedCastIds = taggedCastIds,
             likeCount = 0,
             createdAt = createdAt,
-            visitVerified = false
+            visitVerified = false,
+            userNickname = userNickname
         )
         reviews.removeAll { review -> review.id == reviewId }
         reviews.add(created)
@@ -3332,6 +3335,9 @@ class FirestoreConCafeDataSource(
         return Review(
             id = reviewId,
             userId = userId,
+            userNickname = fields.getFirestoreString("userNickname")
+                ?: findUserById(userId)?.nickname
+                ?: "",
             cafeId = cafeId,
             visitId = fields.getFirestoreString("visitId").orEmpty(),
             rating = ratingValue.toFloat(),
