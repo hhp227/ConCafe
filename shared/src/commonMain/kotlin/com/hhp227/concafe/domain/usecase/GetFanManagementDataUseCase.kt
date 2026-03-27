@@ -3,6 +3,7 @@ package com.hhp227.concafe.domain.usecase
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.FanManagementData
+import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
@@ -41,18 +42,32 @@ class GetFanManagementDataUseCase(
                     fromDate = weekStart.toString(),
                     toDate = weekEnd.toString()
                 )
+                val followerSnapshots = castRepository.getFollowerSnapshots(castId)
+                val followers = followerSnapshots.map { follower ->
+                    runCatching {
+                        val user = userRepository.getUser(follower.userId)
+                        FanFollower(
+                            id = user.id,
+                            nickname = user.nickname,
+                            profileImage = user.profileImage,
+                            followedAt = follower.followedAt
+                        )
+                    }.getOrElse {
+                        FanFollower(
+                            id = follower.userId,
+                            nickname = follower.userNickname?.takeIf { nickname -> nickname.isNotBlank() }
+                                ?: "알 수 없는 팬",
+                            profileImage = follower.userProfileImage,
+                            followedAt = follower.followedAt
+                        )
+                    }
+                }
 
                 AppResult.Success(
                     FanManagementData(
                         user = currentUser,
                         detail = detail.copy(schedule = weekSchedules),
-                        followers = castRepository.getFollowerUserIds(castId)
-                            .distinct()
-                            .mapNotNull { userId ->
-                                runCatching {
-                                    userRepository.getUser(userId)
-                                }.getOrNull()
-                            }
+                        followers = followers
                     )
                 )
             }

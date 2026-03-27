@@ -11,6 +11,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastFollowerSnapshot
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
@@ -258,6 +259,27 @@ class CastRepositoryImpl(
             ?.toList()
             ?.sorted()
             .orEmpty()
+    }
+
+    override suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            val remote = runCatching {
+                firestoreDataSource.getCastFollowerSnapshots(castId)
+            }.getOrNull()
+
+            if (remote != null) {
+                return remote
+            }
+        }
+        return getFollowerUserIds(castId)
+            .map { followerUserId ->
+                CastFollowerSnapshot(
+                    userId = followerUserId,
+                    followedAt = ""
+                )
+            }
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {

@@ -5,6 +5,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastFollowerSnapshot
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
@@ -166,6 +167,15 @@ class FakeCastRepository(
             .filterValues { followedIds -> followedIds.contains(castId) }
             .keys
             .sorted()
+    }
+
+    override suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
+        return getFollowerUserIds(castId).map { followerUserId ->
+            CastFollowerSnapshot(
+                userId = followerUserId,
+                followedAt = ""
+            )
+        }
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {

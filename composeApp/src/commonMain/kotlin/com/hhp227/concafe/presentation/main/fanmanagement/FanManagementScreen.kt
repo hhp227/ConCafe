@@ -24,10 +24,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
-import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -580,7 +582,7 @@ private fun CastClaimSheet(
 
 @Composable
 private fun RecentFollowersSection(
-    followers: List<User>,
+    followers: List<FanFollower>,
     onFollowerClick: (String) -> Unit
 ) {
     SectionCard(
@@ -595,12 +597,7 @@ private fun RecentFollowersSection(
             ) {
                 followers.take(10).forEachIndexed { index, follower ->
                     val accent = index == 0
-                    val joinedLabel = when (index) {
-                        0 -> "방금 전"
-                        1 -> "2시간 전"
-                        2 -> "5시간 전"
-                        else -> "최근"
-                    }
+                    val joinedLabel = follower.followedAt.toRelativeFollowerTimeLabel()
                     Column(
                         modifier = Modifier
                             .width(74.dp)
@@ -651,6 +648,24 @@ private fun RecentFollowersSection(
                 AddFollowerButton()
             }
         }
+    }
+}
+
+private fun String.toRelativeFollowerTimeLabel(): String {
+    val followedAt = runCatching {
+        Instant.parse(this)
+    }.getOrNull()
+    if (followedAt == null) {
+        return "최근"
+    }
+    val now = Clock.System.now()
+    val diffSeconds = (now.epochSeconds - followedAt.epochSeconds).coerceAtLeast(0)
+    return when {
+        diffSeconds < 60 -> "방금 전"
+        diffSeconds < 3600 -> "${diffSeconds / 60}분 전"
+        diffSeconds < 86_400 -> "${diffSeconds / 3600}시간 전"
+        diffSeconds < 2_592_000 -> "${diffSeconds / 86_400}일 전"
+        else -> "오래 전"
     }
 }
 

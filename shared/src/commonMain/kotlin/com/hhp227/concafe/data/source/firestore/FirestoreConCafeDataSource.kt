@@ -37,6 +37,7 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastClaim
 import com.hhp227.concafe.domain.model.CastClaimStatus
 import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastFollowerSnapshot
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
@@ -914,32 +915,62 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun refreshFollowerUserIds(castId: String) {
-        val idToken = tokenProvider.getIdToken()
-        val followDocuments = runCatching {
-            runFieldScopedQuery(
-                collectionId = FirestorePaths.CAST_FOLLOWS,
-                fieldPath = "castId",
-                fieldValue = castId,
-                idToken = idToken,
-                orderByCreatedAtDesc = false
-            )
-        }.recoverCatching {
-            runFieldScopedQuery(
-                collectionId = FirestorePaths.CAST_FOLLOWS,
-                fieldPath = "castId",
-                fieldValue = castId,
-                idToken = null,
-                orderByCreatedAtDesc = false
-            )
-        }.getOrElse { emptyList() }
-        val followerIds = followDocuments
-            .mapNotNull { document ->
-                document["fields"]?.jsonObject?.getFirestoreString("userId")
-            }
+        val followerIds = getCastFollowerSnapshots(castId)
+            .map { snapshot -> snapshot.userId }
             .toMutableSet()
 
         followerUserIdsByCastId[castId] = followerIds
         syncCastFollowerCountInCache(castId = castId, followerCount = followerIds.size)
+    }
+
+    suspend fun getCastFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
+        val idToken = tokenProvider.getIdToken()
+        val followDocuments = runCatching {
+            runCastFollowerQuery(
+                castId = castId,
+                idToken = idToken,
+                orderByCreatedAtDesc = true,
+                limit = RECENT_FOLLOWER_FETCH_LIMIT
+            )
+        }.recoverCatching {
+            runCastFollowerQuery(
+                castId = castId,
+                idToken = null,
+                orderByCreatedAtDesc = true,
+                limit = RECENT_FOLLOWER_FETCH_LIMIT
+            )
+        }.getOrElse {
+            runCatching {
+                runCastFollowerQuery(
+                    castId = castId,
+                    idToken = idToken,
+                    orderByCreatedAtDesc = false,
+                    limit = RECENT_FOLLOWER_FETCH_LIMIT
+                )
+            }.recoverCatching {
+                runCastFollowerQuery(
+                    castId = castId,
+                    idToken = null,
+                    orderByCreatedAtDesc = false,
+                    limit = RECENT_FOLLOWER_FETCH_LIMIT
+                )
+            }.getOrElse { emptyList() }
+        }
+
+        val snapshots = followDocuments.mapNotNull { document ->
+            parseCastFollowDocument(document)
+        }.filter { snapshot ->
+            snapshot.userId.isNotBlank()
+        }.sortedByDescending { snapshot ->
+            snapshot.followedAt
+        }
+        val followerIds = snapshots
+            .map { snapshot -> snapshot.userId }
+            .toMutableSet()
+
+        followerUserIdsByCastId[castId] = followerIds
+        syncCastFollowerCountInCache(castId = castId, followerCount = followerIds.size)
+        return snapshots
     }
 
     suspend fun followCastRemote(userId: String, castId: String) {
@@ -955,11 +986,14 @@ class FirestoreConCafeDataSource(
         val followId = buildCastFollowDocumentId(userId = userId, castId = castId)
         val path = "${config.documentBasePath()}/${FirestorePaths.CAST_FOLLOWS}/$followId"
         val createdAt = Clock.System.now().toString()
+        val follower = findUserById(userId)
         val body = firestoreDocumentBody(
             mapOf(
                 "userId" to firestoreString(userId),
                 "castId" to firestoreString(castId),
                 "cafeId" to firestoreString(cast.cafeId),
+                "userNickname" to firestoreNullableString(follower?.nickname),
+                "userProfileImage" to firestoreNullableString(follower?.profileImage),
                 "createdAt" to firestoreString(createdAt)
             )
         )
@@ -2805,6 +2839,51 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runCastFollowerQuery(
+        castId: String,
+        idToken: String?,
+        orderByCreatedAtDesc: Boolean,
+        limit: Int
+    ): List<JsonObject> {
+        val safeLimit = limit.coerceAtLeast(1)
+        val path = "${config.documentBasePath()}:runQuery"
+        val orderBySection = if (orderByCreatedAtDesc) {
+            """
+            ,
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ]
+            """.trimIndent()
+        } else {
+            ""
+        }
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.CAST_FOLLOWS}" }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "castId" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(castId)}" }
+                  }
+                }$orderBySection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runVerifiedVisitByUserCafeQuery(
         userId: String,
         cafeId: String,
@@ -4022,6 +4101,18 @@ class FirestoreConCafeDataSource(
         )
     }
 
+    private fun parseCastFollowDocument(document: JsonObject): CastFollowerSnapshot? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val userId = fields.getFirestoreString("userId") ?: return null
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        return CastFollowerSnapshot(
+            userId = userId,
+            followedAt = createdAt,
+            userNickname = fields.getFirestoreString("userNickname"),
+            userProfileImage = fields.getFirestoreString("userProfileImage")
+        )
+    }
+
     private fun parsePendingCafeOwnerClaimDocument(document: JsonObject): CafeManagementData.PendingClaimSummary? {
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
@@ -4215,6 +4306,7 @@ class FirestoreConCafeDataSource(
     private companion object {
         const val DEFAULT_OWNER_CLAIM_STATUS = "승인 대기 중"
         const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
+        const val RECENT_FOLLOWER_FETCH_LIMIT = 30
     }
 }
 

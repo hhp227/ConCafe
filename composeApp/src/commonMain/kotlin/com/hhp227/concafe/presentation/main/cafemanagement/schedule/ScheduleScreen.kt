@@ -324,37 +324,49 @@ private fun ScheduleContentScreen(
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFF8FB), Color(0xFFFFEFF5))
                     )
                 )
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ScheduleCastSummaryCard(uiState.castSummary)
-            WeekSelectorSection(uiState = uiState, onAction = onAction)
-            if (uiState.errorMessage != null) {
-                ScheduleInfoBanner(
-                    message = uiState.errorMessage,
-                    onDismiss = { onAction(ScheduleAction.DismissInfoMessage) }
+            if (!uiState.isLoading) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ScheduleCastSummaryCard(uiState.castSummary)
+                    WeekSelectorSection(uiState = uiState, onAction = onAction)
+                    if (uiState.errorMessage != null) {
+                        ScheduleInfoBanner(
+                            message = uiState.errorMessage,
+                            onDismiss = { onAction(ScheduleAction.DismissInfoMessage) }
+                        )
+                    }
+                    if (uiState.infoMessage != null) {
+                        ScheduleInfoBanner(
+                            message = uiState.infoMessage,
+                            onDismiss = { onAction(ScheduleAction.DismissInfoMessage) }
+                        )
+                    }
+                    ScheduleDayList(
+                        schedules = uiState.schedules,
+                        onAction = onAction
+                    )
+                }
+            } else {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFFEF6797)
                 )
             }
-            if (uiState.infoMessage != null) {
-                ScheduleInfoBanner(
-                    message = uiState.infoMessage,
-                    onDismiss = { onAction(ScheduleAction.DismissInfoMessage) }
-                )
-            }
-            ScheduleDayList(
-                schedules = uiState.schedules,
-                onAction = onAction
-            )
         }
     }
 }

@@ -280,31 +280,39 @@ private struct ScheduleContentView: View {
     let onAction: (ScheduleAction) -> Void
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: true) {
-            VStack(spacing: 12) {
-                castSummaryCard
-                weekSelectorSection
-                if let errorMessage = uiState.errorMessage {
-                    infoBanner(message: errorMessage)
-                }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                scheduleListSection
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 24)
-            .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(
+        ZStack {
             LinearGradient(
                 colors: [Color(hex: "F8F5F6"), Color(hex: "FFF8FB"), Color(hex: "FFEFF5")],
                 startPoint: .top,
                 endPoint: .bottom
             )
-        )
+            .ignoresSafeArea()
+            if !uiState.isLoading {
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(spacing: 12) {
+                        castSummaryCard
+                        weekSelectorSection
+                        if let errorMessage = uiState.errorMessage {
+                            infoBanner(message: errorMessage)
+                        }
+                        if let infoMessage = uiState.infoMessage {
+                            infoBanner(message: infoMessage)
+                        }
+                        scheduleListSection
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .tint(Color(hex: "EF6797"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            }
+        }
     }
 
     private var castSummaryCard: some View {
