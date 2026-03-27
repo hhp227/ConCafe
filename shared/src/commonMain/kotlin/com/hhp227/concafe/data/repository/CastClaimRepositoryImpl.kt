@@ -36,11 +36,8 @@ class CastClaimRepositoryImpl(
                 val lastRefreshEpochMillis = lastCafeCastsRefreshEpochMillisByCafeId[affiliatedCafeId] ?: 0L
 
                 if (nowEpochMillis - lastRefreshEpochMillis >= CAFE_CASTS_REFRESH_INTERVAL_MILLIS) {
-                    runCatching {
-                        firestoreDataSource.refreshCafeCastsRemote(affiliatedCafeId)
-                    }.onSuccess {
-                        lastCafeCastsRefreshEpochMillisByCafeId[affiliatedCafeId] = nowEpochMillis
-                    }
+                    firestoreDataSource.refreshCafeCastsRemote(affiliatedCafeId)
+                    lastCafeCastsRefreshEpochMillisByCafeId[affiliatedCafeId] = nowEpochMillis
                 }
             }
         }
@@ -97,11 +94,8 @@ class CastClaimRepositoryImpl(
             val lastRefreshEpochMillis = lastUserClaimsRefreshEpochMillisByUserId[userId] ?: 0L
 
             if (nowEpochMillis - lastRefreshEpochMillis >= USER_CLAIMS_REFRESH_INTERVAL_MILLIS) {
-                runCatching {
-                    firestoreDataSource.refreshCastClaimsForUser(userId)
-                }.onSuccess {
-                    lastUserClaimsRefreshEpochMillisByUserId[userId] = nowEpochMillis
-                }
+                firestoreDataSource.refreshCastClaimsForUser(userId)
+                lastUserClaimsRefreshEpochMillisByUserId[userId] = nowEpochMillis
             }
         }
     }
@@ -114,16 +108,15 @@ class CastClaimRepositoryImpl(
             val lastRefreshEpochMillis = lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] ?: 0L
 
             if (nowEpochMillis - lastRefreshEpochMillis >= CAFE_CLAIMS_REFRESH_INTERVAL_MILLIS) {
-                val isChanged = runCatching {
+                val isChanged = try {
                     firestoreDataSource.hasCastClaimCafeSyncChanged(cafeId)
-                }.getOrDefault(true)
+                } catch (_: Throwable) {
+                    true
+                }
 
                 if (isChanged) {
-                    runCatching {
-                        firestoreDataSource.refreshCastClaimsForCafe(cafeId)
-                    }.onSuccess {
-                        lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
-                    }
+                    firestoreDataSource.refreshCastClaimsForCafe(cafeId)
+                    lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
                 } else {
                     lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] = nowEpochMillis
                 }

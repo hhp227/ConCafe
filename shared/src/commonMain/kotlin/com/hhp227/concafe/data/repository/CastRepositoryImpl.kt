@@ -87,19 +87,11 @@ class CastRepositoryImpl(
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
         if (firestoreDataSource != null) {
-            val remoteCasts = runCatching {
-                firestoreDataSource.fetchBirthdayCastsRemote(
-                    month = month,
-                    dayOfMonth = dayOfMonth,
-                    limit = safeLimit
-                )
-            }.getOrElse {
-                emptyList()
-            }
-
-            if (remoteCasts.isNotEmpty()) {
-                return remoteCasts.take(safeLimit)
-            }
+            return firestoreDataSource.fetchBirthdayCastsRemote(
+                month = month,
+                dayOfMonth = dayOfMonth,
+                limit = safeLimit
+            ).take(safeLimit)
         }
 
         return castDataSource.casts
@@ -116,9 +108,7 @@ class CastRepositoryImpl(
         var detail = castDataSource.castDetail(castId)
 
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCastDetailRemote(castId)
-            }
+            firestoreDataSource.refreshCastDetailRemote(castId)
             detail = castDataSource.castDetail(castId) ?: detail
         }
         return detail ?: throw NoSuchElementException("cast detail not found")
@@ -220,9 +210,7 @@ class CastRepositoryImpl(
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-            }
+            firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
         }
         return castDataSource.castSchedules(castId, fromDate, toDate)
     }
@@ -233,9 +221,7 @@ class CastRepositoryImpl(
         toDate: String
     ): Map<String, CastScheduleStatus> {
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-            }
+            firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
         }
         return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
@@ -274,11 +260,7 @@ class CastRepositoryImpl(
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
         if (firestoreDataSource != null) {
-            return runCatching {
-                firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
-            }.getOrElse {
-                cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
-            }
+            return firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
         } else {
             return cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
         }
@@ -286,18 +268,14 @@ class CastRepositoryImpl(
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFollowedCastIds(userId)
-            }
+            firestoreDataSource.refreshFollowedCastIds(userId)
         }
         return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
     }
 
     override suspend fun getFollowedCastIds(userId: String): List<String> {
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFollowedCastIds(userId)
-            }
+            firestoreDataSource.refreshFollowedCastIds(userId)
         }
         return socialDataSource.followedCastIdsByUser[userId]
             ?.toList()
@@ -321,9 +299,7 @@ class CastRepositoryImpl(
         } else {
             val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
             if (firestoreDataSource != null) {
-                val remote = runCatching {
-                    firestoreDataSource.refreshCastByLinkedUserId(userId)
-                }.getOrNull()
+                val remote = firestoreDataSource.refreshCastByLinkedUserId(userId)
                 if (remote != null) {
                     return remote
                 }
@@ -365,9 +341,7 @@ class CastRepositoryImpl(
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
         (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFollowerUserIds(castId)
-            }
+            firestoreDataSource.refreshFollowerUserIds(castId)
         }
         return socialDataSource.followerUserIdsByCastId[castId]
             ?.toList()
@@ -379,13 +353,7 @@ class CastRepositoryImpl(
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
         if (firestoreDataSource != null) {
-            val remote = runCatching {
-                firestoreDataSource.getCastFollowerSnapshots(castId)
-            }.getOrNull()
-
-            if (remote != null) {
-                return remote
-            }
+            return firestoreDataSource.getCastFollowerSnapshots(castId)
         }
         return getFollowerUserIds(castId)
             .map { followerUserId ->
