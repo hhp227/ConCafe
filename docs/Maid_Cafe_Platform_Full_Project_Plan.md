@@ -36,6 +36,16 @@ ConCafe는 메이드카페 정보를 공유하고
 - 운영관리 승인 대기 목록은 Firestore pending claim 조회 경로를 사용한다.
 - Firestore Rules에서 Admin의 claim 조회(read) 권한을 반영했다.
 
+## 구현 기준 스냅샷 (2026-03-27)
+
+- Claim 동기화는 `메타 문서 확인 -> 변경 시 본조회` 패턴으로 운영한다.
+  - `castClaims`: `cafes/{cafeId}/castClaims/sync`
+  - `cafeOwnerClaims`: `cafeOwnerClaims/sync`
+  - `cafeRegistrationClaims`: `cafeRegistrationClaims/sync`
+- 팬관리의 캐스트 프로필 연결 상태는 Claim 전용 경량 갱신 경로를 사용한다.
+- Admin 운영관리 / 카페관리 화면은 클라이언트 간 Claim 변경 반영을 위해 주기 동기화(5초)를 사용한다.
+- 카페 Claim 생성(`owner`, `registration`) 전에는 사용자 Claim 상태를 선행 동기화해 stale 캐시로 인한 UX 불일치를 줄인다.
+
 ------------------------------------------------------------------------
 
 # 3. 유저 타입 정의 (Role 기반 설계)
@@ -65,6 +75,7 @@ ConCafe는 4가지 Role 기반 구조를 가진다.
 
 현재 앱 구현 범위에서는 `운영관리` 대시보드가 Firestore의 `cafeOwnerClaims`, `cafeRegistrationClaims` 조회 경로를 사용해 승인 대기 목록을 표시한다.
 신규 카페 등록 승인 시 새 카페 데이터와 운영자 연결이 함께 생성된다.
+승인 대기 목록은 메타 변경 감지 기반으로 필요한 경우에만 본문 목록을 재조회한다.
 
 ------------------------------------------------------------------------
 
@@ -191,6 +202,7 @@ Android Compose와 iOS SwiftUI에 동일한 상태 구조의 운영 UI를 제공
 - 신청 상태가 `PENDING`이면 캐스트에게 `승인 대기 중` 상태를 표시하고 재신청을 막는다.
 - `REJECTED`된 경우에는 반려 상태를 표시하고 다시 신청할 수 있다.
 - 연결된 캐스트 프로필이 삭제되면 계정은 다시 `미연결` 상태가 되며, 팬관리에서 재신청할 수 있다.
+- 상태 계산은 소속 카페 캐시만이 아니라 사용자 Claim 이력(`PENDING` 우선, 최신 claim fallback)을 함께 사용한다.
 
 ### Cast 권한
 
