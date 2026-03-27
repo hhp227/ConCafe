@@ -44,6 +44,7 @@ import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -542,6 +543,13 @@ private fun NearByCafeItem(
     cafe: Cafe,
     modifier: Modifier = Modifier
 ) {
+    val roundedRating = (cafe.ratingAvg * 10).roundToInt() / 10.0
+    val ratingText = if (roundedRating % 1.0 == 0.0) {
+        "${roundedRating.toInt()}.0"
+    } else {
+        roundedRating.toString()
+    }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -564,7 +572,7 @@ private fun NearByCafeItem(
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+            Text("⭐ $ratingText", style = MaterialTheme.typography.bodySmall)
             Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(cafe.region.address, color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

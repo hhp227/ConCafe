@@ -499,7 +499,7 @@ private struct NearByCafeItem: View {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                Text("⭐ \(cafe.ratingAvg)")
+                Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))")
                 .font(.caption)
                 Text(cafe.region.city)
                 .font(.caption)
