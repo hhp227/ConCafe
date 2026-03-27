@@ -20,6 +20,9 @@ class CafeRegistrationClaimRepositoryImpl(
         userId: String,
         draft: CafeRegistrationDraft
     ): PendingCafeRegistrationClaimPreview {
+        runCatching {
+            firestoreSyncDataSource.refreshCafeManagementData(userId)
+        }
         val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
         if (draft.name.isBlank()) throw IllegalArgumentException("카페명을 입력해 주세요.")
         if (draft.description.isBlank()) throw IllegalArgumentException("카페 소개를 입력해 주세요.")

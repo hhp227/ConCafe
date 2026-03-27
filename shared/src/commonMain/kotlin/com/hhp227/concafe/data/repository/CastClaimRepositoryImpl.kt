@@ -48,11 +48,26 @@ class CastClaimRepositoryImpl(
 
     private fun resolveAffiliatedCafeId(userId: String, linkedCast: Cast?): String? {
         val mappedAffiliatedCafeId = castDataSource.affiliatedCafeIdByUser[userId]
+        val userClaims = castClaimDataSource.castClaims
+            .asSequence()
+            .filter { claim -> claim.userId == userId }
+            .toList()
+        val latestPendingCafeId = userClaims
+            .filter { claim -> claim.status == CastClaimStatus.PENDING }
+            .maxByOrNull { claim -> claim.createdAt }
+            ?.cafeId
+        val latestClaimCafeId = userClaims
+            .maxByOrNull { claim -> claim.createdAt }
+            ?.cafeId
 
         if (!mappedAffiliatedCafeId.isNullOrBlank()) {
             return mappedAffiliatedCafeId
         } else if (linkedCast != null) {
             return linkedCast.cafeId
+        } else if (!latestPendingCafeId.isNullOrBlank()) {
+            return latestPendingCafeId
+        } else if (!latestClaimCafeId.isNullOrBlank()) {
+            return latestClaimCafeId
         } else {
             val requestableCafeIds = castDataSource.casts
                 .asSequence()
@@ -69,6 +84,7 @@ class CastClaimRepositoryImpl(
     }
 
     override suspend fun getAffiliatedCafeId(userId: String): String? {
+        refreshClaimsForUser(userId)
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
         return resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
     }
@@ -116,14 +132,13 @@ class CastClaimRepositoryImpl(
     }
 
     override suspend fun getMyCastClaimStatus(userId: String): MyCastClaimStatus {
+        refreshClaimsForUser(userId)
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
 
         refreshAffiliatedCafeCasts(affiliatedCafeId)
         if (affiliatedCafeId != null) {
             refreshClaimsForCafe(affiliatedCafeId)
-        } else {
-            refreshClaimsForUser(userId)
         }
 
         val affiliatedCafe = affiliatedCafeId?.let { cafeId ->
@@ -151,6 +166,7 @@ class CastClaimRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CastClaimCandidate> {
+        refreshClaimsForUser(userId)
         val linkedCast = castDataSource.casts.firstOrNull { it.linkedUserId == userId }
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
 

@@ -207,16 +207,19 @@ final class FanManagementViewModel: ObservableObject {
                             accent: .rejected
                         )
                     }
+                    let shouldLoadPage = !data.hasLinkedProfile && pendingClaim == nil && data.hasRequestableCasts
+                    let shouldFetchCandidatePage = shouldLoadPage && (
+                        includeCandidatePage
+                            || fallbackSheet == nil
+                            || fallbackSheet?.affiliatedCafeId != cafeId
+                            || (fallbackSheet?.requestableCasts.isEmpty ?? true)
+                    )
                     let initialPage: PagedResult<Shared.CastClaimCandidate>?
-                    if !data.hasLinkedProfile && pendingClaim == nil && data.hasRequestableCasts {
-                        if includeCandidatePage {
-                            let pageResult = try await getMyRequestableCastPageUseCase.invoke(cursor: nil)
-                            if let pageSuccess = pageResult as? AppResultSuccess<AnyObject>,
-                               let page = pageSuccess.data as? PagedResult<Shared.CastClaimCandidate> {
-                                initialPage = page
-                            } else {
-                                initialPage = nil
-                            }
+                    if shouldFetchCandidatePage {
+                        let pageResult = try await getMyRequestableCastPageUseCase.invoke(cursor: nil)
+                        if let pageSuccess = pageResult as? AppResultSuccess<AnyObject>,
+                           let page = pageSuccess.data as? PagedResult<Shared.CastClaimCandidate> {
+                            initialPage = page
                         } else {
                             initialPage = nil
                         }
@@ -260,7 +263,7 @@ final class FanManagementViewModel: ObservableObject {
                         let canLoadMore: Bool
                         let selectedCastId: String?
                         let canSubmit: Bool
-                        if includeCandidatePage {
+                        if shouldFetchCandidatePage {
                             requestableCasts = initialCandidates
                             nextCursor = initialPage?.nextCursor
                             canLoadMore = initialPage?.hasNext ?? false

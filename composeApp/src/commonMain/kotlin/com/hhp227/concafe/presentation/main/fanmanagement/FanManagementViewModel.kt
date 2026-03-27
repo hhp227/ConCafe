@@ -176,14 +176,16 @@ class FanManagementViewModel(
             )
         }
         val shouldLoadPage = !status.hasLinkedProfile && pendingClaim == null && status.hasRequestableCasts
-        val initialCandidatePage: PagedResult<CastClaimCandidate>? = if (shouldLoadPage) {
-            if (includeCandidatePage) {
-                when (val pageResult = getMyRequestableCastPageUseCase.invoke(cursor = null)) {
-                    is AppResult.Success -> pageResult.data
-                    is AppResult.Failure -> null
-                }
-            } else {
-                null
+        val shouldFetchCandidatePage = shouldLoadPage && (
+            includeCandidatePage
+                || fallbackSheet == null
+                || fallbackSheet.affiliatedCafeId != cafeId
+                || fallbackSheet.requestableCasts.isEmpty()
+        )
+        val initialCandidatePage: PagedResult<CastClaimCandidate>? = if (shouldFetchCandidatePage) {
+            when (val pageResult = getMyRequestableCastPageUseCase.invoke(cursor = null)) {
+                is AppResult.Success -> pageResult.data
+                is AppResult.Failure -> null
             }
         } else {
             null
@@ -224,24 +226,24 @@ class FanManagementViewModel(
                 } else {
                     "연결할 캐스트 프로필을 선택하고 신청을 보내세요."
                 },
-                requestableCasts = if (includeCandidatePage) {
+                requestableCasts = if (shouldFetchCandidatePage) {
                     initialCandidates
                 } else {
                     fallbackSheet?.requestableCasts.orEmpty()
                 },
-                nextCursor = if (includeCandidatePage) {
+                nextCursor = if (shouldFetchCandidatePage) {
                     initialCandidatePage?.nextCursor
                 } else {
                     fallbackSheet?.nextCursor
                 },
-                canLoadMore = if (includeCandidatePage) {
+                canLoadMore = if (shouldFetchCandidatePage) {
                     initialCandidatePage?.hasNext ?: false
                 } else {
                     fallbackSheet?.canLoadMore ?: false
                 },
                 isLoadingMore = false,
-                selectedCastId = if (includeCandidatePage) selectedId else fallbackSheet?.selectedCastId,
-                canSubmit = if (includeCandidatePage) selectedId != null else fallbackSheet?.selectedCastId != null
+                selectedCastId = if (shouldFetchCandidatePage) selectedId else fallbackSheet?.selectedCastId,
+                canSubmit = if (shouldFetchCandidatePage) selectedId != null else fallbackSheet?.selectedCastId != null
             )
         }
 

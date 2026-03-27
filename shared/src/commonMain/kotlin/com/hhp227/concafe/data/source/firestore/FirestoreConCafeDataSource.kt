@@ -993,7 +993,7 @@ class FirestoreConCafeDataSource(
 
     suspend fun refreshCastClaimsForUser(userId: String) {
         val idToken = tokenProvider.getIdToken()
-        val claimDocuments = runCatching {
+        val claimDocumentsResult = runCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.CAST_CLAIMS,
                 userId = userId,
@@ -1005,20 +1005,26 @@ class FirestoreConCafeDataSource(
                 userId = userId,
                 idToken = null
             )
-        }.getOrElse { emptyList() }
-        val parsedClaims = claimDocuments.mapNotNull { document ->
-            parseCastClaimDocument(document)
-        }.sortedByDescending { claim ->
-            claim.createdAt
         }
 
-        castClaims.removeAll { claim -> claim.userId == userId }
-        castClaims.addAll(parsedClaims)
+        if (claimDocumentsResult.isSuccess) {
+            val claimDocuments = claimDocumentsResult.getOrNull().orEmpty()
+            val parsedClaims = claimDocuments.mapNotNull { document ->
+                parseCastClaimDocument(document)
+            }.sortedByDescending { claim ->
+                claim.createdAt
+            }
+
+            castClaims.removeAll { claim -> claim.userId == userId }
+            castClaims.addAll(parsedClaims)
+        } else {
+            Unit
+        }
     }
 
     suspend fun refreshCastClaimsForCafe(cafeId: String) {
         val idToken = tokenProvider.getIdToken()
-        val claimDocuments = runCatching {
+        val claimDocumentsResult = runCatching {
             runFieldScopedQuery(
                 collectionId = FirestorePaths.CAST_CLAIMS,
                 fieldPath = "cafeId",
@@ -1034,15 +1040,21 @@ class FirestoreConCafeDataSource(
                 idToken = null,
                 orderByCreatedAtDesc = false
             )
-        }.getOrElse { emptyList() }
-        val parsedClaims = claimDocuments.mapNotNull { document ->
-            parseCastClaimDocument(document)
-        }.sortedByDescending { claim ->
-            claim.createdAt
         }
 
-        castClaims.removeAll { claim -> claim.cafeId == cafeId }
-        castClaims.addAll(parsedClaims)
+        if (claimDocumentsResult.isSuccess) {
+            val claimDocuments = claimDocumentsResult.getOrNull().orEmpty()
+            val parsedClaims = claimDocuments.mapNotNull { document ->
+                parseCastClaimDocument(document)
+            }.sortedByDescending { claim ->
+                claim.createdAt
+            }
+
+            castClaims.removeAll { claim -> claim.cafeId == cafeId }
+            castClaims.addAll(parsedClaims)
+        } else {
+            Unit
+        }
     }
 
     suspend fun hasCastClaimCafeSyncChanged(cafeId: String): Boolean {
@@ -1830,67 +1842,94 @@ class FirestoreConCafeDataSource(
         if (!ownerSyncChanged && !registrationSyncChanged) {
             return
         }
-        val ownerClaimDocuments = runUserScopedQuery(
-            collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
-            userId = userId,
-            idToken = idToken
-        )
-        val registrationClaimDocuments = runUserScopedQuery(
-            collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
-            userId = userId,
-            idToken = idToken
-        )
-        val ownerClaims = ownerClaimDocuments.mapNotNull { document ->
-            parsePendingCafeOwnerClaimDocument(document)
+        val ownerClaimDocumentsResult = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                userId = userId,
+                idToken = null
+            )
         }
-        val registrationClaims = registrationClaimDocuments.mapNotNull { document ->
-            parseCafeRegistrationClaimDocument(document)
+        val registrationClaimDocumentsResult = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                userId = userId,
+                idToken = null
+            )
         }
-        val ownedCafeIds = mutableSetOf<String>()
 
-        ownerClaims.forEach { claim ->
-            val isApproved = claim.status.isApprovedClaimStatus()
-
-            if (isApproved) {
-                ownedCafeIds.add(claim.cafeId)
+        if (ownerClaimDocumentsResult.isSuccess && registrationClaimDocumentsResult.isSuccess) {
+            val ownerClaimDocuments = ownerClaimDocumentsResult.getOrNull().orEmpty()
+            val registrationClaimDocuments = registrationClaimDocumentsResult.getOrNull().orEmpty()
+            val ownerClaims = ownerClaimDocuments.mapNotNull { document ->
+                parsePendingCafeOwnerClaimDocument(document)
             }
-        }
-        val userDocument = runCatching {
-            val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
-            val response = restApi.get(path, idToken)
-            Json.parseToJsonElement(response).jsonObject
-        }.getOrNull()
-        val ownedCafeIdsFromUser = userDocument
-            ?.get("fields")
-            ?.jsonObject
-            ?.getFirestoreStringList("ownedCafeIds")
-            .orEmpty()
-        ownedCafeIds.addAll(ownedCafeIdsFromUser)
-        registrationClaimDocuments.forEach { document ->
-            val fields = document["fields"]?.jsonObject
+            val registrationClaims = registrationClaimDocuments.mapNotNull { document ->
+                parseCafeRegistrationClaimDocument(document)
+            }
+            val ownedCafeIds = mutableSetOf<String>()
 
-            if (fields != null) {
-                val status = fields.getFirestoreString("status").orEmpty()
-                val approvedCafeId = fields.getFirestoreString("approvedCafeId")
-                    ?: fields.getFirestoreString("cafeId")
-                val isApproved = status.isApprovedClaimStatus()
+            ownerClaims.forEach { claim ->
+                val isApproved = claim.status.isApprovedClaimStatus()
 
-                if (isApproved && !approvedCafeId.isNullOrBlank()) {
-                    ownedCafeIds.add(approvedCafeId)
+                if (isApproved) {
+                    ownedCafeIds.add(claim.cafeId)
                 }
             }
+            val userDocument = runCatching {
+                val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+                val response = restApi.get(path, idToken)
+                Json.parseToJsonElement(response).jsonObject
+            }.recoverCatching {
+                val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+                val response = restApi.get(path, null)
+                Json.parseToJsonElement(response).jsonObject
+            }.getOrNull()
+            val ownedCafeIdsFromUser = userDocument
+                ?.get("fields")
+                ?.jsonObject
+                ?.getFirestoreStringList("ownedCafeIds")
+                .orEmpty()
+            ownedCafeIds.addAll(ownedCafeIdsFromUser)
+            registrationClaimDocuments.forEach { document ->
+                val fields = document["fields"]?.jsonObject
+
+                if (fields != null) {
+                    val status = fields.getFirestoreString("status").orEmpty()
+                    val approvedCafeId = fields.getFirestoreString("approvedCafeId")
+                        ?: fields.getFirestoreString("cafeId")
+                    val isApproved = status.isApprovedClaimStatus()
+
+                    if (isApproved && !approvedCafeId.isNullOrBlank()) {
+                        ownedCafeIds.add(approvedCafeId)
+                    }
+                }
+            }
+            syncOwnedCafeDocuments(
+                ownedCafeIds = ownedCafeIds,
+                idToken = idToken
+            )
+            pendingCafeClaimsByUser[userId] = ownerClaims
+                .sortedByDescending { it.requestedAt }
+                .toMutableList()
+            pendingCafeRegistrationClaimsByUser[userId] = registrationClaims
+                .sortedByDescending { it.requestedAt }
+                .toMutableList()
+            ownedCafeIdsByUser[userId] = ownedCafeIds.toMutableList()
+        } else {
+            Unit
         }
-        syncOwnedCafeDocuments(
-            ownedCafeIds = ownedCafeIds,
-            idToken = idToken
-        )
-        pendingCafeClaimsByUser[userId] = ownerClaims
-            .sortedByDescending { it.requestedAt }
-            .toMutableList()
-        pendingCafeRegistrationClaimsByUser[userId] = registrationClaims
-            .sortedByDescending { it.requestedAt }
-            .toMutableList()
-        ownedCafeIdsByUser[userId] = ownedCafeIds.toMutableList()
     }
 
     private suspend fun syncOwnedCafeDocuments(
