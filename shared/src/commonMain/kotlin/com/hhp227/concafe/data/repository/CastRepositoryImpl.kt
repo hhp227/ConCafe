@@ -199,7 +199,22 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastByLinkedUserId(userId: String): Cast? {
-        return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+        val cached = castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+
+        if (cached != null) {
+            return cached
+        } else {
+            val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+            if (firestoreDataSource != null) {
+                val remote = runCatching {
+                    firestoreDataSource.refreshCastByLinkedUserId(userId)
+                }.getOrNull()
+                if (remote != null) {
+                    return remote
+                }
+            }
+            return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+        }
     }
 
     override suspend fun followCast(userId: String, castId: String) {

@@ -46,9 +46,13 @@ class GetFanManagementDataUseCase(
                     FanManagementData(
                         user = currentUser,
                         detail = detail.copy(schedule = weekSchedules),
-                        followers = castRepository.getFollowerUserIds(castId).map { userId ->
-                            userRepository.getUser(userId)
-                        }
+                        followers = castRepository.getFollowerUserIds(castId)
+                            .distinct()
+                            .mapNotNull { userId ->
+                                runCatching {
+                                    userRepository.getUser(userId)
+                                }.getOrNull()
+                            }
                     )
                 )
             }

@@ -1,54 +1,15 @@
 package com.hhp227.concafe.presentation.main.fanmanagement
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,8 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -181,6 +142,7 @@ private fun FanManagementContentScreen(
         QuickActionGrid(
             onActionClick = { onAction(FanManagementAction.ClickQuickAction(it)) }
         )
+        print("TEST TEST!!!! ${uiState.fanManagementData?.detail}")
         WeeklyScheduleSection(
             schedule = uiState.fanManagementData?.detail?.schedule.orEmpty()
         )
@@ -392,7 +354,7 @@ private fun InfoBanner(
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = Color(0xFFFFF6D7),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1D88D))
+        border = BorderStroke(1.dp, Color(0xFFF1D88D))
     ) {
         Row(
             modifier = Modifier
@@ -430,7 +392,7 @@ private fun PrimaryAnnouncementButton(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
+        colors = ButtonDefaults.elevatedButtonColors(
             containerColor = Color(0xFFFFD1DC),
             contentColor = Color(0xFF24161E)
         )
@@ -477,7 +439,7 @@ private fun QuickActionGrid(
                     .clickable { onActionClick(quickAction) },
                 shape = RoundedCornerShape(20.dp),
                 color = Color.White.copy(alpha = 0.92f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                border = BorderStroke(1.dp, Color(0x1AFFD1DC))
             ) {
                 Box {
                     Column(
@@ -569,7 +531,7 @@ private fun CastClaimSheet(
                             .clickable { onSelect(candidate.castId) },
                         shape = RoundedCornerShape(16.dp),
                         color = if (sheet.selectedCastId == candidate.castId) Color(0xFFFFD1DC) else Color.White,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
                     ) {
                         Text(
                             text = candidate.castName,
@@ -604,7 +566,7 @@ private fun CastClaimSheet(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     contentPadding = PaddingValues(vertical = 14.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
+                    colors = ButtonDefaults.elevatedButtonColors(
                         containerColor = Color(0xFFFFD1DC),
                         contentColor = Color(0xFF24161E)
                     )
@@ -698,11 +660,12 @@ private fun WeeklyScheduleSection(
 ) {
     val weeklyStatus = rememberWeeklySchedule(schedule)
 
+    print("TEST, schedule: $schedule")
     SectionCard(title = "주간 출근") {
         Surface(
             shape = RoundedCornerShape(22.dp),
             color = Color.White.copy(alpha = 0.88f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+            border = BorderStroke(1.dp, Color(0x1AFFD1DC))
         ) {
             Column(
                 modifier = Modifier
@@ -769,7 +732,7 @@ private fun WeeklyScheduleItemCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         color = if (isWorking) Color(0xFFEF6797) else Color(0xFFFDF8FA),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.dp,
             if (isWorking) Color.Transparent else Color(0x1AFFD1DC)
         )
@@ -834,7 +797,6 @@ private data class WeeklyScheduleStatus(
 
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleStatus> {
     val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
-
     return listOf("월", "화", "수", "목", "금", "토", "일").map { dayLabel ->
         WeeklyScheduleStatus(
             dayLabel = dayLabel,
@@ -869,7 +831,7 @@ private fun EmptySectionCard(message: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = Color.White.copy(alpha = 0.88f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
     ) {
         Text(
             text = message,

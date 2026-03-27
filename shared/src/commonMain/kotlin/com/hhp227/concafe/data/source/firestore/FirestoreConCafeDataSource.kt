@@ -574,7 +574,7 @@ class FirestoreConCafeDataSource(
         val parsedSchedules = scheduleDocuments.mapNotNull { document ->
             parseCastScheduleDocument(document)
         }.filter { entry ->
-            entry.cafeId == cafeId && entry.date == date && entry.status == CastScheduleStatus.WORK
+            entry.date == date && entry.status == CastScheduleStatus.WORK
         }
 
         parsedSchedules.forEach { entry ->
@@ -1439,41 +1439,48 @@ class FirestoreConCafeDataSource(
 
         if (schedulesDocumentsResult.isSuccess) {
             val schedulesDocuments = schedulesDocumentsResult.getOrNull().orEmpty()
-            val remoteSchedulesByDate = schedulesDocuments.mapNotNull { document ->
+            val remoteEntries = schedulesDocuments.mapNotNull { document ->
                 parseCastScheduleDocument(document)
             }.filter { scheduleEntry ->
                 scheduleEntry.castId == castId && scheduleEntry.date >= fromDate && scheduleEntry.date <= toDate
-            }.associateBy { scheduleEntry -> scheduleEntry.date }
+            }
 
-            enumerateDates(fromDate, toDate).forEach { date ->
-                val scheduleEntry = remoteSchedulesByDate[date]
-                val status = scheduleEntry?.status ?: CastScheduleStatus.OFF
-                val update = if (
-                    status == CastScheduleStatus.WORK &&
-                    scheduleEntry?.startTime != null &&
-                    scheduleEntry.endTime != null
-                ) {
-                    CastScheduleUpdate(
-                        castId = castId,
-                        date = date,
-                        status = CastScheduleStatus.WORK,
-                        startTime = scheduleEntry.startTime,
-                        endTime = scheduleEntry.endTime
-                    )
-                } else {
-                    CastScheduleUpdate(
-                        castId = castId,
-                        date = date,
-                        status = if (status == CastScheduleStatus.WORK) CastScheduleStatus.OFF else status,
-                        startTime = null,
-                        endTime = null
-                    )
-                }
+            remoteEntries.forEach { scheduleEntry ->
+                val update = CastScheduleUpdate(
+                    castId = castId,
+                    date = scheduleEntry.date,
+                    status = scheduleEntry.status,
+                    startTime = scheduleEntry.startTime,
+                    endTime = scheduleEntry.endTime
+                )
                 delegate.updateCastSchedule(update)
             }
-        } else {
-            Unit
         }
+    }
+
+    suspend fun refreshCastByLinkedUserId(userId: String): Cast? {
+        require(userId.isNotBlank()) { "userId is required" }
+        val idToken = tokenProvider.getIdToken()
+        val documents = runCatching {
+            runCastByLinkedUserIdQuery(userId = userId, idToken = idToken)
+        }.recoverCatching {
+            runCastByLinkedUserIdQuery(userId = userId, idToken = null)
+        }.getOrElse {
+            emptyList()
+        }
+        val firstDocument = documents.firstOrNull() ?: return null
+        val name = firstDocument["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val cafeId = extractCafeIdFromCastDocumentName(name) ?: return null
+        val parsed = parseCastDocument(cafeId = cafeId, document = firstDocument) ?: return null
+
+        delegate.casts.removeAll { cast -> cast.id == parsed.id }
+        delegate.casts.add(parsed)
+        delegate.cafeDetailsById[cafeId]?.let { detail ->
+            delegate.cafeDetailsById[cafeId] = detail.copy(
+                casts = detail.casts.filterNot { cast -> cast.id == parsed.id } + parsed
+            )
+        }
+        return parsed
     }
 
     suspend fun refreshCafeCastsRemote(cafeId: String) {
@@ -2766,6 +2773,38 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runCastByLinkedUserIdQuery(
+        userId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
+                    "allDescendants": true
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "linkedUserId" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
+                  }
+                },
+                "limit": 1
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runVerifiedVisitByUserCafeQuery(
         userId: String,
         cafeId: String,
@@ -3963,8 +4002,7 @@ class FirestoreConCafeDataSource(
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val scheduleId = name.substringAfterLast("/")
         val castId = fields.getFirestoreString("castId") ?: return null
-        val cafeId = fields.getFirestoreString("cafeId") ?: return null
-        val date = fields.getFirestoreString("date") ?: return null
+        val date = normalizeScheduleDateOrNull(fields.getFirestoreString("date")) ?: return null
         val startTime = fields.getFirestoreString("startTime")
         val endTime = fields.getFirestoreString("endTime")
         val rawStatus = fields.getFirestoreString("status")
@@ -3977,7 +4015,6 @@ class FirestoreConCafeDataSource(
         return CastScheduleDocumentEntry(
             id = scheduleId,
             castId = castId,
-            cafeId = cafeId,
             date = date,
             status = status,
             startTime = startTime,
@@ -4190,7 +4227,6 @@ private data class CafeDetailMetadata(
 private data class CastScheduleDocumentEntry(
     val id: String,
     val castId: String,
-    val cafeId: String,
     val date: String,
     val status: CastScheduleStatus,
     val startTime: String?,
@@ -4302,6 +4338,22 @@ private fun parseCastScheduleStatus(raw: String?): CastScheduleStatus? {
         "VACATION", "휴가" -> CastScheduleStatus.VACATION
         else -> null
     }
+}
+
+private fun extractCafeIdFromCastDocumentName(name: String): String? {
+    val regex = Regex(""".*/cafes/([^/]+)/casts/[^/]+$""")
+    val match = regex.matchEntire(name) ?: return null
+    return match.groupValues.getOrNull(1)
+}
+
+private fun normalizeScheduleDateOrNull(raw: String?): String? {
+    val candidate = raw?.trim().orEmpty()
+    val regex = Regex("""(\d{4})[-./](\d{2})[-./](\d{2})""")
+    val match = regex.find(candidate) ?: return null
+    val year = match.groupValues.getOrNull(1) ?: return null
+    val month = match.groupValues.getOrNull(2) ?: return null
+    val day = match.groupValues.getOrNull(3) ?: return null
+    return "$year-$month-$day"
 }
 
 private fun enumerateDates(fromDate: String, toDate: String): List<String> {
