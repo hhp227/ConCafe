@@ -113,7 +113,6 @@ class VisitRepositoryImpl(
                 visitId = visitId,
                 requesterId = userId
             )
-
             runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
             }
@@ -127,6 +126,9 @@ class VisitRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Visit> {
+        val firestoreDataSource = visitDataSource as? FirestoreConCafeDataSource
+
+        firestoreDataSource?.refreshVisitsByUserRemote(userId)
         val items = visitDataSource.visits
             .filter { visit -> visit.userId == userId }
             .sortedByDescending { visit -> visit.visitedAt }

@@ -93,7 +93,6 @@ class CastRepositoryImpl(
                 limit = safeLimit
             ).take(safeLimit)
         }
-
         return castDataSource.casts
             .asSequence()
             .filter { cast ->
@@ -292,20 +291,18 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastByLinkedUserId(userId: String): Cast? {
-        val cached = castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
 
-        if (cached != null) {
-            return cached
-        } else {
-            val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-            if (firestoreDataSource != null) {
-                val remote = firestoreDataSource.refreshCastByLinkedUserId(userId)
-                if (remote != null) {
-                    return remote
-                }
+        if (firestoreDataSource != null) {
+            val remote = runCatching {
+                firestoreDataSource.refreshCastByLinkedUserId(userId)
+            }.getOrNull()
+
+            if (remote != null) {
+                return remote
             }
-            return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
         }
+        return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
     }
 
     override suspend fun followCast(userId: String, castId: String) {
@@ -365,24 +362,46 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
-        val castScoreById = castDataSource.casts.associate { cast ->
-            val score = castDataSource.castTodayVisitCountById[cast.id] ?: cast.followerCount
-            return@associate cast.id to score
-        }
-        return castDataSource.casts
-            .sortedByDescending { castScoreById[it.id] ?: 0 }
-            .take(limit)
-            .map { cast ->
-                val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
-                return@map CheckInCastSummary(
-                    id = cast.id,
-                    cafeId = cast.cafeId,
-                    cafeName = cafeName,
-                    name = cast.name,
-                    profileImage = cast.profileImage,
-                    todayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
-                )
+        val safeLimit = if (limit > 0) limit else 1
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+        val sourceCasts = if (firestoreDataSource != null) {
+            val page = firestoreDataSource.searchCastsRemote(
+                query = null,
+                country = null,
+                city = null,
+                sort = CastSort.POPULAR,
+                cursor = null,
+                pageSize = safeLimit
+            )
+            page.items
+        } else {
+            val castScoreById = castDataSource.casts.associate { cast ->
+                val score = castDataSource.castTodayVisitCountById[cast.id] ?: cast.followerCount
+                cast.id to score
             }
+            castDataSource.casts
+                .sortedByDescending { castScoreById[it.id] ?: 0 }
+                .take(safeLimit)
+        }
+
+        return sourceCasts.map { cast ->
+            val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
+            val cachedTodayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
+            val resolvedTodayVisit = if (cachedTodayVisit > 0) {
+                cachedTodayVisit
+            } else {
+                cast.visitCertificationCount
+            }
+
+            CheckInCastSummary(
+                id = cast.id,
+                cafeId = cast.cafeId,
+                cafeName = cafeName,
+                name = cast.name,
+                profileImage = cast.profileImage,
+                todayVisit = resolvedTodayVisit
+            )
+        }
     }
 
     private fun updateFollowerCountInCache(castId: String, followerCount: Int) {
@@ -428,16 +447,37 @@ class CastRepositoryImpl(
 }
 
 private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
-    val birthdayValue = this
-    if (birthdayValue == null) {
+    val monthDay = this?.toBirthMonthDayOrNull()
+    if (monthDay == null) {
         return false
     }
-    val parts = birthdayValue.split("-")
-    if (parts.size != 3) {
-        return false
-    }
-    val birthMonth = parts[1].toIntOrNull()
-    val birthDay = parts[2].toIntOrNull()
+    val birthMonth = monthDay.first
+    val birthDay = monthDay.second
 
     return birthMonth == month && birthDay == dayOfMonth
+}
+
+private fun String.toBirthMonthDayOrNull(): Pair<Int, Int>? {
+    val normalized = trim()
+    val isoParts = normalized.split("-")
+
+    if (isoParts.size == 3) {
+        val month = isoParts[1].toIntOrNull()
+        val day = isoParts[2].toIntOrNull()
+
+        if (month != null && day != null) {
+            return month to day
+        }
+    }
+    val slashParts = normalized.split("/")
+
+    if (slashParts.size == 3) {
+        val month = slashParts[0].toIntOrNull()
+        val day = slashParts[1].toIntOrNull()
+
+        if (month != null && day != null) {
+            return month to day
+        }
+    }
+    return null
 }

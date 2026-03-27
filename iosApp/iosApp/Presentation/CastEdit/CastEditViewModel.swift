@@ -99,11 +99,13 @@ final class CastEditViewModel: ObservableObject {
                     uiState.isSaving = false
                     event.send(.navigateBack)
                 } else {
+                    print("TEST, CastEditViewModel save failure: \(String(describing: result))")
                     uiState.isSaving = false
                     uiState.infoMessage = "캐스트 정보를 저장하지 못했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
+                print("TEST, CastEditViewModel save catch: \(error.localizedDescription)")
                 uiState.isSaving = false
                 uiState.infoMessage = "캐스트 정보를 저장하지 못했습니다."
             }
@@ -240,6 +242,7 @@ private extension CastEditViewModel {
         let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
         guard let success = result as? AppResultSuccess<AnyObject>,
               let uploaded = success.data as? String else {
+            print("TEST, CastEditViewModel upload failure: \(String(describing: result))")
             throw NSError(domain: "CastEditUpload", code: 1)
         }
         return uploaded

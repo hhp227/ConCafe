@@ -186,24 +186,46 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
+        val safeLimit = if (limit > 0) limit else 1
         val visitCountByCafeId = visitDataSource.visits
             .groupingBy { it.cafeId }
             .eachCount()
-        return cafeDataSource.cafes
-            .filter { it.approved }
-            .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
-            .take(limit)
-            .map { cafe ->
-                CheckInCafeSummary(
-                    id = cafe.id,
-                    name = cafe.name,
-                    locationLabel = cafe.region.city,
-                    geoPoint = cafe.region.location,
-                    rating = cafe.ratingAvg,
-                    checkInCount = visitCountByCafeId[cafe.id] ?: 0,
-                    thumbnailImage = cafe.thumbnailImage
-                )
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+        val sourceCafes = if (firestoreDataSource != null) {
+            val page = firestoreDataSource.searchCafesRemote(
+                query = null,
+                country = null,
+                city = null,
+                sort = CafeSort.POPULAR,
+                cursor = null,
+                pageSize = safeLimit
+            )
+            page.items
+        } else {
+            cafeDataSource.cafes
+                .filter { it.approved }
+                .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
+                .take(safeLimit)
+        }
+
+        return sourceCafes.map { cafe ->
+            val cachedVisitCount = visitCountByCafeId[cafe.id] ?: 0
+            val resolvedVisitCount = if (cachedVisitCount > 0) {
+                cachedVisitCount
+            } else {
+                cafe.reviewCount
             }
+
+            CheckInCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                locationLabel = cafe.region.city,
+                geoPoint = cafe.region.location,
+                rating = cafe.ratingAvg,
+                checkInCount = resolvedVisitCount,
+                thumbnailImage = cafe.thumbnailImage
+            )
+        }
     }
 
     private fun searchCafesFromCache(

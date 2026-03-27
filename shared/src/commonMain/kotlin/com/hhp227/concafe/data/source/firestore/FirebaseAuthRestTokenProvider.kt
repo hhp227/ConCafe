@@ -13,10 +13,32 @@ class FirebaseAuthRestTokenProvider(
     private var currentSession: FirebaseAuthSession? = null
 
     override suspend fun getIdToken(): String? {
-        val session = currentSession ?: return null
+        val session = currentSession ?: runCatching {
+            signInAnonymously()
+        }.getOrNull()
+            ?: return null
         val refreshed = refreshSessionIfNeeded(session)
         currentSession = refreshed
         return refreshed.idToken
+    }
+
+    override suspend fun signInAnonymously(): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        val body = """
+            {
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signUpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(response, allowMissingEmail = true)
+
+        currentSession = session
+        return session
     }
 
     override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
@@ -36,7 +58,7 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signInUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response)
+        val session = parseSessionFromResponse(response, allowMissingEmail = false)
 
         currentSession = session
 
@@ -64,7 +86,7 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signInWithIdpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response)
+        val session = parseSessionFromResponse(response, allowMissingEmail = false)
 
         currentSession = session
 
@@ -88,7 +110,7 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signUpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response)
+        val session = parseSessionFromResponse(response, allowMissingEmail = false)
 
         currentSession = session
 
@@ -193,6 +215,7 @@ class FirebaseAuthRestTokenProvider(
         body: String
     ): String {
         var lastError: Throwable? = null
+        val errorSummaries = mutableListOf<String>()
 
         authApiKeys().forEach { key ->
             val result = runCatching {
@@ -203,10 +226,16 @@ class FirebaseAuthRestTokenProvider(
                 return result.getOrThrow()
             } else {
                 lastError = result.exceptionOrNull()
+                val message = result.exceptionOrNull()?.message ?: "unknown"
+                errorSummaries.add(message)
             }
         }
-
-        throw IllegalStateException("Firebase auth request failed for all configured API keys", lastError)
+        val detail = if (errorSummaries.isEmpty()) {
+            ""
+        } else {
+            ": ${errorSummaries.joinToString(separator = " | ")}"
+        }
+        throw IllegalStateException("Firebase auth request failed for all configured API keys$detail", lastError)
     }
 
     private suspend fun postFormUrlEncodedWithApiKeyFallback(
@@ -214,6 +243,7 @@ class FirebaseAuthRestTokenProvider(
         body: String
     ): String {
         var lastError: Throwable? = null
+        val errorSummaries = mutableListOf<String>()
 
         authApiKeys().forEach { key ->
             val result = runCatching {
@@ -224,10 +254,16 @@ class FirebaseAuthRestTokenProvider(
                 return result.getOrThrow()
             } else {
                 lastError = result.exceptionOrNull()
+                val message = result.exceptionOrNull()?.message ?: "unknown"
+                errorSummaries.add(message)
             }
         }
-
-        throw IllegalStateException("Firebase auth refresh failed for all configured API keys", lastError)
+        val detail = if (errorSummaries.isEmpty()) {
+            ""
+        } else {
+            ": ${errorSummaries.joinToString(separator = " | ")}"
+        }
+        throw IllegalStateException("Firebase auth refresh failed for all configured API keys$detail", lastError)
     }
 
     private fun authApiKeys(): List<String> {
@@ -247,15 +283,20 @@ class FirebaseAuthRestTokenProvider(
         return keys
     }
 
-    private fun parseSessionFromResponse(response: String): FirebaseAuthSession {
+    private fun parseSessionFromResponse(response: String, allowMissingEmail: Boolean): FirebaseAuthSession {
         val root = Json.parseToJsonElement(response).jsonObject
         val userId = root["localId"]?.jsonPrimitive?.content.orEmpty()
-        val email = root["email"]?.jsonPrimitive?.content.orEmpty()
+        val rawEmail = root["email"]?.jsonPrimitive?.content.orEmpty()
+        val email = if (rawEmail.isNotBlank()) {
+            rawEmail
+        } else {
+            "anonymous-$userId@concafe.local"
+        }
         val idToken = root["idToken"]?.jsonPrimitive?.content
         val refreshToken = root["refreshToken"]?.jsonPrimitive?.content
         val expiresInSeconds = root["expiresIn"]?.jsonPrimitive?.content?.toLongOrNull()
 
-        if (userId.isBlank() || email.isBlank()) {
+        if (userId.isBlank() || (!allowMissingEmail && email.isBlank())) {
             throw IllegalStateException("Firebase auth response is missing localId/email")
         }
         return FirebaseAuthSession(

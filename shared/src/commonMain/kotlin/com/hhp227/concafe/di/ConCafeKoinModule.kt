@@ -43,7 +43,6 @@ import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
-import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 
 private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
@@ -51,16 +50,11 @@ private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
 val dataSourceModule = module {
     single { FirestoreConfig(projectId = FIRESTORE_PROJECT_ID) }
     single {
-        val dataSource = FirestoreConCafeDataSource(
+        FirestoreConCafeDataSource(
             config = get(),
             restApi = get(),
             tokenProvider = get()
         )
-
-        runBlocking {
-            runCatching { dataSource.bootstrap() }
-        }
-        dataSource
     }
     single<AuthDataSource> { get<FirestoreConCafeDataSource>() }
     single<BannerDataSource> { get<FirestoreConCafeDataSource>() }

@@ -68,15 +68,19 @@ class HomeViewModel(
                     notices = result.data.notices
                 )
             } else if (result is AppResult.Failure) {
-                _uiState.value = empty().copy(
-                    isLoading = false,
-                    errorMessage = result.error.toString()
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        errorMessage = result.error.toString()
+                    )
+                }
             } else {
-                _uiState.value = empty().copy(
-                    isLoading = false,
-                    errorMessage = "unknown"
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        errorMessage = "unknown"
+                    )
+                }
             }
         }
     }

@@ -154,6 +154,17 @@ object TimeUtils {
         return "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
     }
 
+    fun isCurrentDateVisitedAt(visitedAt: String): Boolean {
+        val today = currentIsoDate()
+        val localDate = runCatching {
+            Instant.parse(visitedAt)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+        }.getOrNull()
+        return if (localDate == null) visitedAt.startsWith(today) else localDate == today
+    }
+
     fun currentMonthDayLabelKorean(): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         return "${now.monthNumber}월 ${now.dayOfMonth}일"

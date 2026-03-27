@@ -81,7 +81,7 @@ final class CheckInViewModel: ObservableObject {
                     var nextState = uiState
                     let mergedRecentVisits = append ? (nextState.recentVisits + loadedRecentVisits) : loadedRecentVisits
                     let mergedTodayVisits = mergedRecentVisits
-                        .filter { $0.visitedAt.hasPrefix(TimeUtils.currentIsoDate()) }
+                        .filter { TimeUtils.isCurrentDateVisitedAt($0.visitedAt) }
                         .prefix(Self.todayVisitLimit)
 
                     nextState.todayVisits = Array(mergedTodayVisits)

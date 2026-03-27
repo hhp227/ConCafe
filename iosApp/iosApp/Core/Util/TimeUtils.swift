@@ -119,6 +119,22 @@ final class TimeUtils {
         return formatter.string(from: Date())
     }
 
+    static func isCurrentDateVisitedAt(_ visitedAt: String) -> Bool {
+        let today = currentIsoDate()
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+
+        if let parsed = formatter.date(from: visitedAt) {
+            let dateFormatter = DateFormatter()
+            dateFormatter.calendar = Calendar.current
+            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            return dateFormatter.string(from: parsed) == today
+        } else {
+            return visitedAt.hasPrefix(today)
+        }
+    }
+
     static func currentMonthDayLabelKorean() -> String {
         let components = Calendar.current.dateComponents([.month, .day], from: Date())
         let month = components.month ?? 1

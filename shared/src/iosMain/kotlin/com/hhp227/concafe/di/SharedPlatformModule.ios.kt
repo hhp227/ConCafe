@@ -18,7 +18,7 @@ actual fun sharedPlatformModules(): List<Module> {
         module {
             single { createPlatformHttpClient() }
             single<CafeExternalLinkLocalStore> { IosCafeExternalLinkLocalStore() }
-            single<FirestoreRestApi> { KtorFirestoreRestApi(get()) }
+            single<FirestoreRestApi> { KtorFirestoreRestApi(get(), FIREBASE_WEB_API_KEY) }
             single<FirestoreAuthTokenProvider> {
                 PersistedFirebaseAuthTokenProvider(
                     delegate = FirebaseAuthRestTokenProvider(

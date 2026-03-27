@@ -395,7 +395,7 @@ private struct ProfileMyInfoView: View {
         case UserRole.cast:
             return [
                 .init(title: "전체 팔로워", value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
-                .init(title: "근무 일정", value: "\(uiState.castDetail?.schedule.count ?? 0)", highlight: true),
+                .init(title: "근무 일정", value: "\(currentWeekScheduleCount)", highlight: true),
                 .init(title: "평점", value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
             ]
         case UserRole.cafeOwner:
@@ -414,6 +414,33 @@ private struct ProfileMyInfoView: View {
                 .init(title: "팔로우", value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
             ]
         }
+    }
+
+    private var currentWeekScheduleCount: Int {
+        guard let schedules = uiState.castDetail?.schedule, !schedules.isEmpty else {
+            return 0
+        }
+        let calendar = Calendar.current
+        let now = Date()
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
+        let formatter = DateFormatter()
+
+        formatter.calendar = calendar
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        let includedDates = schedules.compactMap { schedule -> Date? in
+            let normalizedDate = String(schedule.date.prefix(10))
+            return formatter.date(from: normalizedDate)
+        }.filter { scheduleDate in
+            let day = calendar.startOfDay(for: scheduleDate)
+            return day >= calendar.startOfDay(for: weekStart) && day <= calendar.startOfDay(for: weekEnd)
+        }.map { scheduleDate in
+            formatter.string(from: scheduleDate)
+        }
+
+        return Set(includedDates).count
     }
 
     private var badgesSection: some View {

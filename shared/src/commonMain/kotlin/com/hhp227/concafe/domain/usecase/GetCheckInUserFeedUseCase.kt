@@ -8,6 +8,7 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -48,7 +49,9 @@ class GetCheckInUserFeedUseCase(
 
                 AppResult.Success(
                     CheckInUserFeed(
-                        todayVisits = visitEntries.filter { it.visitedAt.startsWith(todayDateText()) }.take(TODAY_VISIT_LIMIT),
+                        todayVisits = visitEntries
+                            .filter { visit -> isTodayVisit(visit.visitedAt) }
+                            .take(TODAY_VISIT_LIMIT),
                         recentVisits = visitEntries,
                         recentVisitsNextCursor = visitsPage.nextCursor,
                         canLoadMoreRecentVisits = visitsPage.hasNext
@@ -79,6 +82,22 @@ class GetCheckInUserFeedUseCase(
         val month = today.monthNumber.toString().padStart(2, '0')
         val day = today.dayOfMonth.toString().padStart(2, '0')
         return "${today.year}-$month-$day"
+    }
+
+    private fun isTodayVisit(visitedAt: String): Boolean {
+        val today = todayDateText()
+        val normalizedDate = runCatching {
+            Instant.parse(visitedAt)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+        }.getOrNull()
+
+        return if (normalizedDate == null) {
+            visitedAt.startsWith(today)
+        } else {
+            normalizedDate == today
+        }
     }
 
     private companion object {
