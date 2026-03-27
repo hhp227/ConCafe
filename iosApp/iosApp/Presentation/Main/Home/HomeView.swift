@@ -111,7 +111,7 @@ private struct HomeContentView: View {
                         HomeBannerItem(banner: banner)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 3)
+                            .padding(.vertical, 4)
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
                             }
@@ -140,7 +140,7 @@ private struct HomeContentView: View {
     }
 
     private var bannerTabViewHeight: CGFloat {
-        bannerHeight + 6
+        bannerHeight + 8
     }
 
     private var popularCastSection: some View {
