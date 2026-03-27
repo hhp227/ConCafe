@@ -109,7 +109,9 @@ private struct HomeContentView: View {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
                         HomeBannerItem(banner: banner)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(.horizontal, 16)
+                            .padding(.vertical, 1)
                             .onTapGesture {
                                 onAction(.bannerTapped(banner))
                             }
@@ -346,6 +348,7 @@ private struct HomeBannerItem: View {
             }
             .padding(18)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .compositingGroup()
         .clipShape(cardShape)
         .contentShape(cardShape)
