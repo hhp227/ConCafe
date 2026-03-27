@@ -33,9 +33,7 @@ class ReviewRepositoryImpl(
 
         if (shouldRefresh) {
             (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeReviews(cafeId)
-                }
+                firestoreDataSource.refreshCafeReviews(cafeId)
             }
         }
         val items = reviewDataSource.reviews
@@ -46,11 +44,15 @@ class ReviewRepositoryImpl(
 
     override suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review> {
         val safeLimit = if (limit > 0) limit else 1
-        return (reviewDataSource as? FirestoreConCafeDataSource)?.getRecentTaggedReviews(
-            cafeId = cafeId,
-            castId = castId,
-            limit = safeLimit
-        ) ?: reviewDataSource.reviews
+        val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getRecentTaggedReviews(
+                cafeId = cafeId,
+                castId = castId,
+                limit = safeLimit
+            )
+        }
+        return reviewDataSource.reviews
             .filter { review ->
                 review.cafeId == cafeId && review.taggedCastIds.contains(castId)
             }

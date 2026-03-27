@@ -64,9 +64,7 @@ class CafeRepositoryImpl(
                 )
 
             if (shouldRefresh) {
-                runCatching {
-                    firestoreDataSource?.refreshCafeDetail(cafeId)
-                }
+                firestoreDataSource?.refreshCafeDetail(cafeId)
                 val refreshed = cafeDataSource.cafeDetail(cafeId)
 
                 if (refreshed != null) {
@@ -77,9 +75,7 @@ class CafeRepositoryImpl(
         }
 
         if (firestoreDataSource != null) {
-            runCatching {
-                firestoreDataSource.refreshCafeDetail(cafeId)
-            }
+            firestoreDataSource.refreshCafeDetail(cafeId)
             val refreshed = cafeDataSource.cafeDetail(cafeId)
 
             if (refreshed != null) {
@@ -118,9 +114,7 @@ class CafeRepositoryImpl(
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
         }
         val set = socialDataSource.favoriteCafeIdsByUser[userId]
         return set?.contains(cafeId) ?: false
@@ -128,9 +122,7 @@ class CafeRepositoryImpl(
 
     override suspend fun getFavoriteCafeIds(userId: String): List<String> {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
         }
         return socialDataSource.favoriteCafeIdsByUser[userId]
             ?.toList()
@@ -152,9 +144,7 @@ class CafeRepositoryImpl(
 
         if (firestoreDataSource != null && missingIds.isNotEmpty()) {
             missingIds.forEach { cafeId ->
-                runCatching {
-                    firestoreDataSource.refreshCafeDetail(cafeId)
-                }
+                firestoreDataSource.refreshCafeDetail(cafeId)
             }
         }
 
@@ -168,9 +158,7 @@ class CafeRepositoryImpl(
 
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
             val favoriteSet = socialDataSource.favoriteCafeIdsByUser[userId]
             val isFavorite = favoriteSet?.contains(cafeId) == true
 

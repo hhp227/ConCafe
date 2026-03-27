@@ -108,11 +108,7 @@ class CastClaimRepositoryImpl(
             val lastRefreshEpochMillis = lastCafeClaimsRefreshEpochMillisByCafeId[cafeId] ?: 0L
 
             if (nowEpochMillis - lastRefreshEpochMillis >= CAFE_CLAIMS_REFRESH_INTERVAL_MILLIS) {
-                val isChanged = try {
-                    firestoreDataSource.hasCastClaimCafeSyncChanged(cafeId)
-                } catch (_: Throwable) {
-                    true
-                }
+                val isChanged = firestoreDataSource.hasCastClaimCafeSyncChanged(cafeId)
 
                 if (isChanged) {
                     firestoreDataSource.refreshCastClaimsForCafe(cafeId)

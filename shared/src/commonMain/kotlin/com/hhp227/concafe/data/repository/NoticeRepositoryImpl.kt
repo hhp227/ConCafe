@@ -52,9 +52,7 @@ class NoticeRepositoryImpl(
 
         if (shouldRefresh) {
             (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
-                }
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
             }
         }
         val normalizedQuery = query.trim()
@@ -92,9 +90,7 @@ class NoticeRepositoryImpl(
 
         if (shouldRefresh) {
             (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
-                }
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
             }
         }
         val normalizedQuery = query.trim()
