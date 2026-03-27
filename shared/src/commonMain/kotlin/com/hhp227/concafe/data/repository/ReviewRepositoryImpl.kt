@@ -19,6 +19,21 @@ class ReviewRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Review> {
+        val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null && pageSize <= REMOTE_REVIEW_PAGE_LIMIT) {
+            val remoteResult = runCatching {
+                firestoreDataSource.getCafeReviewsPageRemote(
+                    cafeId = cafeId,
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+            }.getOrNull()
+
+            if (remoteResult != null) {
+                return remoteResult
+            }
+        }
         val hasCachedReviews = reviewDataSource.reviews.any { review -> review.cafeId == cafeId }
         val shouldRefresh = cursor == null && !hasCachedReviews
 
@@ -192,6 +207,8 @@ class ReviewRepositoryImpl(
         )
     }
 }
+
+private const val REMOTE_REVIEW_PAGE_LIMIT = 100
 
 private fun nextEntityId(prefix: String): String {
     val now = Clock.System.now().toEpochMilliseconds()

@@ -10,10 +10,8 @@ import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
-import com.hhp227.concafe.domain.repository.RankingRepository
 
 class GetRankingFeedUseCase(
-    private val rankingRepository: RankingRepository,
     private val castRepository: CastRepository,
     private val cafeRepository: CafeRepository
 ) {
@@ -23,57 +21,55 @@ class GetRankingFeedUseCase(
         city: String?
     ): AppResult<RankingFeed> {
         return try {
-            val castRankings = rankingRepository.getCastRanking(period, country, city)
-            val cafeRankings = rankingRepository.getCafeRanking(period, country, city)
             val casts = castRepository.searchCasts(
                 query = null,
                 country = country,
                 city = city,
                 sort = CastSort.FOLLOWERS,
                 cursor = null,
-                pageSize = Int.MAX_VALUE
-            ).items.associateBy { it.id }
+                pageSize = RANKING_FETCH_LIMIT
+            ).items
             val cafes = cafeRepository.searchCafes(
                 query = null,
                 country = country,
                 city = city,
                 sort = CafeSort.RATING,
                 cursor = null,
-                pageSize = Int.MAX_VALUE
-            ).items.associateBy { it.id }
+                pageSize = RANKING_FETCH_LIMIT
+            ).items
+            val cafeNameById = cafes.associateBy({ cafe -> cafe.id }, { cafe -> cafe.name })
+            val castRankings = casts.mapIndexed { index, cast ->
+                RankingFeedEntry(
+                    id = cast.id,
+                    rank = index + 1,
+                    name = cast.name,
+                    subtitle = cafeNameById[cast.cafeId] ?: cast.cafeId,
+                    score = cast.followerCount,
+                    change = rankChange(index),
+                    startColorHex = castColors(index).first,
+                    endColorHex = castColors(index).second,
+                    symbol = castSymbol(index)
+                )
+            }
+            val cafeRankings = cafes.mapIndexed { index, cafe ->
+                RankingFeedEntry(
+                    id = cafe.id,
+                    rank = index + 1,
+                    name = cafe.name,
+                    subtitle = cafe.region.address.substringBefore("구").substringBefore("로").ifBlank { cafe.region.city },
+                    score = (cafe.ratingAvg * 100).toInt(),
+                    change = rankChange(index + 1),
+                    startColorHex = cafeColors(index).first,
+                    endColorHex = cafeColors(index).second,
+                    symbol = cafeSymbol(index)
+                )
+            }
 
             AppResult.Success(
                 RankingFeed(
                     ads = defaultAds(),
-                    castRankings = castRankings.mapIndexedNotNull { index, item ->
-                        val cast = casts[item.id] ?: return@mapIndexedNotNull null
-                        val cafe = cafes[cast.cafeId]
-                        RankingFeedEntry(
-                            id = item.id,
-                            rank = item.rank,
-                            name = item.name,
-                            subtitle = cafe?.name ?: cast.cafeId,
-                            score = item.score,
-                            change = rankChange(index),
-                            startColorHex = castColors(index).first,
-                            endColorHex = castColors(index).second,
-                            symbol = castSymbol(index)
-                        )
-                    },
-                    cafeRankings = cafeRankings.mapIndexedNotNull { index, item ->
-                        val cafe = cafes[item.id] ?: return@mapIndexedNotNull null
-                        RankingFeedEntry(
-                            id = item.id,
-                            rank = item.rank,
-                            name = item.name,
-                            subtitle = cafe.region.address.substringBefore("구").substringBefore("로").ifBlank { cafe.region.city },
-                            score = item.score,
-                            change = rankChange(index + 1),
-                            startColorHex = cafeColors(index).first,
-                            endColorHex = cafeColors(index).second,
-                            symbol = cafeSymbol(index)
-                        )
-                    }
+                    castRankings = castRankings,
+                    cafeRankings = cafeRankings
                 )
             )
         } catch (e: NoSuchElementException) {
@@ -126,3 +122,5 @@ class GetRankingFeedUseCase(
         return symbols[index % symbols.size]
     }
 }
+
+private const val RANKING_FETCH_LIMIT = 30
