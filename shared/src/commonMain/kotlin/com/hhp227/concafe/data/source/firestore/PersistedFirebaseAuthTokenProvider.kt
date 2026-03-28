@@ -75,6 +75,13 @@ class PersistedFirebaseAuthTokenProvider(
         return session
     }
 
+    override suspend fun signInWithKakaoIdToken(idToken: String): FirebaseAuthSession? {
+        val session = delegate.signInWithKakaoIdToken(idToken)
+
+        persistSession(session)
+        return session
+    }
+
     override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
         val session = delegate.signUpWithEmailPassword(email, password)
 

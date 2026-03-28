@@ -10,14 +10,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
 
 class SignInViewModel(
     private val signInUseCase: SignInUseCase,
-    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase,
     private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
-    private val googleIdTokenProvider: GoogleIdTokenProvider
+    private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -99,20 +100,37 @@ class SignInViewModel(
                             }
                         }
                         SignInProvider.KAKAO -> {
-                            when (signInWithSocialProviderUseCase.invoke(action.provider.name.lowercase())) {
-                                is AppResult.Success -> {
-                                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                                    _event.emit(SignInEvent.SignedIn)
-                                }
-                                is AppResult.Failure -> {
-                                    _uiState.update {
-                                        it.copy(
+                            runCatching { kakaoIdTokenProvider.getKakaoIdToken() }
+                                .onFailure {
+                                    println("TEST, Kakao getKakaoIdToken failed in SignInViewModel: ${it.message}")
+                                    _uiState.update { state ->
+                                        state.copy(
                                             isLoading = false,
-                                            errorMessage = "소셜 로그인에 실패했습니다. 입력값을 확인해주세요."
+                                            errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
                                         )
                                     }
                                 }
-                            }
+                                .onSuccess { idToken ->
+                                    println("TEST, Kakao idToken acquired in SignInViewModel. length=${idToken.length}")
+                                    val kakaoSignInResult = signInWithKakaoIdTokenUseCase.invoke(idToken)
+                                    when (kakaoSignInResult) {
+                                        is AppResult.Success -> {
+                                            println("TEST, Kakao sign-in usecase success")
+                                            _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                                            _event.emit(SignInEvent.SignedIn)
+                                        }
+                                        is AppResult.Failure -> {
+                                            println("TEST, Kakao sign-in usecase failure")
+                                            println("TEST, Kakao sign-in failure detail: ${kakaoSignInResult.error}")
+                                            _uiState.update {
+                                                it.copy(
+                                                    isLoading = false,
+                                                    errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                         }
                     }
                 }

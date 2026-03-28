@@ -12,6 +12,8 @@ interface AuthRepository {
 
     suspend fun signInWithAppleIdToken(idToken: String): User
 
+    suspend fun signInWithKakaoIdToken(idToken: String): User
+
     suspend fun signUp(
         email: String,
         password: String,

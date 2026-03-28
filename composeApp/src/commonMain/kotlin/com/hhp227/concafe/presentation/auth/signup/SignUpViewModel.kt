@@ -15,11 +15,12 @@ import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
 
 class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
@@ -27,9 +28,10 @@ class SignUpViewModel(
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
     private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
-    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase,
     private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
-    private val googleIdTokenProvider: GoogleIdTokenProvider
+    private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -296,21 +298,37 @@ class SignUpViewModel(
                     }
                 }
                 SignUpProvider.KAKAO -> {
-                    when (signInWithSocialProviderUseCase.invoke(provider.name.lowercase())) {
-                        is AppResult.Success -> {
-                            _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                            _event.emit(SignUpEvent.SignedUp)
-                        }
-                        is AppResult.Failure -> {
-                            _uiState.update {
-                                it.copy(
+                    runCatching { kakaoIdTokenProvider.getKakaoIdToken() }
+                        .onFailure {
+                            println("TEST, Kakao getKakaoIdToken failed in SignUpViewModel: ${it.message}")
+                            _uiState.update { state ->
+                                state.copy(
                                     isLoading = false,
-                                    errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요.",
+                                    errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
                                     infoMessage = null
                                 )
                             }
                         }
-                    }
+                        .onSuccess { idToken ->
+                            println("TEST, Kakao idToken acquired in SignUpViewModel. length=${idToken.length}")
+                            when (signInWithKakaoIdTokenUseCase.invoke(idToken)) {
+                                is AppResult.Success -> {
+                                    println("TEST, Kakao sign-up usecase success")
+                                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                                    _event.emit(SignUpEvent.SignedUp)
+                                }
+                                is AppResult.Failure -> {
+                                    println("TEST, Kakao sign-up usecase failure")
+                                    _uiState.update {
+                                        it.copy(
+                                            isLoading = false,
+                                            errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
+                                            infoMessage = null
+                                        )
+                                    }
+                                }
+                            }
+                        }
                 }
             }
         }

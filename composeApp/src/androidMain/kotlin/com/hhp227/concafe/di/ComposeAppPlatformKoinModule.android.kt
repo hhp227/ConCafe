@@ -5,7 +5,9 @@ import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
 import com.hhp227.concafe.push.AndroidPushTokenClient
 import com.hhp227.concafe.presentation.auth.signin.AndroidGoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.AndroidKakaoIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
 import com.hhp227.concafe.presentation.main.checkin.AndroidCheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import org.koin.core.module.Module
@@ -32,6 +34,10 @@ internal fun androidPlatformModules(application: Application): List<Module> {
             single<GoogleIdTokenProvider> {
                 val currentActivityProvider = get<AndroidCurrentActivityProvider>()
                 AndroidGoogleIdTokenProvider(activityProvider = currentActivityProvider::getCurrentActivity)
+            }
+            single<KakaoIdTokenProvider> {
+                val currentActivityProvider = get<AndroidCurrentActivityProvider>()
+                AndroidKakaoIdTokenProvider(activityProvider = currentActivityProvider::getCurrentActivity)
             }
             single<CheckInLocationProvider> {
                 val currentActivityProvider = get<AndroidCurrentActivityProvider>()

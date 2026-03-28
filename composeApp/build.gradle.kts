@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.google.play.services.maps)
             implementation(libs.google.maps.compose)
             implementation(libs.firebase.messaging.ktx)
+            implementation(libs.kakao.user)
             implementation(libs.coil.compose)
             implementation(libs.androidx.core.splashscreen)
         }

@@ -10,6 +10,7 @@ class AndroidFirebaseAuthSessionStore(
     override fun load(): FirebaseAuthSession? {
         val userId = sharedPreferences.getString(KEY_USER_ID, null)
         val email = sharedPreferences.getString(KEY_EMAIL, null)
+        val displayName = sharedPreferences.getString(KEY_DISPLAY_NAME, null)
         val idToken = sharedPreferences.getString(KEY_ID_TOKEN, null)
         val refreshToken = sharedPreferences.getString(KEY_REFRESH_TOKEN, null)
         val expiresAtEpochSeconds = if (sharedPreferences.contains(KEY_EXPIRES_AT_EPOCH_SECONDS)) {
@@ -23,6 +24,7 @@ class AndroidFirebaseAuthSessionStore(
             FirebaseAuthSession(
                 userId = userId,
                 email = email,
+                displayName = displayName,
                 idToken = idToken,
                 refreshToken = refreshToken,
                 expiresAtEpochSeconds = expiresAtEpochSeconds
@@ -34,6 +36,7 @@ class AndroidFirebaseAuthSessionStore(
         sharedPreferences.edit()
             .putString(KEY_USER_ID, session.userId)
             .putString(KEY_EMAIL, session.email)
+            .putString(KEY_DISPLAY_NAME, session.displayName)
             .putString(KEY_ID_TOKEN, session.idToken)
             .putString(KEY_REFRESH_TOKEN, session.refreshToken)
             .apply {
@@ -50,6 +53,7 @@ class AndroidFirebaseAuthSessionStore(
         sharedPreferences.edit()
             .remove(KEY_USER_ID)
             .remove(KEY_EMAIL)
+            .remove(KEY_DISPLAY_NAME)
             .remove(KEY_ID_TOKEN)
             .remove(KEY_REFRESH_TOKEN)
             .remove(KEY_EXPIRES_AT_EPOCH_SECONDS)
@@ -60,6 +64,7 @@ class AndroidFirebaseAuthSessionStore(
 private const val PREFS_NAME = "concafe.firebase.auth"
 private const val KEY_USER_ID = "concafe.firebase.user_id"
 private const val KEY_EMAIL = "concafe.firebase.email"
+private const val KEY_DISPLAY_NAME = "concafe.firebase.display_name"
 private const val KEY_ID_TOKEN = "concafe.firebase.id_token"
 private const val KEY_REFRESH_TOKEN = "concafe.firebase.refresh_token"
 private const val KEY_EXPIRES_AT_EPOCH_SECONDS = "concafe.firebase.expires_at_epoch_seconds"

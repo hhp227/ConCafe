@@ -172,6 +172,7 @@ val useCaseModule = module {
     factory { SignInUseCase(get()) }
     factory { SignInWithAppleIdTokenUseCase(get()) }
     factory { SignInWithGoogleIdTokenUseCase(get()) }
+    factory { SignInWithKakaoIdTokenUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { RequestPasswordResetUseCase(get()) }
     factory { SignUpUseCase(get()) }

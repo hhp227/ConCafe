@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import AuthenticationServices
 import UIKit
+import KakaoSDKUser
 import Shared
 
 @MainActor
@@ -20,6 +21,8 @@ class SignInViewModel: ObservableObject {
     private let signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase
 
     private let signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase
+
+    private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
     
     @Published private(set) var uiState = SignInUiState.empty
     
@@ -76,6 +79,9 @@ class SignInViewModel: ObservableObject {
                 if provider == .google {
                     await handleGoogleSignIn()
                     return
+                } else if provider == .kakao {
+                    await handleKakaoSignIn()
+                    return
                 }
 
                 do {
@@ -120,12 +126,14 @@ class SignInViewModel: ObservableObject {
     init(
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
         signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
-        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase()
+        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
+        signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase()
     ) {
         self.signInUseCase = signInUseCase
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
+        self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
     }
     
     deinit {
@@ -149,6 +157,25 @@ class SignInViewModel: ObservableObject {
             if Task.isCancelled { return }
             uiState.isLoading = false
             uiState.errorMessage = "구글 로그인에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func handleKakaoSignIn() async {
+        do {
+            let idToken = try await requestKakaoIdToken()
+            let result = try await signInWithKakaoIdTokenUseCase.invoke(idToken: idToken)
+
+            if result is AppResultSuccess<AnyObject> {
+                uiState.isLoading = false
+                event.send(.signedIn)
+            } else {
+                uiState.isLoading = false
+                uiState.errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
+            }
+        } catch {
+            if Task.isCancelled { return }
+            uiState.isLoading = false
+            uiState.errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
         }
     }
 
@@ -207,6 +234,35 @@ class SignInViewModel: ObservableObject {
             if !session.start() {
                 self.webAuthSession = nil
                 continuation.resume(throwing: SignInError.failedToStartWebAuth)
+            }
+        }
+    }
+
+    private func requestKakaoIdToken() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            let loginCompletion: (OAuthToken?, Error?) -> Void = { token, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let idToken = token?.idToken, !idToken.isEmpty else {
+                    continuation.resume(throwing: SignInError.idTokenNotFound)
+                    return
+                }
+                continuation.resume(returning: idToken)
+            }
+
+            if UserApi.isKakaoTalkLoginAvailable() {
+                UserApi.shared.loginWithKakaoTalk(
+                    scopes: ["openid", "account_email", "profile_nickname"],
+                    completion: loginCompletion
+                )
+            } else {
+                UserApi.shared.loginWithKakaoAccount(
+                    scopes: ["openid", "account_email", "profile_nickname"],
+                    completion: loginCompletion
+                )
             }
         }
     }

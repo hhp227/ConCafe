@@ -4,6 +4,8 @@ import UIKit
 import UserNotifications
 import FirebaseCore
 import FirebaseMessaging
+import KakaoSDKCommon
+import KakaoSDKAuth
 
 @main
 struct iOSApp: App {
@@ -26,12 +28,25 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
+        KakaoSDK.initSDK(appKey: "af25c4820b65d3fe2a9145156351ccaf")
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in
         }
         application.registerForRemoteNotifications()
         return true
+    }
+
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+    ) -> Bool {
+        if AuthApi.isKakaoTalkLoginUrl(url) {
+            return AuthController.handleOpenUrl(url: url)
+        } else {
+            return false
+        }
     }
 
     func application(

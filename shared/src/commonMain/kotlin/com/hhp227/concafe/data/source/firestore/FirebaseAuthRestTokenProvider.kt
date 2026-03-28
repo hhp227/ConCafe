@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.source.firestore
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.datetime.Clock
 
@@ -115,6 +116,38 @@ class FirebaseAuthRestTokenProvider(
             body = body
         )
         val session = parseSessionFromResponse(response, allowMissingEmail = false)
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signInWithKakaoIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("kakao idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=oidc.kakao",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInWithIdpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = true,
+            fallbackEmailPrefix = "kakao"
+        )
 
         currentSession = session
 
@@ -250,6 +283,7 @@ class FirebaseAuthRestTokenProvider(
         return FirebaseAuthSession(
             userId = userId,
             email = email,
+            displayName = session.displayName,
             idToken = idToken,
             refreshToken = nextRefreshToken,
             expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }
@@ -369,15 +403,20 @@ class FirebaseAuthRestTokenProvider(
         return keys
     }
 
-    private fun parseSessionFromResponse(response: String, allowMissingEmail: Boolean): FirebaseAuthSession {
+    private fun parseSessionFromResponse(
+        response: String,
+        allowMissingEmail: Boolean,
+        fallbackEmailPrefix: String = "anonymous"
+    ): FirebaseAuthSession {
         val root = Json.parseToJsonElement(response).jsonObject
         val userId = root["localId"]?.jsonPrimitive?.content.orEmpty()
         val rawEmail = root["email"]?.jsonPrimitive?.content.orEmpty()
         val email = if (rawEmail.isNotBlank()) {
             rawEmail
         } else {
-            "anonymous-$userId@concafe.local"
+            "$fallbackEmailPrefix-$userId@concafe.local"
         }
+        val displayName = root["displayName"]?.jsonPrimitive?.contentOrNull
         val idToken = root["idToken"]?.jsonPrimitive?.content
         val refreshToken = root["refreshToken"]?.jsonPrimitive?.content
         val expiresInSeconds = root["expiresIn"]?.jsonPrimitive?.content?.toLongOrNull()
@@ -388,6 +427,7 @@ class FirebaseAuthRestTokenProvider(
         return FirebaseAuthSession(
             userId = userId,
             email = email,
+            displayName = displayName,
             idToken = idToken,
             refreshToken = refreshToken,
             expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }

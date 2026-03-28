@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">ConCafe</string>
+    <string name="kakao_native_app_key">af25c4820b65d3fe2a9145156351ccaf</string>
+    <string name="kakao_scheme">kakaoaf25c4820b65d3fe2a9145156351ccaf</string>
     <string name="main_tab_home">홈</string>
     <string name="main_tab_explore">탐색</string>
     <string name="main_tab_checkin">체크인</string>

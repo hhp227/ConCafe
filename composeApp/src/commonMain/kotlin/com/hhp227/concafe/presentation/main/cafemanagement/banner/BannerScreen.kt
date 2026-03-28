@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -107,7 +109,7 @@ private fun BannerContentScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = { onAction(BannerAction.ClickBack) }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                         }
                     },
                     actions = {
@@ -117,11 +119,11 @@ private fun BannerContentScreen(
                     }
                 )
                 ConCafeTabBar(
-                    labels = BannerTab.values().map { it.label },
-                    selectedIndex = BannerTab.values().indexOf(uiState.selectedTab),
+                    labels = BannerTab.entries.map { it.label },
+                    selectedIndex = BannerTab.entries.indexOf(uiState.selectedTab),
                     modifier = Modifier.fillMaxWidth(),
                     onTabSelected = { index ->
-                        onAction(BannerAction.SelectTab(BannerTab.values()[index]))
+                        onAction(BannerAction.SelectTab(BannerTab.entries[index]))
                     }
                 )
             }
@@ -329,5 +331,5 @@ private fun BannerItem.iconVector(): ImageVector = when (imageIcon) {
     "cake" -> Icons.Default.Cake
     "restaurant" -> Icons.Default.Restaurant
     "redeem" -> Icons.Default.Redeem
-    else -> Icons.Default.EventNote
+    else -> Icons.AutoMirrored.Filled.EventNote
 }

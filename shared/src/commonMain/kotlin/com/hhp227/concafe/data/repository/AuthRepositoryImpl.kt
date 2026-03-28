@@ -26,7 +26,7 @@ class AuthRepositoryImpl(
             val session = authTokenProvider.signInWithEmailPassword(email, password)
 
             if (session != null) {
-                val user = resolveUserFromSession(session.userId, session.email)
+                val user = resolveUserFromSession(session.userId, session.email, session.displayName)
                 authDataSource.currentUserId = user.id
                 return user
             }
@@ -40,7 +40,7 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithGoogleIdToken(idToken)
                 ?: throw IllegalArgumentException("google sign-in is not supported")
-            val user = resolveUserFromSession(session.userId, session.email)
+            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
             authDataSource.currentUserId = user.id
             return user
         }
@@ -51,11 +51,22 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithAppleIdToken(idToken)
                 ?: throw IllegalArgumentException("apple sign-in is not supported")
-            val user = resolveUserFromSession(session.userId, session.email)
+            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
             authDataSource.currentUserId = user.id
             return user
         }
         throw IllegalArgumentException("apple idToken is required")
+    }
+
+    override suspend fun signInWithKakaoIdToken(idToken: String): User {
+        if (!idToken.isBlank()) {
+            val session = authTokenProvider.signInWithKakaoIdToken(idToken)
+                ?: throw IllegalArgumentException("kakao sign-in is not supported")
+            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
+            authDataSource.currentUserId = user.id
+            return user
+        }
+        throw IllegalArgumentException("kakao idToken is required")
     }
 
     override suspend fun signUp(
@@ -230,7 +241,7 @@ class AuthRepositoryImpl(
         }
     }
 
-    private suspend fun resolveUserFromSession(userId: String, email: String): User {
+    private suspend fun resolveUserFromSession(userId: String, email: String, displayName: String?): User {
         val foundById = authDataSource.findUserById(userId)
 
         if (foundById != null) {
@@ -263,7 +274,7 @@ class AuthRepositoryImpl(
         val createdUser = User(
             id = userId,
             email = email,
-            nickname = email.substringBefore("@").ifBlank { "유저" },
+            nickname = resolveInitialNickname(email, displayName),
             profileImage = null,
             role = UserRole.VISITOR,
             banned = false,
@@ -313,6 +324,22 @@ class AuthRepositoryImpl(
             return null
         }
         return null
+    }
+}
+
+private fun resolveInitialNickname(email: String, displayName: String?): String {
+    val normalizedDisplayName = displayName?.trim().orEmpty()
+    val emailPrefix = email.substringBefore("@").trim()
+    return if (normalizedDisplayName.isNotBlank()) {
+        normalizedDisplayName
+    } else if (emailPrefix.startsWith("anonymous-")) {
+        "사용자"
+    } else if (emailPrefix.startsWith("kakao-")) {
+        "카카오유저"
+    } else if (emailPrefix.isNotBlank()) {
+        emailPrefix
+    } else {
+        "유저"
     }
 }
 

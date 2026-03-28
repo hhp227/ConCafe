@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import AuthenticationServices
 import UIKit
+import KakaoSDKUser
 import Shared
 
 @MainActor
@@ -24,6 +25,8 @@ class SignUpViewModel: ObservableObject {
     private let signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase
 
     private let signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase
+
+    private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
 
     private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
 
@@ -203,6 +206,9 @@ class SignUpViewModel: ObservableObject {
             if provider == .google {
                 await handleGoogleSignUp()
                 return
+            } else if provider == .kakao {
+                await handleKakaoSignUp()
+                return
             }
 
             do {
@@ -265,6 +271,25 @@ class SignUpViewModel: ObservableObject {
         }
     }
 
+    private func handleKakaoSignUp() async {
+        do {
+            let idToken = try await requestKakaoIdToken()
+            let result = try await signInWithKakaoIdTokenUseCase.invoke(idToken: idToken)
+
+            if result is AppResultSuccess<AnyObject> {
+                uiState.isLoading = false
+                event.send(.signedUp)
+            } else {
+                uiState.isLoading = false
+                uiState.errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        } catch {
+            if Task.isCancelled { return }
+            uiState.isLoading = false
+            uiState.errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
     private func requestGoogleIdToken() async throws -> String {
         let clientId = try requireGoogleServiceValue(key: "CLIENT_ID")
         let callbackScheme = try requireGoogleServiceValue(key: "REVERSED_CLIENT_ID")
@@ -319,6 +344,35 @@ class SignUpViewModel: ObservableObject {
             if !session.start() {
                 self.webAuthSession = nil
                 continuation.resume(throwing: SignUpError.failedToStartWebAuth)
+            }
+        }
+    }
+
+    private func requestKakaoIdToken() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            let loginCompletion: (OAuthToken?, Error?) -> Void = { token, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let idToken = token?.idToken, !idToken.isEmpty else {
+                    continuation.resume(throwing: SignUpError.idTokenNotFound)
+                    return
+                }
+                continuation.resume(returning: idToken)
+            }
+
+            if UserApi.isKakaoTalkLoginAvailable() {
+                UserApi.shared.loginWithKakaoTalk(
+                    scopes: ["openid", "account_email", "profile_nickname"],
+                    completion: loginCompletion
+                )
+            } else {
+                UserApi.shared.loginWithKakaoAccount(
+                    scopes: ["openid", "account_email", "profile_nickname"],
+                    completion: loginCompletion
+                )
             }
         }
     }
@@ -529,7 +583,8 @@ class SignUpViewModel: ObservableObject {
         createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
         signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
-        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase()
+        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
+        signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
@@ -537,6 +592,7 @@ class SignUpViewModel: ObservableObject {
         self.signInUseCase = signInUseCase
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
+        self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
         self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
         self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
