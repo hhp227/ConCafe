@@ -10,14 +10,6 @@ import Combine
 import Shared
 import KMPNativeCoroutinesAsync
 
-enum ContentAction {
-    case syncPushToken(token: String)
-}
-
-enum ContentEvent {
-    case syncPushToken
-}
-
 @MainActor
 final class ContentViewModel: ObservableObject {
     private let observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase

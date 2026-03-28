@@ -116,6 +116,8 @@
 		0A580DB72F59711000390F67 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB82F59711000390F67 /* CheckInView.swift */; };
 		0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBA2F59712000390F67 /* MyInfoView.swift */; };
 		0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBF2F59730000390F67 /* NotificationView.swift */; };
+		0A5F07AD2F7827120064CCB3 /* ContentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5F07AC2F7827120064CCB3 /* ContentAction.swift */; };
+		0A5F07AF2F78273D0064CCB3 /* ContentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5F07AE2F78273D0064CCB3 /* ContentEvent.swift */; };
 		0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33452F610B2D0074940F /* MenuGoodsViewModel.swift */; };
 		0A6B33482F610B4F0074940F /* MenuGoodsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33472F610B4F0074940F /* MenuGoodsUiState.swift */; };
 		0A6B334A2F610B700074940F /* MenuGoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33492F610B700074940F /* MenuGoodsView.swift */; };
@@ -322,6 +324,8 @@
 		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
 		0A580DBF2F59730000390F67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		0A5F07AB2F7826050064CCB3 /* ConCafePush.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = ConCafePush.entitlements; path = iosApp/ConCafePush.entitlements; sourceTree = "<group>"; };
+		0A5F07AC2F7827120064CCB3 /* ContentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentAction.swift; sourceTree = "<group>"; };
+		0A5F07AE2F78273D0064CCB3 /* ContentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentEvent.swift; sourceTree = "<group>"; };
 		0A6B33452F610B2D0074940F /* MenuGoodsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsViewModel.swift; sourceTree = "<group>"; };
 		0A6B33472F610B4F0074940F /* MenuGoodsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsUiState.swift; sourceTree = "<group>"; };
 		0A6B33492F610B700074940F /* MenuGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsView.swift; sourceTree = "<group>"; };
@@ -949,6 +953,8 @@
 				A1011001AABBCCDDEEFF0001 /* ContentView.swift */,
 				0A3D3AC12F6D1F7300167893 /* ContentViewModel.swift */,
 				0A3D3ABD2F6D1EF100167893 /* ContentUiState.swift */,
+				0A5F07AC2F7827120064CCB3 /* ContentAction.swift */,
+				0A5F07AE2F78273D0064CCB3 /* ContentEvent.swift */,
 				A1011002AABBCCDDEEFF0002 /* iOSApp.swift */,
 				A1011004AABBCCDDEEFF0004 /* Assets.xcassets */,
 				0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */,
@@ -1260,6 +1266,7 @@
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
 				0A2C5B1F2F65615000D3004E /* AccountSettingsEvent.swift in Sources */,
 				0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */,
+				0A5F07AF2F78273D0064CCB3 /* ContentEvent.swift in Sources */,
 				0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */,
 				0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
@@ -1279,6 +1286,7 @@
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
 				0A3470732F611AD6005F9A8C /* ExternalLinkView.swift in Sources */,
 				0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */,
+				0A5F07AD2F7827120064CCB3 /* ContentAction.swift in Sources */,
 				0A3D3ABE2F6D1EF100167893 /* ContentUiState.swift in Sources */,
 				0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */,
 				0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */,
