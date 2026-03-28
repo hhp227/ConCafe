@@ -984,55 +984,65 @@ private struct CheckInNewVisitSheet: View {
                             text: $memo,
                             placeholder: "방문 후기를 남겨보세요."
                         )
-                        if let errorMessage, !errorMessage.isEmpty {
-                            HStack(alignment: .top, spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(Color(hex: "E25575"))
-                                    .padding(.top, 2)
-                                Text(errorMessage)
-                                    .font(.footnote)
-                                    .foregroundStyle(Color(hex: "B03854"))
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(Color(hex: "FFF1F3"))
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
-                            )
-                        }
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 60)
+                .padding(.bottom, 170)
                 .padding(.top, 10)
                 .background(Color.white)
             }
-            Button("체크인 완료") {
-                guard let cafeId = selectedCafeId else { return }
-                let normalizedMemo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                onAction(
-                    .submitNewVisit(
-                        cafeId: cafeId,
-                        visitedAt: makeVisitedAtString(date: visitDate, time: visitTime),
-                        memo: normalizedMemo.isEmpty ? nil : normalizedMemo
+            VStack(spacing: 8) {
+                if let errorMessage, !errorMessage.isEmpty {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color(hex: "E25575"))
+                            .padding(.top, 2)
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(Color(hex: "B03854"))
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color(hex: "FFF1F3"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
                     )
-                )
+                }
+                Button("체크인 완료") {
+                    guard let cafeId = selectedCafeId else { return }
+                    let normalizedMemo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    onAction(
+                        .submitNewVisit(
+                            cafeId: cafeId,
+                            visitedAt: makeVisitedAtString(date: visitDate, time: visitTime),
+                            memo: normalizedMemo.isEmpty ? nil : normalizedMemo
+                        )
+                    )
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(hex: "FFD1DC"))
+                .foregroundStyle(Color(hex: "2B2330"))
+                .font(.headline.weight(.bold))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .disabled(selectedCafeId == nil)
+                .padding(.bottom, 8)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
-            .font(.headline.weight(.bold))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .disabled(selectedCafeId == nil)
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
             .padding(.top, 10)
+            .background(Color.white)
+            .overlay(
+                Rectangle()
+                    .fill(Color(hex: "EEE4EA"))
+                    .frame(height: 1),
+                alignment: .top
+            }
             Spacer()
         }
         .background(
