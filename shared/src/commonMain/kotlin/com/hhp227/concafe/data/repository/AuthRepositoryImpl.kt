@@ -113,6 +113,16 @@ class AuthRepositoryImpl(
         authDataSource.currentUserId = null
     }
 
+    override suspend fun requestPasswordReset(email: String) {
+        if (email.isBlank()) {
+            throw IllegalArgumentException("email is required")
+        }
+        if (!authTokenProvider.supportsEmailPasswordAuth()) {
+            throw IllegalArgumentException("email/password auth not supported")
+        }
+        authTokenProvider.sendPasswordResetEmail(email)
+    }
+
     override suspend fun changePassword(currentPassword: String, newPassword: String) {
         if (currentPassword.isBlank() || newPassword.isBlank()) {
             throw IllegalArgumentException("currentPassword/newPassword is required")

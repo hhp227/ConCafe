@@ -90,6 +90,9 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToSignUp -> {
                     _event.emit(NavigateTo(Route.SignUp))
                 }
+                NavigationAction.NavigateToResetPassword -> {
+                    _event.emit(NavigateTo(Route.ResetPassword))
+                }
                 is NavigationAction.NavigateToNotification -> {
                     _event.emit(NavigateTo(Route.Notification))
                 }

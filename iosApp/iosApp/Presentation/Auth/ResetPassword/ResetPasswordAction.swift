@@ -8,5 +8,7 @@
 import Foundation
 
 enum ResetPasswordAction {
-    
+    case backTapped
+    case emailChanged(String)
+    case submitTapped
 }

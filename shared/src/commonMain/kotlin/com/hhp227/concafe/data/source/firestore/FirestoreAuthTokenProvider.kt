@@ -21,6 +21,8 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signOut()
 
+    suspend fun sendPasswordResetEmail(email: String)
+
     suspend fun updateCurrentUserPassword(
         idToken: String,
         newPassword: String

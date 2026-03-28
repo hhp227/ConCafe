@@ -19,6 +19,9 @@ struct SignInView: View {
             onBack: {
                 onNavigationAction(.navigateBack)
             },
+            onResetPassword: {
+                onNavigationAction(.navigateToResetPassword)
+            },
             onSignUp: {
                 onNavigationAction(.navigateToSignUp)
             },
@@ -37,6 +40,8 @@ private struct SignInContentView: View {
     let uiState: SignInUiState
     
     let onBack: () -> Void
+
+    let onResetPassword: () -> Void
 
     let onSignUp: () -> Void
     
@@ -153,7 +158,10 @@ private struct SignInContentView: View {
     
     private var footerLinks: some View {
         HStack(spacing: 8) {
-            Text("비밀번호 찾기")
+            Button(action: onResetPassword) {
+                Text("비밀번호 찾기")
+            }
+            .buttonStyle(.plain)
             Text("|")
             Button(action: onSignUp) {
                 Text("회원가입")

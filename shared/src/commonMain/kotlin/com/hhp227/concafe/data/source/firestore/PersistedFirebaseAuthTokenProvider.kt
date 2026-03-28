@@ -80,6 +80,10 @@ class PersistedFirebaseAuthTokenProvider(
         clearPersistedSession()
     }
 
+    override suspend fun sendPasswordResetEmail(email: String) {
+        delegate.sendPasswordResetEmail(email)
+    }
+
     override suspend fun updateCurrentUserPassword(
         idToken: String,
         newPassword: String

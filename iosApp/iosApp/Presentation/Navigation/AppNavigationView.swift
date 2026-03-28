@@ -63,6 +63,8 @@ struct AppNavigationView: View {
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:
                 SignUpView(onNavigationAction: viewModel.onAction)
+            case .resetPassword:
+                ResetPasswordView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView(onNavigationAction: viewModel.onAction)
             case .settings:
@@ -118,7 +120,7 @@ struct AppNavigationView: View {
         guard let lastRoute = path.last else { return false }
 
         switch lastRoute {
-        case .cafe, .cast, .signIn, .signUp:
+        case .cafe, .cast, .signIn, .signUp, .resetPassword:
             return true
         default:
             return false

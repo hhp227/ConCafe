@@ -2,6 +2,7 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.presentation.AppViewModel
 import com.hhp227.concafe.presentation.auth.signin.SignInViewModel
+import com.hhp227.concafe.presentation.auth.resetpassword.ResetPasswordViewModel
 import com.hhp227.concafe.presentation.auth.signup.SignUpViewModel
 import com.hhp227.concafe.presentation.cafe.CafeViewModel
 import com.hhp227.concafe.presentation.cast.CastViewModel
@@ -36,6 +37,7 @@ import org.koin.dsl.module
 private val composeAppPresentationModule = module {
     factory { AppViewModel(get(), get(), get()) }
     factory { SignInViewModel(get(), get(), get(), get()) }
+    factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get()) }

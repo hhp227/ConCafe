@@ -109,6 +109,12 @@ class FakeAuthRepository(
         currentUserFlow.value = null
     }
 
+    override suspend fun requestPasswordReset(email: String) {
+        if (email.isBlank()) {
+            throw IllegalArgumentException("email is required")
+        }
+    }
+
     override suspend fun changePassword(currentPassword: String, newPassword: String) {
         if (currentPassword.isBlank() || newPassword.isBlank()) {
             throw IllegalArgumentException("currentPassword/newPassword is required")

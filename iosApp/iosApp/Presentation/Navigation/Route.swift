@@ -25,6 +25,7 @@ enum Route: Hashable {
     case reviewEdit(cafeId: String)
     case signIn
     case signUp
+    case resetPassword
     case notification
     case settings
     case notificationSettings

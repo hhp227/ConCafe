@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import com.hhp227.concafe.domain.model.MainNavigationTab
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
+import com.hhp227.concafe.presentation.auth.resetpassword.ResetPasswordScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -191,6 +192,10 @@ fun NavigationScreen(
         composable<Route.SignUp> { backStackEntry ->
             backStackEntry.toRoute<Route.SignUp>()
             SignUpScreen(onNavigate = viewModel::onAction)
+        }
+        composable<Route.ResetPassword> { backStackEntry ->
+            backStackEntry.toRoute<Route.ResetPassword>()
+            ResetPasswordScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Notification> {
             NotificationScreen(

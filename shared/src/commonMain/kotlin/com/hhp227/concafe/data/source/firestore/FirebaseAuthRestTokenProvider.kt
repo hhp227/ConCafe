@@ -121,6 +121,27 @@ class FirebaseAuthRestTokenProvider(
         currentSession = null
     }
 
+    override suspend fun sendPasswordResetEmail(email: String) {
+        if (!supportsEmailPasswordAuth()) {
+            throw IllegalArgumentException("email/password auth not supported")
+        }
+        if (email.isBlank()) {
+            throw IllegalArgumentException("email is required")
+        }
+
+        val body = """
+            {
+              "requestType": "PASSWORD_RESET",
+              "email": "${escapeJson(email)}"
+            }
+        """.trimIndent()
+
+        postJsonWithApiKeyFallback(
+            buildUrl = { key -> sendOobCodeUrl(key) },
+            body = body
+        )
+    }
+
     override suspend fun updateCurrentUserPassword(
         idToken: String,
         newPassword: String
@@ -237,6 +258,10 @@ class FirebaseAuthRestTokenProvider(
 
     private fun updatePasswordUrl(apiKey: String): String {
         return "$FIREBASE_AUTH_BASE_URL/accounts:update?key=$apiKey"
+    }
+
+    private fun sendOobCodeUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:sendOobCode?key=$apiKey"
     }
 
     private fun refreshUrl(apiKey: String): String {
