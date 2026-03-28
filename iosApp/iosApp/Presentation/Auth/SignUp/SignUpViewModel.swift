@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import AuthenticationServices
 import UIKit
+import KakaoSDKAuth
 import KakaoSDKUser
 import Shared
 
@@ -372,9 +373,9 @@ class SignUpViewModel: ObservableObject {
             }
 
             if UserApi.isKakaoTalkLoginAvailable() {
-                UserApi.shared.loginWithKakaoTalk(scopes: ["openid"], completion: loginCompletion)
+                UserApi.shared.loginWithKakaoTalk(completion: loginCompletion)
             } else {
-                UserApi.shared.loginWithKakaoAccount(scopes: ["openid"], completion: loginCompletion)
+                UserApi.shared.loginWithKakaoAccount(completion: loginCompletion)
             }
         }
     }
