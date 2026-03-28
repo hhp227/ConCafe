@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -148,7 +149,7 @@ private fun GuestMyInfoScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             tint = Color(0xFFEF6797),
                             modifier = Modifier.size(18.dp)
@@ -222,7 +223,7 @@ private fun GuestMyInfoScreen(
                 ) {
                     Text("더보기", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
                     Icon(
-                        imageVector = Icons.Filled.ArrowForward,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         tint = Color(0xFFEF6797),
                         modifier = Modifier.size(16.dp)

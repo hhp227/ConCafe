@@ -43,4 +43,10 @@ class FakeNotificationRepository(
         settingsByUserId[userId] = settings
         return settings
     }
+
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        if (userId.isBlank() || platform.isBlank() || token.isBlank()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
+    }
 }

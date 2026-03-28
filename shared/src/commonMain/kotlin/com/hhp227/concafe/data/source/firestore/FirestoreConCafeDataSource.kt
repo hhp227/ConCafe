@@ -326,6 +326,39 @@ class FirestoreConCafeDataSource(
         return settings
     }
 
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        val normalizedPlatform = platform.trim()
+        val normalizedToken = token.trim()
+        val normalizedUserId = userId.trim()
+
+        if (normalizedUserId.isEmpty() || normalizedPlatform.isEmpty() || normalizedToken.isEmpty()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
+        val idToken = tokenProvider.getIdToken()
+        val tokenDocumentId = "token_${normalizedToken.hashCode().toString().replace("-", "_")}"
+        val locale = "ko-KR"
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$normalizedUserId/${FirestorePaths.USER_DEVICE_TOKENS}/$tokenDocumentId"
+        val body = firestoreDocumentBody(
+            fields = mapOf(
+                "userId" to firestoreString(normalizedUserId),
+                "platform" to firestoreString(normalizedPlatform),
+                "token" to firestoreString(normalizedToken),
+                "locale" to firestoreString(locale),
+                "isEnabled" to firestoreBoolean(true),
+                "updatedAt" to firestoreString(now),
+                "createdAt" to firestoreString(now)
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = body, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = body, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to register push token", throwable)
+        }
+    }
+
     suspend fun refreshCafeDetail(cafeId: String) {
         val idToken = tokenProvider.getIdToken()
         val cafeDocument = runCatching {

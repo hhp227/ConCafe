@@ -1,8 +1,14 @@
 import SwiftUI
 import Shared
+import UIKit
+import UserNotifications
+import FirebaseCore
+import FirebaseMessaging
 
 @main
 struct iOSApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -12,4 +18,68 @@ struct iOSApp: App {
     init() {
         KoinInitializerKt.doInitKoin()
     }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+    ) -> Bool {
+        FirebaseApp.configure()
+        Messaging.messaging().delegate = self
+        UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in
+        }
+        application.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        let token = fcmToken?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if token.isEmpty {
+            return
+        } else {
+            PushTokenBridge.shared.updateToken(token)
+        }
+    }
+}
+
+final class PushTokenBridge {
+    static let shared = PushTokenBridge()
+
+    private let tokenKey = "concafe.push.fcm.token"
+
+    private init() {}
+
+    func updateToken(_ token: String) {
+        let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if normalizedToken.isEmpty {
+            return
+        } else {
+            UserDefaults.standard.set(normalizedToken, forKey: tokenKey)
+            NotificationCenter.default.post(
+                name: .pushTokenUpdated,
+                object: nil,
+                userInfo: ["token": normalizedToken]
+            )
+        }
+    }
+
+    func currentToken() -> String {
+        let token = UserDefaults.standard.string(forKey: tokenKey) ?? ""
+        return token.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+extension Notification.Name {
+    static let pushTokenUpdated = Notification.Name("concafe.pushTokenUpdated")
 }

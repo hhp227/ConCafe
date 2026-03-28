@@ -12,4 +12,6 @@ interface NotificationRepository {
     suspend fun getNotificationSettings(userId: String): UserNotificationSettings
 
     suspend fun updateNotificationSettings(userId: String, settings: UserNotificationSettings): UserNotificationSettings
+
+    suspend fun registerPushToken(userId: String, platform: String, token: String)
 }

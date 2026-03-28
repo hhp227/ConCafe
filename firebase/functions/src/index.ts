@@ -4,6 +4,7 @@ import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import {getApps, initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
+import {getMessaging} from "firebase-admin/messaging";
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -219,6 +220,11 @@ async function createUserNotification(
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
   const notificationRef = userRef.collection("notifications").doc(sanitizedId);
+  const existing = await notificationRef.get();
+
+  if (existing.exists) {
+    return;
+  }
 
   await notificationRef.set(
     {
@@ -232,8 +238,83 @@ async function createUserNotification(
       isRead: false,
       updatedAt: createdAt,
     },
-    {merge: true}
+    {merge: false}
   );
+  await sendPushToUser(userId, title, body, type, targetId, sanitizedId);
+}
+
+async function sendPushToUser(
+  userId: string,
+  title: string,
+  body: string,
+  type: string,
+  targetId: string,
+  notificationId: string
+): Promise<void> {
+  const tokenSnapshot = await db()
+    .collection("users")
+    .doc(userId)
+    .collection("deviceTokens")
+    .where("isEnabled", "==", true)
+    .select("token")
+    .get();
+
+  if (tokenSnapshot.empty) {
+    return;
+  }
+  const tokens = tokenSnapshot.docs
+    .map((doc) => asNonBlankString(doc.get("token")))
+    .filter((token): token is string => token !== null);
+
+  if (tokens.length == 0) {
+    return;
+  }
+  const response = await getMessaging().sendEachForMulticast({
+    tokens: tokens,
+    notification: {
+      title: title,
+      body: body,
+    },
+    data: {
+      type: type,
+      targetId: targetId,
+      notificationId: notificationId,
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+        },
+      },
+    },
+    android: {
+      priority: "high",
+      notification: {
+        sound: "default",
+      },
+    },
+  });
+
+  if (response.failureCount == 0) {
+    return;
+  }
+  const deleteTasks = response.responses.map(async (sendResponse, index) => {
+    if (sendResponse.success) {
+      return;
+    }
+    const token = tokens[index];
+    const errorCode = sendResponse.error?.code ?? "";
+    const shouldDeleteToken = errorCode.includes("registration-token-not-registered")
+      || errorCode.includes("invalid-argument");
+
+    if (!shouldDeleteToken) {
+      return;
+    }
+    const targetDocs = tokenSnapshot.docs.filter((doc) => doc.get("token") === token);
+    await Promise.all(targetDocs.map(async (doc) => doc.ref.delete()));
+  });
+
+  await Promise.all(deleteTasks);
 }
 
 function asGeoPoint(value: unknown): {latitude: number; longitude: number} | null {

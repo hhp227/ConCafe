@@ -1208,6 +1208,12 @@ class MockConCafeDataSource : ConCafeDataSource {
         return settings
     }
 
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        if (userId.isBlank() || platform.isBlank() || token.isBlank()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
+    }
+
     private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371000.0
         val dLat = (lat2 - lat1).toRadians()

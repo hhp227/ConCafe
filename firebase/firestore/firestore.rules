@@ -397,6 +397,14 @@ service cloud.firestore {
           && isNotificationReadOnlyUpdate();
         allow create, delete: if false;
       }
+
+      match /deviceTokens/{tokenId} {
+        allow read: if isSelf(userId);
+        allow create, update: if isSelf(userId)
+          && request.resource.data.userId is string
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if isSelf(userId);
+      }
     }
 
     match /cafeRegistrationClaims/{claimId} {

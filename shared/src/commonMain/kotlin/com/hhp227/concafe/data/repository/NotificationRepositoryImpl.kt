@@ -38,4 +38,12 @@ class NotificationRepositoryImpl(
     ): UserNotificationSettings {
         return notificationDataSource.updateNotificationSettings(userId, settings)
     }
+
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        notificationDataSource.registerPushToken(
+            userId = userId,
+            platform = platform,
+            token = token
+        )
+    }
 }
