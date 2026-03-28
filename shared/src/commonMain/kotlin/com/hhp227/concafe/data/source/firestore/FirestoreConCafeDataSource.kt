@@ -919,7 +919,9 @@ class FirestoreConCafeDataSource(
         userId: String,
         cafeId: String,
         visitedAt: String,
-        memo: String?
+        memo: String?,
+        latitude: Double,
+        longitude: Double
     ): Visit {
         val idToken = tokenProvider.getIdToken()
         val visitId = nextFirestoreEntityId("visit")
@@ -929,6 +931,7 @@ class FirestoreConCafeDataSource(
             mapOf(
                 "userId" to firestoreString(userId),
                 "cafeId" to firestoreString(cafeId),
+                "location" to firestoreGeoPoint(latitude = latitude, longitude = longitude),
                 "visitedAt" to firestoreString(visitedAt),
                 "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
                 "verified" to firestoreBoolean(false),
@@ -989,6 +992,36 @@ class FirestoreConCafeDataSource(
             visits.firstOrNull { visit -> visit.id == visitId }
         }.getOrNull()
         return refreshedVisit ?: fallbackUpdated
+    }
+
+    suspend fun createStampRemote(
+        userId: String,
+        cafeId: String,
+        visitId: String
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.STAMPS}/$visitId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "visitId" to firestoreString(visitId),
+                "earnedAt" to firestoreString(now),
+                "updatedAt" to firestoreString(now)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+    }
+
+    suspend fun deleteStampRemote(visitId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.STAMPS}/$visitId"
+
+        runCatching {
+            restApi.delete(path, idToken)
+        }
     }
 
     suspend fun deleteVisitRemote(visitId: String, requesterId: String) {
@@ -1167,6 +1200,86 @@ class FirestoreConCafeDataSource(
             .toMutableSet()
 
         followedCastIdsByUser[userId] = followedCastIds
+    }
+
+    suspend fun getFollowedCastsRemote(userId: String): List<Cast> {
+        if (userId.isBlank()) {
+            return emptyList()
+        }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val followDocuments = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = null
+            )
+        }.getOrElse { emptyList() }
+        val followedCastIds = mutableListOf<String>()
+        val followsByCafeId = mutableMapOf<String, MutableList<String>>()
+
+        followDocuments.forEach { document ->
+            val fields = document["fields"]?.jsonObject ?: return@forEach
+            val castId = fields.getFirestoreString("castId")?.takeIf { value -> value.isNotBlank() }
+                ?: return@forEach
+            val cafeId = fields.getFirestoreString("cafeId")?.takeIf { value -> value.isNotBlank() }
+                ?: return@forEach
+            val castIds = followsByCafeId.getOrPut(cafeId) { mutableListOf() }
+
+            followedCastIds.add(castId)
+            castIds.add(castId)
+        }
+        if (followsByCafeId.isEmpty()) {
+            val idSet = followedCastIds.toSet()
+
+            followedCastIdsByUser[userId] = idSet.toMutableSet()
+            return delegate.casts.filter { cast -> idSet.contains(cast.id) }
+        }
+        val resolvedCasts = mutableListOf<Cast>()
+
+        followsByCafeId.forEach { (cafeId, castIds) ->
+            val distinctCastIds = castIds.distinct()
+
+            distinctCastIds.chunked(MAX_FIRESTORE_IN_FILTER_VALUES).forEach { chunk ->
+                val documents = runCatching {
+                    runCafeCastIdsInQuery(
+                        cafeId = cafeId,
+                        castIds = chunk,
+                        idToken = idToken
+                    )
+                }.recoverCatching {
+                    runCafeCastIdsInQuery(
+                        cafeId = cafeId,
+                        castIds = chunk,
+                        idToken = null
+                    )
+                }.getOrElse { emptyList() }
+                val parsed = documents.mapNotNull { document ->
+                    parseCastDocument(cafeId = cafeId, document = document)
+                }
+
+                parsed.forEach { cast ->
+                    delegate.casts.removeAll { item -> item.id == cast.id }
+                    delegate.casts.add(cast)
+                }
+                resolvedCasts.addAll(parsed)
+            }
+        }
+        val idSet = followedCastIds.toSet()
+
+        followedCastIdsByUser[userId] = idSet.toMutableSet()
+        return if (resolvedCasts.isNotEmpty()) {
+            resolvedCasts.distinctBy { cast -> cast.id }
+        } else {
+            delegate.casts.filter { cast -> idSet.contains(cast.id) }
+        }
     }
 
     suspend fun refreshFavoriteCafeIds(userId: String) {
@@ -2548,12 +2661,19 @@ class FirestoreConCafeDataSource(
             val parsedSummary = parseMyPageSummaryDocument(userId = userId, document = parsed)
             val resolvedVisitCount = resolveMyPageVisitCount(
                 userId = userId,
-                userDocument = parsed,
                 fallbackVisitCount = parsedSummary.totalVisits,
                 idToken = idToken
             )
+            val resolvedStampCount = resolveMyPageStampCount(
+                userId = userId,
+                fallbackStampCount = parsedSummary.badgesCount,
+                idToken = idToken
+            )
 
-            parsedSummary.copy(totalVisits = resolvedVisitCount)
+            parsedSummary.copy(
+                totalVisits = resolvedVisitCount,
+                badgesCount = resolvedStampCount
+            )
         }.getOrNull()
     }
 
@@ -3946,6 +4066,51 @@ class FirestoreConCafeDataSource(
                   }
                 ]$startAfterSection,
                 "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCafeCastIdsInQuery(
+        cafeId: String,
+        castIds: List<String>,
+        idToken: String?
+    ): List<JsonObject> {
+        if (castIds.isEmpty()) {
+            return emptyList()
+        }
+        val references = castIds.joinToString(",") { castId ->
+            val sanitizedCastId = castId.trim()
+            """
+            { "referenceValue": "${config.documentBasePath()}/${FirestorePaths.CAFES}/${escapeFirestoreQueryString(cafeId)}/${FirestorePaths.CAFE_CASTS}/${escapeFirestoreQueryString(sanitizedCastId)}" }
+            """.trimIndent()
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}"
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "__name__" },
+                    "op": "IN",
+                    "value": {
+                      "arrayValue": {
+                        "values": [ $references ]
+                      }
+                    }
+                  }
+                },
+                "limit": ${castIds.size}
               }
             }
         """.trimIndent()
@@ -5738,36 +5903,43 @@ class FirestoreConCafeDataSource(
 
     private suspend fun resolveMyPageVisitCount(
         userId: String,
-        userDocument: JsonObject,
         fallbackVisitCount: Int,
         idToken: String?
     ): Int {
-        val fields = userDocument["fields"]?.jsonObject
-        val statsField = fields?.getFirestoreMap("stats")
-        val hasVisitCountField = if (statsField != null) {
-            statsField["visitCount"] != null
-        } else {
-            fields?.get("visitCount") != null
-        }
-        val shouldAggregateFromVisits = !hasVisitCountField || fallbackVisitCount <= 0
+        val aggregatedVisitCount = runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "userId",
+                equalsFilterValue = firestoreString(userId)
+            )
+        }.getOrNull()
 
-        if (!shouldAggregateFromVisits) {
+        if (aggregatedVisitCount != null) {
+            return aggregatedVisitCount
+        } else {
             return fallbackVisitCount
-        } else {
-            val aggregatedVisitCount = runCatching {
-                loadCollectionDocumentCount(
-                    collectionId = FirestorePaths.VISITS,
-                    idToken = idToken,
-                    equalsFilterFieldPath = "userId",
-                    equalsFilterValue = firestoreString(userId)
-                )
-            }.getOrNull()
+        }
+    }
 
-            if (aggregatedVisitCount != null) {
-                return aggregatedVisitCount
-            } else {
-                return fallbackVisitCount
-            }
+    private suspend fun resolveMyPageStampCount(
+        userId: String,
+        fallbackStampCount: Int,
+        idToken: String?
+    ): Int {
+        val aggregatedStampCount = runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.STAMPS,
+                idToken = idToken,
+                equalsFilterFieldPath = "userId",
+                equalsFilterValue = firestoreString(userId)
+            )
+        }.getOrNull()
+
+        if (aggregatedStampCount != null) {
+            return aggregatedStampCount
+        } else {
+            return fallbackStampCount
         }
     }
 

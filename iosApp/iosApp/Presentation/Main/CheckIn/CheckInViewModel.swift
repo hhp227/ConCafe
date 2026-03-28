@@ -30,6 +30,8 @@ final class CheckInViewModel: ObservableObject {
 
     private let visitEventPublisher: VisitEventPublisher
 
+    private let currentLocationProvider = IosCheckInLocationProvider()
+
     @Published private(set) var uiState = CheckInUiState.empty
 
     let event = PassthroughSubject<CheckInEvent, Never>()
@@ -175,14 +177,24 @@ final class CheckInViewModel: ObservableObject {
             uiState.errorMessage = nil
 
             tasks[.submitVisit]?.cancel()
+            uiState.errorMessage = "현재 위치를 확인하는 중입니다. 잠시만 기다려 주세요."
             tasks[.submitVisit] = Task {
                 do {
+                    let locationResult = await currentLocationProvider.getCurrentLocation()
+
+                    if !locationResult.isSuccess {
+                        uiState.errorMessage = locationResult.message
+                        return
+                    }
+                    let resolvedLocation = locationResult.location
                     let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
 
                     let result = try await createVisitUseCase.invoke(
                         cafeId: cafeId,
                         visitedAt: visitedAt,
-                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
+                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo,
+                        latitude: resolvedLocation.latitude,
+                        longitude: resolvedLocation.longitude
                     )
 
                     if result is AppResultSuccess<AnyObject> {
@@ -396,6 +408,24 @@ final class CheckInViewModel: ObservableObject {
             event.send(.navigateToReviewEdit(cafeId: prompt.cafeId))
         }
     }
+
+    private func requestCheckInPermissionAndOpenSheet() {
+        tasks[.locationPermission]?.cancel()
+        tasks[.locationPermission] = Task {
+            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
+
+            if permissionResult.isGranted {
+                uiState.isNewVisitSheetVisible = true
+                uiState.errorMessage = nil
+            } else {
+                uiState.isNewVisitSheetVisible = false
+                uiState.errorMessage = permissionResult.message
+                if permissionResult.requiresSettings {
+                    event.send(.openLocationSettings)
+                }
+            }
+        }
+    }
     
     func onAction(_ action: CheckInAction) {
         switch action {
@@ -418,13 +448,15 @@ final class CheckInViewModel: ObservableObject {
                 uiState.isLoginPromptVisible = true
                 uiState.isNewVisitSheetVisible = false
             } else {
-                uiState.isNewVisitSheetVisible = true
+                requestCheckInPermissionAndOpenSheet()
             }
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
             uiState.isLoginPromptVisible = false
+        case .dismissError:
+            uiState.errorMessage = nil
         case .dismissNewVisitSheet:
             uiState.isNewVisitSheetVisible = false
         case .dismissReviewPrompt:
@@ -480,6 +512,7 @@ final class CheckInViewModel: ObservableObject {
         case castEvent
         case visitEvent
         case reviewPromptAction
+        case locationPermission
     }
 
     private static let todayVisitLimit = 4

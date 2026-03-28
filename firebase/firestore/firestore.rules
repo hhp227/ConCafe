@@ -161,13 +161,15 @@ service cloud.firestore {
     function isValidVisitWriteData() {
       return request.resource.data.userId is string
         && request.resource.data.cafeId is string
+        && request.resource.data.location is latlng
         && request.resource.data.visitedAt is string
         && (
           !("memo" in request.resource.data)
           || request.resource.data.memo is string
           || request.resource.data.memo == null
         )
-        && request.resource.data.verified is bool;
+        && request.resource.data.verified is bool
+        && request.resource.data.verified == false;
     }
 
     function isValidInquiryCreateData() {
@@ -180,6 +182,23 @@ service cloud.firestore {
         && request.resource.data.status == "PENDING"
         && request.resource.data.createdAt is string
         && request.resource.data.createdAtLabel is string;
+    }
+
+    function isValidStampCreateData(stampId) {
+      return request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitId is string
+        && request.resource.data.visitId == stampId
+        && request.resource.data.earnedAt is string
+        && (
+          !("updatedAt" in request.resource.data)
+          || request.resource.data.updatedAt is string
+        )
+        && exists(/databases/$(database)/documents/visits/$(stampId))
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.cafeId == request.resource.data.cafeId
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.verified == true;
     }
 
     function isValidCastClaimStatus(status) {
@@ -481,6 +500,17 @@ service cloud.firestore {
       allow delete: if isSignedIn()
         && resource.data.userId is string
         && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /stamps/{stampId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow create: if false;
+      allow delete: if false;
       allow update: if false;
     }
 

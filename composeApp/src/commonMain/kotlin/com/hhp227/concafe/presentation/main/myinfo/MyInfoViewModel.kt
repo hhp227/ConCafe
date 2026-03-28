@@ -249,12 +249,33 @@ class MyInfoViewModel(
                 state
             } else {
                 val nextVisitCount = max(summary.totalVisits + delta, 0)
+                val nextStampCount = max(summary.badgesCount + delta, 0)
                 val nextLevel = max(1, 1 + (nextVisitCount / 5))
+                val nextSummary = summary.copy(
+                    totalVisits = nextVisitCount,
+                    badgesCount = nextStampCount,
+                    level = nextLevel
+                )
+                val favoritesCount = nextSummary.favoritesCount
+                val followedCount = nextSummary.followedCastsCount
                 state.copy(
-                    summary = summary.copy(
-                        totalVisits = nextVisitCount,
-                        level = nextLevel
-                    )
+                    summary = nextSummary,
+                    badges = state.badges.map { badge ->
+                        val isUnlocked = when (badge.id) {
+                            "badge-checkin-starter" -> nextStampCount >= 1
+                            "badge-stamp-collector" -> nextStampCount >= 3
+                            "badge-regular-visitor" -> nextVisitCount >= 5
+                            "badge-checkin-veteran" -> nextVisitCount >= 10
+                            "badge-favorite-curator" -> favoritesCount >= 3
+                            "badge-favorite-master" -> favoritesCount >= 10
+                            "badge-cast-supporter" -> followedCount >= 3
+                            "badge-cast-ambassador" -> followedCount >= 10
+                            "badge-level-up" -> nextLevel >= 3
+                            "badge-concafe-master" -> nextStampCount >= 10
+                            else -> badge.unlocked
+                        }
+                        badge.copy(unlocked = isUnlocked)
+                    }
                 )
             }
         }

@@ -101,7 +101,7 @@ class GetMyInfoUseCase(
                             .sortedByDescending { it.ratingAvg }
                     }
                     val followedMaidsDeferred = async {
-                        castRepository.getCastsByIds(followedCastIdsDeferred.await())
+                        castRepository.getFollowedCasts(currentUser.id)
                             .sortedByDescending { it.followerCount }
                     }
                     val followedCastCountDeferred = async {
@@ -121,12 +121,16 @@ class GetMyInfoUseCase(
                     )
                 }
                 val unlockedBadges = loaded.summary.badgesCount.coerceAtLeast(0)
-                val badges = listOf(
-                    ProfileBadge("badge-1", "첫 방문", "🎉", unlockedBadges >= 1),
-                    ProfileBadge("badge-2", "단골", "⭐", unlockedBadges >= 2),
-                    ProfileBadge("badge-3", "탐험가", "🗺️", unlockedBadges >= 3),
-                    ProfileBadge("badge-4", "콜렉터", "🏆", unlockedBadges >= 4),
-                    ProfileBadge("badge-5", "매니아", "💎", unlockedBadges >= 5)
+                val totalVisits = loaded.summary.totalVisits.coerceAtLeast(0)
+                val favoritesCount = loaded.summary.favoritesCount.coerceAtLeast(0)
+                val followedCastsCount = loaded.summary.followedCastsCount.coerceAtLeast(0)
+                val level = loaded.summary.level.coerceAtLeast(1)
+                val badges = buildActivityBadges(
+                    stampCount = unlockedBadges,
+                    totalVisits = totalVisits,
+                    favoritesCount = favoritesCount,
+                    followedCastsCount = followedCastsCount,
+                    level = level
                 )
 
                 AppResult.Success(
@@ -151,6 +155,32 @@ class GetMyInfoUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+
+    private fun buildActivityBadges(
+        stampCount: Int,
+        totalVisits: Int,
+        favoritesCount: Int,
+        followedCastsCount: Int,
+        level: Int
+    ): List<ProfileBadge> {
+        val normalizedStampCount = stampCount.coerceAtLeast(0)
+        val normalizedVisitCount = totalVisits.coerceAtLeast(0)
+        val normalizedFavoritesCount = favoritesCount.coerceAtLeast(0)
+        val normalizedFollowedCount = followedCastsCount.coerceAtLeast(0)
+        val normalizedLevel = level.coerceAtLeast(1)
+        return listOf(
+            ProfileBadge("badge-checkin-starter", "첫 체크인", "🎉", normalizedStampCount >= 1),
+            ProfileBadge("badge-stamp-collector", "스탬프 수집가", "🧷", normalizedStampCount >= 3),
+            ProfileBadge("badge-regular-visitor", "단골 방문자", "🏡", normalizedVisitCount >= 5),
+            ProfileBadge("badge-checkin-veteran", "체크인 베테랑", "🗺️", normalizedVisitCount >= 10),
+            ProfileBadge("badge-favorite-curator", "취향 큐레이터", "❤️", normalizedFavoritesCount >= 3),
+            ProfileBadge("badge-favorite-master", "취향 마스터", "💘", normalizedFavoritesCount >= 10),
+            ProfileBadge("badge-cast-supporter", "캐스트 서포터", "📣", normalizedFollowedCount >= 3),
+            ProfileBadge("badge-cast-ambassador", "캐스트 앰버서더", "🫶", normalizedFollowedCount >= 10),
+            ProfileBadge("badge-level-up", "레벨 성장", "🌱", normalizedLevel >= 3),
+            ProfileBadge("badge-concafe-master", "ConCafe 마스터", "👑", normalizedStampCount >= 10)
+        )
     }
 
     private suspend fun fetchPopularCafes(limit: Int): List<Cafe> {

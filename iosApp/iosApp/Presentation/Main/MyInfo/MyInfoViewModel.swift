@@ -271,15 +271,52 @@ final class MyInfoViewModel: ObservableObject {
         guard delta != 0, let summary = uiState.summary else { return }
 
         let nextVisitCount = max(Int(summary.totalVisits) + delta, 0)
+        let nextStampCount = max(Int(summary.badgesCount) + delta, 0)
         let nextLevel = max(1, 1 + (nextVisitCount / 5))
         uiState.summary = MyPageSummary(
             userId: summary.userId,
             totalVisits: Int32(nextVisitCount),
             favoritesCount: summary.favoritesCount,
             followedCastsCount: summary.followedCastsCount,
-            badgesCount: summary.badgesCount,
+            badgesCount: Int32(nextStampCount),
             level: Int32(nextLevel)
         )
+        let favoritesCount = Int(summary.favoritesCount)
+        let followedCount = Int(summary.followedCastsCount)
+        uiState.badges = uiState.badges.map { badge in
+            let unlocked: Bool
+
+            switch badge.id {
+            case "badge-checkin-starter":
+                unlocked = nextStampCount >= 1
+            case "badge-stamp-collector":
+                unlocked = nextStampCount >= 3
+            case "badge-regular-visitor":
+                unlocked = nextVisitCount >= 5
+            case "badge-checkin-veteran":
+                unlocked = nextVisitCount >= 10
+            case "badge-favorite-curator":
+                unlocked = favoritesCount >= 3
+            case "badge-favorite-master":
+                unlocked = favoritesCount >= 10
+            case "badge-cast-supporter":
+                unlocked = followedCount >= 3
+            case "badge-cast-ambassador":
+                unlocked = followedCount >= 10
+            case "badge-level-up":
+                unlocked = nextLevel >= 3
+            case "badge-concafe-master":
+                unlocked = nextStampCount >= 10
+            default:
+                unlocked = badge.unlocked
+            }
+            return ProfileBadge(
+                id: badge.id,
+                name: badge.name,
+                icon: badge.icon,
+                unlocked: unlocked
+            )
+        }
     }
 
     func onAction(_ action: MyInfoAction) {

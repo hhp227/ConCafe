@@ -47,6 +47,8 @@ interface CastRepository {
 
     suspend fun getFollowedCastIds(userId: String): List<String>
 
+    suspend fun getFollowedCasts(userId: String): List<Cast>
+
     suspend fun getCastsByIds(castIds: List<String>): List<Cast>
 
     suspend fun getCastByLinkedUserId(userId: String): Cast?

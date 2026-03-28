@@ -7,12 +7,15 @@
 
 import SwiftUI
 import MapKit
+import UIKit
 import Shared
 
 struct CheckInView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = CheckInViewModel()
+
+    @State private var isLocationSettingsAlertVisible = false
 
     var body: some View {
         ZStack {
@@ -59,6 +62,14 @@ struct CheckInView: View {
         ) {
             CheckInNewVisitSheet(
                 cafes: viewModel.uiState.mapCafes,
+                errorMessage: Binding(
+                    get: { viewModel.uiState.errorMessage },
+                    set: { value in
+                        if value == nil {
+                            viewModel.onAction(.dismissError)
+                        }
+                    }
+                ),
                 onAction: viewModel.onAction
             )
             .compatLargeSheetDetent()
@@ -91,7 +102,29 @@ struct CheckInView: View {
                 onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
+            case .openLocationSettings:
+                isLocationSettingsAlertVisible = true
             }
+        }
+        .alert(
+            "위치 권한 필요",
+            isPresented: $isLocationSettingsAlertVisible
+        ) {
+            Button("취소", role: .cancel) {}
+            Button("설정으로 이동") {
+                openLocationSettings()
+            }
+        } message: {
+            Text("체크인을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.")
+        }
+    }
+
+    private func openLocationSettings() {
+        let settingsUrlString = UIApplication.openSettingsURLString
+        let settingsUrl = URL(string: settingsUrlString)
+
+        if settingsUrl != nil {
+            UIApplication.shared.open(settingsUrl!)
         }
     }
 }
@@ -848,6 +881,8 @@ private struct CheckInReviewPromptSheet: View {
 private struct CheckInNewVisitSheet: View {
     let cafes: [CheckInCafeSummary]
 
+    @Binding var errorMessage: String?
+
     let onAction: (CheckInAction) -> Void
 
     @State private var selectedCafeId: String?
@@ -952,32 +987,62 @@ private struct CheckInNewVisitSheet: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 60)
+                .padding(.bottom, 170)
                 .padding(.top, 10)
                 .background(Color.white)
             }
-            Button("체크인 완료") {
-                guard let cafeId = selectedCafeId else { return }
-                let normalizedMemo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                onAction(
-                    .submitNewVisit(
-                        cafeId: cafeId,
-                        visitedAt: makeVisitedAtString(date: visitDate, time: visitTime),
-                        memo: normalizedMemo.isEmpty ? nil : normalizedMemo
+            VStack(spacing: 8) {
+                if let errorMessage, !errorMessage.isEmpty {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color(hex: "E25575"))
+                            .padding(.top, 2)
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(Color(hex: "B03854"))
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color(hex: "FFF1F3"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
                     )
-                )
+                }
+                Button("체크인 완료") {
+                    guard let cafeId = selectedCafeId else { return }
+                    let normalizedMemo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    onAction(
+                        .submitNewVisit(
+                            cafeId: cafeId,
+                            visitedAt: makeVisitedAtString(date: visitDate, time: visitTime),
+                            memo: normalizedMemo.isEmpty ? nil : normalizedMemo
+                        )
+                    )
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(hex: "FFD1DC"))
+                .foregroundStyle(Color(hex: "2B2330"))
+                .font(.headline.weight(.bold))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .disabled(selectedCafeId == nil)
+                .padding(.bottom, 8)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
-            .font(.headline.weight(.bold))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .disabled(selectedCafeId == nil)
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
             .padding(.top, 10)
+            .background(Color.white)
+            .overlay(
+                Rectangle()
+                    .fill(Color(hex: "EEE4EA"))
+                    .frame(height: 1),
+                alignment: .top
+            )
             Spacer()
         }
         .background(
@@ -1015,9 +1080,11 @@ private struct CheckInNewVisitSheet: View {
 
     init(
         cafes: [CheckInCafeSummary],
+        errorMessage: Binding<String?>,
         onAction: @escaping (CheckInAction) -> Void
     ) {
         self.cafes = cafes
+        self._errorMessage = errorMessage
         self.onAction = onAction
         _selectedCafeId = State(initialValue: cafes.first?.id)
     }
