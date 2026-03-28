@@ -93,6 +93,34 @@ class FirebaseAuthRestTokenProvider(
         return session
     }
 
+    override suspend fun signInWithAppleIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("apple idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=apple.com",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInWithIdpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+
+        currentSession = session
+
+        return session
+    }
+
     override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
         if (!supportsEmailPasswordAuth()) {
             return null

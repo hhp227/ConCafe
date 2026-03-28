@@ -90,7 +90,15 @@ class SignInViewModel(
                                     }
                                 }
                         }
-                        else -> {
+                        SignInProvider.APPLE -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = "애플 로그인은 iOS 앱에서 지원됩니다."
+                                )
+                            }
+                        }
+                        SignInProvider.KAKAO -> {
                             when (signInWithSocialProviderUseCase.invoke(action.provider.name.lowercase())) {
                                 is AppResult.Success -> {
                                     _uiState.update { it.copy(isLoading = false, errorMessage = null) }

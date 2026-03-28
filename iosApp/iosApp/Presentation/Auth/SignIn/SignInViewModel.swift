@@ -18,6 +18,8 @@ class SignInViewModel: ObservableObject {
     private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 
     private let signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase
+
+    private let signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase
     
     @Published private(set) var uiState = SignInUiState.empty
     
@@ -91,16 +93,39 @@ class SignInViewModel: ObservableObject {
                     uiState.errorMessage = error.localizedDescription
                 }
             }
+        case .appleIdTokenReceived(let idToken):
+            uiState.isLoading = true
+            uiState.errorMessage = nil
+            signInTask?.cancel()
+            signInTask = Task {
+                do {
+                    let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
+
+                    if result is AppResultSuccess<AnyObject> {
+                        uiState.isLoading = false
+                        event.send(.signedIn)
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = "애플 로그인에 실패했습니다. 다시 시도해주세요."
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.isLoading = false
+                    uiState.errorMessage = "애플 로그인에 실패했습니다. 다시 시도해주세요."
+                }
+            }
         }
     }
     
     init(
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
-        signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase()
+        signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
+        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase()
     ) {
         self.signInUseCase = signInUseCase
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
+        self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
     }
     
     deinit {

@@ -47,6 +47,17 @@ class AuthRepositoryImpl(
         throw IllegalArgumentException("google idToken is required")
     }
 
+    override suspend fun signInWithAppleIdToken(idToken: String): User {
+        if (!idToken.isBlank()) {
+            val session = authTokenProvider.signInWithAppleIdToken(idToken)
+                ?: throw IllegalArgumentException("apple sign-in is not supported")
+            val user = resolveUserFromSession(session.userId, session.email)
+            authDataSource.currentUserId = user.id
+            return user
+        }
+        throw IllegalArgumentException("apple idToken is required")
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,

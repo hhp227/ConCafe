@@ -70,6 +70,7 @@ import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
 import com.hhp227.concafe.domain.usecase.RequestPasswordResetUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithAppleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -461,6 +462,13 @@ fun resolveSignInUseCase(): SignInUseCase {
 }
 
 fun resolveSignInWithGoogleIdTokenUseCase(): SignInWithGoogleIdTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithAppleIdTokenUseCase(): SignInWithAppleIdTokenUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

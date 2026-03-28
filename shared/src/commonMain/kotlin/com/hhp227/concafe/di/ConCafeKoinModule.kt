@@ -170,6 +170,7 @@ val useCaseModule = module {
     factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
+    factory { SignInWithAppleIdTokenUseCase(get()) }
     factory { SignInWithGoogleIdTokenUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { RequestPasswordResetUseCase(get()) }

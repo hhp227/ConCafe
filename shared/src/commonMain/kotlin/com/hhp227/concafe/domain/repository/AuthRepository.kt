@@ -10,6 +10,8 @@ interface AuthRepository {
 
     suspend fun signInWithGoogleIdToken(idToken: String): User
 
+    suspend fun signInWithAppleIdToken(idToken: String): User
+
     suspend fun signUp(
         email: String,
         password: String,

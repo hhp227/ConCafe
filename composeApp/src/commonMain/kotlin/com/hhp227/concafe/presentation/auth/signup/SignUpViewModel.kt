@@ -16,8 +16,10 @@ import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithSocialProviderUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
+import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 
 class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
@@ -25,7 +27,9 @@ class SignUpViewModel(
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
     private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
     private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
-    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
+    private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase,
+    private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
+    private val googleIdTokenProvider: GoogleIdTokenProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -252,18 +256,60 @@ class SignUpViewModel(
     private fun socialSignUp(provider: SignUpProvider) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (signInWithSocialProviderUseCase.invoke(provider.name.lowercase())) {
-                is AppResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                    _event.emit(SignUpEvent.SignedUp)
+            when (provider) {
+                SignUpProvider.GOOGLE -> {
+                    runCatching { googleIdTokenProvider.getGoogleIdToken() }
+                        .onFailure {
+                            _uiState.update { state ->
+                                state.copy(
+                                    isLoading = false,
+                                    errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
+                                    infoMessage = null
+                                )
+                            }
+                        }
+                        .onSuccess { idToken ->
+                            when (signInWithGoogleIdTokenUseCase.invoke(idToken)) {
+                                is AppResult.Success -> {
+                                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                                    _event.emit(SignUpEvent.SignedUp)
+                                }
+                                is AppResult.Failure -> {
+                                    _uiState.update {
+                                        it.copy(
+                                            isLoading = false,
+                                            errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
+                                            infoMessage = null
+                                        )
+                                    }
+                                }
+                            }
+                        }
                 }
-                is AppResult.Failure -> {
+                SignUpProvider.APPLE -> {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요.",
+                            errorMessage = "애플 회원가입은 iOS 앱에서 지원됩니다.",
                             infoMessage = null
                         )
+                    }
+                }
+                SignUpProvider.KAKAO -> {
+                    when (signInWithSocialProviderUseCase.invoke(provider.name.lowercase())) {
+                        is AppResult.Success -> {
+                            _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                            _event.emit(SignUpEvent.SignedUp)
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요.",
+                                    infoMessage = null
+                                )
+                            }
+                        }
                     }
                 }
             }

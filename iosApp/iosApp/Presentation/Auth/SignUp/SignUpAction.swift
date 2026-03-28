@@ -27,6 +27,7 @@ enum SignUpAction {
     case clearCafeTapped
     case submitTapped
     case socialSignUpTapped(provider: SignUpProvider)
+    case appleIdTokenReceived(String)
     case signInInsteadTapped
 }
 

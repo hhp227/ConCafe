@@ -17,6 +17,8 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession?
 
+    suspend fun signInWithAppleIdToken(idToken: String): FirebaseAuthSession?
+
     suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession?
 
     suspend fun signOut()

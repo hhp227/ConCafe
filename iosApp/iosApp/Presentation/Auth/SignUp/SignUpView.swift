@@ -465,7 +465,12 @@ private struct SignUpContentView: View {
                     request.requestedScopes = [.fullName, .email]
                 },
                 onCompletion: { result in
-                    if case .success = result {
+                    if case let .success(authorization) = result,
+                       let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                       let identityTokenData = credential.identityToken,
+                       let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                        onAction(.appleIdTokenReceived(identityToken))
+                    } else {
                         onAction(.socialSignUpTapped(provider: .apple))
                     }
                 }

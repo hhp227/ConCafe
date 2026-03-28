@@ -12,6 +12,7 @@ enum SignInAction {
     case passwordChanged(String)
     case signInTapped
     case socialSignInTapped(provider: SignInProvider)
+    case appleIdTokenReceived(String)
 }
 
 enum SignInProvider: String {

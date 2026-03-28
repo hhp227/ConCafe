@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+import AuthenticationServices
+import UIKit
 import Shared
 
 @MainActor
@@ -19,6 +21,10 @@ class SignUpViewModel: ObservableObject {
 
     private let signInUseCase: SignInUseCase
 
+    private let signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase
+
+    private let signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase
+
     private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
 
     private let verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase
@@ -30,6 +36,10 @@ class SignUpViewModel: ObservableObject {
     let event = PassthroughSubject<SignUpEvent, Never>()
 
     private var requestTask: Task<Void, Never>?
+
+    private var webAuthSession: ASWebAuthenticationSession?
+
+    private let webAuthPresentationContextProvider = WebAuthPresentationContextProvider()
 
     private func selectUserType(_ type: SignUpUiState.UserType) {
         uiState.step = .form
@@ -190,6 +200,11 @@ class SignUpViewModel: ObservableObject {
 
         requestTask?.cancel()
         requestTask = Task {
+            if provider == .google {
+                await handleGoogleSignUp()
+                return
+            }
+
             do {
                 let result = try await signInWithSocialProviderUseCase.invoke(provider: provider.rawValue)
                 if result is AppResultSuccess<AnyObject> {
@@ -205,6 +220,137 @@ class SignUpViewModel: ObservableObject {
                 uiState.errorMessage = error.localizedDescription
             }
         }
+    }
+
+    private func signUpWithAppleIdToken(_ idToken: String) {
+        uiState.isLoading = true
+        clearMessages()
+
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
+
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isLoading = false
+                    event.send(.signedUp)
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = "애플 회원가입에 실패했습니다. 다시 시도해주세요."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.errorMessage = "애플 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        }
+    }
+
+    private func handleGoogleSignUp() async {
+        do {
+            let idToken = try await requestGoogleIdToken()
+            let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
+
+            if result is AppResultSuccess<AnyObject> {
+                uiState.isLoading = false
+                event.send(.signedUp)
+            } else {
+                uiState.isLoading = false
+                uiState.errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        } catch {
+            if Task.isCancelled { return }
+            uiState.isLoading = false
+            uiState.errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func requestGoogleIdToken() async throws -> String {
+        let clientId = try requireGoogleServiceValue(key: "CLIENT_ID")
+        let callbackScheme = try requireGoogleServiceValue(key: "REVERSED_CLIENT_ID")
+        let nonce = UUID().uuidString
+        let state = UUID().uuidString
+        let redirectUri = "\(callbackScheme):/oauthredirect"
+        let authUrlString =
+            "https://accounts.google.com/o/oauth2/v2/auth" +
+            "?response_type=id_token" +
+            "&client_id=\(urlEncoded(clientId))" +
+            "&redirect_uri=\(urlEncoded(redirectUri))" +
+            "&scope=\(urlEncoded("openid email profile"))" +
+            "&nonce=\(urlEncoded(nonce))" +
+            "&state=\(urlEncoded(state))" +
+            "&prompt=select_account"
+
+        guard let authUrl = URL(string: authUrlString) else {
+            throw SignUpError.invalidAuthUrl
+        }
+        return try await withCheckedThrowingContinuation { continuation in
+            let session = ASWebAuthenticationSession(
+                url: authUrl,
+                callbackURLScheme: callbackScheme
+            ) { [weak self] callbackUrl, error in
+                self?.webAuthSession = nil
+
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let callbackUrl else {
+                    continuation.resume(throwing: SignUpError.emptyCallbackUrl)
+                    return
+                }
+
+                guard
+                    let fragment = callbackUrl.fragment,
+                    let idToken = self?.extractFragmentValue(fragment: fragment, key: "id_token"),
+                    !idToken.isEmpty
+                else {
+                    continuation.resume(throwing: SignUpError.idTokenNotFound)
+                    return
+                }
+
+                continuation.resume(returning: idToken)
+            }
+
+            session.presentationContextProvider = self.webAuthPresentationContextProvider
+            session.prefersEphemeralWebBrowserSession = false
+            self.webAuthSession = session
+            if !session.start() {
+                self.webAuthSession = nil
+                continuation.resume(throwing: SignUpError.failedToStartWebAuth)
+            }
+        }
+    }
+
+    private func requireGoogleServiceValue(key: String) throws -> String {
+        guard
+            let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+            let dictionary = NSDictionary(contentsOfFile: path) as? [String: Any],
+            let value = dictionary[key] as? String,
+            !value.isEmpty
+        else {
+            throw SignUpError.googleServiceConfigMissing
+        }
+
+        return value
+    }
+
+    private func extractFragmentValue(fragment: String, key: String) -> String? {
+        let pairs = fragment.split(separator: "&")
+        for pair in pairs {
+            let components = pair.split(separator: "=", maxSplits: 1)
+            guard components.count == 2 else { continue }
+            if components[0] == Substring(key) {
+                return String(components[1]).removingPercentEncoding
+            }
+        }
+        return nil
+    }
+
+    private func urlEncoded(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-._~"))
+        return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
     }
 
     private func updateState(
@@ -370,6 +516,8 @@ class SignUpViewModel: ObservableObject {
             submit()
         case .socialSignUpTapped(let provider):
             socialSignUp(provider)
+        case .appleIdTokenReceived(let idToken):
+            signUpWithAppleIdToken(idToken)
         case .signInInsteadTapped:
             event.send(.navigateBack)
         }
@@ -379,12 +527,16 @@ class SignUpViewModel: ObservableObject {
         getSignUpCafeListUseCase: GetSignUpCafeListUseCase = KoinInitializerKt.resolveGetSignUpCafeListUseCase(),
         signUpUseCase: SignUpUseCase = KoinInitializerKt.resolveSignUpUseCase(),
         createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
-        signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase()
+        signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
+        signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
+        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.signInUseCase = signInUseCase
+        self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
+        self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
         self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
         self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
@@ -393,8 +545,26 @@ class SignUpViewModel: ObservableObject {
 
     deinit {
         requestTask?.cancel()
+        webAuthSession?.cancel()
     }
 
     private static let minimumPasswordLength = 8
 
+}
+
+private enum SignUpError: Error {
+    case googleServiceConfigMissing
+    case invalidAuthUrl
+    case failedToStartWebAuth
+    case emptyCallbackUrl
+    case idTokenNotFound
+}
+
+private final class WebAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first
+        return scene?.windows.first ?? ASPresentationAnchor()
+    }
 }

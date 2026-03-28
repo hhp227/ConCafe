@@ -69,6 +69,34 @@ class FakeAuthRepository(
         }
     }
 
+    override suspend fun signInWithAppleIdToken(idToken: String): User {
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("apple idToken is required")
+        }
+
+        val email = "apple-user@concafe.test"
+        val found = dataSource.users.firstOrNull { it.email == email }
+        return if (found != null) {
+            dataSource.currentUserId = found.id
+            currentUserFlow.value = found
+            found
+        } else {
+            val created = User(
+                id = "user-${dataSource.users.size + 1}",
+                email = email,
+                nickname = "애플유저",
+                profileImage = null,
+                role = UserRole.VISITOR,
+                banned = false,
+                createdAt = "2026-03-05T00:00:00Z"
+            )
+            dataSource.users.add(created)
+            dataSource.currentUserId = created.id
+            currentUserFlow.value = created
+            created
+        }
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,
