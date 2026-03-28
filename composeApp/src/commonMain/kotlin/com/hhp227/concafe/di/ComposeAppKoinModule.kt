@@ -1,5 +1,6 @@
 package com.hhp227.concafe.di
 
+import com.hhp227.concafe.presentation.AppViewModel
 import com.hhp227.concafe.presentation.auth.signin.SignInViewModel
 import com.hhp227.concafe.presentation.auth.signup.SignUpViewModel
 import com.hhp227.concafe.presentation.cafe.CafeViewModel
@@ -26,11 +27,14 @@ import com.hhp227.concafe.presentation.notification.NotificationViewModel
 import com.hhp227.concafe.presentation.review.ReviewEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
+import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordViewModel
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
+import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsViewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
+    factory { AppViewModel(get(), get(), get()) }
     factory { SignInViewModel(get(), get(), get(), get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get()) }
@@ -60,7 +64,9 @@ private val composeAppPresentationModule = module {
     factory { NotificationViewModel(get(), get(), get()) }
     factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get(), get()) }
     factory { AccountSettingsViewModel(get(), get(), get(), get()) }
+    factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
+    factory { NotificationSettingsViewModel(get(), get()) }
 }
 
 private val composeAppModules = listOf(

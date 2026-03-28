@@ -33,6 +33,7 @@ import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
+import com.hhp227.concafe.domain.model.UserNotificationSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -111,6 +112,7 @@ class FirestoreCacheDataSource :
         followerUserIdsByCastId.values.forEach { userIds ->
             userIds.remove(userId)
         }
+        notificationSettingsByUser.remove(userId)
         notifications.removeAll { notification -> notification.userId == userId }
         inquiries.removeAll { inquiry -> inquiry.userId == userId }
         visits.removeAll { visit -> visit.userId == userId }
@@ -164,6 +166,8 @@ class FirestoreCacheDataSource :
     override val visits = mutableListOf<Visit>()
 
     override val notifications = mutableListOf<AppNotification>()
+
+    private val notificationSettingsByUser = mutableMapOf<String, UserNotificationSettings>()
 
     override val favoriteCafeIdsByUser = mutableMapOf<String, MutableSet<String>>()
 
@@ -600,6 +604,54 @@ class FirestoreCacheDataSource :
                     imageUrl = cast.profileImage
                 )
             }
+    }
+
+    override suspend fun getNotifications(
+        userId: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<AppNotification> {
+        val items = notifications
+            .filter { notification -> notification.userId == userId }
+            .sortedByDescending { notification -> notification.createdAt }
+        return toPaged(items, cursor, pageSize)
+    }
+
+    override suspend fun markNotificationAsRead(userId: String, notificationId: String) {
+        val index = notifications.indexOfFirst { notification ->
+            notification.userId == userId && notification.id == notificationId
+        }
+
+        if (index == -1) {
+            throw NoSuchElementException("notification not found")
+        } else {
+            val current = notifications[index]
+            notifications[index] = current.copy(isRead = true)
+        }
+    }
+
+    override suspend fun getNotificationSettings(userId: String): UserNotificationSettings {
+        val cached = notificationSettingsByUser[userId]
+
+        if (cached != null) {
+            return cached
+        } else {
+            return UserNotificationSettings.default()
+        }
+    }
+
+    override suspend fun updateNotificationSettings(
+        userId: String,
+        settings: UserNotificationSettings
+    ): UserNotificationSettings {
+        notificationSettingsByUser[userId] = settings
+        return settings
+    }
+
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        if (userId.isBlank() || platform.isBlank() || token.isBlank()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
     }
 
     override suspend fun rankingItemsFromCafes(

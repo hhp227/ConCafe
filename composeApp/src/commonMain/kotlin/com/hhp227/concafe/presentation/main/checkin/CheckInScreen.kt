@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -372,13 +373,17 @@ private fun CheckInUserScreen(
                 items = uiState.recentVisits,
                 key = { _, visit -> visit.id }
             ) { _, visit ->
-                TimelineItem(visit)
+                TimelineItem(
+                    visit = visit,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
             item {
                 if (uiState.isLoadingMoreRecentVisits) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -390,7 +395,9 @@ private fun CheckInUserScreen(
                 } else if (uiState.canLoadMoreRecentVisits) {
                     TextButton(
                         onClick = { onAction(CheckInAction.LoadMoreRecentVisits) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
                     ) {
                         Text("최근 방문 더 보기")
                     }
@@ -649,7 +656,7 @@ private fun LoginPromotionSection(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("로그인", fontWeight = FontWeight.Bold)
             }
@@ -1164,8 +1171,13 @@ private fun CheckInButton(
 }
 
 @Composable
-fun TimelineItem(visit: CheckInVisitEntry) {
-    Row(modifier = Modifier.fillMaxWidth()) {
+fun TimelineItem(
+    visit: CheckInVisitEntry,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth()
+    ) {
         // 왼쪽 타임라인 선과 아이콘
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Surface(

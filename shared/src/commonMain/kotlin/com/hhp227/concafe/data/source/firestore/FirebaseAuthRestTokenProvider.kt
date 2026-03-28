@@ -121,6 +121,35 @@ class FirebaseAuthRestTokenProvider(
         currentSession = null
     }
 
+    override suspend fun updateCurrentUserPassword(
+        idToken: String,
+        newPassword: String
+    ): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank() || newPassword.isBlank()) {
+            throw IllegalArgumentException("idToken/newPassword is required")
+        }
+
+        val body = """
+            {
+              "idToken": "${escapeJson(idToken)}",
+              "password": "${escapeJson(newPassword)}",
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> updatePasswordUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+
+        currentSession = session
+        return session
+    }
+
     override suspend fun deleteCurrentUser(idToken: String?) {
         if (!supportsEmailPasswordAuth()) {
             return
@@ -204,6 +233,10 @@ class FirebaseAuthRestTokenProvider(
 
     private fun deleteAccountUrl(apiKey: String): String {
         return "$FIREBASE_AUTH_BASE_URL/accounts:delete?key=$apiKey"
+    }
+
+    private fun updatePasswordUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:update?key=$apiKey"
     }
 
     private fun refreshUrl(apiKey: String): String {

@@ -20,6 +20,8 @@ interface AuthRepository {
 
     suspend fun signOut()
 
+    suspend fun changePassword(currentPassword: String, newPassword: String)
+
     suspend fun deleteAccount(password: String)
 
     suspend fun restoreSession(): User?

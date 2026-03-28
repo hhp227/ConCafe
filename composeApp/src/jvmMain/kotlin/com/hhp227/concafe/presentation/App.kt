@@ -9,12 +9,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
+import org.koin.core.context.GlobalContext
 
 @Composable
 fun App() {
-    val appViewModel: AppViewModel = viewModel()
+    val appViewModel: AppViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                GlobalContext.get().get<AppViewModel>()
+            }
+        }
+    )
     val uiState by appViewModel.uiState.collectAsState()
 
     MaterialTheme {

@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FeaturedPlayList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -83,7 +85,7 @@ private fun MenuGoodsEditContentScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MenuGoodsEditAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
             )
@@ -421,7 +423,7 @@ private fun categoryIcon(categoryId: String): ImageVector {
     return when (categoryId) {
         "food" -> Icons.Default.Restaurant
         "dessert" -> Icons.Default.Icecream
-        "goods" -> Icons.Default.FeaturedPlayList
+        "goods" -> Icons.AutoMirrored.Filled.FeaturedPlayList
         else -> Icons.Default.LocalCafe
     }
 }

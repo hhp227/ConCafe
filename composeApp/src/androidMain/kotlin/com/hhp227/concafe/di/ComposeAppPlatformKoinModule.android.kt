@@ -2,6 +2,8 @@ package com.hhp227.concafe.di
 
 import android.app.Application
 import android.content.Context
+import com.google.firebase.messaging.FirebaseMessaging
+import com.hhp227.concafe.push.AndroidPushTokenClient
 import com.hhp227.concafe.presentation.auth.signin.AndroidGoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import com.hhp227.concafe.presentation.main.checkin.AndroidCheckInLocationProvider
@@ -17,6 +19,13 @@ internal fun androidPlatformModules(application: Application): List<Module> {
     return listOf(
         module {
             single<Context> { application }
+            single<FirebaseMessaging> { FirebaseMessaging.getInstance() }
+            single<AndroidPushTokenClient> {
+                AndroidPushTokenClient(
+                    context = get(),
+                    firebaseMessaging = get()
+                )
+            }
             single(createdAtStart = true) {
                 AndroidCurrentActivityProvider(application)
             }

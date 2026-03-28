@@ -9,4 +9,5 @@ import Foundation
 
 enum NotificationSettingsEvent {
     case navigateBack
+    case showMessage(String)
 }

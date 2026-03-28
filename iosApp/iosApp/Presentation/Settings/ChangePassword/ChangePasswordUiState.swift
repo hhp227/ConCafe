@@ -11,10 +11,12 @@ struct ChangePasswordUiState {
     var currentPassword: String
     var newPassword: String
     var confirmPassword: String
+    var isSubmitting: Bool
 
     static let empty = ChangePasswordUiState(
         currentPassword: "",
         newPassword: "",
-        confirmPassword: ""
+        confirmPassword: "",
+        isSubmitting: false
     )
 }

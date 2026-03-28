@@ -27,6 +27,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
+import com.hhp227.concafe.domain.usecase.ChangePasswordUseCase
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -54,6 +55,7 @@ import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
@@ -61,10 +63,12 @@ import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import com.hhp227.concafe.domain.usecase.UpdateNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
+import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
@@ -287,6 +291,13 @@ fun resolveDeleteAccountUseCase(): DeleteAccountUseCase {
     return koin.get()
 }
 
+fun resolveChangePasswordUseCase(): ChangePasswordUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveDeleteHomeBannerUseCase(): DeleteHomeBannerUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -420,6 +431,13 @@ fun resolveGetNotificationFeedUseCase(): GetNotificationFeedUseCase {
     return koin.get()
 }
 
+fun resolveGetNotificationSettingsUseCase(): GetNotificationSettingsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetMainNavigationUseCase(): GetMainNavigationUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -463,6 +481,20 @@ fun resolveSignUpUseCase(): SignUpUseCase {
 }
 
 fun resolveMarkNotificationReadUseCase(): MarkNotificationReadUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRegisterPushTokenUseCase(): RegisterPushTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateNotificationSettingsUseCase(): UpdateNotificationSettingsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

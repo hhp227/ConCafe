@@ -91,7 +91,7 @@ val repositoryModule = module {
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
     single<RankingRepository> { RankingRepositoryImpl(get()) }
-    single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
+    single<NotificationRepository> { NotificationRepositoryImpl(get()) }
     single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
@@ -141,6 +141,7 @@ val useCaseModule = module {
     factory { DeleteHomeBannerUseCase(get(), get(), get(), get()) }
     factory { DeleteCastUseCase(get(), get(), get(), get()) }
     factory { DeleteAccountUseCase(get()) }
+    factory { ChangePasswordUseCase(get()) }
     factory { DismissReviewPromptUseCase(get(), get()) }
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }
@@ -155,6 +156,7 @@ val useCaseModule = module {
     factory { GetMyRequestableCastPageUseCase(get(), get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
+    factory { GetNotificationSettingsUseCase(get(), get()) }
     factory { GetRankingFeedUseCase(get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
@@ -162,6 +164,8 @@ val useCaseModule = module {
     factory { GetPendingCafeOwnerClaimsUseCase(get(), get()) }
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
+    factory { RegisterPushTokenUseCase(get(), get()) }
+    factory { UpdateNotificationSettingsUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }

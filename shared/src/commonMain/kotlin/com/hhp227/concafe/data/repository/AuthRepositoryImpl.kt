@@ -113,6 +113,46 @@ class AuthRepositoryImpl(
         authDataSource.currentUserId = null
     }
 
+    override suspend fun changePassword(currentPassword: String, newPassword: String) {
+        if (currentPassword.isBlank() || newPassword.isBlank()) {
+            throw IllegalArgumentException("currentPassword/newPassword is required")
+        }
+        if (!authTokenProvider.supportsEmailPasswordAuth()) {
+            throw IllegalArgumentException("email/password auth not supported")
+        }
+
+        val currentUserId = authTokenProvider.getCurrentUserId()
+            ?: authDataSource.currentUserId
+            ?: throw IllegalArgumentException("no signed in user")
+        val currentUserEmail = authTokenProvider.getCurrentUserEmail()
+            ?: authDataSource.findUserById(currentUserId)?.email
+            ?: throw IllegalArgumentException("current user email not found")
+        val verifiedSession = try {
+            authTokenProvider.signInWithEmailPassword(
+                email = currentUserEmail,
+                password = currentPassword
+            ) ?: throw IllegalArgumentException("invalid password")
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            if (isInvalidPasswordError(e)) {
+                throw IllegalArgumentException("invalid password")
+            } else {
+                throw e
+            }
+        }
+
+        if (verifiedSession.userId != currentUserId) {
+            throw IllegalArgumentException("password does not match current user")
+        }
+
+        authTokenProvider.updateCurrentUserPassword(
+            idToken = verifiedSession.idToken ?: authTokenProvider.getIdToken()
+            ?: throw IllegalStateException("Firebase auth update requires idToken"),
+            newPassword = newPassword
+        ) ?: throw IllegalStateException("failed to update password in firebase auth")
+    }
+
     override suspend fun deleteAccount(password: String) {
         if (password.isBlank()) {
             throw IllegalArgumentException("password is required")

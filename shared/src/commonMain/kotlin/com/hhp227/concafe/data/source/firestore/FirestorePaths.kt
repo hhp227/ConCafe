@@ -21,5 +21,8 @@ object FirestorePaths {
     const val CAST_SCHEDULES = "castSchedules"
     const val INQUIRIES = "inquiries"
     const val RANKINGS = "rankings"
+    const val USER_NOTIFICATIONS = "notifications"
+    const val USER_NOTIFICATION_SETTINGS = "notificationSettings"
+    const val USER_DEVICE_TOKENS = "deviceTokens"
 }
 

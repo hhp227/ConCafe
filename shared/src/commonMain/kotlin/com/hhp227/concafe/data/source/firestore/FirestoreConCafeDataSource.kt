@@ -20,6 +20,7 @@ import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.model.AdminOperationsMetrics
+import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CafeDashboardData
@@ -53,6 +54,7 @@ import com.hhp227.concafe.domain.model.InquiryStatus
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.NoticeStatusAccent
+import com.hhp227.concafe.domain.model.NotificationQuietHoursMode
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
@@ -61,6 +63,7 @@ import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserNotificationSettings
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
 import kotlinx.datetime.Clock
@@ -193,6 +196,167 @@ class FirestoreConCafeDataSource(
             scopeKey = scopeKey,
             cache = cafeRankingItemsByScope
         )
+    }
+
+    override suspend fun getNotifications(
+        userId: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<AppNotification> {
+        val safePageSize = if (pageSize > 0) {
+            pageSize
+        } else {
+            20
+        }
+        val idToken = tokenProvider.getIdToken()
+        val documents = runCatching {
+            runUserNotificationPageQuery(
+                userId = userId,
+                cursor = cursor,
+                limit = safePageSize,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserNotificationPageQuery(
+                userId = userId,
+                cursor = cursor,
+                limit = safePageSize,
+                idToken = null
+            )
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load notification page", throwable)
+        }
+        val parsedItems = documents.mapNotNull { document ->
+            parseNotificationDocument(userId = userId, document = document)
+        }
+        val upsertedIds = parsedItems.map { item -> item.id }.toSet()
+        notifications.removeAll { item ->
+            item.userId == userId && item.id in upsertedIds
+        }
+        notifications.addAll(parsedItems)
+        val sortedItems = notifications
+            .filter { item -> item.userId == userId }
+            .sortedByDescending { item -> item.createdAt }
+        val nextCursor = if (parsedItems.size < safePageSize) {
+            null
+        } else {
+            documents.lastOrNull()?.toStringFieldCursor(fieldPath = "createdAt")
+        }
+        return PagedResult(
+            items = sortedItems,
+            nextCursor = nextCursor,
+            hasNext = nextCursor != null
+        )
+    }
+
+    override suspend fun markNotificationAsRead(userId: String, notificationId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId/${FirestorePaths.USER_NOTIFICATIONS}/$notificationId"
+        val body = firestoreDocumentBody(
+            fields = mapOf(
+                "isRead" to firestoreBoolean(true),
+                "readAt" to firestoreString(Clock.System.now().toString())
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = body, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = body, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to mark notification as read", throwable)
+        }
+        val index = notifications.indexOfFirst { notification ->
+            notification.userId == userId && notification.id == notificationId
+        }
+
+        if (index != -1) {
+            val current = notifications[index]
+            notifications[index] = current.copy(isRead = true)
+        }
+    }
+
+    override suspend fun getNotificationSettings(userId: String): UserNotificationSettings {
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId/${FirestorePaths.USER_NOTIFICATION_SETTINGS}/default"
+        val idToken = tokenProvider.getIdToken()
+        val document = runCatching {
+            restApi.get(path = path, idToken = idToken)
+        }.recoverCatching {
+            restApi.get(path = path, idToken = null)
+        }.getOrNull()
+
+        if (document.isNullOrBlank()) {
+            return UserNotificationSettings.default()
+        } else {
+            val parsed = runCatching {
+                Json.parseToJsonElement(document).jsonObject
+            }.getOrNull()
+
+            if (parsed == null || parsed["fields"] == null) {
+                return UserNotificationSettings.default()
+            } else {
+                return parseNotificationSettingsDocument(parsed)
+            }
+        }
+    }
+
+    override suspend fun updateNotificationSettings(
+        userId: String,
+        settings: UserNotificationSettings
+    ): UserNotificationSettings {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId/${FirestorePaths.USER_NOTIFICATION_SETTINGS}/default"
+        val body = firestoreDocumentBody(
+            fields = mapOf(
+                "userId" to firestoreString(userId),
+                "isPushNotificationsEnabled" to firestoreBoolean(settings.isPushNotificationsEnabled),
+                "isShiftNotificationsEnabled" to firestoreBoolean(settings.isShiftNotificationsEnabled),
+                "isBirthdayNotificationsEnabled" to firestoreBoolean(settings.isBirthdayNotificationsEnabled),
+                "isNoticeNotificationsEnabled" to firestoreBoolean(settings.isNoticeNotificationsEnabled),
+                "quietHoursMode" to firestoreString(settings.quietHoursMode.name),
+                "updatedAt" to firestoreString(Clock.System.now().toString())
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = body, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = body, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to update notification settings", throwable)
+        }
+        return settings
+    }
+
+    override suspend fun registerPushToken(userId: String, platform: String, token: String) {
+        val normalizedPlatform = platform.trim()
+        val normalizedToken = token.trim()
+        val normalizedUserId = userId.trim()
+
+        if (normalizedUserId.isEmpty() || normalizedPlatform.isEmpty() || normalizedToken.isEmpty()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
+        val idToken = tokenProvider.getIdToken()
+        val tokenDocumentId = "token_${normalizedToken.hashCode().toString().replace("-", "_")}"
+        val locale = "ko-KR"
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$normalizedUserId/${FirestorePaths.USER_DEVICE_TOKENS}/$tokenDocumentId"
+        val body = firestoreDocumentBody(
+            fields = mapOf(
+                "userId" to firestoreString(normalizedUserId),
+                "platform" to firestoreString(normalizedPlatform),
+                "token" to firestoreString(normalizedToken),
+                "locale" to firestoreString(locale),
+                "isEnabled" to firestoreBoolean(true),
+                "updatedAt" to firestoreString(now),
+                "createdAt" to firestoreString(now)
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = body, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = body, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to register push token", throwable)
+        }
     }
 
     suspend fun refreshCafeDetail(cafeId: String) {
@@ -4154,6 +4318,44 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runUserNotificationPageQuery(
+        userId: String,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.USER_NOTIFICATIONS}"
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runCafeEventPageQuery(
         cafeId: String,
         cursor: String?,
@@ -5551,6 +5753,52 @@ class FirestoreConCafeDataSource(
         )
     }
 
+    private fun parseNotificationDocument(userId: String, document: JsonObject): AppNotification? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val notificationId = name.substringAfterLast("/")
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        val type = fields.getFirestoreString("type").orEmpty()
+        val targetUserId = fields.getFirestoreString("userId")
+            ?: fields.getFirestoreString("recipientUserId")
+            ?: userId
+        val relativeTime = fields.getFirestoreString("relativeTime")
+            ?: fields.getFirestoreString("createdAtLabel")
+            ?: "최근"
+        return AppNotification(
+            id = notificationId,
+            userId = targetUserId,
+            title = fields.getFirestoreString("title").orEmpty(),
+            body = fields.getFirestoreString("body").orEmpty(),
+            type = type,
+            targetId = fields.getFirestoreString("targetId"),
+            isRead = fields.getFirestoreBoolean("isRead") ?: false,
+            createdAt = createdAt,
+            relativeTime = relativeTime
+        )
+    }
+
+    private fun parseNotificationSettingsDocument(document: JsonObject): UserNotificationSettings {
+        val fields = document["fields"]?.jsonObject
+
+        if (fields == null) {
+            return UserNotificationSettings.default()
+        } else {
+            val quietHoursMode = when (fields.getFirestoreString("quietHoursMode")?.uppercase()) {
+                NotificationQuietHoursMode.OFF.name -> NotificationQuietHoursMode.OFF
+                NotificationQuietHoursMode.ALL_DAY.name -> NotificationQuietHoursMode.ALL_DAY
+                else -> NotificationQuietHoursMode.NIGHT
+            }
+            return UserNotificationSettings(
+                isPushNotificationsEnabled = fields.getFirestoreBoolean("isPushNotificationsEnabled") ?: true,
+                isShiftNotificationsEnabled = fields.getFirestoreBoolean("isShiftNotificationsEnabled") ?: true,
+                isBirthdayNotificationsEnabled = fields.getFirestoreBoolean("isBirthdayNotificationsEnabled") ?: true,
+                isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: false,
+                quietHoursMode = quietHoursMode
+            )
+        }
+    }
+
     private fun parseNoticeManagementDocument(
         cafeId: String,
         document: JsonObject
@@ -6326,6 +6574,11 @@ private fun JsonObject.toNoticeQueryCursor(): String? {
 private fun JsonObject.toEventQueryCursor(): String? {
     val fields = this["fields"]?.jsonObject ?: return null
     return fields.getFirestoreString("startDate")
+}
+
+private fun JsonObject.toStringFieldCursor(fieldPath: String): String? {
+    val fields = this["fields"]?.jsonObject ?: return null
+    return fields.getFirestoreString(fieldPath)
 }
 
 private fun String?.toStartAfterSection(latestSort: Boolean): String {

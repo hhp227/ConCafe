@@ -7,12 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,34 +19,42 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.NotificationQuietHoursMode
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
-    viewModel: NotificationSettingsViewModel = viewModel(),
+    viewModel: NotificationSettingsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GlobalContext.get().get<NotificationSettingsViewModel>() }
+        }
+    ),
     onNavigationAction: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                NotificationSettingsEvent.NavigateBack -> {
-                    onNavigationAction(NavigationAction.NavigateBack)
-                }
+                NotificationSettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is NotificationSettingsEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
-
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("알림 설정") },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(NotificationSettingsAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "뒤로가기"
                         )
                     }
@@ -56,11 +62,22 @@ fun NotificationSettingsScreen(
             )
         }
     ) { innerPadding ->
-        NotificationSettingsContentScreen(
-            uiState = uiState,
-            innerPadding = innerPadding,
-            onAction = viewModel::onAction
-        )
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            NotificationSettingsContentScreen(
+                uiState = uiState,
+                innerPadding = innerPadding,
+                onAction = viewModel::onAction
+            )
+        }
     }
 }
 
@@ -87,9 +104,7 @@ private fun NotificationSettingsContentScreen(
             NotificationSettingsHeroCard(uiState = uiState)
         }
         item {
-            NotificationSettingCard(
-                title = "기본 수신"
-            ) {
+            NotificationSettingCard(title = "기본 수신") {
                 NotificationToggleRow(
                     icon = Icons.Default.Notifications,
                     iconBackground = Color(0xFFFFE6F1),
@@ -97,16 +112,13 @@ private fun NotificationSettingsContentScreen(
                     title = "푸시 알림 받기",
                     description = "새 공지와 팬 활동 업데이트를 앱 푸시로 받아요.",
                     checked = uiState.isPushNotificationsEnabled,
-                    onCheckedChange = {
-                        onAction(NotificationSettingsAction.TogglePushNotifications(it))
-                    }
+                    onCheckedChange = { onAction(NotificationSettingsAction.TogglePushNotifications(it)) },
+                    enabled = !uiState.isSaving
                 )
             }
         }
         item {
-            NotificationSettingCard(
-                title = "알림 종류"
-            ) {
+            NotificationSettingCard(title = "알림 종류") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     NotificationToggleRow(
                         icon = Icons.Default.WorkHistory,
@@ -115,9 +127,8 @@ private fun NotificationSettingsContentScreen(
                         title = "출근 알림",
                         description = "팔로우한 캐스트의 오늘 출근 소식을 빠르게 받아요.",
                         checked = uiState.isShiftNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleShiftNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleShiftNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Cake,
@@ -126,9 +137,8 @@ private fun NotificationSettingsContentScreen(
                         title = "생일 알림",
                         description = "생일이 다가오는 캐스트와 당일 이벤트를 놓치지 않아요.",
                         checked = uiState.isBirthdayNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleBirthdayNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleBirthdayNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Campaign,
@@ -137,17 +147,14 @@ private fun NotificationSettingsContentScreen(
                         title = "공지 알림",
                         description = "카페 공지와 이벤트 업데이트를 우선적으로 받아요.",
                         checked = uiState.isNoticeNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleNoticeNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleNoticeNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                 }
             }
         }
         item {
-            NotificationSettingCard(
-                title = "조용한 시간"
-            ) {
+            NotificationSettingCard(title = "조용한 시간") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = "밤 시간이나 하루 요약 모드를 선택해 알림 강도를 조절할 수 있어요.",
@@ -158,17 +165,23 @@ private fun NotificationSettingsContentScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        NotificationQuietHoursOption.entries.forEach { option ->
+                        NotificationQuietHoursMode.entries.forEach { option ->
                             FilterChip(
                                 selected = uiState.quietHoursOption == option,
-                                onClick = {
-                                    onAction(NotificationSettingsAction.SelectQuietHours(option))
-                                },
-                                label = { Text(option.title) }
+                                onClick = { onAction(NotificationSettingsAction.SelectQuietHours(option)) },
+                                label = { Text(option.titleText()) },
+                                enabled = !uiState.isSaving
                             )
                         }
                     }
                     QuietHoursDescriptionCard(option = uiState.quietHoursOption)
+                    if (!uiState.errorMessage.isNullOrBlank()) {
+                        Text(
+                            text = uiState.errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFC33E6A)
+                        )
+                    }
                 }
             }
         }
@@ -176,9 +189,7 @@ private fun NotificationSettingsContentScreen(
 }
 
 @Composable
-private fun NotificationSettingsHeroCard(
-    uiState: NotificationSettingsUiState
-) {
+private fun NotificationSettingsHeroCard(uiState: NotificationSettingsUiState) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -255,7 +266,8 @@ private fun NotificationToggleRow(
     title: String,
     description: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -291,15 +303,18 @@ private fun NotificationToggleRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color(0xFFEF6797)
+            )
         )
     }
 }
 
 @Composable
-private fun QuietHoursDescriptionCard(
-    option: NotificationQuietHoursOption
-) {
+private fun QuietHoursDescriptionCard(option: NotificationQuietHoursMode) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,12 +328,12 @@ private fun QuietHoursDescriptionCard(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = option.title,
+                text = option.titleText(),
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFB84473)
             )
             Text(
-                text = option.description,
+                text = option.descriptionText(),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF7C7480)
             )
@@ -333,5 +348,21 @@ private fun heroSummary(uiState: NotificationSettingsUiState): String {
         uiState.isBirthdayNotificationsEnabled,
         uiState.isNoticeNotificationsEnabled
     ).count { it }
-    return "현재 ${enabledCount}개 알림을 켜 두었고, ${uiState.quietHoursOption.title} 모드로 받을 예정입니다."
+    return "현재 ${enabledCount}개 알림을 켜 두었고, ${uiState.quietHoursOption.titleText()} 모드로 받을 예정입니다."
+}
+
+private fun NotificationQuietHoursMode.titleText(): String {
+    return when (this) {
+        NotificationQuietHoursMode.OFF -> "즉시 받기"
+        NotificationQuietHoursMode.NIGHT -> "밤 시간만 조용히"
+        NotificationQuietHoursMode.ALL_DAY -> "요약만 받기"
+    }
+}
+
+private fun NotificationQuietHoursMode.descriptionText(): String {
+    return when (this) {
+        NotificationQuietHoursMode.OFF -> "중요 알림을 포함해 들어오는 즉시 알려드려요."
+        NotificationQuietHoursMode.NIGHT -> "밤 11시부터 오전 8시까지는 조용히 보관해요."
+        NotificationQuietHoursMode.ALL_DAY -> "하루 동안 모아 저녁 시간에 한 번 정리해드려요."
+    }
 }

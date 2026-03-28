@@ -6,22 +6,46 @@
 //
 
 import SwiftUI
+import Shared
 
 struct NotificationSettingsView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = NotificationSettingsViewModel()
 
+    @State private var toastMessage: String?
+
     var body: some View {
-        NotificationSettingsContentView(
-            uiState: viewModel.uiState,
-            onAction: viewModel.onAction
-        )
+        ZStack {
+            NotificationSettingsContentView(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+            if viewModel.uiState.isLoading {
+                ProgressView()
+            }
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .showMessage(let message):
+                toastMessage = message
             }
+        }
+        .alert("알림", isPresented: Binding(
+            get: { toastMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    toastMessage = nil
+                }
+            }
+        )) {
+            Button("확인", role: .cancel) {
+                toastMessage = nil
+            }
+        } message: {
+            Text(toastMessage ?? "")
         }
         .navigationTitle("알림 설정")
         .navigationBarTitleDisplayMode(.inline)
@@ -45,7 +69,8 @@ private struct NotificationSettingsContentView: View {
                         title: "푸시 알림 받기",
                         description: "새 공지와 팬 활동 업데이트를 앱 푸시로 받아요.",
                         isOn: uiState.isPushNotificationsEnabled,
-                        onToggle: { onAction(.pushNotificationsToggled($0)) }
+                        onToggle: { onAction(.pushNotificationsToggled($0)) },
+                        isEnabled: !uiState.isSaving
                     )
                 }
                 settingsCard(title: "알림 종류") {
@@ -57,7 +82,8 @@ private struct NotificationSettingsContentView: View {
                             title: "출근 알림",
                             description: "팔로우한 캐스트의 오늘 출근 소식을 빠르게 받아요.",
                             isOn: uiState.isShiftNotificationsEnabled,
-                            onToggle: { onAction(.shiftNotificationsToggled($0)) }
+                            onToggle: { onAction(.shiftNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                         NotificationToggleRow(
                             symbol: "birthday.cake.fill",
@@ -66,7 +92,8 @@ private struct NotificationSettingsContentView: View {
                             title: "생일 알림",
                             description: "생일이 다가오는 캐스트와 당일 이벤트를 놓치지 않아요.",
                             isOn: uiState.isBirthdayNotificationsEnabled,
-                            onToggle: { onAction(.birthdayNotificationsToggled($0)) }
+                            onToggle: { onAction(.birthdayNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                         NotificationToggleRow(
                             symbol: "megaphone.fill",
@@ -75,7 +102,8 @@ private struct NotificationSettingsContentView: View {
                             title: "공지 알림",
                             description: "카페 공지와 이벤트 업데이트를 우선적으로 받아요.",
                             isOn: uiState.isNoticeNotificationsEnabled,
-                            onToggle: { onAction(.noticeNotificationsToggled($0)) }
+                            onToggle: { onAction(.noticeNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                     }
                 }
@@ -86,6 +114,11 @@ private struct NotificationSettingsContentView: View {
                             .foregroundStyle(.secondary)
                         quietHoursChips
                         quietHoursDescriptionCard
+                        if let errorMessage = uiState.errorMessage {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundStyle(Color(hex: "C33E6A"))
+                        }
                     }
                 }
             }
@@ -128,13 +161,14 @@ private struct NotificationSettingsContentView: View {
     }
 
     private var quietHoursChips: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(NotificationQuietHoursOption.allCases) { option in
+        let quietHourOptions: [NotificationQuietHoursMode] = [.off, .night, .allDay]
+        return VStack(alignment: .leading, spacing: 8) {
+            ForEach(quietHourOptions, id: \.self) { option in
                 Button {
                     onAction(.quietHoursSelected(option))
                 } label: {
                     HStack {
-                        Text(option.title)
+                        Text(option.titleText)
                             .font(.subheadline)
                             .bold()
                             .foregroundStyle(uiState.quietHoursOption == option ? Color(hex: "B84473") : Color(hex: "5F5664"))
@@ -158,17 +192,18 @@ private struct NotificationSettingsContentView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(uiState.isSaving)
             }
         }
     }
 
     private var quietHoursDescriptionCard: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(uiState.quietHoursOption.title)
+            Text(uiState.quietHoursOption.titleText)
                 .font(.subheadline)
                 .bold()
                 .foregroundStyle(Color(hex: "B84473"))
-            Text(uiState.quietHoursOption.description)
+            Text(uiState.quietHoursOption.descriptionText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -189,7 +224,7 @@ private struct NotificationSettingsContentView: View {
             uiState.isBirthdayNotificationsEnabled,
             uiState.isNoticeNotificationsEnabled
         ].filter { $0 }.count
-        return "현재 \(enabledCount)개 알림을 켜 두었고, \(uiState.quietHoursOption.title) 모드로 받을 예정입니다."
+        return "현재 \(enabledCount)개 알림을 켜 두었고, \(uiState.quietHoursOption.titleText) 모드로 받을 예정입니다."
     }
 
     private func settingsCard<Content: View>(
@@ -224,6 +259,8 @@ private struct NotificationToggleRow: View {
 
     let onToggle: (Bool) -> Void
 
+    let isEnabled: Bool
+
     var body: some View {
         HStack(spacing: 14) {
             Circle()
@@ -249,6 +286,7 @@ private struct NotificationToggleRow: View {
             ))
             .labelsHidden()
             .tint(Color(hex: "EF6797"))
+            .disabled(!isEnabled)
         }
     }
 }
@@ -256,5 +294,33 @@ private struct NotificationToggleRow: View {
 struct NotificationSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationSettingsView(onNavigationAction: { _ in })
+    }
+}
+
+private extension NotificationQuietHoursMode {
+    var titleText: String {
+        switch self {
+        case .off:
+            return "즉시 받기"
+        case .night:
+            return "밤 시간만 조용히"
+        case .allDay:
+            return "요약만 받기"
+        default:
+            return "밤 시간만 조용히"
+        }
+    }
+
+    var descriptionText: String {
+        switch self {
+        case .off:
+            return "중요 알림을 포함해 들어오는 즉시 알려드려요."
+        case .night:
+            return "밤 11시부터 오전 8시까지는 조용히 보관해요."
+        case .allDay:
+            return "하루 동안 모아 저녁 시간에 한 번 정리해드려요."
+        default:
+            return "밤 11시부터 오전 8시까지는 조용히 보관해요."
+        }
     }
 }
