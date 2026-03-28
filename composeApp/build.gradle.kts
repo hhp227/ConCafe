@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.google.play.services.maps)
             implementation(libs.google.maps.compose)
             implementation(libs.coil.compose)
+            implementation(libs.androidx.core.splashscreen)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
