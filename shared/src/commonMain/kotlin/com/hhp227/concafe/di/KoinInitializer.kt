@@ -2,6 +2,7 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
@@ -626,6 +627,13 @@ fun resolveCafeDetailEventPublisher(): CafeDetailEventPublisher {
 }
 
 fun resolveCafeRegistrationClaimEventPublisher(): CafeRegistrationClaimEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCafeOwnerClaimEventPublisher(): CafeOwnerClaimEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

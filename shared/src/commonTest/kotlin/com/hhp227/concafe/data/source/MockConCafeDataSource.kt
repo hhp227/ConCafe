@@ -660,7 +660,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         )
         val updatedDetail = currentDetail.copy(
             cafe = updatedCafe,
-            images = if (nextImages.isNotEmpty()) nextImages else currentDetail.images,
+            images = nextImages.ifEmpty { currentDetail.images },
             businessHours = formatBusinessHours(update),
             phoneNumber = update.contactNumber
         )

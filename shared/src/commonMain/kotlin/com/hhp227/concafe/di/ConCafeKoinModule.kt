@@ -100,6 +100,7 @@ val repositoryModule = module {
 val eventModule = module {
     single<BannerEventPublisher> { BannerEventPublisher() }
     single<CafeDetailEventPublisher> { CafeDetailEventPublisher() }
+    single<CafeOwnerClaimEventPublisher> { CafeOwnerClaimEventPublisher() }
     single<CafeRegistrationClaimEventPublisher> { CafeRegistrationClaimEventPublisher() }
     single<CastClaimEventPublisher> { CastClaimEventPublisher() }
     single<CastEventPublisher> { CastEventPublisher() }
@@ -129,9 +130,9 @@ val useCaseModule = module {
     factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
-    factory { CreateCafeOwnerClaimUseCase(get(), get()) }
+    factory { CreateCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
-    factory { ApproveCafeOwnerClaimUseCase(get(), get()) }
+    factory { ApproveCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { DeleteCafeEventUseCase(get(), get()) }
     factory { DeleteCafeNoticeUseCase(get(), get()) }
@@ -181,7 +182,7 @@ val useCaseModule = module {
     factory { UpdateCastScheduleUseCase(get(), get(), get()) }
     factory { ApproveCastClaimUseCase(get(), get(), get()) }
     factory { RejectCastClaimUseCase(get(), get(), get()) }
-    factory { RejectCafeOwnerClaimUseCase(get(), get()) }
+    factory { RejectCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { RejectCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }

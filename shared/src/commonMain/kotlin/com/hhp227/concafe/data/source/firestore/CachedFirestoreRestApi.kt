@@ -93,6 +93,7 @@ class CachedFirestoreRestApi(
                 delegate.get(path, idToken)
             }
             val networkPayload = networkResult.getOrNull()
+            val networkFailure = networkResult.exceptionOrNull()
 
             if (networkPayload != null) {
                 writeCacheEntry(
@@ -101,10 +102,14 @@ class CachedFirestoreRestApi(
                     cachedAtEpochMillis = nowEpochMillis
                 )
                 networkPayload
-            } else if (cachedEntry != null && canUseStale(cachedEntry, policy, nowEpochMillis)) {
+            } else if (
+                cachedEntry != null &&
+                canUseStale(cachedEntry, policy, nowEpochMillis) &&
+                shouldUseStaleForFailure(networkFailure)
+            ) {
                 cachedEntry.payload
             } else {
-                throw networkResult.exceptionOrNull()
+                throw networkFailure
                     ?: IllegalStateException("Firestore GET request failed without error: $path")
             }
         }
@@ -122,6 +127,7 @@ class CachedFirestoreRestApi(
                 delegate.post(path, body, idToken)
             }
             val networkPayload = networkResult.getOrNull()
+            val networkFailure = networkResult.exceptionOrNull()
 
             if (networkPayload != null) {
                 writeCacheEntry(
@@ -130,13 +136,33 @@ class CachedFirestoreRestApi(
                     cachedAtEpochMillis = nowEpochMillis
                 )
                 networkPayload
-            } else if (cachedEntry != null && canUseStale(cachedEntry, policy, nowEpochMillis)) {
+            } else if (
+                cachedEntry != null &&
+                canUseStale(cachedEntry, policy, nowEpochMillis) &&
+                shouldUseStaleForFailure(networkFailure)
+            ) {
                 cachedEntry.payload
             } else {
-                throw networkResult.exceptionOrNull()
+                throw networkFailure
                     ?: IllegalStateException("Firestore POST request failed without error: $path")
             }
         }
+    }
+
+    private fun shouldUseStaleForFailure(throwable: Throwable?): Boolean {
+        if (throwable == null) {
+            return false
+        }
+        val message = throwable.message?.lowercase().orEmpty()
+        return message.contains("unable to resolve host") ||
+            message.contains("unknownhost") ||
+            message.contains("failed to connect") ||
+            message.contains("connection refused") ||
+            message.contains("connection reset") ||
+            message.contains("timed out") ||
+            message.contains("timeout") ||
+            message.contains("network is unreachable") ||
+            message.contains("no route to host")
     }
 
     private fun buildGetCacheKey(path: String): String {
@@ -186,7 +212,7 @@ class CachedFirestoreRestApi(
 
     private companion object {
         private val QUERY_POLICY = CachePolicy(
-            softTtlMillis = 2 * 60 * 1000L,
+            softTtlMillis = 0L,
             maxStaleMillis = 24 * 60 * 60 * 1000L
         )
 

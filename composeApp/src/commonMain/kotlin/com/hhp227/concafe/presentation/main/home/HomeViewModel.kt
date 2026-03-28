@@ -15,10 +15,12 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -30,6 +32,7 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
+    private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -188,6 +191,17 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCafeRegistrationClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
+            cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
+                if (event is CafeRegistrationClaimEvent.Approved) {
+                    loadNearbyCafePage(cursor = null, append = false)
+                }
+            }
+        }
+    }
+
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
@@ -320,6 +334,7 @@ class HomeViewModel(
     init {
         observeSession()
         observeBannerEvent()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
@@ -327,6 +342,7 @@ class HomeViewModel(
 
     private enum class TaskKey {
         OBSERVE_BANNER_EVENT,
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,
