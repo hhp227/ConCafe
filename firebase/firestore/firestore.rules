@@ -484,6 +484,15 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    match /stamps/{stampId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow create, update, delete: if false;
+    }
+
     match /inquiries/{inquiryId} {
       allow create: if isSignedIn()
         && request.resource.data.userId is string

@@ -39,6 +39,12 @@ type CafeFavoriteLike = {
   userId?: unknown;
 };
 
+type StampLike = {
+  userId?: unknown;
+  cafeId?: unknown;
+  visitId?: unknown;
+};
+
 type CastClaimLike = {
   castId?: unknown;
   cafeId?: unknown;
@@ -315,6 +321,37 @@ async function syncUserFavoriteCountAggregate(userId: string, delta: number): Pr
       {
         stats: stats,
         favoritesCount: nextFavoriteCount,
+      },
+      {merge: true}
+    );
+  });
+}
+
+async function syncUserStampCountAggregate(userId: string): Promise<void> {
+  if (userId.length == 0) {
+    return;
+  }
+  const userRef = db().collection("users").doc(userId);
+  const stampSnapshot = await db()
+    .collection("stamps")
+    .where("userId", "==", userId)
+    .select("userId")
+    .get();
+  const stampCount = stampSnapshot.size;
+
+  await db().runTransaction(async (transaction) => {
+    const userSnapshot = await transaction.get(userRef);
+    const userData = userSnapshot.data();
+    const statsRaw = asPlainObject(userData?.stats);
+    const stats = statsRaw == null ? {} : {...statsRaw};
+
+    stats.stampCount = stampCount;
+
+    transaction.set(
+      userRef,
+      {
+        stats: stats,
+        stampCount: stampCount,
       },
       {merge: true}
     );
@@ -1112,6 +1149,88 @@ export const onCafeFavoriteWrittenSyncUserFavoriteStats = onDocumentWritten(
     logger.info("Synced user favoritesCount aggregate from favorite write.", {
       favoriteId: event.params.favoriteId,
       targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
+    });
+  }
+);
+
+export const onVisitWrittenIssueStamp = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const visitId = asNonBlankString(event.params.visitId) ?? "";
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+    const beforeUserId = asNonBlankString(beforeData?.userId);
+    const beforeCafeId = asNonBlankString(beforeData?.cafeId);
+    const afterUserId = asNonBlankString(afterData?.userId);
+    const afterCafeId = asNonBlankString(afterData?.cafeId);
+
+    if (visitId.length == 0) {
+      return;
+    }
+    const stampRef = db().collection("stamps").doc(visitId);
+    const shouldDelete = afterUserId == null || afterCafeId == null;
+    const hasBefore = beforeUserId != null && beforeCafeId != null;
+    const hasAfter = afterUserId != null && afterCafeId != null;
+    const isSourceChanged = hasBefore
+      && hasAfter
+      && (beforeUserId !== afterUserId || beforeCafeId !== afterCafeId);
+
+    if (shouldDelete || isSourceChanged) {
+      await stampRef.delete();
+    }
+    if (hasAfter) {
+      await stampRef.set(
+        {
+          userId: afterUserId,
+          cafeId: afterCafeId,
+          visitId: visitId,
+          earnedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {merge: true}
+      );
+    }
+
+    logger.info("Synced stamp from visit write.", {
+      visitId: visitId,
+      beforeUserId: beforeUserId,
+      afterUserId: afterUserId,
+      beforeCafeId: beforeCafeId,
+      afterCafeId: afterCafeId,
+      deleted: shouldDelete || isSourceChanged,
+      upserted: hasAfter,
+    });
+  }
+);
+
+export const onStampWrittenSyncUserStampStats = onDocumentWritten(
+  "stamps/{stampId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as StampLike | undefined;
+    const afterData = event.data?.after.data() as StampLike | undefined;
+    const userIds = new Set<string>();
+    const beforeUserId = asNonBlankString(beforeData?.userId);
+    const afterUserId = asNonBlankString(afterData?.userId);
+
+    if (beforeUserId != null) {
+      userIds.add(beforeUserId);
+    }
+    if (afterUserId != null) {
+      userIds.add(afterUserId);
+    }
+    if (userIds.size == 0) {
+      return;
+    }
+
+    await Promise.all(
+      Array.from(userIds).map(async (userId) => {
+        await syncUserStampCountAggregate(userId);
+      })
+    );
+
+    logger.info("Synced user stampCount aggregate from stamp write.", {
+      stampId: event.params.stampId,
+      targets: Array.from(userIds),
     });
   }
 );

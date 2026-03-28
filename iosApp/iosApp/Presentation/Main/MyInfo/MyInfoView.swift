@@ -446,7 +446,7 @@ private struct ProfileMyInfoView: View {
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("획득 배지").font(.headline)
+                Text("활동 뱃지").font(.headline)
                 Spacer()
                 Text("\(uiState.badges.filter { $0.unlocked }.count) / \(uiState.badges.count)")
                     .font(.caption)
@@ -467,8 +467,8 @@ private struct ProfileMyInfoView: View {
                         }
                     } else {
                         MyInfoSectionPlaceholderCard(
-                            title: "획득한 배지가 아직 없어요",
-                            description: "체크인과 활동을 통해 첫 배지를 모아보세요."
+                            title: "획득한 활동 뱃지가 아직 없어요",
+                            description: "체크인과 팬 활동으로 첫 뱃지를 모아보세요."
                         )
                     }
                 }

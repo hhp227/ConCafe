@@ -374,7 +374,7 @@ private fun ProfileMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("획득 배지", fontWeight = FontWeight.Bold)
+                Text("활동 뱃지", fontWeight = FontWeight.Bold)
                 Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
             }
             Row(
@@ -400,8 +400,8 @@ private fun ProfileMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "획득한 배지가 아직 없어요",
-                        description = "체크인과 활동을 통해 첫 배지를 모아보세요."
+                        title = "획득한 활동 뱃지가 아직 없어요",
+                        description = "체크인과 팬 활동으로 첫 뱃지를 모아보세요."
                     )
                 }
             }

@@ -2552,8 +2552,16 @@ class FirestoreConCafeDataSource(
                 fallbackVisitCount = parsedSummary.totalVisits,
                 idToken = idToken
             )
+            val resolvedStampCount = resolveMyPageStampCount(
+                userId = userId,
+                fallbackStampCount = parsedSummary.badgesCount,
+                idToken = idToken
+            )
 
-            parsedSummary.copy(totalVisits = resolvedVisitCount)
+            parsedSummary.copy(
+                totalVisits = resolvedVisitCount,
+                badgesCount = resolvedStampCount
+            )
         }.getOrNull()
     }
 
@@ -5768,6 +5776,27 @@ class FirestoreConCafeDataSource(
             } else {
                 return fallbackVisitCount
             }
+        }
+    }
+
+    private suspend fun resolveMyPageStampCount(
+        userId: String,
+        fallbackStampCount: Int,
+        idToken: String?
+    ): Int {
+        val aggregatedStampCount = runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.STAMPS,
+                idToken = idToken,
+                equalsFilterFieldPath = "userId",
+                equalsFilterValue = firestoreString(userId)
+            )
+        }.getOrNull()
+
+        if (aggregatedStampCount != null) {
+            return aggregatedStampCount
+        } else {
+            return fallbackStampCount
         }
     }
 
