@@ -2,9 +2,12 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.IosCafeExternalLinkLocalStore
+import com.hhp227.concafe.data.source.firestore.CachedFirestoreRestApi
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
+import com.hhp227.concafe.data.source.firestore.FirestoreRestCacheStore
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
+import com.hhp227.concafe.data.source.firestore.IosFirestoreRestCacheStore
 import com.hhp227.concafe.data.source.firestore.IosFirebaseAuthSessionStore
 import com.hhp227.concafe.data.source.firestore.KtorFirebaseAuthRestClient
 import com.hhp227.concafe.data.source.firestore.KtorFirestoreRestApi
@@ -18,7 +21,13 @@ actual fun sharedPlatformModules(): List<Module> {
         module {
             single { createPlatformHttpClient() }
             single<CafeExternalLinkLocalStore> { IosCafeExternalLinkLocalStore() }
-            single<FirestoreRestApi> { KtorFirestoreRestApi(get(), FIREBASE_WEB_API_KEY) }
+            single<FirestoreRestCacheStore> { IosFirestoreRestCacheStore() }
+            single<FirestoreRestApi> {
+                CachedFirestoreRestApi(
+                    delegate = KtorFirestoreRestApi(get(), FIREBASE_WEB_API_KEY),
+                    cacheStore = get()
+                )
+            }
             single<FirestoreAuthTokenProvider> {
                 PersistedFirebaseAuthTokenProvider(
                     delegate = FirebaseAuthRestTokenProvider(
