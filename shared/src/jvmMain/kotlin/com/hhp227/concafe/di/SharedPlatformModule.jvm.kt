@@ -32,6 +32,7 @@ actual fun sharedPlatformModules(): List<Module> {
                 PersistedFirebaseAuthTokenProvider(
                     delegate = FirebaseAuthRestTokenProvider(
                         apiKey = FIREBASE_WEB_API_KEY,
+                        kakaoOidcProviderId = desktopKakaoOidcProviderId(),
                         restClient = KtorFirebaseAuthRestClient(get())
                     ),
                     sessionStore = JvmFirebaseAuthSessionStore()
@@ -39,4 +40,14 @@ actual fun sharedPlatformModules(): List<Module> {
             }
         }
     )
+}
+
+private fun desktopKakaoOidcProviderId(): String {
+    val configuredProviderId = System.getProperty("concafe.kakao.oidcProviderId")
+
+    return if (configuredProviderId.isNullOrBlank()) {
+        "oidc.kakao_web"
+    } else {
+        configuredProviderId
+    }
 }

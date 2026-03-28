@@ -9,6 +9,7 @@ import kotlinx.datetime.Clock
 class FirebaseAuthRestTokenProvider(
     private val apiKey: String,
     private val fallbackApiKeys: List<String> = emptyList(),
+    private val kakaoOidcProviderId: String = DEFAULT_KAKAO_OIDC_PROVIDER_ID,
     private val restClient: FirebaseAuthRestClient
 ) : FirestoreAuthTokenProvider {
     private var currentSession: FirebaseAuthSession? = null
@@ -132,7 +133,7 @@ class FirebaseAuthRestTokenProvider(
 
         val body = """
             {
-              "postBody": "id_token=${escapeJson(idToken)}&providerId=oidc.kakao",
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=${escapeJson(kakaoOidcProviderId)}",
               "requestUri": "http://localhost",
               "returnSecureToken": true,
               "returnIdpCredential": true
@@ -450,6 +451,7 @@ class FirebaseAuthRestTokenProvider(
 private const val FIREBASE_AUTH_BASE_URL = "https://identitytoolkit.googleapis.com/v1"
 private const val FIREBASE_TOKEN_BASE_URL = "https://securetoken.googleapis.com/v1"
 private const val TOKEN_REFRESH_BUFFER_SECONDS = 60L
+private const val DEFAULT_KAKAO_OIDC_PROVIDER_ID = "oidc.kakao"
 
 private fun escapeJson(value: String): String {
     return value.replace("\\", "\\\\").replace("\"", "\\\"")
