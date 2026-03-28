@@ -646,8 +646,12 @@ class FirestoreCacheDataSource :
 
     override fun verifyVisitResult(cafeId: String, latitude: Double, longitude: Double): VisitVerificationResult {
         val cafe = cafes.firstOrNull { it.id == cafeId }
-        val cafeLat = cafe?.region?.location?.latitude ?: latitude
-        val cafeLon = cafe?.region?.location?.longitude ?: longitude
+
+        if (cafe == null) {
+            return VisitVerificationResult(false, Double.POSITIVE_INFINITY, 100.0, "카페 위치 정보를 확인할 수 없습니다")
+        }
+        val cafeLat = cafe.region.location.latitude
+        val cafeLon = cafe.region.location.longitude
         val distance = haversineMeters(cafeLat, cafeLon, latitude, longitude)
         val allowed = 100.0
         return if (distance <= allowed) {

@@ -13,8 +13,15 @@ class FakeVisitRepository(
         return dataSource.verifyVisitResult(cafeId, latitude, longitude)
     }
 
-    override suspend fun createVisit(userId: String, cafeId: String, visitedAt: String, memo: String?): Visit {
-        val verification = dataSource.verifyVisitResult(cafeId, 37.499, 127.031)
+    override suspend fun createVisit(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?,
+        latitude: Double,
+        longitude: Double
+    ): Visit {
+        val verification = dataSource.verifyVisitResult(cafeId, latitude, longitude)
         val visit = Visit(
             id = "visit-${dataSource.visits.size + 1}",
             userId = userId,

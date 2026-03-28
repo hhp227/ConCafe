@@ -36,7 +36,8 @@ class CheckInViewModel(
     private val dismissReviewPromptUseCase: DismissReviewPromptUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher,
-    private val visitEventPublisher: VisitEventPublisher
+    private val visitEventPublisher: VisitEventPublisher,
+    private val checkInLocationProvider: CheckInLocationProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -183,18 +184,64 @@ class CheckInViewModel(
 
             jobs[TaskKey.SUBMIT_VISIT]?.cancel()
             jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
-                when (val result = createVisitUseCase.invoke(
-                    cafeId = cafeId,
-                    visitedAt = visitedAt,
-                    memo = memo
-                )) {
-                    is AppResult.Success -> {
-                        _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
-                        refreshRecentVisitPage()
-                        maybeShowReviewPrompt(result.data)
+                when (val locationResult = checkInLocationProvider.getCurrentLocation()) {
+                    is CheckInLocationResult.Failure -> {
+                        _uiState.update {
+                            it.copy(errorMessage = locationResult.message)
+                        }
                     }
-                    is AppResult.Failure -> {
-                        _uiState.update { it.copy(errorMessage = result.error.toString()) }
+                    is CheckInLocationResult.Success -> {
+                        when (val result = createVisitUseCase.invoke(
+                            cafeId = cafeId,
+                            visitedAt = visitedAt,
+                            memo = memo,
+                            latitude = locationResult.location.latitude,
+                            longitude = locationResult.location.longitude
+                        )) {
+                            is AppResult.Success -> {
+                                _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
+                                refreshRecentVisitPage()
+                                maybeShowReviewPrompt(result.data)
+                            }
+                            is AppResult.Failure -> {
+                                _uiState.update { it.copy(errorMessage = result.error.toString()) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun clickCheckIn() {
+        val currentUser = _uiState.value.currentUser
+
+        if (currentUser == null) {
+            _uiState.update {
+                it.copy(
+                    isLoginPromptVisible = true,
+                    isNewVisitSheetVisible = false
+                )
+            }
+        } else {
+            jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
+            jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
+                when (val permissionResult = checkInLocationProvider.requestPermissionIfNeeded()) {
+                    CheckInLocationPermissionResult.Granted -> {
+                        _uiState.update {
+                            it.copy(
+                                isNewVisitSheetVisible = true,
+                                errorMessage = null
+                            )
+                        }
+                    }
+                    is CheckInLocationPermissionResult.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                isNewVisitSheetVisible = false,
+                                errorMessage = permissionResult.message
+                            )
+                        }
                     }
                 }
             }
@@ -364,18 +411,7 @@ class CheckInViewModel(
                     }
                 }
                 CheckInAction.ClickCheckIn -> {
-                    val currentUser = _uiState.value.currentUser
-
-                    if (currentUser == null) {
-                        _uiState.update {
-                            it.copy(
-                                isLoginPromptVisible = true,
-                                isNewVisitSheetVisible = false
-                            )
-                        }
-                    } else {
-                        _uiState.update { it.copy(isNewVisitSheetVisible = true) }
-                    }
+                    clickCheckIn()
                 }
                 CheckInAction.ClickSignIn -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
@@ -387,6 +423,9 @@ class CheckInViewModel(
                 }
                 CheckInAction.DismissLoginPrompt -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
+                CheckInAction.DismissError -> {
+                    _uiState.update { it.copy(errorMessage = null) }
                 }
                 CheckInAction.DismissNewVisitSheet -> {
                     _uiState.update { it.copy(isNewVisitSheetVisible = false) }
@@ -424,6 +463,7 @@ class CheckInViewModel(
         OBSERVE_SESSION,
         LOAD_USER_VISIT_PAGE,
         SUBMIT_VISIT,
+        REQUEST_LOCATION_PERMISSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,

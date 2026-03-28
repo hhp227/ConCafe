@@ -13,7 +13,13 @@ class CreateVisitUseCase(
     private val visitRepository: VisitRepository,
     private val visitEventPublisher: VisitEventPublisher
 ) {
-    suspend operator fun invoke(cafeId: String, visitedAt: String, memo: String?): AppResult<Visit> {
+    suspend operator fun invoke(
+        cafeId: String,
+        visitedAt: String,
+        memo: String?,
+        latitude: Double,
+        longitude: Double
+    ): AppResult<Visit> {
         return try {
             val currentUser = authRepository.getCurrentUser()
 
@@ -23,12 +29,30 @@ class CreateVisitUseCase(
                 AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
             } else if (visitedAt.isBlank()) {
                 AppResult.Failure(AppError.ValidationFailed("visitedAt is required"))
+            } else if (latitude !in -90.0..90.0) {
+                AppResult.Failure(AppError.ValidationFailed("latitude out of range"))
+            } else if (longitude !in -180.0..180.0) {
+                AppResult.Failure(AppError.ValidationFailed("longitude out of range"))
             } else {
+                val verification = visitRepository.verifyVisit(
+                    cafeId = cafeId,
+                    latitude = latitude,
+                    longitude = longitude,
+                    visitedAt = visitedAt
+                )
+
+                if (!verification.verified) {
+                    return AppResult.Failure(
+                        AppError.ValidationFailed(verification.message)
+                    )
+                }
                 val visited = visitRepository.createVisit(
                     userId = currentUser.id,
                     cafeId = cafeId,
                     visitedAt = visitedAt,
-                    memo = memo?.trim().takeIf { !it.isNullOrBlank() }
+                    memo = memo?.trim().takeIf { !it.isNullOrBlank() },
+                    latitude = latitude,
+                    longitude = longitude
                 )
 
                 visitEventPublisher.publish(VisitEvent.Created(visited.id))

@@ -14,6 +14,7 @@ enum CheckInAction {
     case signInTapped
     case signUpTapped
     case dismissLoginPrompt
+    case dismissError
     case dismissNewVisitSheet
     case dismissReviewPrompt
     case writeReviewPromptTapped

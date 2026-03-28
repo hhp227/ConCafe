@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import com.hhp227.concafe.presentation.auth.signin.AndroidGoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
+import com.hhp227.concafe.presentation.main.checkin.AndroidCheckInLocationProvider
+import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -15,12 +17,19 @@ internal fun androidPlatformModules(application: Application): List<Module> {
     return listOf(
         module {
             single<Context> { application }
-            single {
+            single(createdAtStart = true) {
                 AndroidCurrentActivityProvider(application)
             }
             single<GoogleIdTokenProvider> {
                 val currentActivityProvider = get<AndroidCurrentActivityProvider>()
                 AndroidGoogleIdTokenProvider(activityProvider = currentActivityProvider::getCurrentActivity)
+            }
+            single<CheckInLocationProvider> {
+                val currentActivityProvider = get<AndroidCurrentActivityProvider>()
+                AndroidCheckInLocationProvider(
+                    context = get(),
+                    activityProvider = currentActivityProvider::getCurrentActivity
+                )
             }
         }
     )

@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import CoreLocation
 import Shared
 import KMPNativeCoroutinesAsync
 
@@ -29,6 +30,8 @@ final class CheckInViewModel: ObservableObject {
     private let castEventPublisher: CastEventPublisher
 
     private let visitEventPublisher: VisitEventPublisher
+
+    private let currentLocationProvider = IosCheckInLocationProvider()
 
     @Published private(set) var uiState = CheckInUiState.empty
 
@@ -177,12 +180,21 @@ final class CheckInViewModel: ObservableObject {
             tasks[.submitVisit]?.cancel()
             tasks[.submitVisit] = Task {
                 do {
+                    let locationResult = await currentLocationProvider.getCurrentLocation()
+
+                    if !locationResult.isSuccess {
+                        uiState.errorMessage = locationResult.message
+                        return
+                    }
+                    let resolvedLocation = locationResult.location
                     let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
 
                     let result = try await createVisitUseCase.invoke(
                         cafeId: cafeId,
                         visitedAt: visitedAt,
-                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
+                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo,
+                        latitude: resolvedLocation.latitude,
+                        longitude: resolvedLocation.longitude
                     )
 
                     if result is AppResultSuccess<AnyObject> {
@@ -396,6 +408,24 @@ final class CheckInViewModel: ObservableObject {
             event.send(.navigateToReviewEdit(cafeId: prompt.cafeId))
         }
     }
+
+    private func requestCheckInPermissionAndOpenSheet() {
+        tasks[.locationPermission]?.cancel()
+        tasks[.locationPermission] = Task {
+            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
+
+            if permissionResult.isGranted {
+                uiState.isNewVisitSheetVisible = true
+                uiState.errorMessage = nil
+            } else {
+                uiState.isNewVisitSheetVisible = false
+                uiState.errorMessage = permissionResult.message
+                if permissionResult.requiresSettings {
+                    event.send(.openLocationSettings)
+                }
+            }
+        }
+    }
     
     func onAction(_ action: CheckInAction) {
         switch action {
@@ -418,13 +448,15 @@ final class CheckInViewModel: ObservableObject {
                 uiState.isLoginPromptVisible = true
                 uiState.isNewVisitSheetVisible = false
             } else {
-                uiState.isNewVisitSheetVisible = true
+                requestCheckInPermissionAndOpenSheet()
             }
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
             uiState.isLoginPromptVisible = false
+        case .dismissError:
+            uiState.errorMessage = nil
         case .dismissNewVisitSheet:
             uiState.isNewVisitSheetVisible = false
         case .dismissReviewPrompt:
@@ -480,9 +512,138 @@ final class CheckInViewModel: ObservableObject {
         case castEvent
         case visitEvent
         case reviewPromptAction
+        case locationPermission
     }
 
     private static let todayVisitLimit = 4
 
     private static let recentVisitPageSize: Int32 = 12
+}
+
+private struct IosCheckInLocationResult {
+    let isSuccess: Bool
+
+    let location: CLLocationCoordinate2D
+
+    let message: String
+}
+
+private struct IosCheckInPermissionResult {
+    let isGranted: Bool
+
+    let message: String
+
+    let requiresSettings: Bool
+}
+
+private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
+    private let locationManager = CLLocationManager()
+
+    private var continuation: CheckedContinuation<IosCheckInLocationResult, Never>?
+
+    private var pendingAuthContinuation: CheckedContinuation<CLAuthorizationStatus, Never>?
+
+    private let fallbackLocation = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
+
+    func requestPermissionIfNeeded() async -> IosCheckInPermissionResult {
+        if CLLocationManager.locationServicesEnabled() == false {
+            return IosCheckInPermissionResult(
+                isGranted: false,
+                message: "위치 서비스를 사용할 수 없습니다.",
+                requiresSettings: true
+            )
+        }
+        locationManager.delegate = self
+
+        let status = locationManager.authorizationStatus
+        let resolvedStatus = await resolveAuthorizationStatus(status)
+
+        if resolvedStatus == .authorizedAlways || resolvedStatus == .authorizedWhenInUse {
+            return IosCheckInPermissionResult(
+                isGranted: true,
+                message: "",
+                requiresSettings: false
+            )
+        } else {
+            return IosCheckInPermissionResult(
+                isGranted: false,
+                message: "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.",
+                requiresSettings: resolvedStatus == .denied || resolvedStatus == .restricted
+            )
+        }
+    }
+
+    func getCurrentLocation() async -> IosCheckInLocationResult {
+        let permissionResult = await requestPermissionIfNeeded()
+
+        if permissionResult.isGranted {
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            return await withCheckedContinuation { continuation in
+                self.continuation = continuation
+                self.locationManager.requestLocation()
+            }
+        } else {
+            return IosCheckInLocationResult(
+                isSuccess: false,
+                location: fallbackLocation,
+                message: permissionResult.message
+            )
+        }
+    }
+
+    private func resolveAuthorizationStatus(_ status: CLAuthorizationStatus) async -> CLAuthorizationStatus {
+        if status == .notDetermined {
+            return await requestWhenInUseAuthorization()
+        } else {
+            return status
+        }
+    }
+
+    private func requestWhenInUseAuthorization() async -> CLAuthorizationStatus {
+        return await withCheckedContinuation { continuation in
+            self.pendingAuthContinuation = continuation
+            self.locationManager.requestWhenInUseAuthorization()
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if pendingAuthContinuation != nil {
+            pendingAuthContinuation?.resume(returning: manager.authorizationStatus)
+            pendingAuthContinuation = nil
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let location = locations.first
+
+        if location != nil {
+            continuation?.resume(
+                returning: IosCheckInLocationResult(
+                    isSuccess: true,
+                    location: location!.coordinate,
+                    message: ""
+                )
+            )
+        } else {
+            continuation?.resume(
+                returning: IosCheckInLocationResult(
+                    isSuccess: false,
+                    location: fallbackLocation,
+                    message: "현재 위치를 확인할 수 없습니다."
+                )
+            )
+        }
+        continuation = nil
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        continuation?.resume(
+            returning: IosCheckInLocationResult(
+                isSuccess: false,
+                location: fallbackLocation,
+                message: "현재 위치를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요."
+            )
+        )
+        continuation = nil
+    }
 }

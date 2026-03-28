@@ -1,9 +1,11 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.StampDataSource
 import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.Stamp
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
 import com.hhp227.concafe.domain.repository.VisitRepository
@@ -26,16 +28,54 @@ class VisitRepositoryImpl(
         userId: String,
         cafeId: String,
         visitedAt: String,
-        memo: String?
+        memo: String?,
+        latitude: Double,
+        longitude: Double
     ): Visit {
         val firestoreDataSource = visitDataSource as? FirestoreConCafeDataSource
+        val stampDataSource = visitDataSource as? StampDataSource
+        val normalizedMemo = memo?.trim().takeIf { !it.isNullOrBlank() }
+        val verification = visitDataSource.verifyVisitResult(cafeId, latitude, longitude)
 
+        if (!verification.verified) {
+            throw IllegalArgumentException(verification.message)
+        }
         if (firestoreDataSource != null) {
             val createdVisit = firestoreDataSource.createVisitRemote(
                 userId = userId,
                 cafeId = cafeId,
                 visitedAt = visitedAt,
-                memo = memo
+                memo = normalizedMemo,
+                latitude = latitude,
+                longitude = longitude
+            )
+            val stampResult = runCatching {
+                firestoreDataSource.createStampRemote(
+                    userId = userId,
+                    cafeId = cafeId,
+                    visitId = createdVisit.id
+                )
+            }
+
+            if (stampResult.isFailure) {
+                runCatching {
+                    firestoreDataSource.deleteVisitRemote(
+                        visitId = createdVisit.id,
+                        requesterId = userId
+                    )
+                }
+                throw stampResult.exceptionOrNull()
+                    ?: IllegalStateException("failed to issue stamp")
+            }
+            stampDataSource?.stamps?.removeAll { stamp -> stamp.id == createdVisit.id }
+            stampDataSource?.stamps?.add(
+                Stamp(
+                    id = createdVisit.id,
+                    userId = userId,
+                    cafeId = cafeId,
+                    visitId = createdVisit.id,
+                    earnedAt = Clock.System.now().toString()
+                )
             )
             val refreshedVisit = runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
@@ -60,11 +100,21 @@ class VisitRepositoryImpl(
                 userId = userId,
                 cafeId = cafeId,
                 visitedAt = visitedAt,
-                memo = memo,
-                verified = false
+                memo = normalizedMemo,
+                verified = true
             )
 
             visitDataSource.visits.add(localVisit)
+            stampDataSource?.stamps?.removeAll { stamp -> stamp.id == localVisit.id }
+            stampDataSource?.stamps?.add(
+                Stamp(
+                    id = localVisit.id,
+                    userId = userId,
+                    cafeId = cafeId,
+                    visitId = localVisit.id,
+                    earnedAt = Clock.System.now().toString()
+                )
+            )
             return localVisit
         }
     }
@@ -114,10 +164,16 @@ class VisitRepositoryImpl(
                 requesterId = userId
             )
             runCatching {
+                firestoreDataSource.deleteStampRemote(visitId = visitId)
+            }
+            runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
             }
         } else {
             visitDataSource.visits.removeAll { visit -> visit.id == visitId && visit.userId == userId }
+        }
+        (visitDataSource as? StampDataSource)?.stamps?.removeAll { stamp ->
+            stamp.id == visitId && stamp.userId == userId
         }
     }
 

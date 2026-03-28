@@ -32,6 +32,8 @@ type VisitLike = {
   cafeId?: unknown;
   userId?: unknown;
   verified?: unknown;
+  location?: unknown;
+  verificationDistanceMeters?: unknown;
 };
 
 type CafeFavoriteLike = {
@@ -66,6 +68,13 @@ function asNonNegativeInt(value: unknown): number | null {
     return null;
   }
   return Math.max(0, Math.floor(value));
+}
+
+function asFiniteNumber(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  return value;
 }
 
 function asNonBlankString(value: unknown): string | null {
@@ -116,6 +125,38 @@ function buildCastFollowDocumentId(userId: string, castId: string): string {
   const normalizedUserId = userId.replace(/\//g, "_");
   const normalizedCastId = castId.replace(/\//g, "_");
   return `${normalizedUserId}_${normalizedCastId}`;
+}
+
+function asGeoPoint(value: unknown): {latitude: number; longitude: number} | null {
+  if (value == null || typeof value !== "object") {
+    return null;
+  }
+  const point = value as {
+    latitude?: unknown;
+    longitude?: unknown;
+    _latitude?: unknown;
+    _longitude?: unknown;
+  };
+  const latitude = asFiniteNumber(point.latitude ?? point._latitude);
+  const longitude = asFiniteNumber(point.longitude ?? point._longitude);
+
+  if (latitude == null || longitude == null) {
+    return null;
+  }
+  return {latitude, longitude};
+}
+
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const earthRadius = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const normalizedLat1 = (lat1 * Math.PI) / 180;
+  const normalizedLat2 = (lat2 * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(normalizedLat1) * Math.cos(normalizedLat2) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadius * c;
 }
 
 async function syncCastClaimRequesterSnapshot(claimId: string, claim: CastClaimLike | undefined): Promise<void> {
@@ -1087,6 +1128,92 @@ export const onVisitWrittenSyncReviewVisitVerified = onDocumentWritten(
   }
 );
 
+export const onVisitWrittenValidateDistance = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const visitId = asNonBlankString(event.params.visitId) ?? "";
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+
+    if (visitId.length == 0 || afterData == null) {
+      return;
+    }
+    const visitRef = db().collection("visits").doc(visitId);
+    const cafeId = asNonBlankString(afterData.cafeId);
+    const userId = asNonBlankString(afterData.userId);
+    const userLocation = asGeoPoint(afterData.location);
+    const allowedRadiusMeters = 100;
+
+    if (cafeId == null || userId == null || userLocation == null) {
+      await visitRef.delete();
+      logger.warn("Deleted invalid visit payload.", {
+        visitId: visitId,
+        hasCafeId: cafeId != null,
+        hasUserId: userId != null,
+        hasLocation: userLocation != null,
+      });
+      return;
+    }
+    const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+    const cafeData = cafeSnapshot.data();
+    const region = asPlainObject(cafeData?.region);
+    const cafeLocation = asGeoPoint(region?.location);
+
+    if (cafeLocation == null) {
+      await visitRef.delete();
+      logger.warn("Deleted visit because cafe location is missing.", {
+        visitId: visitId,
+        cafeId: cafeId,
+      });
+      return;
+    }
+    const distanceMeters = haversineMeters(
+      cafeLocation.latitude,
+      cafeLocation.longitude,
+      userLocation.latitude,
+      userLocation.longitude
+    );
+    const shouldVerify = distanceMeters <= allowedRadiusMeters;
+
+    if (!shouldVerify) {
+      await visitRef.delete();
+      logger.info("Deleted visit outside allowed radius.", {
+        visitId: visitId,
+        cafeId: cafeId,
+        userId: userId,
+        distanceMeters: distanceMeters,
+        allowedRadiusMeters: allowedRadiusMeters,
+      });
+      return;
+    }
+    const currentVerified = afterData.verified === true;
+    const currentDistance = asFiniteNumber(afterData.verificationDistanceMeters);
+    const isDistanceSynced = currentDistance != null &&
+      Math.abs(currentDistance - distanceMeters) < 0.1;
+
+    if (currentVerified && isDistanceSynced) {
+      return;
+    }
+    await visitRef.set(
+      {
+        verified: true,
+        verificationDistanceMeters: distanceMeters,
+        allowedRadiusMeters: allowedRadiusMeters,
+        verifiedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {merge: true}
+    );
+
+    logger.info("Validated visit distance and marked as verified.", {
+      visitId: visitId,
+      cafeId: cafeId,
+      userId: userId,
+      distanceMeters: distanceMeters,
+      allowedRadiusMeters: allowedRadiusMeters,
+    });
+  }
+);
+
 export const onVisitWrittenSyncUserVisitStats = onDocumentWritten(
   "visits/{visitId}",
   async (event) => {
@@ -1174,21 +1301,10 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
     const isSourceChanged = hasBefore
       && hasAfter
       && (beforeUserId !== afterUserId || beforeCafeId !== afterCafeId);
+    const shouldUpsert = false;
 
     if (shouldDelete || isSourceChanged) {
       await stampRef.delete();
-    }
-    if (hasAfter) {
-      await stampRef.set(
-        {
-          userId: afterUserId,
-          cafeId: afterCafeId,
-          visitId: visitId,
-          earnedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {merge: true}
-      );
     }
 
     logger.info("Synced stamp from visit write.", {
@@ -1198,7 +1314,7 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
       beforeCafeId: beforeCafeId,
       afterCafeId: afterCafeId,
       deleted: shouldDelete || isSourceChanged,
-      upserted: hasAfter,
+      upserted: shouldUpsert,
     });
   }
 );

@@ -88,6 +88,7 @@ fun CheckInScreen(
             ) {
                 NewVisitCheckInBottomSheet(
                     cafes = uiState.mapCafes,
+                    errorMessage = uiState.errorMessage,
                     onSubmit = { cafeId, visitedAt, memo ->
                         viewModel.onAction(
                             CheckInAction.SubmitNewVisit(
@@ -695,6 +696,7 @@ private fun LoginRequiredBottomSheet(
 @Composable
 private fun NewVisitCheckInBottomSheet(
     cafes: List<CheckInCafeSummary>,
+    errorMessage: String?,
     onSubmit: (String, String, String?) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -877,6 +879,34 @@ private fun NewVisitCheckInBottomSheet(
             minLines = 4,
             singleLine = false
         )
+        if (!errorMessage.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFFFF1F3),
+                border = BorderStroke(1.dp, Color(0xFFFFCDD5))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        tint = Color(0xFFE25575),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB03854)
+                    )
+                }
+            }
+        }
         Button(
             enabled = selectedCafeId.isNotBlank(),
             onClick = {

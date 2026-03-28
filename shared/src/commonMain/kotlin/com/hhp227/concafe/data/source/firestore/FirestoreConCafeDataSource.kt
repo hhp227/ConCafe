@@ -919,7 +919,9 @@ class FirestoreConCafeDataSource(
         userId: String,
         cafeId: String,
         visitedAt: String,
-        memo: String?
+        memo: String?,
+        latitude: Double,
+        longitude: Double
     ): Visit {
         val idToken = tokenProvider.getIdToken()
         val visitId = nextFirestoreEntityId("visit")
@@ -929,6 +931,7 @@ class FirestoreConCafeDataSource(
             mapOf(
                 "userId" to firestoreString(userId),
                 "cafeId" to firestoreString(cafeId),
+                "location" to firestoreGeoPoint(latitude = latitude, longitude = longitude),
                 "visitedAt" to firestoreString(visitedAt),
                 "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
                 "verified" to firestoreBoolean(false),
@@ -989,6 +992,36 @@ class FirestoreConCafeDataSource(
             visits.firstOrNull { visit -> visit.id == visitId }
         }.getOrNull()
         return refreshedVisit ?: fallbackUpdated
+    }
+
+    suspend fun createStampRemote(
+        userId: String,
+        cafeId: String,
+        visitId: String
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.STAMPS}/$visitId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "visitId" to firestoreString(visitId),
+                "earnedAt" to firestoreString(now),
+                "updatedAt" to firestoreString(now)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+    }
+
+    suspend fun deleteStampRemote(visitId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.STAMPS}/$visitId"
+
+        runCatching {
+            restApi.delete(path, idToken)
+        }
     }
 
     suspend fun deleteVisitRemote(visitId: String, requesterId: String) {
@@ -2548,7 +2581,6 @@ class FirestoreConCafeDataSource(
             val parsedSummary = parseMyPageSummaryDocument(userId = userId, document = parsed)
             val resolvedVisitCount = resolveMyPageVisitCount(
                 userId = userId,
-                userDocument = parsed,
                 fallbackVisitCount = parsedSummary.totalVisits,
                 idToken = idToken
             )
@@ -5746,36 +5778,22 @@ class FirestoreConCafeDataSource(
 
     private suspend fun resolveMyPageVisitCount(
         userId: String,
-        userDocument: JsonObject,
         fallbackVisitCount: Int,
         idToken: String?
     ): Int {
-        val fields = userDocument["fields"]?.jsonObject
-        val statsField = fields?.getFirestoreMap("stats")
-        val hasVisitCountField = if (statsField != null) {
-            statsField["visitCount"] != null
-        } else {
-            fields?.get("visitCount") != null
-        }
-        val shouldAggregateFromVisits = !hasVisitCountField || fallbackVisitCount <= 0
+        val aggregatedVisitCount = runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "userId",
+                equalsFilterValue = firestoreString(userId)
+            )
+        }.getOrNull()
 
-        if (!shouldAggregateFromVisits) {
+        if (aggregatedVisitCount != null) {
+            return aggregatedVisitCount
+        } else {
             return fallbackVisitCount
-        } else {
-            val aggregatedVisitCount = runCatching {
-                loadCollectionDocumentCount(
-                    collectionId = FirestorePaths.VISITS,
-                    idToken = idToken,
-                    equalsFilterFieldPath = "userId",
-                    equalsFilterValue = firestoreString(userId)
-                )
-            }.getOrNull()
-
-            if (aggregatedVisitCount != null) {
-                return aggregatedVisitCount
-            } else {
-                return fallbackVisitCount
-            }
         }
     }
 

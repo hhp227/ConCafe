@@ -13,6 +13,8 @@ sealed interface CheckInAction {
 
     data object DismissLoginPrompt : CheckInAction
 
+    data object DismissError : CheckInAction
+
     data object DismissNewVisitSheet : CheckInAction
 
     data object DismissReviewPrompt : CheckInAction
