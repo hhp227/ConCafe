@@ -1042,7 +1042,7 @@ private struct CheckInNewVisitSheet: View {
                     .fill(Color(hex: "EEE4EA"))
                     .frame(height: 1),
                 alignment: .top
-            }
+            )
             Spacer()
         }
         .background(

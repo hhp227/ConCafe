@@ -190,6 +190,11 @@
 		0AB609352F69031C00591FEE /* goyangdeogyang_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */; };
 		0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */; };
 		0ABE84D42F6FC6990014281C /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */; };
+		0ADA5A122F77CA2F00D253AF /* ResetPasswordUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A112F77CA2F00D253AF /* ResetPasswordUiState.swift */; };
+		0ADA5A142F77CA4A00D253AF /* ResetPasswordAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A132F77CA4A00D253AF /* ResetPasswordAction.swift */; };
+		0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */; };
+		0ADA5A182F77CA7D00D253AF /* ResetPasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */; };
+		0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
 		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
@@ -387,6 +392,11 @@
 		0AB609332F69031C00591FEE /* goyangdeogyang_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_bold.ttf; sourceTree = "<group>"; };
 		0ABDDBE92F5C3E1C001BEF08 /* SignInComponents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInComponents.swift; sourceTree = "<group>"; };
 		0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAsyncImage.swift; sourceTree = "<group>"; };
+		0ADA5A112F77CA2F00D253AF /* ResetPasswordUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordUiState.swift; sourceTree = "<group>"; };
+		0ADA5A132F77CA4A00D253AF /* ResetPasswordAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordAction.swift; sourceTree = "<group>"; };
+		0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordEvent.swift; sourceTree = "<group>"; };
+		0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordViewModel.swift; sourceTree = "<group>"; };
+		0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
 		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
@@ -467,6 +477,7 @@
 			children = (
 				0A0C66972F5C0DD200B0CDE4 /* SignIn */,
 				0A0C669A2F5C0DF100B0CDE4 /* SignUp */,
+				0ADA5A102F77CA0C00D253AF /* ResetPassword */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -863,6 +874,18 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
+		0ADA5A102F77CA0C00D253AF /* ResetPassword */ = {
+			isa = PBXGroup;
+			children = (
+				0ADA5A112F77CA2F00D253AF /* ResetPasswordUiState.swift */,
+				0ADA5A132F77CA4A00D253AF /* ResetPasswordAction.swift */,
+				0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */,
+				0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */,
+				0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */,
+			);
+			path = ResetPassword;
+			sourceTree = "<group>";
+		};
 		0ADC46E92F5B33A5003484E4 /* Component */ = {
 			isa = PBXGroup;
 			children = (
@@ -1076,6 +1099,7 @@
 				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
 				0A0C66842F5C034600B0CDE4 /* MainViewModel.swift in Sources */,
 				0A6B33512F610C440074940F /* NoticeEventViewModel.swift in Sources */,
+				0ADA5A142F77CA4A00D253AF /* ResetPasswordAction.swift in Sources */,
 				0A8ABA762F5C1D6E00265D4F /* SettingsUiState.swift in Sources */,
 				0A3470772F611C1D005F9A8C /* ExternalLinkViewModel.swift in Sources */,
 				0A785CBD2F5A7DDE004037A8 /* RankingEvent.swift in Sources */,
@@ -1103,6 +1127,7 @@
 				0A785C9A2F5A7723004037A8 /* HomeViewModel.swift in Sources */,
 				0A785CAB2F5A7C2F004037A8 /* CheckInEvent.swift in Sources */,
 				0A3470802F611D2F005F9A8C /* MenuGoodsEditUiState.swift in Sources */,
+				0ADA5A122F77CA2F00D253AF /* ResetPasswordUiState.swift in Sources */,
 				0A580DA72F59678D00390F67 /* NavigationViewModel.swift in Sources */,
 				0A3DB8122F649FB400064804 /* BannerEditView.swift in Sources */,
 				0A785CCD2F5A7F23004037A8 /* CastAction.swift in Sources */,
@@ -1153,6 +1178,7 @@
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
 				0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */,
 				0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */,
+				0ADA5A182F77CA7D00D253AF /* ResetPasswordViewModel.swift in Sources */,
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,
 				0A3470842F611D63005F9A8C /* MenuGoodsEditEvent.swift in Sources */,
 				0A8ABA782F5C1D8B00265D4F /* SettingsAction.swift in Sources */,
@@ -1207,6 +1233,7 @@
 				0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */,
 				0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */,
 				0A3D3AC22F6D1F7300167893 /* ContentViewModel.swift in Sources */,
+				0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
 				0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
@@ -1228,6 +1255,7 @@
 				0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
 				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
+				0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
