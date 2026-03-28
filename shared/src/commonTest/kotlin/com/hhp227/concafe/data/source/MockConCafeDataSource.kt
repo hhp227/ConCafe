@@ -1377,7 +1377,6 @@ private fun buildAdditionalMockCafes(): List<Cafe> {
     )
     val adjectives = listOf("로즈", "슈가", "드림", "미스티", "퓨어", "멜로디", "스텔라", "코코아", "플럼", "오팔")
     val nouns = listOf("하우스", "라운지", "살롱", "스테이지", "가든", "팔레트", "테라스", "아틀리에")
-
     return (12..50).map { idNumber ->
         val zeroBasedIndex = idNumber - 12
         val regionIndex = zeroBasedIndex % 3
