@@ -124,7 +124,18 @@ private fun RankingContent(
                 onSelect = { index -> onAction(RankingAction.SelectAd(index)) }
             )
         }
-        if (uiState.rankingEntries.isNotEmpty()) {
+        if (uiState.isLoading) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 28.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else if (uiState.rankingEntries.isNotEmpty()) {
             items(uiState.rankingEntries) { item ->
                 RankingEntryCard(
                     item = item,

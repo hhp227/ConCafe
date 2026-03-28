@@ -112,7 +112,11 @@ private struct RankingContentView: View {
 
     private var rankingList: some View {
         VStack(spacing: 12) {
-            if !uiState.rankingEntries.isEmpty {
+            if uiState.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+            } else if !uiState.rankingEntries.isEmpty {
                 ForEach(uiState.rankingEntries, id: \.id) { item in
                     rankingCard(item)
                 }
