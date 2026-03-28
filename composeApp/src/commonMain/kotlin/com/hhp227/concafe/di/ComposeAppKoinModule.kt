@@ -27,6 +27,7 @@ import com.hhp227.concafe.presentation.notification.NotificationViewModel
 import com.hhp227.concafe.presentation.review.ReviewEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
+import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordViewModel
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkViewModel
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsViewModel
 import org.koin.core.module.Module
@@ -63,6 +64,7 @@ private val composeAppPresentationModule = module {
     factory { NotificationViewModel(get(), get(), get()) }
     factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get(), get()) }
     factory { AccountSettingsViewModel(get(), get(), get(), get()) }
+    factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
     factory { NotificationSettingsViewModel(get(), get()) }
 }

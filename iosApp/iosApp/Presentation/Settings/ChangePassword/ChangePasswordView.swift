@@ -71,12 +71,12 @@ struct ChangePasswordView: View {
                 settingsCard(title: "안내", symbol: "checkmark.shield") {
                     guideRow("새 비밀번호는 8자 이상이어야 합니다.")
                     guideRow("새 비밀번호 확인 입력값까지 일치해야 합니다.")
-                    guideRow("실제 서버 변경 연동은 후속 단계에서 연결됩니다.")
+                    guideRow("변경 즉시 다음 로그인부터 새 비밀번호가 적용됩니다.")
                 }
                 Button {
                     viewModel.onAction(.submitTapped)
                 } label: {
-                    Text("비밀번호 변경")
+                    Text(viewModel.uiState.isSubmitting ? "변경 중..." : "비밀번호 변경")
                         .font(.headline)
                         .fontWeight(.bold)
                         .foregroundStyle(Color(hex: "2B2330"))
@@ -86,6 +86,7 @@ struct ChangePasswordView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .disabled(viewModel.uiState.isSubmitting)
             }
             .padding(16)
             .padding(.bottom, 24)

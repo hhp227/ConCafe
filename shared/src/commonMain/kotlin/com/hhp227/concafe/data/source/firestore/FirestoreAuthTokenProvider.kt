@@ -21,6 +21,11 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signOut()
 
+    suspend fun updateCurrentUserPassword(
+        idToken: String,
+        newPassword: String
+    ): FirebaseAuthSession?
+
     suspend fun deleteCurrentUser(idToken: String?)
 
     suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession?

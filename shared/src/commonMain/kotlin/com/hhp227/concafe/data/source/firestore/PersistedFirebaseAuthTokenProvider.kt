@@ -80,6 +80,16 @@ class PersistedFirebaseAuthTokenProvider(
         clearPersistedSession()
     }
 
+    override suspend fun updateCurrentUserPassword(
+        idToken: String,
+        newPassword: String
+    ): FirebaseAuthSession? {
+        val session = delegate.updateCurrentUserPassword(idToken, newPassword)
+
+        persistSession(session)
+        return session
+    }
+
     override suspend fun deleteCurrentUser(idToken: String?) {
         val resolvedIdToken = idToken ?: cachedSession?.idToken
 

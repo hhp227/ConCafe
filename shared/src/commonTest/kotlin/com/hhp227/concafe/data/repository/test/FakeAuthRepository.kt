@@ -109,6 +109,15 @@ class FakeAuthRepository(
         currentUserFlow.value = null
     }
 
+    override suspend fun changePassword(currentPassword: String, newPassword: String) {
+        if (currentPassword.isBlank() || newPassword.isBlank()) {
+            throw IllegalArgumentException("currentPassword/newPassword is required")
+        }
+        if (dataSource.currentUserId == null) {
+            throw IllegalArgumentException("no signed in user")
+        }
+    }
+
     override suspend fun deleteAccount(password: String) {
         if (password.isBlank()) {
             throw IllegalArgumentException("password is required")
