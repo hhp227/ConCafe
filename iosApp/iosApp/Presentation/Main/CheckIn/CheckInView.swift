@@ -62,7 +62,14 @@ struct CheckInView: View {
         ) {
             CheckInNewVisitSheet(
                 cafes: viewModel.uiState.mapCafes,
-                errorMessage: viewModel.uiState.errorMessage,
+                errorMessage: Binding(
+                    get: { viewModel.uiState.errorMessage },
+                    set: { value in
+                        if value == nil {
+                            viewModel.onAction(.dismissError)
+                        }
+                    }
+                ),
                 onAction: viewModel.onAction
             )
             .compatLargeSheetDetent()
@@ -874,7 +881,7 @@ private struct CheckInReviewPromptSheet: View {
 private struct CheckInNewVisitSheet: View {
     let cafes: [CheckInCafeSummary]
 
-    let errorMessage: String?
+    @Binding var errorMessage: String?
 
     let onAction: (CheckInAction) -> Void
 
@@ -1063,11 +1070,11 @@ private struct CheckInNewVisitSheet: View {
 
     init(
         cafes: [CheckInCafeSummary],
-        errorMessage: String?,
+        errorMessage: Binding<String?>,
         onAction: @escaping (CheckInAction) -> Void
     ) {
         self.cafes = cafes
-        self.errorMessage = errorMessage
+        self._errorMessage = errorMessage
         self.onAction = onAction
         _selectedCafeId = State(initialValue: cafes.first?.id)
     }
