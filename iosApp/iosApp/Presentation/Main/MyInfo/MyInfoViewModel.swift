@@ -289,12 +289,20 @@ final class MyInfoViewModel: ObservableObject {
             switch badge.id {
             case "badge-checkin-starter":
                 unlocked = nextStampCount >= 1
+            case "badge-stamp-collector":
+                unlocked = nextStampCount >= 3
             case "badge-regular-visitor":
                 unlocked = nextVisitCount >= 5
+            case "badge-checkin-veteran":
+                unlocked = nextVisitCount >= 10
             case "badge-favorite-curator":
                 unlocked = favoritesCount >= 3
+            case "badge-favorite-master":
+                unlocked = favoritesCount >= 10
             case "badge-cast-supporter":
                 unlocked = followedCount >= 3
+            case "badge-cast-ambassador":
+                unlocked = followedCount >= 10
             case "badge-level-up":
                 unlocked = nextLevel >= 3
             case "badge-concafe-master":

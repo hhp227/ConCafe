@@ -263,9 +263,13 @@ class MyInfoViewModel(
                     badges = state.badges.map { badge ->
                         val isUnlocked = when (badge.id) {
                             "badge-checkin-starter" -> nextStampCount >= 1
+                            "badge-stamp-collector" -> nextStampCount >= 3
                             "badge-regular-visitor" -> nextVisitCount >= 5
+                            "badge-checkin-veteran" -> nextVisitCount >= 10
                             "badge-favorite-curator" -> favoritesCount >= 3
+                            "badge-favorite-master" -> favoritesCount >= 10
                             "badge-cast-supporter" -> followedCount >= 3
+                            "badge-cast-ambassador" -> followedCount >= 10
                             "badge-level-up" -> nextLevel >= 3
                             "badge-concafe-master" -> nextStampCount >= 10
                             else -> badge.unlocked
