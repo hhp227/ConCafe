@@ -9,34 +9,10 @@ class FakeRankingRepository(
     private val dataSource: ConCafeDataSource
 ) : RankingRepository {
     override suspend fun getCastRanking(period: RankingPeriod, country: String?, city: String?): List<RankingItem> {
-        val validCafeIds = dataSource.cafes.filter { cafe ->
-            val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
-            val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
-            countryMatched && cityMatched
-        }.map { it.id }.toSet()
-
-        return dataSource.rankingItemsFromCasts()
-            .filter { item ->
-                if (validCafeIds.isEmpty()) {
-                    true
-                } else {
-                    dataSource.casts.any { cast ->
-                        cast.id == item.id && validCafeIds.contains(cast.cafeId)
-                    }
-                }
-            }
+        return dataSource.rankingItemsFromCasts(period = period, country = country, city = city)
     }
 
     override suspend fun getCafeRanking(period: RankingPeriod, country: String?, city: String?): List<RankingItem> {
-        val validCafeIds = dataSource.cafes.filter { cafe ->
-            val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
-            val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
-            countryMatched && cityMatched
-        }.map { it.id }.toSet()
-
-        return dataSource.rankingItemsFromCafes()
-            .filter { item ->
-                validCafeIds.isEmpty() || validCafeIds.contains(item.id)
-            }
+        return dataSource.rankingItemsFromCafes(period = period, country = country, city = city)
     }
 }

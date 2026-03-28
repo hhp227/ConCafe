@@ -53,6 +53,8 @@ import com.hhp227.concafe.domain.model.NoticeStatusAccent
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
+import com.hhp227.concafe.domain.model.RankingItem
+import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.User
@@ -122,6 +124,10 @@ class FirestoreConCafeDataSource(
 
     private val lastCafeRegistrationClaimSyncUpdatedAtByUserId = mutableMapOf<String, String>()
 
+    private val castRankingItemsByScope = mutableMapOf<String, List<RankingItem>>()
+
+    private val cafeRankingItemsByScope = mutableMapOf<String, List<RankingItem>>()
+
     fun isCafeDetailHydrated(cafeId: String): Boolean {
         return hydratedCafeDetailIds.contains(cafeId)
     }
@@ -150,6 +156,40 @@ class FirestoreConCafeDataSource(
             )
         delegate.cafeDetailsById[cafeId] = synced
         return synced
+    }
+
+    override suspend fun rankingItemsFromCasts(
+        period: RankingPeriod,
+        country: String?,
+        city: String?
+    ): List<RankingItem> {
+        val scopeKey = rankingScopeKey(period = period, country = country, city = city)
+
+        return loadRankingItemsRemote(
+            kind = RANKING_KIND_CAST,
+            period = period,
+            country = country,
+            city = city,
+            scopeKey = scopeKey,
+            cache = castRankingItemsByScope
+        )
+    }
+
+    override suspend fun rankingItemsFromCafes(
+        period: RankingPeriod,
+        country: String?,
+        city: String?
+    ): List<RankingItem> {
+        val scopeKey = rankingScopeKey(period = period, country = country, city = city)
+
+        return loadRankingItemsRemote(
+            kind = RANKING_KIND_CAFE,
+            period = period,
+            country = country,
+            city = city,
+            scopeKey = scopeKey,
+            cache = cafeRankingItemsByScope
+        )
     }
 
     suspend fun refreshCafeDetail(cafeId: String) {
@@ -4897,6 +4937,80 @@ class FirestoreConCafeDataSource(
         delegate.cafeDetailsById[cafe.id] = detail
     }
 
+    private suspend fun loadRankingItemsRemote(
+        kind: String,
+        period: RankingPeriod,
+        country: String?,
+        city: String?,
+        scopeKey: String,
+        cache: MutableMap<String, List<RankingItem>>
+    ): List<RankingItem> {
+        val rankingId = rankingDocumentId(
+            kind = kind,
+            period = period,
+            country = country,
+            city = city
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.RANKINGS}/$rankingId"
+        val cachedItems = cache[scopeKey]
+        val response = runCatching {
+            restApi.get(path, null)
+        }.getOrElse { throwable ->
+            if (cachedItems != null) {
+                return cachedItems
+            } else if (throwable.isFirestoreNotFound()) {
+                return emptyList()
+            }
+            throw IllegalStateException("failed to load ranking document: $rankingId", throwable)
+        }
+        val document = Json.parseToJsonElement(response).jsonObject
+        val rankingItems = parseRankingItemsDocument(document)
+            .sortedBy { item -> item.rank }
+
+        cache[scopeKey] = rankingItems
+        return rankingItems
+    }
+
+    private fun parseRankingItemsDocument(document: JsonObject): List<RankingItem> {
+        val fields = document["fields"]?.jsonObject ?: return emptyList()
+        val entryValues = fields["entries"]
+            ?.jsonObject
+            ?.get("arrayValue")
+            ?.jsonObject
+            ?.get("values")
+            ?.jsonArray
+            .orEmpty()
+        return entryValues.mapNotNull { element ->
+            val entryFields = element
+                .jsonObject["mapValue"]
+                ?.jsonObject
+                ?.get("fields")
+                ?.jsonObject
+                ?: return@mapNotNull null
+            val id = entryFields.getFirestoreString("id")
+                ?: return@mapNotNull null
+            val name = entryFields.getFirestoreString("name").orEmpty()
+            val subtitle = entryFields.getFirestoreString("subtitle").orEmpty()
+            val score = entryFields.getFirestoreLong("score")?.toInt()
+                ?: entryFields.getFirestoreDouble("score")?.toInt()
+                ?: 0
+            val rank = entryFields.getFirestoreLong("rank")?.toInt()
+                ?: entryFields.getFirestoreDouble("rank")?.toInt()
+                ?: 0
+            val change = entryFields.getFirestoreString("change") ?: "0"
+            val imageUrl = entryFields.getFirestoreString("imageUrl")
+            return@mapNotNull RankingItem(
+                id = id,
+                name = name,
+                subtitle = subtitle,
+                score = score,
+                rank = rank,
+                change = change,
+                imageUrl = imageUrl
+            )
+        }
+    }
+
     private fun parseMenuDocument(document: JsonObject): CafeMenu? {
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
@@ -6080,6 +6194,36 @@ private fun String.toCafeIdFromNoticeDocumentName(): String? {
     return if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) null else segments[cafeSegmentIndex].takeIf { value -> value.isNotBlank() }
 }
 
+private fun rankingScopeKey(period: RankingPeriod, country: String?, city: String?): String {
+    val periodValue = period.name.lowercase()
+    val countryValue = country?.trim()?.takeIf { value -> value.isNotEmpty() }?.lowercase() ?: "all"
+    val cityValue = city?.trim()?.takeIf { value -> value.isNotEmpty() }?.lowercase() ?: "all"
+
+    return "$periodValue|$countryValue|$cityValue"
+}
+
+private fun rankingDocumentId(
+    kind: String,
+    period: RankingPeriod,
+    country: String?,
+    city: String?
+): String {
+    val kindValue = kind.trim().lowercase()
+    val periodValue = period.name.lowercase()
+    val countryValue = country?.trim()?.takeIf { value -> value.isNotEmpty() }?.slugifyRankingToken() ?: "all"
+    val cityValue = city?.trim()?.takeIf { value -> value.isNotEmpty() }?.slugifyRankingToken() ?: "all"
+
+    return "${kindValue}_${periodValue}_${countryValue}_${cityValue}"
+}
+
+private fun String.slugifyRankingToken(): String {
+    val normalized = trim().lowercase()
+    val alphanumeric = Regex("[^a-z0-9]+").replace(normalized, "-")
+    val collapsed = Regex("-+").replace(alphanumeric, "-")
+
+    return collapsed.trim('-').ifBlank { "all" }
+}
+
 private fun nextFirestoreEntityId(prefix: String): String {
     val now = Clock.System.now().toEpochMilliseconds()
     return "$prefix-$now"
@@ -6093,6 +6237,8 @@ private const val CAST_CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
 private const val CAST_CLAIM_SYNC_META_DOC_ID = "sync"
 private const val CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"
 private const val GLOBAL_CLAIM_SYNC_META_DOC_ID = "sync"
+private const val RANKING_KIND_CAST = "cast"
+private const val RANKING_KIND_CAFE = "cafe"
 private const val MAX_FIRESTORE_IN_FILTER_VALUES = 30
 private const val REGION_FILTER_CAFE_CACHE_LIMIT = 200
 private const val CAFE_FANOUT_CACHE_LIMIT = 120

@@ -90,7 +90,7 @@ val repositoryModule = module {
     single<VisitRepository> { VisitRepositoryImpl(get(), get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
-    single<RankingRepository> { RankingRepositoryImpl(get(), get(), get()) }
+    single<RankingRepository> { RankingRepositoryImpl(get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
     single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
@@ -154,7 +154,7 @@ val useCaseModule = module {
     factory { GetMyRequestableCastPageUseCase(get(), get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
-    factory { GetRankingFeedUseCase(get(), get()) }
+    factory { GetRankingFeedUseCase(get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
     factory { GetPendingCastClaimsForCafeUseCase(get(), get()) }
