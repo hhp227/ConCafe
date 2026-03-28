@@ -47,6 +47,9 @@ import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.Inquiry
+import com.hhp227.concafe.domain.model.InquiryCreate
+import com.hhp227.concafe.domain.model.InquiryStatus
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.NoticeStatusAccent
@@ -278,6 +281,91 @@ class FirestoreConCafeDataSource(
         notices.sortByDescending { notice -> notice.createdAt }
         cafeEventManagementItems.removeAll { item -> item.cafeId == cafeId }
         cafeEventManagementItems.addAll(parsedEvents)
+    }
+
+    suspend fun createInquiryRemote(
+        userId: String,
+        userNickname: String,
+        input: InquiryCreate
+    ): Inquiry {
+        val idToken = tokenProvider.getIdToken()
+        val inquiryId = nextFirestoreEntityId("inquiry")
+        val createdAt = Clock.System.now().toString()
+        val normalizedInquiryType = input.inquiryType.trim()
+        val normalizedTitle = input.title.trim()
+        val normalizedContent = input.content.trim()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "userNickname" to firestoreString(userNickname),
+                "inquiryType" to firestoreString(normalizedInquiryType),
+                "title" to firestoreString(normalizedTitle),
+                "content" to firestoreString(normalizedContent),
+                "status" to firestoreString(InquiryStatus.PENDING.name),
+                "createdAt" to firestoreString(createdAt),
+                "createdAtLabel" to firestoreString("방금 전")
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.INQUIRIES}/$inquiryId"
+
+        restApi.patch(path, body, idToken)
+        val inquiry = Inquiry(
+            id = inquiryId,
+            userId = userId,
+            userNickname = userNickname,
+            inquiryType = normalizedInquiryType,
+            title = normalizedTitle,
+            content = normalizedContent,
+            status = InquiryStatus.PENDING,
+            createdAt = createdAt,
+            createdAtLabel = "방금 전"
+        )
+        inquiries.removeAll { item -> item.id == inquiryId }
+        inquiries.add(0, inquiry)
+        return inquiry
+    }
+
+    suspend fun getInquiryPageRemote(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Inquiry> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val documents = runCatching {
+            runInquiryPageQuery(
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runInquiryPageQuery(
+                cursor = cursor,
+                limit = safePageSize + 1,
+                idToken = null
+            )
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load inquiry page", throwable)
+        }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()
+                ?.get("fields")
+                ?.jsonObject
+                ?.getFirestoreString("createdAt")
+        } else {
+            null
+        }
+        val pageItems = pageDocuments.mapNotNull { document ->
+            parseInquiryDocument(document)
+        }
+        return PagedResult(
+            items = pageItems,
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
     }
 
     suspend fun createCafeNoticeRemote(input: CafeNoticeCreate): CafeNoticeManagementItem {
@@ -3868,6 +3956,39 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runInquiryPageQuery(
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.INQUIRIES}"
+                  }
+                ],
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  }
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runCafeEventPageQuery(
         cafeId: String,
         cursor: String?,
@@ -5240,6 +5361,28 @@ class FirestoreConCafeDataSource(
             content = fields.getFirestoreString("content").orEmpty(),
             createdAt = createdAt,
             relativeTime = "최근"
+        )
+    }
+
+    private fun parseInquiryDocument(document: JsonObject): Inquiry? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val inquiryId = name.substringAfterLast("/")
+        val status = when (fields.getFirestoreString("status")?.uppercase()) {
+            InquiryStatus.ANSWERED.name -> InquiryStatus.ANSWERED
+            else -> InquiryStatus.PENDING
+        }
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        return Inquiry(
+            id = inquiryId,
+            userId = fields.getFirestoreString("userId").orEmpty(),
+            userNickname = fields.getFirestoreString("userNickname").orEmpty(),
+            inquiryType = fields.getFirestoreString("inquiryType").orEmpty(),
+            title = fields.getFirestoreString("title").orEmpty(),
+            content = fields.getFirestoreString("content").orEmpty(),
+            status = status,
+            createdAt = createdAt,
+            createdAtLabel = fields.getFirestoreString("createdAtLabel") ?: "최근"
         )
     }
 

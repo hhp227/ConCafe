@@ -18,6 +18,7 @@ struct AdminOperationsView: View {
             VStack(alignment: .leading, spacing: 18) {
                 metricsGrid
                 pendingSection
+                inquirySection
                 quickMenuSection
                 bannerRegisterSection
                 if let message = viewModel.uiState.infoMessage {
@@ -260,6 +261,73 @@ struct AdminOperationsView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private var inquirySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("문의하기")
+                .font(.title3.weight(.bold))
+            if viewModel.uiState.inquiries.isEmpty {
+                Text("등록된 문의가 없습니다.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "7A707A"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            } else {
+                ForEach(viewModel.uiState.inquiries, id: \.id) { inquiry in
+                    inquiryCard(inquiry)
+                }
+                if viewModel.uiState.canLoadMoreInquiries || viewModel.uiState.isLoadingMoreInquiries {
+                    Button {
+                        viewModel.onAction(.loadMoreInquiries)
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.uiState.isLoadingMoreInquiries {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            } else {
+                                Text("문의 더 불러오기")
+                                    .font(.subheadline.weight(.bold))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(hex: "F5F2F4"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .disabled(viewModel.uiState.isLoadingMoreInquiries)
+                }
+            }
+        }
+    }
+
+    private func inquiryCard(_ inquiry: Inquiry) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(inquiry.inquiryType)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                Spacer()
+                Text(inquiry.createdAtLabel)
+                    .font(.caption2)
+                    .foregroundStyle(Color(hex: "7A707A"))
+            }
+            Text(inquiry.title)
+                .font(.subheadline.weight(.bold))
+            Text(inquiry.content)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "6F6670"))
+            Text("작성자 \(inquiry.userNickname)")
+                .font(.caption2)
+                .foregroundStyle(Color(hex: "8B7F8A"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func infoBanner(_ message: String) -> some View {

@@ -11,6 +11,7 @@ enum AdminOperationsAction {
     case clickNotifications
     case clickSeeAllPending
     case clickBannerRegister
+    case loadMoreInquiries
     case selectPendingFilter(PendingFilter)
     case approvePending(String)
     case rejectPending(String)

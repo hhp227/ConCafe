@@ -21,6 +21,10 @@ struct AdminOperationsUiState {
     var selectedPendingFilter: PendingFilter = .cafeRegistration
     var pendingCafeRegistrationClaims: [PendingCafeRegistrationClaimPreview] = []
     var pendingCafeOwnerClaims: [PendingCafeOwnerClaimPreview] = []
+    var inquiries: [Inquiry] = []
+    var inquiryNextCursor: String? = nil
+    var canLoadMoreInquiries: Bool = false
+    var isLoadingMoreInquiries: Bool = false
     var quickMenus: [AdminQuickMenu] = defaultQuickMenus
     var hasUnreadNotifications: Bool = true
     var infoMessage: String? = nil

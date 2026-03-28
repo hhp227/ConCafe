@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -75,6 +76,9 @@ fun AdminOperationsScreen(
         }
         item {
             PendingSection(uiState = uiState, onAction = viewModel::onAction)
+        }
+        item {
+            InquirySection(uiState = uiState, onAction = viewModel::onAction)
         }
         item {
             QuickMenuSection(uiState = uiState, onAction = viewModel::onAction)
@@ -244,6 +248,101 @@ private fun PendingSection(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun InquirySection(
+    uiState: AdminOperationsUiState,
+    onAction: (AdminOperationsAction) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("문의하기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        if (uiState.inquiries.isEmpty()) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Text(
+                    text = "등록된 문의가 없습니다.",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                    color = Color(0xFF7A707A)
+                )
+            }
+        } else {
+            uiState.inquiries.forEach { inquiry ->
+                InquiryCard(inquiry = inquiry)
+            }
+            if (uiState.canLoadMoreInquiries || uiState.isLoadingMoreInquiries) {
+                Button(
+                    onClick = { onAction(AdminOperationsAction.LoadMoreInquiries) },
+                    enabled = !uiState.isLoadingMoreInquiries,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF5F2F4),
+                        contentColor = Color(0xFF5E545F)
+                    )
+                ) {
+                    if (uiState.isLoadingMoreInquiries) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF8B7F8A)
+                        )
+                    } else {
+                        Text("문의 더 불러오기", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InquiryCard(
+    inquiry: Inquiry
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = inquiry.inquiryType,
+                    color = Color(0xFFEF6797),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = inquiry.createdAtLabel,
+                    color = Color(0xFF7A707A),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            Text(
+                text = inquiry.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = inquiry.content,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF6F6670)
+            )
+            Text(
+                text = "작성자 ${inquiry.userNickname}",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF8B7F8A)
+            )
         }
     }
 }

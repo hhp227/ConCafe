@@ -170,6 +170,18 @@ service cloud.firestore {
         && request.resource.data.verified is bool;
     }
 
+    function isValidInquiryCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.userNickname is string
+        && request.resource.data.inquiryType is string
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string;
+    }
+
     function isValidCastClaimStatus(status) {
       return status == "PENDING" || status == "APPROVED" || status == "REJECTED";
     }
@@ -470,6 +482,19 @@ service cloud.firestore {
         && resource.data.userId is string
         && resource.data.userId == request.auth.uid;
       allow update: if false;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && isValidInquiryCreateData();
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update, delete: if false;
     }
 
     match /rankings/{rankingId} {

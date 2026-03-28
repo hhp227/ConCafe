@@ -86,7 +86,7 @@ val repositoryModule = module {
     single<CafeRepository> { CafeRepositoryImpl(get(), get(), get(), get()) }
     single<CastRepository> { CastRepositoryImpl(get(), get(), get(), get()) }
     single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get(), get(), get()) }
-    single<InquiryRepository> { InquiryRepositoryImpl(get()) }
+    single<InquiryRepository> { InquiryRepositoryImpl(get(), get()) }
     single<VisitRepository> { VisitRepositoryImpl(get(), get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
@@ -114,6 +114,7 @@ val eventModule = module {
 val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
+    factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }

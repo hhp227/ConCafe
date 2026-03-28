@@ -12,15 +12,13 @@ import KMPNativeCoroutinesAsync
 
 @MainActor
 final class AdminOperationsViewModel: ObservableObject {
-    @Published private(set) var uiState = AdminOperationsUiState()
-
-    let event = PassthroughSubject<AdminOperationsEvent, Never>()
-
     private let getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase
 
     private let getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase
 
     private let getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase
+
+    private let getAdminInquiryPageUseCase: GetAdminInquiryPageUseCase
 
     private let approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase
 
@@ -33,6 +31,10 @@ final class AdminOperationsViewModel: ObservableObject {
     private let cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher
 
     private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
+    @Published private(set) var uiState = AdminOperationsUiState()
+
+    let event = PassthroughSubject<AdminOperationsEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
@@ -133,6 +135,58 @@ final class AdminOperationsViewModel: ObservableObject {
             pendingCount: pendingCount,
             reportItemsCount: snapshot.reportItemsCount
         )
+    }
+
+    private func loadInitialInquiries() {
+        loadInquiryPage(cursor: nil, append: false)
+    }
+
+    private func loadMoreInquiries() {
+        let canLoadMore = uiState.canLoadMoreInquiries
+        let isLoadingMore = uiState.isLoadingMoreInquiries
+        let cursor = uiState.inquiryNextCursor
+
+        if canLoadMore, !isLoadingMore, let cursor {
+            loadInquiryPage(cursor: cursor, append: true)
+        } else {
+            return
+        }
+    }
+
+    private func loadInquiryPage(cursor: String?, append: Bool) {
+        tasks[.inquiryPage]?.cancel()
+        tasks[.inquiryPage] = Task {
+            if append {
+                uiState.isLoadingMoreInquiries = true
+            }
+            do {
+                let result = try await getAdminInquiryPageUseCase.invoke(
+                    cursor: cursor,
+                    pageSize: adminInquiryPageSize
+                )
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? Shared.PagedResult<Inquiry> {
+                    let pageItems = (page.items as? [Inquiry] ?? []).sorted { $0.createdAt > $1.createdAt }
+                    if append {
+                        uiState.inquiries = uiState.inquiries + pageItems
+                    } else {
+                        uiState.inquiries = pageItems
+                    }
+                    uiState.inquiryNextCursor = page.nextCursor
+                    uiState.canLoadMoreInquiries = page.hasNext
+                    uiState.isLoadingMoreInquiries = false
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isLoadingMoreInquiries = false
+                    uiState.infoMessage = "\(failure.error)"
+                } else {
+                    uiState.isLoadingMoreInquiries = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreInquiries = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
     }
 
     private func observeClaimEvents() {
@@ -320,6 +374,8 @@ final class AdminOperationsViewModel: ObservableObject {
             uiState.infoMessage = "전체보기 연결은 다음 단계에서 이어집니다."
         case .clickBannerRegister:
             event.send(.navigateToBannerEdit)
+        case .loadMoreInquiries:
+            loadMoreInquiries()
         case .selectPendingFilter(let filter):
             uiState.selectedPendingFilter = filter
             uiState.infoMessage = nil
@@ -343,6 +399,7 @@ final class AdminOperationsViewModel: ObservableObject {
         getPendingCafeRegistrationClaimsUseCase: GetPendingCafeRegistrationClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeRegistrationClaimsUseCase(),
         getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeOwnerClaimsUseCase(),
         getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase = KoinInitializerKt.resolveGetAdminOperationsMetricsUseCase(),
+        getAdminInquiryPageUseCase: GetAdminInquiryPageUseCase = KoinInitializerKt.resolveGetAdminInquiryPageUseCase(),
         approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase = KoinInitializerKt.resolveApproveCafeRegistrationClaimUseCase(),
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
         rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
@@ -353,6 +410,7 @@ final class AdminOperationsViewModel: ObservableObject {
         self.getPendingCafeRegistrationClaimsUseCase = getPendingCafeRegistrationClaimsUseCase
         self.getPendingCafeOwnerClaimsUseCase = getPendingCafeOwnerClaimsUseCase
         self.getAdminOperationsMetricsUseCase = getAdminOperationsMetricsUseCase
+        self.getAdminInquiryPageUseCase = getAdminInquiryPageUseCase
         self.approveCafeRegistrationClaimUseCase = approveCafeRegistrationClaimUseCase
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
         self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
@@ -365,6 +423,7 @@ final class AdminOperationsViewModel: ObservableObject {
         observeOwnerClaimEvents()
         startClaimPolling()
         loadPendingRequests()
+        loadInitialInquiries()
     }
 
     deinit {
@@ -376,11 +435,13 @@ final class AdminOperationsViewModel: ObservableObject {
         case claimEvent
         case ownerClaimEvent
         case claimPolling
+        case inquiryPage
     }
 }
 
 private let adminBannerMenuId = "banner"
 private let claimPollingIntervalNanoseconds: UInt64 = 5_000_000_000
+private let adminInquiryPageSize: Int32 = 10
 
 private struct AdminPendingSnapshot {
     let registrationClaims: [PendingCafeRegistrationClaimPreview]
