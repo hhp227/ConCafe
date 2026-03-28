@@ -44,10 +44,12 @@ final class MyInfoViewModel: ObservableObject {
     }
     
     private func loadMyInfo() {
+        tasks[.loadMyInfo]?.cancel()
+
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        Task {
+        tasks[.loadMyInfo] = Task {
             do {
                 let result = try await getMyInfoUseCase.invoke()
 
@@ -84,6 +86,7 @@ final class MyInfoViewModel: ObservableObject {
                 }
             } catch {
                 if Task.isCancelled { return }
+
                 uiState = .empty
                 uiState.errorMessage = error.localizedDescription
             }
@@ -333,6 +336,7 @@ final class MyInfoViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case loadMyInfo
         case session
         case cafeDetailEvent
         case castEvent
