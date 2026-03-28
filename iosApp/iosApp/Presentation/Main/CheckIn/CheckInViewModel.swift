@@ -591,7 +591,7 @@ private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDeleg
                             returning: IosCheckInLocationResult(
                                 isSuccess: false,
                                 location: self.fallbackLocation,
-                                message: "현재 위치를 불러오는 중입니다. 잠시만 기다려 주세요."
+                                message: "현재 위치 확인에 실패했습니다. 잠시 후 다시 시도해 주세요."
                             )
                         )
                     }
