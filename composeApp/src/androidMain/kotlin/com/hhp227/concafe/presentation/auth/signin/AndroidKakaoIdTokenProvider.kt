@@ -9,11 +9,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class AndroidKakaoIdTokenProvider(
     private val activityProvider: () -> Activity?
 ) : KakaoIdTokenProvider {
-    override suspend fun getKakaoIdToken(): String {
+    override suspend fun getKakaoAuthPayload(): KakaoAuthPayload {
         val activity = activityProvider()
             ?: throw IllegalStateException("kakao sign-in requires current activity")
         println("TEST, Kakao getKakaoIdToken started")
-        return if (UserApiClient.instance.isKakaoTalkLoginAvailable(activity)) {
+        val idToken = if (UserApiClient.instance.isKakaoTalkLoginAvailable(activity)) {
             runCatching {
                 println("TEST, KakaoTalk login available. try talk login")
                 loginWithKakaoTalk(activity)
@@ -25,6 +25,11 @@ class AndroidKakaoIdTokenProvider(
             println("TEST, KakaoTalk login not available. use account login")
             loginWithKakaoAccount(activity)
         }
+        val nickname = requestKakaoNickname()
+        return KakaoAuthPayload(
+            idToken = idToken,
+            nickname = nickname
+        )
     }
 
     private suspend fun loginWithKakaoTalk(activity: Activity): String {
@@ -88,21 +93,33 @@ class AndroidKakaoIdTokenProvider(
     ) {
         if (!currentIdToken.isNullOrBlank()) {
             println("TEST, current Kakao idToken exists")
-        } else {
-            println("TEST, current Kakao idToken missing")
+            completion(currentIdToken, null)
+            return
         }
-        println("TEST, request Kakao additional scopes: openid/account_email/profile_nickname")
-        UserApiClient.instance.loginWithNewScopes(
-            activity,
-            listOf("openid", "account_email", "profile_nickname")
-        ) { token, error ->
+        println("TEST, current Kakao idToken missing. request new scope openid only")
+        UserApiClient.instance.loginWithNewScopes(activity, listOf("openid")) { token, error ->
             if (error != null) {
                 println("TEST, loginWithNewScopes error: ${error.message}")
-                completion(currentIdToken, null)
+                completion(null, error)
             } else {
                 val refreshedIdToken = token?.idToken
                 println("TEST, loginWithNewScopes success. hasIdToken=${!refreshedIdToken.isNullOrBlank()}")
-                completion(refreshedIdToken ?: currentIdToken, null)
+                completion(refreshedIdToken, null)
+            }
+        }
+    }
+
+    private suspend fun requestKakaoNickname(): String? {
+        return suspendCancellableCoroutine { continuation ->
+            UserApiClient.instance.me { user, error ->
+                if (error != null) {
+                    println("TEST, requestKakaoNickname error: ${error.message}")
+                    continuation.resume(null)
+                } else {
+                    val nickname = user?.kakaoAccount?.profile?.nickname?.trim()
+                    println("TEST, requestKakaoNickname success. hasNickname=${!nickname.isNullOrBlank()}")
+                    continuation.resume(nickname?.ifBlank { null })
+                }
             }
         }
     }

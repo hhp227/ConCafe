@@ -18,6 +18,7 @@ import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
@@ -30,6 +31,7 @@ class SignUpViewModel(
     private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
     private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
     private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val googleIdTokenProvider: GoogleIdTokenProvider,
     private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : ViewModel() {
@@ -298,7 +300,7 @@ class SignUpViewModel(
                     }
                 }
                 SignUpProvider.KAKAO -> {
-                    runCatching { kakaoIdTokenProvider.getKakaoIdToken() }
+                    runCatching { kakaoIdTokenProvider.getKakaoAuthPayload() }
                         .onFailure {
                             println("TEST, Kakao getKakaoIdToken failed in SignUpViewModel: ${it.message}")
                             _uiState.update { state ->
@@ -309,11 +311,19 @@ class SignUpViewModel(
                                 )
                             }
                         }
-                        .onSuccess { idToken ->
-                            println("TEST, Kakao idToken acquired in SignUpViewModel. length=${idToken.length}")
-                            when (signInWithKakaoIdTokenUseCase.invoke(idToken)) {
+                        .onSuccess { payload ->
+                            println("TEST, Kakao idToken acquired in SignUpViewModel. length=${payload.idToken.length}")
+                            when (signInWithKakaoIdTokenUseCase.invoke(payload.idToken)) {
                                 is AppResult.Success -> {
                                     println("TEST, Kakao sign-up usecase success")
+                                    val nickname = payload.nickname?.trim().orEmpty()
+                                    if (nickname.isNotBlank()) {
+                                        updateUserProfileUseCase.invoke(
+                                            nickname = nickname,
+                                            profileImage = null
+                                        )
+                                        println("TEST, Kakao nickname applied in SignUpViewModel: $nickname")
+                                    }
                                     _uiState.update { it.copy(isLoading = false, errorMessage = null) }
                                     _event.emit(SignUpEvent.SignedUp)
                                 }

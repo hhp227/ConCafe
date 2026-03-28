@@ -28,6 +28,8 @@ class SignUpViewModel: ObservableObject {
 
     private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
 
+    private let updateUserProfileUseCase: UpdateUserProfileUseCase
+
     private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
 
     private let verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase
@@ -277,6 +279,7 @@ class SignUpViewModel: ObservableObject {
             let result = try await signInWithKakaoIdTokenUseCase.invoke(idToken: idToken)
 
             if result is AppResultSuccess<AnyObject> {
+                await applyKakaoNicknameIfNeeded()
                 uiState.isLoading = false
                 event.send(.signedUp)
             } else {
@@ -364,15 +367,33 @@ class SignUpViewModel: ObservableObject {
             }
 
             if UserApi.isKakaoTalkLoginAvailable() {
-                UserApi.shared.loginWithKakaoTalk(
-                    scopes: ["openid", "account_email", "profile_nickname"],
-                    completion: loginCompletion
-                )
+                UserApi.shared.loginWithKakaoTalk(scopes: ["openid"], completion: loginCompletion)
             } else {
-                UserApi.shared.loginWithKakaoAccount(
-                    scopes: ["openid", "account_email", "profile_nickname"],
-                    completion: loginCompletion
-                )
+                UserApi.shared.loginWithKakaoAccount(scopes: ["openid"], completion: loginCompletion)
+            }
+        }
+    }
+
+    private func applyKakaoNicknameIfNeeded() async {
+        let nickname = await requestKakaoNickname()
+
+        if let nickname, !nickname.isEmpty {
+            _ = try? await updateUserProfileUseCase.invoke(
+                nickname: nickname,
+                profileImage: nil
+            )
+        }
+    }
+
+    private func requestKakaoNickname() async -> String? {
+        return await withCheckedContinuation { continuation in
+            UserApi.shared.me { user, error in
+                if error != nil {
+                    continuation.resume(returning: nil)
+                } else {
+                    let nickname = user?.kakaoAccount?.profile?.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    continuation.resume(returning: nickname?.isEmpty == true ? nil : nickname)
+                }
             }
         }
     }
@@ -584,7 +605,8 @@ class SignUpViewModel: ObservableObject {
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
         signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
         signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
-        signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase()
+        signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase(),
+        updateUserProfileUseCase: UpdateUserProfileUseCase = KoinInitializerKt.resolveUpdateUserProfileUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
@@ -593,6 +615,7 @@ class SignUpViewModel: ObservableObject {
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
         self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
+        self.updateUserProfileUseCase = updateUserProfileUseCase
         self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
         self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
