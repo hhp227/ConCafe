@@ -101,7 +101,7 @@ class GetMyInfoUseCase(
                             .sortedByDescending { it.ratingAvg }
                     }
                     val followedMaidsDeferred = async {
-                        castRepository.getCastsByIds(followedCastIdsDeferred.await())
+                        castRepository.getFollowedCasts(currentUser.id)
                             .sortedByDescending { it.followerCount }
                     }
                     val followedCastCountDeferred = async {

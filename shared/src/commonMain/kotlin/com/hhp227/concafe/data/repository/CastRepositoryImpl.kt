@@ -282,6 +282,20 @@ class CastRepositoryImpl(
             .sorted()
     }
 
+    override suspend fun getFollowedCasts(userId: String): List<Cast> {
+        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getFollowedCastsRemote(userId)
+        }
+        val followedCastIds = getFollowedCastIds(userId)
+        val idSet = followedCastIds.toSet()
+        return castDataSource.casts
+            .asSequence()
+            .filter { cast -> idSet.contains(cast.id) }
+            .toList()
+    }
+
     override suspend fun getCastsByIds(castIds: List<String>): List<Cast> {
         val idSet = castIds.toSet()
         return castDataSource.casts

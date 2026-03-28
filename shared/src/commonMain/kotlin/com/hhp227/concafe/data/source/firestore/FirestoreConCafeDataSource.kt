@@ -1202,6 +1202,77 @@ class FirestoreConCafeDataSource(
         followedCastIdsByUser[userId] = followedCastIds
     }
 
+    suspend fun getFollowedCastsRemote(userId: String): List<Cast> {
+        if (userId.isBlank()) {
+            return emptyList()
+        }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val followDocuments = runCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runUserScopedQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = null
+            )
+        }.getOrElse { emptyList() }
+        val followsByCafeId = followDocuments
+            .mapNotNull { document ->
+                val fields = document["fields"]?.jsonObject ?: return@mapNotNull null
+                val castId = fields.getFirestoreString("castId")?.takeIf { value -> value.isNotBlank() }
+                    ?: return@mapNotNull null
+                val cafeId = fields.getFirestoreString("cafeId")?.takeIf { value -> value.isNotBlank() }
+                    ?: return@mapNotNull null
+                cafeId to castId
+            }
+            .groupBy(keySelector = { item -> item.first }, valueTransform = { item -> item.second })
+
+        if (followsByCafeId.isEmpty()) {
+            followedCastIdsByUser[userId] = mutableSetOf()
+            return emptyList()
+        }
+        val resolvedCasts = mutableListOf<Cast>()
+
+        followsByCafeId.forEach { (cafeId, castIds) ->
+            val distinctCastIds = castIds.distinct()
+
+            distinctCastIds.chunked(MAX_FIRESTORE_IN_FILTER_VALUES).forEach { chunk ->
+                val documents = runCatching {
+                    runCafeCastIdsInQuery(
+                        cafeId = cafeId,
+                        castIds = chunk,
+                        idToken = idToken
+                    )
+                }.recoverCatching {
+                    runCafeCastIdsInQuery(
+                        cafeId = cafeId,
+                        castIds = chunk,
+                        idToken = null
+                    )
+                }.getOrElse { emptyList() }
+                val parsed = documents.mapNotNull { document ->
+                    parseCastDocument(cafeId = cafeId, document = document)
+                }
+
+                parsed.forEach { cast ->
+                    delegate.casts.removeAll { item -> item.id == cast.id }
+                    delegate.casts.add(cast)
+                }
+                resolvedCasts.addAll(parsed)
+            }
+        }
+        followedCastIdsByUser[userId] = resolvedCasts
+            .map { cast -> cast.id }
+            .toMutableSet()
+        return resolvedCasts
+    }
+
     suspend fun refreshFavoriteCafeIds(userId: String) {
         val idToken = tokenProvider.getIdToken()
         val favoriteDocuments = runCatching {
@@ -3986,6 +4057,51 @@ class FirestoreConCafeDataSource(
                   }
                 ]$startAfterSection,
                 "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun runCafeCastIdsInQuery(
+        cafeId: String,
+        castIds: List<String>,
+        idToken: String?
+    ): List<JsonObject> {
+        if (castIds.isEmpty()) {
+            return emptyList()
+        }
+        val references = castIds.joinToString(",") { castId ->
+            val sanitizedCastId = castId.trim()
+            """
+            { "referenceValue": "${config.documentBasePath()}/${FirestorePaths.CAFES}/${escapeFirestoreQueryString(cafeId)}/${FirestorePaths.CAFE_CASTS}/${escapeFirestoreQueryString(sanitizedCastId)}" }
+            """.trimIndent()
+        }
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}"
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "__name__" },
+                    "op": "IN",
+                    "value": {
+                      "arrayValue": {
+                        "values": [ $references ]
+                      }
+                    }
+                  }
+                },
+                "limit": ${castIds.size}
               }
             }
         """.trimIndent()
