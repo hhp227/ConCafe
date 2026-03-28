@@ -181,8 +181,6 @@
 		0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */; };
 		0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */; };
 		0A9A0B182F6B2B2500B69B62 /* KMPNativeCoroutinesAsync in Frameworks */ = {isa = PBXBuildFile; productRef = 0A9A0B172F6B2B2500B69B62 /* KMPNativeCoroutinesAsync */; };
-		FBA100012F90000100AAA001 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FBA100042F90000100AAA001 /* FirebaseCore */; };
-		FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FBA100052F90000100AAA001 /* FirebaseMessaging */; };
 		0A9B96162F62645300F6D8FE /* ConCafeCastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */; };
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
@@ -210,6 +208,7 @@
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
+		FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FBA100052F90000100AAA001 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -322,6 +321,7 @@
 		0A580DB82F59711000390F67 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
 		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
 		0A580DBF2F59730000390F67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
+		0A5F07AB2F7826050064CCB3 /* ConCafePush.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = ConCafePush.entitlements; path = iosApp/ConCafePush.entitlements; sourceTree = "<group>"; };
 		0A6B33452F610B2D0074940F /* MenuGoodsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsViewModel.swift; sourceTree = "<group>"; };
 		0A6B33472F610B4F0074940F /* MenuGoodsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsUiState.swift; sourceTree = "<group>"; };
 		0A6B33492F610B700074940F /* MenuGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsView.swift; sourceTree = "<group>"; };
@@ -424,7 +424,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A9A0B182F6B2B2500B69B62 /* KMPNativeCoroutinesAsync in Frameworks */,
-				FBA100012F90000100AAA001 /* FirebaseCore in Frameworks */,
 				FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -987,6 +986,7 @@
 		FBFDA0ED57CE363227DB6AC1 = {
 			isa = PBXGroup;
 			children = (
+				0A5F07AB2F7826050064CCB3 /* ConCafePush.entitlements */,
 				C98E98B4AE0F51EAF578C098 /* Configuration */,
 				1030E2EB8EFBD5F27A20D64D /* iosApp */,
 				7332ACCB08708982CBFABD2D /* Products */,
@@ -1012,7 +1012,6 @@
 			name = iosApp;
 			packageProductDependencies = (
 				0A9A0B172F6B2B2500B69B62 /* KMPNativeCoroutinesAsync */,
-				FBA100042F90000100AAA001 /* FirebaseCore */,
 				FBA100052F90000100AAA001 /* FirebaseMessaging */,
 			);
 			productName = iosApp;
@@ -1426,9 +1425,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1467,9 +1466,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1534,14 +1533,14 @@
 				kind = branch;
 			};
 		};
-			FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-				isa = XCRemoteSwiftPackageReference;
-				repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-				requirement = {
-					kind = upToNextMinorVersion;
-					minimumVersion = 10.24.0;
-				};
+		FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 10.24.0;
 			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1549,11 +1548,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
 			productName = KMPNativeCoroutinesAsync;
-		};
-		FBA100042F90000100AAA001 /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
 		};
 		FBA100052F90000100AAA001 /* FirebaseMessaging */ = {
 			isa = XCSwiftPackageProductDependency;
