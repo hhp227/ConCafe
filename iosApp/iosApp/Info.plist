@@ -15,10 +15,10 @@
 			</array>
 		</dict>
 	</array>
-    <key>UIAppFonts</key>
-    <array>
-        <string>goyangdeogyang_bold.ttf</string>
-        <string>goyangdeogyang_extrabold.ttf</string>
-    </array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>goyangdeogyang_bold.ttf</string>
+		<string>goyangdeogyang_extrabold.ttf</string>
+	</array>
 </dict>
 </plist>

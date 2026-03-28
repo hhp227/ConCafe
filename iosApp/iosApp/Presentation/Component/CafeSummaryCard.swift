@@ -17,7 +17,7 @@ struct CafeSummaryCard: View {
 
     let thumbnailImage: String?
 
-    let showLocationIcon: Bool = true
+    let showLocationIcon: Bool
 
     let trailingLabel: String?
 

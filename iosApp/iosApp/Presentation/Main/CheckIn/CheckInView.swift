@@ -126,6 +126,7 @@ private struct CheckInGuestContentView: View {
                                     rating: String(format: "%.1f", cafe.rating),
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,
+                                    showLocationIcon: true,
                                     trailingLabel: "체크인 \(cafe.checkInCount)",
                                     onTap: { onAction(.cafeTapped(id: cafe.id)) }
                                 )
