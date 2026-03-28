@@ -39,6 +39,8 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -530,14 +532,22 @@ private fun PopularCafeCard(
 ) {
     CafeSummaryCard(
         name = cafe.name,
-        rating = "${cafe.rating}",
+        rating = formatRatingOneDecimal(cafe.rating),
         location = cafe.locationLabel,
         thumbnailImage = cafe.thumbnailImage,
+        showLocationIcon = false,
         modifier = Modifier
             .width(220.dp),
         trailingLabel = "체크인 ${cafe.checkInCount}",
         onClick = onClick
     )
+}
+
+private fun formatRatingOneDecimal(rating: Double): String {
+    val roundedRating = (rating * 10).roundToInt()
+    val integer = roundedRating / 10
+    val decimal = abs(roundedRating % 10)
+    return "$integer.$decimal"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

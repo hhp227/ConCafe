@@ -209,12 +209,7 @@ class CafeRepositoryImpl(
         }
 
         return sourceCafes.map { cafe ->
-            val cachedVisitCount = visitCountByCafeId[cafe.id] ?: 0
-            val resolvedVisitCount = if (cachedVisitCount > 0) {
-                cachedVisitCount
-            } else {
-                cafe.reviewCount
-            }
+            val resolvedVisitCount = visitCountByCafeId[cafe.id] ?: 0
 
             CheckInCafeSummary(
                 id = cafe.id,
