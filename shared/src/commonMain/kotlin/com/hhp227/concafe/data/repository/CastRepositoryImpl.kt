@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.repository
 import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.PagingDataSource
+import com.hhp227.concafe.data.source.ReviewDataSource
 import com.hhp227.concafe.data.source.ScheduleStatusDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
 import com.hhp227.concafe.data.source.FirestoreCacheDataSource
@@ -21,12 +22,14 @@ import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class CastRepositoryImpl(
     private val castDataSource: CastDataSource,
     private val cafeDataSource: CafeDataSource,
+    private val reviewDataSource: ReviewDataSource,
     private val socialDataSource: SocialDataSource,
     private val pagingDataSource: PagingDataSource
 ) : CastRepository {
@@ -377,35 +380,40 @@ class CastRepositoryImpl(
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
         val safeLimit = if (limit > 0) limit else 1
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-        val sourceCasts = if (firestoreDataSource != null) {
-            val page = firestoreDataSource.searchCastsRemote(
-                query = null,
-                country = null,
-                city = null,
-                sort = CastSort.POPULAR,
-                cursor = null,
-                pageSize = safeLimit
-            )
-            page.items
-        } else {
-            val castScoreById = castDataSource.casts.associate { cast ->
-                val score = castDataSource.castTodayVisitCountById[cast.id] ?: cast.followerCount
-                cast.id to score
+        val todayTagCountByCastId = mutableMapOf<String, Int>()
+
+        reviewDataSource.reviews.forEach { review ->
+            val isTodayReview = isTodayDate(review.createdAt)
+            val isVerifiedVisit = review.visitVerified
+
+            if (isTodayReview && isVerifiedVisit) {
+                review.taggedCastIds
+                    .asSequence()
+                    .map { castId -> castId.trim() }
+                    .filter { castId -> castId.isNotEmpty() }
+                    .distinct()
+                    .forEach { castId ->
+                        val currentCount = todayTagCountByCastId[castId] ?: 0
+
+                        todayTagCountByCastId[castId] = currentCount + 1
+                    }
             }
-            castDataSource.casts
-                .sortedByDescending { castScoreById[it.id] ?: 0 }
-                .take(safeLimit)
         }
+
+        val sourceCasts = castDataSource.casts
+            .asSequence()
+            .filter { cast -> (todayTagCountByCastId[cast.id] ?: 0) > 0 }
+            .sortedWith(
+                compareByDescending<Cast> { cast -> todayTagCountByCastId[cast.id] ?: 0 }
+                    .thenByDescending { cast -> cast.followerCount }
+                    .thenBy { cast -> cast.id }
+            )
+            .take(safeLimit)
+            .toList()
 
         return sourceCasts.map { cast ->
             val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
-            val cachedTodayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
-            val resolvedTodayVisit = if (cachedTodayVisit > 0) {
-                cachedTodayVisit
-            } else {
-                cast.visitCertificationCount
-            }
+            val resolvedTodayVisit = todayTagCountByCastId[cast.id] ?: 0
 
             CheckInCastSummary(
                 id = cast.id,
@@ -415,6 +423,29 @@ class CastRepositoryImpl(
                 profileImage = cast.profileImage,
                 todayVisit = resolvedTodayVisit
             )
+        }
+    }
+
+    private fun todayDateText(): String {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val month = today.monthNumber.toString().padStart(2, '0')
+        val day = today.dayOfMonth.toString().padStart(2, '0')
+        return "${today.year}-$month-$day"
+    }
+
+    private fun isTodayDate(rawDateTime: String): Boolean {
+        val today = todayDateText()
+        val normalizedDate = runCatching {
+            Instant.parse(rawDateTime)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+        }.getOrNull()
+
+        return if (normalizedDate == null) {
+            rawDateTime.startsWith(today)
+        } else {
+            normalizedDate == today
         }
     }
 
