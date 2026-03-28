@@ -178,6 +178,7 @@ final class CheckInViewModel: ObservableObject {
             uiState.errorMessage = nil
 
             tasks[.submitVisit]?.cancel()
+            uiState.errorMessage = "현재 위치를 확인하는 중입니다. 잠시만 기다려 주세요."
             tasks[.submitVisit] = Task {
                 do {
                     let locationResult = await currentLocationProvider.getCurrentLocation()
