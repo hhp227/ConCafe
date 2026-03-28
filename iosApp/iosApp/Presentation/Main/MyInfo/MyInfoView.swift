@@ -533,7 +533,17 @@ private struct ProfileMyInfoView: View {
             if !uiState.favorites.isEmpty {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
-                        favoriteCafeCard(cafe)
+                        CafeSummaryCard(
+                            name: cafe.name,
+                            rating: favoriteCafeRating(cafe.ratingAvg),
+                            location: cafe.region.city,
+                            thumbnailImage: cafe.thumbnailImage,
+                            showLocationIcon: false,
+                            trailingLabel: nil,
+                            onTap: {
+                                onAction(.cafeTapped(id: cafe.id))
+                            }
+                        )
                     }
                 }
             } else {
@@ -545,53 +555,8 @@ private struct ProfileMyInfoView: View {
         }
     }
 
-    private func favoriteCafeCard(_ cafe: Cafe) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            GeometryReader { geometry in
-                let imageSize = geometry.size
-
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                    if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
-                        CachedAsyncImage(
-                            url: imageUrl,
-                            placeholder: EmptyView()
-                        )
-                        .frame(width: imageSize.width, height: imageSize.height)
-                        .clipped()
-                    } else {
-                        Image(systemName: "building.2.fill")
-                            .foregroundStyle(Color.white.opacity(0.85))
-                    }
-                }
-            }
-            .frame(height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(cafe.name)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))")
-                    .font(.caption)
-                Text(cafe.region.city)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, 4)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onAction(.cafeTapped(id: cafe.id))
-        }
+    private func favoriteCafeRating(_ rating: Double) -> String {
+        String(format: Locale(identifier: "en_US_POSIX"), "%.1f", rating)
     }
 
     private var followedMaidsSection: some View {

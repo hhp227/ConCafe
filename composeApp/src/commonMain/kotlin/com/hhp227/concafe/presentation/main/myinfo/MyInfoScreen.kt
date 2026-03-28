@@ -46,6 +46,7 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -472,9 +473,10 @@ private fun ProfileMyInfoScreen(
                                 Box(modifier = Modifier.weight(1f)) {
                                     CafeSummaryCard(
                                         name = cafe.name,
-                                        rating = "${cafe.ratingAvg}",
+                                        rating = formatCafeRating(cafe.ratingAvg),
                                         location = cafe.region.city,
                                         thumbnailImage = cafe.thumbnailImage,
+                                        showLocationIcon = false,
                                         onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
                                     )
                                 }
@@ -692,6 +694,15 @@ private fun resolveCurrentWeekScheduleCount(uiState: MyInfoUiState): Int {
         .map { scheduleDate -> scheduleDate.toString() }
         .distinct()
         .size
+}
+
+private fun formatCafeRating(rating: Double): String {
+    val roundedRating = (rating * 10).roundToInt() / 10.0
+    return if (roundedRating % 1.0 == 0.0) {
+        "${roundedRating.toInt()}.0"
+    } else {
+        roundedRating.toString()
+    }
 }
 
 @Composable
