@@ -51,6 +51,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
     func application(
         _ application: UIApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+    ) -> Bool {
+        let callbackUrl = userActivity.webpageURL
+
+        if let callbackUrl, AuthApi.isKakaoTalkLoginUrl(callbackUrl) {
+            return AuthController.handleOpenUrl(url: callbackUrl)
+        } else {
+            return false
+        }
+    }
+
+    func application(
+        _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         Messaging.messaging().apnsToken = deviceToken
