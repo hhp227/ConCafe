@@ -461,8 +461,14 @@ private struct SignUpContentView: View {
             )
             SignInWithAppleButton(
                 .signUp,
-                onRequest: { request in },
-                onCompletion: { result in }
+                onRequest: { request in
+                    request.requestedScopes = [.fullName, .email]
+                },
+                onCompletion: { result in
+                    if case .success = result {
+                        onAction(.socialSignUpTapped(provider: .apple))
+                    }
+                }
             )
             .signInWithAppleButtonStyle(.black)
             .frame(height: 52)
