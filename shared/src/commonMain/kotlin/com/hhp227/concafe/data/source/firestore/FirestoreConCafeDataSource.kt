@@ -1222,20 +1222,25 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { emptyList() }
-        val followsByCafeId = followDocuments
-            .mapNotNull { document ->
-                val fields = document["fields"]?.jsonObject ?: return@mapNotNull null
-                val castId = fields.getFirestoreString("castId")?.takeIf { value -> value.isNotBlank() }
-                    ?: return@mapNotNull null
-                val cafeId = fields.getFirestoreString("cafeId")?.takeIf { value -> value.isNotBlank() }
-                    ?: return@mapNotNull null
-                cafeId to castId
-            }
-            .groupBy(keySelector = { item -> item.first }, valueTransform = { item -> item.second })
+        val followedCastIds = mutableListOf<String>()
+        val followsByCafeId = mutableMapOf<String, MutableList<String>>()
 
+        followDocuments.forEach { document ->
+            val fields = document["fields"]?.jsonObject ?: return@forEach
+            val castId = fields.getFirestoreString("castId")?.takeIf { value -> value.isNotBlank() }
+                ?: return@forEach
+            val cafeId = fields.getFirestoreString("cafeId")?.takeIf { value -> value.isNotBlank() }
+                ?: return@forEach
+            val castIds = followsByCafeId.getOrPut(cafeId) { mutableListOf() }
+
+            followedCastIds.add(castId)
+            castIds.add(castId)
+        }
         if (followsByCafeId.isEmpty()) {
-            followedCastIdsByUser[userId] = mutableSetOf()
-            return emptyList()
+            val idSet = followedCastIds.toSet()
+
+            followedCastIdsByUser[userId] = idSet.toMutableSet()
+            return delegate.casts.filter { cast -> idSet.contains(cast.id) }
         }
         val resolvedCasts = mutableListOf<Cast>()
 
@@ -1267,10 +1272,14 @@ class FirestoreConCafeDataSource(
                 resolvedCasts.addAll(parsed)
             }
         }
-        followedCastIdsByUser[userId] = resolvedCasts
-            .map { cast -> cast.id }
-            .toMutableSet()
-        return resolvedCasts
+        val idSet = followedCastIds.toSet()
+
+        followedCastIdsByUser[userId] = idSet.toMutableSet()
+        return if (resolvedCasts.isNotEmpty()) {
+            resolvedCasts.distinctBy { cast -> cast.id }
+        } else {
+            delegate.casts.filter { cast -> idSet.contains(cast.id) }
+        }
     }
 
     suspend fun refreshFavoriteCafeIds(userId: String) {
