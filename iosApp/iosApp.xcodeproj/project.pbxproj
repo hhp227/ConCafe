@@ -195,6 +195,7 @@
 		0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */; };
 		0ADA5A182F77CA7D00D253AF /* ResetPasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */; };
 		0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */; };
+		0ADA5A1C2F77CBA700D253AF /* IosCheckInLocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
 		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
@@ -397,6 +398,7 @@
 		0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordEvent.swift; sourceTree = "<group>"; };
 		0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordViewModel.swift; sourceTree = "<group>"; };
 		0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
+		0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosCheckInLocationProvider.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
 		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
@@ -772,6 +774,7 @@
 				0A785CAC2F5A7C4D004037A8 /* CheckInViewModel.swift */,
 				0A50FE922F5EB83400613093 /* CheckInUiState.swift */,
 				0A50FE942F5EB86000613093 /* CheckInAction.swift */,
+				0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */,
 			);
 			path = CheckIn;
 			sourceTree = "<group>";
@@ -1278,6 +1281,7 @@
 				0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */,
 				0A6B6AC22F60704300E395C2 /* CafeInfoEditUiState.swift in Sources */,
 				0A580DA12F5966E400390F67 /* Route.swift in Sources */,
+				0ADA5A1C2F77CBA700D253AF /* IosCheckInLocationProvider.swift in Sources */,
 				0A400E252F655F4F00BD41C7 /* InquiryUiState.swift in Sources */,
 				0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */,
 				0A3DB8102F649F8700064804 /* BannerEditViewModel.swift in Sources */,
