@@ -2429,6 +2429,23 @@ class FirestoreConCafeDataSource(
         }.getOrNull()
     }
 
+    override suspend fun updateUserProfile(
+        userId: String,
+        nickname: String,
+        profileImage: String?
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId?updateMask.fieldPaths=nickname&updateMask.fieldPaths=profileImage"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "nickname" to firestoreString(nickname),
+                "profileImage" to firestoreNullableString(profileImage)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+    }
+
     override suspend fun pushUser(user: User) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/${user.id}"

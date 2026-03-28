@@ -35,7 +35,21 @@ class UserRepositoryImpl(
             throw NoSuchElementException("user not found")
         }
 
-        authDataSource.replaceUser(current.copy(nickname = nickname, profileImage = profileImage))
+        val normalizedNickname = nickname.trim()
+        val normalizedProfileImage = profileImage?.trim()?.ifBlank { null }
+
+        firestoreSyncDataSource.updateUserProfile(
+            userId = userId,
+            nickname = normalizedNickname,
+            profileImage = normalizedProfileImage
+        )
+
+        authDataSource.replaceUser(
+            current.copy(
+                nickname = normalizedNickname,
+                profileImage = normalizedProfileImage
+            )
+        )
     }
 
     override suspend fun getMyPageSummary(userId: String): MyPageSummary {

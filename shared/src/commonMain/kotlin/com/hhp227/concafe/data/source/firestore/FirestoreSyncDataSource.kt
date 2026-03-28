@@ -14,6 +14,12 @@ interface FirestoreSyncDataSource {
 
     suspend fun fetchMyPageSummary(userId: String): MyPageSummary?
 
+    suspend fun updateUserProfile(
+        userId: String,
+        nickname: String,
+        profileImage: String?
+    )
+
     suspend fun pushUser(user: User)
 
     suspend fun deleteUser(userId: String)

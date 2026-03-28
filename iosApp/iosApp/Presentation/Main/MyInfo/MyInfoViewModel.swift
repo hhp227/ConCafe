@@ -22,6 +22,8 @@ final class MyInfoViewModel: ObservableObject {
 
     private let visitEventPublisher: VisitEventPublisher
 
+    private let userEventPublisher: UserEventPublisher
+
     @Published private(set) var uiState = MyInfoUiState.empty
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
@@ -149,6 +151,24 @@ final class MyInfoViewModel: ObservableObject {
         }
     }
 
+    private func observeUserEvent() {
+        tasks[.userEvent]?.cancel()
+        tasks[.userEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: userEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.UserEvent.ProfileUpdated:
+                        self.patchUser(updated.user)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func patchCafe(_ cafe: Cafe) {
         uiState.ownedCafes = uiState.ownedCafes.map { item in
             guard item.id == cafe.id else { return item }
@@ -198,6 +218,12 @@ final class MyInfoViewModel: ObservableObject {
         uiState.followedMaids.removeAll { $0.id == castId }
         if uiState.castDetail?.cast.id == castId {
             uiState.castDetail = nil
+        }
+    }
+
+    private func patchUser(_ user: User) {
+        if uiState.user?.id == user.id {
+            uiState.user = user
         }
     }
 
@@ -284,18 +310,21 @@ final class MyInfoViewModel: ObservableObject {
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
-        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher(),
+        userEventPublisher: UserEventPublisher = KoinInitializerKt.resolveUserEventPublisher()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         self.visitEventPublisher = visitEventPublisher
+        self.userEventPublisher = userEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
+        observeUserEvent()
     }
 
     deinit {
@@ -308,6 +337,7 @@ final class MyInfoViewModel: ObservableObject {
         case cafeDetailEvent
         case castEvent
         case visitEvent
+        case userEvent
     }
 
     private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {

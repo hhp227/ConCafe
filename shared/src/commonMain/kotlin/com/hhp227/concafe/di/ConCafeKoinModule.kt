@@ -107,6 +107,7 @@ val eventModule = module {
     single<ReviewEventPublisher> { ReviewEventPublisher() }
     single<ScheduleManagementEventPublisher> { ScheduleManagementEventPublisher() }
     single<VisitEventPublisher> { VisitEventPublisher() }
+    single<UserEventPublisher> { UserEventPublisher() }
 }
 
 val useCaseModule = module {
@@ -172,6 +173,7 @@ val useCaseModule = module {
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
     factory { ToggleFollowCastUseCase(get(), get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get(), get()) }
+    factory { UpdateUserProfileUseCase(get(), get(), get()) }
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }

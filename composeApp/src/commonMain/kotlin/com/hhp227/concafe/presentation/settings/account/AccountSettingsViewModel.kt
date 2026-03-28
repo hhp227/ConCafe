@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.settings.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,11 +14,13 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 
 class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val deleteAccountUseCase: DeleteAccountUseCase
+    private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -25,8 +28,11 @@ class AccountSettingsViewModel(
     private val _event = MutableSharedFlow<AccountSettingsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
+    private val jobs = mutableMapOf<TaskKey, Job>()
+
     private fun observeSession() {
-        viewModelScope.launch {
+        jobs[TaskKey.ObserveSession]?.cancel()
+        jobs[TaskKey.ObserveSession] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
                 loadAccountSettings()
             }
@@ -36,7 +42,8 @@ class AccountSettingsViewModel(
     private fun loadAccountSettings() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[TaskKey.LoadAccountSettings]?.cancel()
+        jobs[TaskKey.LoadAccountSettings] = viewModelScope.launch {
             when (val result = getMyInfoUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.value = _uiState.value.copy(
@@ -66,9 +73,47 @@ class AccountSettingsViewModel(
 
     private fun clickSaveUserInfo() {
         val state = _uiState.value
-        when {
-            state.nicknameInput.isBlank() -> emitMessage("닉네임을 입력해 주세요.")
-            else -> emitMessage("계정 기본 정보를 저장했어요. 현재 단계에서는 로컬 상태에 반영됩니다.")
+        val nicknameInput = state.nicknameInput
+        val profileImage = state.myInfoFeed?.user?.profileImage
+
+        if (nicknameInput.isBlank()) {
+            emitMessage("닉네임을 입력해 주세요.")
+        } else {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+
+            jobs[TaskKey.SaveUserInfo]?.cancel()
+            jobs[TaskKey.SaveUserInfo] = viewModelScope.launch {
+                when (val result = updateUserProfileUseCase.invoke(nicknameInput, profileImage)) {
+                    is AppResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null,
+                                nicknameInput = result.data.nickname,
+                                myInfoFeed = it.myInfoFeed?.copy(user = result.data)
+                            )
+                        }
+                        emitMessage("계정 기본 정보를 원격 데이터에 저장했어요.")
+                    }
+
+                    is AppResult.Failure -> {
+                        val message = mapProfileUpdateFailureMessage(result)
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null
+                            )
+                        }
+                        emitMessage(message)
+                    }
+                }
+            }
         }
     }
 
@@ -129,7 +174,8 @@ class AccountSettingsViewModel(
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[TaskKey.DeleteAccount]?.cancel()
+        jobs[TaskKey.DeleteAccount] = viewModelScope.launch {
             when (val result = deleteAccountUseCase.invoke(state.deletePassword)) {
                 is AppResult.Success -> {
                     _uiState.update {
@@ -165,6 +211,33 @@ class AccountSettingsViewModel(
         }
     }
 
+    private fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString()
+        val normalized = rawError.uppercase()
+
+        return if (normalized.contains("INVALID PASSWORD")
+            || normalized.contains("INVALID_LOGIN_CREDENTIALS")
+            || normalized.contains("INVALID_PASSWORD")
+            || normalized.contains("EMAIL_NOT_FOUND")
+        ) {
+            "비밀번호가 올바르지 않습니다."
+        } else {
+            "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        }
+    }
+
+    private fun mapProfileUpdateFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString().uppercase()
+
+        return if (rawError.contains("UNAUTHORIZED")) {
+            "로그인이 만료되었습니다. 다시 로그인해 주세요."
+        } else if (rawError.contains("VALIDATIONFAILED")) {
+            "닉네임을 입력해 주세요."
+        } else {
+            "프로필 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+        }
+    }
+
     fun onAction(action: AccountSettingsAction) {
         when (action) {
             AccountSettingsAction.ClickBack -> clickBack()
@@ -184,23 +257,21 @@ class AccountSettingsViewModel(
         }
     }
 
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
     init {
         loadAccountSettings()
         observeSession()
     }
 
-    private fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
-        val rawError = failure.error.toString()
-        val normalized = rawError.uppercase()
-
-        return if (normalized.contains("INVALID PASSWORD")
-            || normalized.contains("INVALID_LOGIN_CREDENTIALS")
-            || normalized.contains("INVALID_PASSWORD")
-            || normalized.contains("EMAIL_NOT_FOUND")
-        ) {
-            "비밀번호가 올바르지 않습니다."
-        } else {
-            "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
-        }
+    private enum class TaskKey {
+        ObserveSession,
+        LoadAccountSettings,
+        SaveUserInfo,
+        DeleteAccount
     }
 }

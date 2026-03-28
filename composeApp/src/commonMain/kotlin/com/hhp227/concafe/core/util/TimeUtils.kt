@@ -25,7 +25,6 @@ object TimeUtils {
         val month = normalized.substring(5, 7).toIntOrNull() ?: return null
         val day = normalized.substring(8, 10).toIntOrNull() ?: return null
         if (month !in 1..12 || day !in 1..31) return null
-
         val adjustedYear = year - if (month <= 2) 1 else 0
         val era = if (adjustedYear >= 0) adjustedYear / 400 else (adjustedYear - 399) / 400
         val yearOfEra = adjustedYear - era * 400
@@ -82,11 +81,8 @@ object TimeUtils {
         val matched = Regex("""^\s*(\d{1,2}):(\d{2})\s*$""").find(value)
         val hour = matched?.groupValues?.getOrNull(1)?.toIntOrNull()
         val minute = matched?.groupValues?.getOrNull(2)?.toIntOrNull()
-        return if (hour != null && minute != null && hour in 0..23 && minute in 0..59) {
-            hour to minute
-        } else {
-            defaultHour to defaultMinute
-        }
+        return if (hour != null && minute != null && hour in 0..23 && minute in 0..59) hour to minute
+        else defaultHour to defaultMinute
     }
 
     fun extractNormalizedHourMinuteList(value: String): List<String> {
@@ -145,7 +141,6 @@ object TimeUtils {
             second = 0,
             nanosecond = 0
         )
-
         return localDateTime.toInstant(zone).toString()
     }
 
@@ -235,5 +230,4 @@ object TimeUtils {
         val day = match.groupValues.getOrNull(3) ?: return null
         return "$year-$month-$day"
     }
-
 }
