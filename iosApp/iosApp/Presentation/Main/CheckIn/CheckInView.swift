@@ -1063,9 +1063,11 @@ private struct CheckInNewVisitSheet: View {
 
     init(
         cafes: [CheckInCafeSummary],
+        errorMessage: String?,
         onAction: @escaping (CheckInAction) -> Void
     ) {
         self.cafes = cafes
+        self.errorMessage = errorMessage
         self.onAction = onAction
         _selectedCafeId = State(initialValue: cafes.first?.id)
     }

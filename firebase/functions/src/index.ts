@@ -307,22 +307,25 @@ async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string):
   await writeBatch.commit();
 }
 
-async function syncUserVisitCountAggregate(userId: string, delta: number): Promise<void> {
-  if (userId.length == 0 || delta == 0) {
+async function syncUserVisitCountAggregate(userId: string): Promise<void> {
+  if (userId.length == 0) {
     return;
   }
   const userRef = db().collection("users").doc(userId);
+  const verifiedVisitSnapshot = await db()
+    .collection("visits")
+    .where("userId", "==", userId)
+    .where("verified", "==", true)
+    .select("userId")
+    .get();
+  const nextVisitCount = verifiedVisitSnapshot.size;
+  const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
   await db().runTransaction(async (transaction) => {
     const snapshot = await transaction.get(userRef);
     const userData = snapshot.data();
     const statsRaw = asPlainObject(userData?.stats);
     const stats = statsRaw == null ? {} : {...statsRaw};
-    const currentVisitCount = asNonNegativeInt(stats.visitCount)
-      ?? asNonNegativeInt(userData?.visitCount)
-      ?? 0;
-    const nextVisitCount = Math.max(0, currentVisitCount + delta);
-    const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
     stats.visitCount = nextVisitCount;
     stats.level = nextLevel;
@@ -1221,28 +1224,25 @@ export const onVisitWrittenSyncUserVisitStats = onDocumentWritten(
     const afterData = event.data?.after.data() as VisitLike | undefined;
     const beforeUserId = asNonBlankString(beforeData?.userId);
     const afterUserId = asNonBlankString(afterData?.userId);
-    const deltaByUserId = new Map<string, number>();
+    const userIds = new Set<string>();
 
     if (beforeUserId != null) {
-      deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
+      userIds.add(beforeUserId);
     }
     if (afterUserId != null) {
-      deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
+      userIds.add(afterUserId);
     }
-
-    const targetEntries = Array.from(deltaByUserId.entries())
-      .filter(([userId, delta]) => userId.length > 0 && delta != 0);
-    if (targetEntries.length == 0) {
+    if (userIds.size == 0) {
       return;
     }
 
-    await Promise.all(targetEntries.map(async ([userId, delta]) => {
-      await syncUserVisitCountAggregate(userId, delta);
+    await Promise.all(Array.from(userIds).map(async (userId) => {
+      await syncUserVisitCountAggregate(userId);
     }));
 
     logger.info("Synced user visitCount aggregate from visit write.", {
       visitId: event.params.visitId,
-      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
+      targets: Array.from(userIds),
     });
   }
 );
@@ -1290,21 +1290,34 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
     const beforeCafeId = asNonBlankString(beforeData?.cafeId);
     const afterUserId = asNonBlankString(afterData?.userId);
     const afterCafeId = asNonBlankString(afterData?.cafeId);
+    const afterVerified = afterData?.verified === true;
 
     if (visitId.length == 0) {
       return;
     }
     const stampRef = db().collection("stamps").doc(visitId);
-    const shouldDelete = afterUserId == null || afterCafeId == null;
+    const shouldDelete = afterUserId == null || afterCafeId == null || !afterVerified;
     const hasBefore = beforeUserId != null && beforeCafeId != null;
     const hasAfter = afterUserId != null && afterCafeId != null;
     const isSourceChanged = hasBefore
       && hasAfter
       && (beforeUserId !== afterUserId || beforeCafeId !== afterCafeId);
-    const shouldUpsert = false;
+    const shouldUpsert = !shouldDelete && !isSourceChanged;
 
     if (shouldDelete || isSourceChanged) {
       await stampRef.delete();
+    }
+    if (shouldUpsert) {
+      await stampRef.set(
+        {
+          userId: afterUserId,
+          cafeId: afterCafeId,
+          visitId: visitId,
+          earnedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {merge: true}
+      );
     }
 
     logger.info("Synced stamp from visit write.", {
@@ -1313,6 +1326,7 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
       afterUserId: afterUserId,
       beforeCafeId: beforeCafeId,
       afterCafeId: afterCafeId,
+      afterVerified: afterVerified,
       deleted: shouldDelete || isSourceChanged,
       upserted: shouldUpsert,
     });

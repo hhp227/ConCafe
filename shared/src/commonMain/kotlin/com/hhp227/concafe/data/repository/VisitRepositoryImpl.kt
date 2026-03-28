@@ -49,34 +49,6 @@ class VisitRepositoryImpl(
                 latitude = latitude,
                 longitude = longitude
             )
-            val stampResult = runCatching {
-                firestoreDataSource.createStampRemote(
-                    userId = userId,
-                    cafeId = cafeId,
-                    visitId = createdVisit.id
-                )
-            }
-
-            if (stampResult.isFailure) {
-                runCatching {
-                    firestoreDataSource.deleteVisitRemote(
-                        visitId = createdVisit.id,
-                        requesterId = userId
-                    )
-                }
-                throw stampResult.exceptionOrNull()
-                    ?: IllegalStateException("failed to issue stamp")
-            }
-            stampDataSource?.stamps?.removeAll { stamp -> stamp.id == createdVisit.id }
-            stampDataSource?.stamps?.add(
-                Stamp(
-                    id = createdVisit.id,
-                    userId = userId,
-                    cafeId = cafeId,
-                    visitId = createdVisit.id,
-                    earnedAt = Clock.System.now().toString()
-                )
-            )
             val refreshedVisit = runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
                 visitDataSource.visits.firstOrNull { visit -> visit.id == createdVisit.id }
@@ -163,9 +135,6 @@ class VisitRepositoryImpl(
                 visitId = visitId,
                 requesterId = userId
             )
-            runCatching {
-                firestoreDataSource.deleteStampRemote(visitId = visitId)
-            }
             runCatching {
                 firestoreDataSource.refreshVisitsByUserRemote(userId)
             }

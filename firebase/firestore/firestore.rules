@@ -197,7 +197,8 @@ service cloud.firestore {
         )
         && exists(/databases/$(database)/documents/visits/$(stampId))
         && get(/databases/$(database)/documents/visits/$(stampId)).data.userId == request.auth.uid
-        && get(/databases/$(database)/documents/visits/$(stampId)).data.cafeId == request.resource.data.cafeId;
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.cafeId == request.resource.data.cafeId
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.verified == true;
     }
 
     function isValidCastClaimStatus(status) {
@@ -508,12 +509,8 @@ service cloud.firestore {
           resource.data.userId == request.auth.uid
           || isAdmin()
         );
-      allow create: if isSignedIn() && isValidStampCreateData(stampId);
-      allow delete: if isSignedIn()
-        && (
-          resource.data.userId == request.auth.uid
-          || isAdmin()
-        );
+      allow create: if false;
+      allow delete: if false;
       allow update: if false;
     }
 
