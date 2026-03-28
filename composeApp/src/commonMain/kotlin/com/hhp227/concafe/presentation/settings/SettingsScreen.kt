@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
@@ -210,13 +209,6 @@ private fun settingsItems(appVersion: String): List<SettingsItem> = listOf(
         description = "출근, 생일, 공지 알림 설정 영역입니다.",
         icon = Icons.Default.Notifications,
         action = SettingsAction.ClickNotificationSettings
-    ),
-    SettingsItem(
-        id = "customerSupport",
-        title = "고객지원",
-        description = "서비스 이용 관련 문의를 남길 수 있습니다.",
-        icon = Icons.Default.HeadsetMic,
-        action = SettingsAction.ClickCustomerSupport
     ),
     SettingsItem(
         id = "inquiry",

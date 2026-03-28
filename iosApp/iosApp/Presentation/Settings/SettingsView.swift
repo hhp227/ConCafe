@@ -50,9 +50,6 @@ private struct SettingsContentView: View {
                 SettingsRow(item: .notification)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.notificationSettingsTapped) }
-                SettingsRow(item: .customerSupport)
-                    .contentShape(Rectangle())
-                    .onTapGesture { onAction(.customerSupportTapped) }
                 SettingsRow(item: .inquiry)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.inquiryTapped) }
@@ -134,14 +131,6 @@ private struct SettingsItem {
             trailingText: "v\(version)"
         )
     }
-
-    static let customerSupport = SettingsItem(
-        icon: "headphones",
-        title: "고객지원",
-        description: "서비스 이용 관련 문의를 남길 수 있습니다.",
-        foregroundColor: Color(hex: "EF6797"),
-        trailingText: nil
-    )
 
     static let inquiry = SettingsItem(
         icon: "bubble.left.and.text.bubble.right",
