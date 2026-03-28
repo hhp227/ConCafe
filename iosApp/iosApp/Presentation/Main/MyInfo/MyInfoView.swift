@@ -556,7 +556,7 @@ private struct ProfileMyInfoView: View {
     }
 
     private func favoriteCafeRating(_ rating: Double) -> String {
-        String(format: Locale(identifier: "en_US_POSIX"), "%.1f", rating)
+        String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), rating)
     }
 
     private var followedMaidsSection: some View {
