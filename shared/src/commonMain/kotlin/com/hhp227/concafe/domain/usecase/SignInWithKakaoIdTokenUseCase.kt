@@ -8,14 +8,22 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 class SignInWithKakaoIdTokenUseCase(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(idToken: String): AppResult<User> {
+    suspend operator fun invoke(
+        idToken: String,
+        email: String? = null,
+        nickname: String? = null
+    ): AppResult<User> {
         return try {
-            AppResult.Success(authRepository.signInWithKakaoIdToken(idToken))
+            AppResult.Success(
+                authRepository.signInWithKakaoIdToken(
+                    idToken = idToken,
+                    email = email,
+                    nickname = nickname
+                )
+            )
         } catch (e: IllegalArgumentException) {
-            println("TEST, SignInWithKakaoIdTokenUseCase validation error: ${e.message}")
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: Exception) {
-            println("TEST, SignInWithKakaoIdTokenUseCase unknown error: ${e.message}")
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }

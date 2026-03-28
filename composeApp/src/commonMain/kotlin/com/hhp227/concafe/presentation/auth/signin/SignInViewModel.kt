@@ -104,7 +104,6 @@ class SignInViewModel(
                         SignInProvider.KAKAO -> {
                             runCatching { kakaoIdTokenProvider.getKakaoAuthPayload() }
                                 .onFailure {
-                                    println("TEST, Kakao getKakaoIdToken failed in SignInViewModel: ${it.message}")
                                     _uiState.update { state ->
                                         state.copy(
                                             isLoading = false,
@@ -113,25 +112,26 @@ class SignInViewModel(
                                     }
                                 }
                                 .onSuccess { payload ->
-                                    println("TEST, Kakao idToken acquired in SignInViewModel. length=${payload.idToken.length}")
-                                    val kakaoSignInResult = signInWithKakaoIdTokenUseCase.invoke(payload.idToken)
+                                    val email = payload.email?.trim()
+                                    val nickname = payload.nickname?.trim()
+                                    val kakaoSignInResult = signInWithKakaoIdTokenUseCase.invoke(
+                                        idToken = payload.idToken,
+                                        email = email,
+                                        nickname = nickname
+                                    )
                                     when (kakaoSignInResult) {
                                         is AppResult.Success -> {
-                                            println("TEST, Kakao sign-in usecase success")
-                                            val nickname = payload.nickname?.trim().orEmpty()
-                                            if (nickname.isNotBlank()) {
+                                            val resolvedNickname = nickname.orEmpty()
+                                            if (resolvedNickname.isNotBlank()) {
                                                 updateUserProfileUseCase.invoke(
-                                                    nickname = nickname,
+                                                    nickname = resolvedNickname,
                                                     profileImage = null
                                                 )
-                                                println("TEST, Kakao nickname applied in SignInViewModel: $nickname")
                                             }
                                             _uiState.update { it.copy(isLoading = false, errorMessage = null) }
                                             _event.emit(SignInEvent.SignedIn)
                                         }
                                         is AppResult.Failure -> {
-                                            println("TEST, Kakao sign-in usecase failure")
-                                            println("TEST, Kakao sign-in failure detail: ${kakaoSignInResult.error}")
                                             _uiState.update {
                                                 it.copy(
                                                     isLoading = false,

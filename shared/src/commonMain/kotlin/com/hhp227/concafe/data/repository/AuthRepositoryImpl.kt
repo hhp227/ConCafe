@@ -58,11 +58,17 @@ class AuthRepositoryImpl(
         throw IllegalArgumentException("apple idToken is required")
     }
 
-    override suspend fun signInWithKakaoIdToken(idToken: String): User {
+    override suspend fun signInWithKakaoIdToken(
+        idToken: String,
+        email: String?,
+        nickname: String?
+    ): User {
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithKakaoIdToken(idToken)
                 ?: throw IllegalArgumentException("kakao sign-in is not supported")
-            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
+            val resolvedEmail = resolveKakaoEmail(session.email, email)
+            val resolvedDisplayName = resolveKakaoDisplayName(session.displayName, nickname)
+            val user = resolveUserFromSession(session.userId, resolvedEmail, resolvedDisplayName)
             authDataSource.currentUserId = user.id
             return user
         }
@@ -340,6 +346,24 @@ private fun resolveInitialNickname(email: String, displayName: String?): String 
         emailPrefix
     } else {
         "유저"
+    }
+}
+
+private fun resolveKakaoEmail(sessionEmail: String, profileEmail: String?): String {
+    val normalizedProfileEmail = profileEmail?.trim().orEmpty()
+    return if (normalizedProfileEmail.isNotBlank()) {
+        normalizedProfileEmail
+    } else {
+        sessionEmail
+    }
+}
+
+private fun resolveKakaoDisplayName(sessionDisplayName: String?, profileNickname: String?): String? {
+    val normalizedProfileNickname = profileNickname?.trim().orEmpty()
+    return if (normalizedProfileNickname.isNotBlank()) {
+        normalizedProfileNickname
+    } else {
+        sessionDisplayName
     }
 }
 

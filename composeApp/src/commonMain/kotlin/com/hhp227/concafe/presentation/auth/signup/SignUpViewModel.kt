@@ -302,7 +302,6 @@ class SignUpViewModel(
                 SignUpProvider.KAKAO -> {
                     runCatching { kakaoIdTokenProvider.getKakaoAuthPayload() }
                         .onFailure {
-                            println("TEST, Kakao getKakaoIdToken failed in SignUpViewModel: ${it.message}")
                             _uiState.update { state ->
                                 state.copy(
                                     isLoading = false,
@@ -312,23 +311,29 @@ class SignUpViewModel(
                             }
                         }
                         .onSuccess { payload ->
-                            println("TEST, Kakao idToken acquired in SignUpViewModel. length=${payload.idToken.length}")
-                            when (signInWithKakaoIdTokenUseCase.invoke(payload.idToken)) {
+                            val email = payload.email?.trim()
+                            val nickname = payload.nickname?.trim()
+
+                            when (
+                                signInWithKakaoIdTokenUseCase.invoke(
+                                    idToken = payload.idToken,
+                                    email = email,
+                                    nickname = nickname
+                                )
+                            ) {
                                 is AppResult.Success -> {
-                                    println("TEST, Kakao sign-up usecase success")
-                                    val nickname = payload.nickname?.trim().orEmpty()
-                                    if (nickname.isNotBlank()) {
+                                    val resolvedNickname = nickname.orEmpty()
+
+                                    if (resolvedNickname.isNotBlank()) {
                                         updateUserProfileUseCase.invoke(
-                                            nickname = nickname,
+                                            nickname = resolvedNickname,
                                             profileImage = null
                                         )
-                                        println("TEST, Kakao nickname applied in SignUpViewModel: $nickname")
                                     }
                                     _uiState.update { it.copy(isLoading = false, errorMessage = null) }
                                     _event.emit(SignUpEvent.SignedUp)
                                 }
                                 is AppResult.Failure -> {
-                                    println("TEST, Kakao sign-up usecase failure")
                                     _uiState.update {
                                         it.copy(
                                             isLoading = false,

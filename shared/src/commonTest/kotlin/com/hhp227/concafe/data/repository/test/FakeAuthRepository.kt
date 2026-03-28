@@ -97,13 +97,18 @@ class FakeAuthRepository(
         }
     }
 
-    override suspend fun signInWithKakaoIdToken(idToken: String): User {
+    override suspend fun signInWithKakaoIdToken(
+        idToken: String,
+        email: String?,
+        nickname: String?
+    ): User {
         if (idToken.isBlank()) {
             throw IllegalArgumentException("kakao idToken is required")
         }
 
-        val email = "kakao-user@concafe.test"
-        val found = dataSource.users.firstOrNull { it.email == email }
+        val resolvedEmail = if (email.isNullOrBlank()) "kakao-user@concafe.test" else email
+        val resolvedNickname = if (nickname.isNullOrBlank()) "카카오유저" else nickname
+        val found = dataSource.users.firstOrNull { it.email == resolvedEmail }
         return if (found != null) {
             dataSource.currentUserId = found.id
             currentUserFlow.value = found
@@ -111,8 +116,8 @@ class FakeAuthRepository(
         } else {
             val created = User(
                 id = "user-${dataSource.users.size + 1}",
-                email = email,
-                nickname = "카카오유저",
+                email = resolvedEmail,
+                nickname = resolvedNickname,
                 profileImage = null,
                 role = UserRole.VISITOR,
                 banned = false,

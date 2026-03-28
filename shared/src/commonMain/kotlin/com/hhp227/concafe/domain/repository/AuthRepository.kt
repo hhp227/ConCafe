@@ -12,7 +12,11 @@ interface AuthRepository {
 
     suspend fun signInWithAppleIdToken(idToken: String): User
 
-    suspend fun signInWithKakaoIdToken(idToken: String): User
+    suspend fun signInWithKakaoIdToken(
+        idToken: String,
+        email: String? = null,
+        nickname: String? = null
+    ): User
 
     suspend fun signUp(
         email: String,

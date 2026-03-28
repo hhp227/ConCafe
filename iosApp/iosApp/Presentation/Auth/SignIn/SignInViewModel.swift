@@ -167,10 +167,15 @@ class SignInViewModel: ObservableObject {
     private func handleKakaoSignIn() async {
         do {
             let idToken = try await requestKakaoIdToken()
-            let result = try await signInWithKakaoIdTokenUseCase.invoke(idToken: idToken)
+            let profile = await requestKakaoProfile()
+            let result = try await signInWithKakaoIdTokenUseCase.invoke(
+                idToken: idToken,
+                email: profile.email,
+                nickname: profile.nickname
+            )
 
             if result is AppResultSuccess<AnyObject> {
-                await applyKakaoNicknameIfNeeded()
+                await applyKakaoNicknameIfNeeded(profile.nickname)
                 uiState.isLoading = false
                 event.send(.signedIn)
             } else {
@@ -266,9 +271,7 @@ class SignInViewModel: ObservableObject {
         }
     }
 
-    private func applyKakaoNicknameIfNeeded() async {
-        let nickname = await requestKakaoNickname()
-
+    private func applyKakaoNicknameIfNeeded(_ nickname: String?) async {
         if let nickname, !nickname.isEmpty {
             _ = try? await updateUserProfileUseCase.invoke(
                 nickname: nickname,
@@ -277,14 +280,20 @@ class SignInViewModel: ObservableObject {
         }
     }
 
-    private func requestKakaoNickname() async -> String? {
+    private func requestKakaoProfile() async -> KakaoProfile {
         return await withCheckedContinuation { continuation in
             UserApi.shared.me { user, error in
                 if error != nil {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: KakaoProfile(email: nil, nickname: nil))
                 } else {
                     let nickname = user?.kakaoAccount?.profile?.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    continuation.resume(returning: nickname?.isEmpty == true ? nil : nickname)
+                    let email = user?.kakaoAccount?.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    continuation.resume(
+                        returning: KakaoProfile(
+                            email: email?.isEmpty == true ? nil : email,
+                            nickname: nickname?.isEmpty == true ? nil : nickname
+                        )
+                    )
                 }
             }
         }
@@ -319,6 +328,11 @@ class SignInViewModel: ObservableObject {
         let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-._~"))
         return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
     }
+}
+
+private struct KakaoProfile {
+    let email: String?
+    let nickname: String?
 }
 
 private enum SignInError: Error {
