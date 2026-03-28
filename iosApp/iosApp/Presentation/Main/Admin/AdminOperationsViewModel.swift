@@ -30,6 +30,8 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private let rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase
 
+    private let cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher
+
     private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
@@ -143,9 +145,32 @@ final class AdminOperationsViewModel: ObservableObject {
                         _ = created
                         self.refreshPendingClaimsOnly()
                     case let approved as CafeRegistrationClaimEvent.Approved:
-                        self.removeRegistrationClaimLocally(claimId: approved.claimId)
+                        self.applyRegistrationApprovalLocally(claimId: approved.claimId)
                     case let rejected as CafeRegistrationClaimEvent.Rejected:
                         self.removeRegistrationClaimLocally(claimId: rejected.claimId)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeOwnerClaimEvents() {
+        tasks[.ownerClaimEvent]?.cancel()
+        tasks[.ownerClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeOwnerClaimEventPublisher.events) {
+                    switch event {
+                    case let created as CafeOwnerClaimEvent.Created:
+                        _ = created
+                        self.refreshPendingClaimsOnly()
+                    case let approved as CafeOwnerClaimEvent.Approved:
+                        self.removeOwnerClaimLocally(claimId: approved.claimId)
+                    case let rejected as CafeOwnerClaimEvent.Rejected:
+                        self.removeOwnerClaimLocally(claimId: rejected.claimId)
                     default:
                         break
                     }
@@ -192,6 +217,29 @@ final class AdminOperationsViewModel: ObservableObject {
             ownerClaims: uiState.pendingCafeOwnerClaims,
             totalUsersCount: totalUsersCount,
             activeCafesCount: activeCafesCount,
+            reportItemsCount: reportItemsCount
+        )
+    }
+
+    private func applyRegistrationApprovalLocally(claimId: String) {
+        let hadClaim = uiState.pendingCafeRegistrationClaims.contains { $0.claimId == claimId }
+        let totalUsersCount = uiState.totalUsersCount
+        let reportItemsCount = uiState.reportItemsCount
+        let nextActiveCafesCount = hadClaim ? (uiState.activeCafesCount + 1) : uiState.activeCafesCount
+
+        uiState.pendingCafeRegistrationClaims.removeAll { $0.claimId == claimId }
+        uiState.activeCafesCount = nextActiveCafesCount
+        uiState.metrics = buildAdminMetrics(
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: nextActiveCafesCount,
+            pendingCount: uiState.pendingCafeRegistrationClaims.count + uiState.pendingCafeOwnerClaims.count,
+            reportItemsCount: reportItemsCount
+        )
+        AdminPendingCache.snapshot = AdminPendingSnapshot(
+            registrationClaims: uiState.pendingCafeRegistrationClaims,
+            ownerClaims: uiState.pendingCafeOwnerClaims,
+            totalUsersCount: totalUsersCount,
+            activeCafesCount: nextActiveCafesCount,
             reportItemsCount: reportItemsCount
         )
     }
@@ -243,7 +291,11 @@ final class AdminOperationsViewModel: ObservableObject {
 
                 if result is AppResultSuccess<AnyObject> {
                     if selectedFilter == .cafeRegistration {
-                        removeRegistrationClaimLocally(claimId: id)
+                        if approved {
+                            applyRegistrationApprovalLocally(claimId: id)
+                        } else {
+                            removeRegistrationClaimLocally(claimId: id)
+                        }
                     } else {
                         removeOwnerClaimLocally(claimId: id)
                     }
@@ -295,6 +347,7 @@ final class AdminOperationsViewModel: ObservableObject {
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
         rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
         rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase = KoinInitializerKt.resolveRejectCafeOwnerClaimUseCase(),
+        cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher = KoinInitializerKt.resolveCafeOwnerClaimEventPublisher(),
         cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher()
     ) {
         self.getPendingCafeRegistrationClaimsUseCase = getPendingCafeRegistrationClaimsUseCase
@@ -304,9 +357,12 @@ final class AdminOperationsViewModel: ObservableObject {
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
         self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
         self.rejectCafeOwnerClaimUseCase = rejectCafeOwnerClaimUseCase
+        self.cafeOwnerClaimEventPublisher = cafeOwnerClaimEventPublisher
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
+
         showCachedPendingRequests()
         observeClaimEvents()
+        observeOwnerClaimEvents()
         startClaimPolling()
         loadPendingRequests()
     }
@@ -318,6 +374,7 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private enum TaskKey {
         case claimEvent
+        case ownerClaimEvent
         case claimPolling
     }
 }

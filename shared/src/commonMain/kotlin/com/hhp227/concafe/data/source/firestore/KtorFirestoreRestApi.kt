@@ -14,43 +14,61 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 
 class KtorFirestoreRestApi(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val apiKey: String
 ) : FirestoreRestApi {
     override suspend fun get(path: String, idToken: String?): String {
-        val response = httpClient.get(path) {
+        val resolvedPath = path.withApiKey(apiKey)
+        val response = httpClient.get(resolvedPath) {
             contentType(ContentType.Application.Json)
             applyAuthorization(idToken)
         }
 
-        return readResponseBodyOrThrow("GET", path, response.status, response.bodyAsText())
+        return readResponseBodyOrThrow("GET", resolvedPath, response.status, response.bodyAsText())
     }
 
     override suspend fun post(path: String, body: String, idToken: String?): String {
-        val response = httpClient.post(path) {
+        val resolvedPath = path.withApiKey(apiKey)
+        val response = httpClient.post(resolvedPath) {
             contentType(ContentType.Application.Json)
             setBody(body)
             applyAuthorization(idToken)
         }
 
-        return readResponseBodyOrThrow(HttpMethod.Post.value, path, response.status, response.bodyAsText())
+        return readResponseBodyOrThrow(HttpMethod.Post.value, resolvedPath, response.status, response.bodyAsText())
     }
 
     override suspend fun patch(path: String, body: String, idToken: String?): String {
-        val response = httpClient.patch(path) {
+        val resolvedPath = path.withApiKey(apiKey)
+        val response = httpClient.patch(resolvedPath) {
             contentType(ContentType.Application.Json)
             setBody(body)
             applyAuthorization(idToken)
         }
 
-        return readResponseBodyOrThrow(HttpMethod.Patch.value, path, response.status, response.bodyAsText())
+        return readResponseBodyOrThrow(HttpMethod.Patch.value, resolvedPath, response.status, response.bodyAsText())
     }
 
     override suspend fun delete(path: String, idToken: String?) {
-        val response = httpClient.delete(path) {
+        val resolvedPath = path.withApiKey(apiKey)
+        val response = httpClient.delete(resolvedPath) {
             contentType(ContentType.Application.Json)
             applyAuthorization(idToken)
         }
-        readResponseBodyOrThrow(HttpMethod.Delete.value, path, response.status, response.bodyAsText())
+        readResponseBodyOrThrow(HttpMethod.Delete.value, resolvedPath, response.status, response.bodyAsText())
+    }
+}
+
+private fun String.withApiKey(apiKey: String): String {
+    val normalizedKey = apiKey.trim()
+
+    if (normalizedKey.isEmpty()) {
+        return this
+    }
+    return if (contains("?")) {
+        "$this&key=$normalizedKey"
+    } else {
+        "$this?key=$normalizedKey"
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -262,7 +263,10 @@ private fun CheckInGuestScreen(
                 )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                CheckInGuestSectionTitle("🔥 인기 컨셉 카페")
+                CheckInGuestSectionTitle(
+                    title = "인기 컨셉 카페",
+                    leadingIcon = Icons.Filled.LocalFireDepartment
+                )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 if (uiState.popularCafes.isNotEmpty()) {
@@ -278,7 +282,10 @@ private fun CheckInGuestScreen(
                 }
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                CheckInGuestSectionTitle("☕ 오늘 인기 캐스트")
+                CheckInGuestSectionTitle(
+                    title = "오늘 인기 캐스트",
+                    leadingIcon = Icons.Filled.LocalCafe
+                )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 if (uiState.popularCasts.isNotEmpty()) {
@@ -331,7 +338,11 @@ private fun CheckInUserScreen(
             )
         }
         item {
-            CheckInSectionTitle("오늘의 방문", TimeUtils.currentMonthDayLabelKorean())
+            CheckInSectionTitle(
+                title = "오늘의 방문",
+                trailing = TimeUtils.currentMonthDayLabelKorean(),
+                leadingIcon = null
+            )
         }
         item {
             TodayVisitsRow(
@@ -342,7 +353,11 @@ private fun CheckInUserScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
         item {
-            CheckInSectionTitle("최근 타임라인", "🕘")
+            CheckInSectionTitle(
+                title = "최근 타임라인",
+                trailing = null,
+                leadingIcon = Icons.Filled.AccessTime
+            )
         }
         if (uiState.recentVisits.isEmpty()) {
             item {
@@ -891,20 +906,33 @@ private fun NewVisitCheckInBottomSheet(
 
 @Composable
 private fun CheckInGuestSectionTitle(
-    title: String
+    title: String,
+    leadingIcon: ImageVector
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF2B2630)
-    )
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = leadingIcon,
+            contentDescription = null,
+            tint = Color(0xFF7B7480),
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2B2630)
+        )
+    }
 }
 
 @Composable
 private fun CheckInSectionTitle(
     title: String,
-    trailing: String?
+    trailing: String?,
+    leadingIcon: ImageVector?
 ) {
     Row(
         modifier = Modifier
@@ -917,6 +945,14 @@ private fun CheckInSectionTitle(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (leadingIcon != null) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = Color(0xFF7B7480),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
             if (trailing != null) {
                 Text(
                     text = trailing,

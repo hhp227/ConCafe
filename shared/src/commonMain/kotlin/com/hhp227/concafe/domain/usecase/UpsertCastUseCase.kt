@@ -51,10 +51,13 @@ class UpsertCastUseCase(
                 AppResult.Success(detail)
             }
         } catch (e: NoSuchElementException) {
+            println("TEST, UpsertCastUseCase NoSuchElementException: ${e.message}")
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
+            println("TEST, UpsertCastUseCase IllegalArgumentException: ${e.message}")
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: Exception) {
+            println("TEST, UpsertCastUseCase Exception: ${e.message}")
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }

@@ -1,5 +1,6 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import {getApps, initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
@@ -402,6 +403,359 @@ async function syncCastFollowerAggregate(cafeId: string, castId: string): Promis
     );
 }
 
+type RankingScope = {
+  country: string | null;
+  city: string | null;
+  token: string;
+};
+
+type CafeRankingSource = {
+  id: string;
+  name: string;
+  subtitle: string;
+  country: string;
+  city: string;
+  score: number;
+  imageUrl: string | null;
+};
+
+type CastRankingSource = {
+  id: string;
+  name: string;
+  subtitle: string;
+  country: string;
+  city: string;
+  score: number;
+  imageUrl: string | null;
+};
+
+type RankingSnapshotEntry = {
+  id: string;
+  name: string;
+  subtitle: string;
+  score: number;
+  rank: number;
+  prevRank: number | null;
+  change: string;
+  imageUrl: string | null;
+};
+
+const RANKING_SYNC_DOC_PATH = "rankingSync/state";
+const RANKING_MAX_COUNT = 50;
+const RANKING_PERIODS = ["WEEKLY", "MONTHLY"] as const;
+const RANKING_SCOPES: RankingScope[] = [
+  {country: null, city: null, token: "all_all"},
+  {country: "KR", city: "Seoul", token: "kr_seoul"},
+  {country: "JP", city: "Tokyo", token: "jp_tokyo"},
+  {country: "JP", city: "Osaka", token: "jp_osaka"},
+];
+
+function asNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return null;
+}
+
+function normalizeCountry(value: unknown): string {
+  const raw = asNonBlankString(value);
+  if (raw == null) {
+    return "";
+  }
+  return raw.toUpperCase();
+}
+
+function normalizeCity(value: unknown): string {
+  const raw = asNonBlankString(value);
+  if (raw == null) {
+    return "";
+  }
+  return raw;
+}
+
+function resolveCafeSubtitle(address: string, city: string): string {
+  const fromGu = address.split("구")[0]?.trim() ?? "";
+  const fromRoad = fromGu.split("로")[0]?.trim() ?? "";
+  if (fromRoad.length > 0) {
+    return fromRoad;
+  } else {
+    return city;
+  }
+}
+
+function matchesScope(country: string, city: string, scope: RankingScope): boolean {
+  if (scope.country == null || scope.city == null) {
+    return true;
+  }
+  const countryMatches = country === scope.country;
+  const cityMatches = city === scope.city;
+  return countryMatches && cityMatches;
+}
+
+function rankingDocumentId(kind: string, period: string, scope: RankingScope): string {
+  const kindValue = kind.trim().toLowerCase();
+  const periodValue = period.trim().toLowerCase();
+  return `${kindValue}_${periodValue}_${scope.token}`;
+}
+
+function buildRankingChange(prevRank: number | null, currentRank: number): string {
+  if (prevRank == null) {
+    return "NEW";
+  }
+  const delta = prevRank - currentRank;
+
+  if (delta > 0) {
+    return `+${delta}`;
+  } else if (delta < 0) {
+    return `${delta}`;
+  }
+  return "0";
+}
+
+function parsePreviousRankingMap(rawEntries: unknown): Map<string, number> {
+  const rankById = new Map<string, number>();
+
+  if (!Array.isArray(rawEntries)) {
+    return rankById;
+  }
+  rawEntries.forEach((entry) => {
+    const entryObject = asPlainObject(entry);
+    const id = asNonBlankString(entryObject?.id);
+    const rank = asNumber(entryObject?.rank);
+
+    if (id == null || rank == null) {
+      return;
+    }
+    rankById.set(id, Math.max(1, Math.floor(rank)));
+  });
+  return rankById;
+}
+
+function parseRankingSnapshotEntries(rawEntries: unknown): RankingSnapshotEntry[] {
+  if (!Array.isArray(rawEntries)) {
+    return [];
+  }
+  return rawEntries
+    .map((entry) => {
+      const object = asPlainObject(entry);
+      const id = asNonBlankString(object?.id);
+      const rank = asNumber(object?.rank);
+      const prevRankRaw = asNumber(object?.prevRank);
+
+      if (id == null || rank == null) {
+        return null;
+      }
+      return {
+        id: id,
+        name: asNonBlankString(object?.name) ?? "",
+        subtitle: asNonBlankString(object?.subtitle) ?? "",
+        score: Math.max(0, Math.floor(asNumber(object?.score) ?? 0)),
+        rank: Math.max(1, Math.floor(rank)),
+        prevRank: prevRankRaw == null ? null : Math.max(1, Math.floor(prevRankRaw)),
+        change: asNonBlankString(object?.change) ?? "0",
+        imageUrl: asNonBlankString(object?.imageUrl),
+      } as RankingSnapshotEntry;
+    })
+    .filter((entry): entry is RankingSnapshotEntry => entry !== null);
+}
+
+function buildRankingSnapshotEntries<T extends CafeRankingSource | CastRankingSource>(
+  sources: T[],
+  previousRankById: Map<string, number>
+): RankingSnapshotEntry[] {
+  return sources
+    .slice(0, RANKING_MAX_COUNT)
+    .map((source, index) => {
+      const rank = index + 1;
+      const prevRank = previousRankById.get(source.id) ?? null;
+      const change = buildRankingChange(prevRank, rank);
+      return {
+        id: source.id,
+        name: source.name,
+        subtitle: source.subtitle,
+        score: source.score,
+        rank: rank,
+        prevRank: prevRank,
+        change: change,
+        imageUrl: source.imageUrl,
+      };
+    });
+}
+
+function areRankingEntriesEqual(left: RankingSnapshotEntry[], right: RankingSnapshotEntry[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    const lhs = left[index];
+    const rhs = right[index];
+
+    if (
+      lhs.id !== rhs.id ||
+      lhs.rank !== rhs.rank ||
+      lhs.prevRank !== rhs.prevRank ||
+      lhs.score !== rhs.score ||
+      lhs.name !== rhs.name ||
+      lhs.subtitle !== rhs.subtitle ||
+      lhs.change !== rhs.change ||
+      lhs.imageUrl !== rhs.imageUrl
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function loadCafeRankingSources(): Promise<CafeRankingSource[]> {
+  const snapshot = await db()
+    .collection("cafes")
+    .select("name", "region", "address", "ratingAvg", "thumbnailImage", "approved")
+    .get();
+
+  return snapshot.docs
+    .map((doc) => {
+      const data = doc.data();
+      const approved = data.approved !== false;
+
+      if (!approved) {
+        return null;
+      }
+      const region = asPlainObject(data.region);
+      const country = normalizeCountry(region?.country);
+      const city = normalizeCity(region?.city);
+      const address = asNonBlankString(region?.address) ?? asNonBlankString(data.address) ?? city;
+      const subtitle = resolveCafeSubtitle(address, city);
+      const score = Math.max(0, Math.floor((asNumber(data.ratingAvg) ?? 0) * 100));
+
+      return {
+        id: doc.id,
+        name: asNonBlankString(data.name) ?? "",
+        subtitle: subtitle,
+        country: country,
+        city: city,
+        score: score,
+        imageUrl: asNonBlankString(data.thumbnailImage),
+      } as CafeRankingSource;
+    })
+    .filter((item): item is CafeRankingSource => item !== null)
+    .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+}
+
+async function loadCastRankingSources(cafeById: Map<string, CafeRankingSource>): Promise<CastRankingSource[]> {
+  const snapshot = await db()
+    .collectionGroup("casts")
+    .select("name", "followerCount", "profileImage")
+    .get();
+
+  return snapshot.docs
+    .map((doc) => {
+      const cafeRef = doc.ref.parent.parent;
+      const cafeId = cafeRef?.id ?? "";
+      const cafe = cafeById.get(cafeId);
+
+      if (cafe == null) {
+        return null;
+      }
+      const data = doc.data();
+      const score = Math.max(0, Math.floor(asNumber(data.followerCount) ?? 0));
+
+      return {
+        id: doc.id,
+        name: asNonBlankString(data.name) ?? "",
+        subtitle: cafe.name,
+        country: cafe.country,
+        city: cafe.city,
+        score: score,
+        imageUrl: asNonBlankString(data.profileImage),
+      } as CastRankingSource;
+    })
+    .filter((item): item is CastRankingSource => item !== null)
+    .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+}
+
+async function syncRankingSnapshotDocument(
+  kind: "cast" | "cafe",
+  period: typeof RANKING_PERIODS[number],
+  scope: RankingScope,
+  sourceEntries: Array<CafeRankingSource | CastRankingSource>
+): Promise<void> {
+  const rankingId = rankingDocumentId(kind, period, scope);
+  const rankingRef = db().collection("rankings").doc(rankingId);
+  const previousSnapshot = await rankingRef.get();
+  const previousData = previousSnapshot.data();
+  const previousRankById = parsePreviousRankingMap(previousData?.entries);
+  const nextEntries = buildRankingSnapshotEntries(sourceEntries, previousRankById);
+  const previousEntries = parseRankingSnapshotEntries(previousData?.entries);
+
+  if (areRankingEntriesEqual(previousEntries, nextEntries)) {
+    return;
+  }
+  await rankingRef.set(
+    {
+      kind: kind.toUpperCase(),
+      period: period,
+      country: scope.country,
+      city: scope.city,
+      updatedAt: new Date().toISOString(),
+      entries: nextEntries,
+    },
+    {merge: true}
+  );
+}
+
+async function syncAllRankingSnapshots(): Promise<void> {
+  const cafeSources = await loadCafeRankingSources();
+  const cafeById = new Map<string, CafeRankingSource>();
+
+  cafeSources.forEach((cafe) => {
+    cafeById.set(cafe.id, cafe);
+  });
+  const castSources = await loadCastRankingSources(cafeById);
+  const tasks: Promise<void>[] = [];
+
+  RANKING_PERIODS.forEach((period) => {
+    RANKING_SCOPES.forEach((scope) => {
+      const scopedCafes = cafeSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+      const scopedCasts = castSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+
+      tasks.push(syncRankingSnapshotDocument("cafe", period, scope, scopedCafes));
+      tasks.push(syncRankingSnapshotDocument("cast", period, scope, scopedCasts));
+    });
+  });
+  await Promise.all(tasks);
+}
+
+async function markRankingSyncDirty(reason: string, payload: Record<string, unknown>): Promise<void> {
+  await db().doc(RANKING_SYNC_DOC_PATH).set(
+    {
+      dirty: true,
+      updatedAt: new Date().toISOString(),
+      reason: reason,
+      payload: payload,
+    },
+    {merge: true}
+  );
+}
+
+async function shouldSyncRankingSnapshots(): Promise<boolean> {
+  const snapshot = await db().doc(RANKING_SYNC_DOC_PATH).get();
+
+  if (!snapshot.exists) {
+    return true;
+  }
+  return snapshot.get("dirty") === true;
+}
+
+async function completeRankingSync(): Promise<void> {
+  await db().doc(RANKING_SYNC_DOC_PATH).set(
+    {
+      dirty: false,
+      syncedAt: new Date().toISOString(),
+    },
+    {merge: true}
+  );
+}
+
 
 export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
   "reviews/{reviewId}",
@@ -425,6 +779,10 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
         await syncCafeReviewAggregate(cafeId);
       })
     );
+    await markRankingSyncDirty("review_written", {
+      reviewId: event.params.reviewId,
+      cafeIds: Array.from(targetCafeIds),
+    });
     logger.info("Synced cafe review aggregate.", {
       cafeIds: Array.from(targetCafeIds),
       reviewId: event.params.reviewId,
@@ -464,6 +822,13 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         await syncCastFollowerAggregate(cafeId, castId);
       })
     );
+    await markRankingSyncDirty("cast_follow_written", {
+      followId: event.params.followId,
+      targets: Array.from(followTargets.entries()).map(([castId, cafeId]) => ({
+        castId: castId,
+        cafeId: cafeId,
+      })),
+    });
     logger.info("Synced cast follower aggregate.", {
       followId: event.params.followId,
       targets: Array.from(followTargets.entries()).map(([castId, cafeId]) => ({
@@ -747,6 +1112,45 @@ export const onCafeFavoriteWrittenSyncUserFavoriteStats = onDocumentWritten(
     logger.info("Synced user favoritesCount aggregate from favorite write.", {
       favoriteId: event.params.favoriteId,
       targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
+    });
+  }
+);
+
+export const onCafeWrittenMarkRankingDirty = onDocumentWritten(
+  "cafes/{cafeId}",
+  async (event) => {
+    await markRankingSyncDirty("cafe_written", {
+      cafeId: event.params.cafeId,
+    });
+  }
+);
+
+export const onCastWrittenMarkRankingDirty = onDocumentWritten(
+  "cafes/{cafeId}/casts/{castId}",
+  async (event) => {
+    await markRankingSyncDirty("cast_written", {
+      cafeId: event.params.cafeId,
+      castId: event.params.castId,
+    });
+  }
+);
+
+export const onScheduleSyncRankingSnapshots = onSchedule(
+  {
+    schedule: "every 30 minutes",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const shouldSync = await shouldSyncRankingSnapshots();
+
+    if (!shouldSync) {
+      return;
+    }
+    await syncAllRankingSnapshots();
+    await completeRankingSync();
+    logger.info("Synced ranking snapshots.", {
+      periods: RANKING_PERIODS,
+      scopeCount: RANKING_SCOPES.length,
     });
   }
 );

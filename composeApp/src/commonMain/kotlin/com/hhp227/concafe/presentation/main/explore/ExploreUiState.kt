@@ -23,7 +23,7 @@ data class ExploreUiState(
 ) {
     enum class TabType(val label: String) {
         CAFE("카페"),
-        MAID("메이드")
+        MAID("캐스트")
     }
 
     enum class RegionFilter(val label: String, val key: String) {

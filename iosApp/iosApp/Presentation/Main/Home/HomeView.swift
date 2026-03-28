@@ -499,8 +499,13 @@ private struct NearByCafeItem: View {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                Text("⭐ \(cafe.ratingAvg)")
-                .font(.caption)
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Text(String(format: "%.1f", cafe.ratingAvg))
+                        .font(.caption)
+                }
                 Text(cafe.region.city)
                 .font(.caption)
                 .foregroundStyle(.secondary)

@@ -18,7 +18,7 @@ data class RankingUiState(
     val cafeRankings: List<RankingFeedEntry> = emptyList()
 ) {
     enum class TabType(val label: String) {
-        MAIDS("메이드 랭킹"),
+        MAIDS("캐스트 랭킹"),
         CAFES("카페 랭킹")
     }
 

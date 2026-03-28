@@ -37,6 +37,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
+import kotlin.math.roundToInt
 
 @Composable
 fun ExploreScreen(
@@ -124,7 +125,7 @@ fun ExploreContentScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("카페나 메이드를 검색하세요...") },
+                    placeholder = { Text("카페나 캐스트를 검색하세요...") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -320,11 +321,19 @@ private fun ExplorePagingTrigger(
 
 @Composable
 private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
+    val roundedRating = (cafe.ratingAvg * 10).roundToInt() / 10.0
+    val ratingText = if (roundedRating % 1.0 == 0.0) {
+        "${roundedRating.toInt()}.0"
+    } else {
+        roundedRating.toString()
+    }
+
     CafeSummaryCard(
         name = cafe.name,
-        rating = "${cafe.ratingAvg}",
+        rating = ratingText,
         location = cafe.region.city,
         thumbnailImage = cafe.thumbnailImage,
+        showLocationIcon = false,
         onClick = onClick
     )
 }
@@ -374,10 +383,8 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("👥", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    maid.followerCount.toString(),
+                    text = "팔로워 ${maid.followerCount}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFEF6797)
                 )

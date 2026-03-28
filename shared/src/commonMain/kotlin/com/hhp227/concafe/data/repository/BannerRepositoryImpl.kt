@@ -28,6 +28,9 @@ class BannerRepositoryImpl(
     }
 
     override suspend fun getHomeBanners(limit: Int): List<HomeBanner> {
+        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
+
+        firestoreDataSource?.refreshHomeBanners()
         normalizeBannerSlots()
         return bannerDataSource.banners
             .asSequence()

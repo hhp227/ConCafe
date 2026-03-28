@@ -21,27 +21,19 @@ class ReviewRepositoryImpl(
     ): PagedResult<Review> {
         val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_REVIEW_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.getCafeReviewsPageRemote(
-                    cafeId = cafeId,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getCafeReviewsPageRemote(
+                cafeId = cafeId,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         val hasCachedReviews = reviewDataSource.reviews.any { review -> review.cafeId == cafeId }
         val shouldRefresh = cursor == null && !hasCachedReviews
 
         if (shouldRefresh) {
             (reviewDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeReviews(cafeId)
-                }
+                firestoreDataSource.refreshCafeReviews(cafeId)
             }
         }
         val items = reviewDataSource.reviews
@@ -52,11 +44,15 @@ class ReviewRepositoryImpl(
 
     override suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review> {
         val safeLimit = if (limit > 0) limit else 1
-        return (reviewDataSource as? FirestoreConCafeDataSource)?.getRecentTaggedReviews(
-            cafeId = cafeId,
-            castId = castId,
-            limit = safeLimit
-        ) ?: reviewDataSource.reviews
+        val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getRecentTaggedReviews(
+                cafeId = cafeId,
+                castId = castId,
+                limit = safeLimit
+            )
+        }
+        return reviewDataSource.reviews
             .filter { review ->
                 review.cafeId == cafeId && review.taggedCastIds.contains(castId)
             }
@@ -207,8 +203,6 @@ class ReviewRepositoryImpl(
         )
     }
 }
-
-private const val REMOTE_REVIEW_PAGE_LIMIT = 100
 
 private fun nextEntityId(prefix: String): String {
     val now = Clock.System.now().toEpochMilliseconds()

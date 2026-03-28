@@ -22,9 +22,12 @@ class GetHomeFeedUseCase(
         popularCastCursor: String? = null,
         nearbyCafeCursor: String? = null
     ): AppResult<HomeFeed> {
-        return try {
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val nearbyCafePage = cafeRepository.searchCafes(
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val bannersResult = runCatching {
+            bannerRepository.getHomeBanners(HOME_FEED_LIMIT)
+        }
+        val nearbyCafePageResult = runCatching {
+            cafeRepository.searchCafes(
                 query = null,
                 country = null,
                 city = null,
@@ -32,45 +35,86 @@ class GetHomeFeedUseCase(
                 cursor = nearbyCafeCursor,
                 pageSize = NEARBY_CAFE_PAGE_SIZE
             )
-            val popularCastPage = castRepository.getHomePopularCastPage(
+        }
+        val popularCastPageResult = runCatching {
+            castRepository.getHomePopularCastPage(
                 cursor = popularCastCursor,
                 pageSize = POPULAR_CAST_PAGE_SIZE
             )
-            val popularCastCafeNames = popularCastPage.items
-                .map { it.cafeId }
-                .distinct()
-                .associateWith { cafeId ->
-                    runCatching { cafeRepository.getCafeDetail(cafeId).cafe.name }
-                        .getOrElse { cafeId }
-                }
-            val birthdayCasts = castRepository.getBirthdayCasts(
+        }
+        val birthdayCastsResult = runCatching {
+            castRepository.getBirthdayCasts(
                 month = today.monthNumber,
                 dayOfMonth = today.dayOfMonth,
                 limit = HOME_FEED_LIMIT
             )
-            val notices = noticeRepository.getRecentNotices(HOME_FEED_LIMIT)
-
-            AppResult.Success(
-                HomeFeed(
-                    banners = bannerRepository.getHomeBanners(HOME_FEED_LIMIT),
-                    popularCasts = popularCastPage.items,
-                    popularCastCafeNames = popularCastCafeNames,
-                    popularCastsNextCursor = popularCastPage.nextCursor,
-                    hasMorePopularCasts = popularCastPage.hasNext,
-                    nearbyCafes = nearbyCafePage.items,
-                    nearbyCafesNextCursor = nearbyCafePage.nextCursor,
-                    hasMoreNearbyCafes = nearbyCafePage.hasNext,
-                    birthdayCasts = birthdayCasts,
-                    notices = notices
-                )
-            )
-        } catch (e: NoSuchElementException) {
-            AppResult.Failure(AppError.NotFound)
-        } catch (e: IllegalArgumentException) {
-            AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
-        } catch (e: Exception) {
-            AppResult.Failure(AppError.Unknown(e.message))
         }
+        val noticesResult = runCatching {
+            noticeRepository.getRecentNotices(HOME_FEED_LIMIT)
+        }
+        bannersResult.exceptionOrNull()?.let { error ->
+            println("TEST, ${error.message}")
+        }
+        nearbyCafePageResult.exceptionOrNull()?.let { error ->
+            println("TEST, ${error.message}")
+        }
+        popularCastPageResult.exceptionOrNull()?.let { error ->
+            println("TEST, ${error.message}")
+        }
+        birthdayCastsResult.exceptionOrNull()?.let { error ->
+            println("TEST, ${error.message}")
+        }
+        noticesResult.exceptionOrNull()?.let { error ->
+            println("TEST, ${error.message}")
+        }
+        val firstError = listOf(
+            bannersResult.exceptionOrNull(),
+            nearbyCafePageResult.exceptionOrNull(),
+            popularCastPageResult.exceptionOrNull(),
+            birthdayCastsResult.exceptionOrNull(),
+            noticesResult.exceptionOrNull()
+        ).firstOrNull { throwable -> throwable != null }
+        val allFailed = bannersResult.isFailure &&
+            nearbyCafePageResult.isFailure &&
+            popularCastPageResult.isFailure &&
+            birthdayCastsResult.isFailure &&
+            noticesResult.isFailure
+
+        if (allFailed) {
+            val throwable = firstError
+            return if (throwable is NoSuchElementException) {
+                AppResult.Failure(AppError.NotFound)
+            } else if (throwable is IllegalArgumentException) {
+                AppResult.Failure(AppError.ValidationFailed(throwable.message ?: "invalid request"))
+            } else {
+                AppResult.Failure(AppError.Unknown(throwable?.message))
+            }
+        }
+        val nearbyCafePage = nearbyCafePageResult.getOrNull()
+        val popularCastPage = popularCastPageResult.getOrNull()
+        val popularCastCafeNames = popularCastPage
+            ?.items
+            ?.map { cast -> cast.cafeId }
+            ?.distinct()
+            ?.associateWith { cafeId ->
+                runCatching { cafeRepository.getCafeDetail(cafeId).cafe.name }
+                    .getOrElse { cafeId }
+            }
+            ?: emptyMap()
+        return AppResult.Success(
+            HomeFeed(
+                banners = bannersResult.getOrElse { emptyList() },
+                popularCasts = popularCastPage?.items ?: emptyList(),
+                popularCastCafeNames = popularCastCafeNames,
+                popularCastsNextCursor = popularCastPage?.nextCursor,
+                hasMorePopularCasts = popularCastPage?.hasNext == true,
+                nearbyCafes = nearbyCafePage?.items ?: emptyList(),
+                nearbyCafesNextCursor = nearbyCafePage?.nextCursor,
+                hasMoreNearbyCafes = nearbyCafePage?.hasNext == true,
+                birthdayCasts = birthdayCastsResult.getOrElse { emptyList() },
+                notices = noticesResult.getOrElse { emptyList() }
+            )
+        )
     }
 
     companion object {

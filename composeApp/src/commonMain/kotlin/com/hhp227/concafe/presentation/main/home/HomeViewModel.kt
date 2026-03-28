@@ -15,10 +15,12 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
@@ -30,6 +32,7 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
+    private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -68,15 +71,19 @@ class HomeViewModel(
                     notices = result.data.notices
                 )
             } else if (result is AppResult.Failure) {
-                _uiState.value = empty().copy(
-                    isLoading = false,
-                    errorMessage = result.error.toString()
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        errorMessage = result.error.toString()
+                    )
+                }
             } else {
-                _uiState.value = empty().copy(
-                    isLoading = false,
-                    errorMessage = "unknown"
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        errorMessage = "unknown"
+                    )
+                }
             }
         }
     }
@@ -179,6 +186,17 @@ class HomeViewModel(
                     is BannerEvent.Created -> loadHomeFeed()
                     is BannerEvent.Updated -> patchBanner(event.banner)
                     is BannerEvent.Deleted -> removeBanner(event.banner.id)
+                }
+            }
+        }
+    }
+
+    private fun observeCafeRegistrationClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
+            cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
+                if (event is CafeRegistrationClaimEvent.Approved) {
+                    loadNearbyCafePage(cursor = null, append = false)
                 }
             }
         }
@@ -316,6 +334,7 @@ class HomeViewModel(
     init {
         observeSession()
         observeBannerEvent()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
@@ -323,6 +342,7 @@ class HomeViewModel(
 
     private enum class TaskKey {
         OBSERVE_BANNER_EVENT,
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,

@@ -17,6 +17,8 @@ struct CafeSummaryCard: View {
 
     let thumbnailImage: String?
 
+    let showLocationIcon: Bool
+
     let trailingLabel: String?
 
     let onTap: () -> Void
@@ -31,13 +33,25 @@ struct CafeSummaryCard: View {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
-                Text("⭐ \(rating)")
-                    .font(.caption)
-                HStack(alignment: .center) {
-                    Text("📍 \(location)")
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .foregroundStyle(Color(hex: "EF6797"))
+                    Text(rating)
+                        .font(.caption)
+                }
+                HStack(alignment: .center) {
+                    HStack(spacing: 4) {
+                        if showLocationIcon {
+                            Image(systemName: "mappin.and.ellipse")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(location)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 8)
                     if let trailingLabel {
                         Text(trailingLabel)

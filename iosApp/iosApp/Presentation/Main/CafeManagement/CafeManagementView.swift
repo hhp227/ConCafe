@@ -168,8 +168,7 @@ private struct CafeManagementContentView: View {
 
     private func ownedCafeCard(cafe: CafeManagementData.OwnedCafeSummary) -> some View {
         let dynamicHeight = min(max(UIScreen.main.bounds.width / 1.8, 220), 500)
-
-        ZStack(alignment: .trailing) {
+        return ZStack(alignment: .trailing) {
             Button {
                 onAction(.clickCafe(cafe.id))
             } label: {

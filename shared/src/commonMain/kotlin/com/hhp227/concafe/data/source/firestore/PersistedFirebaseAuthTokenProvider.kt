@@ -8,11 +8,32 @@ class PersistedFirebaseAuthTokenProvider(
 ) : FirestoreAuthTokenProvider {
     private var cachedSession: FirebaseAuthSession? = sessionStore.load()
 
+    private var hasTriedAnonymousSignIn = false
+
     override suspend fun getIdToken(): String? {
         val currentSession = cachedSession
 
         if (currentSession == null) {
-            return delegate.getIdToken()
+            val tokenFromDelegate = delegate.getIdToken()
+
+            if (!tokenFromDelegate.isNullOrBlank()) {
+                return tokenFromDelegate
+            }
+            if (hasTriedAnonymousSignIn) {
+                return null
+            }
+            val anonymousSession = runCatching {
+                delegate.signInAnonymously()
+            }.onFailure { error ->
+                println("TEST, ${error.message}")
+            }.getOrNull()
+            hasTriedAnonymousSignIn = true
+
+            if (anonymousSession != null) {
+                persistSession(anonymousSession)
+                return anonymousSession.idToken
+            }
+            return null
         } else {
             val refreshed = refreshSessionIfNeeded(currentSession)
 
@@ -24,6 +45,13 @@ class PersistedFirebaseAuthTokenProvider(
             }
             return refreshed.idToken
         }
+    }
+
+    override suspend fun signInAnonymously(): FirebaseAuthSession? {
+        val session = delegate.signInAnonymously()
+
+        persistSession(session)
+        return session
     }
 
     override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
@@ -85,8 +113,10 @@ class PersistedFirebaseAuthTokenProvider(
 
         if (session == null) {
             sessionStore.clear()
+            hasTriedAnonymousSignIn = false
         } else {
             sessionStore.save(session)
+            hasTriedAnonymousSignIn = false
         }
     }
 

@@ -88,7 +88,7 @@ private struct ExploreContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("카페나 메이드를 검색하세요...", text: Binding(
+                TextField("카페나 캐스트를 검색하세요...", text: Binding(
                     get: { uiState.query },
                     set: { onAction(.queryChanged($0)) }
                 ))
@@ -213,6 +213,7 @@ private struct ExploreContentView: View {
             rating: String(format: "%.1f", cafe.ratingAvg),
             location: cafe.region.city,
             thumbnailImage: cafe.thumbnailImage,
+            showLocationIcon: false,
             trailingLabel: nil,
             onTap: {
                 onAction(.cafeTapped(id: cafe.id))
@@ -247,7 +248,7 @@ private struct ExploreContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Text("👥 \(maid.followerCount)")
+                Text("팔로워 \(maid.followerCount)")
                     .font(.caption)
                     .foregroundStyle(Color(hex: "EF6797"))
             }

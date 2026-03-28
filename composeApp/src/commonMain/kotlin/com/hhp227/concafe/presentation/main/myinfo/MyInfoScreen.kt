@@ -38,6 +38,14 @@ import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.navigation.NavigationAction.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -637,7 +645,7 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
     return when (user.role) {
         UserRole.CAST -> {
             val cast = uiState.castDetail?.cast
-            val scheduleCount = uiState.castDetail?.schedule?.size ?: 0
+            val scheduleCount = resolveCurrentWeekScheduleCount(uiState)
             listOf(
                 MyInfoMetricCardModel("전체 팔로워", (cast?.followerCount ?: 0).toString(), false),
                 MyInfoMetricCardModel("근무 일정", scheduleCount.toString(), true),
@@ -662,6 +670,28 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             )
         }
     }
+}
+
+private fun resolveCurrentWeekScheduleCount(uiState: MyInfoUiState): Int {
+    val schedules = uiState.castDetail?.schedule.orEmpty()
+
+    if (schedules.isEmpty()) {
+        return 0
+    }
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    val daysFromSunday = today.dayOfWeek.isoDayNumber % 7
+    val weekStart = today.minus(DatePeriod(days = daysFromSunday))
+    val weekEnd = weekStart.plus(DatePeriod(days = 6))
+
+    return schedules
+        .mapNotNull { schedule ->
+            val normalizedDate = schedule.date.take(10)
+            runCatching { LocalDate.parse(normalizedDate) }.getOrNull()
+        }
+        .filter { scheduleDate -> scheduleDate >= weekStart && scheduleDate <= weekEnd }
+        .map { scheduleDate -> scheduleDate.toString() }
+        .distinct()
+        .size
 }
 
 @Composable

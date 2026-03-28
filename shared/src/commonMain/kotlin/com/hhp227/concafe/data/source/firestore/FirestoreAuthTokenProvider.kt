@@ -11,6 +11,8 @@ data class FirebaseAuthSession(
 interface FirestoreAuthTokenProvider {
     suspend fun getIdToken(): String?
 
+    suspend fun signInAnonymously(): FirebaseAuthSession?
+
     suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession?
 
     suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession?
@@ -28,44 +30,4 @@ interface FirestoreAuthTokenProvider {
     fun getCurrentUserEmail(): String?
 
     fun supportsEmailPasswordAuth(): Boolean
-}
-
-class NoOpFirestoreAuthTokenProvider : FirestoreAuthTokenProvider {
-    override suspend fun getIdToken(): String? {
-        return null
-    }
-
-    override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
-        return null
-    }
-
-    override suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession? {
-        return null
-    }
-
-    override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
-        return null
-    }
-
-    override suspend fun signOut() {
-    }
-
-    override suspend fun deleteCurrentUser(idToken: String?) {
-    }
-
-    override suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession? {
-        return null
-    }
-
-    override fun getCurrentUserId(): String? {
-        return null
-    }
-
-    override fun getCurrentUserEmail(): String? {
-        return null
-    }
-
-    override fun supportsEmailPasswordAuth(): Boolean {
-        return false
-    }
 }

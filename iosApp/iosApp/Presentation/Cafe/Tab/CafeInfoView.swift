@@ -10,14 +10,15 @@ import Shared
 
 struct CafeInfoView: View {
     let cafeDetail: CafeDetail
-    
+
     var body: some View {
         VStack(spacing: 14) {
             infoCard(detail: cafeDetail)
             descriptionCard(detail: cafeDetail)
+            reservationButton()
         }
     }
-    
+
     private func infoCard(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             infoRow(icon: "mappin.and.ellipse", title: "주소", value: detail.cafe.region.address)
@@ -69,6 +70,24 @@ struct CafeInfoView: View {
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func reservationButton() -> some View {
+        Button {
+        } label: {
+            HStack {
+                Spacer()
+                Text("예약하기")
+                    .font(.headline.weight(.bold))
+                Spacer()
+            }
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Color(hex: "FFD1DC"))
+        .foregroundStyle(Color(hex: "2B2330"))
+        .frame(maxWidth: .infinity)
+        .disabled(true)
     }
 }
 

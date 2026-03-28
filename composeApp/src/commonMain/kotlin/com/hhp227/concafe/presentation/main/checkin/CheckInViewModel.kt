@@ -119,7 +119,7 @@ class CheckInViewModel(
                             result.data.recentVisits
                         }
                         val mergedTodayVisits = mergedRecentVisits
-                            .filter { visit -> visit.visitedAt.startsWith(TimeUtils.currentIsoDate()) }
+                            .filter { visit -> TimeUtils.isCurrentDateVisitedAt(visit.visitedAt) }
                             .take(TODAY_VISIT_LIMIT)
 
                         state.copy(

@@ -6,6 +6,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,6 +25,7 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 fun CafeInfoScreen(detail: CafeDetail) {
     InfoCard(detail = detail)
     DescriptionCard(detail = detail)
+    ReservationButton()
 }
 
 @Composable
@@ -105,5 +108,28 @@ private fun DescriptionCard(detail: CafeDetail) {
                 color = Color(0xFF666666)
             )
         }
+    }
+}
+
+@Composable
+private fun ReservationButton() {
+    Button(
+        onClick = {},
+        enabled = false,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFFFD1DC),
+            contentColor = Color(0xFF2B2330),
+            disabledContainerColor = Color(0xFFF4D7DF),
+            disabledContentColor = Color(0x802B2330)
+        )
+    ) {
+        Text(
+            text = "예약하기",
+            fontWeight = FontWeight.Bold
+        )
     }
 }

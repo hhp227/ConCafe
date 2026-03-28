@@ -2,6 +2,8 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CafeOwnerClaimEvent
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
@@ -9,7 +11,8 @@ import com.hhp227.concafe.domain.repository.CafeOwnerClaimRepository
 
 class ApproveCafeOwnerClaimUseCase(
     private val authRepository: AuthRepository,
-    private val cafeOwnerClaimRepository: CafeOwnerClaimRepository
+    private val cafeOwnerClaimRepository: CafeOwnerClaimRepository,
+    private val cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher
 ) {
     suspend operator fun invoke(claimId: String): AppResult<PendingCafeOwnerClaimPreview> {
         return try {
@@ -19,7 +22,15 @@ class ApproveCafeOwnerClaimUseCase(
             if (currentUser.role != UserRole.ADMIN) {
                 AppResult.Failure(AppError.PermissionDenied)
             } else {
-                AppResult.Success(cafeOwnerClaimRepository.approveCafeOwnerClaim(claimId, currentUser.id))
+                val preview = cafeOwnerClaimRepository.approveCafeOwnerClaim(claimId, currentUser.id)
+
+                cafeOwnerClaimEventPublisher.publish(
+                    CafeOwnerClaimEvent.Approved(
+                        requesterUserId = preview.requesterUserId,
+                        claimId = claimId
+                    )
+                )
+                AppResult.Success(preview)
             }
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)

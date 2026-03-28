@@ -3,7 +3,9 @@ package com.hhp227.concafe.presentation.main.admin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CafeOwnerClaimEvent
 import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
@@ -34,6 +36,7 @@ class AdminOperationsViewModel(
     private val approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase,
     private val rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase,
     private val rejectCafeOwnerClaimUseCase: RejectCafeOwnerClaimUseCase,
+    private val cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AdminOperationsUiState())
@@ -150,8 +153,21 @@ class AdminOperationsViewModel(
             cafeRegistrationClaimEventPublisher.events.collectLatest { claimEvent ->
                 when (claimEvent) {
                     is CafeRegistrationClaimEvent.Created -> refreshPendingClaimsOnly()
-                    is CafeRegistrationClaimEvent.Approved -> removeRegistrationClaimLocally(claimEvent.claimId)
+                    is CafeRegistrationClaimEvent.Approved -> applyRegistrationApprovalLocally(claimEvent.claimId)
                     is CafeRegistrationClaimEvent.Rejected -> removeRegistrationClaimLocally(claimEvent.claimId)
+                }
+            }
+        }
+    }
+
+    private fun observeOwnerClaimEvents() {
+        jobs[TaskKey.OWNER_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OWNER_CLAIM_EVENT] = viewModelScope.launch {
+            cafeOwnerClaimEventPublisher.events.collectLatest { claimEvent ->
+                when (claimEvent) {
+                    is CafeOwnerClaimEvent.Created -> refreshPendingClaimsOnly()
+                    is CafeOwnerClaimEvent.Approved -> removeOwnerClaimLocally(claimEvent.claimId)
+                    is CafeOwnerClaimEvent.Rejected -> removeOwnerClaimLocally(claimEvent.claimId)
                 }
             }
         }
@@ -190,6 +206,39 @@ class AdminOperationsViewModel(
                 ownerClaims = nextOwnerClaims,
                 totalUsersCount = state.totalUsersCount,
                 activeCafesCount = state.activeCafesCount,
+                reportItemsCount = state.reportItemsCount
+            )
+            nextState
+        }
+    }
+
+    private fun applyRegistrationApprovalLocally(claimId: String) {
+        _uiState.update { state ->
+            val hadClaim = state.pendingCafeRegistrationClaims.any { it.claimId == claimId }
+            val nextRegistrationClaims = state.pendingCafeRegistrationClaims.filterNot { it.claimId == claimId }
+            val nextOwnerClaims = state.pendingCafeOwnerClaims
+            val nextActiveCafesCount = if (hadClaim) {
+                state.activeCafesCount + 1
+            } else {
+                state.activeCafesCount
+            }
+            val pendingCount = nextRegistrationClaims.size + nextOwnerClaims.size
+            val nextState = state.copy(
+                activeCafesCount = nextActiveCafesCount,
+                pendingCafeRegistrationClaims = nextRegistrationClaims,
+                pendingCafeOwnerClaims = nextOwnerClaims,
+                metrics = buildAdminMetrics(
+                    totalUsersCount = state.totalUsersCount,
+                    activeCafesCount = nextActiveCafesCount,
+                    pendingCount = pendingCount,
+                    reportItemsCount = state.reportItemsCount
+                )
+            )
+            AdminPendingCache.snapshot = AdminPendingSnapshot(
+                registrationClaims = nextRegistrationClaims,
+                ownerClaims = nextOwnerClaims,
+                totalUsersCount = state.totalUsersCount,
+                activeCafesCount = nextActiveCafesCount,
                 reportItemsCount = state.reportItemsCount
             )
             nextState
@@ -255,9 +304,14 @@ class AdminOperationsViewModel(
             }
             when (result) {
                 is AppResult.Success -> {
-                    when (selectedFilter) {
-                        PendingFilter.CAFE_REGISTRATION -> removeRegistrationClaimLocally(id)
-                        PendingFilter.ROLE_CLAIM -> removeOwnerClaimLocally(id)
+                    if (selectedFilter == PendingFilter.CAFE_REGISTRATION) {
+                        if (approved) {
+                            applyRegistrationApprovalLocally(id)
+                        } else {
+                            removeRegistrationClaimLocally(id)
+                        }
+                    } else {
+                        removeOwnerClaimLocally(id)
                     }
                     _uiState.update { state ->
                         state.copy(
@@ -319,6 +373,7 @@ class AdminOperationsViewModel(
     init {
         showCachedPendingRequests()
         observeClaimEvents()
+        observeOwnerClaimEvents()
         startClaimPolling()
         loadPendingRequests()
     }
@@ -331,6 +386,7 @@ class AdminOperationsViewModel(
 
     private enum class TaskKey {
         CLAIM_EVENT,
+        OWNER_CLAIM_EVENT,
         CLAIM_POLLING
     }
 }

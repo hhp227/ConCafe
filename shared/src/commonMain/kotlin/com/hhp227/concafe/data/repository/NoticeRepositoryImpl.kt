@@ -25,14 +25,8 @@ class NoticeRepositoryImpl(
         val safeLimit = limit.coerceAtLeast(1)
         val firestoreDataSource = noticeDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && safeLimit <= REMOTE_NOTICE_PAGE_LIMIT) {
-            val remote = runCatching {
-                firestoreDataSource.getRecentNoticesRemote(safeLimit)
-            }.getOrNull()
-
-            if (remote != null) {
-                return remote
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getRecentNoticesRemote(safeLimit)
         }
         return noticeDataSource.notices.take(safeLimit)
     }
@@ -45,28 +39,20 @@ class NoticeRepositoryImpl(
     ): PagedResult<CafeNoticeManagementItem> {
         val firestoreDataSource = noticeDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_NOTICE_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.getCafeNoticePageRemote(
-                    cafeId = cafeId,
-                    query = query,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getCafeNoticePageRemote(
+                cafeId = cafeId,
+                query = query,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         val hasCachedNotices = noticeDataSource.cafeNoticeManagementItems.any { item -> item.cafeId == cafeId }
         val shouldRefresh = cursor == null && !hasCachedNotices
 
         if (shouldRefresh) {
             (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
-                }
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
             }
         }
         val normalizedQuery = query.trim()
@@ -91,28 +77,20 @@ class NoticeRepositoryImpl(
     ): PagedResult<CafeEventManagementItem> {
         val firestoreDataSource = noticeDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_NOTICE_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.getCafeEventPageRemote(
-                    cafeId = cafeId,
-                    query = query,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getCafeEventPageRemote(
+                cafeId = cafeId,
+                query = query,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         val hasCachedEvents = noticeDataSource.cafeEventManagementItems.any { item -> item.cafeId == cafeId }
         val shouldRefresh = cursor == null && !hasCachedEvents
 
         if (shouldRefresh) {
             (noticeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-                runCatching {
-                    firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
-                }
+                firestoreDataSource.refreshCafeNoticeEventManagement(cafeId)
             }
         }
         val normalizedQuery = query.trim()
@@ -297,8 +275,6 @@ class NoticeRepositoryImpl(
         return eventId
     }
 }
-
-private const val REMOTE_NOTICE_PAGE_LIMIT = 100
 
 private fun nextEntityId(prefix: String): String {
     val now = Clock.System.now().toEpochMilliseconds()

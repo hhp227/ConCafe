@@ -10,7 +10,7 @@ import Shared
 
 struct RankingUiState {
     enum TabType: String, CaseIterable {
-        case maids = "메이드 랭킹"
+        case maids = "캐스트 랭킹"
         case cafes = "카페 랭킹"
     }
 

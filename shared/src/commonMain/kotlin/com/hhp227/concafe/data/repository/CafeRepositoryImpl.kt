@@ -30,21 +30,15 @@ class CafeRepositoryImpl(
     ): PagedResult<Cafe> {
         val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
 
-        if (firestoreDataSource != null && pageSize <= REMOTE_CAFE_PAGE_LIMIT) {
-            val remoteResult = runCatching {
-                firestoreDataSource.searchCafesRemote(
-                    query = query,
-                    country = country,
-                    city = city,
-                    sort = sort,
-                    cursor = cursor,
-                    pageSize = pageSize
-                )
-            }.getOrNull()
-
-            if (remoteResult != null) {
-                return remoteResult
-            }
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.searchCafesRemote(
+                query = query,
+                country = country,
+                city = city,
+                sort = sort,
+                cursor = cursor,
+                pageSize = pageSize
+            )
         }
         return searchCafesFromCache(
             query = query,
@@ -70,9 +64,7 @@ class CafeRepositoryImpl(
                 )
 
             if (shouldRefresh) {
-                runCatching {
-                    firestoreDataSource?.refreshCafeDetail(cafeId)
-                }
+                firestoreDataSource?.refreshCafeDetail(cafeId)
                 val refreshed = cafeDataSource.cafeDetail(cafeId)
 
                 if (refreshed != null) {
@@ -83,9 +75,7 @@ class CafeRepositoryImpl(
         }
 
         if (firestoreDataSource != null) {
-            runCatching {
-                firestoreDataSource.refreshCafeDetail(cafeId)
-            }
+            firestoreDataSource.refreshCafeDetail(cafeId)
             val refreshed = cafeDataSource.cafeDetail(cafeId)
 
             if (refreshed != null) {
@@ -124,9 +114,7 @@ class CafeRepositoryImpl(
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
         }
         val set = socialDataSource.favoriteCafeIdsByUser[userId]
         return set?.contains(cafeId) ?: false
@@ -134,9 +122,7 @@ class CafeRepositoryImpl(
 
     override suspend fun getFavoriteCafeIds(userId: String): List<String> {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
         }
         return socialDataSource.favoriteCafeIdsByUser[userId]
             ?.toList()
@@ -158,9 +144,7 @@ class CafeRepositoryImpl(
 
         if (firestoreDataSource != null && missingIds.isNotEmpty()) {
             missingIds.forEach { cafeId ->
-                runCatching {
-                    firestoreDataSource.refreshCafeDetail(cafeId)
-                }
+                firestoreDataSource.refreshCafeDetail(cafeId)
             }
         }
 
@@ -174,9 +158,7 @@ class CafeRepositoryImpl(
 
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
         (cafeDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            runCatching {
-                firestoreDataSource.refreshFavoriteCafeIds(userId)
-            }
+            firestoreDataSource.refreshFavoriteCafeIds(userId)
             val favoriteSet = socialDataSource.favoriteCafeIdsByUser[userId]
             val isFavorite = favoriteSet?.contains(cafeId) == true
 
@@ -204,24 +186,46 @@ class CafeRepositoryImpl(
     }
 
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
+        val safeLimit = if (limit > 0) limit else 1
         val visitCountByCafeId = visitDataSource.visits
             .groupingBy { it.cafeId }
             .eachCount()
-        return cafeDataSource.cafes
-            .filter { it.approved }
-            .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
-            .take(limit)
-            .map { cafe ->
-                CheckInCafeSummary(
-                    id = cafe.id,
-                    name = cafe.name,
-                    locationLabel = cafe.region.city,
-                    geoPoint = cafe.region.location,
-                    rating = cafe.ratingAvg,
-                    checkInCount = visitCountByCafeId[cafe.id] ?: 0,
-                    thumbnailImage = cafe.thumbnailImage
-                )
+        val firestoreDataSource = cafeDataSource as? FirestoreConCafeDataSource
+        val sourceCafes = if (firestoreDataSource != null) {
+            val page = firestoreDataSource.searchCafesRemote(
+                query = null,
+                country = null,
+                city = null,
+                sort = CafeSort.POPULAR,
+                cursor = null,
+                pageSize = safeLimit
+            )
+            page.items
+        } else {
+            cafeDataSource.cafes
+                .filter { it.approved }
+                .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
+                .take(safeLimit)
+        }
+
+        return sourceCafes.map { cafe ->
+            val cachedVisitCount = visitCountByCafeId[cafe.id] ?: 0
+            val resolvedVisitCount = if (cachedVisitCount > 0) {
+                cachedVisitCount
+            } else {
+                cafe.reviewCount
             }
+
+            CheckInCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                locationLabel = cafe.region.city,
+                geoPoint = cafe.region.location,
+                rating = cafe.ratingAvg,
+                checkInCount = resolvedVisitCount,
+                thumbnailImage = cafe.thumbnailImage
+            )
+        }
     }
 
     private fun searchCafesFromCache(
@@ -251,5 +255,3 @@ class CafeRepositoryImpl(
         return pagingDataSource.toPaged(filtered, cursor, pageSize)
     }
 }
-
-private const val REMOTE_CAFE_PAGE_LIMIT = 100

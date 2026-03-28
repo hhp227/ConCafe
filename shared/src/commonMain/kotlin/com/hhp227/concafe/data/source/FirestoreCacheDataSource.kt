@@ -26,6 +26,7 @@ import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.Notice
 import com.hhp227.concafe.domain.model.RankingItem
+import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.Stamp
 import com.hhp227.concafe.domain.model.User
@@ -563,21 +564,76 @@ class FirestoreCacheDataSource :
 
     }
 
-    override fun rankingItemsFromCasts(): List<RankingItem> {
-        return casts
+    override suspend fun rankingItemsFromCasts(
+        period: RankingPeriod,
+        country: String?,
+        city: String?
+    ): List<RankingItem> {
+        val cafeNameById = cafes.associate { cafe -> cafe.id to cafe.name }
+        var filtered = casts.asSequence()
+
+        if (!country.isNullOrBlank()) {
+            val normalizedCountry = country.trim()
+            filtered = filtered.filter { cast ->
+                val cafeCountry = cafes.firstOrNull { cafe -> cafe.id == cast.cafeId }?.region?.country
+                cafeCountry.equals(normalizedCountry, ignoreCase = true)
+            }
+        }
+        if (!city.isNullOrBlank()) {
+            val normalizedCity = city.trim()
+            filtered = filtered.filter { cast ->
+                val cafeCity = cafes.firstOrNull { cafe -> cafe.id == cast.cafeId }?.region?.city
+                cafeCity.equals(normalizedCity, ignoreCase = true)
+            }
+        }
+        return filtered.toList()
             .sortedByDescending { it.followerCount }
             .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cast ->
-                RankingItem(cast.id, cast.name, cast.followerCount, index + 1, cast.profileImage)
+                RankingItem(
+                    id = cast.id,
+                    name = cast.name,
+                    subtitle = cafeNameById[cast.cafeId] ?: cast.cafeId,
+                    score = cast.followerCount,
+                    rank = index + 1,
+                    change = "0",
+                    imageUrl = cast.profileImage
+                )
             }
     }
 
-    override fun rankingItemsFromCafes(): List<RankingItem> {
-        return cafes
+    override suspend fun rankingItemsFromCafes(
+        period: RankingPeriod,
+        country: String?,
+        city: String?
+    ): List<RankingItem> {
+        var filtered = cafes.asSequence()
+
+        if (!country.isNullOrBlank()) {
+            val normalizedCountry = country.trim()
+            filtered = filtered.filter { cafe ->
+                cafe.region.country.equals(normalizedCountry, ignoreCase = true)
+            }
+        }
+        if (!city.isNullOrBlank()) {
+            val normalizedCity = city.trim()
+            filtered = filtered.filter { cafe ->
+                cafe.region.city.equals(normalizedCity, ignoreCase = true)
+            }
+        }
+        return filtered.toList()
             .sortedByDescending { it.ratingAvg }
             .take(RANKING_MAX_COUNT)
             .mapIndexed { index, cafe ->
-                RankingItem(cafe.id, cafe.name, (cafe.ratingAvg * 100).toInt(), index + 1, cafe.thumbnailImage)
+                RankingItem(
+                    id = cafe.id,
+                    name = cafe.name,
+                    subtitle = cafe.region.address.substringBefore("구").substringBefore("로").ifBlank { cafe.region.city },
+                    score = (cafe.ratingAvg * 100).toInt(),
+                    rank = index + 1,
+                    change = "0",
+                    imageUrl = cafe.thumbnailImage
+                )
             }
     }
 

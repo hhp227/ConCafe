@@ -47,7 +47,7 @@ struct ExploreUiState {
 
     enum TabType: String, CaseIterable {
         case cafe = "카페"
-        case maid = "메이드"
+        case maid = "캐스트"
     }
 
     enum RegionFilter: String, CaseIterable {

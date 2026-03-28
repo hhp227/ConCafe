@@ -2,6 +2,7 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
@@ -9,6 +10,7 @@ import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
+import com.hhp227.concafe.domain.event.publisher.UserEventPublisher
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
@@ -75,6 +77,7 @@ import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
@@ -486,6 +489,13 @@ fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
     return koin.get()
 }
 
+fun resolveUpdateUserProfileUseCase(): UpdateUserProfileUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveUpdateCafeEventUseCase(): UpdateCafeEventUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -623,6 +633,13 @@ fun resolveCafeRegistrationClaimEventPublisher(): CafeRegistrationClaimEventPubl
     return koin.get()
 }
 
+fun resolveCafeOwnerClaimEventPublisher(): CafeOwnerClaimEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveCastClaimEventPublisher(): CastClaimEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -659,6 +676,13 @@ fun resolveScheduleManagementEventPublisher(): ScheduleManagementEventPublisher 
 }
 
 fun resolveVisitEventPublisher(): VisitEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUserEventPublisher(): UserEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

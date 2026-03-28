@@ -18,6 +18,8 @@ final class HomeViewModel: ObservableObject {
 
     private let bannerEventPublisher: BannerEventPublisher
 
+    private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
@@ -312,6 +314,21 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeRegistrationClaimEvent() {
+        tasks[.cafeRegistrationClaimEvent]?.cancel()
+        tasks[.cafeRegistrationClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    if event is CafeRegistrationClaimEvent.Approved {
+                        self.loadNearbyCafePage(cursor: nil, append: false)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func observeCastEvent() {
         tasks[.castEvent]?.cancel()
         tasks[.castEvent] = Task {
@@ -534,17 +551,20 @@ final class HomeViewModel: ObservableObject {
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
+        cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.bannerEventPublisher = bannerEventPublisher
+        self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
         observeSession()
         observeBannerEvent()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
@@ -565,6 +585,7 @@ final class HomeViewModel: ObservableObject {
     private enum TaskKey {
         case session
         case bannerEvent
+        case cafeRegistrationClaimEvent
         case cafeDetailEvent
         case castEvent
         case popularCastPage

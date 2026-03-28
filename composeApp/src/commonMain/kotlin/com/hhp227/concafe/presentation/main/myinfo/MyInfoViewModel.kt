@@ -13,12 +13,15 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.MyPageSummary
+import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.UserEvent
 import com.hhp227.concafe.domain.event.VisitEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.UserEventPublisher
 import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -31,7 +34,8 @@ class MyInfoViewModel(
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher,
-    private val visitEventPublisher: VisitEventPublisher
+    private val visitEventPublisher: VisitEventPublisher,
+    private val userEventPublisher: UserEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
@@ -119,6 +123,17 @@ class MyInfoViewModel(
         }
     }
 
+    private fun observeUserEvent() {
+        jobs[TaskKey.OBSERVE_USER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_USER_EVENT] = viewModelScope.launch {
+            userEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is UserEvent.ProfileUpdated -> patchUser(event.user)
+                }
+            }
+        }
+    }
+
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
@@ -173,6 +188,16 @@ class MyInfoViewModel(
                 castDetail = state.castDetail?.takeUnless { it.cast.id == castId },
                 followedMaids = state.followedMaids.filterNot { it.id == castId }
             )
+        }
+    }
+
+    private fun patchUser(user: User) {
+        _uiState.update { state ->
+            if (state.user?.id == user.id) {
+                state.copy(user = user)
+            } else {
+                state
+            }
         }
     }
 
@@ -266,10 +291,11 @@ class MyInfoViewModel(
     }
 
     init {
+        observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
-        observeSession()
+        observeUserEvent()
     }
 
     override fun onCleared() {
@@ -281,7 +307,8 @@ class MyInfoViewModel(
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
-        OBSERVE_VISIT_EVENT
+        OBSERVE_VISIT_EVENT,
+        OBSERVE_USER_EVENT
     }
 
     private fun normalizeCafes(items: List<Cafe>, maxCount: Int): List<Cafe> {

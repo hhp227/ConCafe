@@ -112,6 +112,7 @@ class CastEditViewModel(
                     _event.emit(CastEditEvent.NavigateBack)
                 }
                 is AppResult.Failure -> {
+                    println("TEST, CastEditViewModel save failure: ${result.error}")
                     _uiState.update {
                         it.copy(
                             isSaving = false,
@@ -241,6 +242,7 @@ class CastEditViewModel(
         return when (val result = uploadImageUseCase.invoke(imageUrl, folder)) {
             is AppResult.Success -> result.data
             is AppResult.Failure -> {
+                println("TEST, CastEditViewModel upload failure: ${result.error}")
                 _uiState.update {
                     it.copy(
                         isSaving = false,

@@ -112,7 +112,11 @@ private struct CheckInGuestContentView: View {
                 )
                 .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
-                CheckInSectionTitle(title: "🔥 인기 컨셉 카페", trailing: nil)
+                CheckInSectionTitle(
+                    title: "인기 컨셉 카페",
+                    trailing: nil,
+                    leadingSystemImage: "flame.fill"
+                )
                 if !uiState.popularCafes.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 14) {
@@ -122,6 +126,7 @@ private struct CheckInGuestContentView: View {
                                     rating: String(format: "%.1f", cafe.rating),
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,
+                                    showLocationIcon: true,
                                     trailingLabel: "체크인 \(cafe.checkInCount)",
                                     onTap: { onAction(.cafeTapped(id: cafe.id)) }
                                 )
@@ -137,7 +142,11 @@ private struct CheckInGuestContentView: View {
                     )
                     .padding(.horizontal, 16)
                 }
-                CheckInSectionTitle(title: "☕ 오늘 인기 캐스트", trailing: nil)
+                CheckInSectionTitle(
+                    title: "오늘 인기 캐스트",
+                    trailing: nil,
+                    leadingSystemImage: "cup.and.saucer.fill"
+                )
                 if !uiState.popularCasts.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -188,11 +197,19 @@ private struct CheckInUserContentView: View {
                 }
                 .padding(.horizontal, 64)
                 .padding(.vertical, 12)
-                CheckInSectionTitle(title: "오늘의 방문", trailing: TimeUtils.currentMonthDayLabelKorean())
+                CheckInSectionTitle(
+                    title: "오늘의 방문",
+                    trailing: TimeUtils.currentMonthDayLabelKorean(),
+                    leadingSystemImage: nil
+                )
                 CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
                     .frame(height: 20)
-                CheckInSectionTitle(title: "최근 타임라인", trailing: "🕘")
+                CheckInSectionTitle(
+                    title: "최근 타임라인",
+                    trailing: nil,
+                    leadingSystemImage: "clock.fill"
+                )
                 CheckInTimelineList(
                     visits: uiState.recentVisits,
                     canLoadMore: uiState.canLoadMoreRecentVisits,
@@ -729,9 +746,16 @@ private struct CheckInSectionTitle: View {
 
     let trailing: String?
 
+    let leadingSystemImage: String?
+
     var body: some View {
         HStack {
             HStack(spacing: 6) {
+                if let leadingSystemImage {
+                    Image(systemName: leadingSystemImage)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(hex: "7B7480"))
+                }
                 if let trailing {
                     Text(trailing)
                         .font(.caption)

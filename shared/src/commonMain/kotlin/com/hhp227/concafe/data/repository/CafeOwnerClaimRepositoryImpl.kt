@@ -16,9 +16,7 @@ class CafeOwnerClaimRepositoryImpl(
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeOwnerClaimRepository {
     override suspend fun createCafeOwnerClaim(userId: String, cafeId: String): PendingCafeOwnerClaimPreview {
-        runCatching {
-            firestoreSyncDataSource.refreshCafeManagementData(userId)
-        }
+        firestoreSyncDataSource.refreshCafeManagementData(userId)
         val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
         val cafe = cafeDataSource.cafes.firstOrNull { it.id == cafeId } ?: throw NoSuchElementException("cafe not found")
 

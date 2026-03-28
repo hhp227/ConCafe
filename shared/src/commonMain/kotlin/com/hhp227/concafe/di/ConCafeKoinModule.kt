@@ -43,7 +43,6 @@ import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
-import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 
 private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
@@ -51,16 +50,11 @@ private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
 val dataSourceModule = module {
     single { FirestoreConfig(projectId = FIRESTORE_PROJECT_ID) }
     single {
-        val dataSource = FirestoreConCafeDataSource(
+        FirestoreConCafeDataSource(
             config = get(),
             restApi = get(),
             tokenProvider = get()
         )
-
-        runBlocking {
-            runCatching { dataSource.bootstrap() }
-        }
-        dataSource
     }
     single<AuthDataSource> { get<FirestoreConCafeDataSource>() }
     single<BannerDataSource> { get<FirestoreConCafeDataSource>() }
@@ -96,7 +90,7 @@ val repositoryModule = module {
     single<VisitRepository> { VisitRepositoryImpl(get(), get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get(), get(), get()) }
-    single<RankingRepository> { RankingRepositoryImpl(get(), get(), get()) }
+    single<RankingRepository> { RankingRepositoryImpl(get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
     single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
@@ -106,6 +100,7 @@ val repositoryModule = module {
 val eventModule = module {
     single<BannerEventPublisher> { BannerEventPublisher() }
     single<CafeDetailEventPublisher> { CafeDetailEventPublisher() }
+    single<CafeOwnerClaimEventPublisher> { CafeOwnerClaimEventPublisher() }
     single<CafeRegistrationClaimEventPublisher> { CafeRegistrationClaimEventPublisher() }
     single<CastClaimEventPublisher> { CastClaimEventPublisher() }
     single<CastEventPublisher> { CastEventPublisher() }
@@ -113,6 +108,7 @@ val eventModule = module {
     single<ReviewEventPublisher> { ReviewEventPublisher() }
     single<ScheduleManagementEventPublisher> { ScheduleManagementEventPublisher() }
     single<VisitEventPublisher> { VisitEventPublisher() }
+    single<UserEventPublisher> { UserEventPublisher() }
 }
 
 val useCaseModule = module {
@@ -134,9 +130,9 @@ val useCaseModule = module {
     factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
-    factory { CreateCafeOwnerClaimUseCase(get(), get()) }
+    factory { CreateCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
-    factory { ApproveCafeOwnerClaimUseCase(get(), get()) }
+    factory { ApproveCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { DeleteCafeEventUseCase(get(), get()) }
     factory { DeleteCafeNoticeUseCase(get(), get()) }
@@ -158,7 +154,7 @@ val useCaseModule = module {
     factory { GetMyRequestableCastPageUseCase(get(), get()) }
     factory { GetMyInfoUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetNotificationFeedUseCase(get(), get()) }
-    factory { GetRankingFeedUseCase(get(), get()) }
+    factory { GetRankingFeedUseCase(get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }
     factory { GetSignUpCafeListUseCase(get()) }
     factory { GetPendingCastClaimsForCafeUseCase(get(), get()) }
@@ -178,6 +174,7 @@ val useCaseModule = module {
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
     factory { ToggleFollowCastUseCase(get(), get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get(), get()) }
+    factory { UpdateUserProfileUseCase(get(), get(), get()) }
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }
@@ -185,7 +182,7 @@ val useCaseModule = module {
     factory { UpdateCastScheduleUseCase(get(), get(), get()) }
     factory { ApproveCastClaimUseCase(get(), get(), get()) }
     factory { RejectCastClaimUseCase(get(), get(), get()) }
-    factory { RejectCafeOwnerClaimUseCase(get(), get()) }
+    factory { RejectCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { RejectCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { UpsertCastUseCase(get(), get(), get(), get()) }
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
