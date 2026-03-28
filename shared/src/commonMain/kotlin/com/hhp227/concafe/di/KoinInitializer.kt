@@ -54,6 +54,7 @@ import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
@@ -61,6 +62,7 @@ import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import com.hhp227.concafe.domain.usecase.UpdateNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
@@ -420,6 +422,13 @@ fun resolveGetNotificationFeedUseCase(): GetNotificationFeedUseCase {
     return koin.get()
 }
 
+fun resolveGetNotificationSettingsUseCase(): GetNotificationSettingsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetMainNavigationUseCase(): GetMainNavigationUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -463,6 +472,13 @@ fun resolveSignUpUseCase(): SignUpUseCase {
 }
 
 fun resolveMarkNotificationReadUseCase(): MarkNotificationReadUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateNotificationSettingsUseCase(): UpdateNotificationSettingsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

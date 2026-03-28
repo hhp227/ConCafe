@@ -263,6 +263,21 @@ service cloud.firestore {
         ]);
     }
 
+    function isNotificationReadOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.body == resource.data.body
+        && request.resource.data.targetId == resource.data.targetId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.isRead is bool
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "isRead",
+          "readAt",
+          "relativeTime"
+        ]);
+    }
+
     match /homeBanners/{bannerId} {
       allow read: if true;
       allow create: if isAdmin()
@@ -365,6 +380,23 @@ service cloud.firestore {
       allow create: if isSelf(userId);
       allow update: if isSelf(userId) || isAdmin();
       allow delete: if isSelf(userId);
+
+      match /notificationSettings/{settingId} {
+        allow read: if isSelf(userId)
+          && settingId == "default";
+        allow create, update: if isSelf(userId)
+          && settingId == "default"
+          && request.resource.data.userId is string
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if false;
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isSelf(userId);
+        allow update: if isSelf(userId)
+          && isNotificationReadOnlyUpdate();
+        allow create, delete: if false;
+      }
     }
 
     match /cafeRegistrationClaims/{claimId} {

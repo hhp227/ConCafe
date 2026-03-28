@@ -35,6 +35,7 @@ import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.Stamp
 import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.domain.model.UserNotificationSettings
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
@@ -471,6 +472,8 @@ class MockConCafeDataSource : ConCafeDataSource {
         AppNotification("noti-7", "user-1", "새로운 팔로워", "메이드팬123님이 회원님을 팔로우했어요.", "FOLLOW_UPDATE", null, false, "2026-03-09T05:00:00Z", "5시간 전"),
         AppNotification("noti-8", "user-1", "팬클럽 가입 알림", "리본러버님이 회원님을 새로 팔로우했어요.", "FOLLOW_UPDATE", null, true, "2026-03-07T08:00:00Z", "2일 전")
     )
+
+    private val notificationSettingsByUserId = mutableMapOf<String, UserNotificationSettings>()
 
     override val favoriteCafeIdsByUser = mutableMapOf("user-1" to mutableSetOf("cafe-1"))
     override val favoriteUserIdsByCafeId = mutableMapOf(
@@ -1161,6 +1164,48 @@ class MockConCafeDataSource : ConCafeDataSource {
         val endExclusive = (start + pageSize).coerceAtMost(items.size)
         val next = if (endExclusive < items.size) endExclusive.toString() else null
         return PagedResult(items.subList(start, endExclusive), next, next != null)
+    }
+
+    override suspend fun getNotifications(
+        userId: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<AppNotification> {
+        val items = notifications
+            .filter { notification -> notification.userId == userId }
+            .sortedByDescending { notification -> notification.createdAt }
+        return toPaged(items, cursor, pageSize)
+    }
+
+    override suspend fun markNotificationAsRead(userId: String, notificationId: String) {
+        val index = notifications.indexOfFirst { notification ->
+            notification.userId == userId && notification.id == notificationId
+        }
+
+        if (index == -1) {
+            throw NoSuchElementException("notification not found")
+        } else {
+            val current = notifications[index]
+            notifications[index] = current.copy(isRead = true)
+        }
+    }
+
+    override suspend fun getNotificationSettings(userId: String): UserNotificationSettings {
+        val cached = notificationSettingsByUserId[userId]
+
+        if (cached != null) {
+            return cached
+        } else {
+            return UserNotificationSettings.default()
+        }
+    }
+
+    override suspend fun updateNotificationSettings(
+        userId: String,
+        settings: UserNotificationSettings
+    ): UserNotificationSettings {
+        notificationSettingsByUserId[userId] = settings
+        return settings
     }
 
     private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {

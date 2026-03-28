@@ -56,6 +56,28 @@ type CastClaimLike = {
   requesterProfileImage?: unknown;
 };
 
+type CastScheduleLike = {
+  castId?: unknown;
+  cafeId?: unknown;
+  date?: unknown;
+  status?: unknown;
+  startTime?: unknown;
+  endTime?: unknown;
+};
+
+type NoticeLike = {
+  title?: unknown;
+  content?: unknown;
+  createdAt?: unknown;
+};
+
+type UserNotificationSettings = {
+  isPushNotificationsEnabled: boolean;
+  isShiftNotificationsEnabled: boolean;
+  isBirthdayNotificationsEnabled: boolean;
+  isNoticeNotificationsEnabled: boolean;
+};
+
 function asPlainObject(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value == null || Array.isArray(value)) {
     return null;
@@ -125,6 +147,93 @@ function buildCastFollowDocumentId(userId: string, castId: string): string {
   const normalizedUserId = userId.replace(/\//g, "_");
   const normalizedCastId = castId.replace(/\//g, "_");
   return `${normalizedUserId}_${normalizedCastId}`;
+}
+
+function sanitizeNotificationDocumentId(value: string): string {
+  return value.replace(/\//g, "_").trim();
+}
+
+function kstNow(): Date {
+  const now = new Date();
+  const utcMillis = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+  return new Date(utcMillis + (9 * 60 * 60 * 1000));
+}
+
+function kstDateKey(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getUTCDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function kstBirthdayKey(date: Date): string {
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getUTCDate()}`.padStart(2, "0");
+  return `${month}-${day}`;
+}
+
+function readNotificationSettings(data: unknown): UserNotificationSettings {
+  const plain = asPlainObject(data);
+  const isPushEnabled = plain?.isPushNotificationsEnabled !== false;
+  const isShiftEnabled = plain?.isShiftNotificationsEnabled !== false;
+  const isBirthdayEnabled = plain?.isBirthdayNotificationsEnabled !== false;
+  const isNoticeEnabled = plain?.isNoticeNotificationsEnabled === true;
+
+  return {
+    isPushNotificationsEnabled: isPushEnabled,
+    isShiftNotificationsEnabled: isShiftEnabled,
+    isBirthdayNotificationsEnabled: isBirthdayEnabled,
+    isNoticeNotificationsEnabled: isNoticeEnabled,
+  };
+}
+
+async function loadUserNotificationSettings(userId: string): Promise<UserNotificationSettings> {
+  const snapshot = await db()
+    .collection("users")
+    .doc(userId)
+    .collection("notificationSettings")
+    .doc("default")
+    .get();
+
+  if (!snapshot.exists) {
+    return {
+      isPushNotificationsEnabled: true,
+      isShiftNotificationsEnabled: true,
+      isBirthdayNotificationsEnabled: true,
+      isNoticeNotificationsEnabled: false,
+    };
+  } else {
+    return readNotificationSettings(snapshot.data());
+  }
+}
+
+async function createUserNotification(
+  userId: string,
+  notificationId: string,
+  type: "CAST_SHIFT" | "BIRTHDAY" | "CAFE_NOTICE",
+  title: string,
+  body: string,
+  targetId: string,
+  createdAt: string
+): Promise<void> {
+  const sanitizedId = sanitizeNotificationDocumentId(notificationId);
+  const userRef = db().collection("users").doc(userId);
+  const notificationRef = userRef.collection("notifications").doc(sanitizedId);
+
+  await notificationRef.set(
+    {
+      userId: userId,
+      type: type,
+      title: title,
+      body: body,
+      targetId: targetId,
+      createdAt: createdAt,
+      relativeTime: "방금 전",
+      isRead: false,
+      updatedAt: createdAt,
+    },
+    {merge: true}
+  );
 }
 
 function asGeoPoint(value: unknown): {latitude: number; longitude: number} | null {
@@ -482,6 +591,176 @@ async function syncCastFollowerAggregate(cafeId: string, castId: string): Promis
       },
       {merge: true}
     );
+}
+
+async function syncCastScheduleNotifications(
+  scheduleId: string,
+  beforeData: CastScheduleLike | undefined,
+  afterData: CastScheduleLike | undefined
+): Promise<void> {
+  const beforeStatus = asNonBlankString(beforeData?.status);
+  const afterStatus = asNonBlankString(afterData?.status);
+  const castId = asNonBlankString(afterData?.castId);
+  const cafeId = asNonBlankString(afterData?.cafeId);
+  const scheduleDate = asNonBlankString(afterData?.date);
+  const todayDate = kstDateKey(kstNow());
+
+  if (afterStatus !== "WORK") {
+    return;
+  } else if (beforeStatus === "WORK") {
+    return;
+  } else if (castId == null || cafeId == null || scheduleDate == null) {
+    return;
+  } else if (scheduleDate !== todayDate) {
+    return;
+  }
+
+  const castSnapshot = await db()
+    .collection("cafes")
+    .doc(cafeId)
+    .collection("casts")
+    .doc(castId)
+    .get();
+  const castName = asNonBlankString(castSnapshot.data()?.name) ?? "팔로우한 캐스트";
+  const followers = await db()
+    .collection("castFollows")
+    .where("castId", "==", castId)
+    .select("userId")
+    .get();
+
+  if (followers.empty) {
+    return;
+  }
+  const startTime = asNonBlankString(afterData?.startTime) ?? "";
+  const endTime = asNonBlankString(afterData?.endTime) ?? "";
+  const timeLabel = startTime.length > 0 && endTime.length > 0
+    ? `${startTime} - ${endTime}`
+    : "오늘";
+  const createdAt = new Date().toISOString();
+  const tasks = followers.docs.map(async (followerDoc) => {
+    const userId = asNonBlankString(followerDoc.get("userId"));
+
+    if (userId == null) {
+      return;
+    }
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isPushNotificationsEnabled || !settings.isShiftNotificationsEnabled) {
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `cast_shift_${scheduleId}_${userId}`,
+      "CAST_SHIFT",
+      "팔로우 캐스트 출근 알림",
+      `${castName}님이 ${timeLabel} 출근 예정이에요.`,
+      castId,
+      createdAt
+    );
+  });
+
+  await Promise.all(tasks);
+}
+
+async function syncFavoriteCafeNoticeNotifications(
+  cafeId: string,
+  noticeId: string,
+  beforeData: NoticeLike | undefined,
+  afterData: NoticeLike | undefined
+): Promise<void> {
+  if (afterData == null || beforeData != null) {
+    return;
+  }
+  const title = asNonBlankString(afterData.title) ?? "새 공지";
+  const content = asNonBlankString(afterData.content) ?? "즐겨찾기 카페에 새 공지가 등록되었어요.";
+  const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+  const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "즐겨찾기 카페";
+  const favorites = await db()
+    .collection("cafeFavorites")
+    .where("cafeId", "==", cafeId)
+    .select("userId")
+    .get();
+
+  if (favorites.empty) {
+    return;
+  }
+  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+  const tasks = favorites.docs.map(async (favoriteDoc) => {
+    const userId = asNonBlankString(favoriteDoc.get("userId"));
+
+    if (userId == null) {
+      return;
+    }
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isPushNotificationsEnabled || !settings.isNoticeNotificationsEnabled) {
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `cafe_notice_${noticeId}_${userId}`,
+      "CAFE_NOTICE",
+      `${cafeName} 공지 업데이트`,
+      title.length > 0 ? title : content,
+      cafeId,
+      createdAt
+    );
+  });
+
+  await Promise.all(tasks);
+}
+
+async function syncBirthdayNotifications(): Promise<void> {
+  const today = kstNow();
+  const birthdayKey = kstBirthdayKey(today);
+  const castSnapshot = await db()
+    .collectionGroup("casts")
+    .where("birthdayKey", "==", birthdayKey)
+    .select("name")
+    .get();
+
+  if (castSnapshot.empty) {
+    return;
+  }
+  const createdAt = new Date().toISOString();
+  const tasks = castSnapshot.docs.map(async (castDoc) => {
+    const castId = castDoc.id;
+    const castName = asNonBlankString(castDoc.get("name")) ?? "팔로우한 캐스트";
+    const followers = await db()
+      .collection("castFollows")
+      .where("castId", "==", castId)
+      .select("userId")
+      .get();
+
+    if (followers.empty) {
+      return;
+    }
+    const followerTasks = followers.docs.map(async (followerDoc) => {
+      const userId = asNonBlankString(followerDoc.get("userId"));
+
+      if (userId == null) {
+        return;
+      }
+      const settings = await loadUserNotificationSettings(userId);
+
+      if (!settings.isPushNotificationsEnabled || !settings.isBirthdayNotificationsEnabled) {
+        return;
+      }
+      await createUserNotification(
+        userId,
+        `birthday_${castId}_${birthdayKey}_${userId}`,
+        "BIRTHDAY",
+        "팔로우 캐스트 생일 알림",
+        `오늘은 ${castName}님의 생일이에요. 축하 메시지를 남겨보세요.`,
+        castId,
+        createdAt
+      );
+    });
+
+    await Promise.all(followerTasks);
+  });
+
+  await Promise.all(tasks);
 }
 
 type RankingScope = {
@@ -916,6 +1195,46 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         castId: castId,
         cafeId: cafeId,
       })),
+    });
+  }
+);
+
+export const onCastScheduleWrittenCreateShiftNotifications = onDocumentWritten(
+  "castSchedules/{scheduleId}",
+  async (event) => {
+    const scheduleId = asNonBlankString(event.params.scheduleId);
+    const beforeData = event.data?.before.data() as CastScheduleLike | undefined;
+    const afterData = event.data?.after.data() as CastScheduleLike | undefined;
+
+    if (scheduleId == null) {
+      return;
+    }
+    await syncCastScheduleNotifications(scheduleId, beforeData, afterData);
+    logger.info("Synced cast schedule notifications.", {
+      scheduleId: scheduleId,
+      status: asNonBlankString(afterData?.status),
+      date: asNonBlankString(afterData?.date),
+      castId: asNonBlankString(afterData?.castId),
+    });
+  }
+);
+
+export const onCafeNoticeWrittenCreateFavoriteNotifications = onDocumentWritten(
+  "cafes/{cafeId}/notices/{noticeId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+    const noticeId = asNonBlankString(event.params.noticeId);
+    const beforeData = event.data?.before.data() as NoticeLike | undefined;
+    const afterData = event.data?.after.data() as NoticeLike | undefined;
+
+    if (cafeId == null || noticeId == null) {
+      return;
+    }
+    await syncFavoriteCafeNoticeNotifications(cafeId, noticeId, beforeData, afterData);
+    logger.info("Synced favorite cafe notice notifications.", {
+      cafeId: cafeId,
+      noticeId: noticeId,
+      created: beforeData == null && afterData != null,
     });
   }
 );
@@ -1400,6 +1719,19 @@ export const onScheduleSyncRankingSnapshots = onSchedule(
     logger.info("Synced ranking snapshots.", {
       periods: RANKING_PERIODS,
       scopeCount: RANKING_SCOPES.length,
+    });
+  }
+);
+
+export const onScheduleCreateBirthdayNotifications = onSchedule(
+  {
+    schedule: "every day 10:00",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    await syncBirthdayNotifications();
+    logger.info("Synced birthday notifications.", {
+      birthdayKey: kstBirthdayKey(kstNow()),
     });
   }
 );

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 
 enum NotificationSettingsAction {
     case backTapped
@@ -13,5 +14,5 @@ enum NotificationSettingsAction {
     case shiftNotificationsToggled(Bool)
     case birthdayNotificationsToggled(Bool)
     case noticeNotificationsToggled(Bool)
-    case quietHoursSelected(NotificationQuietHoursOption)
+    case quietHoursSelected(NotificationQuietHoursMode)
 }
