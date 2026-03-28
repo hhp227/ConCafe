@@ -8,6 +8,8 @@
 import Foundation
 import Combine
 import AuthenticationServices
+import CryptoKit
+import Security
 import UIKit
 import KakaoSDKAuth
 import KakaoSDKUser
@@ -193,24 +195,26 @@ class SignInViewModel: ObservableObject {
     private func requestGoogleIdToken() async throws -> String {
         let clientId = try requireGoogleServiceValue(key: "CLIENT_ID")
         let callbackScheme = try requireGoogleServiceValue(key: "REVERSED_CLIENT_ID")
-        let nonce = UUID().uuidString
         let state = UUID().uuidString
         let redirectUri = "\(callbackScheme):/oauthredirect"
+        let codeVerifier = makeGoogleCodeVerifier()
+        let codeChallenge = makeGoogleCodeChallenge(codeVerifier: codeVerifier)
         let authUrlString =
             "https://accounts.google.com/o/oauth2/v2/auth" +
-            "?response_type=id_token" +
+            "?response_type=code" +
             "&client_id=\(urlEncoded(clientId))" +
             "&redirect_uri=\(urlEncoded(redirectUri))" +
             "&scope=\(urlEncoded("openid email profile"))" +
-            "&nonce=\(urlEncoded(nonce))" +
             "&state=\(urlEncoded(state))" +
+            "&code_challenge=\(urlEncoded(codeChallenge))" +
+            "&code_challenge_method=S256" +
             "&prompt=select_account"
 
         guard let authUrl = URL(string: authUrlString) else {
             throw SignInError.invalidAuthUrl
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        let authCode = try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: authUrl,
                 callbackURLScheme: callbackScheme
@@ -227,16 +231,21 @@ class SignInViewModel: ObservableObject {
                     return
                 }
 
-                guard
-                    let fragment = callbackUrl.fragment,
-                    let idToken = self?.extractFragmentValue(fragment: fragment, key: "id_token"),
-                    !idToken.isEmpty
-                else {
-                    continuation.resume(throwing: SignInError.idTokenNotFound)
+                let callbackState = self?.extractQueryValue(url: callbackUrl, key: "state")
+                if callbackState != state {
+                    continuation.resume(throwing: SignInError.invalidCallbackState)
                     return
                 }
 
-                continuation.resume(returning: idToken)
+                guard
+                    let authCode = self?.extractQueryValue(url: callbackUrl, key: "code"),
+                    !authCode.isEmpty
+                else {
+                    continuation.resume(throwing: SignInError.authCodeNotFound)
+                    return
+                }
+
+                continuation.resume(returning: authCode)
             }
 
             session.presentationContextProvider = self.webAuthPresentationContextProvider
@@ -247,6 +256,13 @@ class SignInViewModel: ObservableObject {
                 continuation.resume(throwing: SignInError.failedToStartWebAuth)
             }
         }
+
+        return try await exchangeGoogleAuthCodeForIdToken(
+            clientId: clientId,
+            authCode: authCode,
+            codeVerifier: codeVerifier,
+            redirectUri: redirectUri
+        )
     }
 
     private func requestKakaoIdToken() async throws -> String {
@@ -325,6 +341,69 @@ class SignInViewModel: ObservableObject {
         return nil
     }
 
+    private func extractQueryValue(url: URL, key: String) -> String? {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        return components?.queryItems?.first(where: { $0.name == key })?.value
+    }
+
+    private func makeGoogleCodeVerifier() -> String {
+        var randomBytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        return base64UrlEncode(Data(randomBytes))
+    }
+
+    private func makeGoogleCodeChallenge(codeVerifier: String) -> String {
+        let verifierData = Data(codeVerifier.utf8)
+        let digest = SHA256.hash(data: verifierData)
+        return base64UrlEncode(Data(digest))
+    }
+
+    private func base64UrlEncode(_ data: Data) -> String {
+        return data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    private func exchangeGoogleAuthCodeForIdToken(
+        clientId: String,
+        authCode: String,
+        codeVerifier: String,
+        redirectUri: String
+    ) async throws -> String {
+        guard let url = URL(string: "https://oauth2.googleapis.com/token") else {
+            throw SignInError.invalidAuthUrl
+        }
+
+        let body =
+            "code=\(urlEncoded(authCode))" +
+            "&client_id=\(urlEncoded(clientId))" +
+            "&code_verifier=\(urlEncoded(codeVerifier))" +
+            "&redirect_uri=\(urlEncoded(redirectUri))" +
+            "&grant_type=authorization_code"
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse {
+            if (200..<300).contains(httpResponse.statusCode) {
+                let tokenResponse = try JSONDecoder().decode(GoogleTokenResponse.self, from: data)
+                if let idToken = tokenResponse.idToken, !idToken.isEmpty {
+                    return idToken
+                } else {
+                    throw SignInError.idTokenNotFound
+                }
+            } else {
+                throw SignInError.googleTokenExchangeFailed
+            }
+        } else {
+            throw SignInError.googleTokenExchangeFailed
+        }
+    }
+
     private func urlEncoded(_ value: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-._~"))
         return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
@@ -341,7 +420,18 @@ private enum SignInError: Error {
     case invalidAuthUrl
     case failedToStartWebAuth
     case emptyCallbackUrl
+    case invalidCallbackState
+    case authCodeNotFound
     case idTokenNotFound
+    case googleTokenExchangeFailed
+}
+
+private struct GoogleTokenResponse: Decodable {
+    let idToken: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case idToken = "id_token"
+    }
 }
 
 private final class WebAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
