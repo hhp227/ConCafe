@@ -543,6 +543,8 @@ private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDeleg
 
     private var pendingAuthContinuation: CheckedContinuation<CLAuthorizationStatus, Never>?
 
+    private var locationTimeoutWorkItem: DispatchWorkItem?
+
     private let fallbackLocation = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
 
     func requestPermissionIfNeeded() async -> IosCheckInPermissionResult {
@@ -580,6 +582,23 @@ private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDeleg
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
             return await withCheckedContinuation { continuation in
                 self.continuation = continuation
+                let timeoutWorkItem = DispatchWorkItem { [weak self] in
+                    guard let self else { return }
+                    if let pendingContinuation = self.continuation {
+                        self.continuation = nil
+                        pendingContinuation.resume(
+                            returning: IosCheckInLocationResult(
+                                isSuccess: false,
+                                location: self.fallbackLocation,
+                                message: "현재 위치를 불러오는 중입니다. 잠시만 기다려 주세요."
+                            )
+                        )
+                    }
+                }
+
+                self.locationTimeoutWorkItem?.cancel()
+                self.locationTimeoutWorkItem = timeoutWorkItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: timeoutWorkItem)
                 self.locationManager.requestLocation()
             }
         } else {
@@ -614,6 +633,8 @@ private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDeleg
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        locationTimeoutWorkItem?.cancel()
+        locationTimeoutWorkItem = nil
         let location = locations.first
 
         if location != nil {
@@ -637,6 +658,8 @@ private final class IosCheckInLocationProvider: NSObject, CLLocationManagerDeleg
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        locationTimeoutWorkItem?.cancel()
+        locationTimeoutWorkItem = nil
         continuation?.resume(
             returning: IosCheckInLocationResult(
                 isSuccess: false,
