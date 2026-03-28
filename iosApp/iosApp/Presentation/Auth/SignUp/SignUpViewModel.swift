@@ -322,7 +322,7 @@ class SignUpViewModel: ObservableObject {
         guard let authUrl = URL(string: authUrlString) else {
             throw SignUpError.invalidAuthUrl
         }
-        let authCode = try await withCheckedThrowingContinuation { continuation in
+        let authCode: String = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             let session = ASWebAuthenticationSession(
                 url: authUrl,
                 callbackURLScheme: callbackScheme
