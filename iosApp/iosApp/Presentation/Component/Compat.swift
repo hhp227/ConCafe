@@ -266,17 +266,11 @@ struct CompatImagePicker: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        if #available(iOS 16.0, *) {
-            PhotosUICompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        } else {
-            PHPickerCompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        }
+        // Use one stable picker path across iOS 15/16 to avoid callback-loss regressions.
+        PHPickerCompatImagePicker(
+            onImageSelected: onImageSelected,
+            onDismiss: onDismiss
+        )
     }
 }
 
@@ -312,16 +306,28 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
             _ picker: PHPickerViewController,
             didFinishPicking results: [PHPickerResult]
         ) {
-            picker.dismiss(animated: true)
-            parent.onDismiss()
-
-            guard let provider = results.first?.itemProvider,
-                  provider.canLoadObject(ofClass: UIImage.self) else { return }
-
-            provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
-                guard let image = object as? UIImage else { return }
+            guard let provider = results.first?.itemProvider else {
                 DispatchQueue.main.async {
-                    self?.parent.onImageSelected(image)
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
+                }
+                return
+            }
+            guard provider.canLoadObject(ofClass: UIImage.self) else {
+                DispatchQueue.main.async {
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
+                }
+                return
+            }
+
+            provider.loadObject(ofClass: UIImage.self) { object, _ in
+                DispatchQueue.main.async {
+                    if let image = object as? UIImage {
+                        self.parent.onImageSelected(image)
+                    }
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
                 }
             }
         }
