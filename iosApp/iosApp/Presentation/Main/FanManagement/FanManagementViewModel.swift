@@ -16,6 +16,8 @@ final class FanManagementViewModel: ObservableObject {
 
     private let createCastClaimUseCase: CreateCastClaimUseCase
 
+    private let sendFanAnnouncementUseCase: SendFanAnnouncementUseCase
+
     private let getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase
 
     private let getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase
@@ -582,6 +584,74 @@ final class FanManagementViewModel: ObservableObject {
         uiState.isClaimSheetVisible = false
     }
 
+    private func openAnnouncementSheet() {
+        guard uiState.fanManagementData != nil,
+              let castClaimStatus = uiState.castClaimStatus else {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        if castClaimStatus.accent != .linked {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        uiState.isAnnouncementSheetVisible = true
+        uiState.announcementTitle = ""
+        uiState.announcementBody = ""
+        uiState.isSendingAnnouncement = false
+        uiState.infoMessage = nil
+    }
+
+    private func submitAnnouncement() {
+        guard let fanManagementData = uiState.fanManagementData,
+              let castClaimStatus = uiState.castClaimStatus else {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        if castClaimStatus.accent != .linked {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        let title = uiState.announcementTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = uiState.announcementBody.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if title.isEmpty || body.isEmpty {
+            setInfoMessage("제목과 내용을 모두 입력해 주세요.")
+            return
+        }
+        uiState.isSendingAnnouncement = true
+        uiState.infoMessage = nil
+        let cast = fanManagementData.detail.cast
+
+        Task {
+            do {
+                let result = try await sendFanAnnouncementUseCase.invoke(
+                    userId: fanManagementData.user.id,
+                    cafeId: cast.cafeId,
+                    castId: cast.id,
+                    title: title,
+                    body: body
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isAnnouncementSheetVisible = false
+                    uiState.announcementTitle = ""
+                    uiState.announcementBody = ""
+                    uiState.isSendingAnnouncement = false
+                    uiState.infoMessage = "팔로워에게 팬 공지를 전송했습니다."
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSendingAnnouncement = false
+                    uiState.infoMessage = "\(failure.error)"
+                } else {
+                    uiState.isSendingAnnouncement = false
+                    uiState.infoMessage = "팬 공지 전송에 실패했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isSendingAnnouncement = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func submitCastClaim() {
         guard let sheet = uiState.castClaimSheet, let castId = sheet.selectedCastId else { return }
         uiState.castClaimSheet = .init(
@@ -656,7 +726,16 @@ final class FanManagementViewModel: ObservableObject {
             guard let detail = uiState.fanManagementData?.detail else { return }
             event.send(.navigateToCastEdit(cafeId: detail.cast.cafeId, castId: detail.cast.id))
         case .clickPrimaryAnnouncement:
-            setInfoMessage("팬 공지 작성 흐름은 다음 단계에서 연결합니다.")
+            openAnnouncementSheet()
+        case .changeAnnouncementTitle(let title):
+            uiState.announcementTitle = title
+        case .changeAnnouncementBody(let body):
+            uiState.announcementBody = body
+        case .submitAnnouncement:
+            submitAnnouncement()
+        case .dismissAnnouncementSheet:
+            uiState.isAnnouncementSheetVisible = false
+            uiState.isSendingAnnouncement = false
         case .clickQuickAction(let quickAction):
             clickQuickAction(quickAction)
         case .clickViewAllFollowers:
@@ -673,6 +752,7 @@ final class FanManagementViewModel: ObservableObject {
     init(
         getFanManagementDataUseCase: GetFanManagementDataUseCase = KoinInitializerKt.resolveGetFanManagementDataUseCase(),
         createCastClaimUseCase: CreateCastClaimUseCase = KoinInitializerKt.resolveCreateCastClaimUseCase(),
+        sendFanAnnouncementUseCase: SendFanAnnouncementUseCase = KoinInitializerKt.resolveSendFanAnnouncementUseCase(),
         getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase = KoinInitializerKt.resolveGetMyCastClaimStatusUseCase(),
         getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase = KoinInitializerKt.resolveGetMyRequestableCastPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
@@ -682,6 +762,7 @@ final class FanManagementViewModel: ObservableObject {
     ) {
         self.getFanManagementDataUseCase = getFanManagementDataUseCase
         self.createCastClaimUseCase = createCastClaimUseCase
+        self.sendFanAnnouncementUseCase = sendFanAnnouncementUseCase
         self.getMyCastClaimStatusUseCase = getMyCastClaimStatusUseCase
         self.getMyRequestableCastPageUseCase = getMyRequestableCastPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase

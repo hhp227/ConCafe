@@ -74,6 +74,15 @@ type CafeOwnerClaimLike = {
   requestedAt?: unknown;
 };
 
+type FanAnnouncementRequestLike = {
+  userId?: unknown;
+  cafeId?: unknown;
+  castId?: unknown;
+  title?: unknown;
+  body?: unknown;
+  createdAt?: unknown;
+};
+
 type CastScheduleLike = {
   castId?: unknown;
   cafeId?: unknown;
@@ -1446,6 +1455,93 @@ export const onCastScheduleWrittenCreateShiftNotifications = onDocumentWritten(
       date: asNonBlankString(afterData?.date),
       castId: asNonBlankString(afterData?.castId),
     });
+  }
+);
+
+export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
+  "fanAnnouncementRequests/{requestId}",
+  async (event) => {
+    const requestId = asNonBlankString(event.params.requestId);
+    const beforeData = event.data?.before.data() as FanAnnouncementRequestLike | undefined;
+    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
+
+    if (requestId == null || afterData == null || beforeData != null) {
+      return;
+    }
+    try {
+      const requesterUserId = asNonBlankString(afterData.userId);
+      const cafeId = asNonBlankString(afterData.cafeId);
+      const castId = asNonBlankString(afterData.castId);
+      const rawTitle = asNonBlankString(afterData.title);
+      const rawBody = asNonBlankString(afterData.body);
+
+      if (requesterUserId == null || cafeId == null || castId == null || rawTitle == null || rawBody == null) {
+        return;
+      }
+      const title = rawTitle.substring(0, 50);
+      const body = rawBody.substring(0, 300);
+      const requesterSnapshot = await db().collection("users").doc(requesterUserId).get();
+      const requesterRole = asNonBlankString(requesterSnapshot.data()?.role);
+      const requesterAffiliatedCafeId = asNonBlankString(requesterSnapshot.data()?.affiliatedCafeId);
+      const hasAnnouncementPermission = requesterAffiliatedCafeId === cafeId &&
+        (requesterRole === "CAST" || requesterRole === "CAFE_OWNER" || requesterRole === "ADMIN");
+
+      if (!hasAnnouncementPermission) {
+        logger.warn("Fan announcement request rejected due to permission.", {
+          requestId: requestId,
+          requesterUserId: requesterUserId,
+          requesterRole: requesterRole,
+          requesterAffiliatedCafeId: requesterAffiliatedCafeId,
+          cafeId: cafeId,
+        });
+        return;
+      }
+      const followers = await db()
+        .collection("castFollows")
+        .where("castId", "==", castId)
+        .select("userId")
+        .get();
+
+      if (followers.empty) {
+        logger.info("Fan announcement has no follower target.", {
+          requestId: requestId,
+          requesterUserId: requesterUserId,
+          castId: castId,
+        });
+        return;
+      }
+      const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+      const followerTasks = followers.docs.map(async (followerDoc) => {
+        const userId = asNonBlankString(followerDoc.get("userId"));
+
+        if (userId == null || userId === requesterUserId) {
+          return;
+        }
+        const settings = await loadUserNotificationSettings(userId);
+
+        if (!settings.isPushNotificationsEnabled) {
+          return;
+        }
+        await sendPushToUser(
+          userId,
+          title,
+          body,
+          "FAN_ANNOUNCEMENT",
+          castId,
+          sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`)
+        );
+        logger.info("Sent fan announcement push.", {
+          requestId: requestId,
+          targetUserId: userId,
+          castId: castId,
+          createdAt: createdAt,
+        });
+      });
+
+      await Promise.all(followerTasks);
+    } finally {
+      await event.data?.after.ref.delete();
+    }
   }
 );
 

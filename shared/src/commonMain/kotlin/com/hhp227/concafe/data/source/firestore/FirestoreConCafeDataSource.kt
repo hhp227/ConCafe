@@ -359,6 +359,57 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    override suspend fun sendFanAnnouncement(
+        userId: String,
+        cafeId: String,
+        castId: String,
+        title: String,
+        body: String
+    ) {
+        val normalizedUserId = userId.trim()
+        val normalizedCafeId = cafeId.trim()
+        val normalizedCastId = castId.trim()
+        val normalizedTitle = title.trim()
+        val normalizedBody = body.trim()
+
+        if (normalizedUserId.isEmpty() || normalizedCafeId.isEmpty() || normalizedCastId.isEmpty()) {
+            throw IllegalArgumentException("fan announcement target is required")
+        }
+        if (normalizedTitle.isEmpty()) {
+            throw IllegalArgumentException("fan announcement title is required")
+        }
+        if (normalizedBody.isEmpty()) {
+            throw IllegalArgumentException("fan announcement body is required")
+        }
+        if (normalizedTitle.length > 50) {
+            throw IllegalArgumentException("fan announcement title is too long")
+        }
+        if (normalizedBody.length > 300) {
+            throw IllegalArgumentException("fan announcement body is too long")
+        }
+        val idToken = tokenProvider.getIdToken()
+        val requestId = nextFirestoreEntityId("fan-announcement")
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.FAN_ANNOUNCEMENT_REQUESTS}/$requestId"
+        val bodyPayload = firestoreDocumentBody(
+            fields = mapOf(
+                "userId" to firestoreString(normalizedUserId),
+                "cafeId" to firestoreString(normalizedCafeId),
+                "castId" to firestoreString(normalizedCastId),
+                "title" to firestoreString(normalizedTitle),
+                "body" to firestoreString(normalizedBody),
+                "createdAt" to firestoreString(now)
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = bodyPayload, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = bodyPayload, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to send fan announcement request", throwable)
+        }
+    }
+
     suspend fun refreshCafeDetail(cafeId: String) {
         val idToken = tokenProvider.getIdToken()
         val cafeDocument = runCatching {

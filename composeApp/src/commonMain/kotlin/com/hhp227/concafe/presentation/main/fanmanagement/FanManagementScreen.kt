@@ -26,6 +26,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
+import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.datetime.Clock
@@ -89,6 +90,19 @@ fun FanManagementScreen(
                 )
             }
         }
+        if (uiState.isAnnouncementSheetVisible) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.onAction(FanManagementAction.DismissAnnouncementSheet) },
+                sheetState = sheetState
+            ) {
+                FanAnnouncementSheetContent(
+                    uiState = uiState,
+                    onAction = viewModel::onAction
+                )
+            }
+        }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -144,7 +158,6 @@ private fun FanManagementContentScreen(
         QuickActionGrid(
             onActionClick = { onAction(FanManagementAction.ClickQuickAction(it)) }
         )
-        print("TEST TEST!!!! ${uiState.fanManagementData?.detail}")
         WeeklyScheduleSection(
             schedule = uiState.fanManagementData?.detail?.schedule.orEmpty()
         )
@@ -666,6 +679,108 @@ private fun String.toRelativeFollowerTimeLabel(): String {
         diffSeconds < 86_400 -> "${diffSeconds / 3600}시간 전"
         diffSeconds < 2_592_000 -> "${diffSeconds / 86_400}일 전"
         else -> "오래 전"
+    }
+}
+
+@Composable
+private fun FanAnnouncementSheetContent(
+    uiState: FanManagementUiState,
+    onAction: (FanManagementAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.82f)
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "팬 공지 작성하기",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = { onAction(FanManagementAction.DismissAnnouncementSheet) }) {
+                Icon(Icons.Default.Close, contentDescription = "닫기", tint = Color(0xFF7A707A))
+            }
+        }
+        LazyColumn(
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            item {
+                ConCafeFormField(
+                    label = "제목",
+                    value = uiState.announcementTitle,
+                    onValueChange = { onAction(FanManagementAction.ChangeAnnouncementTitle(it)) },
+                    placeholder = "팬에게 전달할 제목을 입력해 주세요"
+                )
+            }
+            item {
+                ConCafeFormField(
+                    label = "내용",
+                    value = uiState.announcementBody,
+                    onValueChange = { onAction(FanManagementAction.ChangeAnnouncementBody(it)) },
+                    placeholder = "팬에게 전달할 공지 내용을 입력해 주세요",
+                    minLines = 7,
+                    singleLine = false
+                )
+            }
+            item {
+                Text(
+                    text = "공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF8A8087)
+                )
+            }
+        }
+        Surface(
+            color = Color.Transparent,
+            modifier = Modifier.imePadding()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color(0xFFF8F5F6), Color(0xFFF8F5F6))
+                        )
+                    )
+            ) {
+                Button(
+                    onClick = { onAction(FanManagementAction.SubmitAnnouncement) },
+                    enabled = uiState.isAnnouncementSubmitEnabled,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 18.dp)
+                        .navigationBarsPadding()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD1DC),
+                        contentColor = Color(0xFF2B2330),
+                        disabledContainerColor = Color(0xFFFFE6EE),
+                        disabledContentColor = Color(0xFFBCAAB3)
+                    )
+                ) {
+                    if (uiState.isSendingAnnouncement) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(22.dp),
+                            color = Color(0xFF2B2330)
+                        )
+                    } else {
+                        Text("팬 공지 전송", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                    }
+                }
+            }
+        }
     }
 }
 

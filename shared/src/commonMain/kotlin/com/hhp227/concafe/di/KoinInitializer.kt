@@ -69,6 +69,7 @@ import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
+import com.hhp227.concafe.domain.usecase.SendFanAnnouncementUseCase
 import com.hhp227.concafe.domain.usecase.RequestPasswordResetUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithAppleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
@@ -519,6 +520,13 @@ fun resolveRegisterPushTokenUseCase(): RegisterPushTokenUseCase {
 }
 
 fun resolveUpdateNotificationSettingsUseCase(): UpdateNotificationSettingsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSendFanAnnouncementUseCase(): SendFanAnnouncementUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

@@ -50,6 +50,22 @@ struct FanManagementView: View {
                     .compatLargeSheetDetent()
             }
         }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.uiState.isAnnouncementSheetVisible },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.dismissAnnouncementSheet)
+                    }
+                }
+            )
+        ) {
+            FanAnnouncementSheetView(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+            .compatLargeSheetDetent()
+        }
         .alert(
             "안내",
             isPresented: Binding(
@@ -481,6 +497,89 @@ private struct CastClaimSheetView: View {
                 }
             }
         }
+    }
+}
+
+private struct FanAnnouncementSheetView: View {
+    let uiState: FanManagementUiState
+
+    let onAction: (FanManagementAction) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("팬 공지 작성하기")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color(hex: "23161C"))
+                Spacer()
+                Button {
+                    onAction(.dismissAnnouncementSheet)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(hex: "9A8D95"))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    ConCafeFormField(
+                        label: "제목",
+                        text: Binding(
+                            get: { uiState.announcementTitle },
+                            set: { onAction(.changeAnnouncementTitle($0)) }
+                        ),
+                        placeholder: "팬에게 전달할 제목을 입력해 주세요"
+                    )
+                    ConCafeFormEditor(
+                        label: "내용",
+                        text: Binding(
+                            get: { uiState.announcementBody },
+                            set: { onAction(.changeAnnouncementBody($0)) }
+                        ),
+                        placeholder: "팬에게 전달할 공지 내용을 입력해 주세요"
+                    )
+                    Text("공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다.")
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "8A8087"))
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+                .padding(.bottom, 28)
+                .padding(.bottom, 60)
+            }
+            VStack {
+                Button {
+                    onAction(.submitAnnouncement)
+                } label: {
+                    HStack {
+                        if uiState.isSendingAnnouncement {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .tint(Color(hex: "2B2330"))
+                        } else {
+                            Text("팬 공지 전송")
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(Color(hex: "2B2330"))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .background(uiState.isAnnouncementSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "FFE6EE"))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(!uiState.isAnnouncementSubmitEnabled)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 14)
+            .padding(.bottom, 18)
+            .background(Color(hex: "F8F5F6"))
+        }
+        .background(Color(hex: "F8F5F6"))
     }
 }
 

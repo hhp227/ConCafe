@@ -165,6 +165,7 @@ val useCaseModule = module {
     factory { GetPendingCafeRegistrationClaimsUseCase(get(), get()) }
     factory { MarkNotificationReadUseCase(get(), get()) }
     factory { RegisterPushTokenUseCase(get(), get()) }
+    factory { SendFanAnnouncementUseCase(get()) }
     factory { UpdateNotificationSettingsUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { ObserveNetworkAlertStateUseCase(get()) }

@@ -10,6 +10,10 @@ data class FanManagementUiState(
     val castClaimStatus: CastClaimStatusCard? = null,
     val castClaimSheet: CastClaimSheet? = null,
     val isClaimSheetVisible: Boolean = false,
+    val isAnnouncementSheetVisible: Boolean = false,
+    val announcementTitle: String = "",
+    val announcementBody: String = "",
+    val isSendingAnnouncement: Boolean = false,
     val infoMessage: String? = null
 ) {
     data class CastClaimStatusCard(
@@ -47,6 +51,11 @@ data class FanManagementUiState(
         LINKED,
         REJECTED
     }
+
+    val isAnnouncementSubmitEnabled: Boolean
+        get() = announcementTitle.trim().isNotEmpty() &&
+            announcementBody.trim().isNotEmpty() &&
+            !isSendingAnnouncement
 
     companion object {
         fun empty(): FanManagementUiState = FanManagementUiState()
