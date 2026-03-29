@@ -1,6 +1,8 @@
 package com.hhp227.concafe.data.source.firestore
 
 import kotlinx.datetime.Clock
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class PersistedFirebaseAuthTokenProvider(
     private val delegate: FirestoreAuthTokenProvider,
@@ -10,40 +12,44 @@ class PersistedFirebaseAuthTokenProvider(
 
     private var hasTriedAnonymousSignIn = false
 
+    private val tokenMutex = Mutex()
+
     override suspend fun getIdToken(): String? {
-        val currentSession = cachedSession
+        return tokenMutex.withLock {
+            val currentSession = cachedSession
 
-        if (currentSession == null) {
-            val tokenFromDelegate = delegate.getIdToken()
+            if (currentSession == null) {
+                val tokenFromDelegate = delegate.getIdToken()
 
-            if (!tokenFromDelegate.isNullOrBlank()) {
-                return tokenFromDelegate
-            }
-            if (hasTriedAnonymousSignIn) {
-                return null
-            }
-            val anonymousSession = runCatching {
-                delegate.signInAnonymously()
-            }.onFailure { error ->
-                println("TEST, ${error.message}")
-            }.getOrNull()
-            hasTriedAnonymousSignIn = true
+                if (!tokenFromDelegate.isNullOrBlank()) {
+                    return@withLock tokenFromDelegate
+                }
+                if (hasTriedAnonymousSignIn) {
+                    return@withLock null
+                }
+                val anonymousSession = runCatching {
+                    delegate.signInAnonymously()
+                }.onFailure { error ->
+                    println("TEST, ${error.message}")
+                }.getOrNull()
+                hasTriedAnonymousSignIn = true
 
-            if (anonymousSession != null) {
-                persistSession(anonymousSession)
-                return anonymousSession.idToken
-            }
-            return null
-        } else {
-            val refreshed = refreshSessionIfNeeded(currentSession)
+                if (anonymousSession != null) {
+                    persistSession(anonymousSession)
+                    return@withLock anonymousSession.idToken
+                }
+                return@withLock null
+            } else {
+                val refreshed = refreshSessionIfNeeded(currentSession)
 
-            if (refreshed == null) {
-                clearPersistedSession()
-                return null
-            } else if (refreshed != currentSession) {
-                persistSession(refreshed)
+                if (refreshed == null) {
+                    clearPersistedSession()
+                    return@withLock null
+                } else if (refreshed != currentSession) {
+                    persistSession(refreshed)
+                }
+                return@withLock refreshed.idToken
             }
-            return refreshed.idToken
         }
     }
 

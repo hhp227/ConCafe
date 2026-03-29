@@ -24,15 +24,14 @@ actual fun sharedPlatformModules(): List<Module> {
             single<FirestoreRestCacheStore> { IosFirestoreRestCacheStore() }
             single<FirestoreRestApi> {
                 CachedFirestoreRestApi(
-                    delegate = KtorFirestoreRestApi(get(), FIREBASE_WEB_API_KEY),
+                    delegate = KtorFirestoreRestApi(get(), FIREBASE_IOS_API_KEY),
                     cacheStore = get()
                 )
             }
             single<FirestoreAuthTokenProvider> {
                 PersistedFirebaseAuthTokenProvider(
                     delegate = FirebaseAuthRestTokenProvider(
-                        apiKey = FIREBASE_WEB_API_KEY,
-                        fallbackApiKeys = listOf(FIREBASE_IOS_API_KEY),
+                        apiKey = FIREBASE_IOS_API_KEY,
                         restClient = KtorFirebaseAuthRestClient(get())
                     ),
                     sessionStore = IosFirebaseAuthSessionStore()

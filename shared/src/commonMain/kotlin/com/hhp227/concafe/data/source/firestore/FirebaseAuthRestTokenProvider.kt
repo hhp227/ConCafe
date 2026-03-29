@@ -8,6 +8,7 @@ import kotlinx.datetime.Clock
 
 class FirebaseAuthRestTokenProvider(
     private val apiKey: String,
+    @Suppress("unused")
     private val fallbackApiKeys: List<String> = emptyList(),
     private val kakaoOidcProviderId: String = DEFAULT_KAKAO_OIDC_PROVIDER_ID,
     private val restClient: FirebaseAuthRestClient
@@ -18,7 +19,7 @@ class FirebaseAuthRestTokenProvider(
         val session = currentSession ?: runCatching {
             signInAnonymously()
         }.getOrNull()
-            ?: return null
+        ?: return null
         val refreshed = refreshSessionIfNeeded(session)
         currentSession = refreshed
         return refreshed.idToken
@@ -335,73 +336,40 @@ class FirebaseAuthRestTokenProvider(
         buildUrl: (String) -> String,
         body: String
     ): String {
-        var lastError: Throwable? = null
-        val errorSummaries = mutableListOf<String>()
+        val key = authApiKey()
 
-        authApiKeys().forEach { key ->
-            val result = runCatching {
-                restClient.postJson(buildUrl(key), body)
-            }
+        if (key.isBlank()) {
+            throw IllegalStateException("Firebase auth request failed: API key is missing")
+        }
+        return runCatching {
+            restClient.postJson(buildUrl(key), body)
+        }.getOrElse { error ->
+            val message = error.message ?: "unknown"
 
-            if (result.isSuccess) {
-                return result.getOrThrow()
-            } else {
-                lastError = result.exceptionOrNull()
-                val message = result.exceptionOrNull()?.message ?: "unknown"
-                errorSummaries.add(message)
-            }
+            throw IllegalStateException("Firebase auth request failed: $message", error)
         }
-        val detail = if (errorSummaries.isEmpty()) {
-            ""
-        } else {
-            ": ${errorSummaries.joinToString(separator = " | ")}"
-        }
-        throw IllegalStateException("Firebase auth request failed for all configured API keys$detail", lastError)
     }
 
     private suspend fun postFormUrlEncodedWithApiKeyFallback(
         buildUrl: (String) -> String,
         body: String
     ): String {
-        var lastError: Throwable? = null
-        val errorSummaries = mutableListOf<String>()
+        val key = authApiKey()
 
-        authApiKeys().forEach { key ->
-            val result = runCatching {
-                restClient.postFormUrlEncoded(buildUrl(key), body)
-            }
+        if (key.isBlank()) {
+            throw IllegalStateException("Firebase auth refresh failed: API key is missing")
+        }
+        return runCatching {
+            restClient.postFormUrlEncoded(buildUrl(key), body)
+        }.getOrElse { error ->
+            val message = error.message ?: "unknown"
 
-            if (result.isSuccess) {
-                return result.getOrThrow()
-            } else {
-                lastError = result.exceptionOrNull()
-                val message = result.exceptionOrNull()?.message ?: "unknown"
-                errorSummaries.add(message)
-            }
+            throw IllegalStateException("Firebase auth refresh failed: $message", error)
         }
-        val detail = if (errorSummaries.isEmpty()) {
-            ""
-        } else {
-            ": ${errorSummaries.joinToString(separator = " | ")}"
-        }
-        throw IllegalStateException("Firebase auth refresh failed for all configured API keys$detail", lastError)
     }
 
-    private fun authApiKeys(): List<String> {
-        val keys = mutableListOf<String>()
-        val normalizedPrimary = apiKey.trim()
-
-        if (normalizedPrimary.isNotBlank()) {
-            keys.add(normalizedPrimary)
-        }
-        fallbackApiKeys.forEach { key ->
-            val normalized = key.trim()
-
-            if (normalized.isNotBlank() && !keys.contains(normalized)) {
-                keys.add(normalized)
-            }
-        }
-        return keys
+    private fun authApiKey(): String {
+        return apiKey.trim()
     }
 
     private fun parseSessionFromResponse(
