@@ -465,7 +465,8 @@ private fun CafeMapSection(
                         listOf(Color(0xFFFFF0F6), Color(0xFFFFFAFC), Color(0xFFFFF3F8))
                     )
                 )
-                .padding(18.dp),
+                .padding(12.dp)
+                .padding(vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
