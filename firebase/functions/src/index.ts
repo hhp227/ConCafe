@@ -3035,7 +3035,7 @@ function pickSeeded<T>(items: T[], seed: number): T {
 
 function buildMockCastDisplayName(cafeIndex: number, castIndex: number): string {
   const base = pickSeeded(MOCK_CAST_NAME_POOL, (cafeIndex * 1000) + castIndex);
-  return `${base}${(castIndex % 24) + 1}기`;
+  return base;
 }
 
 function buildMockReviewContent(cafeName: string, reviewIndex: number): string {
