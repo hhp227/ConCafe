@@ -350,7 +350,8 @@ private struct CheckInMapSection: View {
             }
             .frame(height: 240)
         }
-        .padding(18)
+        .padding(12)
+        .padding(.vertical, 6)
         .background(
             LinearGradient(
                 colors: [Color(hex: "FFF0F6"), Color(hex: "FFFAFC"), Color(hex: "FFF3F8")],
