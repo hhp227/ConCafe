@@ -160,6 +160,7 @@
 		0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785CC82F5A7EDB004037A8 /* CastEvent.swift */; };
 		0A785CCB2F5A7F00004037A8 /* CafeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785CCA2F5A7F00004037A8 /* CafeAction.swift */; };
 		0A785CCD2F5A7F23004037A8 /* CastAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785CCC2F5A7F23004037A8 /* CastAction.swift */; };
+		0A7E6AA72F78C65E00A03E42 /* RatingBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */; };
 		0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA582F5C1B8300265D4F /* AdminOperationsViewModel.swift */; };
 		0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */; };
 		0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */; };
@@ -210,10 +211,10 @@
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
-		FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FBA100052F90000100AAA001 /* FirebaseMessaging */; };
 		EBA100012F90000100AAA001 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100052F90000100AAA001 /* KakaoSDKCommon */; };
 		EBA100022F90000100AAA001 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100062F90000100AAA001 /* KakaoSDKAuth */; };
 		EBA100032F90000100AAA001 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100072F90000100AAA001 /* KakaoSDKUser */; };
+		FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FBA100052F90000100AAA001 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -371,6 +372,7 @@
 		0A785CC82F5A7EDB004037A8 /* CastEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastEvent.swift; sourceTree = "<group>"; };
 		0A785CCA2F5A7F00004037A8 /* CafeAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeAction.swift; sourceTree = "<group>"; };
 		0A785CCC2F5A7F23004037A8 /* CastAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastAction.swift; sourceTree = "<group>"; };
+		0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingBox.swift; sourceTree = "<group>"; };
 		0A8ABA582F5C1B8300265D4F /* AdminOperationsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsViewModel.swift; sourceTree = "<group>"; };
 		0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsUiState.swift; sourceTree = "<group>"; };
 		0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsAction.swift; sourceTree = "<group>"; };
@@ -917,6 +919,7 @@
 				0AB6092D2F69011000591FEE /* ConCafeLogo.swift */,
 				0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */,
 				0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */,
+				0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1192,6 +1195,7 @@
 				0A51B04F2F6155C000051A97 /* CastEditView.swift in Sources */,
 				0A785CBB2F5A7DC3004037A8 /* RankingAction.swift in Sources */,
 				0A785CB12F5A7CF1004037A8 /* MyInfoAction.swift in Sources */,
+				0A7E6AA72F78C65E00A03E42 /* RatingBox.swift in Sources */,
 				0A785CBF2F5A7E11004037A8 /* CastViewModel.swift in Sources */,
 				0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */,
 				0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */,
@@ -1551,20 +1555,20 @@
 				kind = branch;
 			};
 		};
-		FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 10.24.0;
-			};
-		};
 		EBA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
 			requirement = {
 				kind = upToNextMinorVersion;
 				minimumVersion = 2.20.0;
+			};
+		};
+		FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 10.24.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1574,11 +1578,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
 			productName = KMPNativeCoroutinesAsync;
-		};
-		FBA100052F90000100AAA001 /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
 		};
 		EBA100052F90000100AAA001 /* KakaoSDKCommon */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1594,6 +1593,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = EBA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
 			productName = KakaoSDKUser;
+		};
+		FBA100052F90000100AAA001 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -207,7 +207,6 @@ class CafeRepositoryImpl(
                 .sortedByDescending { visitCountByCafeId[it.id] ?: 0 }
                 .take(safeLimit)
         }
-
         return sourceCafes.map { cafe ->
             val resolvedVisitCount = visitCountByCafeId[cafe.id] ?: 0
 

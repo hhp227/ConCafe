@@ -13,6 +13,8 @@ struct CafeSummaryCard: View {
 
     let rating: String
 
+    let conceptType: String?
+
     let location: String
 
     let thumbnailImage: String?
@@ -33,12 +35,11 @@ struct CafeSummaryCard: View {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.caption)
+                if let conceptType = conceptType?.trimmingCharacters(in: .whitespacesAndNewlines), !conceptType.isEmpty {
+                    Text(conceptType)
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "EF6797"))
-                    Text(rating)
-                        .font(.caption)
+                        .lineLimit(1)
                 }
                 HStack(alignment: .center) {
                     HStack(spacing: 4) {
@@ -75,7 +76,7 @@ struct CafeSummaryCard: View {
         GeometryReader { geometry in
             let imageSize = geometry.size
 
-            ZStack {
+            ZStack(alignment: .topTrailing) {
                 placeholderCafeImage
                 if let resolvedImageUrl = resolvedRemoteImageUrl(thumbnailImage) {
                     CachedAsyncImage(
@@ -85,6 +86,9 @@ struct CafeSummaryCard: View {
                     .frame(width: imageSize.width, height: imageSize.height)
                     .clipped()
                 }
+                RatingBox(rating: rating)
+                    .padding(.top, 8)
+                    .padding(.trailing, 8)
             }
         }
     }

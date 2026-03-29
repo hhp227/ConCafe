@@ -499,12 +499,11 @@ private struct NearByCafeItem: View {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.caption)
+                if !cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(cafe.conceptType)
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "EF6797"))
-                    Text(String(format: "%.1f", cafe.ratingAvg))
-                        .font(.caption)
+                        .lineLimit(1)
                 }
                 Text(cafe.region.city)
                 .font(.caption)

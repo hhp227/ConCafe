@@ -157,6 +157,7 @@ private struct CheckInGuestContentView: View {
                                 CafeSummaryCard(
                                     name: cafe.name,
                                     rating: String(format: "%.1f", cafe.rating),
+                                    conceptType: nil,
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,
                                     showLocationIcon: false,

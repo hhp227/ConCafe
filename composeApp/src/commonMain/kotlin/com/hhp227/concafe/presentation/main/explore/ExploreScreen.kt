@@ -331,6 +331,7 @@ private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
     CafeSummaryCard(
         name = cafe.name,
         rating = ratingText,
+        conceptType = cafe.conceptType,
         location = cafe.region.city,
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
