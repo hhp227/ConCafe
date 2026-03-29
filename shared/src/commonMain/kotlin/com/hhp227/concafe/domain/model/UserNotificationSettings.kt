@@ -15,10 +15,10 @@ data class UserNotificationSettings(
                 isPushNotificationsEnabled = true,
                 isShiftNotificationsEnabled = true,
                 isBirthdayNotificationsEnabled = true,
-                isNoticeNotificationsEnabled = false,
+                isNoticeNotificationsEnabled = true,
                 isFollowNotificationsEnabled = true,
                 isEventNotificationsEnabled = true,
-                quietHoursMode = NotificationQuietHoursMode.NIGHT
+                quietHoursMode = NotificationQuietHoursMode.OFF
             )
         }
     }

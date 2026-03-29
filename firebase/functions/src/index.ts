@@ -222,12 +222,12 @@ function readNotificationSettings(data: unknown): UserNotificationSettings {
   const isPushEnabled = plain?.isPushNotificationsEnabled !== false;
   const isShiftEnabled = plain?.isShiftNotificationsEnabled !== false;
   const isBirthdayEnabled = plain?.isBirthdayNotificationsEnabled !== false;
-  const isNoticeEnabled = plain?.isNoticeNotificationsEnabled === true;
+  const isNoticeEnabled = plain?.isNoticeNotificationsEnabled !== false;
   const isFollowEnabled = plain?.isFollowNotificationsEnabled !== false;
   const isEventEnabled = plain?.isEventNotificationsEnabled !== false;
   const quietHoursRaw = asNonBlankString(plain?.quietHoursMode)?.toUpperCase();
   const quietHoursMode: NotificationQuietHoursMode =
-    quietHoursRaw === "OFF" || quietHoursRaw === "ALL_DAY" ? quietHoursRaw : "NIGHT";
+    quietHoursRaw === "NIGHT" || quietHoursRaw === "ALL_DAY" ? quietHoursRaw : "OFF";
 
   return {
     isPushNotificationsEnabled: isPushEnabled,
@@ -264,10 +264,10 @@ async function loadUserNotificationSettings(userId: string): Promise<UserNotific
       isPushNotificationsEnabled: true,
       isShiftNotificationsEnabled: true,
       isBirthdayNotificationsEnabled: true,
-      isNoticeNotificationsEnabled: false,
+      isNoticeNotificationsEnabled: true,
       isFollowNotificationsEnabled: true,
       isEventNotificationsEnabled: true,
-      quietHoursMode: "NIGHT",
+      quietHoursMode: "OFF",
     };
   } else {
     return readNotificationSettings(snapshot.data());
@@ -538,6 +538,8 @@ async function sendPushToUser(
     android: {
       priority: "high",
       notification: {
+        icon: "ic_launcher",
+        color: "#EF6797",
         sound: "default",
       },
     },

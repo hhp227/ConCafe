@@ -29,9 +29,9 @@ struct NotificationSettingsUiState {
         isPushNotificationsEnabled: true,
         isShiftNotificationsEnabled: true,
         isBirthdayNotificationsEnabled: true,
-        isNoticeNotificationsEnabled: false,
+        isNoticeNotificationsEnabled: true,
         isFollowNotificationsEnabled: true,
         isEventNotificationsEnabled: true,
-        quietHoursOption: .night
+        quietHoursOption: .off
     )
 }

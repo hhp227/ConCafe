@@ -5839,14 +5839,15 @@ class FirestoreConCafeDataSource(
         } else {
             val quietHoursMode = when (fields.getFirestoreString("quietHoursMode")?.uppercase()) {
                 NotificationQuietHoursMode.OFF.name -> NotificationQuietHoursMode.OFF
+                NotificationQuietHoursMode.NIGHT.name -> NotificationQuietHoursMode.NIGHT
                 NotificationQuietHoursMode.ALL_DAY.name -> NotificationQuietHoursMode.ALL_DAY
-                else -> NotificationQuietHoursMode.NIGHT
+                else -> NotificationQuietHoursMode.OFF
             }
             return UserNotificationSettings(
                 isPushNotificationsEnabled = fields.getFirestoreBoolean("isPushNotificationsEnabled") ?: true,
                 isShiftNotificationsEnabled = fields.getFirestoreBoolean("isShiftNotificationsEnabled") ?: true,
                 isBirthdayNotificationsEnabled = fields.getFirestoreBoolean("isBirthdayNotificationsEnabled") ?: true,
-                isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: false,
+                isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: true,
                 isFollowNotificationsEnabled = fields.getFirestoreBoolean("isFollowNotificationsEnabled") ?: true,
                 isEventNotificationsEnabled = fields.getFirestoreBoolean("isEventNotificationsEnabled") ?: true,
                 quietHoursMode = quietHoursMode
