@@ -9,8 +9,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.hhp227.concafe.R
+import com.hhp227.concafe.di.resolveRegisterPushTokenUseCase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -47,6 +51,14 @@ class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         resolveAndroidPushTokenClient().saveToken(token = token)
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                resolveRegisterPushTokenUseCase().invoke(
+                    platform = "ANDROID",
+                    token = token
+                )
+            }
+        }
     }
 
     private fun ensureDefaultChannel() {

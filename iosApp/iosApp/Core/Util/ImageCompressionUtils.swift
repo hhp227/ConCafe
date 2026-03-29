@@ -4,8 +4,9 @@ import UIKit
 func saveCompressedImageToTemporaryFile(_ image: UIImage, maxBytes: Int = 1_048_575) -> String? {
     let fileName = "concafe-image-\(UUID().uuidString).jpg"
     let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+    let normalizedImage = normalizedForEncoding(image) ?? image
 
-    if let originalData = image.jpegData(compressionQuality: 1.0), originalData.count <= maxBytes {
+    if let originalData = normalizedImage.jpegData(compressionQuality: 1.0), originalData.count <= maxBytes {
         do {
             try originalData.write(to: fileURL, options: [.atomic])
             return fileURL.absoluteString
@@ -14,7 +15,7 @@ func saveCompressedImageToTemporaryFile(_ image: UIImage, maxBytes: Int = 1_048_
         }
     }
 
-    var workingImage = image
+    var workingImage = normalizedImage
     var quality: CGFloat = 0.9
     var attempt = 0
 
@@ -54,5 +55,15 @@ private func resizeImage(_ image: UIImage, scale: CGFloat) -> UIImage? {
     let renderer = UIGraphicsImageRenderer(size: targetSize)
     return renderer.image { _ in
         image.draw(in: CGRect(origin: .zero, size: targetSize))
+    }
+}
+
+private func normalizedForEncoding(_ image: UIImage) -> UIImage? {
+    guard image.cgImage == nil || image.imageOrientation != .up else {
+        return image
+    }
+    let renderer = UIGraphicsImageRenderer(size: image.size)
+    return renderer.image { _ in
+        image.draw(in: CGRect(origin: .zero, size: image.size))
     }
 }

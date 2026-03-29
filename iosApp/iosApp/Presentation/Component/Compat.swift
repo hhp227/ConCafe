@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import PhotosUI
+import UniformTypeIdentifiers
 
 enum CompatNavigationBarStyle {
     case opaque
@@ -313,22 +314,49 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
                 }
                 return
             }
-            guard provider.canLoadObject(ofClass: UIImage.self) else {
+            loadImage(from: provider) { image in
                 DispatchQueue.main.async {
-                    picker.dismiss(animated: true)
-                    self.parent.onDismiss()
-                }
-                return
-            }
-
-            provider.loadObject(ofClass: UIImage.self) { object, _ in
-                DispatchQueue.main.async {
-                    if let image = object as? UIImage {
+                    if let image {
                         self.parent.onImageSelected(image)
                     }
                     picker.dismiss(animated: true)
                     self.parent.onDismiss()
                 }
+            }
+        }
+
+        private func loadImage(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    if let image = object as? UIImage {
+                        completion(image)
+                    } else {
+                        self.loadImageFromDataRepresentation(from: provider, completion: completion)
+                    }
+                }
+                return
+            }
+            loadImageFromDataRepresentation(from: provider, completion: completion)
+        }
+
+        private func loadImageFromDataRepresentation(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            let imageTypeIdentifier = UTType.image.identifier
+            guard provider.hasItemConformingToTypeIdentifier(imageTypeIdentifier) else {
+                completion(nil)
+                return
+            }
+            provider.loadDataRepresentation(forTypeIdentifier: imageTypeIdentifier) { data, _ in
+                guard let data, let image = UIImage(data: data) else {
+                    completion(nil)
+                    return
+                }
+                completion(image)
             }
         }
 

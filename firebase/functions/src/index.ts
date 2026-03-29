@@ -538,7 +538,6 @@ async function sendPushToUser(
     android: {
       priority: "high",
       notification: {
-        icon: "ic_launcher",
         color: "#EF6797",
         sound: "default",
       },
@@ -1741,40 +1740,58 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
         if (userId == null || userId === requesterUserId) {
           return;
         }
-        const settings = await loadUserNotificationSettings(userId);
+        try {
+          const settings = await loadUserNotificationSettings(userId);
 
-        if (!settings.isPushNotificationsEnabled) {
-          logger.info("Skipped fan announcement push because push is disabled.", {
+          if (!settings.isPushNotificationsEnabled) {
+            logger.info("Skipped fan announcement push because push is disabled.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+            });
+            return;
+          }
+          if (!settings.isFollowNotificationsEnabled) {
+            logger.info("Skipped fan announcement push because follow notification is disabled.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+            });
+            return;
+          }
+          if (isQuietHoursPushSuppressed(settings)) {
+            logger.info("Skipped fan announcement push due to quiet hours.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+              quietHoursMode: settings.quietHoursMode,
+            });
+            return;
+          }
+          await createUserNotification(
+            userId,
+            sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`),
+            "FAN_ANNOUNCEMENT",
+            title,
+            body,
+            castId,
+            createdAt,
+            settings
+          );
+          logger.info("Sent fan announcement push.", {
             requestId: requestId,
             targetUserId: userId,
             castId: castId,
+            createdAt: createdAt,
           });
-          return;
-        }
-        if (isQuietHoursPushSuppressed(settings)) {
-          logger.info("Skipped fan announcement push due to quiet hours.", {
+        } catch (error) {
+          logger.error("Failed to send fan announcement push.", {
             requestId: requestId,
             targetUserId: userId,
             castId: castId,
-            quietHoursMode: settings.quietHoursMode,
+            error: error instanceof Error ? error.message : String(error),
           });
-          return;
         }
-        await sendPushToUser(
-          userId,
-          title,
-          body,
-          "FAN_ANNOUNCEMENT",
-          castId,
-          sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`),
-          settings
-        );
-        logger.info("Sent fan announcement push.", {
-          requestId: requestId,
-          targetUserId: userId,
-          castId: castId,
-          createdAt: createdAt,
-        });
       });
 
       await Promise.all(followerTasks);
