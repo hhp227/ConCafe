@@ -69,6 +69,67 @@ class FakeAuthRepository(
         }
     }
 
+    override suspend fun signInWithAppleIdToken(idToken: String): User {
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("apple idToken is required")
+        }
+
+        val email = "apple-user@concafe.test"
+        val found = dataSource.users.firstOrNull { it.email == email }
+        return if (found != null) {
+            dataSource.currentUserId = found.id
+            currentUserFlow.value = found
+            found
+        } else {
+            val created = User(
+                id = "user-${dataSource.users.size + 1}",
+                email = email,
+                nickname = "애플유저",
+                profileImage = null,
+                role = UserRole.VISITOR,
+                banned = false,
+                createdAt = "2026-03-05T00:00:00Z"
+            )
+            dataSource.users.add(created)
+            dataSource.currentUserId = created.id
+            currentUserFlow.value = created
+            created
+        }
+    }
+
+    override suspend fun signInWithKakaoIdToken(
+        idToken: String,
+        email: String?,
+        nickname: String?
+    ): User {
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("kakao idToken is required")
+        }
+
+        val resolvedEmail = if (email.isNullOrBlank()) "kakao-user@concafe.test" else email
+        val resolvedNickname = if (nickname.isNullOrBlank()) "카카오유저" else nickname
+        val found = dataSource.users.firstOrNull { it.email == resolvedEmail }
+        return if (found != null) {
+            dataSource.currentUserId = found.id
+            currentUserFlow.value = found
+            found
+        } else {
+            val created = User(
+                id = "user-${dataSource.users.size + 1}",
+                email = resolvedEmail,
+                nickname = resolvedNickname,
+                profileImage = null,
+                role = UserRole.VISITOR,
+                banned = false,
+                createdAt = "2026-03-05T00:00:00Z"
+            )
+            dataSource.users.add(created)
+            dataSource.currentUserId = created.id
+            currentUserFlow.value = created
+            created
+        }
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,
@@ -107,6 +168,12 @@ class FakeAuthRepository(
     override suspend fun signOut() {
         dataSource.currentUserId = null
         currentUserFlow.value = null
+    }
+
+    override suspend fun requestPasswordReset(email: String) {
+        if (email.isBlank()) {
+            throw IllegalArgumentException("email is required")
+        }
     }
 
     override suspend fun changePassword(currentPassword: String, newPassword: String) {

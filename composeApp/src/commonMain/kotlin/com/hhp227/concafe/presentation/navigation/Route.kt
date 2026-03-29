@@ -65,6 +65,9 @@ sealed interface Route {
     data object SignUp : Route
 
     @Serializable
+    data object ResetPassword : Route
+
+    @Serializable
     data object Notification : Route
 
     @Serializable

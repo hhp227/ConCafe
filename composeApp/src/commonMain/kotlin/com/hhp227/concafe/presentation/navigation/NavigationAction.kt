@@ -23,6 +23,7 @@ sealed interface NavigationAction {
     data class NavigateToReviewEdit(val cafeId: String) : NavigationAction
     data object NavigateToSignIn : NavigationAction
     data object NavigateToSignUp : NavigationAction
+    data object NavigateToResetPassword : NavigationAction
     data object NavigateToNotification : NavigationAction
     data object NavigateToSettings : NavigationAction
     data object NavigateToNotificationSettings : NavigationAction

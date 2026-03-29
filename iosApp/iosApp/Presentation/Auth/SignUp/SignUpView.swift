@@ -461,8 +461,19 @@ private struct SignUpContentView: View {
             )
             SignInWithAppleButton(
                 .signUp,
-                onRequest: { request in },
-                onCompletion: { result in }
+                onRequest: { request in
+                    request.requestedScopes = [.fullName, .email]
+                },
+                onCompletion: { result in
+                    if case let .success(authorization) = result,
+                       let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                       let identityTokenData = credential.identityToken,
+                       let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                        onAction(.appleIdTokenReceived(identityToken))
+                    } else {
+                        onAction(.socialSignUpTapped(provider: .apple))
+                    }
+                }
             )
             .signInWithAppleButtonStyle(.black)
             .frame(height: 52)

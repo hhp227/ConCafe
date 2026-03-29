@@ -1,4 +1,15 @@
 package com.hhp227.concafe.presentation.auth.resetpassword
 
-class ResetPasswordUiState {
+data class ResetPasswordUiState(
+    val email: String,
+    val isSubmitting: Boolean
+) {
+    companion object {
+        fun empty(): ResetPasswordUiState {
+            return ResetPasswordUiState(
+                email = "",
+                isSubmitting = false
+            )
+        }
+    }
 }

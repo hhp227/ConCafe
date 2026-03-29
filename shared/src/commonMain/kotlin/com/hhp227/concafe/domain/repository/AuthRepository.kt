@@ -10,6 +10,14 @@ interface AuthRepository {
 
     suspend fun signInWithGoogleIdToken(idToken: String): User
 
+    suspend fun signInWithAppleIdToken(idToken: String): User
+
+    suspend fun signInWithKakaoIdToken(
+        idToken: String,
+        email: String? = null,
+        nickname: String? = null
+    ): User
+
     suspend fun signUp(
         email: String,
         password: String,
@@ -19,6 +27,8 @@ interface AuthRepository {
     ): User
 
     suspend fun signOut()
+
+    suspend fun requestPasswordReset(email: String)
 
     suspend fun changePassword(currentPassword: String, newPassword: String)
 

@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -80,6 +81,7 @@ fun SignInScreen(
     SignInContentScreen(
         uiState = uiState,
         onBack = { onNavigate(NavigationAction.NavigateBack) },
+        onResetPassword = { onNavigate(NavigationAction.NavigateToResetPassword) },
         onSignUp = { onNavigate(NavigationAction.NavigateToSignUp) },
         onAction = viewModel::onAction
     )
@@ -90,6 +92,7 @@ fun SignInScreen(
 private fun SignInContentScreen(
     uiState: SignInUiState,
     onBack: () -> Unit,
+    onResetPassword: () -> Unit,
     onSignUp: () -> Unit,
     onAction: (SignInAction) -> Unit
 ) {
@@ -205,11 +208,16 @@ private fun SignInContentScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "비밀번호 찾기",
-                            color = Color(0xFF8E8794),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        TextButton(
+                            onClick = onResetPassword,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = "비밀번호 찾기",
+                                color = Color(0xFF8E8794),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                         Text(
                             text = " | ",
                             color = Color(0xFFB5AEB9),
@@ -236,7 +244,7 @@ private fun SignInContentScreen(
                     .padding(start = 4.dp, top = 4.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "뒤로가기"
                 )
             }

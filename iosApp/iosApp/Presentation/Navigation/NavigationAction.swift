@@ -24,6 +24,7 @@ enum NavigationAction {
     case navigateToReviewEdit(cafeId: String)
     case navigateToSignIn
     case navigateToSignUp
+    case navigateToResetPassword
     case navigateToNotification
     case navigateToSettings
     case navigateToNotificationSettings

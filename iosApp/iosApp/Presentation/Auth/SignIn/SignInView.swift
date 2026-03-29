@@ -19,6 +19,9 @@ struct SignInView: View {
             onBack: {
                 onNavigationAction(.navigateBack)
             },
+            onResetPassword: {
+                onNavigationAction(.navigateToResetPassword)
+            },
             onSignUp: {
                 onNavigationAction(.navigateToSignUp)
             },
@@ -37,6 +40,8 @@ private struct SignInContentView: View {
     let uiState: SignInUiState
     
     let onBack: () -> Void
+
+    let onResetPassword: () -> Void
 
     let onSignUp: () -> Void
     
@@ -141,8 +146,19 @@ private struct SignInContentView: View {
             )
             SignInWithAppleButton(
                 .signIn,
-                onRequest: { request in },
-                onCompletion: { result in }
+                onRequest: { request in
+                    request.requestedScopes = [.fullName, .email]
+                },
+                onCompletion: { result in
+                    if case let .success(authorization) = result,
+                       let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                       let identityTokenData = credential.identityToken,
+                       let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                        onAction(.appleIdTokenReceived(identityToken))
+                    } else {
+                        onAction(.socialSignInTapped(provider: .apple))
+                    }
+                }
             )
             .signInWithAppleButtonStyle(.black)
             .frame(height: 52)
@@ -153,7 +169,10 @@ private struct SignInContentView: View {
     
     private var footerLinks: some View {
         HStack(spacing: 8) {
-            Text("비밀번호 찾기")
+            Button(action: onResetPassword) {
+                Text("비밀번호 찾기")
+            }
+            .buttonStyle(.plain)
             Text("|")
             Button(action: onSignUp) {
                 Text("회원가입")

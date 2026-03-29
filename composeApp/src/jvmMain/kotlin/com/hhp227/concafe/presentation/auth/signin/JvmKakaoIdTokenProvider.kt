@@ -20,7 +20,7 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeout
 
-class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
+class JvmKakaoIdTokenProvider : KakaoIdTokenProvider {
     private val httpClient = HttpClient.newBuilder().build()
 
     private fun createCallbackServer(
@@ -56,22 +56,22 @@ class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
 
         if (!error.isNullOrBlank()) {
             authCodeDeferred.completeExceptionally(
-                IllegalStateException("google sign-in failed: $error")
+                IllegalStateException("kakao sign-in failed: $error")
             )
         } else if (callbackState != state) {
             authCodeDeferred.completeExceptionally(
-                IllegalStateException("google sign-in failed: invalid callback state")
+                IllegalStateException("kakao sign-in failed: invalid callback state")
             )
         } else if (!authCode.isNullOrBlank()) {
             authCodeDeferred.complete(authCode)
         } else {
             authCodeDeferred.completeExceptionally(
-                IllegalStateException("google auth code is missing from callback")
+                IllegalStateException("kakao auth code is missing from callback")
             )
         }
 
         val response = """
-            <html><body><h3>ConCafe</h3><p>Google 로그인 처리가 완료되었습니다. 창을 닫아주세요.</p></body></html>
+            <html><body><h3>ConCafe</h3><p>카카오 로그인 처리가 완료되었습니다. 창을 닫아주세요.</p></body></html>
         """.trimIndent().toByteArray()
         exchange.sendResponseHeaders(200, response.size.toLong())
         exchange.responseBody.use { it.write(response) }
@@ -99,48 +99,73 @@ class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
     private fun buildAuthUri(
         redirectUri: String,
         state: String,
-        codeChallenge: String
+        codeChallenge: String,
+        nonce: String
     ): URI {
         val query = buildString {
             append("response_type=code")
-            append("&client_id=${urlEncode(googleClientId())}")
+            append("&client_id=${urlEncode(kakaoRestApiKey())}")
             append("&redirect_uri=${urlEncode(redirectUri)}")
-            append("&scope=${urlEncode("openid email profile")}")
+            append("&scope=${urlEncode("openid account_email profile_nickname")}")
             append("&state=${urlEncode(state)}")
+            append("&nonce=${urlEncode(nonce)}")
             append("&code_challenge=${urlEncode(codeChallenge)}")
             append("&code_challenge_method=S256")
-            append("&prompt=select_account")
+            append("&prompt=login")
         }
-        return URI("$GOOGLE_OAUTH_AUTHORIZE_URL?$query")
+        return URI("$KAKAO_OAUTH_AUTHORIZE_URL?$query")
     }
 
-    private fun exchangeAuthCodeForIdToken(
+    private fun exchangeAuthCodeForToken(
         authCode: String,
         codeVerifier: String,
         redirectUri: String
-    ): String {
+    ): KakaoTokenResponse {
         val requestBody = buildString {
-            append("code=${urlEncode(authCode)}")
-            append("&client_id=${urlEncode(googleClientId())}")
-            append("&code_verifier=${urlEncode(codeVerifier)}")
+            append("grant_type=authorization_code")
+            append("&client_id=${urlEncode(kakaoRestApiKey())}")
             append("&redirect_uri=${urlEncode(redirectUri)}")
-            append("&grant_type=authorization_code")
+            append("&code=${urlEncode(authCode)}")
+            append("&code_verifier=${urlEncode(codeVerifier)}")
         }
         val request = HttpRequest.newBuilder()
-            .uri(URI(GOOGLE_OAUTH_TOKEN_URL))
+            .uri(URI(KAKAO_OAUTH_TOKEN_URL))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build()
         val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
         if (response.statusCode() !in 200..299) {
-            throw IllegalStateException("google token exchange failed: status=${response.statusCode()}")
+            throw IllegalStateException("kakao token exchange failed: status=${response.statusCode()}")
         } else {
             val idToken = parseJsonString(response.body(), "id_token")
+            val accessToken = parseJsonString(response.body(), "access_token")
             if (idToken.isNullOrBlank()) {
-                throw IllegalStateException("google id_token is missing in token response")
+                throw IllegalStateException("kakao id_token is missing in token response")
             } else {
-                return idToken
+                return KakaoTokenResponse(
+                    idToken = idToken,
+                    accessToken = accessToken
+                )
+            }
+        }
+    }
+
+    private fun parseJwtClaims(jwt: String): Map<String, String> {
+        val segments = jwt.split(".")
+        if (segments.size < 2) {
+            return emptyMap()
+        } else {
+            val payload = String(Base64.getUrlDecoder().decode(segments[1]), StandardCharsets.UTF_8)
+            val email = parseJsonString(payload, "email")
+            val nickname = parseJsonString(payload, "nickname")
+            return buildMap {
+                if (!email.isNullOrBlank()) {
+                    put("email", email)
+                }
+                if (!nickname.isNullOrBlank()) {
+                    put("nickname", nickname)
+                }
             }
         }
     }
@@ -150,13 +175,13 @@ class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
         return pattern.find(json)?.groupValues?.getOrNull(1)
     }
 
-    private fun googleClientId(): String {
-        val configuredClientId = System.getProperty("concafe.google.clientId")
+    private fun kakaoRestApiKey(): String {
+        val configuredApiKey = System.getProperty("concafe.kakao.restApiKey")
 
-        return if (configuredClientId.isNullOrBlank()) {
-            DEFAULT_GOOGLE_CLIENT_ID
+        if (configuredApiKey.isNullOrBlank()) {
+            throw IllegalStateException("desktop kakao login requires -Dconcafe.kakao.restApiKey=<KAKAO_REST_API_KEY>")
         } else {
-            configuredClientId
+            return configuredApiKey
         }
     }
 
@@ -186,31 +211,39 @@ class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
             .encodeToString(value)
     }
 
-    override suspend fun getGoogleIdToken(): String {
+    override suspend fun getKakaoAuthPayload(): KakaoAuthPayload {
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             throw IllegalStateException("desktop browser is not supported")
         } else {
             val codeVerifier = generateCodeVerifier()
             val codeChallenge = generateCodeChallenge(codeVerifier)
             val state = UUID.randomUUID().toString()
+            val nonce = UUID.randomUUID().toString()
             val authCodeDeferred = CompletableDeferred<String>()
             val (server, callbackUri) = createCallbackServer(authCodeDeferred, state)
             val authUri = buildAuthUri(
                 redirectUri = callbackUri,
                 state = state,
-                codeChallenge = codeChallenge
+                codeChallenge = codeChallenge,
+                nonce = nonce
             )
 
             server.start()
             return try {
                 Desktop.getDesktop().browse(authUri)
-                val authCode = withTimeout(GOOGLE_SIGN_IN_TIMEOUT_MS) {
+                val authCode = withTimeout(KAKAO_SIGN_IN_TIMEOUT_MS) {
                     authCodeDeferred.await()
                 }
-                exchangeAuthCodeForIdToken(
+                val tokenResponse = exchangeAuthCodeForToken(
                     authCode = authCode,
                     codeVerifier = codeVerifier,
                     redirectUri = callbackUri
+                )
+                val claims = parseJwtClaims(tokenResponse.idToken)
+                KakaoAuthPayload(
+                    idToken = tokenResponse.idToken,
+                    email = claims["email"],
+                    nickname = claims["nickname"]
                 )
             } finally {
                 server.stop(0)
@@ -220,10 +253,11 @@ class JvmGoogleIdTokenProvider : GoogleIdTokenProvider {
     }
 }
 
-private const val GOOGLE_OAUTH_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-private const val GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
+private data class KakaoTokenResponse(
+    val idToken: String,
+    val accessToken: String?
+)
 
-private const val DEFAULT_GOOGLE_CLIENT_ID =
-    "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com"
-
-private const val GOOGLE_SIGN_IN_TIMEOUT_MS = 180_000L
+private const val KAKAO_OAUTH_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize"
+private const val KAKAO_OAUTH_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
+private const val KAKAO_SIGN_IN_TIMEOUT_MS = 180_000L

@@ -68,6 +68,20 @@ class PersistedFirebaseAuthTokenProvider(
         return session
     }
 
+    override suspend fun signInWithAppleIdToken(idToken: String): FirebaseAuthSession? {
+        val session = delegate.signInWithAppleIdToken(idToken)
+
+        persistSession(session)
+        return session
+    }
+
+    override suspend fun signInWithKakaoIdToken(idToken: String): FirebaseAuthSession? {
+        val session = delegate.signInWithKakaoIdToken(idToken)
+
+        persistSession(session)
+        return session
+    }
+
     override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
         val session = delegate.signUpWithEmailPassword(email, password)
 
@@ -78,6 +92,10 @@ class PersistedFirebaseAuthTokenProvider(
     override suspend fun signOut() {
         delegate.signOut()
         clearPersistedSession()
+    }
+
+    override suspend fun sendPasswordResetEmail(email: String) {
+        delegate.sendPasswordResetEmail(email)
     }
 
     override suspend fun updateCurrentUserPassword(

@@ -8,5 +8,12 @@
 import Foundation
 
 struct ResetPasswordUiState {
-    
+    var email: String
+
+    var isSubmitting: Bool
+
+    static let empty = ResetPasswordUiState(
+        email: "",
+        isSubmitting: false
+    )
 }

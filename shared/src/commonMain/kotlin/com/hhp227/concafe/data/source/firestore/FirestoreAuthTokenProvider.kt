@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.source.firestore
 data class FirebaseAuthSession(
     val userId: String,
     val email: String,
+    val displayName: String?,
     val idToken: String?,
     val refreshToken: String?,
     val expiresAtEpochSeconds: Long?
@@ -17,9 +18,15 @@ interface FirestoreAuthTokenProvider {
 
     suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession?
 
+    suspend fun signInWithAppleIdToken(idToken: String): FirebaseAuthSession?
+
+    suspend fun signInWithKakaoIdToken(idToken: String): FirebaseAuthSession?
+
     suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession?
 
     suspend fun signOut()
+
+    suspend fun sendPasswordResetEmail(email: String)
 
     suspend fun updateCurrentUserPassword(
         idToken: String,

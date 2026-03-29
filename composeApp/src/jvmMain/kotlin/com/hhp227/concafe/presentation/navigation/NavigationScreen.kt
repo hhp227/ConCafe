@@ -23,6 +23,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.auth.signin.SignInScreen
+import com.hhp227.concafe.presentation.auth.resetpassword.ResetPasswordScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -251,6 +252,9 @@ private fun DetailRoutePane(
         }
         Route.SignUp -> {
             SignUpScreen(onNavigate = onNavigationAction)
+        }
+        Route.ResetPassword -> {
+            ResetPasswordScreen(onNavigationAction = onNavigationAction)
         }
         Route.Notification -> {
             NotificationScreen(

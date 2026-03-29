@@ -11,7 +11,11 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,30 +44,6 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
-import kotlin.collections.List
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.getOrNull
-import kotlin.collections.isNotEmpty
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.mapNotNull
-import kotlin.collections.toSet
-import kotlin.sequences.firstOrNull
-import kotlin.sequences.ifEmpty
-import kotlin.sequences.mapNotNull
-import kotlin.sequences.toSet
-import kotlin.text.contains
-import kotlin.text.firstOrNull
-import kotlin.text.format
-import kotlin.text.isNotEmpty
-import kotlin.text.mapNotNull
-import kotlin.text.orEmpty
-import kotlin.text.replaceFirstChar
-import kotlin.text.split
-import kotlin.text.toIntOrNull
-import kotlin.text.toSet
-import kotlin.text.uppercase
 
 private val SummaryTitleTriggerOffset = 22.dp
 
@@ -128,7 +108,7 @@ private fun CastContentScreen(
                 navigationIcon = {
                     IconButton(onClick = { onAction(CastAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "뒤로가기",
                             tint = if (topBarVisible) Color(0xFF222222) else Color.White
                         )
