@@ -29,6 +29,7 @@ final class CastEditViewModel: ObservableObject {
 
     private var pendingDeletedGalleryImageUrls: Set<String> = []
     private var pendingDeletedProfileImageUrl: String? = nil
+    private var hasPendingLocalEdits = false
 
     private func clickProfilePhoto() {
         uiState.infoMessage = nil
@@ -113,6 +114,7 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func loadCastDetail(_ castId: String) {
+        hasPendingLocalEdits = false
         uiState.isLoading = true
         uiState.infoMessage = nil
 
@@ -124,21 +126,25 @@ final class CastEditViewModel: ObservableObject {
                    let feed = success.data as? CastDetailFeed {
                     let detail = feed.detail
                     var nextState = uiState
-                    pendingDeletedGalleryImageUrls.removeAll()
-                    pendingDeletedProfileImageUrl = nil
-                    nextState.isLoading = false
-                    nextState.profileImageUrl = detail.cast.profileImage
-                    nextState.castName = detail.cast.name
-                    nextState.conceptRole = detail.cast.conceptRole
-                    nextState.birthday = detail.cast.birthday ?? ""
-                    nextState.introduction = detail.cast.desc
-                    nextState.selectedWorkingDays = workingDays(from: detail.schedule)
-                    nextState.galleryImages = Array(
-                        detail.images
-                            .filter { !$0.isEmpty && $0 != detail.cast.profileImage }
-                            .prefix(nextState.galleryMaxCount)
-                    )
-                    uiState = nextState
+                    if hasPendingLocalEdits {
+                        uiState.isLoading = false
+                    } else {
+                        pendingDeletedGalleryImageUrls.removeAll()
+                        pendingDeletedProfileImageUrl = nil
+                        nextState.isLoading = false
+                        nextState.profileImageUrl = detail.cast.profileImage
+                        nextState.castName = detail.cast.name
+                        nextState.conceptRole = detail.cast.conceptRole
+                        nextState.birthday = detail.cast.birthday ?? ""
+                        nextState.introduction = detail.cast.desc
+                        nextState.selectedWorkingDays = workingDays(from: detail.schedule)
+                        nextState.galleryImages = Array(
+                            detail.images
+                                .filter { !$0.isEmpty && $0 != detail.cast.profileImage }
+                                .prefix(nextState.galleryMaxCount)
+                        )
+                        uiState = nextState
+                    }
                 } else {
                     uiState.isLoading = false
                     uiState.infoMessage = "캐스트 정보를 불러오지 못했습니다."
@@ -158,6 +164,7 @@ final class CastEditViewModel: ObservableObject {
         case .clickProfilePhoto:
             clickProfilePhoto()
         case .selectProfilePhoto(let imageUrl):
+            hasPendingLocalEdits = true
             let previousProfileImageUrl = uiState.profileImageUrl
             if let previousProfileImageUrl,
                !previousProfileImageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -170,6 +177,7 @@ final class CastEditViewModel: ObservableObject {
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
         case .addGalleryImage(let imageUrl):
+            hasPendingLocalEdits = true
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
                 uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
                 return
@@ -180,6 +188,7 @@ final class CastEditViewModel: ObservableObject {
             uiState.isImageRequiredAlertVisible = false
         case .removeGalleryImage(let index):
             if uiState.galleryImages.indices.contains(index) {
+                hasPendingLocalEdits = true
                 let removedImageUrl = uiState.galleryImages[index]
                 if removedImageUrl.hasPrefix("http://") || removedImageUrl.hasPrefix("https://") {
                     pendingDeletedGalleryImageUrls.insert(removedImageUrl)
@@ -188,14 +197,19 @@ final class CastEditViewModel: ObservableObject {
                 uiState.infoMessage = nil
             }
         case .changeCastName(let value):
+            hasPendingLocalEdits = true
             uiState.castName = value
         case .changeConceptRole(let value):
+            hasPendingLocalEdits = true
             uiState.conceptRole = value
         case .changeBirthday(let value):
+            hasPendingLocalEdits = true
             uiState.birthday = value
         case .changeIntroduction(let value):
+            hasPendingLocalEdits = true
             uiState.introduction = value
         case .toggleWorkingDay(let day):
+            hasPendingLocalEdits = true
             toggleWorkingDay(day)
         case .clickAddGalleryPhoto:
             clickAddGalleryPhoto()

@@ -29,6 +29,7 @@ class CastEditViewModel(
 
     private val pendingDeletedGalleryImageUrls = mutableSetOf<String>()
     private var pendingDeletedProfileImageUrl: String? = null
+    private var hasPendingLocalEdits = false
 
     private fun clickBack() {
         viewModelScope.launch {
@@ -128,6 +129,7 @@ class CastEditViewModel(
     }
 
     private fun loadCastDetail(targetCastId: String) {
+        hasPendingLocalEdits = false
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -139,21 +141,27 @@ class CastEditViewModel(
             when (val result = getCastDetailUseCase.invoke(targetCastId)) {
                 is AppResult.Success -> {
                     val detail = result.data.detail
-                    pendingDeletedGalleryImageUrls.clear()
-                    pendingDeletedProfileImageUrl = null
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            profileImageUrl = detail.cast.profileImage,
-                            castName = detail.cast.name,
-                            conceptRole = detail.cast.conceptRole,
-                            birthday = detail.cast.birthday.orEmpty(),
-                            introduction = detail.cast.desc,
-                            selectedWorkingDays = detail.schedule.toWorkingDays(),
-                            galleryImages = detail.images
-                                .filter { image -> image.isNotBlank() && image != detail.cast.profileImage }
-                                .take(state.galleryMaxCount)
-                        )
+                    if (hasPendingLocalEdits) {
+                        _uiState.update { state ->
+                            state.copy(isLoading = false)
+                        }
+                    } else {
+                        pendingDeletedGalleryImageUrls.clear()
+                        pendingDeletedProfileImageUrl = null
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoading = false,
+                                profileImageUrl = detail.cast.profileImage,
+                                castName = detail.cast.name,
+                                conceptRole = detail.cast.conceptRole,
+                                birthday = detail.cast.birthday.orEmpty(),
+                                introduction = detail.cast.desc,
+                                selectedWorkingDays = detail.schedule.toWorkingDays(),
+                                galleryImages = detail.images
+                                    .filter { image -> image.isNotBlank() && image != detail.cast.profileImage }
+                                    .take(state.galleryMaxCount)
+                            )
+                        }
                     }
                 }
                 is AppResult.Failure -> {
@@ -173,6 +181,7 @@ class CastEditViewModel(
             CastEditAction.ClickBack -> clickBack()
             CastEditAction.ClickProfilePhoto -> clickProfilePhoto()
             is CastEditAction.SelectProfilePhoto -> {
+                hasPendingLocalEdits = true
                 val nextImageUrl = action.imageUrl
                 val previousProfileImageUrl = _uiState.value.profileImageUrl
 
@@ -193,6 +202,7 @@ class CastEditViewModel(
                 }
             }
             is CastEditAction.AddGalleryImage -> {
+                hasPendingLocalEdits = true
                 val imageUrl = action.imageUrl
                 if (imageUrl.isBlank()) return
                 val galleryImages = _uiState.value.galleryImages
@@ -213,6 +223,7 @@ class CastEditViewModel(
                 val index = action.index
                 val galleryImages = _uiState.value.galleryImages
                 if (index in galleryImages.indices) {
+                    hasPendingLocalEdits = true
                     val removedImageUrl = galleryImages[index]
                     if (removedImageUrl.startsWith("http://") || removedImageUrl.startsWith("https://")) {
                         pendingDeletedGalleryImageUrls.add(removedImageUrl)
@@ -225,11 +236,26 @@ class CastEditViewModel(
                     }
                 }
             }
-            is CastEditAction.ChangeCastName -> _uiState.update { it.copy(castName = action.value) }
-            is CastEditAction.ChangeConceptRole -> _uiState.update { it.copy(conceptRole = action.value) }
-            is CastEditAction.ChangeBirthday -> _uiState.update { it.copy(birthday = action.value) }
-            is CastEditAction.ChangeIntroduction -> _uiState.update { it.copy(introduction = action.value) }
-            is CastEditAction.ToggleWorkingDay -> toggleWorkingDay(action.day)
+            is CastEditAction.ChangeCastName -> {
+                hasPendingLocalEdits = true
+                _uiState.update { it.copy(castName = action.value) }
+            }
+            is CastEditAction.ChangeConceptRole -> {
+                hasPendingLocalEdits = true
+                _uiState.update { it.copy(conceptRole = action.value) }
+            }
+            is CastEditAction.ChangeBirthday -> {
+                hasPendingLocalEdits = true
+                _uiState.update { it.copy(birthday = action.value) }
+            }
+            is CastEditAction.ChangeIntroduction -> {
+                hasPendingLocalEdits = true
+                _uiState.update { it.copy(introduction = action.value) }
+            }
+            is CastEditAction.ToggleWorkingDay -> {
+                hasPendingLocalEdits = true
+                toggleWorkingDay(action.day)
+            }
             CastEditAction.ClickAddGalleryPhoto -> clickAddGalleryPhoto()
             CastEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             CastEditAction.ClickSave -> clickSave()

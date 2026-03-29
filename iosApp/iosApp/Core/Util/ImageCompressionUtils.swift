@@ -7,12 +7,16 @@ func saveCompressedImageToTemporaryFileAsync(
     completion: @escaping (String?) -> Void
 ) {
     DispatchQueue.global(qos: .userInitiated).async {
-        let imageUrl = autoreleasepool {
+        let backgroundResult = autoreleasepool {
             saveCompressedImageToTemporaryFile(image, maxBytes: maxBytes)
         }
 
         DispatchQueue.main.async {
-            completion(imageUrl)
+            if backgroundResult != nil {
+                completion(backgroundResult)
+            } else {
+                completion(saveCompressedImageToTemporaryFile(image, maxBytes: maxBytes))
+            }
         }
     }
 }
