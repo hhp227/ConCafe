@@ -192,12 +192,14 @@ private struct CheckInGuestContentView: View {
                         }
                         .padding(.horizontal, 16)
                     }
+                    .padding(.bottom, 8)
                 } else {
                     CheckInSectionPlaceholderCard(
                         title: "인기 캐스트가 아직 없어요",
                         description: "활동이 누적되면 추천 캐스트를 볼 수 있어요."
                     )
                     .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
                 }
                 if let errorMessage = uiState.errorMessage {
                     Text(errorMessage)
@@ -536,9 +538,9 @@ private struct CheckInTodayVisitsRow: View {
 
 private struct CheckInVisitCard: View {
     let name: String
-    
+   
     let time: String
-    
+   
     let image: String
 
     private let cornerRadius: CGFloat = 24
@@ -841,7 +843,7 @@ private struct CheckInLoginPromptSheet: View {
 
 private struct CheckInReviewPromptSheet: View {
     let cafeName: String
-    
+   
     let onAction: (CheckInAction) -> Void
 
     var body: some View {
