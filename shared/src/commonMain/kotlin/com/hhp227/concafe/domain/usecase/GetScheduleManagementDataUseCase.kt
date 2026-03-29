@@ -9,6 +9,8 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
@@ -38,17 +40,34 @@ class GetScheduleManagementDataUseCase(
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val weekStart = today.toWeekStart()
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
-            val detail = castRepository.getCastDetail(resolvedCastId)
-            val scheduleByDate = castRepository.getCastSchedules(
-                castId = resolvedCastId,
-                fromDate = weekStart.toString(),
-                toDate = weekEnd.toString()
-            ).associateBy { it.date }
-            val scheduleStatusByDate = castRepository.getCastScheduleStatuses(
-                castId = resolvedCastId,
-                fromDate = weekStart.toString(),
-                toDate = weekEnd.toString()
-            )
+            val loaded = coroutineScope {
+                val detailDeferred = async {
+                    castRepository.getCastDetail(resolvedCastId)
+                }
+                val schedulesDeferred = async {
+                    castRepository.getCastSchedules(
+                        castId = resolvedCastId,
+                        fromDate = weekStart.toString(),
+                        toDate = weekEnd.toString()
+                    )
+                }
+                val scheduleStatusesDeferred = async {
+                    castRepository.getCastScheduleStatuses(
+                        castId = resolvedCastId,
+                        fromDate = weekStart.toString(),
+                        toDate = weekEnd.toString()
+                    )
+                }
+
+                Triple(
+                    detailDeferred.await(),
+                    schedulesDeferred.await().associateBy { schedule -> schedule.date },
+                    scheduleStatusesDeferred.await()
+                )
+            }
+            val detail = loaded.first
+            val scheduleByDate = loaded.second
+            val scheduleStatusByDate = loaded.third
             val weekDates = (0..6).map { weekStart.plus(DatePeriod(days = it)) }
 
             AppResult.Success(

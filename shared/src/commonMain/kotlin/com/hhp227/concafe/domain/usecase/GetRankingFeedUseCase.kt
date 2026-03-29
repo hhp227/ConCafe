@@ -7,6 +7,8 @@ import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
 import com.hhp227.concafe.domain.repository.RankingRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class GetRankingFeedUseCase(
     private val rankingRepository: RankingRepository
@@ -15,24 +17,34 @@ class GetRankingFeedUseCase(
         period: RankingPeriod,
         country: String?,
         city: String?
-    ): AppResult<RankingFeed> {
-        val castResult = runCatching {
-            rankingRepository.getCastRanking(period = period, country = country, city = city)
+    ): AppResult<RankingFeed> = coroutineScope {
+        val castDeferred = async {
+            runCatching {
+                rankingRepository.getCastRanking(period = period, country = country, city = city)
+            }
         }
-        val cafeResult = runCatching {
-            rankingRepository.getCafeRanking(period = period, country = country, city = city)
+        val cafeDeferred = async {
+            runCatching {
+                rankingRepository.getCafeRanking(period = period, country = country, city = city)
+            }
         }
+        val castResult = castDeferred.await()
+        val cafeResult = cafeDeferred.await()
         val allFailed = castResult.isFailure && cafeResult.isFailure
         val firstError = castResult.exceptionOrNull() ?: cafeResult.exceptionOrNull()
 
         if (allFailed) {
             val throwable = firstError
-            return if (throwable is NoSuchElementException) {
-                AppResult.Failure(AppError.NotFound)
-            } else if (throwable is IllegalArgumentException) {
-                AppResult.Failure(AppError.ValidationFailed(throwable.message ?: "invalid request"))
-            } else {
-                AppResult.Failure(AppError.Unknown(throwable?.message))
+            return@coroutineScope when (throwable) {
+                is NoSuchElementException -> {
+                    AppResult.Failure(AppError.NotFound)
+                }
+                is IllegalArgumentException -> {
+                    AppResult.Failure(AppError.ValidationFailed(throwable.message ?: "invalid request"))
+                }
+                else -> {
+                    AppResult.Failure(AppError.Unknown(throwable?.message))
+                }
             }
         }
         val castRankings = castResult.getOrElse { emptyList() }.mapIndexed { index, item ->
@@ -61,7 +73,7 @@ class GetRankingFeedUseCase(
                 symbol = cafeSymbol(index)
             )
         }
-        return AppResult.Success(
+        return@coroutineScope AppResult.Success(
             RankingFeed(
                 ads = defaultAds(),
                 castRankings = castRankings,

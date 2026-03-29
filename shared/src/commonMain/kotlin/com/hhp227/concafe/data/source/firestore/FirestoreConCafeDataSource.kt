@@ -2081,6 +2081,9 @@ class FirestoreConCafeDataSource(
             )
         }.getOrElse { error ->
             println("TEST, Failed birthdayKey query: ${error.message}")
+            if (isFirestorePermissionDenied(error)) {
+                return emptyList()
+            }
             emptyList()
         }
         val primaryCasts = parseCollectionGroupCastDocuments(primaryDocuments)
@@ -2092,6 +2095,9 @@ class FirestoreConCafeDataSource(
                 runCastWithBirthdayFieldQuery(idToken = idToken)
             }.getOrElse { error ->
                 println("TEST, Failed birthday fallback query: ${error.message}")
+                if (isFirestorePermissionDenied(error)) {
+                    return primaryCasts.take(safeLimit)
+                }
                 emptyList()
             }
             val fallbackCasts = parseCollectionGroupCastDocuments(fallbackDocuments)
@@ -6855,6 +6861,14 @@ private fun nextFirestoreEntityId(prefix: String): String {
 
 private fun Throwable.isFirestoreNotFound(): Boolean {
     return message?.contains("request failed(404)") == true
+}
+
+private fun isFirestorePermissionDenied(error: Throwable): Boolean {
+    val message = error.message.orEmpty()
+
+    return message.contains("PERMISSION_DENIED", ignoreCase = true) ||
+        message.contains("Missing or insufficient permissions", ignoreCase = true) ||
+        message.contains("request failed(403)", ignoreCase = true)
 }
 
 private const val CAST_CLAIM_SYNC_META_MISSING_MARKER = "__MISSING__"

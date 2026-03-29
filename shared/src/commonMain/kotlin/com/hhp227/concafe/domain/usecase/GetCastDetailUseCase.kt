@@ -9,6 +9,8 @@ import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
@@ -23,8 +25,18 @@ class GetCastDetailUseCase(
 ) {
     suspend operator fun invoke(castId: String): AppResult<CastDetailFeed> {
         return try {
-            val currentUser = authRepository.getCurrentUser()
-            val detail = normalizeDetail(castRepository.getCastDetail(castId))
+            val initialLoaded = coroutineScope {
+                val currentUserDeferred = async {
+                    authRepository.getCurrentUser()
+                }
+                val detailDeferred = async {
+                    normalizeDetail(castRepository.getCastDetail(castId))
+                }
+
+                currentUserDeferred.await() to detailDeferred.await()
+            }
+            val currentUser = initialLoaded.first
+            val detail = initialLoaded.second
             val taggedReviews = reviewRepository.getRecentTaggedReviews(
                 cafeId = detail.cafe.id,
                 castId = castId,
@@ -33,14 +45,40 @@ class GetCastDetailUseCase(
             val taggedCastIds = taggedReviews
                 .flatMap { review -> review.taggedCastIds }
                 .distinct()
-            val taggedCastNamesById = castRepository.getCastsByIds(taggedCastIds)
-                .associate { cast -> cast.id to cast.name }
+            val secondaryLoaded = coroutineScope {
+                val taggedCastNamesByIdDeferred = async {
+                    castRepository.getCastsByIds(taggedCastIds)
+                        .associate { cast -> cast.id to cast.name }
+                }
+                val isFollowingDeferred = async {
+                    if (currentUser != null) {
+                        castRepository.isFollowing(currentUser.id, castId)
+                    } else {
+                        false
+                    }
+                }
+
+                taggedCastNamesByIdDeferred.await() to isFollowingDeferred.await()
+            }
+            val taggedCastNamesById = secondaryLoaded.first
+            val isFollowing = secondaryLoaded.second
+            val reviewUserIds = taggedReviews
+                .map { review -> review.userId }
+                .distinct()
+            val userNicknameById = coroutineScope {
+                reviewUserIds.associateWith { userId ->
+                    async {
+                        runCatching { userRepository.getUser(userId).nickname }
+                            .getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }
+            }
             val recentReviews = taggedReviews.map { review ->
                 val userNickname = review.userNickname
                     .takeIf { nickname -> nickname.isNotBlank() }
-                    ?: runCatching { userRepository.getUser(review.userId) }
-                    .getOrNull()
-                    ?.nickname
+                    ?: userNicknameById[review.userId]
                     ?: CAST_UNKNOWN_USER_NICKNAME
                 val taggedCastNames = review.taggedCastIds.mapNotNull { taggedCastId ->
                     taggedCastNamesById[taggedCastId]
@@ -54,12 +92,6 @@ class GetCastDetailUseCase(
                     createdDateLabel = review.createdAt.toRelativeDateLabel()
                 )
             }
-            val isFollowing = if (currentUser != null) {
-                castRepository.isFollowing(currentUser.id, castId)
-            } else {
-                false
-            }
-
             AppResult.Success(
                 CastDetailFeed(
                     detail = detail,

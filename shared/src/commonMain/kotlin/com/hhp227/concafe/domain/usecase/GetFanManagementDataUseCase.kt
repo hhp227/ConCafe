@@ -8,6 +8,8 @@ import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.UserRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -36,32 +38,53 @@ class GetFanManagementDataUseCase(
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 val weekStart = today.toWeekStart()
                 val weekEnd = weekStart.plus(DatePeriod(days = 6))
-                val detail = castRepository.getCastDetail(castId)
-                val weekSchedules = castRepository.getCastSchedules(
-                    castId = castId,
-                    fromDate = weekStart.toString(),
-                    toDate = weekEnd.toString()
-                )
-                val followerSnapshots = castRepository.getFollowerSnapshots(castId)
-                val followers = followerSnapshots.map { follower ->
-                    runCatching {
-                        val user = userRepository.getUser(follower.userId)
-                        FanFollower(
-                            id = user.id,
-                            nickname = user.nickname,
-                            profileImage = user.profileImage,
-                            followedAt = follower.followedAt
-                        )
-                    }.getOrElse {
-                        FanFollower(
-                            id = follower.userId,
-                            nickname = follower.userNickname?.takeIf { nickname -> nickname.isNotBlank() }
-                                ?: "알 수 없는 팬",
-                            profileImage = follower.userProfileImage,
-                            followedAt = follower.followedAt
+                val loaded = coroutineScope {
+                    val detailDeferred = async {
+                        castRepository.getCastDetail(castId)
+                    }
+                    val weekSchedulesDeferred = async {
+                        castRepository.getCastSchedules(
+                            castId = castId,
+                            fromDate = weekStart.toString(),
+                            toDate = weekEnd.toString()
                         )
                     }
+                    val followerSnapshotsDeferred = async {
+                        castRepository.getFollowerSnapshots(castId)
+                    }
+                    val followerSnapshots = followerSnapshotsDeferred.await()
+                    val followersDeferred = followerSnapshots.map { follower ->
+                        async {
+                            runCatching {
+                                val user = userRepository.getUser(follower.userId)
+
+                                FanFollower(
+                                    id = user.id,
+                                    nickname = user.nickname,
+                                    profileImage = user.profileImage,
+                                    followedAt = follower.followedAt
+                                )
+                            }.getOrElse {
+                                FanFollower(
+                                    id = follower.userId,
+                                    nickname = follower.userNickname?.takeIf { nickname -> nickname.isNotBlank() }
+                                        ?: "알 수 없는 팬",
+                                    profileImage = follower.userProfileImage,
+                                    followedAt = follower.followedAt
+                                )
+                            }
+                        }
+                    }
+
+                    Triple(
+                        detailDeferred.await(),
+                        weekSchedulesDeferred.await(),
+                        followersDeferred.map { deferred -> deferred.await() }
+                    )
                 }
+                val detail = loaded.first
+                val weekSchedules = loaded.second
+                val followers = loaded.third
 
                 AppResult.Success(
                     FanManagementData(

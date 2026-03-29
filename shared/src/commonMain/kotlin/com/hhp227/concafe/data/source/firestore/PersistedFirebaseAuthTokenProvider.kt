@@ -19,11 +19,6 @@ class PersistedFirebaseAuthTokenProvider(
             val currentSession = cachedSession
 
             if (currentSession == null) {
-                val tokenFromDelegate = delegate.getIdToken()
-
-                if (!tokenFromDelegate.isNullOrBlank()) {
-                    return@withLock tokenFromDelegate
-                }
                 if (hasTriedAnonymousSignIn) {
                     return@withLock null
                 }

@@ -7,6 +7,8 @@ import com.hhp227.concafe.domain.model.ExploreRegionFilter
 import com.hhp227.concafe.domain.model.ExploreSortFilter
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class GetExploreFeedUseCase(
     private val cafeRepository: CafeRepository,
@@ -25,22 +27,32 @@ class GetExploreFeedUseCase(
             val cappedPageSize = pageSize.coerceAtLeast(1)
             val region = ExploreRegionFilter.from(regionKey)
             val sort = ExploreSortFilter.from(sortKey)
-            val cafes = cafeRepository.searchCafes(
-                query = normalizedQuery,
-                country = region.country,
-                city = region.city,
-                sort = sort.cafeSort,
-                cursor = cafeCursor,
-                pageSize = cappedPageSize
-            )
-            val maids = castRepository.searchCasts(
-                query = normalizedQuery,
-                country = region.country,
-                city = region.city,
-                sort = sort.castSort,
-                cursor = maidCursor,
-                pageSize = cappedPageSize
-            )
+            val loaded = coroutineScope {
+                val cafesDeferred = async {
+                    cafeRepository.searchCafes(
+                        query = normalizedQuery,
+                        country = region.country,
+                        city = region.city,
+                        sort = sort.cafeSort,
+                        cursor = cafeCursor,
+                        pageSize = cappedPageSize
+                    )
+                }
+                val maidsDeferred = async {
+                    castRepository.searchCasts(
+                        query = normalizedQuery,
+                        country = region.country,
+                        city = region.city,
+                        sort = sort.castSort,
+                        cursor = maidCursor,
+                        pageSize = cappedPageSize
+                    )
+                }
+
+                cafesDeferred.await() to maidsDeferred.await()
+            }
+            val cafes = loaded.first
+            val maids = loaded.second
 
             AppResult.Success(
                 ExploreFeed(

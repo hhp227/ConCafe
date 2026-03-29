@@ -7,6 +7,8 @@ import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class GetCafeReviewPageUseCase(
     private val cafeRepository: CafeRepository,
@@ -19,20 +21,43 @@ class GetCafeReviewPageUseCase(
         pageSize: Int = DEFAULT_PAGE_SIZE
     ): AppResult<PagedResult<CafeDetailReview>> {
         return try {
-            val detail = cafeRepository.getCafeDetail(cafeId)
+            val loaded = coroutineScope {
+                val detailDeferred = async {
+                    cafeRepository.getCafeDetail(cafeId)
+                }
+                val reviewsDeferred = async {
+                    reviewRepository.getCafeReviews(
+                        cafeId = cafeId,
+                        cursor = cursor,
+                        pageSize = pageSize
+                    )
+                }
+
+                detailDeferred.await() to reviewsDeferred.await()
+            }
+            val detail = loaded.first
             val castNameById = detail.casts.associate { cast -> cast.id to cast.name }
-            val reviews = reviewRepository.getCafeReviews(
-                cafeId = cafeId,
-                cursor = cursor,
-                pageSize = pageSize
-            )
+            val reviews = loaded.second
+            val reviewUserIds = reviews.items
+                .map { review -> review.userId }
+                .distinct()
+            val userNicknameById = coroutineScope {
+                reviewUserIds.associateWith { userId ->
+                    async {
+                        runCatching { userRepository.getUser(userId).nickname }
+                            .getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }
+            }
 
             AppResult.Success(
                 PagedResult(
                     items = reviews.items.map { review ->
                         val userNickname = review.userNickname
                             .takeIf { nickname -> nickname.isNotBlank() }
-                            ?: runCatching { userRepository.getUser(review.userId) }.getOrNull()?.nickname
+                            ?: userNicknameById[review.userId]
                             ?: UNKNOWN_USER_NICKNAME
                         val verified = review.visitVerified
                         val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
