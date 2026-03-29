@@ -32,8 +32,12 @@ class GetCheckInUserFeedUseCase(
                     cursor = cursor,
                     pageSize = pageSize
                 )
+                val cafeIds = visitsPage.items.map { visit -> visit.cafeId }.distinct()
+                val cafesById = cafeRepository.getCafesByIds(cafeIds)
+                    .associateBy { cafe -> cafe.id }
                 val visitEntries = visitsPage.items.map { visit ->
-                    val cafe = cafeRepository.getCafeDetail(visit.cafeId).cafe
+                    val cafe = cafesById[visit.cafeId]
+                        ?: cafeRepository.getCafeDetail(visit.cafeId).cafe
 
                     CheckInVisitEntry(
                         id = visit.id,
@@ -92,7 +96,6 @@ class GetCheckInUserFeedUseCase(
                 .date
                 .toString()
         }.getOrNull()
-
         return if (normalizedDate == null) {
             visitedAt.startsWith(today)
         } else {

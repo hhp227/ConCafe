@@ -12,6 +12,8 @@ import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -26,42 +28,89 @@ class GetCafeDetailUseCase(
 ) {
     suspend operator fun invoke(cafeId: String): AppResult<CafeDetailFeed> {
         return try {
-            val currentUser = authRepository.getCurrentUser()
-            val detail = normalizeDetail(cafeRepository.getCafeDetail(cafeId))
-            val reviewPage = reviewRepository.getCafeReviews(
-                cafeId = cafeId,
-                cursor = null,
-                pageSize = INITIAL_REVIEW_PAGE_SIZE
-            )
+            val loaded = coroutineScope {
+                val currentUserDeferred = async {
+                    authRepository.getCurrentUser()
+                }
+                val detailDeferred = async {
+                    normalizeDetail(cafeRepository.getCafeDetail(cafeId))
+                }
+                val reviewPageDeferred = async {
+                    reviewRepository.getCafeReviews(
+                        cafeId = cafeId,
+                        cursor = null,
+                        pageSize = INITIAL_REVIEW_PAGE_SIZE
+                    )
+                }
+
+                Triple(
+                    currentUserDeferred.await(),
+                    detailDeferred.await(),
+                    reviewPageDeferred.await()
+                )
+            }
+            val currentUser = loaded.first
+            val detail = loaded.second
+            val reviewPage = loaded.third
             val currentDate = Clock.System.now()
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
                 .toString()
-            val workingCastIds = castRepository.getWorkingCastIdsByCafeAndDate(
-                cafeId = cafeId,
-                date = currentDate
-            )
+            val secondary = coroutineScope {
+                val workingCastIdsDeferred = async {
+                    castRepository.getWorkingCastIdsByCafeAndDate(
+                        cafeId = cafeId,
+                        date = currentDate
+                    )
+                }
+                val isFavoriteDeferred = async {
+                    if (currentUser != null) {
+                        cafeRepository.isFavorite(currentUser.id, cafeId)
+                    } else {
+                        false
+                    }
+                }
+                val isVisitVerifiedDeferred = async {
+                    if (currentUser != null) {
+                        visitRepository.hasVerifiedVisitAtCafe(userId = currentUser.id, cafeId = cafeId)
+                    } else {
+                        false
+                    }
+                }
+
+                Triple(
+                    workingCastIdsDeferred.await(),
+                    isFavoriteDeferred.await(),
+                    isVisitVerifiedDeferred.await()
+                )
+            }
+            val workingCastIds = secondary.first
             val castItems = detail.casts.map { cast ->
                 CafeDetailCast(
                     cast = cast,
                     isWorking = workingCastIds.contains(cast.id)
                 )
             }
-            val isFavorite = if (currentUser != null) {
-                cafeRepository.isFavorite(currentUser.id, cafeId)
-            } else {
-                false
-            }
-            val isVisitVerified = if (currentUser != null) {
-                visitRepository.hasVerifiedVisitAtCafe(userId = currentUser.id, cafeId = cafeId)
-            } else {
-                false
-            }
+            val isFavorite = secondary.second
+            val isVisitVerified = secondary.third
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
+            val reviewUserIds = reviewPage.items
+                .map { review -> review.userId }
+                .distinct()
+            val userNicknameById = coroutineScope {
+                reviewUserIds.associateWith { userId ->
+                    async {
+                        runCatching { userRepository.getUser(userId).nickname }
+                            .getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }
+            }
             val reviewItems = reviewPage.items.map { review ->
                 val userNickname = review.userNickname
                     .takeIf { nickname -> nickname.isNotBlank() }
-                    ?: runCatching { userRepository.getUser(review.userId) }.getOrNull()?.nickname
+                    ?: userNicknameById[review.userId]
                     ?: UNKNOWN_USER_NICKNAME
                 val verified = review.visitVerified
                 val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
