@@ -20,6 +20,7 @@ import netscape.javascript.JSObject
 actual fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
+    cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
     SwingPanel(
@@ -30,6 +31,7 @@ actual fun CheckInCafeMap(
         update = { panel ->
             panel.bind(
                 cafes = cafes,
+                cameraTarget = cameraTarget,
                 onCafeClick = onCafeClick
             )
         }
@@ -43,12 +45,19 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
 
     private var cafes: List<CheckInCafeSummary> = emptyList()
 
+    private var cameraTarget: CheckInMapCameraTarget? = null
+
     private var onCafeClick: (String) -> Unit = {}
 
     private var isBridgeListenerAttached: Boolean = false
 
-    fun bind(cafes: List<CheckInCafeSummary>, onCafeClick: (String) -> Unit) {
+    fun bind(
+        cafes: List<CheckInCafeSummary>,
+        cameraTarget: CheckInMapCameraTarget?,
+        onCafeClick: (String) -> Unit
+    ) {
         this.cafes = cafes
+        this.cameraTarget = cameraTarget
         this.onCafeClick = onCafeClick
 
         if (webEngine != null) {
@@ -63,7 +72,8 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
         val apiKey = resolveGoogleMapsApiKey()
         val html = buildCheckInMapHtml(
             apiKey = apiKey,
-            cafes = cafes
+            cafes = cafes,
+            cameraTarget = cameraTarget
         )
 
         if (isBridgeListenerAttached == false) {
@@ -110,7 +120,8 @@ private class CafeClickBridge(
 
 private fun buildCheckInMapHtml(
     apiKey: String,
-    cafes: List<CheckInCafeSummary>
+    cafes: List<CheckInCafeSummary>,
+    cameraTarget: CheckInMapCameraTarget?
 ): String {
     if (apiKey.isBlank()) {
         return """
@@ -130,8 +141,9 @@ private fun buildCheckInMapHtml(
             longitude = normalizedLongitude
         )
     }
-    val centerLatitude = normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
-    val centerLongitude = normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
+    val centerLatitude = cameraTarget?.latitude ?: normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
+    val centerLongitude = cameraTarget?.longitude ?: normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
+    val zoom = cameraTarget?.zoom ?: 13f
     val cafesJson = normalizedCafes.joinToString(prefix = "[", postfix = "]") { cafe ->
         """
         {
@@ -160,7 +172,7 @@ private fun buildCheckInMapHtml(
                 const center = { lat: $centerLatitude, lng: $centerLongitude };
                 map = new google.maps.Map(document.getElementById("map"), {
                   center: center,
-                  zoom: 13,
+                  zoom: $zoom,
                   mapTypeId: "roadmap",
                   mapTypeControl: false,
                   streetViewControl: false

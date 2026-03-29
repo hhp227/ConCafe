@@ -1,12 +1,12 @@
 package com.hhp227.concafe.presentation.main.checkin
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -17,10 +17,19 @@ import com.hhp227.concafe.domain.model.CheckInCafeSummary
 actual fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
+    cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
-    val cameraState = rememberCheckInMapCameraState(cafes)
+    val cameraState = rememberCameraPositionState()
 
+    LaunchedEffect(cafes, cameraTarget) {
+        val targetPosition = resolveCheckInMapCameraPosition(
+            cafes = cafes,
+            cameraTarget = cameraTarget
+        )
+
+        cameraState.move(CameraUpdateFactory.newCameraPosition(targetPosition))
+    }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraState
@@ -44,28 +53,38 @@ actual fun CheckInCafeMap(
     }
 }
 
-@Composable
-private fun rememberCheckInMapCameraState(cafes: List<CheckInCafeSummary>): CameraPositionState {
+private fun resolveCheckInMapCameraPosition(
+    cafes: List<CheckInCafeSummary>,
+    cameraTarget: CheckInMapCameraTarget?
+): CameraPosition {
+    if (cameraTarget != null) {
+        return CameraPosition.fromLatLngZoom(
+            LatLng(cameraTarget.latitude, cameraTarget.longitude),
+            cameraTarget.zoom
+        )
+    }
+
     val defaultSeoul = LatLng(37.5665, 126.9780)
-    val cameraPosition = remember(cafes) {
-        if (cafes.isEmpty()) {
-            CameraPosition.fromLatLngZoom(defaultSeoul, 11.5f)
-        } else if (cafes.size == 1) {
-            val first = cafes.first()
-            CameraPosition.fromLatLngZoom(
-                LatLng(first.geoPoint.latitude, first.geoPoint.longitude),
-                14.5f
-            )
-        } else {
-            val boundsBuilder = LatLngBounds.builder()
-            cafes.forEach { cafe ->
-                boundsBuilder.include(LatLng(cafe.geoPoint.latitude, cafe.geoPoint.longitude))
-            }
-            val center = boundsBuilder.build().center
-            CameraPosition.fromLatLngZoom(center, 12.5f)
-        }
+
+    if (cafes.isEmpty()) {
+        return CameraPosition.fromLatLngZoom(defaultSeoul, 11.5f)
     }
-    return rememberCameraPositionState {
-        position = cameraPosition
+
+    if (cafes.size == 1) {
+        val first = cafes.first()
+
+        return CameraPosition.fromLatLngZoom(
+            LatLng(first.geoPoint.latitude, first.geoPoint.longitude),
+            14.5f
+        )
     }
+
+    val boundsBuilder = LatLngBounds.builder()
+    cafes.forEach { cafe ->
+        boundsBuilder.include(LatLng(cafe.geoPoint.latitude, cafe.geoPoint.longitude))
+    }
+
+    val center = boundsBuilder.build().center
+
+    return CameraPosition.fromLatLngZoom(center, 12.5f)
 }

@@ -38,6 +38,7 @@ import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -446,6 +447,11 @@ private fun CafeMapSection(
     onCafeClick: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
+    var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.SEOUL) }
+    var isRegionDropdownExpanded by remember { mutableStateOf(false) }
+    val selectedRegionLabel = "${if (selectedRegion == ExploreUiState.RegionFilter.ALL) "근처" else selectedRegion.label} 주요 메이드카페"
+    val mapCameraTarget = resolveCheckInMapCameraTarget(selectedRegion)
+
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(28.dp),
@@ -473,21 +479,53 @@ private fun CafeMapSection(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFFEF6797),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = currentLocationLabel,
-                            color = Color(0xFF7B7480),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    Box {
+                        Row(
+                            modifier = Modifier.clickable { isRegionDropdownExpanded = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color(0xFFEF6797),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = selectedRegionLabel,
+                                color = Color(0xFF7B7480),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = Color(0xFF7B7480),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = isRegionDropdownExpanded,
+                            onDismissRequest = { isRegionDropdownExpanded = false }
+                        ) {
+                            ExploreUiState.RegionFilter.entries.forEach { region ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (region == ExploreUiState.RegionFilter.ALL) {
+                                                "근처"
+                                            } else {
+                                                region.label
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedRegion = region
+                                        isRegionDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
                 OutlinedButton(
@@ -505,12 +543,34 @@ private fun CafeMapSection(
                 CheckInCafeMap(
                     cafes = mapCafes,
                     onCafeClick = onCafeClick,
+                    cameraTarget = mapCameraTarget,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(24.dp))
                 )
             }
         }
+    }
+}
+
+private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): CheckInMapCameraTarget? {
+    return when (region) {
+        ExploreUiState.RegionFilter.ALL -> null
+        ExploreUiState.RegionFilter.SEOUL -> CheckInMapCameraTarget(
+            latitude = 37.5665,
+            longitude = 126.9780,
+            zoom = 12.5f
+        )
+        ExploreUiState.RegionFilter.TOKYO -> CheckInMapCameraTarget(
+            latitude = 35.6762,
+            longitude = 139.6503,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.OSAKA -> CheckInMapCameraTarget(
+            latitude = 34.6937,
+            longitude = 135.5023,
+            zoom = 12.0f
+        )
     }
 }
 

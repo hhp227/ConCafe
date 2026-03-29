@@ -271,6 +271,8 @@ private struct CheckInMapSection: View {
         span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
     )
 
+    @State private var selectedRegion: ExploreUiState.RegionFilter = .seoul
+
     var body: some View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
@@ -278,13 +280,25 @@ private struct CheckInMapSection: View {
                     Text("주변 컨셉카페 지도")
                         .font(.headline)
                         .fontWeight(.bold)
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(Color(hex: "EF6797"))
-                        Text(currentLocationLabel)
-                            .font(.caption)
-                            .foregroundStyle(Color(hex: "7B7480"))
+                    Menu {
+                        ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
+                            Button(region == .all ? "근처" : region.label) {
+                                selectedRegion = region
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .foregroundStyle(Color(hex: "EF6797"))
+                            Text("\((selectedRegion == .all ? "근처" : selectedRegion.label)) 주요 메이드카페")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color(hex: "7B7480"))
+                            Image(systemName: "chevron.down")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Color(hex: "7B7480"))
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
                 Spacer()
                 Button("체크인", action: onCheckInTap)
@@ -325,10 +339,13 @@ private struct CheckInMapSection: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onAppear {
-                    mapRegion = resolvedMapRegion(cafes: cafes)
+                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
                 }
                 .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(cafes: cafes)
+                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
+                }
+                .onChange(of: selectedRegion) { region in
+                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: region)
                 }
             }
             .frame(height: 240)
@@ -360,8 +377,13 @@ private struct CheckInMapSection: View {
         }
     }
 
-    private func resolvedMapRegion(cafes: [CheckInCafeSummary]) -> MKCoordinateRegion {
-        if cafes.isEmpty {
+    private func resolvedMapRegion(
+        cafes: [CheckInCafeSummary],
+        selectedRegion: ExploreUiState.RegionFilter
+    ) -> MKCoordinateRegion {
+        if let regionPreset = regionPreset(for: selectedRegion) {
+            return regionPreset
+        } else if cafes.isEmpty {
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
                 span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
@@ -392,6 +414,28 @@ private struct CheckInMapSection: View {
             )
         }
     }
+
+    private func regionPreset(for region: ExploreUiState.RegionFilter) -> MKCoordinateRegion? {
+        if region == .all {
+            return nil
+        } else if region == .seoul {
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+                span: MKCoordinateSpan(latitudeDelta: 0.10, longitudeDelta: 0.10)
+            )
+        } else if region == .tokyo {
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        } else {
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 34.6937, longitude: 135.5023),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        }
+    }
+
 }
 
 private struct CheckInMapPin: Identifiable {
