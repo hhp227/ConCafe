@@ -567,6 +567,22 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /fanAnnouncementRequests/{requestId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 50
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 300
+        && request.resource.data.createdAt is string;
+      allow read, update, delete: if false;
+    }
+
     match /rankings/{rankingId} {
       allow read: if true;
       allow write: if false;

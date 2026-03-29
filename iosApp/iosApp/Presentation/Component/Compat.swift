@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import PhotosUI
+import UniformTypeIdentifiers
 
 enum CompatNavigationBarStyle {
     case opaque
@@ -266,17 +267,11 @@ struct CompatImagePicker: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        if #available(iOS 16.0, *) {
-            PhotosUICompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        } else {
-            PHPickerCompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        }
+        // Use one stable picker path across iOS 15/16 to avoid callback-loss regressions.
+        PHPickerCompatImagePicker(
+            onImageSelected: onImageSelected,
+            onDismiss: onDismiss
+        )
     }
 }
 
@@ -312,17 +307,56 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
             _ picker: PHPickerViewController,
             didFinishPicking results: [PHPickerResult]
         ) {
-            picker.dismiss(animated: true)
-            parent.onDismiss()
-
-            guard let provider = results.first?.itemProvider,
-                  provider.canLoadObject(ofClass: UIImage.self) else { return }
-
-            provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
-                guard let image = object as? UIImage else { return }
+            guard let provider = results.first?.itemProvider else {
                 DispatchQueue.main.async {
-                    self?.parent.onImageSelected(image)
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
                 }
+                return
+            }
+            loadImage(from: provider) { image in
+                DispatchQueue.main.async {
+                    if let image {
+                        self.parent.onImageSelected(image)
+                    }
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
+                }
+            }
+        }
+
+        private func loadImage(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    if let image = object as? UIImage {
+                        completion(image)
+                    } else {
+                        self.loadImageFromDataRepresentation(from: provider, completion: completion)
+                    }
+                }
+                return
+            }
+            loadImageFromDataRepresentation(from: provider, completion: completion)
+        }
+
+        private func loadImageFromDataRepresentation(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            let imageTypeIdentifier = UTType.image.identifier
+            guard provider.hasItemConformingToTypeIdentifier(imageTypeIdentifier) else {
+                completion(nil)
+                return
+            }
+            provider.loadDataRepresentation(forTypeIdentifier: imageTypeIdentifier) { data, _ in
+                guard let data, let image = UIImage(data: data) else {
+                    completion(nil)
+                    return
+                }
+                completion(image)
             }
         }
 

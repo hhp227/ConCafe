@@ -5,6 +5,8 @@ data class UserNotificationSettings(
     val isShiftNotificationsEnabled: Boolean,
     val isBirthdayNotificationsEnabled: Boolean,
     val isNoticeNotificationsEnabled: Boolean,
+    val isFollowNotificationsEnabled: Boolean,
+    val isEventNotificationsEnabled: Boolean,
     val quietHoursMode: NotificationQuietHoursMode
 ) {
     companion object {
@@ -13,8 +15,10 @@ data class UserNotificationSettings(
                 isPushNotificationsEnabled = true,
                 isShiftNotificationsEnabled = true,
                 isBirthdayNotificationsEnabled = true,
-                isNoticeNotificationsEnabled = false,
-                quietHoursMode = NotificationQuietHoursMode.NIGHT
+                isNoticeNotificationsEnabled = true,
+                isFollowNotificationsEnabled = true,
+                isEventNotificationsEnabled = true,
+                quietHoursMode = NotificationQuietHoursMode.OFF
             )
         }
     }

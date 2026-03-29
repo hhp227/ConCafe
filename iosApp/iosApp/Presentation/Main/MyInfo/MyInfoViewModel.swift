@@ -24,7 +24,21 @@ final class MyInfoViewModel: ObservableObject {
 
     private let userEventPublisher: UserEventPublisher
 
-    @Published private(set) var uiState = MyInfoUiState.empty
+    @Published private(set) var uiState = MyInfoUiState(
+        isLoading: true,
+        errorMessage: nil,
+        isLoggedIn: false,
+        user: nil,
+        summary: nil,
+        castDetail: nil,
+        ownedCafes: [],
+        badges: [],
+        popularCafes: [],
+        recentVisits: [],
+        favorites: [],
+        followedMaids: [],
+        isLoginPromptVisible: false
+    )
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
 
@@ -360,6 +374,7 @@ final class MyInfoViewModel: ObservableObject {
         self.visitEventPublisher = visitEventPublisher
         self.userEventPublisher = userEventPublisher
 
+        loadMyInfo()
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()

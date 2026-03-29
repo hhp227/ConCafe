@@ -46,4 +46,20 @@ class NotificationRepositoryImpl(
             token = token
         )
     }
+
+    override suspend fun sendFanAnnouncement(
+        userId: String,
+        cafeId: String,
+        castId: String,
+        title: String,
+        body: String
+    ) {
+        notificationDataSource.sendFanAnnouncement(
+            userId = userId,
+            cafeId = cafeId,
+            castId = castId,
+            title = title,
+            body = body
+        )
+    }
 }

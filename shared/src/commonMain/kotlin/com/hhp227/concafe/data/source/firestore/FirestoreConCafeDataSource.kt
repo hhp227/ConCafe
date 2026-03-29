@@ -312,6 +312,8 @@ class FirestoreConCafeDataSource(
                 "isShiftNotificationsEnabled" to firestoreBoolean(settings.isShiftNotificationsEnabled),
                 "isBirthdayNotificationsEnabled" to firestoreBoolean(settings.isBirthdayNotificationsEnabled),
                 "isNoticeNotificationsEnabled" to firestoreBoolean(settings.isNoticeNotificationsEnabled),
+                "isFollowNotificationsEnabled" to firestoreBoolean(settings.isFollowNotificationsEnabled),
+                "isEventNotificationsEnabled" to firestoreBoolean(settings.isEventNotificationsEnabled),
                 "quietHoursMode" to firestoreString(settings.quietHoursMode.name),
                 "updatedAt" to firestoreString(Clock.System.now().toString())
             )
@@ -356,6 +358,57 @@ class FirestoreConCafeDataSource(
             restApi.patch(path = path, body = body, idToken = null)
         }.getOrElse { throwable ->
             throw IllegalStateException("Failed to register push token", throwable)
+        }
+    }
+
+    override suspend fun sendFanAnnouncement(
+        userId: String,
+        cafeId: String,
+        castId: String,
+        title: String,
+        body: String
+    ) {
+        val normalizedUserId = userId.trim()
+        val normalizedCafeId = cafeId.trim()
+        val normalizedCastId = castId.trim()
+        val normalizedTitle = title.trim()
+        val normalizedBody = body.trim()
+
+        if (normalizedUserId.isEmpty() || normalizedCafeId.isEmpty() || normalizedCastId.isEmpty()) {
+            throw IllegalArgumentException("fan announcement target is required")
+        }
+        if (normalizedTitle.isEmpty()) {
+            throw IllegalArgumentException("fan announcement title is required")
+        }
+        if (normalizedBody.isEmpty()) {
+            throw IllegalArgumentException("fan announcement body is required")
+        }
+        if (normalizedTitle.length > 50) {
+            throw IllegalArgumentException("fan announcement title is too long")
+        }
+        if (normalizedBody.length > 300) {
+            throw IllegalArgumentException("fan announcement body is too long")
+        }
+        val idToken = tokenProvider.getIdToken()
+        val requestId = nextFirestoreEntityId("fan-announcement")
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.FAN_ANNOUNCEMENT_REQUESTS}/$requestId"
+        val bodyPayload = firestoreDocumentBody(
+            fields = mapOf(
+                "userId" to firestoreString(normalizedUserId),
+                "cafeId" to firestoreString(normalizedCafeId),
+                "castId" to firestoreString(normalizedCastId),
+                "title" to firestoreString(normalizedTitle),
+                "body" to firestoreString(normalizedBody),
+                "createdAt" to firestoreString(now)
+            )
+        )
+        runCatching {
+            restApi.patch(path = path, body = bodyPayload, idToken = idToken)
+        }.recoverCatching {
+            restApi.patch(path = path, body = bodyPayload, idToken = null)
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to send fan announcement request", throwable)
         }
     }
 
@@ -5786,14 +5839,17 @@ class FirestoreConCafeDataSource(
         } else {
             val quietHoursMode = when (fields.getFirestoreString("quietHoursMode")?.uppercase()) {
                 NotificationQuietHoursMode.OFF.name -> NotificationQuietHoursMode.OFF
+                NotificationQuietHoursMode.NIGHT.name -> NotificationQuietHoursMode.NIGHT
                 NotificationQuietHoursMode.ALL_DAY.name -> NotificationQuietHoursMode.ALL_DAY
-                else -> NotificationQuietHoursMode.NIGHT
+                else -> NotificationQuietHoursMode.OFF
             }
             return UserNotificationSettings(
                 isPushNotificationsEnabled = fields.getFirestoreBoolean("isPushNotificationsEnabled") ?: true,
                 isShiftNotificationsEnabled = fields.getFirestoreBoolean("isShiftNotificationsEnabled") ?: true,
                 isBirthdayNotificationsEnabled = fields.getFirestoreBoolean("isBirthdayNotificationsEnabled") ?: true,
-                isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: false,
+                isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: true,
+                isFollowNotificationsEnabled = fields.getFirestoreBoolean("isFollowNotificationsEnabled") ?: true,
+                isEventNotificationsEnabled = fields.getFirestoreBoolean("isEventNotificationsEnabled") ?: true,
                 quietHoursMode = quietHoursMode
             )
         }

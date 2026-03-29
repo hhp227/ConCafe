@@ -42,6 +42,12 @@ type CafeFavoriteLike = {
   userId?: unknown;
 };
 
+type CastFollowLike = {
+  userId?: unknown;
+  castId?: unknown;
+  cafeId?: unknown;
+};
+
 type StampLike = {
   userId?: unknown;
   cafeId?: unknown;
@@ -50,11 +56,37 @@ type StampLike = {
 
 type CastClaimLike = {
   castId?: unknown;
+  castName?: unknown;
   cafeId?: unknown;
   userId?: unknown;
   status?: unknown;
   requesterNickname?: unknown;
   requesterProfileImage?: unknown;
+  createdAt?: unknown;
+};
+
+type CafeRegistrationClaimLike = {
+  userId?: unknown;
+  cafeName?: unknown;
+  status?: unknown;
+  requestedAt?: unknown;
+};
+
+type CafeOwnerClaimLike = {
+  userId?: unknown;
+  cafeId?: unknown;
+  cafeName?: unknown;
+  status?: unknown;
+  requestedAt?: unknown;
+};
+
+type FanAnnouncementRequestLike = {
+  userId?: unknown;
+  cafeId?: unknown;
+  castId?: unknown;
+  title?: unknown;
+  body?: unknown;
+  createdAt?: unknown;
 };
 
 type CastScheduleLike = {
@@ -72,11 +104,23 @@ type NoticeLike = {
   createdAt?: unknown;
 };
 
+type EventLike = {
+  title?: unknown;
+  desc?: unknown;
+  relatedCastId?: unknown;
+  createdAt?: unknown;
+};
+
+type NotificationQuietHoursMode = "OFF" | "NIGHT" | "ALL_DAY";
+
 type UserNotificationSettings = {
   isPushNotificationsEnabled: boolean;
   isShiftNotificationsEnabled: boolean;
   isBirthdayNotificationsEnabled: boolean;
   isNoticeNotificationsEnabled: boolean;
+  isFollowNotificationsEnabled: boolean;
+  isEventNotificationsEnabled: boolean;
+  quietHoursMode: NotificationQuietHoursMode;
 };
 
 function asPlainObject(value: unknown): Record<string, unknown> | null {
@@ -178,14 +222,33 @@ function readNotificationSettings(data: unknown): UserNotificationSettings {
   const isPushEnabled = plain?.isPushNotificationsEnabled !== false;
   const isShiftEnabled = plain?.isShiftNotificationsEnabled !== false;
   const isBirthdayEnabled = plain?.isBirthdayNotificationsEnabled !== false;
-  const isNoticeEnabled = plain?.isNoticeNotificationsEnabled === true;
+  const isNoticeEnabled = plain?.isNoticeNotificationsEnabled !== false;
+  const isFollowEnabled = plain?.isFollowNotificationsEnabled !== false;
+  const isEventEnabled = plain?.isEventNotificationsEnabled !== false;
+  const quietHoursRaw = asNonBlankString(plain?.quietHoursMode)?.toUpperCase();
+  const quietHoursMode: NotificationQuietHoursMode =
+    quietHoursRaw === "NIGHT" || quietHoursRaw === "ALL_DAY" ? quietHoursRaw : "OFF";
 
   return {
     isPushNotificationsEnabled: isPushEnabled,
     isShiftNotificationsEnabled: isShiftEnabled,
     isBirthdayNotificationsEnabled: isBirthdayEnabled,
     isNoticeNotificationsEnabled: isNoticeEnabled,
+    isFollowNotificationsEnabled: isFollowEnabled,
+    isEventNotificationsEnabled: isEventEnabled,
+    quietHoursMode: quietHoursMode,
   };
+}
+
+function isQuietHoursPushSuppressed(settings: UserNotificationSettings): boolean {
+  if (settings.quietHoursMode === "ALL_DAY") {
+    return true;
+  } else if (settings.quietHoursMode === "OFF") {
+    return false;
+  } else {
+    const hour = kstNow().getUTCHours();
+    return hour >= 23 || hour < 8;
+  }
 }
 
 async function loadUserNotificationSettings(userId: string): Promise<UserNotificationSettings> {
@@ -201,21 +264,201 @@ async function loadUserNotificationSettings(userId: string): Promise<UserNotific
       isPushNotificationsEnabled: true,
       isShiftNotificationsEnabled: true,
       isBirthdayNotificationsEnabled: true,
-      isNoticeNotificationsEnabled: false,
+      isNoticeNotificationsEnabled: true,
+      isFollowNotificationsEnabled: true,
+      isEventNotificationsEnabled: true,
+      quietHoursMode: "OFF",
     };
   } else {
     return readNotificationSettings(snapshot.data());
   }
 }
 
-async function createUserNotification(
-  userId: string,
-  notificationId: string,
-  type: "CAST_SHIFT" | "BIRTHDAY" | "CAFE_NOTICE",
+function isPendingApprovalStatus(status: string | null): boolean {
+  if (status == null) {
+    return true;
+  }
+  if (status === "PENDING" || status === "승인 대기 중") {
+    return true;
+  }
+  return status.includes("승인 대기");
+}
+
+function isApprovedStatus(status: string | null): boolean {
+  if (status == null) {
+    return false;
+  }
+  if (status === "APPROVED" || status === "승인 완료") {
+    return true;
+  }
+  return status.includes("승인");
+}
+
+function isRejectedStatus(status: string | null): boolean {
+  if (status == null) {
+    return false;
+  }
+  if (status === "REJECTED" || status === "반려") {
+    return true;
+  }
+  return status.includes("반려");
+}
+
+async function loadAdminUserIds(): Promise<string[]> {
+  const snapshot = await db()
+    .collection("users")
+    .where("role", "==", "ADMIN")
+    .get();
+
+  return snapshot.docs
+    .map((doc) => asNonBlankString(doc.id))
+    .filter((value): value is string => value != null);
+}
+
+async function loadCafeOwnerUserIds(cafeId: string): Promise<string[]> {
+  const snapshot = await db()
+    .collection("users")
+    .where("affiliatedCafeId", "==", cafeId)
+    .where("role", "==", "CAFE_OWNER")
+    .get();
+
+  return snapshot.docs
+    .map((doc) => asNonBlankString(doc.id))
+    .filter((value): value is string => value != null);
+}
+
+async function hasFanAnnouncementPermission(
+  requesterUserId: string,
+  requesterRole: string | null,
+  requesterAffiliatedCafeId: string | null,
+  cafeId: string,
+  castId: string
+): Promise<boolean> {
+  if (requesterRole === "ADMIN") {
+    return true;
+  } else if (requesterRole === "CAFE_OWNER") {
+    const userSnapshot = await db().collection("users").doc(requesterUserId).get();
+    const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+    const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+    const ownerIds = asStringArray(cafeSnapshot.data()?.ownerIds);
+    const hasOwnerPermission = ownedCafeIds.includes(cafeId) || ownerIds.includes(requesterUserId);
+
+    if (hasOwnerPermission) {
+      return true;
+    } else {
+      return requesterAffiliatedCafeId === cafeId;
+    }
+  } else if (requesterRole === "CAST") {
+    const castSnapshot = await db()
+      .collection("cafes")
+      .doc(cafeId)
+      .collection("casts")
+      .doc(castId)
+      .get();
+    const linkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+    const isLinkedCast = linkedUserId === requesterUserId;
+
+    if (isLinkedCast) {
+      return true;
+    } else {
+      return requesterAffiliatedCafeId === cafeId;
+    }
+  } else {
+    return false;
+  }
+}
+
+async function createApprovalRequestNotifications(
+  recipientUserIds: string[],
+  notificationIdPrefix: string,
+  type: "CAFE_APPROVAL_REQUEST" | "CAFE_OWNER_APPROVAL_REQUEST" | "CAST_CLAIM_REQUEST",
   title: string,
   body: string,
   targetId: string,
   createdAt: string
+): Promise<void> {
+  if (recipientUserIds.length == 0) {
+    return;
+  }
+  const uniqueUserIds = Array.from(new Set(recipientUserIds));
+  const tasks = uniqueUserIds.map(async (userId) => {
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isPushNotificationsEnabled) {
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `${notificationIdPrefix}_${userId}`,
+      type,
+      title,
+      body,
+      targetId,
+      createdAt
+    );
+  });
+
+  await Promise.all(tasks);
+}
+
+async function createApprovalResultNotification(
+  recipientUserId: string | null,
+  notificationIdPrefix: string,
+  type:
+    | "CAFE_APPROVED"
+    | "CAFE_OWNER_APPROVED"
+    | "CAST_CLAIM_APPROVED"
+    | "CAFE_REJECTED"
+    | "CAFE_OWNER_REJECTED"
+    | "CAST_CLAIM_REJECTED",
+  title: string,
+  body: string,
+  targetId: string,
+  createdAt: string
+): Promise<void> {
+  if (recipientUserId == null) {
+    return;
+  }
+  const settings = await loadUserNotificationSettings(recipientUserId);
+
+  if (!settings.isPushNotificationsEnabled) {
+    return;
+  }
+  await createUserNotification(
+    recipientUserId,
+    `${notificationIdPrefix}_${recipientUserId}`,
+    type,
+    title,
+    body,
+    targetId,
+    createdAt
+  );
+}
+
+async function createUserNotification(
+  userId: string,
+  notificationId: string,
+  type:
+    | "CAST_SHIFT"
+    | "BIRTHDAY"
+    | "CAFE_NOTICE"
+    | "CAFE_EVENT"
+    | "FAN_ANNOUNCEMENT"
+    | "FOLLOW_UPDATE"
+    | "CAFE_APPROVAL_REQUEST"
+    | "CAFE_OWNER_APPROVAL_REQUEST"
+    | "CAST_CLAIM_REQUEST"
+    | "CAFE_APPROVED"
+    | "CAFE_OWNER_APPROVED"
+    | "CAST_CLAIM_APPROVED"
+    | "CAFE_REJECTED"
+    | "CAFE_OWNER_REJECTED"
+    | "CAST_CLAIM_REJECTED",
+  title: string,
+  body: string,
+  targetId: string,
+  createdAt: string,
+  settings: UserNotificationSettings | null = null
 ): Promise<void> {
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
@@ -240,7 +483,7 @@ async function createUserNotification(
     },
     {merge: false}
   );
-  await sendPushToUser(userId, title, body, type, targetId, sanitizedId);
+  await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings);
 }
 
 async function sendPushToUser(
@@ -249,8 +492,14 @@ async function sendPushToUser(
   body: string,
   type: string,
   targetId: string,
-  notificationId: string
+  notificationId: string,
+  settings: UserNotificationSettings | null = null
 ): Promise<void> {
+  const resolvedSettings = settings ?? await loadUserNotificationSettings(userId);
+
+  if (!resolvedSettings.isPushNotificationsEnabled || isQuietHoursPushSuppressed(resolvedSettings)) {
+    return;
+  }
   const tokenSnapshot = await db()
     .collection("users")
     .doc(userId)
@@ -290,6 +539,7 @@ async function sendPushToUser(
     android: {
       priority: "high",
       notification: {
+        color: "#EF6797",
         sound: "default",
       },
     },
@@ -674,6 +924,60 @@ async function syncCastFollowerAggregate(cafeId: string, castId: string): Promis
     );
 }
 
+async function syncCastFollowNotifications(
+  followId: string,
+  beforeData: unknown,
+  afterData: unknown
+): Promise<void> {
+  const beforeFollow = beforeData as CastFollowLike | undefined;
+  const afterFollow = afterData as CastFollowLike | undefined;
+  const beforeUserId = asNonBlankString(beforeFollow?.userId);
+  const afterUserId = asNonBlankString(afterFollow?.userId);
+  const castId = asNonBlankString(afterFollow?.castId);
+  const cafeId = asNonBlankString(afterFollow?.cafeId);
+
+  if (beforeData != null) {
+    return;
+  } else if (afterData == null) {
+    return;
+  } else if (beforeUserId != null) {
+    return;
+  } else if (afterUserId == null || castId == null || cafeId == null) {
+    return;
+  }
+  const castSnapshot = await db()
+    .collection("cafes")
+    .doc(cafeId)
+    .collection("casts")
+    .doc(castId)
+    .get();
+  const recipientUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+  if (recipientUserId == null || recipientUserId === afterUserId) {
+    return;
+  }
+  const settings = await loadUserNotificationSettings(recipientUserId);
+
+  if (!settings.isFollowNotificationsEnabled) {
+    return;
+  }
+  const castName = asNonBlankString(castSnapshot.data()?.name) ?? "내 캐스트";
+  const followerSnapshot = await db().collection("users").doc(afterUserId).get();
+  const followerName = asNonBlankString(followerSnapshot.data()?.nickname) ?? "새 팬";
+  const createdAt = new Date().toISOString();
+
+  await createUserNotification(
+    recipientUserId,
+    `follow_update_${followId}_${recipientUserId}`,
+    "FOLLOW_UPDATE",
+    "새 팔로워 알림",
+    `${followerName}님이 ${castName}님을 팔로우했어요.`,
+    castId,
+    createdAt,
+    settings
+  );
+}
+
 async function syncCastScheduleNotifications(
   scheduleId: string,
   beforeData: CastScheduleLike | undefined,
@@ -736,7 +1040,8 @@ async function syncCastScheduleNotifications(
       "팔로우 캐스트 출근 알림",
       `${castName}님이 ${timeLabel} 출근 예정이에요.`,
       castId,
-      createdAt
+      createdAt,
+      settings
     );
   });
 
@@ -784,7 +1089,76 @@ async function syncFavoriteCafeNoticeNotifications(
       `${cafeName} 공지 업데이트`,
       title.length > 0 ? title : content,
       cafeId,
-      createdAt
+      createdAt,
+      settings
+    );
+  });
+
+  await Promise.all(tasks);
+}
+
+async function syncCafeEventNotifications(
+  cafeId: string,
+  eventId: string,
+  beforeData: EventLike | undefined,
+  afterData: EventLike | undefined
+): Promise<void> {
+  if (afterData == null || beforeData != null) {
+    return;
+  }
+  const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+  const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "카페";
+  const title = asNonBlankString(afterData.title) ?? "새 이벤트";
+  const desc = asNonBlankString(afterData.desc) ?? "새 이벤트가 등록되었어요.";
+  const relatedCastId = asNonBlankString(afterData.relatedCastId);
+  const favorites = await db()
+    .collection("cafeFavorites")
+    .where("cafeId", "==", cafeId)
+    .select("userId")
+    .get();
+  const recipientUserIds = new Set<string>();
+
+  favorites.docs.forEach((favoriteDoc) => {
+    const userId = asNonBlankString(favoriteDoc.get("userId"));
+
+    if (userId != null) {
+      recipientUserIds.add(userId);
+    }
+  });
+  if (relatedCastId != null) {
+    const followers = await db()
+      .collection("castFollows")
+      .where("castId", "==", relatedCastId)
+      .select("userId")
+      .get();
+
+    followers.docs.forEach((followerDoc) => {
+      const userId = asNonBlankString(followerDoc.get("userId"));
+
+      if (userId != null) {
+        recipientUserIds.add(userId);
+      }
+    });
+  }
+  if (recipientUserIds.size == 0) {
+    return;
+  }
+  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+  const tasks = Array.from(recipientUserIds).map(async (userId) => {
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isEventNotificationsEnabled) {
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `cafe_event_${eventId}_${userId}`,
+      "CAFE_EVENT",
+      `${cafeName} 이벤트 업데이트`,
+      title.length > 0 ? title : desc,
+      cafeId,
+      createdAt,
+      settings
     );
   });
 
@@ -834,7 +1208,8 @@ async function syncBirthdayNotifications(): Promise<void> {
         "팔로우 캐스트 생일 알림",
         `오늘은 ${castName}님의 생일이에요. 축하 메시지를 남겨보세요.`,
         castId,
-        createdAt
+        createdAt,
+        settings
       );
     });
 
@@ -1234,6 +1609,7 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
 export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
   "castFollows/{followId}",
   async (event) => {
+    const followId = asNonBlankString(event.params.followId) ?? "";
     const beforeData = event.data?.before.data();
     const afterData = event.data?.after.data();
     const followTargets = new Map<string, string>();
@@ -1277,6 +1653,7 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         cafeId: cafeId,
       })),
     });
+    await syncCastFollowNotifications(followId, beforeData, afterData);
   }
 );
 
@@ -1300,6 +1677,131 @@ export const onCastScheduleWrittenCreateShiftNotifications = onDocumentWritten(
   }
 );
 
+export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
+  "fanAnnouncementRequests/{requestId}",
+  async (event) => {
+    const requestId = asNonBlankString(event.params.requestId);
+    const beforeData = event.data?.before.data() as FanAnnouncementRequestLike | undefined;
+    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
+
+    if (requestId == null || afterData == null || beforeData != null) {
+      return;
+    }
+    try {
+      const requesterUserId = asNonBlankString(afterData.userId);
+      const cafeId = asNonBlankString(afterData.cafeId);
+      const castId = asNonBlankString(afterData.castId);
+      const rawTitle = asNonBlankString(afterData.title);
+      const rawBody = asNonBlankString(afterData.body);
+
+      if (requesterUserId == null || cafeId == null || castId == null || rawTitle == null || rawBody == null) {
+        return;
+      }
+      const title = rawTitle.substring(0, 50);
+      const body = rawBody.substring(0, 300);
+      const requesterSnapshot = await db().collection("users").doc(requesterUserId).get();
+      const requesterRole = asNonBlankString(requesterSnapshot.data()?.role);
+      const requesterAffiliatedCafeId = asNonBlankString(requesterSnapshot.data()?.affiliatedCafeId);
+      const hasAnnouncementPermission = await hasFanAnnouncementPermission(
+        requesterUserId,
+        requesterRole,
+        requesterAffiliatedCafeId,
+        cafeId,
+        castId
+      );
+
+      if (!hasAnnouncementPermission) {
+        logger.warn("Fan announcement request rejected due to permission.", {
+          requestId: requestId,
+          requesterUserId: requesterUserId,
+          requesterRole: requesterRole,
+          requesterAffiliatedCafeId: requesterAffiliatedCafeId,
+          cafeId: cafeId,
+        });
+        return;
+      }
+      const followers = await db()
+        .collection("castFollows")
+        .where("castId", "==", castId)
+        .select("userId")
+        .get();
+
+      if (followers.empty) {
+        logger.info("Fan announcement has no follower target.", {
+          requestId: requestId,
+          requesterUserId: requesterUserId,
+          castId: castId,
+        });
+        return;
+      }
+      const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+      const followerTasks = followers.docs.map(async (followerDoc) => {
+        const userId = asNonBlankString(followerDoc.get("userId"));
+
+        if (userId == null || userId === requesterUserId) {
+          return;
+        }
+        try {
+          const settings = await loadUserNotificationSettings(userId);
+
+          if (!settings.isPushNotificationsEnabled) {
+            logger.info("Skipped fan announcement push because push is disabled.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+            });
+            return;
+          }
+          if (!settings.isFollowNotificationsEnabled) {
+            logger.info("Skipped fan announcement push because follow notification is disabled.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+            });
+            return;
+          }
+          if (isQuietHoursPushSuppressed(settings)) {
+            logger.info("Skipped fan announcement push due to quiet hours.", {
+              requestId: requestId,
+              targetUserId: userId,
+              castId: castId,
+              quietHoursMode: settings.quietHoursMode,
+            });
+            return;
+          }
+          await createUserNotification(
+            userId,
+            sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`),
+            "FAN_ANNOUNCEMENT",
+            title,
+            body,
+            castId,
+            createdAt,
+            settings
+          );
+          logger.info("Sent fan announcement push.", {
+            requestId: requestId,
+            targetUserId: userId,
+            castId: castId,
+            createdAt: createdAt,
+          });
+        } catch (error) {
+          logger.error("Failed to send fan announcement push.", {
+            requestId: requestId,
+            targetUserId: userId,
+            castId: castId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
+
+      await Promise.all(followerTasks);
+    } finally {
+      await event.data?.after.ref.delete();
+    }
+  }
+);
+
 export const onCafeNoticeWrittenCreateFavoriteNotifications = onDocumentWritten(
   "cafes/{cafeId}/notices/{noticeId}",
   async (event) => {
@@ -1320,6 +1822,26 @@ export const onCafeNoticeWrittenCreateFavoriteNotifications = onDocumentWritten(
   }
 );
 
+export const onCafeEventWrittenCreateNotifications = onDocumentWritten(
+  "cafes/{cafeId}/events/{eventId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+    const eventId = asNonBlankString(event.params.eventId);
+    const beforeData = event.data?.before.data() as EventLike | undefined;
+    const afterData = event.data?.after.data() as EventLike | undefined;
+
+    if (cafeId == null || eventId == null) {
+      return;
+    }
+    await syncCafeEventNotifications(cafeId, eventId, beforeData, afterData);
+    logger.info("Synced cafe event notifications.", {
+      cafeId: cafeId,
+      eventId: eventId,
+      created: beforeData == null && afterData != null,
+    });
+  }
+);
+
 export const onCastClaimWrittenSyncRequesterSnapshot = onDocumentWritten(
   "castClaims/{claimId}",
   async (event) => {
@@ -1333,6 +1855,344 @@ export const onCastClaimWrittenSyncRequesterSnapshot = onDocumentWritten(
     await syncCastClaimRequesterSnapshot(claimId, afterData);
     logger.info("Synced cast claim requester snapshot.", {
       claimId: claimId,
+    });
+  }
+);
+
+export const onCafeRegistrationClaimWrittenCreateAdminNotifications = onDocumentWritten(
+  "cafeRegistrationClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeRegistrationClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeRegistrationClaimLike | undefined;
+
+    if (claimId == null || afterData == null || beforeData != null) {
+      return;
+    }
+    const status = asNonBlankString(afterData.status);
+
+    if (!isPendingApprovalStatus(status)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "새 카페";
+    const createdAt = new Date().toISOString();
+    const adminUserIds = await loadAdminUserIds();
+    const recipientUserIds = adminUserIds.filter((userId) => userId != requesterUserId);
+
+    await createApprovalRequestNotifications(
+      recipientUserIds,
+      `approval_cafe_registration_${claimId}`,
+      "CAFE_APPROVAL_REQUEST",
+      "카페 등록 승인 요청",
+      `${cafeName} 등록 승인 요청이 접수되었어요.`,
+      claimId,
+      createdAt
+    );
+    logger.info("Created admin notifications for cafe registration claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+      recipientCount: recipientUserIds.length,
+    });
+  }
+);
+
+export const onCafeOwnerClaimWrittenCreateAdminNotifications = onDocumentWritten(
+  "cafeOwnerClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeOwnerClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeOwnerClaimLike | undefined;
+
+    if (claimId == null || afterData == null || beforeData != null) {
+      return;
+    }
+    const status = asNonBlankString(afterData.status);
+
+    if (!isPendingApprovalStatus(status)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const createdAt = new Date().toISOString();
+    const adminUserIds = await loadAdminUserIds();
+    const recipientUserIds = adminUserIds.filter((userId) => userId != requesterUserId);
+
+    await createApprovalRequestNotifications(
+      recipientUserIds,
+      `approval_cafe_owner_${claimId}`,
+      "CAFE_OWNER_APPROVAL_REQUEST",
+      "카페 운영 권한 승인 요청",
+      `${cafeName} 운영 권한 요청이 접수되었어요.`,
+      claimId,
+      createdAt
+    );
+    logger.info("Created admin notifications for cafe owner claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+      recipientCount: recipientUserIds.length,
+    });
+  }
+);
+
+export const onCastClaimWrittenCreateCafeApprovalNotifications = onDocumentWritten(
+  "castClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CastClaimLike | undefined;
+    const afterData = event.data?.after.data() as CastClaimLike | undefined;
+
+    if (claimId == null || afterData == null || beforeData != null) {
+      return;
+    }
+    const status = asNonBlankString(afterData.status);
+
+    if (!isPendingApprovalStatus(status)) {
+      return;
+    }
+    const cafeId = asNonBlankString(afterData.cafeId);
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const castId = asNonBlankString(afterData.castId) ?? claimId;
+
+    if (cafeId == null) {
+      return;
+    }
+    const castName = asNonBlankString(afterData.castName) ?? "캐스트";
+    const requesterNickname = asNonBlankString(afterData.requesterNickname) ?? "사용자";
+    const ownerUserIds = await loadCafeOwnerUserIds(cafeId);
+    const adminUserIds = await loadAdminUserIds();
+    const recipientUserIds = Array.from(new Set([...ownerUserIds, ...adminUserIds]))
+      .filter((userId) => userId != requesterUserId);
+    const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+
+    await createApprovalRequestNotifications(
+      recipientUserIds,
+      `approval_cast_claim_${claimId}`,
+      "CAST_CLAIM_REQUEST",
+      "캐스트 프로필 연결 승인 요청",
+      `${requesterNickname}님이 ${castName} 프로필 연결 승인을 요청했어요.`,
+      castId,
+      createdAt
+    );
+    logger.info("Created cafe approval notifications for cast claim.", {
+      claimId: claimId,
+      cafeId: cafeId,
+      requesterUserId: requesterUserId,
+      recipientCount: recipientUserIds.length,
+    });
+  }
+);
+
+export const onCafeRegistrationClaimWrittenRequesterApprovedNotification = onDocumentWritten(
+  "cafeRegistrationClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeRegistrationClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeRegistrationClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isApprovedStatus(afterStatus) || isApprovedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `approved_cafe_registration_${claimId}`,
+      "CAFE_APPROVED",
+      "카페 등록 승인 완료",
+      `${cafeName} 등록 요청이 승인되었어요.`,
+      claimId,
+      createdAt
+    );
+    logger.info("Created requester approved notification for cafe registration claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+    });
+  }
+);
+
+export const onCafeOwnerClaimWrittenCreateRequesterApprovedNotification = onDocumentWritten(
+  "cafeOwnerClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeOwnerClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeOwnerClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isApprovedStatus(afterStatus) || isApprovedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const cafeId = asNonBlankString(afterData.cafeId) ?? claimId;
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `approved_cafe_owner_${claimId}`,
+      "CAFE_OWNER_APPROVED",
+      "카페 운영 권한 승인 완료",
+      `${cafeName} 운영 권한 요청이 승인되었어요.`,
+      cafeId,
+      createdAt
+    );
+    logger.info("Created requester approved notification for cafe owner claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+    });
+  }
+);
+
+export const onCastClaimWrittenCreateRequesterApprovedNotification = onDocumentWritten(
+  "castClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CastClaimLike | undefined;
+    const afterData = event.data?.after.data() as CastClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isApprovedStatus(afterStatus) || isApprovedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const castName = asNonBlankString(afterData.castName) ?? "캐스트";
+    const castId = asNonBlankString(afterData.castId) ?? claimId;
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `approved_cast_claim_${claimId}`,
+      "CAST_CLAIM_APPROVED",
+      "캐스트 프로필 연결 승인 완료",
+      `${castName} 프로필 연결 요청이 승인되었어요.`,
+      castId,
+      createdAt
+    );
+    logger.info("Created requester approved notification for cast claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+    });
+  }
+);
+
+export const onCafeRegistrationClaimWrittenRequesterRejectedNotification = onDocumentWritten(
+  "cafeRegistrationClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeRegistrationClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeRegistrationClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isRejectedStatus(afterStatus) || isRejectedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `rejected_cafe_registration_${claimId}`,
+      "CAFE_REJECTED",
+      "카페 등록 반려 안내",
+      `${cafeName} 등록 요청이 반려되었어요.`,
+      claimId,
+      createdAt
+    );
+    logger.info("Created requester rejected notification for cafe registration claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+    });
+  }
+);
+
+export const onCafeOwnerClaimWrittenCreateRequesterRejectedNotification = onDocumentWritten(
+  "cafeOwnerClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeOwnerClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeOwnerClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isRejectedStatus(afterStatus) || isRejectedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const cafeId = asNonBlankString(afterData.cafeId) ?? claimId;
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `rejected_cafe_owner_${claimId}`,
+      "CAFE_OWNER_REJECTED",
+      "카페 운영 권한 반려 안내",
+      `${cafeName} 운영 권한 요청이 반려되었어요.`,
+      cafeId,
+      createdAt
+    );
+    logger.info("Created requester rejected notification for cafe owner claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
+    });
+  }
+);
+
+export const onCastClaimWrittenCreateRequesterRejectedNotification = onDocumentWritten(
+  "castClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CastClaimLike | undefined;
+    const afterData = event.data?.after.data() as CastClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (claimId == null || beforeData == null || afterData == null) {
+      return;
+    }
+    if (!isRejectedStatus(afterStatus) || isRejectedStatus(beforeStatus)) {
+      return;
+    }
+    const requesterUserId = asNonBlankString(afterData.userId);
+    const castName = asNonBlankString(afterData.castName) ?? "캐스트";
+    const castId = asNonBlankString(afterData.castId) ?? claimId;
+    const createdAt = new Date().toISOString();
+
+    await createApprovalResultNotification(
+      requesterUserId,
+      `rejected_cast_claim_${claimId}`,
+      "CAST_CLAIM_REJECTED",
+      "캐스트 프로필 연결 반려 안내",
+      `${castName} 프로필 연결 요청이 반려되었어요.`,
+      castId,
+      createdAt
+    );
+    logger.info("Created requester rejected notification for cast claim.", {
+      claimId: claimId,
+      requesterUserId: requesterUserId,
     });
   }
 );

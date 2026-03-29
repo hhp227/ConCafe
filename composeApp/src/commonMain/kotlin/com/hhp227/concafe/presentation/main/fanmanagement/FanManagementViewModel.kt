@@ -22,6 +22,7 @@ import com.hhp227.concafe.domain.event.ScheduleManagementEvent as ScheduleManage
 class FanManagementViewModel(
     private val getFanManagementDataUseCase: GetFanManagementDataUseCase,
     private val createCastClaimUseCase: CreateCastClaimUseCase,
+    private val sendFanAnnouncementUseCase: SendFanAnnouncementUseCase,
     private val getMyCastClaimStatusUseCase: GetMyCastClaimStatusUseCase,
     private val getMyRequestableCastPageUseCase: GetMyRequestableCastPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
@@ -382,6 +383,91 @@ class FanManagementViewModel(
         _uiState.update { it.copy(isClaimSheetVisible = false) }
     }
 
+    private fun openAnnouncementSheet() {
+        val currentState = _uiState.value
+        val fanManagementData = currentState.fanManagementData
+        val castClaimStatus = currentState.castClaimStatus
+
+        if (fanManagementData == null || castClaimStatus == null) {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        if (castClaimStatus.accent != FanManagementUiState.Accent.LINKED) {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        _uiState.update { state ->
+            state.copy(
+                isAnnouncementSheetVisible = true,
+                announcementTitle = "",
+                announcementBody = "",
+                isSendingAnnouncement = false,
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun submitAnnouncement() {
+        val currentState = _uiState.value
+        val fanManagementData = currentState.fanManagementData ?: run {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        val castClaimStatus = currentState.castClaimStatus ?: run {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        val cast = fanManagementData.detail.cast
+        val title = currentState.announcementTitle.trim()
+        val body = currentState.announcementBody.trim()
+
+        if (castClaimStatus.accent != FanManagementUiState.Accent.LINKED) {
+            setInfoMessage("소속 카페 연결 후 팬 공지를 작성할 수 있습니다.")
+            return
+        }
+        if (title.isBlank() || body.isBlank()) {
+            setInfoMessage("제목과 내용을 모두 입력해 주세요.")
+            return
+        }
+        _uiState.update { state ->
+            state.copy(
+                isSendingAnnouncement = true,
+                infoMessage = null
+            )
+        }
+        viewModelScope.launch {
+            when (
+                val result = sendFanAnnouncementUseCase.invoke(
+                    userId = fanManagementData.user.id,
+                    cafeId = cast.cafeId,
+                    castId = cast.id,
+                    title = title,
+                    body = body
+                )
+            ) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            isAnnouncementSheetVisible = false,
+                            announcementTitle = "",
+                            announcementBody = "",
+                            isSendingAnnouncement = false,
+                            infoMessage = "팔로워에게 팬 공지를 전송했습니다."
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            isSendingAnnouncement = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun submitCastClaim() {
         val sheet = _uiState.value.castClaimSheet ?: return
         val castId = sheet.selectedCastId ?: return
@@ -438,7 +524,17 @@ class FanManagementViewModel(
                 }
             }
             FanManagementAction.ClickPrimaryAnnouncement -> {
-                setInfoMessage("팬 공지 작성 흐름은 다음 단계에서 연결합니다.")
+                openAnnouncementSheet()
+            }
+            is FanManagementAction.ChangeAnnouncementTitle -> _uiState.update {
+                it.copy(announcementTitle = action.value)
+            }
+            is FanManagementAction.ChangeAnnouncementBody -> _uiState.update {
+                it.copy(announcementBody = action.value)
+            }
+            FanManagementAction.SubmitAnnouncement -> submitAnnouncement()
+            FanManagementAction.DismissAnnouncementSheet -> _uiState.update {
+                it.copy(isAnnouncementSheetVisible = false, isSendingAnnouncement = false)
             }
             is FanManagementAction.ClickQuickAction -> clickQuickAction(action.quickAction)
             FanManagementAction.ClickViewAllFollowers -> {

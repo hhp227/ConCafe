@@ -17,6 +17,8 @@ struct MyInfoView: View {
         Group {
             if viewModel.uiState.isLoading {
                 ProgressView()
+                    .controlSize(.large)
+                    .tint(Color(hex: "EF6797"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.uiState.isLoggedIn {
                 ProfileMyInfoView(

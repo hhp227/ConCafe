@@ -4,19 +4,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.model.UserNotificationSettings
 import com.hhp227.concafe.domain.usecase.GetNotificationSettingsUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.UpdateNotificationSettingsUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class NotificationSettingsViewModel(
     private val getNotificationSettingsUseCase: GetNotificationSettingsUseCase,
-    private val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase
+    private val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationSettingsUiState.initial())
     val uiState = _uiState.asStateFlow()
@@ -45,6 +49,8 @@ class NotificationSettingsViewModel(
                             isShiftNotificationsEnabled = result.data.isShiftNotificationsEnabled,
                             isBirthdayNotificationsEnabled = result.data.isBirthdayNotificationsEnabled,
                             isNoticeNotificationsEnabled = result.data.isNoticeNotificationsEnabled,
+                            isFollowNotificationsEnabled = result.data.isFollowNotificationsEnabled,
+                            isEventNotificationsEnabled = result.data.isEventNotificationsEnabled,
                             quietHoursOption = result.data.quietHoursMode
                         )
                     }
@@ -57,6 +63,16 @@ class NotificationSettingsViewModel(
                             errorMessage = result.error.toMessage()
                         )
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeSession() {
+        viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update { state ->
+                    state.copy(isCastRole = user?.role == UserRole.CAST)
                 }
             }
         }
@@ -75,6 +91,8 @@ class NotificationSettingsViewModel(
                 isShiftNotificationsEnabled = nextState.isShiftNotificationsEnabled,
                 isBirthdayNotificationsEnabled = nextState.isBirthdayNotificationsEnabled,
                 isNoticeNotificationsEnabled = nextState.isNoticeNotificationsEnabled,
+                isFollowNotificationsEnabled = nextState.isFollowNotificationsEnabled,
+                isEventNotificationsEnabled = nextState.isEventNotificationsEnabled,
                 quietHoursMode = nextState.quietHoursOption
             )
             when (val result = updateNotificationSettingsUseCase.invoke(settings)) {
@@ -87,6 +105,8 @@ class NotificationSettingsViewModel(
                             isShiftNotificationsEnabled = result.data.isShiftNotificationsEnabled,
                             isBirthdayNotificationsEnabled = result.data.isBirthdayNotificationsEnabled,
                             isNoticeNotificationsEnabled = result.data.isNoticeNotificationsEnabled,
+                            isFollowNotificationsEnabled = result.data.isFollowNotificationsEnabled,
+                            isEventNotificationsEnabled = result.data.isEventNotificationsEnabled,
                             quietHoursOption = result.data.quietHoursMode
                         )
                     }
@@ -118,6 +138,12 @@ class NotificationSettingsViewModel(
             is NotificationSettingsAction.ToggleNoticeNotifications -> {
                 updateSettings { it.copy(isNoticeNotificationsEnabled = action.enabled) }
             }
+            is NotificationSettingsAction.ToggleFollowNotifications -> {
+                updateSettings { it.copy(isFollowNotificationsEnabled = action.enabled) }
+            }
+            is NotificationSettingsAction.ToggleEventNotifications -> {
+                updateSettings { it.copy(isEventNotificationsEnabled = action.enabled) }
+            }
             is NotificationSettingsAction.SelectQuietHours -> {
                 updateSettings { it.copy(quietHoursOption = action.option) }
             }
@@ -125,6 +151,7 @@ class NotificationSettingsViewModel(
     }
 
     init {
+        observeSession()
         loadSettings()
     }
 }

@@ -17,19 +17,17 @@ struct CastEditView: View {
 
     @StateObject private var viewModel: CastEditViewModel
 
-    @State private var isPhotoPickerPresented = false
-
-    @State private var isGalleryPhotoPickerPresented = false
+    @State private var imagePickerTarget: CastEditImagePickerTarget? = nil
 
     var body: some View {
         CastEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
             onPickProfileImage: {
-                isPhotoPickerPresented = true
+                imagePickerTarget = .profile
             },
             onPickGalleryImage: {
-                isGalleryPhotoPickerPresented = true
+                imagePickerTarget = .gallery
             }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
@@ -40,29 +38,31 @@ struct CastEditView: View {
                 onNavigationAction(.navigateBack)
             }
         }
-        .sheet(isPresented: $isPhotoPickerPresented) {
-            CompatImagePicker(
-                onImageSelected: { image in
-                    isPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.selectProfilePhoto(imageUrl))
+        .sheet(
+            isPresented: Binding(
+                get: { imagePickerTarget != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        imagePickerTarget = nil
                     }
-                },
-                onDismiss: {
-                    isPhotoPickerPresented = false
                 }
             )
-        }
-        .sheet(isPresented: $isGalleryPhotoPickerPresented) {
+        ) {
             CompatImagePicker(
                 onImageSelected: { image in
-                    isGalleryPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.addGalleryImage(imageUrl))
+                    let target = imagePickerTarget
+                    imagePickerTarget = nil
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        guard let imageUrl else { return }
+                        if target == .profile {
+                            viewModel.onAction(.selectProfilePhoto(imageUrl))
+                        } else if target == .gallery {
+                            viewModel.onAction(.addGalleryImage(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
-                    isGalleryPhotoPickerPresented = false
+                    imagePickerTarget = nil
                 }
             )
         }
@@ -587,10 +587,22 @@ private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
 }
 
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
+}
+
 struct CastEditView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             CastEditView(castId: nil, onNavigationAction: { _ in })
         }
     }
+}
+
+private enum CastEditImagePickerTarget {
+    case profile
+    case gallery
 }

@@ -62,13 +62,13 @@ private val composeAppPresentationModule = module {
     factory { (cafeId: String, itemId: String) -> MenuGoodsEditViewModel(cafeId, itemId, get(), get(), get()) }
     factory { (cafeId: String) -> NoticeEventViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> ScheduleViewModel(castId, get(), get(), get(), get(), get()) }
-    factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { (cafeId: String) -> ReviewEditViewModel(cafeId, get(), get(), get()) }
     factory { AccountSettingsViewModel(get(), get(), get(), get()) }
     factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
-    factory { NotificationSettingsViewModel(get(), get()) }
+    factory { NotificationSettingsViewModel(get(), get(), get()) }
 }
 
 private val composeAppModules = listOf(

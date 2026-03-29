@@ -150,6 +150,28 @@ private fun NotificationSettingsContentScreen(
                         onCheckedChange = { onAction(NotificationSettingsAction.ToggleNoticeNotifications(it)) },
                         enabled = !uiState.isSaving
                     )
+                    if (uiState.isCastRole) {
+                        NotificationToggleRow(
+                            icon = Icons.Default.PersonAddAlt1,
+                            iconBackground = Color(0xFFF1E8FF),
+                            iconTint = Color(0xFF8A52E2),
+                            title = "팔로우 알림",
+                            description = "캐스트가 새 팬을 맞이하면 소식을 받아요.",
+                            checked = uiState.isFollowNotificationsEnabled,
+                            onCheckedChange = { onAction(NotificationSettingsAction.ToggleFollowNotifications(it)) },
+                            enabled = !uiState.isSaving
+                        )
+                    }
+                    NotificationToggleRow(
+                        icon = Icons.Default.Celebration,
+                        iconBackground = Color(0xFFFFF4E2),
+                        iconTint = Color(0xFFE29B35),
+                        title = "이벤트 알림",
+                        description = "카페 이벤트 등록과 업데이트 소식을 확인해요.",
+                        checked = uiState.isEventNotificationsEnabled,
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleEventNotifications(it)) },
+                        enabled = !uiState.isSaving
+                    )
                 }
             }
         }
@@ -342,12 +364,18 @@ private fun QuietHoursDescriptionCard(option: NotificationQuietHoursMode) {
 }
 
 private fun heroSummary(uiState: NotificationSettingsUiState): String {
-    val enabledCount = listOf(
+    val toggles = mutableListOf(
         uiState.isPushNotificationsEnabled,
         uiState.isShiftNotificationsEnabled,
         uiState.isBirthdayNotificationsEnabled,
-        uiState.isNoticeNotificationsEnabled
-    ).count { it }
+        uiState.isNoticeNotificationsEnabled,
+        uiState.isEventNotificationsEnabled
+    )
+
+    if (uiState.isCastRole) {
+        toggles.add(uiState.isFollowNotificationsEnabled)
+    }
+    val enabledCount = toggles.count { it }
     return "현재 ${enabledCount}개 알림을 켜 두었고, ${uiState.quietHoursOption.titleText()} 모드로 받을 예정입니다."
 }
 

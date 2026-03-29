@@ -10,4 +10,6 @@
     <string name="main_tab_admin_operations">운영관리</string>
     <string name="main_tab_ranking">랭킹</string>
     <string name="main_tab_my_info">내 정보</string>
+    <string name="push_channel_name">ConCafe 알림</string>
+    <string name="push_channel_description">ConCafe 푸시 알림 채널</string>
 </resources>

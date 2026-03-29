@@ -73,19 +73,21 @@ struct CafeInfoEditView: View {
                     isPhotoPickerPresented = false
 
                     guard let target else { return }
-                    guard let imageUrl = saveImageToTemporaryFile(image) else {
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        guard let imageUrl else {
+                            imagePickTarget = nil
+                            return
+                        }
+
+                        switch target {
+                        case .representative:
+                            viewModel.onAction(.selectRepresentativeImage(imageUrl))
+                        case .gallery:
+                            viewModel.onAction(.addGalleryImage(imageUrl))
+                        }
+
                         imagePickTarget = nil
-                        return
                     }
-
-                    switch target {
-                    case .representative:
-                        viewModel.onAction(.selectRepresentativeImage(imageUrl))
-                    case .gallery:
-                        viewModel.onAction(.addGalleryImage(imageUrl))
-                    }
-
-                    imagePickTarget = nil
                 },
                 onDismiss: {
                     isPhotoPickerPresented = false
@@ -682,6 +684,13 @@ private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
 }
 
 private func formatCoordinate(_ value: Double) -> String {

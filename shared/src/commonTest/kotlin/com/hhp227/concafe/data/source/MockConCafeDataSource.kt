@@ -1214,6 +1214,24 @@ class MockConCafeDataSource : ConCafeDataSource {
         }
     }
 
+    override suspend fun sendFanAnnouncement(
+        userId: String,
+        cafeId: String,
+        castId: String,
+        title: String,
+        body: String
+    ) {
+        if (userId.isBlank() || cafeId.isBlank() || castId.isBlank()) {
+            throw IllegalArgumentException("fan announcement target is required")
+        }
+        if (title.isBlank()) {
+            throw IllegalArgumentException("fan announcement title is required")
+        }
+        if (body.isBlank()) {
+            throw IllegalArgumentException("fan announcement body is required")
+        }
+    }
+
     private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371000.0
         val dLat = (lat2 - lat1).toRadians()

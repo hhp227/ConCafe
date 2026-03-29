@@ -14,4 +14,12 @@ interface NotificationRepository {
     suspend fun updateNotificationSettings(userId: String, settings: UserNotificationSettings): UserNotificationSettings
 
     suspend fun registerPushToken(userId: String, platform: String, token: String)
+
+    suspend fun sendFanAnnouncement(
+        userId: String,
+        cafeId: String,
+        castId: String,
+        title: String,
+        body: String
+    )
 }
