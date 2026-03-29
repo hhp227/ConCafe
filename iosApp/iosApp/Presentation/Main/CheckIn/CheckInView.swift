@@ -271,7 +271,7 @@ private struct CheckInMapSection: View {
         span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
     )
 
-    @State private var selectedRegion: ExploreUiState.RegionFilter = .seoul
+    @State private var selectedRegion: ExploreUiState.RegionFilter = .all
 
     var body: some View {
         VStack(spacing: 14) {

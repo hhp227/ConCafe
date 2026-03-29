@@ -447,7 +447,7 @@ private fun CafeMapSection(
     onCafeClick: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
-    var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.SEOUL) }
+    var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     val selectedRegionLabel = "${if (selectedRegion == ExploreUiState.RegionFilter.ALL) "근처" else selectedRegion.label} 주요 메이드카페"
     val mapCameraTarget = resolveCheckInMapCameraTarget(selectedRegion)
