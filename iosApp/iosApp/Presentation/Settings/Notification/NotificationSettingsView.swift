@@ -105,6 +105,28 @@ private struct NotificationSettingsContentView: View {
                             onToggle: { onAction(.noticeNotificationsToggled($0)) },
                             isEnabled: !uiState.isSaving
                         )
+                        if uiState.isCastRole {
+                            NotificationToggleRow(
+                                symbol: "person.badge.plus.fill",
+                                iconBackground: Color(hex: "F1E8FF"),
+                                iconForeground: Color(hex: "8A52E2"),
+                                title: "팔로우 알림",
+                                description: "캐스트가 새 팬을 맞이하면 소식을 받아요.",
+                                isOn: uiState.isFollowNotificationsEnabled,
+                                onToggle: { onAction(.followNotificationsToggled($0)) },
+                                isEnabled: !uiState.isSaving
+                            )
+                        }
+                        NotificationToggleRow(
+                            symbol: "party.popper.fill",
+                            iconBackground: Color(hex: "FFF4E2"),
+                            iconForeground: Color(hex: "E29B35"),
+                            title: "이벤트 알림",
+                            description: "카페 이벤트 등록과 업데이트 소식을 확인해요.",
+                            isOn: uiState.isEventNotificationsEnabled,
+                            onToggle: { onAction(.eventNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
+                        )
                     }
                 }
                 settingsCard(title: "조용한 시간") {
@@ -218,12 +240,18 @@ private struct NotificationSettingsContentView: View {
     }
 
     private var heroSummary: String {
-        let enabledCount = [
+        var toggles = [
             uiState.isPushNotificationsEnabled,
             uiState.isShiftNotificationsEnabled,
             uiState.isBirthdayNotificationsEnabled,
-            uiState.isNoticeNotificationsEnabled
-        ].filter { $0 }.count
+            uiState.isNoticeNotificationsEnabled,
+            uiState.isEventNotificationsEnabled
+        ]
+
+        if uiState.isCastRole {
+            toggles.append(uiState.isFollowNotificationsEnabled)
+        }
+        let enabledCount = toggles.filter { $0 }.count
         return "현재 \(enabledCount)개 알림을 켜 두었고, \(uiState.quietHoursOption.titleText) 모드로 받을 예정입니다."
     }
 

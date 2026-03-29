@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class NotificationSettingsViewModel: ObservableObject {
@@ -15,12 +16,29 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     private let updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     @Published private(set) var uiState = NotificationSettingsUiState.initial
 
     let event = PassthroughSubject<NotificationSettingsEvent, Never>()
 
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
+
     private func clickBack() {
         event.send(.navigateBack)
+    }
+
+    private func observeSession() {
+        tasks[.observeSession]?.cancel()
+        tasks[.observeSession] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.isCastRole = user?.role == .cast
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
     }
 
     private func loadSettings() {
@@ -41,6 +59,8 @@ final class NotificationSettingsViewModel: ObservableObject {
                     uiState.isShiftNotificationsEnabled = settings.isShiftNotificationsEnabled
                     uiState.isBirthdayNotificationsEnabled = settings.isBirthdayNotificationsEnabled
                     uiState.isNoticeNotificationsEnabled = settings.isNoticeNotificationsEnabled
+                    uiState.isFollowNotificationsEnabled = settings.isFollowNotificationsEnabled
+                    uiState.isEventNotificationsEnabled = settings.isEventNotificationsEnabled
                     uiState.quietHoursOption = settings.quietHoursMode
                 } else if let failure = result as? AppResultFailure {
                     uiState.isLoading = false
@@ -77,6 +97,8 @@ final class NotificationSettingsViewModel: ObservableObject {
             isShiftNotificationsEnabled: nextState.isShiftNotificationsEnabled,
             isBirthdayNotificationsEnabled: nextState.isBirthdayNotificationsEnabled,
             isNoticeNotificationsEnabled: nextState.isNoticeNotificationsEnabled,
+            isFollowNotificationsEnabled: nextState.isFollowNotificationsEnabled,
+            isEventNotificationsEnabled: nextState.isEventNotificationsEnabled,
             quietHoursMode: nextState.quietHoursOption
         )
 
@@ -94,6 +116,8 @@ final class NotificationSettingsViewModel: ObservableObject {
                     uiState.isShiftNotificationsEnabled = settings.isShiftNotificationsEnabled
                     uiState.isBirthdayNotificationsEnabled = settings.isBirthdayNotificationsEnabled
                     uiState.isNoticeNotificationsEnabled = settings.isNoticeNotificationsEnabled
+                    uiState.isFollowNotificationsEnabled = settings.isFollowNotificationsEnabled
+                    uiState.isEventNotificationsEnabled = settings.isEventNotificationsEnabled
                     uiState.quietHoursOption = settings.quietHoursMode
                 } else if let failure = result as? AppResultFailure {
                     uiState = previousState
@@ -136,6 +160,14 @@ final class NotificationSettingsViewModel: ObservableObject {
             updateSettings { state in
                 state.isNoticeNotificationsEnabled = enabled
             }
+        case .followNotificationsToggled(let enabled):
+            updateSettings { state in
+                state.isFollowNotificationsEnabled = enabled
+            }
+        case .eventNotificationsToggled(let enabled):
+            updateSettings { state in
+                state.isEventNotificationsEnabled = enabled
+            }
         case .quietHoursSelected(let option):
             updateSettings { state in
                 state.quietHoursOption = option
@@ -145,12 +177,21 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     init(
         getNotificationSettingsUseCase: GetNotificationSettingsUseCase = KoinInitializerKt.resolveGetNotificationSettingsUseCase(),
-        updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase = KoinInitializerKt.resolveUpdateNotificationSettingsUseCase()
+        updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase = KoinInitializerKt.resolveUpdateNotificationSettingsUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.getNotificationSettingsUseCase = getNotificationSettingsUseCase
         self.updateNotificationSettingsUseCase = updateNotificationSettingsUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
+        observeSession()
         loadSettings()
+    }
+}
+
+private extension NotificationSettingsViewModel {
+    enum TaskKey {
+        case observeSession
     }
 }
 

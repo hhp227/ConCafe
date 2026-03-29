@@ -313,6 +313,7 @@ private fun notificationVisual(type: String): NotificationVisual {
         "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, Color(0xFFE4F7EC), Color(0xFF2E9E5B))
         "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, Color(0xFFFFE6F1), Color(0xFFEB5F97))
         "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, Color(0xFFE8F0FF), Color(0xFF4A79E8))
+        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, Color(0xFFFFF4E2), Color(0xFFE29B35))
         "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, Color(0xFFF1E8FF), Color(0xFF8A52E2))
         else -> NotificationVisual(Icons.Filled.Notifications, Color(0xFFF2F2F2), Color(0xFF666666))
     }

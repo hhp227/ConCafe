@@ -68,7 +68,7 @@ private val composeAppPresentationModule = module {
     factory { AccountSettingsViewModel(get(), get(), get(), get()) }
     factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
-    factory { NotificationSettingsViewModel(get(), get()) }
+    factory { NotificationSettingsViewModel(get(), get(), get()) }
 }
 
 private val composeAppModules = listOf(

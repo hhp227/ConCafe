@@ -14,5 +14,7 @@ enum NotificationSettingsAction {
     case shiftNotificationsToggled(Bool)
     case birthdayNotificationsToggled(Bool)
     case noticeNotificationsToggled(Bool)
+    case followNotificationsToggled(Bool)
+    case eventNotificationsToggled(Bool)
     case quietHoursSelected(NotificationQuietHoursMode)
 }

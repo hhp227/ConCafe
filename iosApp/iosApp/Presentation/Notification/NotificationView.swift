@@ -203,6 +203,8 @@ private struct NotificationSectionsView: View {
             return ("birthday.cake.fill", Color(hex: "FFE6F1"), Color(hex: "EB5F97"))
         } else if type == "CAFE_NOTICE" {
             return ("megaphone.fill", Color(hex: "E8F0FF"), Color(hex: "4A79E8"))
+        } else if type == "CAFE_EVENT" {
+            return ("party.popper.fill", Color(hex: "FFF4E2"), Color(hex: "E29B35"))
         } else if type == "FOLLOW_UPDATE" {
             return ("person.badge.plus.fill", Color(hex: "F1E8FF"), Color(hex: "8A52E2"))
         } else {

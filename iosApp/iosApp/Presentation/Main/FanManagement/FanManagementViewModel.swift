@@ -639,7 +639,7 @@ final class FanManagementViewModel: ObservableObject {
                     uiState.infoMessage = "팔로워에게 팬 공지를 전송했습니다."
                 } else if let failure = result as? AppResultFailure {
                     uiState.isSendingAnnouncement = false
-                    uiState.infoMessage = "\(failure.error)"
+                    uiState.infoMessage = fanAnnouncementErrorMessage(failure.error)
                 } else {
                     uiState.isSendingAnnouncement = false
                     uiState.infoMessage = "팬 공지 전송에 실패했습니다."
@@ -794,4 +794,26 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private let claimStatusPollingIntervalNanoseconds: UInt64 = 5_000_000_000
+}
+
+private extension FanManagementViewModel {
+    func fanAnnouncementErrorMessage(_ error: AppError) -> String {
+        if error is AppErrorUnauthorized {
+            return "로그인 후 다시 시도해 주세요."
+        } else if error is AppErrorPermissionDenied {
+            return "팬 공지 전송 권한이 없습니다."
+        } else if let validationError = error as? AppErrorValidationFailed {
+            return validationError.reason
+        } else if let unknownError = error as? AppErrorUnknown {
+            if let cause = unknownError.cause, !cause.isEmpty {
+                return cause
+            } else {
+                return "팬 공지 전송에 실패했습니다."
+            }
+        } else if let networkError = error as? AppErrorNetworkError {
+            return networkError.message ?? "네트워크 상태를 확인해 주세요."
+        } else {
+            return "팬 공지 전송에 실패했습니다."
+        }
+    }
 }

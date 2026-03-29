@@ -108,7 +108,7 @@ final class NotificationViewModel: ObservableObject {
                     if let targetId {
                         if type == "CAST_SHIFT" || type == "BIRTHDAY" {
                             event.send(.navigateToCast(id: targetId))
-                        } else if type == "CAFE_NOTICE" {
+                        } else if type == "CAFE_NOTICE" || type == "CAFE_EVENT" {
                             event.send(.navigateToCafe(id: targetId))
                         }
                     }

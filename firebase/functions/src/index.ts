@@ -42,6 +42,12 @@ type CafeFavoriteLike = {
   userId?: unknown;
 };
 
+type CastFollowLike = {
+  userId?: unknown;
+  castId?: unknown;
+  cafeId?: unknown;
+};
+
 type StampLike = {
   userId?: unknown;
   cafeId?: unknown;
@@ -98,11 +104,23 @@ type NoticeLike = {
   createdAt?: unknown;
 };
 
+type EventLike = {
+  title?: unknown;
+  desc?: unknown;
+  relatedCastId?: unknown;
+  createdAt?: unknown;
+};
+
+type NotificationQuietHoursMode = "OFF" | "NIGHT" | "ALL_DAY";
+
 type UserNotificationSettings = {
   isPushNotificationsEnabled: boolean;
   isShiftNotificationsEnabled: boolean;
   isBirthdayNotificationsEnabled: boolean;
   isNoticeNotificationsEnabled: boolean;
+  isFollowNotificationsEnabled: boolean;
+  isEventNotificationsEnabled: boolean;
+  quietHoursMode: NotificationQuietHoursMode;
 };
 
 function asPlainObject(value: unknown): Record<string, unknown> | null {
@@ -205,13 +223,32 @@ function readNotificationSettings(data: unknown): UserNotificationSettings {
   const isShiftEnabled = plain?.isShiftNotificationsEnabled !== false;
   const isBirthdayEnabled = plain?.isBirthdayNotificationsEnabled !== false;
   const isNoticeEnabled = plain?.isNoticeNotificationsEnabled === true;
+  const isFollowEnabled = plain?.isFollowNotificationsEnabled !== false;
+  const isEventEnabled = plain?.isEventNotificationsEnabled !== false;
+  const quietHoursRaw = asNonBlankString(plain?.quietHoursMode)?.toUpperCase();
+  const quietHoursMode: NotificationQuietHoursMode =
+    quietHoursRaw === "OFF" || quietHoursRaw === "ALL_DAY" ? quietHoursRaw : "NIGHT";
 
   return {
     isPushNotificationsEnabled: isPushEnabled,
     isShiftNotificationsEnabled: isShiftEnabled,
     isBirthdayNotificationsEnabled: isBirthdayEnabled,
     isNoticeNotificationsEnabled: isNoticeEnabled,
+    isFollowNotificationsEnabled: isFollowEnabled,
+    isEventNotificationsEnabled: isEventEnabled,
+    quietHoursMode: quietHoursMode,
   };
+}
+
+function isQuietHoursPushSuppressed(settings: UserNotificationSettings): boolean {
+  if (settings.quietHoursMode === "ALL_DAY") {
+    return true;
+  } else if (settings.quietHoursMode === "OFF") {
+    return false;
+  } else {
+    const hour = kstNow().getUTCHours();
+    return hour >= 23 || hour < 8;
+  }
 }
 
 async function loadUserNotificationSettings(userId: string): Promise<UserNotificationSettings> {
@@ -228,6 +265,9 @@ async function loadUserNotificationSettings(userId: string): Promise<UserNotific
       isShiftNotificationsEnabled: true,
       isBirthdayNotificationsEnabled: true,
       isNoticeNotificationsEnabled: false,
+      isFollowNotificationsEnabled: true,
+      isEventNotificationsEnabled: true,
+      quietHoursMode: "NIGHT",
     };
   } else {
     return readNotificationSettings(snapshot.data());
@@ -361,6 +401,8 @@ async function createUserNotification(
     | "CAST_SHIFT"
     | "BIRTHDAY"
     | "CAFE_NOTICE"
+    | "CAFE_EVENT"
+    | "FOLLOW_UPDATE"
     | "CAFE_APPROVAL_REQUEST"
     | "CAFE_OWNER_APPROVAL_REQUEST"
     | "CAST_CLAIM_REQUEST"
@@ -373,7 +415,8 @@ async function createUserNotification(
   title: string,
   body: string,
   targetId: string,
-  createdAt: string
+  createdAt: string,
+  settings: UserNotificationSettings | null = null
 ): Promise<void> {
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
@@ -398,7 +441,7 @@ async function createUserNotification(
     },
     {merge: false}
   );
-  await sendPushToUser(userId, title, body, type, targetId, sanitizedId);
+  await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings);
 }
 
 async function sendPushToUser(
@@ -407,8 +450,14 @@ async function sendPushToUser(
   body: string,
   type: string,
   targetId: string,
-  notificationId: string
+  notificationId: string,
+  settings: UserNotificationSettings | null = null
 ): Promise<void> {
+  const resolvedSettings = settings ?? await loadUserNotificationSettings(userId);
+
+  if (!resolvedSettings.isPushNotificationsEnabled || isQuietHoursPushSuppressed(resolvedSettings)) {
+    return;
+  }
   const tokenSnapshot = await db()
     .collection("users")
     .doc(userId)
@@ -832,6 +881,60 @@ async function syncCastFollowerAggregate(cafeId: string, castId: string): Promis
     );
 }
 
+async function syncCastFollowNotifications(
+  followId: string,
+  beforeData: unknown,
+  afterData: unknown
+): Promise<void> {
+  const beforeFollow = beforeData as CastFollowLike | undefined;
+  const afterFollow = afterData as CastFollowLike | undefined;
+  const beforeUserId = asNonBlankString(beforeFollow?.userId);
+  const afterUserId = asNonBlankString(afterFollow?.userId);
+  const castId = asNonBlankString(afterFollow?.castId);
+  const cafeId = asNonBlankString(afterFollow?.cafeId);
+
+  if (beforeData != null) {
+    return;
+  } else if (afterData == null) {
+    return;
+  } else if (beforeUserId != null) {
+    return;
+  } else if (afterUserId == null || castId == null || cafeId == null) {
+    return;
+  }
+  const castSnapshot = await db()
+    .collection("cafes")
+    .doc(cafeId)
+    .collection("casts")
+    .doc(castId)
+    .get();
+  const recipientUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+  if (recipientUserId == null || recipientUserId === afterUserId) {
+    return;
+  }
+  const settings = await loadUserNotificationSettings(recipientUserId);
+
+  if (!settings.isFollowNotificationsEnabled) {
+    return;
+  }
+  const castName = asNonBlankString(castSnapshot.data()?.name) ?? "내 캐스트";
+  const followerSnapshot = await db().collection("users").doc(afterUserId).get();
+  const followerName = asNonBlankString(followerSnapshot.data()?.nickname) ?? "새 팬";
+  const createdAt = new Date().toISOString();
+
+  await createUserNotification(
+    recipientUserId,
+    `follow_update_${followId}_${recipientUserId}`,
+    "FOLLOW_UPDATE",
+    "새 팔로워 알림",
+    `${followerName}님이 ${castName}님을 팔로우했어요.`,
+    castId,
+    createdAt,
+    settings
+  );
+}
+
 async function syncCastScheduleNotifications(
   scheduleId: string,
   beforeData: CastScheduleLike | undefined,
@@ -894,7 +997,8 @@ async function syncCastScheduleNotifications(
       "팔로우 캐스트 출근 알림",
       `${castName}님이 ${timeLabel} 출근 예정이에요.`,
       castId,
-      createdAt
+      createdAt,
+      settings
     );
   });
 
@@ -942,7 +1046,76 @@ async function syncFavoriteCafeNoticeNotifications(
       `${cafeName} 공지 업데이트`,
       title.length > 0 ? title : content,
       cafeId,
-      createdAt
+      createdAt,
+      settings
+    );
+  });
+
+  await Promise.all(tasks);
+}
+
+async function syncCafeEventNotifications(
+  cafeId: string,
+  eventId: string,
+  beforeData: EventLike | undefined,
+  afterData: EventLike | undefined
+): Promise<void> {
+  if (afterData == null || beforeData != null) {
+    return;
+  }
+  const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+  const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "카페";
+  const title = asNonBlankString(afterData.title) ?? "새 이벤트";
+  const desc = asNonBlankString(afterData.desc) ?? "새 이벤트가 등록되었어요.";
+  const relatedCastId = asNonBlankString(afterData.relatedCastId);
+  const favorites = await db()
+    .collection("cafeFavorites")
+    .where("cafeId", "==", cafeId)
+    .select("userId")
+    .get();
+  const recipientUserIds = new Set<string>();
+
+  favorites.docs.forEach((favoriteDoc) => {
+    const userId = asNonBlankString(favoriteDoc.get("userId"));
+
+    if (userId != null) {
+      recipientUserIds.add(userId);
+    }
+  });
+  if (relatedCastId != null) {
+    const followers = await db()
+      .collection("castFollows")
+      .where("castId", "==", relatedCastId)
+      .select("userId")
+      .get();
+
+    followers.docs.forEach((followerDoc) => {
+      const userId = asNonBlankString(followerDoc.get("userId"));
+
+      if (userId != null) {
+        recipientUserIds.add(userId);
+      }
+    });
+  }
+  if (recipientUserIds.size == 0) {
+    return;
+  }
+  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+  const tasks = Array.from(recipientUserIds).map(async (userId) => {
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isEventNotificationsEnabled) {
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `cafe_event_${eventId}_${userId}`,
+      "CAFE_EVENT",
+      `${cafeName} 이벤트 업데이트`,
+      title.length > 0 ? title : desc,
+      cafeId,
+      createdAt,
+      settings
     );
   });
 
@@ -992,7 +1165,8 @@ async function syncBirthdayNotifications(): Promise<void> {
         "팔로우 캐스트 생일 알림",
         `오늘은 ${castName}님의 생일이에요. 축하 메시지를 남겨보세요.`,
         castId,
-        createdAt
+        createdAt,
+        settings
       );
     });
 
@@ -1392,6 +1566,7 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
 export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
   "castFollows/{followId}",
   async (event) => {
+    const followId = asNonBlankString(event.params.followId) ?? "";
     const beforeData = event.data?.before.data();
     const afterData = event.data?.after.data();
     const followTargets = new Map<string, string>();
@@ -1435,6 +1610,7 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         cafeId: cafeId,
       })),
     });
+    await syncCastFollowNotifications(followId, beforeData, afterData);
   }
 );
 
@@ -1528,7 +1704,8 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
           body,
           "FAN_ANNOUNCEMENT",
           castId,
-          sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`)
+          sanitizeNotificationDocumentId(`fan_announcement_${requestId}_${userId}`),
+          settings
         );
         logger.info("Sent fan announcement push.", {
           requestId: requestId,
@@ -1560,6 +1737,26 @@ export const onCafeNoticeWrittenCreateFavoriteNotifications = onDocumentWritten(
     logger.info("Synced favorite cafe notice notifications.", {
       cafeId: cafeId,
       noticeId: noticeId,
+      created: beforeData == null && afterData != null,
+    });
+  }
+);
+
+export const onCafeEventWrittenCreateNotifications = onDocumentWritten(
+  "cafes/{cafeId}/events/{eventId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+    const eventId = asNonBlankString(event.params.eventId);
+    const beforeData = event.data?.before.data() as EventLike | undefined;
+    const afterData = event.data?.after.data() as EventLike | undefined;
+
+    if (cafeId == null || eventId == null) {
+      return;
+    }
+    await syncCafeEventNotifications(cafeId, eventId, beforeData, afterData);
+    logger.info("Synced cafe event notifications.", {
+      cafeId: cafeId,
+      eventId: eventId,
       created: beforeData == null && afterData != null,
     });
   }

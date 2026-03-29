@@ -94,7 +94,7 @@ class GetNotificationFeedUseCase(
             SectionSpec(
                 id = "notice",
                 title = "카페 공지",
-                types = setOf("CAFE_NOTICE")
+                types = setOf("CAFE_NOTICE", "CAFE_EVENT")
             ),
             SectionSpec(
                 id = "follow",

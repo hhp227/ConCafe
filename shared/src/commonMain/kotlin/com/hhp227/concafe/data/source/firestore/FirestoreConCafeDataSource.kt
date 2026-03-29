@@ -312,6 +312,8 @@ class FirestoreConCafeDataSource(
                 "isShiftNotificationsEnabled" to firestoreBoolean(settings.isShiftNotificationsEnabled),
                 "isBirthdayNotificationsEnabled" to firestoreBoolean(settings.isBirthdayNotificationsEnabled),
                 "isNoticeNotificationsEnabled" to firestoreBoolean(settings.isNoticeNotificationsEnabled),
+                "isFollowNotificationsEnabled" to firestoreBoolean(settings.isFollowNotificationsEnabled),
+                "isEventNotificationsEnabled" to firestoreBoolean(settings.isEventNotificationsEnabled),
                 "quietHoursMode" to firestoreString(settings.quietHoursMode.name),
                 "updatedAt" to firestoreString(Clock.System.now().toString())
             )
@@ -5845,6 +5847,8 @@ class FirestoreConCafeDataSource(
                 isShiftNotificationsEnabled = fields.getFirestoreBoolean("isShiftNotificationsEnabled") ?: true,
                 isBirthdayNotificationsEnabled = fields.getFirestoreBoolean("isBirthdayNotificationsEnabled") ?: true,
                 isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: false,
+                isFollowNotificationsEnabled = fields.getFirestoreBoolean("isFollowNotificationsEnabled") ?: true,
+                isEventNotificationsEnabled = fields.getFirestoreBoolean("isEventNotificationsEnabled") ?: true,
                 quietHoursMode = quietHoursMode
             )
         }
