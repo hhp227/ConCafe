@@ -291,7 +291,7 @@ private fun CheckInGuestScreen(
                     leadingIcon = Icons.Filled.LocalCafe
                 )
             }
-            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
                 if (uiState.popularCasts.isNotEmpty()) {
                     PopularCastSection(
                         casts = uiState.popularCasts,
