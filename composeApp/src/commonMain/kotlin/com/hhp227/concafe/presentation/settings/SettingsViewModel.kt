@@ -89,6 +89,6 @@ class SettingsViewModel(
 
     private companion object {
         private const val PRIVACY_POLICY_TITLE = "개인정보 처리방침"
-        private const val PRIVACY_POLICY_URL = "http://www.concafe.app"
+        private const val PRIVACY_POLICY_URL = "https://concafe-5f7fd.firebaseapp.com/privacy"
     }
 }

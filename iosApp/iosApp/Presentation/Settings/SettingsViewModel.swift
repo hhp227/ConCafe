@@ -94,5 +94,5 @@ final class SettingsViewModel: ObservableObject {
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"
-    private static let privacyPolicyUrl = "http://www.concafe.app"
+    private static let privacyPolicyUrl = "https://concafe-5f7fd.firebaseapp.com/privacy"
 }
