@@ -66,8 +66,10 @@ struct BannerEditView: View {
             CompatImagePicker(
                 onImageSelected: { image in
                     isImagePickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.selectImage(imageUrl))
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        if let imageUrl {
+                            viewModel.onAction(.selectImage(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
@@ -525,6 +527,13 @@ private struct BannerEditImageView<Placeholder: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
 }
 
 private struct BannerSelectorSheet: View {

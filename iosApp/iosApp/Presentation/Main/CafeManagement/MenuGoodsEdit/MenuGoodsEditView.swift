@@ -92,8 +92,10 @@ struct MenuGoodsEditView: View {
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(onImageSelected: { image in
                 isPhotoPickerPresented = false
-                if let imageUrl = saveImageToTemporaryFile(image) {
-                    viewModel.onAction(.selectPhoto(imageUrl))
+                saveImageToTemporaryFileAsync(image) { imageUrl in
+                    if let imageUrl {
+                        viewModel.onAction(.selectPhoto(imageUrl))
+                    }
                 }
             }, onDismiss: {
                 isPhotoPickerPresented = false
@@ -294,6 +296,13 @@ struct MenuGoodsEditView: View {
 
     private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
         saveCompressedImageToTemporaryFile(image)
+    }
+
+    private func saveImageToTemporaryFileAsync(
+        _ image: UIImage,
+        completion: @escaping (String?) -> Void
+    ) {
+        saveCompressedImageToTemporaryFileAsync(image, completion: completion)
     }
 
 }

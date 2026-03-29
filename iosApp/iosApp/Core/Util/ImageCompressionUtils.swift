@@ -1,6 +1,22 @@
 import Foundation
 import UIKit
 
+func saveCompressedImageToTemporaryFileAsync(
+    _ image: UIImage,
+    maxBytes: Int = 1_048_575,
+    completion: @escaping (String?) -> Void
+) {
+    DispatchQueue.global(qos: .userInitiated).async {
+        let imageUrl = autoreleasepool {
+            saveCompressedImageToTemporaryFile(image, maxBytes: maxBytes)
+        }
+
+        DispatchQueue.main.async {
+            completion(imageUrl)
+        }
+    }
+}
+
 func saveCompressedImageToTemporaryFile(_ image: UIImage, maxBytes: Int = 1_048_575) -> String? {
     let fileName = "concafe-image-\(UUID().uuidString).jpg"
     let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)

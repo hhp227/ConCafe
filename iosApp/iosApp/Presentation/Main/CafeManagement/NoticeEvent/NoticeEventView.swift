@@ -456,8 +456,10 @@ private struct NoticeEventFormSheet: View {
             CompatImagePicker(
                 onImageSelected: { image in
                     isImagePickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        onAction(.changeFormImage(imageUrl))
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        if let imageUrl {
+                            onAction(.changeFormImage(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
@@ -597,6 +599,13 @@ private struct NoticeEventFormImageView: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
 }
 
 struct NoticeEventView_Previews: PreviewProvider {

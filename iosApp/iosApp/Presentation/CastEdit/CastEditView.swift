@@ -44,8 +44,10 @@ struct CastEditView: View {
             CompatImagePicker(
                 onImageSelected: { image in
                     isPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.selectProfilePhoto(imageUrl))
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        if let imageUrl {
+                            viewModel.onAction(.selectProfilePhoto(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
@@ -57,8 +59,10 @@ struct CastEditView: View {
             CompatImagePicker(
                 onImageSelected: { image in
                     isGalleryPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.addGalleryImage(imageUrl))
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        if let imageUrl {
+                            viewModel.onAction(.addGalleryImage(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
@@ -585,6 +589,13 @@ private struct CastEditImageView<Placeholder: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
 }
 
 struct CastEditView_Previews: PreviewProvider {
