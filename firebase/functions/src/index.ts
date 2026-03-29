@@ -1,5 +1,6 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import {getApps, initializeApp} from "firebase-admin/app";
@@ -109,6 +110,19 @@ type EventLike = {
   desc?: unknown;
   relatedCastId?: unknown;
   createdAt?: unknown;
+};
+
+type HomeBannerLike = {
+  title?: unknown;
+  subtitle?: unknown;
+  imageUrl?: unknown;
+  relatedCafeId?: unknown;
+  linkType?: unknown;
+  linkTarget?: unknown;
+  displayDays?: unknown;
+  status?: unknown;
+  createdAtEpochMillis?: unknown;
+  activatedAtEpochMillis?: unknown;
 };
 
 type NotificationQuietHoursMode = "OFF" | "NIGHT" | "ALL_DAY";
@@ -584,6 +598,134 @@ function asGeoPoint(value: unknown): {latitude: number; longitude: number} | nul
     return null;
   }
   return {latitude, longitude};
+}
+
+function resolveBannerActivatedAtEpochMillis(banner: HomeBannerLike | undefined): number {
+  const activated = asFiniteNumber(banner?.activatedAtEpochMillis);
+  const created = asFiniteNumber(banner?.createdAtEpochMillis);
+
+  if (activated != null && activated > 0) {
+    return Math.floor(activated);
+  } else if (created != null && created > 0) {
+    return Math.floor(created);
+  } else {
+    return 0;
+  }
+}
+
+function resolveBannerDisplayDays(banner: HomeBannerLike | undefined): number {
+  const rawDisplayDays = asNonNegativeInt(banner?.displayDays);
+
+  if (rawDisplayDays == null || rawDisplayDays <= 0) {
+    return 1;
+  } else {
+    return rawDisplayDays;
+  }
+}
+
+function isBannerActiveNow(banner: HomeBannerLike | undefined, nowEpochMillis: number): boolean {
+  const status = asNonBlankString(banner?.status)?.toUpperCase() ?? "";
+
+  if (status !== "ACTIVE") {
+    return false;
+  }
+  const activatedAtEpochMillis = resolveBannerActivatedAtEpochMillis(banner);
+
+  if (activatedAtEpochMillis <= 0) {
+    return false;
+  }
+  const displayDays = resolveBannerDisplayDays(banner);
+  const expireAtEpochMillis = activatedAtEpochMillis + (displayDays * 24 * 60 * 60 * 1000);
+  return nowEpochMillis < expireAtEpochMillis;
+}
+
+function resolveBannerHref(linkType: string | null, linkTarget: string | null): string {
+  if (linkType == null || linkTarget == null) {
+    return "";
+  }
+  if (linkType === "EXTERNAL_LINK") {
+    return linkTarget;
+  } else if (linkType === "CAFE_DETAIL") {
+    return `https://concafe-5f7fd.firebaseapp.com/?cafeId=${encodeURIComponent(linkTarget)}`;
+  } else if (linkType === "EVENT_DETAIL") {
+    return `https://concafe-5f7fd.firebaseapp.com/?eventId=${encodeURIComponent(linkTarget)}`;
+  } else if (linkType === "NOTICE") {
+    return `https://concafe-5f7fd.firebaseapp.com/?noticeId=${encodeURIComponent(linkTarget)}`;
+  } else {
+    return "";
+  }
+}
+
+function resolvePublicBannerImageUrl(rawImageUrl: string | null): string | null {
+  if (rawImageUrl == null) {
+    return null;
+  }
+  const trimmed = rawImageUrl.trim();
+
+  if (trimmed.length == 0) {
+    return null;
+  }
+  const decodeStoragePath = (value: string): string => {
+    let decoded = value.trim();
+
+    for (let index = 0; index < 2; index += 1) {
+      try {
+        const nextDecoded = decodeURIComponent(decoded);
+
+        if (nextDecoded === decoded) {
+          break;
+        }
+        decoded = nextDecoded;
+      } catch (_error) {
+        break;
+      }
+    }
+    return decoded;
+  };
+
+  if (trimmed.startsWith("gs://")) {
+    const withoutScheme = trimmed.substring("gs://".length);
+    const firstSlashIndex = withoutScheme.indexOf("/");
+
+    if (firstSlashIndex <= 0 || firstSlashIndex >= withoutScheme.length - 1) {
+      return null;
+    }
+    const bucket = withoutScheme.substring(0, firstSlashIndex).trim();
+    const objectPath = decodeStoragePath(withoutScheme.substring(firstSlashIndex + 1));
+
+    if (bucket.length == 0 || objectPath.length == 0) {
+      return null;
+    }
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media`;
+  }
+  if (trimmed.startsWith("http://")) {
+    return `https://${trimmed.substring("http://".length)}`;
+  }
+  if (trimmed.startsWith("https://firebasestorage.googleapis.com/")
+    || trimmed.startsWith("http://firebasestorage.googleapis.com/")) {
+    try {
+      const normalized = trimmed.startsWith("http://")
+        ? `https://${trimmed.substring("http://".length)}`
+        : trimmed;
+      const parsedUrl = new URL(normalized);
+      const segments = parsedUrl.pathname.split("/").filter((segment) => segment.length > 0);
+      const bIndex = segments.findIndex((segment) => segment === "b");
+      const oIndex = segments.findIndex((segment) => segment === "o");
+
+      if (bIndex < 0 || oIndex < 0 || oIndex <= bIndex || oIndex >= segments.length - 1) {
+        return normalized;
+      }
+      const bucket = segments[bIndex + 1];
+      const encodedObjectPath = segments.slice(oIndex + 1).join("/");
+      const objectPath = decodeStoragePath(encodedObjectPath);
+      const token = parsedUrl.searchParams.get("token");
+      const tokenQuery = token == null || token.trim().length == 0 ? "" : `&token=${encodeURIComponent(token.trim())}`;
+      return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media${tokenQuery}`;
+    } catch (_error) {
+      return trimmed;
+    }
+  }
+  return trimmed;
 }
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -2674,5 +2816,72 @@ export const onScheduleCreateBirthdayNotifications = onSchedule(
     logger.info("Synced birthday notifications.", {
       birthdayKey: kstBirthdayKey(kstNow()),
     });
+  }
+);
+
+export const getPublicHomeBanners = onRequest(
+  {
+    region: "us-central1",
+  },
+  async (request, response) => {
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    response.set("Access-Control-Allow-Headers", "Content-Type");
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    } else if (request.method !== "GET") {
+      response.status(405).json({
+        error: "method_not_allowed",
+      });
+      return;
+    }
+    try {
+      const limitRaw = asNonNegativeInt(Number(request.query.limit));
+      const limit = Math.min(Math.max(limitRaw ?? 5, 1), 10);
+      const nowEpochMillis = Date.now();
+      const snapshot = await db()
+        .collection("homeBanners")
+        .get();
+      const items = snapshot.docs
+        .map((doc) => {
+          const data = doc.data() as HomeBannerLike;
+          const linkType = asNonBlankString(data.linkType)?.toUpperCase() ?? null;
+          const linkTarget = asNonBlankString(data.linkTarget);
+          const href = resolveBannerHref(linkType, linkTarget);
+          const activatedAtEpochMillis = resolveBannerActivatedAtEpochMillis(data);
+          const displayDays = resolveBannerDisplayDays(data);
+          const isActive = isBannerActiveNow(data, nowEpochMillis);
+
+          if (!isActive) {
+            return null;
+          }
+          return {
+            id: doc.id,
+            title: asNonBlankString(data.title) ?? "콘카 소식",
+            subtitle: asNonBlankString(data.subtitle) ?? "",
+            imageUrl: resolvePublicBannerImageUrl(asNonBlankString(data.imageUrl)),
+            linkType: linkType,
+            linkTarget: linkTarget,
+            href: href,
+            displayDays: displayDays,
+            activatedAtEpochMillis: activatedAtEpochMillis,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => item != null)
+        .sort((a, b) => b.activatedAtEpochMillis - a.activatedAtEpochMillis)
+        .slice(0, limit);
+
+      response.status(200).json({
+        items: items,
+        serverTimeEpochMillis: nowEpochMillis,
+      });
+    } catch (error) {
+      logger.error("getPublicHomeBanners failed.", error);
+      response.status(500).json({
+        error: "internal",
+      });
+    }
   }
 );

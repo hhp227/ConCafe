@@ -99,7 +99,7 @@ a {
   display: inline-block;
   font-size: 25px !important;
   font-weight: 700;
-  color: var(--primary-strong);
+  color: #111111;
   line-height: 1;
 }
 
@@ -254,6 +254,139 @@ a {
   margin-top: 34px;
 }
 
+.section-first {
+  margin-top: 12px;
+}
+
+.banner-carousel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  max-width: 100%;
+  width: 100%;
+}
+
+.banner-track {
+  display: flex;
+  transition: transform 0.36s ease;
+  will-change: transform;
+}
+
+.banner-slide {
+  min-width: 100%;
+  flex: 0 0 100%;
+}
+
+.banner-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  height: clamp(190px, 27vw, 270px);
+  padding: 22px 24px;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  background:
+    linear-gradient(130deg, rgba(255, 233, 242, 0.95) 0%, rgba(248, 197, 215, 0.9) 52%, rgba(239, 103, 151, 0.82) 100%);
+}
+
+.banner-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(43, 35, 48, 0.03) 0%, rgba(43, 35, 48, 0.28) 100%);
+  pointer-events: none;
+}
+
+.banner-title,
+.banner-subtitle {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+}
+
+.banner-title {
+  margin: 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  line-height: 1.2;
+}
+
+.banner-subtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.96;
+}
+
+.banner-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.06);
+  object-position: center;
+}
+
+.banner-card.with-image::after {
+  background:
+    linear-gradient(180deg, rgba(24, 16, 20, 0.16) 0%, rgba(24, 16, 20, 0.58) 100%);
+}
+
+.banner-card.with-image .banner-title,
+.banner-card.with-image .banner-subtitle {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.banner-cta {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.17);
+  color: #fff;
+  font-size: 12px;
+}
+
+.banner-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(34, 28, 36, 0.28);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.banner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.48);
+  padding: 0;
+  cursor: pointer;
+  transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.banner-dot.is-active {
+  width: 16px;
+  background: #fff;
+}
+
 .section-header {
   margin-bottom: 12px;
 }
@@ -277,6 +410,17 @@ a {
 
 .grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.goals-store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
 }
 
 .card {
@@ -360,12 +504,57 @@ a {
   font-size: 13px;
 }
 
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.store-card {
+  display: grid;
+  gap: 10px;
+}
+
+.store-name {
+  margin: 0;
+  font-size: 16px;
+  color: #4a3645;
+}
+
+.store-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.store-button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #f2c7d8;
+  background: #fff7fb;
+  color: var(--primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.store-button.is-placeholder {
+  opacity: 0.85;
+}
+
 @media (max-width: 920px) {
   .hero {
     grid-template-columns: 1fr;
   }
 
   .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-2 {
     grid-template-columns: 1fr;
   }
 
@@ -387,5 +576,18 @@ a {
 
   .app-name {
     font-size: 18px;
+  }
+
+  .banner-card {
+    height: clamp(180px, 44vw, 230px);
+    padding: 18px;
+  }
+
+  .store-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .goals-store-grid {
+    grid-template-columns: 1fr;
   }
 }

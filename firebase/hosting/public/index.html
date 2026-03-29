@@ -30,7 +30,15 @@
       </header>
 
       <main class="container">
-        <section class="hero">
+        <section class="section section-first" id="home-banner">
+          <div class="banner-carousel" aria-live="polite">
+            <div class="banner-track" id="homeBannerTrack"></div>
+            <div class="banner-dots" id="homeBannerDots"></div>
+          </div>
+        </section>
+
+        <section class="section" id="intro">
+          <div class="hero">
           <article class="hero-card">
             <span class="hero-badge">🎀 컨셉카페 플랫폼</span>
             <h1>카페 운영, 팬 커뮤니티, 방문 기록을 하나로.</h1>
@@ -67,6 +75,7 @@
               </ul>
             </div>
           </aside>
+          </div>
         </section>
 
         <section class="section" id="features">
@@ -89,18 +98,47 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section" id="goals-stores">
           <div class="section-header">
             <h2 class="section-title">콘카가 지향하는 서비스 목표</h2>
           </div>
-          <div class="card">
-            <ul>
-              <li>전국 메이드카페 정보 통합</li>
-              <li>캐스트 중심 팬 플랫폼 구축</li>
-              <li>카페 운영자와 유저 연결</li>
-              <li>방문 인증 기반 신뢰 리뷰</li>
-              <li>글로벌 확장 구조(한국 → 일본)</li>
-            </ul>
+          <div class="grid grid-3">
+            <article class="card">
+              <ul>
+                <li>전국 메이드카페 정보 통합</li>
+                <li>캐스트 중심 팬 플랫폼 구축</li>
+                <li>카페 운영자와 유저 연결</li>
+                <li>방문 인증 기반 신뢰 리뷰</li>
+                <li>글로벌 확장 구조(한국 → 일본)</li>
+              </ul>
+            </article>
+            <article class="card store-card">
+              <h4 class="store-name">Google Play 스토어</h4>
+              <p class="store-desc">안드로이드 앱 다운로드 링크를 연결할 수 있습니다.</p>
+              <a
+                class="store-button is-placeholder"
+                href="https://play.google.com/store/apps/details?id=YOUR_ANDROID_PACKAGE"
+                target="_blank"
+                rel="noreferrer"
+              >
+                링크 추후 교체
+              </a>
+            </article>
+            <article class="card store-card">
+              <h4 class="store-name">Apple App Store</h4>
+              <p class="store-desc">iOS 앱 다운로드 링크를 연결할 수 있습니다.</p>
+              <a
+                class="store-button is-placeholder"
+                href="https://apps.apple.com/app/idYOUR_APP_ID"
+                target="_blank"
+                rel="noreferrer"
+              >
+                링크 추후 교체
+              </a>
+            </article>
+          </div>
+          <div class="notice" style="margin-top: 12px;">
+            현재 스토어 링크는 placeholder입니다. 실제 배포 후 URL만 교체하면 됩니다.
           </div>
         </section>
 
@@ -112,5 +150,174 @@
         </footer>
       </main>
     </div>
+    <script>
+      (function () {
+        const endpoint = "https://us-central1-concafe-5f7fd.cloudfunctions.net/getPublicHomeBanners?limit=5";
+        const track = document.getElementById("homeBannerTrack");
+        const dots = document.getElementById("homeBannerDots");
+
+        if (!track || !dots) {
+          return;
+        }
+
+        const fallbackItems = [
+          {
+            id: "fallback-1",
+            title: "이번 주 인기 캐스트 소식",
+            subtitle: "앱에서 최신 인기 캐스트를 확인해보세요.",
+            imageUrl: "",
+            href: ""
+          },
+          {
+            id: "fallback-2",
+            title: "근처 메이드카페 탐색",
+            subtitle: "홈/탐색 탭에서 카페와 캐스트를 빠르게 찾을 수 있습니다.",
+            imageUrl: "",
+            href: ""
+          },
+          {
+            id: "fallback-3",
+            title: "체크인과 방문 인증 리뷰",
+            subtitle: "방문 기록을 남기고 신뢰 리뷰를 작성해보세요.",
+            imageUrl: "",
+            href: ""
+          }
+        ];
+
+        let currentIndex = 0;
+        let timerId = null;
+        let items = [];
+
+        function resolveSlides(nextItems) {
+          if (Array.isArray(nextItems) && nextItems.length > 0) {
+            return nextItems;
+          } else {
+            return fallbackItems;
+          }
+        }
+
+        function escapeHtml(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function render() {
+          track.innerHTML = items
+            .map((item) => {
+              const hasImage = typeof item.imageUrl === "string" && item.imageUrl.trim().length > 0;
+              const safeTitle = escapeHtml(item.title || "콘카 소식");
+              const safeSubtitle = escapeHtml(item.subtitle || "");
+              const safeHref = typeof item.href === "string" ? item.href.trim() : "";
+              const safeImageUrl = typeof item.imageUrl === "string" ? escapeHtml(item.imageUrl.trim()) : "";
+              const cardClass = hasImage ? "banner-card with-image" : "banner-card";
+              const imageHtml = hasImage
+                ? `<img class="banner-image" src="${safeImageUrl}" alt="${safeTitle}" loading="lazy" />`
+                : "";
+              const ctaHtml = safeHref.length > 0
+                ? `<a class="banner-cta" href="${safeHref}" target="_blank" rel="noreferrer">자세히 보기</a>`
+                : "";
+
+              return `
+                <div class="banner-slide">
+                  <article class="${cardClass}">
+                    ${imageHtml}
+                    <h3 class="banner-title">${safeTitle}</h3>
+                    <p class="banner-subtitle">${safeSubtitle}</p>
+                    ${ctaHtml}
+                  </article>
+                </div>
+              `;
+            })
+            .join("");
+
+          dots.innerHTML = items
+            .map((_, index) => {
+              const isActive = index === currentIndex ? " is-active" : "";
+              return `<button class="banner-dot${isActive}" type="button" aria-label="배너 ${index + 1}" data-index="${index}"></button>`;
+            })
+            .join("");
+
+          dots.querySelectorAll(".banner-dot").forEach((button) => {
+            button.addEventListener("click", () => {
+              const targetIndex = Number(button.getAttribute("data-index"));
+
+              if (Number.isNaN(targetIndex)) {
+                return;
+              }
+              moveTo(targetIndex);
+              restartAutoSlide();
+            });
+          });
+          moveTo(currentIndex, true);
+        }
+
+        function moveTo(index, immediate) {
+          if (items.length === 0) {
+            return;
+          }
+          const normalized = ((index % items.length) + items.length) % items.length;
+          currentIndex = normalized;
+
+          if (immediate) {
+            track.style.transition = "none";
+            track.style.transform = `translateX(-${normalized * 100}%)`;
+            requestAnimationFrame(() => {
+              track.style.transition = "";
+            });
+          } else {
+            track.style.transform = `translateX(-${normalized * 100}%)`;
+          }
+          dots.querySelectorAll(".banner-dot").forEach((dot, dotIndex) => {
+            dot.classList.toggle("is-active", dotIndex === normalized);
+          });
+        }
+
+        function startAutoSlide() {
+          if (timerId != null || items.length <= 1) {
+            return;
+          }
+          timerId = window.setInterval(() => {
+            moveTo(currentIndex + 1);
+          }, 5000);
+        }
+
+        function stopAutoSlide() {
+          if (timerId != null) {
+            window.clearInterval(timerId);
+            timerId = null;
+          }
+        }
+
+        function restartAutoSlide() {
+          stopAutoSlide();
+          startAutoSlide();
+        }
+
+        track.addEventListener("mouseenter", stopAutoSlide);
+        track.addEventListener("mouseleave", startAutoSlide);
+
+        fetch(endpoint)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`banner_fetch_failed_${response.status}`);
+            }
+            return response.json();
+          })
+          .then((json) => {
+            items = resolveSlides(json && json.items);
+            render();
+            startAutoSlide();
+          })
+          .catch(() => {
+            items = resolveSlides([]);
+            render();
+            startAutoSlide();
+          });
+      })();
+    </script>
   </body>
 </html>
