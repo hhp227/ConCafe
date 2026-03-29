@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 fun CafeSummaryCard(
     name: String,
     rating: String,
+    conceptType: String? = null,
     location: String,
     thumbnailImage: String? = null,
     modifier: Modifier = Modifier,
@@ -65,6 +65,12 @@ fun CafeSummaryCard(
                         modifier = Modifier.fillMaxWidth().height(120.dp)
                     )
                 }
+                RatingBox(
+                    rating = rating,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                )
             }
         }
         Column(
@@ -77,14 +83,15 @@ fun CafeSummaryCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFEF6797)
+            if (!conceptType.isNullOrBlank()) {
+                Text(
+                    text = conceptType,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF6797),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(rating, style = MaterialTheme.typography.bodySmall)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),

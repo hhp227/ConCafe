@@ -211,6 +211,7 @@ private struct ExploreContentView: View {
         CafeSummaryCard(
             name: cafe.name,
             rating: String(format: "%.1f", cafe.ratingAvg),
+            conceptType: cafe.conceptType,
             location: cafe.region.city,
             thumbnailImage: cafe.thumbnailImage,
             showLocationIcon: false,

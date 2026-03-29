@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.RatingBox
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.navigation.NavigationAction.*
 import kotlinx.datetime.Clock
@@ -234,6 +235,8 @@ private fun GuestMyInfoScreen(
                 if (uiState.popularCafes.isNotEmpty()) {
                     uiState.popularCafes.forEach { cafe ->
                         val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
+                        val ratingText = formatCafeRating(cafe.ratingAvg)
+                        val imageShape = RoundedCornerShape(12.dp)
 
                         Card(
                             modifier = Modifier
@@ -245,19 +248,34 @@ private fun GuestMyInfoScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(64.dp)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(imageShape)
                                         .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
                                 ) {
                                     if (resolvedThumbnail.isNotBlank()) {
                                         CompatImageDisplay(
                                             imageUrl = resolvedThumbnail,
-                                            modifier = Modifier.matchParentSize()
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .clip(imageShape),
+                                            applyRoundedClip = false
                                         )
                                     }
                                 }
-                                Column {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
                                     Text(cafe.name, fontWeight = FontWeight.SemiBold)
-                                    Text("⭐ ${cafe.ratingAvg}", style = MaterialTheme.typography.bodySmall)
+                                    RatingBox(rating = ratingText)
+                                    if (cafe.conceptType.isNotBlank()) {
+                                        Text(
+                                            text = cafe.conceptType,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFFEF6797),
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -475,6 +493,7 @@ private fun ProfileMyInfoScreen(
                                     CafeSummaryCard(
                                         name = cafe.name,
                                         rating = formatCafeRating(cafe.ratingAvg),
+                                        conceptType = cafe.conceptType,
                                         location = cafe.region.city,
                                         thumbnailImage = cafe.thumbnailImage,
                                         showLocationIcon = false,

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +44,6 @@ import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -544,13 +542,6 @@ private fun NearByCafeItem(
     cafe: Cafe,
     modifier: Modifier = Modifier
 ) {
-    val roundedRating = (cafe.ratingAvg * 10).roundToInt() / 10.0
-    val ratingText = if (roundedRating % 1.0 == 0.0) {
-        "${roundedRating.toInt()}.0"
-    } else {
-        roundedRating.toString()
-    }
-
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -573,14 +564,15 @@ private fun NearByCafeItem(
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFEF6797)
+            if (cafe.conceptType.isNotBlank()) {
+                Text(
+                    text = cafe.conceptType,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF6797),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(ratingText, style = MaterialTheme.typography.bodySmall)
             }
             Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(cafe.region.address, color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

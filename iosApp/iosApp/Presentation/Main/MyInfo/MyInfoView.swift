@@ -167,12 +167,20 @@ private struct GuestMyInfoView: View {
                     }
                     if !uiState.popularCafes.isEmpty {
                         ForEach(uiState.popularCafes, id: \.id) { cafe in
+                            let ratingText = String(
+                                format: "%.1f",
+                                locale: Locale(identifier: "en_US_POSIX"),
+                                cafe.ratingAvg
+                            )
+                            let conceptType = cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let imageCornerRadius: CGFloat = 12
+
                             HStack(spacing: 10) {
                                 GeometryReader { geometry in
                                     let imageSize = geometry.size
 
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 12)
+                                        RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous)
                                             .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
                                         if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
                                             CachedAsyncImage(
@@ -181,14 +189,21 @@ private struct GuestMyInfoView: View {
                                             )
                                             .frame(width: imageSize.width, height: imageSize.height)
                                             .clipped()
+                                            .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
                                         }
                                     }
                                 }
                                 .frame(width: 64, height: 64)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(cafe.name).bold()
-                                    Text("⭐ \(String(format: "%.1f", cafe.ratingAvg))").font(.caption)
+                                    RatingBox(rating: ratingText)
+                                    if !conceptType.isEmpty {
+                                        Text(conceptType)
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color(hex: "EF6797"))
+                                            .lineLimit(1)
+                                    }
                                 }
                                 Spacer()
                             }
@@ -536,6 +551,7 @@ private struct ProfileMyInfoView: View {
                         CafeSummaryCard(
                             name: cafe.name,
                             rating: favoriteCafeRating(cafe.ratingAvg),
+                            conceptType: cafe.conceptType,
                             location: cafe.region.city,
                             thumbnailImage: cafe.thumbnailImage,
                             showLocationIcon: false,
