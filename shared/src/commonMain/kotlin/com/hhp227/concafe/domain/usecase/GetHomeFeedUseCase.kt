@@ -2,6 +2,7 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.ExploreRegionFilter
 import com.hhp227.concafe.domain.model.HomeFeed
 import com.hhp227.concafe.domain.repository.BannerRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
@@ -20,11 +21,32 @@ class GetHomeFeedUseCase(
     private val castRepository: CastRepository,
     private val noticeRepository: NoticeRepository
 ) {
+    private fun resolveNearbyRegionFilter(): ExploreRegionFilter? {
+        val timeZoneId = TimeZone.currentSystemDefault().id.lowercase()
+        val isKoreaTimeZone = timeZoneId.contains("seoul")
+            || timeZoneId == "rok"
+        val isJapanTimeZone = timeZoneId.contains("tokyo")
+            || timeZoneId.contains("osaka")
+            || timeZoneId == "japan"
+        return if (isKoreaTimeZone) {
+            ExploreRegionFilter.from("seoul")
+        } else if (isJapanTimeZone) {
+            if (timeZoneId.contains("osaka")) {
+                ExploreRegionFilter.from("osaka")
+            } else {
+                ExploreRegionFilter.from("tokyo")
+            }
+        } else {
+            null
+        }
+    }
+
     suspend operator fun invoke(
         popularCastCursor: String? = null,
         nearbyCafeCursor: String? = null
     ): AppResult<HomeFeed> = coroutineScope {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val nearbyRegionFilter = resolveNearbyRegionFilter()
         val bannersDeferred = async {
             runCatching { bannerRepository.getHomeBanners(HOME_FEED_LIMIT) }
         }
@@ -32,8 +54,8 @@ class GetHomeFeedUseCase(
             runCatching {
                 cafeRepository.searchCafes(
                     query = null,
-                    country = null,
-                    city = null,
+                    country = nearbyRegionFilter?.country,
+                    city = nearbyRegionFilter?.city,
                     sort = CafeSort.RATING,
                     cursor = nearbyCafeCursor,
                     pageSize = NEARBY_CAFE_PAGE_SIZE
