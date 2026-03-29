@@ -7,16 +7,14 @@ func saveCompressedImageToTemporaryFileAsync(
     completion: @escaping (String?) -> Void
 ) {
     DispatchQueue.global(qos: .userInitiated).async {
-        let backgroundResult = autoreleasepool {
+        let imageUrl = autoreleasepool {
             saveCompressedImageToTemporaryFile(image, maxBytes: maxBytes)
+        } ?? autoreleasepool {
+            saveImageToTemporaryFileWithoutCompressionLimit(image)
         }
 
         DispatchQueue.main.async {
-            if backgroundResult != nil {
-                completion(backgroundResult)
-            } else {
-                completion(saveCompressedImageToTemporaryFile(image, maxBytes: maxBytes))
-            }
+            completion(imageUrl)
         }
     }
 }
@@ -85,5 +83,22 @@ private func normalizedForEncoding(_ image: UIImage) -> UIImage? {
     let renderer = UIGraphicsImageRenderer(size: image.size)
     return renderer.image { _ in
         image.draw(in: CGRect(origin: .zero, size: image.size))
+    }
+}
+
+private func saveImageToTemporaryFileWithoutCompressionLimit(_ image: UIImage) -> String? {
+    let fileName = "concafe-image-\(UUID().uuidString).jpg"
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+    let normalizedImage = normalizedForEncoding(image) ?? image
+    let imageData = normalizedImage.jpegData(compressionQuality: 0.8) ?? normalizedImage.pngData()
+
+    guard let imageData else {
+        return nil
+    }
+    do {
+        try imageData.write(to: fileURL, options: [.atomic])
+        return fileURL.absoluteString
+    } catch {
+        return nil
     }
 }

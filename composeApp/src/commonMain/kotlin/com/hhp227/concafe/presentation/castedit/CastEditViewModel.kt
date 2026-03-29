@@ -28,7 +28,9 @@ class CastEditViewModel(
     val event = _event.asSharedFlow()
 
     private val pendingDeletedGalleryImageUrls = mutableSetOf<String>()
+
     private var pendingDeletedProfileImageUrl: String? = null
+
     private var hasPendingLocalEdits = false
 
     private fun clickBack() {

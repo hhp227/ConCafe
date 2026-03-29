@@ -28,7 +28,9 @@ final class CastEditViewModel: ObservableObject {
     private let deleteImageUseCase: DeleteImageUseCase
 
     private var pendingDeletedGalleryImageUrls: Set<String> = []
+
     private var pendingDeletedProfileImageUrl: String? = nil
+
     private var hasPendingLocalEdits = false
 
     private func clickProfilePhoto() {
