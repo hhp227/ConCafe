@@ -11,7 +11,6 @@ import androidx.core.content.ContextCompat
 import com.hhp227.concafe.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.google.firebase.messaging.FirebaseMessagingService
 
 class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
