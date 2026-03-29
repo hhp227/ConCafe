@@ -327,6 +327,47 @@ async function loadCafeOwnerUserIds(cafeId: string): Promise<string[]> {
     .filter((value): value is string => value != null);
 }
 
+async function hasFanAnnouncementPermission(
+  requesterUserId: string,
+  requesterRole: string | null,
+  requesterAffiliatedCafeId: string | null,
+  cafeId: string,
+  castId: string
+): Promise<boolean> {
+  if (requesterRole === "ADMIN") {
+    return true;
+  } else if (requesterRole === "CAFE_OWNER") {
+    const userSnapshot = await db().collection("users").doc(requesterUserId).get();
+    const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+    const cafeSnapshot = await db().collection("cafes").doc(cafeId).get();
+    const ownerIds = asStringArray(cafeSnapshot.data()?.ownerIds);
+    const hasOwnerPermission = ownedCafeIds.includes(cafeId) || ownerIds.includes(requesterUserId);
+
+    if (hasOwnerPermission) {
+      return true;
+    } else {
+      return requesterAffiliatedCafeId === cafeId;
+    }
+  } else if (requesterRole === "CAST") {
+    const castSnapshot = await db()
+      .collection("cafes")
+      .doc(cafeId)
+      .collection("casts")
+      .doc(castId)
+      .get();
+    const linkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+    const isLinkedCast = linkedUserId === requesterUserId;
+
+    if (isLinkedCast) {
+      return true;
+    } else {
+      return requesterAffiliatedCafeId === cafeId;
+    }
+  } else {
+    return false;
+  }
+}
+
 async function createApprovalRequestNotifications(
   recipientUserIds: string[],
   notificationIdPrefix: string,
@@ -1659,8 +1700,13 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
       const requesterSnapshot = await db().collection("users").doc(requesterUserId).get();
       const requesterRole = asNonBlankString(requesterSnapshot.data()?.role);
       const requesterAffiliatedCafeId = asNonBlankString(requesterSnapshot.data()?.affiliatedCafeId);
-      const hasAnnouncementPermission = requesterAffiliatedCafeId === cafeId &&
-        (requesterRole === "CAST" || requesterRole === "CAFE_OWNER" || requesterRole === "ADMIN");
+      const hasAnnouncementPermission = await hasFanAnnouncementPermission(
+        requesterUserId,
+        requesterRole,
+        requesterAffiliatedCafeId,
+        cafeId,
+        castId
+      );
 
       if (!hasAnnouncementPermission) {
         logger.warn("Fan announcement request rejected due to permission.", {
@@ -1696,6 +1742,20 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
         const settings = await loadUserNotificationSettings(userId);
 
         if (!settings.isPushNotificationsEnabled) {
+          logger.info("Skipped fan announcement push because push is disabled.", {
+            requestId: requestId,
+            targetUserId: userId,
+            castId: castId,
+          });
+          return;
+        }
+        if (isQuietHoursPushSuppressed(settings)) {
+          logger.info("Skipped fan announcement push due to quiet hours.", {
+            requestId: requestId,
+            targetUserId: userId,
+            castId: castId,
+            quietHoursMode: settings.quietHoursMode,
+          });
           return;
         }
         await sendPushToUser(
