@@ -54,6 +54,8 @@ fun CheckInScreen(
     onNavigate: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val openLocationSettings = rememberCheckInLocationSettingsOpener()
+    var isLocationSettingsAlertVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -62,6 +64,9 @@ fun CheckInScreen(
                 is CheckInEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 is CheckInEvent.NavigateToReviewEdit -> onNavigate(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 CheckInEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
+                CheckInEvent.OpenLocationSettings -> {
+                    isLocationSettingsAlertVisible = true
+                }
             }
         }
     }
@@ -116,6 +121,30 @@ fun CheckInScreen(
                     onDismiss = { viewModel.onAction(CheckInAction.DismissReviewPrompt) }
                 )
             }
+        }
+        if (isLocationSettingsAlertVisible) {
+            AlertDialog(
+                onDismissRequest = { isLocationSettingsAlertVisible = false },
+                title = { Text("위치 권한 필요") },
+                text = { Text("체크인을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            isLocationSettingsAlertVisible = false
+                            openLocationSettings()
+                        }
+                    ) {
+                        Text("설정으로 이동")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { isLocationSettingsAlertVisible = false }
+                    ) {
+                        Text("취소")
+                    }
+                }
+            )
         }
     }
 }

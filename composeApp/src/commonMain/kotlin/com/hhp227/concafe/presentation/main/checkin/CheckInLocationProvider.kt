@@ -14,7 +14,10 @@ sealed interface CheckInLocationResult {
 sealed interface CheckInLocationPermissionResult {
     data object Granted : CheckInLocationPermissionResult
 
-    data class Failure(val message: String) : CheckInLocationPermissionResult
+    data class Failure(
+        val message: String,
+        val requiresSettings: Boolean = false
+    ) : CheckInLocationPermissionResult
 }
 
 interface CheckInLocationProvider {

@@ -184,6 +184,9 @@ class CheckInViewModel(
 
             jobs[TaskKey.SUBMIT_VISIT]?.cancel()
             jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
+                _uiState.update {
+                    it.copy(errorMessage = "현재 위치를 확인하는 중입니다. 잠시만 기다려 주세요.")
+                }
                 when (val locationResult = checkInLocationProvider.getCurrentLocation()) {
                     is CheckInLocationResult.Failure -> {
                         _uiState.update {
@@ -241,6 +244,9 @@ class CheckInViewModel(
                                 isNewVisitSheetVisible = false,
                                 errorMessage = permissionResult.message
                             )
+                        }
+                        if (permissionResult.requiresSettings) {
+                            _event.emit(CheckInEvent.OpenLocationSettings)
                         }
                     }
                 }

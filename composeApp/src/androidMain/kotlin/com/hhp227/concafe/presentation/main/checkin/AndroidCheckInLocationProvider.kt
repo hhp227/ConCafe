@@ -18,6 +18,8 @@ class AndroidCheckInLocationProvider(
     private val context: Context,
     private val activityProvider: () -> Activity?
 ) : CheckInLocationProvider {
+    private var hasRequestedLocationPermission = false
+
     override suspend fun requestPermissionIfNeeded(): CheckInLocationPermissionResult {
         val hasPermission = hasLocationPermission()
 
@@ -27,6 +29,14 @@ class AndroidCheckInLocationProvider(
             val activity = activityProvider()
 
             if (activity != null) {
+                val shouldOpenSettings = shouldOpenSettings(activity)
+
+                if (shouldOpenSettings) {
+                    return CheckInLocationPermissionResult.Failure(
+                        message = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.",
+                        requiresSettings = true
+                    )
+                }
                 ActivityCompat.requestPermissions(
                     activity,
                     arrayOf(
@@ -35,9 +45,16 @@ class AndroidCheckInLocationProvider(
                     ),
                     LOCATION_PERMISSION_REQUEST_CODE
                 )
-                return CheckInLocationPermissionResult.Failure("위치 권한 요청 중입니다. 권한을 허용한 뒤 다시 시도해 주세요.")
+                hasRequestedLocationPermission = true
+                return CheckInLocationPermissionResult.Failure(
+                    message = "위치 권한 요청 중입니다. 권한을 허용한 뒤 다시 시도해 주세요.",
+                    requiresSettings = false
+                )
             } else {
-                return CheckInLocationPermissionResult.Failure("위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.")
+                return CheckInLocationPermissionResult.Failure(
+                    message = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.",
+                    requiresSettings = true
+                )
             }
         }
     }
@@ -142,6 +159,19 @@ class AndroidCheckInLocationProvider(
         ) == PackageManager.PERMISSION_GRANTED
 
         return hasFinePermission || hasCoarsePermission
+    }
+
+    private fun shouldOpenSettings(activity: Activity): Boolean {
+        val shouldShowFineRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val shouldShowCoarseRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        return hasRequestedLocationPermission && !shouldShowFineRationale && !shouldShowCoarseRationale
     }
 
     private fun resolveBestLocation(locations: List<Location>): Location? {
