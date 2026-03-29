@@ -2,6 +2,7 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.ExploreRegionFilter
 import com.hhp227.concafe.domain.model.HomeFeed
 import com.hhp227.concafe.domain.repository.BannerRepository
@@ -21,6 +22,24 @@ class GetHomeFeedUseCase(
     private val castRepository: CastRepository,
     private val noticeRepository: NoticeRepository
 ) {
+    private enum class NearbyCafePagingPhase {
+        LOCAL,
+        GLOBAL
+    }
+
+    private data class NearbyCafeCursorState(
+        val phase: NearbyCafePagingPhase,
+        val regionKey: String,
+        val localCursor: String?,
+        val globalCursor: String?
+    )
+
+    private data class NearbyCafePage(
+        val items: List<Cafe>,
+        val nextCursor: String?,
+        val hasNext: Boolean
+    )
+
     private fun resolveNearbyRegionFilter(): ExploreRegionFilter? {
         val timeZoneId = TimeZone.currentSystemDefault().id.lowercase()
         val isKoreaTimeZone = timeZoneId.contains("seoul")
@@ -41,6 +60,173 @@ class GetHomeFeedUseCase(
         }
     }
 
+    private fun isSameRegion(cafe: Cafe, regionFilter: ExploreRegionFilter): Boolean {
+        val country = regionFilter.country
+        val city = regionFilter.city
+        return if (!country.isNullOrBlank() && !city.isNullOrBlank()) {
+            cafe.region.country.equals(country, ignoreCase = true)
+                && cafe.region.city.equals(city, ignoreCase = true)
+        } else {
+            false
+        }
+    }
+
+    private fun encodeNearbyCafeCursor(state: NearbyCafeCursorState): String {
+        val separator = "\u001F"
+        val localCursor = state.localCursor ?: ""
+        val globalCursor = state.globalCursor ?: ""
+        return listOf(
+            "v1",
+            state.phase.name,
+            state.regionKey,
+            localCursor,
+            globalCursor
+        ).joinToString(separator)
+    }
+
+    private fun decodeNearbyCafeCursor(rawCursor: String?): NearbyCafeCursorState? {
+        val separator = "\u001F"
+        return if (rawCursor.isNullOrBlank()) {
+            null
+        } else {
+            val tokens = rawCursor.split(separator)
+
+            if (tokens.size != 5 || tokens[0] != "v1") {
+                null
+            } else {
+                val phase = when (tokens[1]) {
+                    NearbyCafePagingPhase.LOCAL.name -> NearbyCafePagingPhase.LOCAL
+                    NearbyCafePagingPhase.GLOBAL.name -> NearbyCafePagingPhase.GLOBAL
+                    else -> null
+                }
+                if (phase != null && tokens[2].isNotBlank()) {
+                    NearbyCafeCursorState(
+                        phase = phase,
+                        regionKey = tokens[2],
+                        localCursor = tokens[3].ifBlank { null },
+                        globalCursor = tokens[4].ifBlank { null }
+                    )
+                } else {
+                    null
+                }
+            }
+        }
+    }
+
+    private suspend fun loadNearbyCafePage(
+        nearbyCafeCursor: String?,
+        nearbyRegionFilter: ExploreRegionFilter?
+    ): NearbyCafePage {
+        if (nearbyRegionFilter == null) {
+            val page = cafeRepository.searchCafes(
+                query = null,
+                country = null,
+                city = null,
+                sort = CafeSort.RATING,
+                cursor = nearbyCafeCursor,
+                pageSize = NEARBY_CAFE_PAGE_SIZE
+            )
+            return NearbyCafePage(
+                items = page.items,
+                nextCursor = page.nextCursor,
+                hasNext = page.hasNext
+            )
+        } else {
+            val decodedCursor = decodeNearbyCafeCursor(nearbyCafeCursor)
+            val currentState = if (decodedCursor != null && decodedCursor.regionKey == nearbyRegionFilter.key) {
+                decodedCursor
+            } else {
+                NearbyCafeCursorState(
+                    phase = NearbyCafePagingPhase.LOCAL,
+                    regionKey = nearbyRegionFilter.key,
+                    localCursor = null,
+                    globalCursor = null
+                )
+            }
+            val collectedItems = mutableListOf<Cafe>()
+            var phase = currentState.phase
+            var localCursor = currentState.localCursor
+            var globalCursor = currentState.globalCursor
+            var localHasNext = false
+            var globalHasNext = false
+            var didQueryGlobal = false
+
+            if (phase == NearbyCafePagingPhase.LOCAL) {
+                val localPage = cafeRepository.searchCafes(
+                    query = null,
+                    country = nearbyRegionFilter.country,
+                    city = nearbyRegionFilter.city,
+                    sort = CafeSort.RATING,
+                    cursor = localCursor,
+                    pageSize = NEARBY_CAFE_PAGE_SIZE
+                )
+                collectedItems.addAll(localPage.items)
+                localCursor = localPage.nextCursor
+                localHasNext = localPage.hasNext
+
+                if (!localHasNext) {
+                    phase = NearbyCafePagingPhase.GLOBAL
+                }
+            }
+
+            var remainingCount = NEARBY_CAFE_PAGE_SIZE - collectedItems.size
+            var globalLoopCount = 0
+
+            if (remainingCount > 0 && phase == NearbyCafePagingPhase.GLOBAL) {
+                while (remainingCount > 0 && globalLoopCount < 5) {
+                    val globalPage = cafeRepository.searchCafes(
+                        query = null,
+                        country = null,
+                        city = null,
+                        sort = CafeSort.RATING,
+                        cursor = globalCursor,
+                        pageSize = NEARBY_CAFE_PAGE_SIZE
+                    )
+                    val nonLocalItems = globalPage.items.filter { cafe ->
+                        !isSameRegion(cafe, nearbyRegionFilter)
+                    }
+                    val appendItems = nonLocalItems.take(remainingCount)
+
+                    collectedItems.addAll(appendItems)
+                    globalCursor = globalPage.nextCursor
+                    globalHasNext = globalPage.hasNext
+                    didQueryGlobal = true
+                    remainingCount = NEARBY_CAFE_PAGE_SIZE - collectedItems.size
+                    globalLoopCount += 1
+
+                    if (!globalPage.hasNext) {
+                        break
+                    }
+                }
+            }
+
+            val hasNext = if (phase == NearbyCafePagingPhase.LOCAL) {
+                localHasNext
+            } else if (!didQueryGlobal) {
+                true
+            } else {
+                globalHasNext
+            }
+            val nextCursor = if (hasNext) {
+                encodeNearbyCafeCursor(
+                    NearbyCafeCursorState(
+                        phase = phase,
+                        regionKey = nearbyRegionFilter.key,
+                        localCursor = localCursor,
+                        globalCursor = globalCursor
+                    )
+                )
+            } else {
+                null
+            }
+            return NearbyCafePage(
+                items = collectedItems,
+                nextCursor = nextCursor,
+                hasNext = hasNext
+            )
+        }
+    }
+
     suspend operator fun invoke(
         popularCastCursor: String? = null,
         nearbyCafeCursor: String? = null
@@ -52,13 +238,9 @@ class GetHomeFeedUseCase(
         }
         val nearbyCafePageDeferred = async {
             runCatching {
-                cafeRepository.searchCafes(
-                    query = null,
-                    country = nearbyRegionFilter?.country,
-                    city = nearbyRegionFilter?.city,
-                    sort = CafeSort.RATING,
-                    cursor = nearbyCafeCursor,
-                    pageSize = NEARBY_CAFE_PAGE_SIZE
+                loadNearbyCafePage(
+                    nearbyCafeCursor = nearbyCafeCursor,
+                    nearbyRegionFilter = nearbyRegionFilter
                 )
             }
         }
