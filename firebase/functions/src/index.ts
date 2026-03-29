@@ -443,6 +443,7 @@ async function createUserNotification(
     | "BIRTHDAY"
     | "CAFE_NOTICE"
     | "CAFE_EVENT"
+    | "FAN_ANNOUNCEMENT"
     | "FOLLOW_UPDATE"
     | "CAFE_APPROVAL_REQUEST"
     | "CAFE_OWNER_APPROVAL_REQUEST"
