@@ -3146,9 +3146,7 @@ class FirestoreConCafeDataSource(
                 return@forEach
             }
             val cafeDocument = loadCafeDocument(cafeId = cafeId, idToken = idToken)
-            val parsedCafe = cafeDocument?.let { document ->
-                parseCafeDocument(document)
-            }
+            val parsedCafe = parseCafeDocument(cafeDocument)
 
             if (parsedCafe != null) {
                 cafes.add(parsedCafe)

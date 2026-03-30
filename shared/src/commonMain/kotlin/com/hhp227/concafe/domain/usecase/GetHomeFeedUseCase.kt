@@ -200,13 +200,7 @@ class GetHomeFeedUseCase(
                 }
             }
 
-            val hasNext = if (phase == NearbyCafePagingPhase.LOCAL) {
-                localHasNext
-            } else if (!didQueryGlobal) {
-                true
-            } else {
-                globalHasNext
-            }
+            val hasNext = if (phase == NearbyCafePagingPhase.LOCAL) localHasNext else if (!didQueryGlobal) true else globalHasNext
             val nextCursor = if (hasNext) {
                 encodeNearbyCafeCursor(
                     NearbyCafeCursorState(
@@ -219,23 +213,7 @@ class GetHomeFeedUseCase(
             } else {
                 null
             }
-
-            if (collectedItems.isEmpty() && nearbyCafeCursor == null) {
-                val fallbackGlobalPage = cafeRepository.searchCafes(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CafeSort.RATING,
-                    cursor = null,
-                    pageSize = NEARBY_CAFE_PAGE_SIZE
-                )
-                return NearbyCafePage(
-                    items = fallbackGlobalPage.items,
-                    nextCursor = fallbackGlobalPage.nextCursor,
-                    hasNext = fallbackGlobalPage.hasNext
-                )
-            }
-
+            println("--ConCafe--, loadNearbyCafePage3, $nearbyCafeCursor, $nearbyRegionFilter")
             return NearbyCafePage(
                 items = collectedItems,
                 nextCursor = nextCursor,
