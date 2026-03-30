@@ -6,7 +6,6 @@ import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.ReviewDataSource
 import com.hhp227.concafe.data.source.ScheduleStatusDataSource
 import com.hhp227.concafe.data.source.SocialDataSource
-import com.hhp227.concafe.data.source.FirestoreCacheDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
@@ -128,11 +127,7 @@ class CastRepositoryImpl(
         } else {
             null
         }
-        val source = if (page != null) {
-            page.items
-        } else {
-            castDataSource.casts.filter { it.cafeId == cafeId }
-        }
+        val source = page?.items ?: castDataSource.casts.filter { it.cafeId == cafeId }
         val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
@@ -160,20 +155,12 @@ class CastRepositoryImpl(
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
         val workingCastIds = resolveWorkingCastIds(cafeId)
         val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-        val page = if (firestoreDataSource != null) {
-            firestoreDataSource.getCafeCastPageRemote(
-                cafeId = cafeId,
-                cursor = cursor,
-                pageSize = pageSize
-            )
-        } else {
-            null
-        }
-        val source = if (page != null) {
-            page.items
-        } else {
-            castDataSource.casts.filter { it.cafeId == cafeId }
-        }
+        val page = firestoreDataSource?.getCafeCastPageRemote(
+            cafeId = cafeId,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+        val source = page?.items ?: castDataSource.casts.filter { it.cafeId == cafeId }
         val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
@@ -441,7 +428,6 @@ class CastRepositoryImpl(
                 .date
                 .toString()
         }.getOrNull()
-
         return if (normalizedDate == null) {
             rawDateTime.startsWith(today)
         } else {
@@ -450,14 +436,11 @@ class CastRepositoryImpl(
     }
 
     private fun updateFollowerCountInCache(castId: String, followerCount: Int) {
-        val cacheDataSource = castDataSource as? FirestoreCacheDataSource
-            ?: return
-        val index = cacheDataSource.casts.indexOfFirst { cast -> cast.id == castId }
+        val mutableCasts = castDataSource.casts as? MutableList<Cast> ?: return
+        val index = mutableCasts.indexOfFirst { cast -> cast.id == castId }
 
         if (index >= 0) {
-            cacheDataSource.casts[index] = cacheDataSource.casts[index].copy(
-                followerCount = followerCount
-            )
+            mutableCasts[index] = mutableCasts[index].copy(followerCount = followerCount)
         }
     }
 
