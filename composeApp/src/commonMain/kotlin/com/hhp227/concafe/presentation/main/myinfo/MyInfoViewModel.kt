@@ -234,11 +234,7 @@ class MyInfoViewModel(
         summary: MyPageSummary?,
         followedMaids: List<Cast>
     ): MyPageSummary? {
-        return if (summary != null) {
-            summary.copy(followedCastsCount = followedMaids.size)
-        } else {
-            null
-        }
+        return summary?.copy(followedCastsCount = followedMaids.size)
     }
 
     private fun applyVisitCountDelta(delta: Int) {

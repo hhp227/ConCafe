@@ -6828,7 +6828,6 @@ private fun rankingScopeKey(period: RankingPeriod, country: String?, city: Strin
     val periodValue = period.name.lowercase()
     val countryValue = country?.trim()?.takeIf { value -> value.isNotEmpty() }?.lowercase() ?: "all"
     val cityValue = city?.trim()?.takeIf { value -> value.isNotEmpty() }?.lowercase() ?: "all"
-
     return "$periodValue|$countryValue|$cityValue"
 }
 
@@ -6842,7 +6841,6 @@ private fun rankingDocumentId(
     val periodValue = period.name.lowercase()
     val countryValue = country?.trim()?.takeIf { value -> value.isNotEmpty() }?.slugifyRankingToken() ?: "all"
     val cityValue = city?.trim()?.takeIf { value -> value.isNotEmpty() }?.slugifyRankingToken() ?: "all"
-
     return "${kindValue}_${periodValue}_${countryValue}_${cityValue}"
 }
 
@@ -6850,7 +6848,6 @@ private fun String.slugifyRankingToken(): String {
     val normalized = trim().lowercase()
     val alphanumeric = Regex("[^a-z0-9]+").replace(normalized, "-")
     val collapsed = Regex("-+").replace(alphanumeric, "-")
-
     return collapsed.trim('-').ifBlank { "all" }
 }
 
@@ -6865,7 +6862,6 @@ private fun Throwable.isFirestoreNotFound(): Boolean {
 
 private fun isFirestorePermissionDenied(error: Throwable): Boolean {
     val message = error.message.orEmpty()
-
     return message.contains("PERMISSION_DENIED", ignoreCase = true) ||
         message.contains("Missing or insufficient permissions", ignoreCase = true) ||
         message.contains("request failed(403)", ignoreCase = true)

@@ -4,7 +4,7 @@ import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import {getApps, initializeApp} from "firebase-admin/app";
-import {getFirestore} from "firebase-admin/firestore";
+import {FieldPath, getFirestore} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
 
 setGlobalOptions({ maxInstances: 10 });
@@ -2879,6 +2879,602 @@ export const getPublicHomeBanners = onRequest(
       });
     } catch (error) {
       logger.error("getPublicHomeBanners failed.", error);
+      response.status(500).json({
+        error: "internal",
+      });
+    }
+  }
+);
+
+type MockCafeSeedConfig = {
+  cafeCount: number;
+  castsPerCafe: number;
+  menusPerCafe: number;
+  noticesPerCafe: number;
+  reviewsPerCafe: number;
+};
+
+const DEFAULT_MOCK_CAFE_SEED_CONFIG: MockCafeSeedConfig = {
+  cafeCount: 3,
+  castsPerCafe: 30,
+  menusPerCafe: 15,
+  noticesPerCafe: 20,
+  reviewsPerCafe: 40,
+};
+
+const MOCK_CAFE_PRESETS = [
+  {
+    id: "mock_cafe_001",
+    name: "콘카페 서울 가든",
+    city: "Seoul",
+    address: "Mapo-gu Hongik-ro 10",
+    latitude: 37.5569,
+    longitude: 126.9245,
+    country: "KR",
+    desc: "홍대 인근의 메이드 컨셉 카페로, 무대 이벤트와 시즌 음료가 활발한 매장입니다.",
+    thumbnailImage: "https://picsum.photos/seed/concafe_seoul/960/540",
+  },
+  {
+    id: "mock_cafe_002",
+    name: "콘카페 도쿄 스테이지",
+    city: "Tokyo",
+    address: "Chiyoda-ku Akihabara 2-5",
+    latitude: 35.6984,
+    longitude: 139.773,
+    country: "JP",
+    desc: "아키하바라 감성의 컨셉 카페로, 아이돌 퍼포먼스와 팬 소통존이 특징입니다.",
+    thumbnailImage: "https://picsum.photos/seed/concafe_tokyo/960/540",
+  },
+  {
+    id: "mock_cafe_003",
+    name: "콘카페 오사카 하버",
+    city: "Osaka",
+    address: "Kita-ku Umeda 1-8",
+    latitude: 34.7024,
+    longitude: 135.4959,
+    country: "JP",
+    desc: "우메다 지역의 따뜻한 분위기 카페로, 디저트와 포토존 중심의 구성을 갖췄습니다.",
+    thumbnailImage: "https://picsum.photos/seed/concafe_osaka/960/540",
+  },
+];
+
+const MOCK_HOME_BANNERS = [
+  {
+    id: "mock_home_banner_001",
+    title: "주말 한정 스테이지 이벤트",
+    subtitle: "서울 가든에서 이번 주말 특별 공연 진행",
+    startColorHex: "FFD1DC",
+    endColorHex: "F58FB2",
+    imageUrl: "https://picsum.photos/seed/mock_home_banner_001/1280/720",
+    linkType: "CAFE",
+    linkTargetCafeId: "mock_cafe_001",
+    displayDays: 7,
+  },
+  {
+    id: "mock_home_banner_002",
+    title: "시즌 디저트 신메뉴 오픈",
+    subtitle: "도쿄 스테이지, 오사카 하버 동시 출시",
+    startColorHex: "FDEBC8",
+    endColorHex: "F7C58D",
+    imageUrl: "https://picsum.photos/seed/mock_home_banner_002/1280/720",
+    linkType: "CAFE",
+    linkTargetCafeId: "mock_cafe_002",
+    displayDays: 10,
+  },
+];
+
+function pad3(value: number): string {
+  return `${value}`.padStart(3, "0");
+}
+
+const MOCK_USER_NICKNAME_POOL = [
+  "딸기라떼", "하늘토끼", "별빛고양이", "달콤푸딩", "유자소다", "벚꽃우유", "라임쿠키", "눈송이", "은하수", "단팥붕어",
+  "바닐라구름", "복숭아티", "모찌러버", "밀크티덕후", "크림소다", "체리무스", "마카롱냥", "허니토스트", "초코크림", "말차라떼",
+  "시나몬롤", "캔디스타", "무지개푸딩", "포근담요", "달빛산책", "소금빵러버", "카페산책", "설탕비", "도토리", "해질녘",
+  "하트스푼", "구름사탕", "몽글몽글", "노을빛", "봄날기록", "오렌지피즈", "밤하늘", "디저트픽", "카페메모", "핫초코",
+  "수플레", "메론소다", "포토존러", "주말나들이", "리본쿠키", "디저트탐험", "우유푸딩", "체크인러", "라떼한잔", "달님",
+];
+
+const MOCK_CAST_NAME_POOL = [
+  "하은", "서아", "지안", "나연", "유리", "수아", "시온", "채린", "가은", "예린",
+  "도아", "해린", "소윤", "아린", "지우", "라희", "민서", "다은", "서윤", "유나",
+  "채아", "은별", "세아", "보민", "하린", "주아", "나래", "예나", "라온", "다온",
+  "소희", "가빈", "은채", "지유", "하연", "미소", "연우", "선아", "지민", "태린",
+];
+
+const MOCK_REVIEW_OPENERS = [
+  "응대가 꼼꼼하고 친절해서 첫 방문도 편했습니다.",
+  "포토존 분위기가 좋아서 사진 찍기 좋았습니다.",
+  "캐스트와의 대화가 자연스럽고 부담이 없었습니다.",
+  "무대 진행 타이밍이 깔끔해서 몰입감이 좋았습니다.",
+  "디저트 퀄리티가 기대 이상이었습니다.",
+  "대기 줄이 생각보다 빨리 빠졌습니다.",
+];
+
+const MOCK_REVIEW_CLOSERS = [
+  "다음에는 친구들이랑 다시 방문할 예정입니다.",
+  "처음 가보는 분들에게도 추천할 만합니다.",
+  "개인적으로 재방문 의사가 높은 매장입니다.",
+  "다음에는 시즌 메뉴도 꼭 먹어보려고 합니다.",
+  "추천해준 메뉴 선택이 정말 좋았습니다.",
+  "전체적으로 만족도가 높은 방문이었습니다.",
+];
+
+const MOCK_MEMO_POOL = [
+  "퇴근 후 짧게 들러 체크인했습니다.",
+  "근처 공연 보고 이동해서 방문했습니다.",
+  "추천받은 시즌 음료를 마셨습니다.",
+  "생일 테마 이벤트 날에 맞춰 방문했습니다.",
+  "첫 방문인데 응대가 정말 친절했습니다.",
+  "주말 라인업 분위기가 활기찼습니다.",
+];
+
+const MOCK_MENU_TEMPLATES: Record<string, string[]> = {
+  drink: [
+    "딸기 우유", "유자 스파클링", "바닐라 라떼", "복숭아 티", "흑임자 라떼",
+    "말차 플로트", "크림 소다", "체리 에이드", "허니 레몬 티", "하우스 블렌드 커피",
+  ],
+  dessert: [
+    "베리 팬케이크", "크림 파르페", "초코 와플", "모찌 플레이트", "카라멜 푸딩",
+    "딸기 쇼트케이크", "수플레 치즈케이크", "몽블랑", "허니 토스트", "티라미수 컵",
+  ],
+  goods: [
+    "아크릴 키링", "포토카드 세트", "스티커 팩", "미니 타월", "배지 세트",
+    "캐릭터 컵", "이벤트 포스터", "데스크 캘린더", "폴라로이드 슬리브", "팬 키트",
+  ],
+};
+
+function seededInt(seed: number): number {
+  return (((seed * 1103515245) + 12345) >>> 0);
+}
+
+function pickSeeded<T>(items: T[], seed: number): T {
+  const index = seededInt(seed) % items.length;
+  return items[index];
+}
+
+function buildMockCastDisplayName(cafeIndex: number, castIndex: number): string {
+  const base = pickSeeded(MOCK_CAST_NAME_POOL, (cafeIndex * 1000) + castIndex);
+  return base;
+}
+
+function buildMockReviewContent(cafeName: string, reviewIndex: number): string {
+  const opener = pickSeeded(MOCK_REVIEW_OPENERS, reviewIndex * 31);
+  const closer = pickSeeded(MOCK_REVIEW_CLOSERS, reviewIndex * 43);
+  return `${opener} ${cafeName}는 이번 방문에서도 전반적인 퀄리티가 안정적이었습니다. ${closer}`;
+}
+
+function buildMockNoticeTitle(cafeName: string, noticeIndex: number): string {
+  const prefixCycle = ["이벤트", "업데이트", "안내", "스케줄", "캠페인"];
+  const prefix = prefixCycle[noticeIndex % prefixCycle.length];
+  return `${prefix} ${pad3(noticeIndex)} - ${cafeName}`;
+}
+
+function buildMockNoticeContent(cafeName: string, noticeIndex: number): string {
+  const templateCycle = [
+    "라인업 및 좌석 안내가 업데이트되었습니다. 방문 전 오픈 시간을 확인해 주세요.",
+    "재료 수급 상황에 따라 일부 한정 메뉴 제공 시간이 변경되었습니다.",
+    "혼잡 완화를 위해 포토존 운영 시간이 조정되었습니다.",
+    "다음 주 이벤트 사전 예약 창이 오픈되었습니다.",
+    "매장 운영 공지: 대기열 및 좌석 운영 정책이 변경되었습니다.",
+  ];
+  const body = templateCycle[noticeIndex % templateCycle.length];
+  return `${cafeName}: ${body}`;
+}
+
+function resolveSeedConfig(request: {query: Record<string, unknown>}): MockCafeSeedConfig {
+  const toPositiveInt = (raw: unknown, fallback: number, max: number): number => {
+    const parsed = asNonNegativeInt(Number(raw));
+    const normalized = parsed ?? fallback;
+    return Math.max(1, Math.min(normalized, max));
+  };
+  return {
+    cafeCount: toPositiveInt(request.query.cafeCount, DEFAULT_MOCK_CAFE_SEED_CONFIG.cafeCount, 3),
+    castsPerCafe: toPositiveInt(request.query.castsPerCafe, DEFAULT_MOCK_CAFE_SEED_CONFIG.castsPerCafe, 100),
+    menusPerCafe: toPositiveInt(request.query.menusPerCafe, DEFAULT_MOCK_CAFE_SEED_CONFIG.menusPerCafe, 100),
+    noticesPerCafe: toPositiveInt(request.query.noticesPerCafe, DEFAULT_MOCK_CAFE_SEED_CONFIG.noticesPerCafe, 100),
+    reviewsPerCafe: toPositiveInt(request.query.reviewsPerCafe, DEFAULT_MOCK_CAFE_SEED_CONFIG.reviewsPerCafe, 200),
+  };
+}
+
+async function deleteDocumentsWithPrefix(collectionPath: string, prefix: string): Promise<number> {
+  const firestore = db();
+  const documentSnapshot = await firestore.collection(collectionPath)
+    .where(FieldPath.documentId(), ">=", prefix)
+    .where(FieldPath.documentId(), "<=", `${prefix}\uf8ff`)
+    .get();
+  const docs = documentSnapshot.docs;
+  let batch = firestore.batch();
+  let pendingDeleteCount = 0;
+  let deletedCount = 0;
+
+  for (let i = 0; i < docs.length; i += 1) {
+    batch.delete(docs[i].ref);
+    pendingDeleteCount += 1;
+    deletedCount += 1;
+
+    if (pendingDeleteCount >= 450) {
+      await batch.commit();
+      batch = firestore.batch();
+      pendingDeleteCount = 0;
+    }
+  }
+
+  if (pendingDeleteCount > 0) {
+    await batch.commit();
+  }
+  return deletedCount;
+}
+
+export const seedMockConCafeData = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 540,
+    memory: "1GiB",
+  },
+  async (request, response) => {
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    response.set("Access-Control-Allow-Headers", "Content-Type, X-Seed-Token");
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    } else if (request.method !== "POST") {
+      response.status(405).json({
+        error: "method_not_allowed",
+      });
+      return;
+    }
+
+    const expectedSeedToken = process.env.MOCK_SEED_TOKEN?.trim();
+    const providedSeedToken = request.get("x-seed-token")?.trim();
+    if (expectedSeedToken != null && expectedSeedToken.length > 0 && providedSeedToken !== expectedSeedToken) {
+      response.status(401).json({
+        error: "unauthorized",
+      });
+      return;
+    }
+
+    const config = resolveSeedConfig(request);
+    const targetCafes = MOCK_CAFE_PRESETS.slice(0, config.cafeCount);
+    const firestore = db();
+    const now = Date.now();
+    const categoryCycle = ["drink", "dessert", "goods"];
+    const createdUserIds = new Set<string>();
+    let batch = firestore.batch();
+    let pendingWriteCount = 0;
+    let committedBatchCount = 0;
+    const summary = {
+      cafes: 0,
+      casts: 0,
+      menus: 0,
+      notices: 0,
+      reviews: 0,
+      users: 0,
+      visits: 0,
+      homeBanners: 0,
+      committedBatches: 0,
+    };
+
+    const setWithMerge = async (
+      pathSegments: string[],
+      data: Record<string, unknown>
+    ): Promise<void> => {
+      let docRef = firestore.collection(pathSegments[0]).doc(pathSegments[1]);
+      for (let i = 2; i < pathSegments.length; i += 2) {
+        docRef = docRef.collection(pathSegments[i]).doc(pathSegments[i + 1]);
+      }
+      batch.set(docRef, data, {merge: true});
+      pendingWriteCount += 1;
+      if (pendingWriteCount >= 450) {
+        await batch.commit();
+        committedBatchCount += 1;
+        batch = firestore.batch();
+        pendingWriteCount = 0;
+      }
+    };
+
+    try {
+      for (let cafeIndex = 0; cafeIndex < targetCafes.length; cafeIndex += 1) {
+        const cafePreset = targetCafes[cafeIndex];
+        let cafeRatingTotal = 0;
+        const cafeReviewCount = config.reviewsPerCafe;
+        const cafeCastFollowerTotals = new Map<string, number>();
+        const cafeCastVisitTotals = new Map<string, number>();
+
+        for (let reviewIndex = 1; reviewIndex <= config.reviewsPerCafe; reviewIndex += 1) {
+          const reviewId = `mock_review_${cafePreset.id}_${pad3(reviewIndex)}`;
+          const visitorSlot = seededInt((cafeIndex + 1) * 10000 + reviewIndex) % 90;
+          const reviewUserId = `mock_user_${pad3(visitorSlot + 1)}`;
+          const castTagIndexA = ((reviewIndex - 1) % config.castsPerCafe) + 1;
+          const castTagIndexB = ((reviewIndex + 7) % config.castsPerCafe) + 1;
+          const taggedCastIds = castTagIndexA === castTagIndexB ?
+            [`mock_cast_${cafePreset.id}_${pad3(castTagIndexA)}`] :
+            [
+              `mock_cast_${cafePreset.id}_${pad3(castTagIndexA)}`,
+              `mock_cast_${cafePreset.id}_${pad3(castTagIndexB)}`,
+            ];
+          const ratingPattern = [3.0, 3.5, 4.0, 4.5, 5.0, 4.0, 4.5, 5.0];
+          const ratingValue = ratingPattern[reviewIndex % ratingPattern.length];
+          const dayOffset = seededInt(reviewIndex * 17 + cafeIndex * 71) % 120;
+          const hourOffset = seededInt(reviewIndex * 23 + cafeIndex * 19) % 14;
+          const createdAtMillis = now - (((dayOffset * 24) + hourOffset) * 60 * 60 * 1000);
+          const createdAt = new Date(createdAtMillis).toISOString();
+          const visitId = `mock_visit_${cafePreset.id}_${pad3(reviewIndex)}`;
+          const reviewImageUrl = reviewIndex % 4 === 0 ?
+            `https://picsum.photos/seed/${reviewId}/720/720` :
+            null;
+          const reviewContent = buildMockReviewContent(cafePreset.name, reviewIndex);
+          const userNicknameBase = pickSeeded(MOCK_USER_NICKNAME_POOL, visitorSlot + reviewIndex);
+          const userNickname = `${userNicknameBase}${(visitorSlot % 30) + 1}번님`;
+          const verificationDistanceMeters = (seededInt(reviewIndex * 97) % 120) + 15;
+
+          cafeRatingTotal += ratingValue;
+          taggedCastIds.forEach((castId) => {
+            const followerCount = (cafeCastFollowerTotals.get(castId) ?? 0) + 1;
+            const visitCount = (cafeCastVisitTotals.get(castId) ?? 0) + 1;
+            cafeCastFollowerTotals.set(castId, followerCount);
+            cafeCastVisitTotals.set(castId, visitCount);
+          });
+
+          if (!createdUserIds.has(reviewUserId)) {
+            await setWithMerge(
+              ["users", reviewUserId],
+              {
+                email: `${reviewUserId}@mock.concafe.app`,
+                nickname: userNickname,
+                role: "VISITOR",
+                banned: false,
+                createdAt: createdAt,
+                profileImage: `https://picsum.photos/seed/${reviewUserId}/256/256`,
+              },
+            );
+            createdUserIds.add(reviewUserId);
+            summary.users += 1;
+          }
+
+          await setWithMerge(
+            ["reviews", reviewId],
+            {
+              userId: reviewUserId,
+              userNickname: userNickname,
+              cafeId: cafePreset.id,
+              visitId: visitId,
+              rating: ratingValue,
+              content: reviewContent,
+              imageUrls: reviewImageUrl == null ? [] : [reviewImageUrl],
+              taggedCastIds: taggedCastIds,
+              likeCount: seededInt(reviewIndex * 41 + cafeIndex * 13) % 80,
+              createdAt: createdAt,
+              visitVerified: true,
+            },
+          );
+          summary.reviews += 1;
+
+          await setWithMerge(
+            ["visits", visitId],
+            {
+              userId: reviewUserId,
+              cafeId: cafePreset.id,
+              visitedAt: createdAt,
+              memo: pickSeeded(MOCK_MEMO_POOL, reviewIndex * 29),
+              verified: true,
+              verifiedAt: createdAt,
+              verificationDistanceMeters: verificationDistanceMeters,
+            },
+          );
+          summary.visits += 1;
+        }
+
+        const ratingAvg = Number((cafeRatingTotal / cafeReviewCount).toFixed(2));
+        await setWithMerge(
+          ["cafes", cafePreset.id],
+          {
+            name: cafePreset.name,
+            desc: cafePreset.desc,
+            region: {
+              country: cafePreset.country,
+              city: cafePreset.city,
+              address: cafePreset.address,
+              location: {
+                latitude: cafePreset.latitude,
+                longitude: cafePreset.longitude,
+              },
+            },
+            thumbnailImage: cafePreset.thumbnailImage,
+            ratingAvg: ratingAvg,
+            reviewCount: cafeReviewCount,
+            approved: true,
+            conceptType: "MAID",
+          },
+        );
+        summary.cafes += 1;
+
+        for (let castIndex = 1; castIndex <= config.castsPerCafe; castIndex += 1) {
+          const castId = `mock_cast_${cafePreset.id}_${pad3(castIndex)}`;
+          const profileSeed = `${castId}_${cafePreset.city}`;
+          const followerBase = (seededInt(castIndex * 37 + cafeIndex * 61) % 220) + 40;
+          const followerBoost = cafeCastFollowerTotals.get(castId) ?? 0;
+          const visitCertificationCount = (cafeCastVisitTotals.get(castId) ?? 0) + (castIndex % 7);
+          const castRating = Number((3.4 + ((castIndex % 8) * 0.2)).toFixed(2));
+
+          await setWithMerge(
+            ["cafes", cafePreset.id, "casts", castId],
+            {
+              name: buildMockCastDisplayName(cafeIndex + 1, castIndex),
+              linkedUserId: null,
+              profileImage: `https://picsum.photos/seed/${profileSeed}/512/512`,
+              desc: `${cafePreset.city} 지점에서 근무 중이며 이벤트 진행 경험이 많은 캐스트입니다.`,
+              birthday: `199${castIndex % 10}-${`${(castIndex % 12) + 1}`.padStart(2, "0")}-${`${(castIndex % 27) + 1}`.padStart(2, "0")}`,
+              conceptRole: "maid",
+              followerCount: followerBase + followerBoost,
+              rating: castRating,
+              visitCertificationCount: visitCertificationCount,
+            },
+          );
+          summary.casts += 1;
+        }
+
+        for (let menuIndex = 1; menuIndex <= config.menusPerCafe; menuIndex += 1) {
+          const menuId = `mock_menu_${cafePreset.id}_${pad3(menuIndex)}`;
+          const category = categoryCycle[(menuIndex - 1) % categoryCycle.length];
+          const categoryTemplates = MOCK_MENU_TEMPLATES[category] ?? MOCK_MENU_TEMPLATES.drink;
+          const menuName = categoryTemplates[(menuIndex - 1) % categoryTemplates.length];
+          const menuPriceBase = category === "goods" ? 9800 : 5200;
+          const menuPriceStep = category === "goods" ? 700 : 350;
+
+          await setWithMerge(
+            ["cafes", cafePreset.id, "menus", menuId],
+            {
+              name: menuName,
+              price: menuPriceBase + (menuIndex * menuPriceStep),
+              desc: `${cafePreset.city} 지점에서 판매 중인 ${category} 카테고리 메뉴입니다.`,
+              image: `https://picsum.photos/seed/${menuId}/640/480`,
+              category: category,
+              isAvailable: menuIndex % 11 !== 0,
+            },
+          );
+          summary.menus += 1;
+        }
+
+        for (let noticeIndex = 1; noticeIndex <= config.noticesPerCafe; noticeIndex += 1) {
+          const noticeId = `mock_notice_${cafePreset.id}_${pad3(noticeIndex)}`;
+          const createdAt = new Date(now - (noticeIndex * 24 * 60 * 60 * 1000)).toISOString();
+          await setWithMerge(
+            ["cafes", cafePreset.id, "notices", noticeId],
+            {
+              title: buildMockNoticeTitle(cafePreset.name, noticeIndex),
+              content: buildMockNoticeContent(cafePreset.name, noticeIndex),
+              createdAt: createdAt,
+            },
+          );
+          summary.notices += 1;
+        }
+      }
+
+      for (let bannerIndex = 0; bannerIndex < MOCK_HOME_BANNERS.length; bannerIndex += 1) {
+        const banner = MOCK_HOME_BANNERS[bannerIndex];
+        const activatedAtEpochMillis = now - (bannerIndex * 6 * 60 * 60 * 1000);
+        await setWithMerge(
+          ["homeBanners", banner.id],
+          {
+            title: banner.title,
+            subtitle: banner.subtitle,
+            startColorHex: banner.startColorHex,
+            endColorHex: banner.endColorHex,
+            relatedCafeId: banner.linkTargetCafeId,
+            imageUrl: banner.imageUrl,
+            linkType: banner.linkType,
+            linkTarget: banner.linkTargetCafeId,
+            displayDays: banner.displayDays,
+            status: "ACTIVE",
+            createdAtEpochMillis: activatedAtEpochMillis,
+            activatedAtEpochMillis: activatedAtEpochMillis,
+          },
+        );
+        summary.homeBanners += 1;
+      }
+
+      if (pendingWriteCount > 0) {
+        await batch.commit();
+        committedBatchCount += 1;
+      }
+      summary.committedBatches = committedBatchCount;
+      logger.info("seedMockConCafeData completed.", {
+        config: config,
+        summary: summary,
+      });
+      response.status(200).json({
+        ok: true,
+        config: config,
+        summary: summary,
+      });
+    } catch (error) {
+      logger.error("seedMockConCafeData failed.", error);
+      response.status(500).json({
+        error: "internal",
+      });
+    }
+  }
+);
+
+export const clearMockConCafeData = onRequest(
+  {
+    region: "us-central1",
+    timeoutSeconds: 540,
+    memory: "1GiB",
+  },
+  async (request, response) => {
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    response.set("Access-Control-Allow-Headers", "Content-Type, X-Seed-Token");
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    } else if (request.method !== "POST") {
+      response.status(405).json({
+        error: "method_not_allowed",
+      });
+      return;
+    }
+
+    const expectedSeedToken = process.env.MOCK_SEED_TOKEN?.trim();
+    const providedSeedToken = request.get("x-seed-token")?.trim();
+
+    if (expectedSeedToken != null && expectedSeedToken.length > 0 && providedSeedToken !== expectedSeedToken) {
+      response.status(401).json({
+        error: "unauthorized",
+      });
+      return;
+    }
+
+    const firestore = db();
+    const summary = {
+      cafes: 0,
+      users: 0,
+      reviews: 0,
+      visits: 0,
+      homeBanners: 0,
+    };
+
+    try {
+      const mockCafeSnapshot = await firestore.collection("cafes")
+        .where(FieldPath.documentId(), ">=", "mock_cafe_")
+        .where(FieldPath.documentId(), "<=", "mock_cafe_\uf8ff")
+        .get();
+      const mockCafes = mockCafeSnapshot.docs;
+
+      for (let i = 0; i < mockCafes.length; i += 1) {
+        await firestore.recursiveDelete(mockCafes[i].ref);
+        summary.cafes += 1;
+      }
+
+      const mockUserSnapshot = await firestore.collection("users")
+        .where(FieldPath.documentId(), ">=", "mock_user_")
+        .where(FieldPath.documentId(), "<=", "mock_user_\uf8ff")
+        .get();
+      const mockUsers = mockUserSnapshot.docs;
+
+      for (let i = 0; i < mockUsers.length; i += 1) {
+        await firestore.recursiveDelete(mockUsers[i].ref);
+        summary.users += 1;
+      }
+
+      summary.reviews = await deleteDocumentsWithPrefix("reviews", "mock_review_");
+      summary.visits = await deleteDocumentsWithPrefix("visits", "mock_visit_");
+      summary.homeBanners = await deleteDocumentsWithPrefix("homeBanners", "mock_home_banner_");
+
+      logger.info("clearMockConCafeData completed.", {
+        summary: summary,
+      });
+      response.status(200).json({
+        ok: true,
+        summary: summary,
+      });
+    } catch (error) {
+      logger.error("clearMockConCafeData failed.", error);
       response.status(500).json({
         error: "internal",
       });
