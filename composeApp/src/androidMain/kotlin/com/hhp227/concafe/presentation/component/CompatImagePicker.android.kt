@@ -84,20 +84,15 @@ actual fun CompatImageDisplay(
     applyRoundedClip: Boolean
 ) {
     val shape = if (applyRoundedClip) RoundedCornerShape(20.dp) else null
-    val finalModifier = if (shape != null) {
-        modifier.clip(shape)
-    } else {
-        modifier
-    }
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
             .data(imageUrl)
-            .size(800, 400)
+            .size(960, 720)
             .crossfade(true)
             .build()
     )
 
-    Box(modifier = finalModifier) {
+    Box(modifier = if (shape != null) modifier.clip(shape) else modifier) {
         Image(
             painter = painter,
             contentDescription = null,

@@ -288,7 +288,6 @@ class AuthRepositoryImpl(
         )
 
         authDataSource.addUser(createdUser)
-
         runCatching { firestoreSyncDataSource.pushUser(createdUser) }
         return createdUser
     }
@@ -296,11 +295,7 @@ class AuthRepositoryImpl(
     private suspend fun syncCurrentUserIdFromFirebase() {
         if (authTokenProvider.supportsEmailPasswordAuth()) {
             val idToken = authTokenProvider.getIdToken()
-            val firebaseUserId = if (idToken.isNullOrBlank()) {
-                null
-            } else {
-                authTokenProvider.getCurrentUserId()
-            }
+            val firebaseUserId = if (idToken.isNullOrBlank()) null else authTokenProvider.getCurrentUserId()
             authDataSource.currentUserId = firebaseUserId
         }
     }
@@ -329,7 +324,31 @@ class AuthRepositoryImpl(
         if (currentUserEmail.isNullOrBlank()) {
             return null
         }
-        return null
+        val foundByEmail = authDataSource.findUserByEmail(currentUserEmail)
+
+        if (foundByEmail != null) {
+            val aligned = if (foundByEmail.id == currentUserId) {
+                foundByEmail
+            } else {
+                val migrated = foundByEmail.copy(id = currentUserId)
+
+                authDataSource.replaceUser(migrated)
+                migrated
+            }
+            return aligned
+        }
+
+        val fallbackUser = User(
+            id = currentUserId,
+            email = currentUserEmail,
+            nickname = resolveInitialNickname(currentUserEmail, null),
+            profileImage = null,
+            role = UserRole.VISITOR,
+            banned = false,
+            createdAt = nowIsoUtc()
+        )
+        authDataSource.addUser(fallbackUser)
+        return fallbackUser
     }
 }
 

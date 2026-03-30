@@ -5,8 +5,8 @@
     </style>
 
     <style name="Theme.ConCafe.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@android:color/white</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo_android</item>
+        <item name="windowSplashScreenBackground">@color/concafe_background_color</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_android</item>
         <item name="postSplashScreenTheme">@style/Theme.ConCafe</item>
     </style>
 </resources>
