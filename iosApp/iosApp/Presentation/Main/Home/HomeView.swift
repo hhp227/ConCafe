@@ -16,7 +16,7 @@ struct HomeView: View {
 
     @State private var currentBannerPage = 0
 
-    private let bannerTimer = Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()
+    private let bannerTimer = Timer.publish(every: 5.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HomeContentView(

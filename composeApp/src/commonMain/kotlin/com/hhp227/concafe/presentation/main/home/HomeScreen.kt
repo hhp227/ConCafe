@@ -81,7 +81,7 @@ fun HomeScreen(
             pagerState.scrollToPage(normalizedPage)
             if (uiState.banners.size != 1) {
                 while (true) {
-                    delay(4000)
+                    delay(5000)
                     val nextPage = (pagerState.settledPage + 1) % uiState.banners.size
                     pagerState.animateScrollToPage(nextPage)
                 }
