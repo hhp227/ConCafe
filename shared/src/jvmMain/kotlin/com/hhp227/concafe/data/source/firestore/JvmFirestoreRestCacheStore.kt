@@ -1,30 +1,33 @@
 package com.hhp227.concafe.data.source.firestore
 
-import java.util.prefs.Preferences
+import java.io.File
 
 class JvmFirestoreRestCacheStore : FirestoreRestCacheStore {
-    private val preferences: Preferences = Preferences.userRoot().node(PREF_NODE)
+    private val cacheDir: File = File(System.getProperty("user.home"), ".concafe${File.separator}cache${File.separator}firestore")
 
     override fun load(key: String): String? {
-        return preferences.get(resolveStorageKey(key), null)
+        val file = resolveFile(key)
+        return if (file.exists()) runCatching { file.readText() }.getOrNull() else null
     }
 
     override fun save(key: String, payload: String) {
-        preferences.put(resolveStorageKey(key), payload)
+        val file = resolveFile(key)
+        runCatching { file.writeText(payload) }
     }
 
     override fun clear() {
-        preferences.keys()
-            .filter { storedKey -> storedKey.startsWith(KEY_PREFIX) }
-            .forEach { storedKey ->
-                preferences.remove(storedKey)
-            }
+        cacheDir.listFiles()
+            ?.filter { file -> file.name.endsWith(CACHE_FILE_EXTENSION) }
+            ?.forEach { file -> file.delete() }
     }
 
-    private fun resolveStorageKey(key: String): String {
-        return "$KEY_PREFIX${key.hashCode()}"
+    private fun resolveFile(key: String): File {
+        return File(cacheDir, "${key.hashCode()}$CACHE_FILE_EXTENSION")
+    }
+
+    init {
+        cacheDir.mkdirs()
     }
 }
 
-private const val PREF_NODE = "com.hhp227.concafe.firestore.http.cache"
-private const val KEY_PREFIX = "concafe.firestore.http.cache.entry."
+private const val CACHE_FILE_EXTENSION = ".cache"
