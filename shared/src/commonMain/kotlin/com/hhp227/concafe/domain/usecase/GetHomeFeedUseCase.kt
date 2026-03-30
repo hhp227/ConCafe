@@ -219,6 +219,23 @@ class GetHomeFeedUseCase(
             } else {
                 null
             }
+
+            if (collectedItems.isEmpty() && nearbyCafeCursor == null) {
+                val fallbackGlobalPage = cafeRepository.searchCafes(
+                    query = null,
+                    country = null,
+                    city = null,
+                    sort = CafeSort.RATING,
+                    cursor = null,
+                    pageSize = NEARBY_CAFE_PAGE_SIZE
+                )
+                return NearbyCafePage(
+                    items = fallbackGlobalPage.items,
+                    nextCursor = fallbackGlobalPage.nextCursor,
+                    hasNext = fallbackGlobalPage.hasNext
+                )
+            }
+
             return NearbyCafePage(
                 items = collectedItems,
                 nextCursor = nextCursor,

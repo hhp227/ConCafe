@@ -20,13 +20,14 @@ class CafeManagementRepositoryImpl(
         runCatching {
             firestoreSyncDataSource.refreshCafeManagementData(userId)
         }
-
         val currentUser = authDataSource.findUserById(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
             cafeDataSource.cafes
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
+        println("--ConCafe--, getOwnedCafes: ${cafeDataSource.cafes}")
+        println("--ConCafe--, getOwnedCafes: ${cafeDataSource.ownedCafeIdsByUser}")
         return manageableCafes.map { cafe ->
             val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
             val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
@@ -59,6 +60,7 @@ class CafeManagementRepositoryImpl(
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
+        println("--ConCafe--, getCafeManagementData: ${manageableCafes}")
         val ownedCafes = manageableCafes.map { cafe ->
             val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
             val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
