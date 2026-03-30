@@ -17,8 +17,13 @@ class CafeManagementRepositoryImpl(
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
     override suspend fun getOwnedCafes(userId: String): List<CafeManagementData.OwnedCafeSummary> {
-        runCatching {
+        val hadCachedOwnedCafeIds = cafeDataSource.ownedCafeIdsByUser.containsKey(userId)
+        val refreshResult = runCatching {
             firestoreSyncDataSource.refreshCafeManagementData(userId)
+        }
+
+        if (refreshResult.isFailure && !hadCachedOwnedCafeIds) {
+            throw refreshResult.exceptionOrNull() ?: IllegalStateException("failed to load cafe management data")
         }
         val currentUser = authDataSource.findUserById(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
@@ -26,8 +31,6 @@ class CafeManagementRepositoryImpl(
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
-        println("--ConCafe--, getOwnedCafes: ${cafeDataSource.cafes}")
-        println("--ConCafe--, getOwnedCafes: ${cafeDataSource.ownedCafeIdsByUser}")
         return manageableCafes.map { cafe ->
             val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
             val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
@@ -50,17 +53,20 @@ class CafeManagementRepositoryImpl(
     }
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
-        runCatching {
+        val hadCachedOwnedCafeIds = cafeDataSource.ownedCafeIdsByUser.containsKey(userId)
+        val refreshResult = runCatching {
             firestoreSyncDataSource.refreshCafeManagementData(userId)
         }
 
+        if (refreshResult.isFailure && !hadCachedOwnedCafeIds) {
+            throw refreshResult.exceptionOrNull() ?: IllegalStateException("failed to load cafe management data")
+        }
         val currentUser = authDataSource.findUserById(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
             cafeDataSource.cafes
         } else {
             cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
         }
-        println("--ConCafe--, getCafeManagementData: ${manageableCafes}")
         val ownedCafes = manageableCafes.map { cafe ->
             val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
             val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }

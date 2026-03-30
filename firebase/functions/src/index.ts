@@ -3,23 +3,16 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
-import {getApps, initializeApp} from "firebase-admin/app";
-import {FieldPath, getFirestore} from "firebase-admin/firestore";
+import {initializeApp} from "firebase-admin/app";
+import {FieldPath, getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
 
 setGlobalOptions({ maxInstances: 10 });
 
-let firestoreDbInstance: ReturnType<typeof getFirestore> | null = null;
+initializeApp();
 
 function db() {
-  if (firestoreDbInstance != null) {
-    return firestoreDbInstance;
-  }
-  if (getApps().length == 0) {
-    initializeApp();
-  }
-  firestoreDbInstance = getFirestore();
-  return firestoreDbInstance;
+  return getFirestore();
 }
 
 type ReviewLike = {
@@ -1045,27 +1038,6 @@ async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
   );
 }
 
-async function syncCastFollowerAggregate(cafeId: string, castId: string): Promise<void> {
-  const snapshot = await db()
-    .collection("castFollows")
-    .where("castId", "==", castId)
-    .select("userId")
-    .get();
-  const followerCount = snapshot.size;
-
-  await db()
-    .collection("cafes")
-    .doc(cafeId)
-    .collection("casts")
-    .doc(castId)
-    .set(
-      {
-        followerCount: followerCount,
-      },
-      {merge: true}
-    );
-}
-
 async function syncCastFollowNotifications(
   followId: string,
   beforeData: unknown,
@@ -1751,50 +1723,75 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
 export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
   "castFollows/{followId}",
   async (event) => {
-    const followId = asNonBlankString(event.params.followId) ?? "";
+    const followId = event.params.followId;
     const beforeData = event.data?.before.data();
     const afterData = event.data?.after.data();
-    const followTargets = new Map<string, string>();
 
-    if (
-      typeof beforeData?.cafeId === "string" &&
-      typeof beforeData?.castId === "string" &&
-      beforeData.cafeId.length > 0 &&
-      beforeData.castId.length > 0
-    ) {
-      followTargets.set(beforeData.castId, beforeData.cafeId);
-    }
-    if (
-      typeof afterData?.cafeId === "string" &&
-      typeof afterData?.castId === "string" &&
-      afterData.cafeId.length > 0 &&
-      afterData.castId.length > 0
-    ) {
-      followTargets.set(afterData.castId, afterData.cafeId);
-    }
-    if (followTargets.size == 0) {
+    logger.info("FOLLOW EVENT TRIGGERED", {
+      followId,
+      beforeData,
+      afterData,
+    });
+
+    const isCreate = !beforeData && afterData;
+    const isDelete = beforeData && !afterData;
+
+    if (!isCreate && !isDelete) {
       return;
     }
 
-    await Promise.all(
-      Array.from(followTargets.entries()).map(async ([castId, cafeId]) => {
-        await syncCastFollowerAggregate(cafeId, castId);
-      })
-    );
-    await markRankingSyncDirty("cast_follow_written", {
-      followId: event.params.followId,
-      targets: Array.from(followTargets.entries()).map(([castId, cafeId]) => ({
-        castId: castId,
-        cafeId: cafeId,
-      })),
-    });
-    logger.info("Synced cast follower aggregate.", {
-      followId: event.params.followId,
-      targets: Array.from(followTargets.entries()).map(([castId, cafeId]) => ({
-        castId: castId,
-        cafeId: cafeId,
-      })),
-    });
+    const target = isCreate ? afterData : beforeData;
+
+    const castId = target?.castId;
+    const cafeId = target?.cafeId;
+
+    if (
+      typeof castId !== "string" ||
+      typeof cafeId !== "string" ||
+      castId.length === 0 ||
+      cafeId.length === 0
+    ) {
+      logger.warn("Invalid follow data", { followId, target });
+      return;
+    }
+    const delta = isCreate ? 1 : -1;
+
+    const castRef = db()
+      .collection("cafes")
+      .doc(cafeId)
+      .collection("casts")
+      .doc(castId);
+
+    try {
+      await castRef.set(
+        {
+          followerCount: FieldValue.increment(delta),
+        },
+        { merge: true }
+      );
+
+      logger.info("Follower count updated", {
+        followId,
+        castId,
+        cafeId,
+        delta,
+      });
+
+      await markRankingSyncDirty("cast_follow_written", {
+        followId,
+        castId,
+        cafeId,
+        delta,
+      });
+
+    } catch (error) {
+      logger.error("Failed to update follower count", {
+        followId,
+        castId,
+        cafeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     await syncCastFollowNotifications(followId, beforeData, afterData);
   }
 );
