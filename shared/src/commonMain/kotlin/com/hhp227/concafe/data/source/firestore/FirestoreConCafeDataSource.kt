@@ -170,7 +170,6 @@ class FirestoreConCafeDataSource(
         city: String?
     ): List<RankingItem> {
         val scopeKey = rankingScopeKey(period = period, country = country, city = city)
-
         return loadRankingItemsRemote(
             kind = RANKING_KIND_CAST,
             period = period,
@@ -187,7 +186,6 @@ class FirestoreConCafeDataSource(
         city: String?
     ): List<RankingItem> {
         val scopeKey = rankingScopeKey(period = period, country = country, city = city)
-
         return loadRankingItemsRemote(
             kind = RANKING_KIND_CAFE,
             period = period,
@@ -203,11 +201,7 @@ class FirestoreConCafeDataSource(
         cursor: String?,
         pageSize: Int
     ): PagedResult<AppNotification> {
-        val safePageSize = if (pageSize > 0) {
-            pageSize
-        } else {
-            20
-        }
+        val safePageSize = if (pageSize > 0) pageSize else 20
         val idToken = tokenProvider.getIdToken()
         val documents = runCatching {
             runUserNotificationPageQuery(
