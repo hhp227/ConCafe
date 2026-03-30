@@ -198,9 +198,7 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-        }
+        (castDataSource as? FirestoreConCafeDataSource)?.refreshCastSchedulesRemote(castId, fromDate, toDate)
         return castDataSource.castSchedules(castId, fromDate, toDate)
     }
 
@@ -209,9 +207,7 @@ class CastRepositoryImpl(
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-        }
+        (castDataSource as? FirestoreConCafeDataSource)?.refreshCastSchedulesRemote(castId, fromDate, toDate)
         return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
@@ -256,16 +252,12 @@ class CastRepositoryImpl(
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshFollowedCastIds(userId)
-        }
+        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowedCastIds(userId)
         return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
     }
 
     override suspend fun getFollowedCastIds(userId: String): List<String> {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshFollowedCastIds(userId)
-        }
+        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowedCastIds(userId)
         return socialDataSource.followedCastIdsByUser[userId]
             ?.toList()
             .orEmpty()
@@ -341,9 +333,7 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshFollowerUserIds(castId)
-        }
+        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowerUserIds(castId)
         return socialDataSource.followerUserIdsByCastId[castId]
             ?.toList()
             ?.sorted()
