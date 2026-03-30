@@ -271,14 +271,15 @@ class FanManagementViewModel(
     }
 
     private fun loadFanManagement() {
-        _uiState.update {
-            it.copy(
-                isLoading = true,
-                errorMessage = null,
-                infoMessage = null
-            )
-        }
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_FAN_MANAGEMENT]?.cancel()
+        jobs[TaskKey.LOAD_FAN_MANAGEMENT] = viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    infoMessage = null
+                )
+            }
             val claimUiState = resolveClaimUi(
                 includeCandidatePage = true,
                 fallbackSheet = null
@@ -562,6 +563,7 @@ class FanManagementViewModel(
 }
 
 private enum class TaskKey {
+    LOAD_FAN_MANAGEMENT,
     OBSERVE_SESSION,
     OBSERVE_CAST_EVENT,
     OBSERVE_SCHEDULE_EVENT,

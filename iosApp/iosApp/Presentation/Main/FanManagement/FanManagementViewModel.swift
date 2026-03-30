@@ -317,13 +317,15 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private func loadFanManagement() {
-        uiState.isLoading = true
-        uiState.errorMessage = nil
-        uiState.infoMessage = nil
+        tasks[.loadFanManagement]?.cancel()
+        tasks[.loadFanManagement] = Task {
+            uiState.isLoading = true
+            uiState.errorMessage = nil
+            uiState.infoMessage = nil
 
-        Task {
             var claimStatus: FanManagementUiState.CastClaimStatusCard?
             var claimSheet: FanManagementUiState.CastClaimSheet?
+
             do {
                 let claimResult = try await getMyCastClaimStatusUseCase.invoke()
                 if let success = claimResult as? AppResultSuccess<AnyObject>,
@@ -781,6 +783,7 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case loadFanManagement
         case session
         case castClaimEvent
         case castEvent

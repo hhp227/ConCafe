@@ -39,7 +39,8 @@ class CafeManagementViewModel(
     private var currentUserId: String? = null
 
     private fun loadCafeManagement() {
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_CAFE_MANAGEMENT]?.cancel()
+        jobs[TaskKey.LOAD_CAFE_MANAGEMENT] = viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     isLoading = true
@@ -249,7 +250,6 @@ class CafeManagementViewModel(
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
         startClaimPolling()
-        loadCafeManagement()
     }
 
     override fun onCleared() {
@@ -259,6 +259,7 @@ class CafeManagementViewModel(
     }
 
     private enum class TaskKey {
+        LOAD_CAFE_MANAGEMENT,
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,

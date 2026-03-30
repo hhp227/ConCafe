@@ -237,6 +237,15 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
+        val currentUserId = authDataSource.currentUserId
+
+        if (currentUserId != null) {
+            val localUser = authDataSource.findUserById(currentUserId)
+
+            if (localUser != null) {
+                return localUser
+            }
+        }
         syncCurrentUserIdFromFirebase()
         return resolveCurrentUser()
     }
@@ -248,12 +257,6 @@ class AuthRepositoryImpl(
     }
 
     private suspend fun resolveUserFromSession(userId: String, email: String, displayName: String?): User {
-        val foundById = authDataSource.findUserById(userId)
-
-        if (foundById != null) {
-            return foundById
-        }
-
         val remoteUser = firestoreSyncDataSource.fetchUser(userId)
 
         if (remoteUser != null) {
@@ -263,6 +266,12 @@ class AuthRepositoryImpl(
                 authDataSource.addUser(remoteUser)
             }
             return remoteUser
+        }
+
+        val foundById = authDataSource.findUserById(userId)
+
+        if (foundById != null) {
+            return foundById
         }
 
         val foundByEmail = authDataSource.findUserByEmail(email)
@@ -302,12 +311,6 @@ class AuthRepositoryImpl(
 
     private suspend fun resolveCurrentUser(): User? {
         val currentUserId = authDataSource.currentUserId ?: return null
-        val localUser = authDataSource.findUserById(currentUserId)
-
-        if (localUser != null) {
-            return localUser
-        }
-
         val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
 
         if (remoteUser != null) {
@@ -317,6 +320,12 @@ class AuthRepositoryImpl(
                 authDataSource.addUser(remoteUser)
             }
             return remoteUser
+        }
+
+        val localUser = authDataSource.findUserById(currentUserId)
+
+        if (localUser != null) {
+            return localUser
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
