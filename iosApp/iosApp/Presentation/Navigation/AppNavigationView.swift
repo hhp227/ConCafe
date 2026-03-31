@@ -61,8 +61,8 @@ struct AppNavigationView: View {
                 MenuGoodsView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .menuGoodsEdit(let cafeId, let itemId):
                 MenuGoodsEditView(cafeId: cafeId, itemId: itemId, onNavigationAction: viewModel.onAction)
-            case .reviewEdit(let cafeId):
-                ReviewEditView(cafeId: cafeId, onNavigationAction: viewModel.onAction)
+            case .reviewEdit(let cafeId, let reviewId):
+                ReviewEditView(cafeId: cafeId, reviewId: reviewId, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:

@@ -285,7 +285,7 @@ final class CafeViewModel: ObservableObject {
         if !uiState.isLoggedIn {
             event.send(.navigateToSignIn)
         } else {
-            event.send(.navigateToReviewEdit(cafeId: cafeId))
+            event.send(.navigateToReviewEdit(cafeId: cafeId, reviewId: nil))
         }
     }
 
@@ -332,8 +332,8 @@ final class CafeViewModel: ObservableObject {
             loadCafeDetail()
         case .consumeScrollToTopOnReturn:
             uiState.shouldScrollToTopOnReturn = false
-        case .editReview:
-            event.send(.navigateToReviewEdit(cafeId: cafeId))
+        case .editReview(let reviewId):
+            event.send(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
         case .deleteReview(let reviewId):
             deleteReview(reviewId: reviewId)
         case .reportReview:

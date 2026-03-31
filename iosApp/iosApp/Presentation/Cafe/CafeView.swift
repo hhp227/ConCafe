@@ -32,8 +32,8 @@ struct CafeView: View {
                     onNavigationAction(.navigateBack)
                 case .navigateToCast(let id):
                     onNavigationAction(.navigateToCast(id: id))
-                case .navigateToReviewEdit(let cafeId):
-                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+                case .navigateToReviewEdit(let cafeId, let reviewId):
+                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
                 case .showMessage(let message):

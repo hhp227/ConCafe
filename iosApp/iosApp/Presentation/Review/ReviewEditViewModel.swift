@@ -17,9 +17,15 @@ final class ReviewEditViewModel: ObservableObject {
 
     private let cafeId: String?
 
+    private let reviewId: String?
+
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
     private let createReviewUseCase: CreateReviewUseCase
+
+    private let updateReviewUseCase: UpdateReviewUseCase
+
+    private let getReviewUseCase: GetReviewUseCase
 
     private let uploadImageUseCase: UploadImageUseCase
 
@@ -49,6 +55,7 @@ final class ReviewEditViewModel: ObservableObject {
                             ReviewEditUiState.CastTag(id: cast.id, name: cast.name)
                         }
                         uiState.infoMessage = nil
+                        if reviewId != nil { loadExistingReview() }
                     } else {
                         uiState.isLoading = false
                         uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
@@ -61,6 +68,28 @@ final class ReviewEditViewModel: ObservableObject {
             }
         } else {
             uiState.infoMessage = "카페 정보를 찾을 수 없습니다."
+        }
+    }
+
+    private func loadExistingReview() {
+        guard let reviewId else { return }
+        Task {
+            do {
+                let result = try await getReviewUseCase.invoke(reviewId: reviewId)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let review = success.data as? Review {
+                    uiState.rating = Int(review.rating)
+                    uiState.content = review.content
+                    uiState.taggedCastIds = review.taggedCastIds as? [String] ?? []
+                    uiState.photoImageUrl = review.imageUrls.firstObject as? String
+                } else {
+                    uiState.infoMessage = "기존 리뷰를 불러오지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.infoMessage = "기존 리뷰를 불러오지 못했습니다."
+            }
         }
     }
 
@@ -97,40 +126,64 @@ final class ReviewEditViewModel: ObservableObject {
             loadTask = Task {
                 do {
                     let uploadedPhoto = try await uploadImageIfNeeded(uiState.photoImageUrl, folder: "reviews")
-                    let result = try await createReviewUseCase.invoke(
-                        cafeId: uiState.cafeId,
-                        rating: Float(uiState.rating),
-                        content: uiState.content,
-                        imageUrls: uploadedPhoto.map { [$0] } ?? [],
-                        taggedCastIds: uiState.taggedCastIds
-                    )
+                    let imageUrls: [String] = uploadedPhoto.map { [$0] } ?? []
 
-                    if let success = result as? AppResultSuccess<AnyObject> {
+                    if let reviewId {
+                        let result = try await updateReviewUseCase.invoke(
+                            reviewId: reviewId,
+                            rating: Float(uiState.rating),
+                            content: uiState.content,
+                            imageUrls: imageUrls,
+                            taggedCastIds: uiState.taggedCastIds
+                        )
                         uiState.isSubmitting = false
-                        if let review = success.data as? Review {
-                            uiState.reviewId = review.id
-                            uiState.userId = review.userId
-                            uiState.visitId = review.visitId
-                            uiState.createdAt = review.createdAt
-                        }
-                        event.send(.navigateBack)
-                    } else if let failure = result as? AppResultFailure {
-                        uiState.isSubmitting = false
-                        if failure.error is AppErrorUnauthorized {
-                            uiState.infoMessage = "리뷰 작성은 로그인 후 가능해요."
-                        } else if let error = failure.error as? AppErrorValidationFailed {
-                            uiState.infoMessage = Self.reviewValidationMessage(for: error.reason)
+                        if result is AppResultSuccess<AnyObject> {
+                            event.send(.navigateBack)
+                        } else if let failure = result as? AppResultFailure {
+                            if failure.error is AppErrorUnauthorized {
+                                uiState.infoMessage = "리뷰 수정은 로그인 후 가능해요."
+                            } else {
+                                uiState.infoMessage = "리뷰 수정에 실패했습니다."
+                            }
                         } else {
-                            uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                            uiState.infoMessage = "리뷰 수정에 실패했습니다."
                         }
                     } else {
-                        uiState.isSubmitting = false
-                        uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                        let result = try await createReviewUseCase.invoke(
+                            cafeId: uiState.cafeId,
+                            rating: Float(uiState.rating),
+                            content: uiState.content,
+                            imageUrls: imageUrls,
+                            taggedCastIds: uiState.taggedCastIds
+                        )
+
+                        if let success = result as? AppResultSuccess<AnyObject> {
+                            uiState.isSubmitting = false
+                            if let review = success.data as? Review {
+                                uiState.reviewId = review.id
+                                uiState.userId = review.userId
+                                uiState.visitId = review.visitId
+                                uiState.createdAt = review.createdAt
+                            }
+                            event.send(.navigateBack)
+                        } else if let failure = result as? AppResultFailure {
+                            uiState.isSubmitting = false
+                            if failure.error is AppErrorUnauthorized {
+                                uiState.infoMessage = "리뷰 작성은 로그인 후 가능해요."
+                            } else if let error = failure.error as? AppErrorValidationFailed {
+                                uiState.infoMessage = Self.reviewValidationMessage(for: error.reason)
+                            } else {
+                                uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                            }
+                        } else {
+                            uiState.isSubmitting = false
+                            uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                        }
                     }
                 } catch {
                     if Task.isCancelled { return }
                     uiState.isSubmitting = false
-                    uiState.infoMessage = "리뷰 등록에 실패했습니다."
+                    uiState.infoMessage = reviewId != nil ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."
                 }
             }
         }
@@ -177,13 +230,19 @@ final class ReviewEditViewModel: ObservableObject {
 
     init(
         cafeId: String? = nil,
+        reviewId: String? = nil,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         createReviewUseCase: CreateReviewUseCase = KoinInitializerKt.resolveCreateReviewUseCase(),
+        updateReviewUseCase: UpdateReviewUseCase = KoinInitializerKt.resolveUpdateReviewUseCase(),
+        getReviewUseCase: GetReviewUseCase = KoinInitializerKt.resolveGetReviewUseCase(),
         uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
     ) {
         self.cafeId = cafeId
+        self.reviewId = reviewId
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.createReviewUseCase = createReviewUseCase
+        self.updateReviewUseCase = updateReviewUseCase
+        self.getReviewUseCase = getReviewUseCase
         self.uploadImageUseCase = uploadImageUseCase
         uiState.cafeId = cafeId ?? ""
 

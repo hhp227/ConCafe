@@ -56,7 +56,7 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data class ReviewEdit(val cafeId: String) : Route
+    data class ReviewEdit(val cafeId: String, val reviewId: String? = null) : Route
 
     @Serializable
     data object SignIn : Route

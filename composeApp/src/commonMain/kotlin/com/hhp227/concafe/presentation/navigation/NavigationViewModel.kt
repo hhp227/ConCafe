@@ -82,7 +82,7 @@ class NavigationViewModel : ViewModel() {
                     _event.emit(NavigateTo(MenuGoodsEdit(action.cafeId, action.itemId)))
                 }
                 is NavigationAction.NavigateToReviewEdit -> {
-                    _event.emit(NavigateTo(ReviewEdit(action.cafeId)))
+                    _event.emit(NavigateTo(ReviewEdit(action.cafeId, action.reviewId)))
                 }
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))

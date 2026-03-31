@@ -322,7 +322,7 @@ class CafeViewModel(
                     _uiState.update { it.copy(shouldScrollToTopOnReturn = false) }
                 }
                 is CafeAction.EditReview -> {
-                    _event.emit(CafeEvent.NavigateToReviewEdit(cafeId))
+                    _event.emit(CafeEvent.NavigateToReviewEdit(cafeId, action.reviewId))
                 }
                 is CafeAction.DeleteReview -> {
                     deleteReview(action.reviewId)

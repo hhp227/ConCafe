@@ -60,7 +60,7 @@ fun CafeScreen(
                 CafeEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CafeEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
                 is CafeEvent.NavigateToReviewEdit -> {
-                    onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                    onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId, event.reviewId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
                 is CafeEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)

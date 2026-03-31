@@ -189,6 +189,7 @@ fun NavigationScreen(
 
             ReviewEditScreen(
                 cafeId = reviewEditRoute.cafeId,
+                reviewId = reviewEditRoute.reviewId,
                 onNavigationAction = viewModel::onAction
             )
         }

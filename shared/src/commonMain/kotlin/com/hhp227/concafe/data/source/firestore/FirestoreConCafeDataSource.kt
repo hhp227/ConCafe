@@ -1253,6 +1253,12 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    suspend fun getReviewRemote(reviewId: String): Review {
+        val idToken = tokenProvider.getIdToken()
+        return resolveReviewById(reviewId = reviewId, idToken = idToken)
+            ?: throw NoSuchElementException("review not found: $reviewId")
+    }
+
     suspend fun createReviewRemote(
         userId: String,
         cafeId: String,

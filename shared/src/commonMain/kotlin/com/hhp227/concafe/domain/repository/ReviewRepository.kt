@@ -6,6 +6,8 @@ import com.hhp227.concafe.domain.model.Review
 interface ReviewRepository {
     suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review>
 
+    suspend fun getReview(reviewId: String): Review
+
     suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review>
 
     suspend fun createReview(

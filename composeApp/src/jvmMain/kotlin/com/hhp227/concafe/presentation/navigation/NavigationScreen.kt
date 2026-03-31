@@ -238,6 +238,7 @@ private fun DetailRoutePane(
         is Route.ReviewEdit -> {
             ReviewEditScreen(
                 cafeId = route.cafeId,
+                reviewId = route.reviewId,
                 onNavigationAction = onNavigationAction
             )
         }
