@@ -2809,6 +2809,59 @@ export const onStampWrittenSyncUserStampStats = onDocumentWritten(
   }
 );
 
+export const onFanAnnouncementRequestCreatedSendPushNotifications = onDocumentWritten(
+  "fanAnnouncementRequests/{requestId}",
+  async (event) => {
+    const requestId = asNonBlankString(event.params.requestId);
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
+
+    if (requestId == null || beforeData != null || afterData == null) {
+      return;
+    }
+    const castId = asNonBlankString(afterData.castId);
+    const cafeId = asNonBlankString(afterData.cafeId);
+    const senderUserId = asNonBlankString(afterData.userId);
+    const title = asNonBlankString(afterData.title);
+    const body = asNonBlankString(afterData.body);
+    const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+
+    if (castId == null || cafeId == null || title == null || body == null) {
+      return;
+    }
+    const followSnapshot = await db()
+      .collection("castFollows")
+      .where("castId", "==", castId)
+      .get();
+    const followerUserIds = followSnapshot.docs
+      .map((doc) => asNonBlankString(doc.data()?.userId))
+      .filter((id): id is string => id != null && id !== senderUserId);
+
+    if (followerUserIds.length === 0) {
+      logger.info("No followers to notify for fan announcement.", {requestId, castId});
+      return;
+    }
+    const tasks = followerUserIds.map(async (userId) => {
+      await createUserNotification(
+        userId,
+        `fan_announcement_${requestId}_${userId}`,
+        "FAN_ANNOUNCEMENT",
+        title,
+        body,
+        castId,
+        createdAt
+      );
+    });
+
+    await Promise.all(tasks);
+    logger.info("Sent fan announcement notifications.", {
+      requestId: requestId,
+      castId: castId,
+      recipientCount: followerUserIds.length,
+    });
+  }
+);
+
 export const onCafeWrittenMarkRankingDirty = onDocumentWritten(
   "cafes/{cafeId}",
   async (event) => {
