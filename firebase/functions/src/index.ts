@@ -389,11 +389,6 @@ async function createApprovalRequestNotifications(
   }
   const uniqueUserIds = Array.from(new Set(recipientUserIds));
   const tasks = uniqueUserIds.map(async (userId) => {
-    const settings = await loadUserNotificationSettings(userId);
-
-    if (!settings.isPushNotificationsEnabled) {
-      return;
-    }
     await createUserNotification(
       userId,
       `${notificationIdPrefix}_${userId}`,
@@ -424,11 +419,6 @@ async function createApprovalResultNotification(
   createdAt: string
 ): Promise<void> {
   if (recipientUserId == null) {
-    return;
-  }
-  const settings = await loadUserNotificationSettings(recipientUserId);
-
-  if (!settings.isPushNotificationsEnabled) {
     return;
   }
   await createUserNotification(

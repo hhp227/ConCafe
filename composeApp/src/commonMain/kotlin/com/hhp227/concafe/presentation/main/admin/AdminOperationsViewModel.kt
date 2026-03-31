@@ -453,7 +453,7 @@ class AdminOperationsViewModel(
     }
 }
 
-private const val ADMIN_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L
+private const val ADMIN_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
 private const val ADMIN_INQUIRY_PAGE_SIZE = 10
 
 private const val ADMIN_BANNER_MENU_ID = "banner"

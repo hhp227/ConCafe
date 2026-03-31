@@ -5197,7 +5197,12 @@ class FirestoreConCafeDataSource(
         approvedCafeId: String?,
         idToken: String?
     ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/$claimId"
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/$claimId" +
+            "?updateMask.fieldPaths=status" +
+            "&updateMask.fieldPaths=message" +
+            "&updateMask.fieldPaths=reviewedBy" +
+            "&updateMask.fieldPaths=reviewedAt" +
+            "&updateMask.fieldPaths=approvedCafeId"
         val body = firestoreDocumentBody(
             mapOf(
                 "status" to firestoreString(status),
@@ -5217,7 +5222,11 @@ class FirestoreConCafeDataSource(
         message: String,
         idToken: String?
     ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId"
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId" +
+            "?updateMask.fieldPaths=status" +
+            "&updateMask.fieldPaths=message" +
+            "&updateMask.fieldPaths=reviewedBy" +
+            "&updateMask.fieldPaths=reviewedAt"
         val body = firestoreDocumentBody(
             mapOf(
                 "status" to firestoreString(status),

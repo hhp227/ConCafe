@@ -78,6 +78,8 @@ class CafeManagementViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
+                            ownedCafes = result.data.ownedCafes,
+                            searchableCafes = result.data.searchableCafes,
                             pendingClaims = result.data.pendingClaims,
                             infoMessage = if (resetMessage) null else state.infoMessage
                         )
@@ -267,4 +269,4 @@ class CafeManagementViewModel(
     }
 }
 
-private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
