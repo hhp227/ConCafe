@@ -18,4 +18,7 @@ enum CafeAction {
     case loadMoreReviews
     case refresh
     case consumeScrollToTopOnReturn
+    case editReview(reviewId: String)
+    case deleteReview(reviewId: String)
+    case reportReview(reviewId: String)
 }

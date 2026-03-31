@@ -17,7 +17,11 @@ struct CafeReviewView: View {
 
     let isLoadingMore: Bool
 
+    let currentUserId: String?
+
     let onLoadMore: () -> Void
+
+    let onAction: (CafeAction) -> Void
     
     var body: some View {
         VStack(spacing: 12) {
@@ -58,9 +62,30 @@ struct CafeReviewView: View {
                                     }
                                 }
                                 Spacer()
-                                Text(review.createdDate)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                HStack(spacing: 4) {
+                                    Text(review.createdDate)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Menu {
+                                        if review.userId == currentUserId {
+                                            Button("수정하기") {
+                                                onAction(.editReview(reviewId: review.id))
+                                            }
+                                            Button("삭제하기", role: .destructive) {
+                                                onAction(.deleteReview(reviewId: review.id))
+                                            }
+                                        } else {
+                                            Button("신고하기", role: .destructive) {
+                                                onAction(.reportReview(reviewId: review.id))
+                                            }
+                                        }
+                                    } label: {
+                                        Image(systemName: "ellipsis")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 24, height: 24)
+                                    }
+                                }
                             }
                             HStack(spacing: 2) {
                                 ForEach(0..<5, id: \.self) { starIndex in

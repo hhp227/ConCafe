@@ -25,7 +25,8 @@ data class CafeUiState(
     val isFavorite: Boolean = false,
     val isLoggedIn: Boolean = false,
     val isVisitVerified: Boolean = false,
-    val shouldScrollToTopOnReturn: Boolean = false
+    val shouldScrollToTopOnReturn: Boolean = false,
+    val currentUserId: String? = null
 ) {
     enum class TabType(val label: String) {
         INFO("정보"),

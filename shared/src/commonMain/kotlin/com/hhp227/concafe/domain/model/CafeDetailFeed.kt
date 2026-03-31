@@ -8,5 +8,6 @@ data class CafeDetailFeed(
     val canLoadMoreReviews: Boolean,
     val isFavorite: Boolean,
     val isLoggedIn: Boolean,
-    val isVisitVerified: Boolean
+    val isVisitVerified: Boolean,
+    val currentUserId: String?
 )

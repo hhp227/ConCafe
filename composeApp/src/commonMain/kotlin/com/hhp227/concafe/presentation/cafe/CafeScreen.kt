@@ -52,6 +52,7 @@ fun CafeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -62,6 +63,7 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                is CafeEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -74,7 +76,8 @@ fun CafeScreen(
     CafeContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
-        listState = listState
+        listState = listState,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -83,7 +86,8 @@ fun CafeScreen(
 fun CafeContentScreen(
     uiState: CafeUiState,
     onAction: (CafeAction) -> Unit,
-    listState: LazyListState
+    listState: LazyListState,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val isTopBarVisible = uiState.detail != null && (
             listState.firstVisibleItemIndex > 1 ||
@@ -143,6 +147,7 @@ fun CafeContentScreen(
     }
     Scaffold(
         containerColor = colorFromHex("FFF9FC"),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -480,7 +485,9 @@ private fun CafeTabContent(
             detail = detail,
             reviews = uiState.reviews,
             canLoadMore = uiState.canLoadMoreReviews,
-            isLoadingMore = uiState.isLoadingMoreReviews
+            isLoadingMore = uiState.isLoadingMoreReviews,
+            currentUserId = uiState.currentUserId,
+            onAction = onAction
         )
         CafeUiState.TabType.NOTICES -> CafeNoticeScreen(
             notices = uiState.notices,

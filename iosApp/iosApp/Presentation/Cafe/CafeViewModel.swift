@@ -24,6 +24,8 @@ final class CafeViewModel: ObservableObject {
 
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 
+    private let deleteReviewUseCase: DeleteReviewUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
@@ -125,7 +127,8 @@ final class CafeViewModel: ObservableObject {
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn,
                         isVisitVerified: feed.isVisitVerified,
-                        shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn
+                        shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn,
+                        currentUserId: feed.currentUserId
                     )
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
@@ -286,6 +289,21 @@ final class CafeViewModel: ObservableObject {
         }
     }
 
+    private func deleteReview(reviewId: String) {
+        Task {
+            do {
+                let result = try await deleteReviewUseCase.invoke(cafeId: cafeId, reviewId: reviewId)
+
+                if result is AppResultFailure {
+                    event.send(.showMessage("리뷰 삭제에 실패했습니다."))
+                }
+            } catch {
+                if Task.isCancelled { return }
+                event.send(.showMessage("리뷰 삭제에 실패했습니다."))
+            }
+        }
+    }
+
     func onAction(_ action: CafeAction) {
         switch action {
         case .backTapped:
@@ -314,6 +332,12 @@ final class CafeViewModel: ObservableObject {
             loadCafeDetail()
         case .consumeScrollToTopOnReturn:
             uiState.shouldScrollToTopOnReturn = false
+        case .editReview:
+            event.send(.navigateToReviewEdit(cafeId: cafeId))
+        case .deleteReview(let reviewId):
+            deleteReview(reviewId: reviewId)
+        case .reportReview:
+            event.send(.showMessage("신고가 접수되었습니다."))
         }
     }
 
@@ -324,6 +348,7 @@ final class CafeViewModel: ObservableObject {
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
+        deleteReviewUseCase: DeleteReviewUseCase = KoinInitializerKt.resolveDeleteReviewUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
@@ -333,6 +358,7 @@ final class CafeViewModel: ObservableObject {
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
+        self.deleteReviewUseCase = deleteReviewUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.reviewEventPublisher = reviewEventPublisher
 
