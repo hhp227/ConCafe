@@ -3047,25 +3047,34 @@ class FirestoreConCafeDataSource(
 
     override suspend fun refreshCafeManagementData(userId: String) {
         val idToken = tokenProvider.getIdToken()
-        val ownerSyncChanged = try {
-            hasGlobalClaimSyncChangedForUser(
-                userId = userId,
-                collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
-                cache = lastCafeOwnerClaimSyncUpdatedAtByUserId,
-                idToken = idToken
-            )
-        } catch (_: Throwable) {
+        val hasExistingCache = ownedCafeIdsByUser.containsKey(userId)
+        val ownerSyncChanged = if (!hasExistingCache) {
             true
+        } else {
+            try {
+                hasGlobalClaimSyncChangedForUser(
+                    userId = userId,
+                    collectionId = FirestorePaths.CAFE_OWNER_CLAIMS,
+                    cache = lastCafeOwnerClaimSyncUpdatedAtByUserId,
+                    idToken = idToken
+                )
+            } catch (_: Throwable) {
+                true
+            }
         }
-        val registrationSyncChanged = try {
-            hasGlobalClaimSyncChangedForUser(
-                userId = userId,
-                collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
-                cache = lastCafeRegistrationClaimSyncUpdatedAtByUserId,
-                idToken = idToken
-            )
-        } catch (_: Throwable) {
+        val registrationSyncChanged = if (!hasExistingCache) {
             true
+        } else {
+            try {
+                hasGlobalClaimSyncChangedForUser(
+                    userId = userId,
+                    collectionId = FirestorePaths.CAFE_REGISTRATION_CLAIMS,
+                    cache = lastCafeRegistrationClaimSyncUpdatedAtByUserId,
+                    idToken = idToken
+                )
+            } catch (_: Throwable) {
+                true
+            }
         }
 
         if (!ownerSyncChanged && !registrationSyncChanged) {
@@ -3139,7 +3148,8 @@ class FirestoreConCafeDataSource(
             if (hasCafe) {
                 return@forEach
             }
-            val cafeDocument = loadCafeDocument(cafeId = cafeId, idToken = idToken)
+            val cafeDocument = runCatching { loadCafeDocument(cafeId = cafeId, idToken = idToken) }.getOrNull()
+                ?: return@forEach
             val parsedCafe = parseCafeDocument(cafeDocument)
 
             if (parsedCafe != null) {
@@ -5187,7 +5197,12 @@ class FirestoreConCafeDataSource(
         approvedCafeId: String?,
         idToken: String?
     ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/$claimId"
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/$claimId" +
+            "?updateMask.fieldPaths=status" +
+            "&updateMask.fieldPaths=message" +
+            "&updateMask.fieldPaths=reviewedBy" +
+            "&updateMask.fieldPaths=reviewedAt" +
+            "&updateMask.fieldPaths=approvedCafeId"
         val body = firestoreDocumentBody(
             mapOf(
                 "status" to firestoreString(status),
@@ -5207,7 +5222,11 @@ class FirestoreConCafeDataSource(
         message: String,
         idToken: String?
     ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId"
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_OWNER_CLAIMS}/$claimId" +
+            "?updateMask.fieldPaths=status" +
+            "&updateMask.fieldPaths=message" +
+            "&updateMask.fieldPaths=reviewedBy" +
+            "&updateMask.fieldPaths=reviewedAt"
         val body = firestoreDocumentBody(
             mapOf(
                 "status" to firestoreString(status),

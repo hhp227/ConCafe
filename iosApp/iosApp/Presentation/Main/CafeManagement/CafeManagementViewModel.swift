@@ -30,7 +30,8 @@ final class CafeManagementViewModel: ObservableObject {
     private var currentUserId: String?
 
     private func loadCafeManagement() {
-        Task {
+        tasks[.loadCafeManagement]?.cancel()
+        tasks[.loadCafeManagement] = Task {
             uiState.isLoading = true
             do {
                 let result = try await getCafeManagementUseCase.invoke()
@@ -65,6 +66,8 @@ final class CafeManagementViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? CafeManagementData {
+                    uiState.ownedCafes = data.ownedCafes
+                    uiState.searchableCafes = data.searchableCafes
                     uiState.pendingClaims = data.pendingClaims
                     if resetMessage {
                         uiState.infoMessage = nil
@@ -265,7 +268,6 @@ final class CafeManagementViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
         startClaimPolling()
-        loadCafeManagement()
     }
 
     deinit {
@@ -274,6 +276,7 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case loadCafeManagement
         case session
         case cafeDetailEvent
         case cafeRegistrationClaimEvent
@@ -281,4 +284,4 @@ final class CafeManagementViewModel: ObservableObject {
     }
 }
 
-private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 5_000_000_000
+private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000

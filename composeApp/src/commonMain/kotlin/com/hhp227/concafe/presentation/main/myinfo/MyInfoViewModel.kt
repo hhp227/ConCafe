@@ -54,9 +54,9 @@ class MyInfoViewModel(
     }
 
     private fun loadMyInfo() {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_MY_INFO]?.cancel()
+        jobs[TaskKey.LOAD_MY_INFO] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = getMyInfoUseCase.invoke()) {
                 is AppResult.Success -> {
                     val normalizedRecentVisits = normalizeCafes(
@@ -322,6 +322,7 @@ class MyInfoViewModel(
     }
 
     private enum class TaskKey {
+        LOAD_MY_INFO,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,
