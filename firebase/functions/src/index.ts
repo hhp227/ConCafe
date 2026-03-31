@@ -6,6 +6,7 @@ import * as logger from "firebase-functions/logger";
 import {initializeApp} from "firebase-admin/app";
 import {FieldPath, getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
+import {getStorage} from "firebase-admin/storage";
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -64,6 +65,7 @@ type CafeRegistrationClaimLike = {
   cafeName?: unknown;
   status?: unknown;
   requestedAt?: unknown;
+  imageUrl?: unknown;
 };
 
 type CafeOwnerClaimLike = {
@@ -709,6 +711,27 @@ function resolvePublicBannerImageUrl(rawImageUrl: string | null): string | null 
     }
   }
   return trimmed;
+}
+
+async function deleteStorageFileByUrl(imageUrl: string): Promise<void> {
+  const trimmed = imageUrl.trim();
+
+  if (!trimmed.startsWith("https://firebasestorage.googleapis.com/")) {
+    return;
+  }
+  const parsedUrl = new URL(trimmed);
+  const segments = parsedUrl.pathname.split("/").filter((s) => s.length > 0);
+  const bIndex = segments.findIndex((s) => s === "b");
+  const oIndex = segments.findIndex((s) => s === "o");
+
+  if (bIndex < 0 || oIndex < 0 || oIndex <= bIndex || oIndex >= segments.length - 1) {
+    return;
+  }
+  const bucketName = segments[bIndex + 1];
+  const encodedObjectPath = segments.slice(oIndex + 1).join("/");
+  const objectPath = decodeURIComponent(encodedObjectPath);
+
+  await getStorage().bucket(bucketName).file(objectPath).delete();
 }
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -2251,6 +2274,39 @@ export const onCafeRegistrationClaimWrittenRequesterRejectedNotification = onDoc
       claimId: claimId,
       requesterUserId: requesterUserId,
     });
+  }
+);
+
+export const onCafeRegistrationClaimRejectedDeleteImage = onDocumentWritten(
+  "cafeRegistrationClaims/{claimId}",
+  async (event) => {
+    const claimId = asNonBlankString(event.params.claimId);
+    const beforeData = event.data?.before.data() as CafeRegistrationClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeRegistrationClaimLike | undefined;
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (!isRejectedStatus(afterStatus) || isRejectedStatus(beforeStatus)) {
+      return;
+    }
+    const imageUrl = asNonBlankString(afterData?.imageUrl);
+
+    if (!imageUrl) {
+      return;
+    }
+    try {
+      await deleteStorageFileByUrl(imageUrl);
+      logger.info("Deleted image for rejected cafe registration claim.", {
+        claimId: claimId,
+        imageUrl: imageUrl,
+      });
+    } catch (error) {
+      logger.warn("Failed to delete image for rejected cafe registration claim.", {
+        claimId: claimId,
+        imageUrl: imageUrl,
+        error: error,
+      });
+    }
   }
 );
 
