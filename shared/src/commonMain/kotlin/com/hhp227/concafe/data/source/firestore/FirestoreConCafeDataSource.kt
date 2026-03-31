@@ -397,13 +397,8 @@ class FirestoreConCafeDataSource(
                 "createdAt" to firestoreString(now)
             )
         )
-        runCatching {
-            restApi.patch(path = path, body = bodyPayload, idToken = idToken)
-        }.recoverCatching {
-            restApi.patch(path = path, body = bodyPayload, idToken = null)
-        }.getOrElse { throwable ->
-            throw IllegalStateException("Failed to send fan announcement request", throwable)
-        }
+
+        restApi.patch(path = path, body = bodyPayload, idToken = idToken)
     }
 
     suspend fun refreshCafeDetail(cafeId: String) {
