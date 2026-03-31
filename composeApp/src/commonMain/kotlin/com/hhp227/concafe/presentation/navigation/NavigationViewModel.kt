@@ -114,6 +114,9 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)
                 }
+                NavigationAction.RefreshUnreadNotificationCount -> {
+                    _event.emit(NavigationEvent.RefreshUnreadNotificationCount)
+                }
             }
         }
     }

@@ -2,10 +2,13 @@ package com.hhp227.concafe.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,12 +16,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class AppViewModel(
     private val observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val registerPushTokenUseCase: RegisterPushTokenUseCase
+    private val registerPushTokenUseCase: RegisterPushTokenUseCase,
+    private val getNotificationFeedUseCase: GetNotificationFeedUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState = _uiState.asStateFlow()
@@ -32,9 +37,7 @@ class AppViewModel(
         jobs[JobKey.OBSERVE_NETWORK_ALERT]?.cancel()
         jobs[JobKey.OBSERVE_NETWORK_ALERT] = viewModelScope.launch {
             observeNetworkAlertStateUseCase.invoke().collect { networkAlertState ->
-                _uiState.update {
-                    it.copy(networkAlertState = networkAlertState)
-                }
+                _uiState.update { it.copy(networkAlertState = networkAlertState) }
             }
         }
     }
@@ -42,30 +45,60 @@ class AppViewModel(
     private fun observeSessionAndSyncPushToken() {
         jobs[JobKey.OBSERVE_CURRENT_USER]?.cancel()
         jobs[JobKey.OBSERVE_CURRENT_USER] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
-                _event.emit(AppEvent.SyncPushToken)
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                if (user != null) {
+                    _event.emit(AppEvent.SyncPushToken)
+                    startUnreadNotificationPolling()
+                } else {
+                    stopUnreadNotificationPolling()
+                    _uiState.update { it.copy(hasUnreadNotifications = false) }
+                }
             }
         }
     }
 
+    private suspend fun refreshUnreadNotificationCount() {
+        val result = getNotificationFeedUseCase.invoke()
+
+        if (result is AppResult.Success) {
+            val hasUnread = result.data.unreadCount > 0
+
+            _uiState.update { current ->
+                if (current.hasUnreadNotifications == hasUnread) current
+                else current.copy(hasUnreadNotifications = hasUnread)
+            }
+        }
+    }
+
+    private fun startUnreadNotificationPolling() {
+        jobs[JobKey.UNREAD_NOTIFICATION_POLL]?.cancel()
+        jobs[JobKey.UNREAD_NOTIFICATION_POLL] = viewModelScope.launch {
+            while (isActive) {
+                refreshUnreadNotificationCount()
+                delay(UNREAD_NOTIFICATION_POLL_INTERVAL_MILLIS)
+            }
+        }
+    }
+
+    private fun stopUnreadNotificationPolling() {
+        jobs[JobKey.UNREAD_NOTIFICATION_POLL]?.cancel()
+        jobs.remove(JobKey.UNREAD_NOTIFICATION_POLL)
+    }
+
     private fun syncPushToken(token: String) {
         val normalizedToken = token.trim()
-
-        if (normalizedToken.isEmpty()) {
-            return
-        } else {
-            viewModelScope.launch {
-                registerPushTokenUseCase.invoke(
-                    platform = "ANDROID",
-                    token = normalizedToken
-                )
-            }
+        if (normalizedToken.isEmpty()) return
+        viewModelScope.launch {
+            registerPushTokenUseCase.invoke(platform = "ANDROID", token = normalizedToken)
         }
     }
 
     fun onAction(action: AppAction) {
         when (action) {
             is AppAction.SyncPushToken -> syncPushToken(action.token)
+            is AppAction.RefreshUnreadNotificationCount -> viewModelScope.launch {
+                refreshUnreadNotificationCount()
+            }
         }
     }
 
@@ -82,6 +115,9 @@ class AppViewModel(
 
     private enum class JobKey {
         OBSERVE_NETWORK_ALERT,
-        OBSERVE_CURRENT_USER
+        OBSERVE_CURRENT_USER,
+        UNREAD_NOTIFICATION_POLL
     }
 }
+
+private const val UNREAD_NOTIFICATION_POLL_INTERVAL_MILLIS = 30_000L

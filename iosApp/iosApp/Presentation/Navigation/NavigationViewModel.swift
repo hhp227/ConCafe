@@ -62,6 +62,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.changePassword))
         case .navigateBack:
             event.send(.navigateBack)
+        case .refreshUnreadNotificationCount:
+            event.send(.refreshUnreadNotificationCount)
         }
     }
 }

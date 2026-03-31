@@ -35,7 +35,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { AppViewModel(get(), get(), get()) }
+    factory { AppViewModel(get(), get(), get(), get()) }
     factory { SignInViewModel(get(), get(), get(), get(), get(), get()) }
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }

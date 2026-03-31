@@ -31,4 +31,5 @@ sealed interface NavigationAction {
     data object NavigateToInquiry : NavigationAction
     data object NavigateToChangePassword : NavigationAction
     data object NavigateBack : NavigationAction
+    data object RefreshUnreadNotificationCount : NavigationAction
 }

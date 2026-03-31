@@ -1,36 +1,23 @@
 package com.hhp227.concafe.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.flow.collectLatest
-import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.resetpassword.ResetPasswordScreen
+import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
-import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
-import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
@@ -40,17 +27,20 @@ import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEve
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
+import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
 import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkScreen
-import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
+import kotlinx.coroutines.flow.collectLatest
 
 private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 
 @Composable
 fun NavigationScreen(
-    viewModel: NavigationViewModel = viewModel()
+    viewModel: NavigationViewModel = viewModel(),
+    hasUnreadNotifications: Boolean = false,
+    onRefreshUnreadNotificationCount: () -> Unit = {}
 ) {
     var currentMainTab by remember { mutableStateOf("home") }
     val detailStack = remember { mutableStateListOf<Pair<Int, Route>>() }
@@ -74,6 +64,9 @@ fun NavigationScreen(
                     if (detailStack.isNotEmpty()) {
                         detailStack.removeLast()
                     }
+                }
+                NavigationEvent.RefreshUnreadNotificationCount -> {
+                    onRefreshUnreadNotificationCount()
                 }
             }
         }
@@ -100,6 +93,7 @@ fun NavigationScreen(
             ) {
                 MainScreen(
                     initialTab = currentMainTab,
+                    hasUnreadNotifications = hasUnreadNotifications,
                     onNavigationAction = viewModel::onAction
                 )
             }

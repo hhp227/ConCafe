@@ -1,34 +1,24 @@
 package com.hhp227.concafe.presentation.main
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ManageAccounts
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -47,8 +37,8 @@ import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
 import com.hhp227.concafe.presentation.main.explore.ExploreScreen
-import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
+import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -57,6 +47,7 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @Composable
 fun MainScreen(
     initialTab: String? = null, // initialTab은 추후 ViewModel에서 처리할예정 리팩토링 TODO
+    hasUnreadNotifications: Boolean = false,
     bottomNavController: NavHostController = rememberNavController(),
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
@@ -75,6 +66,9 @@ fun MainScreen(
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
+    }
     LaunchedEffect(uiState.selectedTab) {
         if (currentRoute != uiState.selectedTab) {
             bottomNavController.navigate(uiState.selectedTab) {
@@ -93,17 +87,35 @@ fun MainScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
+                            if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
                                 onNavigationAction(NavigationAction.NavigateToSettings)
                             } else {
                                 onNavigationAction(NavigationAction.NavigateToNotification)
                             }
                         }
                     ) {
-                        Icon(
-                            imageVector = if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) Icons.Default.Settings else Icons.Default.Notifications,
-                            contentDescription = if (currentRoute == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) "설정" else "알림"
-                        )
+                        if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "설정"
+                            )
+                        } else {
+                            Box {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "알림"
+                                )
+                                if (hasUnreadNotifications) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = 2.dp, y = (-2).dp)
+                                            .background(Color.Red, shape = CircleShape)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             )

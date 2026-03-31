@@ -10,6 +10,10 @@ import SwiftUI
 struct AppNavigationView: View {
     @StateObject private var viewModel = NavigationViewModel()
 
+    let hasUnreadNotifications: Bool
+
+    let onRefreshUnreadNotificationCount: () -> Void
+
     @State var path: [Route] = []
 
     @State var currentRoute: Route = .entry
@@ -78,7 +82,11 @@ struct AppNavigationView: View {
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
             case .main(let initialTab):
-                MainView(initialTab: initialTab, onNavigationAction: viewModel.onAction)
+                MainView(
+                    initialTab: initialTab,
+                    hasUnreadNotifications: hasUnreadNotifications,
+                    onNavigationAction: viewModel.onAction
+                )
             case .entry:
                 EmptyView()
             }
@@ -89,7 +97,6 @@ struct AppNavigationView: View {
                 switch route {
                 case .main(let initialTab):
                     currentRoute = .main(initialTab: initialTab)
-
                     path.removeAll()
                 case .entry:
                     currentRoute = .entry
@@ -100,6 +107,8 @@ struct AppNavigationView: View {
                 if !path.isEmpty {
                     path.removeLast()
                 }
+            case .refreshUnreadNotificationCount:
+                onRefreshUnreadNotificationCount()
             }
         }
     }
@@ -108,11 +117,19 @@ struct AppNavigationView: View {
     private var rootContent: some View {
         switch currentRoute {
         case .main(let initialTab):
-            MainView(initialTab: initialTab, onNavigationAction: viewModel.onAction)
+            MainView(
+                initialTab: initialTab,
+                hasUnreadNotifications: hasUnreadNotifications,
+                onNavigationAction: viewModel.onAction
+            )
         case .entry:
             ProgressView()
         default:
-            MainView(initialTab: "home", onNavigationAction: viewModel.onAction)
+            MainView(
+                initialTab: "home",
+                hasUnreadNotifications: hasUnreadNotifications,
+                onNavigationAction: viewModel.onAction
+            )
         }
     }
 
@@ -130,6 +147,6 @@ struct AppNavigationView: View {
 
 struct AppNavigationView_Previews: PreviewProvider {
     static var previews: some View {
-        AppNavigationView()
+        AppNavigationView(hasUnreadNotifications: false, onRefreshUnreadNotificationCount: {})
     }
 }

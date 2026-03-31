@@ -10,4 +10,5 @@ import Foundation
 enum NavigationEvent {
     case navigateTo(Route)
     case navigateBack
+    case refreshUnreadNotificationCount
 }
