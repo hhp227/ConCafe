@@ -66,6 +66,7 @@ type CafeRegistrationClaimLike = {
   status?: unknown;
   requestedAt?: unknown;
   imageUrl?: unknown;
+  approvedCafeId?: unknown;
 };
 
 type CafeOwnerClaimLike = {
@@ -297,10 +298,7 @@ function isApprovedStatus(status: string | null): boolean {
   if (status == null) {
     return false;
   }
-  if (status === "APPROVED" || status === "승인 완료") {
-    return true;
-  }
-  return status.includes("승인");
+  return status === "APPROVED" || status === "승인 완료";
 }
 
 function isRejectedStatus(status: string | null): boolean {
@@ -2152,6 +2150,7 @@ export const onCafeRegistrationClaimWrittenRequesterApprovedNotification = onDoc
     }
     const requesterUserId = asNonBlankString(afterData.userId);
     const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const cafeId = asNonBlankString(afterData.approvedCafeId) ?? claimId;
     const createdAt = new Date().toISOString();
 
     await createApprovalResultNotification(
@@ -2160,7 +2159,7 @@ export const onCafeRegistrationClaimWrittenRequesterApprovedNotification = onDoc
       "CAFE_APPROVED",
       "카페 등록 승인 완료",
       `${cafeName} 등록 요청이 승인되었어요.`,
-      claimId,
+      cafeId,
       createdAt
     );
     logger.info("Created requester approved notification for cafe registration claim.", {
