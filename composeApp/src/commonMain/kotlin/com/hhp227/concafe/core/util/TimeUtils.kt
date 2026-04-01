@@ -214,7 +214,12 @@ object TimeUtils {
         }
     }
 
-    private fun parseTimeToMinutes(time: String): Int {
+    fun currentTimeMinutes(): Int {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        return now.hour * 60 + now.minute
+    }
+
+    fun parseTimeToMinutes(time: String): Int {
         val parts = time.split(":")
         val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0

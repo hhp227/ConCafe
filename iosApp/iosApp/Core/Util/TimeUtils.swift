@@ -258,7 +258,12 @@ final class TimeUtils {
         }
     }
 
-    private static func parseTimeMinutes(_ time: String) -> Int {
+    static func currentTimeMinutes() -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+
+    static func parseTimeMinutes(_ time: String) -> Int {
         let parts = time.split(separator: ":")
         let hour = Int(parts.first ?? "0") ?? 0
         let minute = Int(parts.dropFirst().first ?? "0") ?? 0
