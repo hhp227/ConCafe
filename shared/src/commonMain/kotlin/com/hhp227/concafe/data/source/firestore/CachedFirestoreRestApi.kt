@@ -181,7 +181,7 @@ class CachedFirestoreRestApi(
         return executePostWithPolicy(path = path, body = body, idToken = idToken)
     }
 
-    override suspend fun patch(path: String, body: String, idToken: String?): String {
+    override suspend fun patch(path: String, body: String, idToken: String?, updateMask: List<String>): String {
         val response = delegate.patch(path, body, idToken)
 
         cacheStore.clear()

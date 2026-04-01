@@ -430,7 +430,23 @@ private fun CastSummarySection(
 private fun CastTodaySection(detail: CastDetail) {
     val currentDate = TimeUtils.currentIsoDate()
     val todaySchedule = detail.schedule.firstOrNull { it.date == currentDate }
+    val currentMinutes = TimeUtils.currentTimeMinutes()
+    val statusText: String
+    val timeText: String
 
+    if (todaySchedule != null) {
+        val startMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.startTime)
+        val endMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.endTime)
+        statusText = when {
+            currentMinutes < startMinutes -> "출근 예정"
+            currentMinutes <= endMinutes -> "근무중"
+            else -> "근무 완료"
+        }
+        timeText = "${todaySchedule.startTime} - ${todaySchedule.endTime}"
+    } else {
+        statusText = "오늘은 휴무"
+        timeText = "다음 스케줄을 확인해 주세요."
+    }
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
@@ -460,13 +476,13 @@ private fun CastTodaySection(detail: CastDetail) {
                     color = Color.White.copy(alpha = 0.82f)
                 )
                 Text(
-                    text = if (todaySchedule != null) "출근 예정" else "오늘은 휴무",
+                    text = statusText,
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = todaySchedule?.let { "${it.startTime} - ${it.endTime}" } ?: "다음 스케줄을 확인해 주세요.",
+                    text = timeText,
                     color = Color.White.copy(alpha = 0.88f)
                 )
             }

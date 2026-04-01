@@ -172,6 +172,15 @@ private struct NotificationSectionsView: View {
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(visual.foreground)
                 )
+                .overlay(alignment: .topTrailing) {
+                    if !item.isRead {
+                        Circle()
+                            .fill(Color(hex: "EF6797"))
+                            .frame(width: 10, height: 10)
+                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                            .offset(x: 2, y: -2)
+                    }
+                }
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top) {
                     Text(item.title)

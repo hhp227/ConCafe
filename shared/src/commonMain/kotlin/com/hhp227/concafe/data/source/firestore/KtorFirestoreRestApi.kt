@@ -38,8 +38,16 @@ class KtorFirestoreRestApi(
         return readResponseBodyOrThrow(HttpMethod.Post.value, resolvedPath, response.status, response.bodyAsText())
     }
 
-    override suspend fun patch(path: String, body: String, idToken: String?): String {
-        val resolvedPath = path.withApiKey(apiKey)
+    override suspend fun patch(path: String, body: String, idToken: String?, updateMask: List<String>): String {
+        val resolvedPath = path.withApiKey(apiKey).let { base ->
+            if (updateMask.isEmpty()) base
+            else {
+                val maskQuery = updateMask.joinToString("&") { "updateMask.fieldPaths=$it" }
+
+                if (base.contains("?")) "$base&$maskQuery"
+                else "$base?$maskQuery"
+            }
+        }
         val response = httpClient.patch(resolvedPath) {
             contentType(ContentType.Application.Json)
             setBody(body)

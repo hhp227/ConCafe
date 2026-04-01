@@ -262,19 +262,31 @@ private fun NotificationItemCard(
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(visual.backgroundColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = visual.icon,
-                    contentDescription = null,
-                    tint = visual.iconColor,
-                    modifier = Modifier.size(22.dp)
-                )
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(visual.backgroundColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = visual.icon,
+                        contentDescription = null,
+                        tint = visual.iconColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                if (!item.isRead) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(12.dp)
+                            .background(Color.White, CircleShape)
+                            .padding(2.dp)
+                            .background(Color(0xFFEF6797), CircleShape)
+                    )
+                }
             }
             Spacer(modifier = Modifier.size(12.dp))
             Column(modifier = Modifier.weight(1f)) {

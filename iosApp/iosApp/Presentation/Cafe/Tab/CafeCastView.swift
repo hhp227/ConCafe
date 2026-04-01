@@ -19,7 +19,7 @@ struct CafeCastView: View {
 
     var body: some View {
         if maids.isEmpty {
-            emptyCard("등록된 메이드가 없습니다.")
+            emptyCard("등록된 캐스트가 없습니다.")
         } else {
             VStack(spacing: 12) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {

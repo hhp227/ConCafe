@@ -308,14 +308,31 @@ private struct CastTodaySection: View {
     var body: some View {
         let currentDate = TimeUtils.currentIsoDate()
         let todaySchedule = detail.schedule.first(where: { $0.date == currentDate })
+        let (statusText, timeText): (String, String) = {
+            guard let schedule = todaySchedule else {
+                return ("오늘은 휴무", "다음 스케줄을 확인해 주세요.")
+            }
+            let currentMinutes = TimeUtils.currentTimeMinutes()
+            let startMinutes = TimeUtils.parseTimeMinutes(schedule.startTime)
+            let endMinutes = TimeUtils.parseTimeMinutes(schedule.endTime)
+            let status: String
+            if currentMinutes < startMinutes {
+                status = "출근 예정"
+            } else if currentMinutes <= endMinutes {
+                status = "근무중"
+            } else {
+                status = "근무 완료"
+            }
+            return (status, "\(schedule.startTime) - \(schedule.endTime)")
+        }()
 
         VStack(alignment: .leading, spacing: 6) {
             Text("오늘의 출근 상태")
                 .foregroundStyle(Color.white.opacity(0.82))
-            Text(todaySchedule != nil ? "출근 예정" : "오늘은 휴무")
+            Text(statusText)
                 .font(.title3.bold())
                 .foregroundStyle(.white)
-            Text(todaySchedule.map { "\($0.startTime) - \($0.endTime)" } ?? "다음 스케줄을 확인해 주세요.")
+            Text(timeText)
                 .foregroundStyle(Color.white.opacity(0.9))
         }
         .frame(maxWidth: .infinity, alignment: .center)

@@ -24,7 +24,7 @@ fun CafeCastScreen(
     onAction: (CafeAction) -> Unit
 ) {
     if (casts.isEmpty()) {
-        EmptyContent(text = "등록된 메이드가 없습니다.")
+        EmptyContent(text = "등록된 캐스트가 없습니다.")
     } else {
         val rows = casts.chunked(2)
 
