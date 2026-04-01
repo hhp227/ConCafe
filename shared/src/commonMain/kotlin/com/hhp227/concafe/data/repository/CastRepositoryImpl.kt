@@ -377,16 +377,28 @@ class CastRepositoryImpl(
             }
         }
 
-        val sourceCasts = castDataSource.casts
-            .asSequence()
-            .filter { cast -> (todayTagCountByCastId[cast.id] ?: 0) > 0 }
-            .sortedWith(
-                compareByDescending<Cast> { cast -> todayTagCountByCastId[cast.id] ?: 0 }
-                    .thenByDescending { cast -> cast.followerCount }
-                    .thenBy { cast -> cast.id }
-            )
-            .take(safeLimit)
-            .toList()
+        val hasTodayTagData = todayTagCountByCastId.isNotEmpty()
+        val sourceCasts = if (hasTodayTagData) {
+            castDataSource.casts
+                .asSequence()
+                .filter { cast -> (todayTagCountByCastId[cast.id] ?: 0) > 0 }
+                .sortedWith(
+                    compareByDescending<Cast> { cast -> todayTagCountByCastId[cast.id] ?: 0 }
+                        .thenByDescending { cast -> cast.followerCount }
+                        .thenBy { cast -> cast.id }
+                )
+                .take(safeLimit)
+                .toList()
+        } else {
+            castDataSource.casts
+                .asSequence()
+                .sortedWith(
+                    compareByDescending<Cast> { cast -> cast.followerCount }
+                        .thenBy { cast -> cast.id }
+                )
+                .take(safeLimit)
+                .toList()
+        }
 
         return sourceCasts.map { cast ->
             val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
