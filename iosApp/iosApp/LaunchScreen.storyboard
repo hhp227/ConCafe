@@ -16,7 +16,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="maid_logo" translatesAutoresizingMaskIntoConstraints="NO" id="Kx3-Vn-mL9">
+                            <imageView opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="splash_logo" translatesAutoresizingMaskIntoConstraints="NO" id="Kx3-Vn-mL9">
                                 <rect key="frame" x="136.66666666666666" y="366" width="119.99999999999997" height="120"/>
                             </imageView>
                         </subviews>
@@ -36,6 +36,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="maid_logo" width="300" height="300"/>
+        <image name="splash_logo" width="300" height="300"/>
     </resources>
 </document>
