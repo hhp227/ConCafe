@@ -13,18 +13,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -185,7 +184,7 @@ private fun SignUpContentScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
-                    .padding(start = 4.dp, top = 4.dp)
+                    .padding(start = 5.dp, top = 8.dp)
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
             }
@@ -461,15 +460,26 @@ private fun PhoneVerificationSection(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
+    var phoneFieldValue by remember(uiState.phone) {
+        mutableStateOf(TextFieldValue(uiState.phone, TextRange(uiState.phone.length)))
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
-                SignUpTextField(
-                    value = uiState.phone,
-                    label = "휴대폰 번호",
-                    placeholder = "010-1234-5678",
-                    keyboardType = KeyboardType.Phone,
-                    onValueChange = { onAction(SignUpAction.ChangePhone(formatKoreanPhoneNumber(it))) }
+                OutlinedTextField(
+                    value = phoneFieldValue,
+                    onValueChange = { new ->
+                        val formatted = formatKoreanPhoneNumber(new.text)
+                        phoneFieldValue = TextFieldValue(formatted, TextRange(formatted.length))
+                        onAction(SignUpAction.ChangePhone(formatted))
+                    },
+                    label = { Text("휴대폰 번호") },
+                    placeholder = { Text("010-1234-5678") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Button(

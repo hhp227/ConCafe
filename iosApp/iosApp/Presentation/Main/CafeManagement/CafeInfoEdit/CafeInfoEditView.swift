@@ -353,14 +353,26 @@ private struct CafeInfoEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "7E737B"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            ConCafeFormField(
-                label: "연락처",
-                text: Binding(
-                    get: { uiState.contactNumber },
-                    set: { onAction(.changeContactNumber(formatKoreanPhoneNumber($0))) }
-                ),
-                keyboardType: .phonePad
-            )
+            VStack(alignment: .leading, spacing: 8) {
+                Text("연락처")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color(hex: "665A63"))
+                PhoneTextField(
+                    text: Binding(
+                        get: { uiState.contactNumber },
+                        set: { onAction(.changeContactNumber($0)) }
+                    ),
+                    placeholder: "010-1234-5678"
+                )
+                .frame(height: 52)
+                .padding(.horizontal, 16)
+                .background(Color(hex: "F8F5F6"))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                )
+            }
         }
     }
 

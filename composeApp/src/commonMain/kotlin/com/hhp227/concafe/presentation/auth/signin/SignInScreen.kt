@@ -241,7 +241,7 @@ private fun SignInContentScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
-                    .padding(start = 4.dp, top = 4.dp)
+                    .padding(start = 5.dp, top = 8.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,

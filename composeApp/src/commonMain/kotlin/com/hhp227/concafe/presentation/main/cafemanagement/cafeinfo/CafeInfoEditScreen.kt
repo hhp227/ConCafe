@@ -18,13 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.PhoneNumberTextField
 import com.hhp227.concafe.core.util.TimeUtils
-import com.hhp227.concafe.core.util.formatKoreanPhoneNumber
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -361,11 +360,10 @@ private fun CafeInfoEditContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF7E737B)
                             )
-                            CafeInfoTextField(
+                            PhoneNumberTextField(
                                 label = "연락처",
                                 value = uiState.contactNumber,
-                                keyboardType = KeyboardType.Phone,
-                                onValueChange = { onAction(CafeInfoEditAction.ChangeContactNumber(formatKoreanPhoneNumber(it))) }
+                                onValueChange = { onAction(CafeInfoEditAction.ChangeContactNumber(it)) }
                             )
                         }
                     }
@@ -444,7 +442,6 @@ private fun CafeInfoTextField(
     value: String,
     onValueChange: (String) -> Unit,
     minLines: Int = 1,
-    keyboardType: KeyboardType = KeyboardType.Text,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     ConCafeFormField(
@@ -453,7 +450,6 @@ private fun CafeInfoTextField(
         onValueChange = onValueChange,
         minLines = minLines,
         singleLine = minLines == 1,
-        keyboardType = keyboardType,
         trailingContent = trailingIcon
     )
 }
