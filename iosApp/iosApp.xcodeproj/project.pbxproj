@@ -217,6 +217,7 @@
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
+		0AFF00072F9B000000FF0007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */; };
 		EBA100012F90000100AAA001 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100052F90000100AAA001 /* KakaoSDKCommon */; };
 		EBA100022F90000100AAA001 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100062F90000100AAA001 /* KakaoSDKAuth */; };
 		EBA100032F90000100AAA001 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = EBA100072F90000100AAA001 /* KakaoSDKUser */; };
@@ -437,6 +438,7 @@
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A1011006AABBCCDDEEFF0006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		FEA9D4AD37B8EF9BE110840A /* ConCafe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ConCafe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -996,6 +998,7 @@
 				A1011004AABBCCDDEEFF0004 /* Assets.xcassets */,
 				0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */,
 				A1011006AABBCCDDEEFF0006 /* Info.plist */,
+				0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */,
 				A1012000AABBCCDDEEFF0000 /* Preview Content */,
 				0A90EBF32F7798F900CEFB85 /* LaunchScreen.storyboard */,
 			);
@@ -1086,6 +1089,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ko,
 				Base,
 			);
 			mainGroup = FBFDA0ED57CE363227DB6AC1;
@@ -1112,6 +1116,7 @@
 				A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */,
 				0A47F5962F6D684F00EA453E /* GoogleService-Info.plist in Resources */,
 				0A90EBF42F7798F900CEFB85 /* LaunchScreen.storyboard in Resources */,
+				0AFF00072F9B000000FF0007 /* InfoPlist.xcstrings in Resources */,
 				0AB609352F69031C00591FEE /* goyangdeogyang_bold.ttf in Resources */,
 				A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */,
 			);
