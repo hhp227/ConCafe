@@ -43,7 +43,7 @@ private val composeAppPresentationModule = module {
     factory { ExploreViewModel(get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { RankingViewModel(get(), get(), get(), get()) }
-    factory { MyInfoViewModel(get(), get(), get(), get(), get(), get()) }
+    factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { SettingsViewModel(get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get()) }

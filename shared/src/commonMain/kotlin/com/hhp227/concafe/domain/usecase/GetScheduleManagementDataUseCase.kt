@@ -15,6 +15,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
@@ -37,7 +38,8 @@ class GetScheduleManagementDataUseCase(
                     ?.id
                     ?: return AppResult.Failure(AppError.NotFound)
             }
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val nowDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val today = nowDateTime.date
             val weekStart = today.toWeekStart()
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
             val loaded = coroutineScope {
@@ -97,11 +99,14 @@ class GetScheduleManagementDataUseCase(
                             } else {
                                 "일정이 없습니다"
                             },
-                            statusLabel = when (status) {
-                                CastScheduleStatus.WORK -> "근무 중"
-                                CastScheduleStatus.OFF -> "휴무"
-                                CastScheduleStatus.VACATION -> "휴가"
-                            },
+                            statusLabel = resolveStatusLabel(
+                                date = date,
+                                today = today,
+                                status = status,
+                                startTime = schedule?.startTime,
+                                endTime = schedule?.endTime,
+                                nowDateTime = nowDateTime
+                            ),
                             isWorking = status == CastScheduleStatus.WORK,
                             status = status
                         )
@@ -115,6 +120,36 @@ class GetScheduleManagementDataUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+}
+
+private fun resolveStatusLabel(
+    date: LocalDate,
+    today: LocalDate,
+    status: CastScheduleStatus,
+    startTime: String?,
+    endTime: String?,
+    nowDateTime: LocalDateTime
+): String {
+    if (status != CastScheduleStatus.WORK) {
+        return when (status) {
+            CastScheduleStatus.OFF -> "휴무"
+            CastScheduleStatus.VACATION -> "휴가"
+            else -> "휴무"
+        }
+    }
+    if (date != today || startTime == null || endTime == null) {
+        return "근무"
+    }
+    val currentTotal = nowDateTime.hour * 60 + nowDateTime.minute
+    val startTotal = (startTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (startTime.substringAfter(':').toIntOrNull() ?: 0)
+    val endTotal = (endTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (endTime.substringAfter(':').toIntOrNull() ?: 0)
+    return when {
+        currentTotal < startTotal -> "출근 예정"
+        currentTotal < endTotal -> "출근 중"
+        else -> "근무 완료"
     }
 }
 

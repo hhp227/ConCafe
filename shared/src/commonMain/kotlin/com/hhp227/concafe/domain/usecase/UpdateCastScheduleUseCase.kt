@@ -44,7 +44,9 @@ class UpdateCastScheduleUseCase(
                 ScheduleManagementEvent.Updated(
                     castId = input.castId,
                     date = input.date,
-                    status = input.status
+                    status = input.status,
+                    startTime = input.startTime,
+                    endTime = input.endTime
                 )
             )
             AppResult.Success(updated)

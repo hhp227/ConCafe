@@ -2914,6 +2914,46 @@ export const onScheduleCreateBirthdayNotifications = onSchedule(
   }
 );
 
+export const onScheduleDeleteExpiredCastSchedules = onSchedule(
+  {
+    schedule: "every monday 03:00",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const firestore = db();
+    const now = kstNow();
+    // 지난 주 일요일(현재 주 시작 - 1일) 이전 데이터를 삭제한다
+    const cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffDateKey = kstDateKey(cutoffDate);
+
+    const snapshot = await firestore
+      .collection("castSchedules")
+      .where("date", "<", cutoffDateKey)
+      .get();
+
+    if (snapshot.empty) {
+      logger.info("onScheduleDeleteExpiredCastSchedules: no expired schedules found.");
+      return;
+    }
+
+    const BATCH_SIZE = 500;
+    let deletedCount = 0;
+
+    for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+      chunk.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      deletedCount += chunk.length;
+    }
+
+    logger.info("onScheduleDeleteExpiredCastSchedules completed.", {
+      cutoffDate: cutoffDateKey,
+      deletedCount,
+    });
+  }
+);
+
 export const getPublicHomeBanners = onRequest(
   {
     region: "us-central1",

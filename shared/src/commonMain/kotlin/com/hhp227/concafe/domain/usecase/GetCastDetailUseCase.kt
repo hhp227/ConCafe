@@ -2,9 +2,11 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastDetailFeed
 import com.hhp227.concafe.domain.model.CastRecentReview
+import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
@@ -45,6 +47,8 @@ class GetCastDetailUseCase(
             val taggedCastIds = taggedReviews
                 .flatMap { review -> review.taggedCastIds }
                 .distinct()
+            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val todayDate = now.date.toString()
             val secondaryLoaded = coroutineScope {
                 val taggedCastNamesByIdDeferred = async {
                     castRepository.getCastsByIds(taggedCastIds)
@@ -57,11 +61,22 @@ class GetCastDetailUseCase(
                         false
                     }
                 }
+                val todayScheduleStatusDeferred = async {
+                    castRepository.getCastScheduleStatuses(
+                        castId = castId,
+                        fromDate = todayDate,
+                        toDate = todayDate
+                    )
+                }
 
-                taggedCastNamesByIdDeferred.await() to isFollowingDeferred.await()
+                Triple(taggedCastNamesByIdDeferred.await(), isFollowingDeferred.await(), todayScheduleStatusDeferred.await())
             }
             val taggedCastNamesById = secondaryLoaded.first
             val isFollowing = secondaryLoaded.second
+            val todayScheduleStatuses = secondaryLoaded.third
+            val todayStatus = todayScheduleStatuses[todayDate]
+            val todaySchedule = detail.schedule.firstOrNull { it.date == todayDate }
+            val todayAttendanceStatus = computeAttendanceStatus(todayStatus, todaySchedule?.startTime, todaySchedule?.endTime, now.hour, now.minute)
             val reviewUserIds = taggedReviews
                 .map { review -> review.userId }
                 .distinct()
@@ -97,7 +112,8 @@ class GetCastDetailUseCase(
                     detail = detail,
                     recentReviews = recentReviews,
                     isFollowing = isFollowing,
-                    isLoggedIn = currentUser != null
+                    isLoggedIn = currentUser != null,
+                    todayAttendanceStatus = todayAttendanceStatus
                 )
             )
         } catch (e: NoSuchElementException) {
@@ -122,6 +138,28 @@ class GetCastDetailUseCase(
         }
 
         return detail.copy(images = normalizedImages)
+    }
+}
+
+private fun computeAttendanceStatus(
+    status: CastScheduleStatus?,
+    startTime: String?,
+    endTime: String?,
+    currentHour: Int,
+    currentMinute: Int
+): CastAttendanceStatus {
+    if (status != CastScheduleStatus.WORK || startTime == null || endTime == null) {
+        return CastAttendanceStatus.OFF
+    }
+    val currentTotal = currentHour * 60 + currentMinute
+    val startTotal = (startTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (startTime.substringAfter(':').toIntOrNull() ?: 0)
+    val endTotal = (endTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (endTime.substringAfter(':').toIntOrNull() ?: 0)
+    return when {
+        currentTotal < startTotal -> CastAttendanceStatus.UPCOMING
+        currentTotal < endTotal -> CastAttendanceStatus.ON_SHIFT
+        else -> CastAttendanceStatus.COMPLETED
     }
 }
 
