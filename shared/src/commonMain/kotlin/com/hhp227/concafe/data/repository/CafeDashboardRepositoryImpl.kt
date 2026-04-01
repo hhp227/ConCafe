@@ -43,6 +43,10 @@ class CafeDashboardRepositoryImpl(
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
             .toString()
+        if (firestoreDataSource != null) {
+            runCatching { firestoreDataSource.refreshCafeReviews(cafeId) }
+        }
+
         val workingCastIds = if (firestoreDataSource != null) {
             runCatching {
                 firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)

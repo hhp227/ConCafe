@@ -37,6 +37,9 @@ import com.hhp227.concafe.domain.model.UserNotificationSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -195,9 +198,27 @@ class FirestoreCacheDataSource :
 
     override val cafeCheckInCountById = emptyMap<String, Int>()
 
-    override val cafeTodayCheckInCountById = emptyMap<String, Int>()
+    override val cafeTodayCheckInCountById: Map<String, Int>
+        get() {
+            val today = Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date.toString()
+            return visits
+                .filter { it.visitedAt.startsWith(today) }
+                .groupingBy { it.cafeId }
+                .eachCount()
+        }
 
-    override val cafeTodayReviewCountById = emptyMap<String, Int>()
+    override val cafeTodayReviewCountById: Map<String, Int>
+        get() {
+            val today = Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date.toString()
+            return reviews
+                .filter { it.createdAt.startsWith(today) }
+                .groupingBy { it.cafeId }
+                .eachCount()
+        }
 
     override val onShiftCastIdsByCafeId = emptyMap<String, Set<String>>()
 
