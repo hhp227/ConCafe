@@ -97,7 +97,7 @@ final class CastViewModel: ObservableObject {
                         recentReviews: feed.recentReviews,
                         isFollowing: feed.isFollowing,
                         isLoggedIn: feed.isLoggedIn,
-                        todayAttendanceStatus: Self.mapAttendanceStatus(feed.todayAttendanceStatus),
+                        todayAttendanceStatus: feed.todayAttendanceStatus,
                         isSelfCast: feed.isSelfCast
                     )
                 } else {
@@ -167,15 +167,6 @@ final class CastViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
-    }
-
-    private static func mapAttendanceStatus(_ status: Shared.CastAttendanceStatus) -> CastAttendanceStatus {
-        switch status {
-        case .upcoming: return .upcoming
-        case .onShift: return .onShift
-        case .completed: return .completed
-        default: return .off
-        }
     }
 
     private enum TaskKey {

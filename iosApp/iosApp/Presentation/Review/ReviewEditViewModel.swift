@@ -75,14 +75,14 @@ final class ReviewEditViewModel: ObservableObject {
         guard let reviewId else { return }
         Task {
             do {
-                let result = try await getReviewUseCase.invoke(reviewId: reviewId)
+                let result = try await self.getReviewUseCase.invoke(reviewId: reviewId)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let review = success.data as? Review {
                     uiState.rating = Int(review.rating)
                     uiState.content = review.content
                     uiState.taggedCastIds = review.taggedCastIds as? [String] ?? []
-                    uiState.photoImageUrl = review.imageUrls.firstObject as? String
+                    uiState.photoImageUrl = review.imageUrls.first as? String
                 } else {
                     uiState.infoMessage = "기존 리뷰를 불러오지 못했습니다."
                 }
