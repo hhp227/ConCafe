@@ -5018,6 +5018,15 @@ class FirestoreConCafeDataSource(
         }
         val parsedCast = parseCastDocument(cafeId = resolvedCafeId, document = castDocument)
             ?: throw NoSuchElementException("cast detail not found")
+        val castFields = castDocument["fields"]?.jsonObject
+        val rawGalleryImages = castFields?.getFirestoreStringList("galleryImages")
+            ?.filter { it.isNotBlank() }
+            .orEmpty()
+        val combinedCastImages = buildList {
+            parsedCast.profileImage?.takeIf { it.isNotBlank() }?.let { add(it) }
+            addAll(rawGalleryImages.filterNot { it == parsedCast.profileImage })
+        }
+        delegate.updateCastImages(parsedCast.id, combinedCastImages)
         val cachedCafe = cafes.firstOrNull { cafe ->
             cafe.id == resolvedCafeId
         }

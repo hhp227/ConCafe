@@ -373,6 +373,12 @@ class FirestoreCacheDataSource :
         return "$prefix-$nextNumber"
     }
 
+    fun updateCastImages(castId: String, images: List<String>) {
+        if (images.isNotEmpty()) {
+            castImagesById[castId] = images
+        }
+    }
+
     override fun castDetail(castId: String): CastDetail? {
         val cast = casts.firstOrNull { it.id == castId } ?: return null
         val cafe = cafes.firstOrNull { it.id == cast.cafeId } ?: return null
