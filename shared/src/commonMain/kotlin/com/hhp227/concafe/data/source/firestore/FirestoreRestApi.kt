@@ -5,7 +5,7 @@ interface FirestoreRestApi {
 
     suspend fun post(path: String, body: String, idToken: String? = null): String
 
-    suspend fun patch(path: String, body: String, idToken: String? = null): String
+    suspend fun patch(path: String, body: String, idToken: String? = null, updateMask: List<String> = emptyList()): String
 
     suspend fun delete(path: String, idToken: String? = null)
 }

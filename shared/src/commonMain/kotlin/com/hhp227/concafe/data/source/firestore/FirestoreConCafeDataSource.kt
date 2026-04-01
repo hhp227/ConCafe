@@ -85,6 +85,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.hhp227.concafe.domain.common.PagedResult
+import io.ktor.client.utils.EmptyContent.status
 
 class FirestoreConCafeDataSource(
     private val config: FirestoreConfig,
@@ -253,11 +254,14 @@ class FirestoreConCafeDataSource(
             )
         )
         runCatching {
-            restApi.patch(path = path, body = body, idToken = idToken)
-        }.recoverCatching {
-            restApi.patch(path = path, body = body, idToken = null)
+            restApi.patch(
+                path = path,
+                body = body,
+                idToken = idToken,
+                updateMask = listOf("isRead", "readAt")
+            )
         }.getOrElse { throwable ->
-            throw IllegalStateException("Failed to mark notification as read", throwable)
+            throw IllegalStateException("Firestore request failed(${status?.value}) at $path: $body")
         }
         val index = notifications.indexOfFirst { notification ->
             notification.userId == userId && notification.id == notificationId
