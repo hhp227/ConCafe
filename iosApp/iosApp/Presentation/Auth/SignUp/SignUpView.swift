@@ -272,7 +272,7 @@ private struct SignUpContentView: View {
                     placeholder: "010-1234-5678",
                     text: Binding(
                         get: { uiState.phone },
-                        set: { onAction(.phoneChanged($0)) }
+                        set: { onAction(.phoneChanged(formatKoreanPhoneNumber($0))) }
                     ),
                     keyboardType: .phonePad
                 )

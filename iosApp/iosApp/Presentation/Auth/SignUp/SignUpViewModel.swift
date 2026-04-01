@@ -13,6 +13,7 @@ import Security
 import UIKit
 import KakaoSDKAuth
 import KakaoSDKUser
+import FirebaseAuth
 import Shared
 
 @MainActor
@@ -33,9 +34,7 @@ class SignUpViewModel: ObservableObject {
 
     private let updateUserProfileUseCase: UpdateUserProfileUseCase
 
-    private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
-
-    private let verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase
+    private var phoneVerificationID: String?
 
     private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 
@@ -126,30 +125,58 @@ class SignUpViewModel: ObservableObject {
             return
         }
 
-        uiState.errorMessage = nil
-        let result = requestPhoneVerificationCodeUseCase.invoke(phone: trimmedPhone)
-        if let success = result as? AppResultSuccess<AnyObject>,
-           let message = success.data as? String {
-            uiState.hasRequestedVerification = true
-            uiState.infoMessage = message
-        } else {
-            uiState.hasRequestedVerification = false
-            uiState.errorMessage = "휴대폰 번호를 다시 확인해주세요."
-            uiState.infoMessage = nil
+        uiState.isLoading = true
+        clearMessages()
+
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(trimmedPhone, uiDelegate: nil)
+                phoneVerificationID = verificationID
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = true
+                uiState.infoMessage = "인증번호가 전송되었습니다."
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = false
+                uiState.errorMessage = "휴대폰 번호를 다시 확인해주세요."
+                uiState.infoMessage = nil
+            }
         }
     }
 
     private func verifyCode() {
-        let result = verifyPhoneVerificationCodeUseCase.invoke(code: uiState.verificationCode)
-        if result is AppResultSuccess<AnyObject> {
-            uiState.hasRequestedVerification = true
-            uiState.isPhoneVerified = true
-            uiState.errorMessage = nil
-            uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
-        } else {
-            uiState.isPhoneVerified = false
-            uiState.errorMessage = "인증번호가 일치하지 않습니다."
+        guard let verificationID = phoneVerificationID else {
+            uiState.errorMessage = "인증번호 요청을 먼저 해주세요."
             uiState.infoMessage = nil
+            return
+        }
+
+        uiState.isLoading = true
+        clearMessages()
+
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let credential = PhoneAuthProvider.provider().credential(
+                    withVerificationID: verificationID,
+                    verificationCode: uiState.verificationCode
+                )
+                try await Auth.auth().signIn(with: credential)
+                try Auth.auth().signOut()
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = true
+                uiState.isPhoneVerified = true
+                uiState.errorMessage = nil
+                uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.isPhoneVerified = false
+                uiState.errorMessage = "인증번호가 일치하지 않습니다."
+                uiState.infoMessage = nil
+            }
         }
     }
 
@@ -705,8 +732,6 @@ class SignUpViewModel: ObservableObject {
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
         self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
         self.updateUserProfileUseCase = updateUserProfileUseCase
-        self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
-        self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         loadCafeOptions()
     }

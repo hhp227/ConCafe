@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.formatKoreanPhoneNumber
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
@@ -468,7 +469,7 @@ private fun PhoneVerificationSection(
                     label = "휴대폰 번호",
                     placeholder = "010-1234-5678",
                     keyboardType = KeyboardType.Phone,
-                    onValueChange = { onAction(SignUpAction.ChangePhone(it)) }
+                    onValueChange = { onAction(SignUpAction.ChangePhone(formatKoreanPhoneNumber(it))) }
                 )
             }
             Button(

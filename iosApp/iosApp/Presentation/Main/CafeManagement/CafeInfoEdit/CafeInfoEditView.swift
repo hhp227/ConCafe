@@ -357,8 +357,9 @@ private struct CafeInfoEditContentView: View {
                 label: "연락처",
                 text: Binding(
                     get: { uiState.contactNumber },
-                    set: { onAction(.changeContactNumber($0)) }
-                )
+                    set: { onAction(.changeContactNumber(formatKoreanPhoneNumber($0))) }
+                ),
+                keyboardType: .phonePad
             )
         }
     }
