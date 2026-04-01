@@ -146,6 +146,7 @@ private fun CastContentScreen(
                         CastSummarySection(
                             detail = uiState.detail,
                             isFollowing = uiState.isFollowing,
+                            isSelfCast = uiState.isSelfCast,
                             onAction = onAction
                         )
                     }
@@ -337,6 +338,7 @@ private fun resolveHeroImages(
 private fun CastSummarySection(
     detail: CastDetail,
     isFollowing: Boolean,
+    isSelfCast: Boolean,
     onAction: (CastAction) -> Unit
 ) {
     Surface(color = Color.White) {
@@ -394,6 +396,7 @@ private fun CastSummarySection(
                 }
                 Button(
                     onClick = { onAction(CastAction.ClickFollow) },
+                    enabled = !isSelfCast,
                     colors = if (isFollowing) {
                         ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFF1E3EB),

@@ -5,5 +5,6 @@ data class CastDetailFeed(
     val recentReviews: List<CastRecentReview>,
     val isFollowing: Boolean,
     val isLoggedIn: Boolean,
-    val todayAttendanceStatus: CastAttendanceStatus = CastAttendanceStatus.OFF
+    val todayAttendanceStatus: CastAttendanceStatus = CastAttendanceStatus.OFF,
+    val isSelfCast: Boolean = false
 )

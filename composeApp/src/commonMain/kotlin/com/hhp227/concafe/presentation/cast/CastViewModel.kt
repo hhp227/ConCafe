@@ -86,7 +86,8 @@ class CastViewModel(
                         recentReviews = result.data.recentReviews,
                         isFollowing = result.data.isFollowing,
                         isLoggedIn = result.data.isLoggedIn,
-                        todayAttendanceStatus = result.data.todayAttendanceStatus
+                        todayAttendanceStatus = result.data.todayAttendanceStatus,
+                        isSelfCast = result.data.isSelfCast
                     )
                 }
                 is AppResult.Failure -> {

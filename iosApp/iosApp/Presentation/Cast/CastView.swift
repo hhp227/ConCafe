@@ -72,7 +72,12 @@ private struct CastContentView: View {
                 offsetReader
                 LazyVStack(spacing: 18) {
                     CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
-                    CastSummarySection(detail: detail, isFollowing: uiState.isFollowing, onAction: onAction)
+                    CastSummarySection(
+                        detail: detail,
+                        isFollowing: uiState.isFollowing,
+                        isSelfCast: uiState.isSelfCast,
+                        onAction: onAction
+                    )
                         .background(summaryOffsetReader)
                     CastTodaySection(detail: detail)
                     CastScheduleSection(detail: detail)
@@ -229,6 +234,8 @@ private struct CastSummarySection: View {
 
     let isFollowing: Bool
 
+    let isSelfCast: Bool
+
     let onAction: (CastAction) -> Void
 
     var body: some View {
@@ -268,6 +275,8 @@ private struct CastSummarySection: View {
                                 .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
                         )
                 }
+                .disabled(isSelfCast)
+                .opacity(isSelfCast ? 0.5 : 1.0)
             }
             HStack(spacing: 18) {
                 statItem(systemName: "person.2.fill", label: "팔로워", value: "\(detail.cast.followerCount)명")

@@ -11,7 +11,8 @@ data class CastUiState(
     val recentReviews: List<CastRecentReview> = emptyList(),
     val isFollowing: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val todayAttendanceStatus: CastAttendanceStatus = CastAttendanceStatus.OFF
+    val todayAttendanceStatus: CastAttendanceStatus = CastAttendanceStatus.OFF,
+    val isSelfCast: Boolean = false
 ) {
     companion object {
         fun empty(): CastUiState {

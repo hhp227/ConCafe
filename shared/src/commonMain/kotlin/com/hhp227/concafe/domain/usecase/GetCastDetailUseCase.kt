@@ -2,22 +2,14 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CastAttendanceStatus
-import com.hhp227.concafe.domain.model.CastDetail
-import com.hhp227.concafe.domain.model.CastDetailFeed
-import com.hhp227.concafe.domain.model.CastRecentReview
-import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.*
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 
 class GetCastDetailUseCase(
     private val authRepository: AuthRepository,
@@ -48,7 +40,11 @@ class GetCastDetailUseCase(
                 .flatMap { review -> review.taggedCastIds }
                 .distinct()
             val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            val todayDate = now.date.toString()
+            val today = now.date
+            val weekStart = today.toWeekStart()
+            val weekEnd = weekStart.plus(DatePeriod(days = 6))
+            val todayDate = today.toString()
+            val isSelfCast = currentUser != null && detail.cast.linkedUserId == currentUser.id
             val secondaryLoaded = coroutineScope {
                 val taggedCastNamesByIdDeferred = async {
                     castRepository.getCastsByIds(taggedCastIds)
@@ -75,7 +71,12 @@ class GetCastDetailUseCase(
             val isFollowing = secondaryLoaded.second
             val todayScheduleStatuses = secondaryLoaded.third
             val todayStatus = todayScheduleStatuses[todayDate]
-            val todaySchedule = detail.schedule.firstOrNull { it.date == todayDate }
+            val weekStartStr = weekStart.toString()
+            val weekEndStr = weekEnd.toString()
+            val weeklyDetail = detail.copy(
+                schedule = detail.schedule.filter { it.date >= weekStartStr && it.date <= weekEndStr }
+            )
+            val todaySchedule = weeklyDetail.schedule.firstOrNull { it.date == todayDate }
             val todayAttendanceStatus = computeAttendanceStatus(todayStatus, todaySchedule?.startTime, todaySchedule?.endTime, now.hour, now.minute)
             val reviewUserIds = taggedReviews
                 .map { review -> review.userId }
@@ -109,11 +110,12 @@ class GetCastDetailUseCase(
             }
             AppResult.Success(
                 CastDetailFeed(
-                    detail = detail,
+                    detail = weeklyDetail,
                     recentReviews = recentReviews,
                     isFollowing = isFollowing,
                     isLoggedIn = currentUser != null,
-                    todayAttendanceStatus = todayAttendanceStatus
+                    todayAttendanceStatus = todayAttendanceStatus,
+                    isSelfCast = isSelfCast
                 )
             )
         } catch (e: NoSuchElementException) {
@@ -139,6 +141,11 @@ class GetCastDetailUseCase(
 
         return detail.copy(images = normalizedImages)
     }
+}
+
+private fun LocalDate.toWeekStart(): LocalDate {
+    val daysFromSunday = dayOfWeek.isoDayNumber % 7
+    return minus(DatePeriod(days = daysFromSunday))
 }
 
 private fun computeAttendanceStatus(

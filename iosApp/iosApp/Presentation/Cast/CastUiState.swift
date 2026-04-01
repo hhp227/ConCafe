@@ -23,6 +23,7 @@ struct CastUiState {
     var isFollowing: Bool
     var isLoggedIn: Bool
     var todayAttendanceStatus: CastAttendanceStatus
+    var isSelfCast: Bool
 
     static let empty = CastUiState(
         isLoading: false,
@@ -31,6 +32,7 @@ struct CastUiState {
         recentReviews: [],
         isFollowing: false,
         isLoggedIn: false,
-        todayAttendanceStatus: .off
+        todayAttendanceStatus: .off,
+        isSelfCast: false
     )
 }
