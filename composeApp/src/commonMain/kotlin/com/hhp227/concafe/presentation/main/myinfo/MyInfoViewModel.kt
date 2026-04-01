@@ -12,15 +12,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.ScheduleManagementEvent
 import com.hhp227.concafe.domain.event.UserEvent
 import com.hhp227.concafe.domain.event.VisitEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
 import com.hhp227.concafe.domain.event.publisher.UserEventPublisher
 import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
@@ -35,7 +39,8 @@ class MyInfoViewModel(
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher,
     private val visitEventPublisher: VisitEventPublisher,
-    private val userEventPublisher: UserEventPublisher
+    private val userEventPublisher: UserEventPublisher,
+    private val scheduleManagementEventPublisher: ScheduleManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState = _uiState.asStateFlow()
@@ -123,17 +128,6 @@ class MyInfoViewModel(
         }
     }
 
-    private fun observeUserEvent() {
-        jobs[TaskKey.OBSERVE_USER_EVENT]?.cancel()
-        jobs[TaskKey.OBSERVE_USER_EVENT] = viewModelScope.launch {
-            userEventPublisher.events.collectLatest { event ->
-                when (event) {
-                    is UserEvent.ProfileUpdated -> patchUser(event.user)
-                }
-            }
-        }
-    }
-
     private fun observeCastEvent() {
         jobs[TaskKey.OBSERVE_CAST_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
@@ -153,6 +147,53 @@ class MyInfoViewModel(
                 }
             }
         }
+    }
+
+    private fun observeUserEvent() {
+        jobs[TaskKey.OBSERVE_USER_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_USER_EVENT] = viewModelScope.launch {
+            userEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is UserEvent.ProfileUpdated -> patchUser(event.user)
+                }
+            }
+        }
+    }
+
+    private fun observeScheduleManagementEvent() {
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_SCHEDULE_EVENT] = viewModelScope.launch {
+            scheduleManagementEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is ScheduleManagementEvent.Updated -> patchCastSchedule(event)
+                }
+            }
+        }
+    }
+
+    private fun patchCastSchedule(event: ScheduleManagementEvent.Updated) {
+        val detail = _uiState.value.castDetail ?: return
+        if (detail.cast.id != event.castId) return
+        val updatedSchedule = when (event.status) {
+            CastScheduleStatus.WORK -> {
+                val startTime = event.startTime ?: return
+                val endTime = event.endTime ?: return
+                val existing = detail.schedule.firstOrNull { it.date == event.date }
+                val newEntry = CastSchedule(
+                    id = existing?.id ?: "schedule-${event.castId}-${event.date.replace("-", "")}",
+                    castId = event.castId,
+                    cafeId = detail.cafe.id,
+                    date = event.date,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+
+                detail.schedule.filterNot { it.date == event.date } + newEntry
+            }
+            CastScheduleStatus.OFF,
+            CastScheduleStatus.VACATION -> detail.schedule.filterNot { it.date == event.date }
+        }
+        _uiState.update { it.copy(castDetail = detail.copy(schedule = updatedSchedule)) }
     }
 
     private fun patchCafe(cafe: Cafe) {
@@ -241,6 +282,7 @@ class MyInfoViewModel(
         if (delta == 0) return
         _uiState.update { state ->
             val summary = state.summary
+
             if (summary == null) {
                 state
             } else {
@@ -313,6 +355,7 @@ class MyInfoViewModel(
         observeCastEvent()
         observeVisitEvent()
         observeUserEvent()
+        observeScheduleManagementEvent()
     }
 
     override fun onCleared() {
@@ -326,7 +369,8 @@ class MyInfoViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,
-        OBSERVE_USER_EVENT
+        OBSERVE_USER_EVENT,
+        OBSERVE_SCHEDULE_EVENT
     }
 
     private fun normalizeCafes(items: List<Cafe>, maxCount: Int): List<Cafe> {

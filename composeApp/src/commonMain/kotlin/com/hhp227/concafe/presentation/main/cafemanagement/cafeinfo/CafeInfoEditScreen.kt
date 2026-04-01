@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.PhoneNumberTextField
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
@@ -359,7 +360,7 @@ private fun CafeInfoEditContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF7E737B)
                             )
-                            CafeInfoTextField(
+                            PhoneNumberTextField(
                                 label = "연락처",
                                 value = uiState.contactNumber,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeContactNumber(it)) }

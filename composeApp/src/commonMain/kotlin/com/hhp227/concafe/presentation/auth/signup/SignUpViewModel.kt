@@ -14,12 +14,10 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
-import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
-import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
 
@@ -27,8 +25,7 @@ class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
     private val signUpUseCase: SignUpUseCase,
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
-    private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
-    private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
+    private val phoneAuthProvider: PhoneAuthProvider,
     private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
     private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
@@ -165,47 +162,57 @@ class SignUpViewModel(
             _uiState.update { it.copy(errorMessage = "휴대폰 번호를 입력해주세요.", infoMessage = null) }
             return
         }
-        when (val result = requestPhoneVerificationCodeUseCase.invoke(phone)) {
-            is AppResult.Success -> {
-                _uiState.update {
-                    it.copy(
-                        hasRequestedVerification = true,
-                        errorMessage = null,
-                        infoMessage = result.data
-                    )
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
+        viewModelScope.launch {
+            when (phoneAuthProvider.sendCode(phone)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            hasRequestedVerification = true,
+                            errorMessage = null,
+                            infoMessage = "인증번호가 전송되었습니다."
+                        )
+                    }
                 }
-            }
-            is AppResult.Failure -> {
-                _uiState.update {
-                    it.copy(
-                        hasRequestedVerification = false,
-                        errorMessage = "휴대폰 번호를 다시 확인해주세요.",
-                        infoMessage = null
-                    )
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            hasRequestedVerification = false,
+                            errorMessage = "휴대폰 번호를 다시 확인해주세요.",
+                            infoMessage = null
+                        )
+                    }
                 }
             }
         }
     }
 
     private fun verifyCode() {
-        when (verifyPhoneVerificationCodeUseCase.invoke(uiState.value.verificationCode)) {
-            is AppResult.Success -> {
-                _uiState.update {
-                    it.copy(
-                        isPhoneVerified = true,
-                        hasRequestedVerification = true,
-                        errorMessage = null,
-                        infoMessage = "휴대폰 인증이 완료되었습니다."
-                    )
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
+        viewModelScope.launch {
+            when (phoneAuthProvider.verifyCode(uiState.value.verificationCode)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isPhoneVerified = true,
+                            hasRequestedVerification = true,
+                            errorMessage = null,
+                            infoMessage = "휴대폰 인증이 완료되었습니다."
+                        )
+                    }
                 }
-            }
-            is AppResult.Failure -> {
-                _uiState.update {
-                    it.copy(
-                        isPhoneVerified = false,
-                        errorMessage = "인증번호가 일치하지 않습니다.",
-                        infoMessage = null
-                    )
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isPhoneVerified = false,
+                            errorMessage = "인증번호가 일치하지 않습니다.",
+                            infoMessage = null
+                        )
+                    }
                 }
             }
         }

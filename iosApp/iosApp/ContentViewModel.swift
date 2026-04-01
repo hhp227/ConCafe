@@ -18,6 +18,8 @@ final class ContentViewModel: ObservableObject {
 
     private let registerPushTokenUseCase: RegisterPushTokenUseCase
 
+    private let getNotificationFeedUseCase: GetNotificationFeedUseCase
+
     @Published private(set) var uiState = ContentUiState()
 
     let event = PassthroughSubject<ContentEvent, Never>()
@@ -29,14 +31,10 @@ final class ContentViewModel: ObservableObject {
         tasks[.observeNetworkAlert] = Task {
             do {
                 for try await networkAlertState in asyncSequence(for: observeNetworkAlertStateUseCase.invoke()) {
-                    await MainActor.run {
-                        uiState.networkAlertState = networkAlertState
-                    }
+                    uiState.networkAlertState = networkAlertState
                 }
             } catch {
-                await MainActor.run {
-                    uiState.networkAlertState = nil
-                }
+                uiState.networkAlertState = nil
             }
         }
     }
@@ -45,23 +43,58 @@ final class ContentViewModel: ObservableObject {
         tasks[.observeCurrentUser]?.cancel()
         tasks[.observeCurrentUser] = Task {
             do {
-                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    event.send(.syncPushToken)
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    if user != nil {
+                        event.send(.syncPushToken)
+                        startUnreadNotificationPolling()
+                    } else {
+                        stopUnreadNotificationPolling()
+                        uiState.hasUnreadNotifications = false
+                    }
                 }
-            } catch {
+            } catch {}
+        }
+    }
+
+    private func refreshUnreadNotificationCount() async {
+        do {
+            let result = try await getNotificationFeedUseCase.invoke(pageSize: 20)
+
+            if let success = result as? AppResultSuccess<AnyObject>,
+               let feed = success.data as? NotificationFeed {
+                let hasUnread = feed.unreadCount > 0
+
+                if uiState.hasUnreadNotifications != hasUnread {
+                    uiState.hasUnreadNotifications = hasUnread
+                }
+            }
+        } catch {}
+    }
+
+    private func startUnreadNotificationPolling() {
+        tasks[.unreadNotificationPoll]?.cancel()
+        tasks[.unreadNotificationPoll] = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.refreshUnreadNotificationCount()
+                do {
+                    try await Task.sleep(nanoseconds: unreadNotificationPollIntervalNanoseconds)
+                } catch {
+                    break
+                }
             }
         }
     }
 
+    private func stopUnreadNotificationPolling() {
+        tasks[.unreadNotificationPoll]?.cancel()
+        tasks.removeValue(forKey: .unreadNotificationPoll)
+    }
+
     private func syncPushToken(_ token: String) {
         let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if normalizedToken.isEmpty {
-            return
-        } else {
-            Task {
-                _ = try? await registerPushTokenUseCase.invoke(platform: "IOS", token: normalizedToken)
-            }
+        if normalizedToken.isEmpty { return }
+        Task {
+            _ = try? await registerPushTokenUseCase.invoke(platform: "IOS", token: normalizedToken)
         }
     }
 
@@ -69,17 +102,21 @@ final class ContentViewModel: ObservableObject {
         switch action {
         case .syncPushToken(let token):
             syncPushToken(token)
+        case .refreshUnreadNotificationCount:
+            Task { await refreshUnreadNotificationCount() }
         }
     }
 
     init(
         observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase = KoinInitializerKt.resolveObserveNetworkAlertStateUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase()
+        registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase(),
+        getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase()
     ) {
         self.observeNetworkAlertStateUseCase = observeNetworkAlertStateUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.registerPushTokenUseCase = registerPushTokenUseCase
+        self.getNotificationFeedUseCase = getNotificationFeedUseCase
 
         observeNetworkAlertState()
         observeSessionAndSyncPushToken()
@@ -93,5 +130,8 @@ final class ContentViewModel: ObservableObject {
     private enum TaskKey {
         case observeNetworkAlert
         case observeCurrentUser
+        case unreadNotificationPoll
     }
 }
+
+private let unreadNotificationPollIntervalNanoseconds: UInt64 = 30_000_000_000

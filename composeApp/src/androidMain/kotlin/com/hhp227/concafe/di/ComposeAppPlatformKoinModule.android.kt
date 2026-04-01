@@ -8,6 +8,8 @@ import com.hhp227.concafe.presentation.auth.signin.AndroidGoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.AndroidKakaoIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signup.AndroidPhoneAuthProvider
+import com.hhp227.concafe.presentation.auth.signup.PhoneAuthProvider
 import com.hhp227.concafe.presentation.main.checkin.AndroidCheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import org.koin.core.module.Module
@@ -45,6 +47,10 @@ internal fun androidPlatformModules(application: Application): List<Module> {
                     context = get(),
                     activityProvider = currentActivityProvider::getCurrentActivity
                 )
+            }
+            single<PhoneAuthProvider> {
+                val currentActivityProvider = get<AndroidCurrentActivityProvider>()
+                AndroidPhoneAuthProvider(activityProvider = currentActivityProvider::getCurrentActivity)
             }
         }
     )

@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -9,16 +10,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.hhp227.concafe.domain.model.MainNavigationTab
-import kotlinx.coroutines.flow.collectLatest
-import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.resetpassword.ResetPasswordScreen
+import com.hhp227.concafe.presentation.auth.signin.SignInScreen
 import com.hhp227.concafe.presentation.auth.signup.SignUpScreen
-import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
-import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
@@ -28,16 +28,19 @@ import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEve
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
+import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
 import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScreen
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkScreen
-import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NavigationScreen(
     navController: NavHostController = rememberNavController(),
-    viewModel: NavigationViewModel = viewModel()
+    viewModel: NavigationViewModel = viewModel(),
+    hasUnreadNotifications: Boolean = false,
+    onRefreshUnreadNotificationCount: () -> Unit = {}
 ) {
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
@@ -51,6 +54,9 @@ fun NavigationScreen(
                 }
                 is NavigationEvent.NavigateBack -> {
                     navController.popBackStack()
+                }
+                NavigationEvent.RefreshUnreadNotificationCount -> {
+                    onRefreshUnreadNotificationCount()
                 }
             }
         }
@@ -73,6 +79,7 @@ fun NavigationScreen(
 
             MainScreen(
                 initialTab = mainRoute.initialTab,
+                hasUnreadNotifications = hasUnreadNotifications,
                 onNavigationAction = viewModel::onAction
             )
         }
@@ -182,6 +189,7 @@ fun NavigationScreen(
 
             ReviewEditScreen(
                 cafeId = reviewEditRoute.cafeId,
+                reviewId = reviewEditRoute.reviewId,
                 onNavigationAction = viewModel::onAction
             )
         }
@@ -198,34 +206,22 @@ fun NavigationScreen(
             ResetPasswordScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Notification> {
-            NotificationScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            NotificationScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Settings> {
-            SettingsScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            SettingsScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.NotificationSettings> {
-            NotificationSettingsScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            NotificationSettingsScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.AccountSettings> {
-            AccountSettingsScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            AccountSettingsScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Inquiry> {
-            InquiryLinkScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            InquiryLinkScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.ChangePassword> {
-            ChangePasswordScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            ChangePasswordScreen(onNavigationAction = viewModel::onAction)
         }
     }
 }

@@ -117,6 +117,7 @@ class GetCafeDetailUseCase(
 
                 CafeDetailReview(
                     id = review.id,
+                    userId = review.userId,
                     userNickname = userNickname,
                     rating = review.rating,
                     content = review.content,
@@ -136,7 +137,8 @@ class GetCafeDetailUseCase(
                     canLoadMoreReviews = reviewPage.hasNext,
                     isFavorite = isFavorite,
                     isLoggedIn = currentUser != null,
-                    isVisitVerified = isVisitVerified
+                    isVisitVerified = isVisitVerified,
+                    currentUserId = currentUser?.id
                 )
             )
         } catch (e: NoSuchElementException) {

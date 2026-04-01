@@ -66,6 +66,7 @@ type CafeRegistrationClaimLike = {
   status?: unknown;
   requestedAt?: unknown;
   imageUrl?: unknown;
+  approvedCafeId?: unknown;
 };
 
 type CafeOwnerClaimLike = {
@@ -297,10 +298,7 @@ function isApprovedStatus(status: string | null): boolean {
   if (status == null) {
     return false;
   }
-  if (status === "APPROVED" || status === "승인 완료") {
-    return true;
-  }
-  return status.includes("승인");
+  return status === "APPROVED" || status === "승인 완료";
 }
 
 function isRejectedStatus(status: string | null): boolean {
@@ -2152,6 +2150,7 @@ export const onCafeRegistrationClaimWrittenRequesterApprovedNotification = onDoc
     }
     const requesterUserId = asNonBlankString(afterData.userId);
     const cafeName = asNonBlankString(afterData.cafeName) ?? "카페";
+    const cafeId = asNonBlankString(afterData.approvedCafeId) ?? claimId;
     const createdAt = new Date().toISOString();
 
     await createApprovalResultNotification(
@@ -2160,7 +2159,7 @@ export const onCafeRegistrationClaimWrittenRequesterApprovedNotification = onDoc
       "CAFE_APPROVED",
       "카페 등록 승인 완료",
       `${cafeName} 등록 요청이 승인되었어요.`,
-      claimId,
+      cafeId,
       createdAt
     );
     logger.info("Created requester approved notification for cafe registration claim.", {
@@ -2810,6 +2809,59 @@ export const onStampWrittenSyncUserStampStats = onDocumentWritten(
   }
 );
 
+export const onFanAnnouncementRequestCreatedSendPushNotifications = onDocumentWritten(
+  "fanAnnouncementRequests/{requestId}",
+  async (event) => {
+    const requestId = asNonBlankString(event.params.requestId);
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
+
+    if (requestId == null || beforeData != null || afterData == null) {
+      return;
+    }
+    const castId = asNonBlankString(afterData.castId);
+    const cafeId = asNonBlankString(afterData.cafeId);
+    const senderUserId = asNonBlankString(afterData.userId);
+    const title = asNonBlankString(afterData.title);
+    const body = asNonBlankString(afterData.body);
+    const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+
+    if (castId == null || cafeId == null || title == null || body == null) {
+      return;
+    }
+    const followSnapshot = await db()
+      .collection("castFollows")
+      .where("castId", "==", castId)
+      .get();
+    const followerUserIds = followSnapshot.docs
+      .map((doc) => asNonBlankString(doc.data()?.userId))
+      .filter((id): id is string => id != null && id !== senderUserId);
+
+    if (followerUserIds.length === 0) {
+      logger.info("No followers to notify for fan announcement.", {requestId, castId});
+      return;
+    }
+    const tasks = followerUserIds.map(async (userId) => {
+      await createUserNotification(
+        userId,
+        `fan_announcement_${requestId}_${userId}`,
+        "FAN_ANNOUNCEMENT",
+        title,
+        body,
+        castId,
+        createdAt
+      );
+    });
+
+    await Promise.all(tasks);
+    logger.info("Sent fan announcement notifications.", {
+      requestId: requestId,
+      castId: castId,
+      recipientCount: followerUserIds.length,
+    });
+  }
+);
+
 export const onCafeWrittenMarkRankingDirty = onDocumentWritten(
   "cafes/{cafeId}",
   async (event) => {
@@ -2858,6 +2910,46 @@ export const onScheduleCreateBirthdayNotifications = onSchedule(
     await syncBirthdayNotifications();
     logger.info("Synced birthday notifications.", {
       birthdayKey: kstBirthdayKey(kstNow()),
+    });
+  }
+);
+
+export const onScheduleDeleteExpiredCastSchedules = onSchedule(
+  {
+    schedule: "every monday 03:00",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const firestore = db();
+    const now = kstNow();
+    // 지난 주 일요일(현재 주 시작 - 1일) 이전 데이터를 삭제한다
+    const cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffDateKey = kstDateKey(cutoffDate);
+
+    const snapshot = await firestore
+      .collection("castSchedules")
+      .where("date", "<", cutoffDateKey)
+      .get();
+
+    if (snapshot.empty) {
+      logger.info("onScheduleDeleteExpiredCastSchedules: no expired schedules found.");
+      return;
+    }
+
+    const BATCH_SIZE = 500;
+    let deletedCount = 0;
+
+    for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+      chunk.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      deletedCount += chunk.length;
+    }
+
+    logger.info("onScheduleDeleteExpiredCastSchedules completed.", {
+      cutoffDate: cutoffDateKey,
+      deletedCount,
     });
   }
 );

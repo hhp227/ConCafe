@@ -1,6 +1,8 @@
 package com.hhp227.concafe.presentation.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -9,8 +11,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -33,6 +38,7 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 @Composable
 fun MainScreen(
     initialTab: String? = null,
+    hasUnreadNotifications: Boolean = false,
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -48,6 +54,9 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
+    }
     LaunchedEffect(initialTab) {
         if (initialTab != null) {
             viewModel.onAction(MainAction.SelectTab(initialTab))
@@ -67,10 +76,28 @@ fun MainScreen(
                             }
                         }
                     ) {
-                        Icon(
-                            imageVector = if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) Icons.Default.Settings else Icons.Default.Notifications,
-                            contentDescription = if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) "설정" else "알림"
-                        )
+                        if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "설정"
+                            )
+                        } else {
+                            Box {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "알림"
+                                )
+                                if (hasUnreadNotifications) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = 2.dp, y = (-2).dp)
+                                            .background(Color.Red, shape = CircleShape)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             )

@@ -50,11 +50,12 @@ struct ReviewEditView: View {
 
     init(
         cafeId: String? = nil,
+        reviewId: String? = nil,
         onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
     ) {
         self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
-        _viewModel = StateObject(wrappedValue: ReviewEditViewModel(cafeId: cafeId))
+        _viewModel = StateObject(wrappedValue: ReviewEditViewModel(cafeId: cafeId, reviewId: reviewId))
     }
 }
 

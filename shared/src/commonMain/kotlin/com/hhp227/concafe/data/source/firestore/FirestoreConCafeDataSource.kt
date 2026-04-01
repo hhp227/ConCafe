@@ -397,13 +397,8 @@ class FirestoreConCafeDataSource(
                 "createdAt" to firestoreString(now)
             )
         )
-        runCatching {
-            restApi.patch(path = path, body = bodyPayload, idToken = idToken)
-        }.recoverCatching {
-            restApi.patch(path = path, body = bodyPayload, idToken = null)
-        }.getOrElse { throwable ->
-            throw IllegalStateException("Failed to send fan announcement request", throwable)
-        }
+
+        restApi.patch(path = path, body = bodyPayload, idToken = idToken)
     }
 
     suspend fun refreshCafeDetail(cafeId: String) {
@@ -1251,6 +1246,12 @@ class FirestoreConCafeDataSource(
         }.onFailure {
             visits.removeAll { visit -> visit.id == visitId }
         }
+    }
+
+    suspend fun getReviewRemote(reviewId: String): Review {
+        val idToken = tokenProvider.getIdToken()
+        return resolveReviewById(reviewId = reviewId, idToken = idToken)
+            ?: throw NoSuchElementException("review not found: $reviewId")
     }
 
     suspend fun createReviewRemote(

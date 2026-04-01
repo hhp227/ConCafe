@@ -24,6 +24,8 @@ final class MyInfoViewModel: ObservableObject {
 
     private let userEventPublisher: UserEventPublisher
 
+    private let scheduleManagementEventPublisher: ScheduleManagementEventPublisher
+
     @Published private(set) var uiState = MyInfoUiState(
         isLoading: true,
         errorMessage: nil,
@@ -184,6 +186,48 @@ final class MyInfoViewModel: ObservableObject {
                 print("Error: \(error)")
             }
         }
+    }
+
+    private func observeScheduleManagementEvent() {
+        tasks[.scheduleManagementEvent]?.cancel()
+        tasks[.scheduleManagementEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    if let updated = event as? Shared.ScheduleManagementEvent.Updated {
+                        self.patchCastSchedule(updated)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func patchCastSchedule(_ event: Shared.ScheduleManagementEvent.Updated) {
+        guard let detail = uiState.castDetail, detail.cast.id == event.castId else { return }
+        let filteredSchedule = detail.schedule.filter { $0.date != event.date }
+        let updatedSchedule: [CastSchedule]
+        if event.status == .work, let startTime = event.startTime, let endTime = event.endTime {
+            let existing = detail.schedule.first { $0.date == event.date }
+            let newEntry = CastSchedule(
+                id: existing?.id ?? "schedule-\(event.castId)-\(event.date.replacingOccurrences(of: "-", with: ""))",
+                castId: event.castId,
+                cafeId: detail.cafe.id,
+                date: event.date,
+                startTime: startTime,
+                endTime: endTime
+            )
+            updatedSchedule = filteredSchedule + [newEntry]
+        } else {
+            updatedSchedule = filteredSchedule
+        }
+        uiState.castDetail = CastDetail(
+            cast: detail.cast,
+            cafe: detail.cafe,
+            images: detail.images,
+            schedule: updatedSchedule,
+            visitCertificationCount: detail.visitCertificationCount
+        )
     }
 
     private func patchCafe(_ cafe: Cafe) {
@@ -365,7 +409,8 @@ final class MyInfoViewModel: ObservableObject {
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
         visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher(),
-        userEventPublisher: UserEventPublisher = KoinInitializerKt.resolveUserEventPublisher()
+        userEventPublisher: UserEventPublisher = KoinInitializerKt.resolveUserEventPublisher(),
+        scheduleManagementEventPublisher: ScheduleManagementEventPublisher = KoinInitializerKt.resolveScheduleManagementEventPublisher()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
@@ -373,6 +418,7 @@ final class MyInfoViewModel: ObservableObject {
         self.castEventPublisher = castEventPublisher
         self.visitEventPublisher = visitEventPublisher
         self.userEventPublisher = userEventPublisher
+        self.scheduleManagementEventPublisher = scheduleManagementEventPublisher
 
         loadMyInfo()
         observeSession()
@@ -380,6 +426,7 @@ final class MyInfoViewModel: ObservableObject {
         observeCastEvent()
         observeVisitEvent()
         observeUserEvent()
+        observeScheduleManagementEvent()
     }
 
     deinit {
@@ -394,6 +441,7 @@ final class MyInfoViewModel: ObservableObject {
         case castEvent
         case visitEvent
         case userEvent
+        case scheduleManagementEvent
     }
 
     private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {

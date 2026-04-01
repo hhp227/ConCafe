@@ -20,7 +20,7 @@ sealed interface NavigationAction {
     data class NavigateToSchedule(val castId: String? = null) : NavigationAction
     data class NavigateToMenuGoods(val id: String) : NavigationAction
     data class NavigateToMenuGoodsEdit(val cafeId: String, val itemId: String? = null) : NavigationAction
-    data class NavigateToReviewEdit(val cafeId: String) : NavigationAction
+    data class NavigateToReviewEdit(val cafeId: String, val reviewId: String? = null) : NavigationAction
     data object NavigateToSignIn : NavigationAction
     data object NavigateToSignUp : NavigationAction
     data object NavigateToResetPassword : NavigationAction
@@ -31,4 +31,5 @@ sealed interface NavigationAction {
     data object NavigateToInquiry : NavigationAction
     data object NavigateToChangePassword : NavigationAction
     data object NavigateBack : NavigationAction
+    data object RefreshUnreadNotificationCount : NavigationAction
 }

@@ -9,4 +9,5 @@ import Foundation
 
 enum ContentAction {
     case syncPushToken(token: String)
+    case refreshUnreadNotificationCount
 }

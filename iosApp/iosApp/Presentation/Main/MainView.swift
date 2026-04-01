@@ -11,6 +11,8 @@ import UIKit
 struct MainView: View {
     let initialTab: String?
 
+    let hasUnreadNotifications: Bool
+
     @StateObject private var viewModel = MainViewModel()
 
     let onNavigationAction: (NavigationAction) -> Void
@@ -49,19 +51,33 @@ struct MainView: View {
                         onNavigationAction(.navigateToNotification)
                     }
                 } label: {
-                    Image(systemName: selectedTab == "myinfo" && viewModel.uiState.currentUser != nil ? "gearshape" : "bell")
+                    if selectedTab == "myinfo" && viewModel.uiState.currentUser != nil {
+                        Image(systemName: "gearshape")
+                            .accessibilityLabel("설정")
+                    } else {
+                        // [변경] contentViewModel.uiState.hasUnreadNotifications → hasUnreadNotifications 파라미터 직접 사용
+                        Image(systemName: "bell")
+                            .overlay(alignment: .topTrailing) {
+                                if hasUnreadNotifications {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 8, height: 8)
+                                        .offset(x: 2, y: -2)
+                                }
+                            }
+                            .accessibilityLabel("알림")
+                    }
                 }
-                .accessibilityLabel(selectedTab == "myinfo" && viewModel.uiState.currentUser != nil ? "설정" : "알림")
             }
         }
         .onAppear {
             if let initialTab = initialTab, !initialTab.isEmpty {
                 selectedTab = initialTab
-
                 viewModel.onAction(.selectTab(route: initialTab))
             } else {
                 selectedTab = viewModel.uiState.selectedTab
             }
+            onNavigationAction(.refreshUnreadNotificationCount)
         }
         .onChange(of: viewModel.uiState.selectedTab) { newValue in
             if selectedTab != newValue {
@@ -73,8 +89,7 @@ struct MainView: View {
                 viewModel.onAction(.selectTab(route: newValue))
             }
         }
-        .onReceive(viewModel.event) { _ in
-        }
+        .onReceive(viewModel.event) { _ in }
     }
 
     @ViewBuilder
@@ -108,9 +123,11 @@ struct MainView: View {
 
     init(
         initialTab: String? = nil,
+        hasUnreadNotifications: Bool = false,
         onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.initialTab = initialTab
+        self.hasUnreadNotifications = hasUnreadNotifications
         self.onNavigationAction = onNavigationAction
 
         Self.configureBarAppearance()
@@ -138,6 +155,7 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(initialTab: "home", onNavigationAction: { _ in })
+        MainView(initialTab: "home", hasUnreadNotifications: false, onNavigationAction: { _ in })
     }
 }
+

@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.colorFromHex
 
 @Composable
@@ -24,7 +26,9 @@ fun CafeReviewScreen(
     detail: CafeDetail,
     reviews: List<CafeDetailReview>,
     canLoadMore: Boolean,
-    isLoadingMore: Boolean
+    isLoadingMore: Boolean,
+    currentUserId: String? = null,
+    onAction: (CafeAction) -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -74,6 +78,8 @@ fun CafeReviewScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -110,11 +116,58 @@ fun CafeReviewScreen(
                                     }
                                 }
                             }
-                            Text(
-                                text = review.createdDate,
-                                color = Color(0xFF999999),
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = review.createdDate,
+                                    color = Color(0xFF999999),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Box {
+                                    IconButton(
+                                        onClick = { menuExpanded = true },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "더보기",
+                                            tint = Color(0xFF999999),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false }
+                                    ) {
+                                        if (currentUserId != null && review.userId == currentUserId) {
+                                            DropdownMenuItem(
+                                                text = { Text("수정하기") },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.EditReview(review.id))
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("삭제하기") },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.DeleteReview(review.id))
+                                                }
+                                            )
+                                        } else {
+                                            DropdownMenuItem(
+                                                text = { Text("신고하기") },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.ReportReview(review.id))
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             repeat(5) { index ->

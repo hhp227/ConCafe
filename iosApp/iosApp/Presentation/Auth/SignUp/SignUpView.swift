@@ -267,15 +267,21 @@ private struct SignUpContentView: View {
     private var phoneVerificationSection: some View {
         VStack(spacing: 10) {
             HStack(alignment: .bottom, spacing: 10) {
-                textField(
-                    title: "휴대폰 번호",
-                    placeholder: "010-1234-5678",
-                    text: Binding(
-                        get: { uiState.phone },
-                        set: { onAction(.phoneChanged($0)) }
-                    ),
-                    keyboardType: .phonePad
-                )
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("휴대폰 번호")
+                        .font(.subheadline.weight(.semibold))
+                    PhoneTextField(
+                        text: Binding(
+                            get: { uiState.phone },
+                            set: { onAction(.phoneChanged($0)) }
+                        ),
+                        placeholder: "010-1234-5678"
+                    )
+                    .frame(height: 52)
+                    .padding(.horizontal, 16)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
                 Button(uiState.isPhoneVerified ? "인증완료" : "인증요청") {
                     onAction(.sendVerificationTapped)
                 }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
@@ -30,6 +31,7 @@ class CafeViewModel(
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase,
+    private val deleteReviewUseCase: DeleteReviewUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
@@ -125,7 +127,8 @@ class CafeViewModel(
                     isFavorite = result.data.isFavorite,
                     isLoggedIn = result.data.isLoggedIn,
                     isVisitVerified = result.data.isVisitVerified,
-                    shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn
+                    shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn,
+                    currentUserId = result.data.currentUserId
                 )
                 refreshCastPage()
                 if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
@@ -269,6 +272,16 @@ class CafeViewModel(
         }
     }
 
+    private fun deleteReview(reviewId: String) {
+        viewModelScope.launch {
+            val result = deleteReviewUseCase.invoke(cafeId, reviewId)
+
+            if (result is AppResult.Failure) {
+                _event.emit(CafeEvent.ShowMessage("리뷰 삭제에 실패했습니다."))
+            }
+        }
+    }
+
     fun onAction(action: CafeAction) {
         viewModelScope.launch {
             when (action) {
@@ -307,6 +320,15 @@ class CafeViewModel(
                 }
                 CafeAction.ConsumeScrollToTopOnReturn -> {
                     _uiState.update { it.copy(shouldScrollToTopOnReturn = false) }
+                }
+                is CafeAction.EditReview -> {
+                    _event.emit(CafeEvent.NavigateToReviewEdit(cafeId, action.reviewId))
+                }
+                is CafeAction.DeleteReview -> {
+                    deleteReview(action.reviewId)
+                }
+                is CafeAction.ReportReview -> {
+                    _event.emit(CafeEvent.ShowMessage("신고가 접수되었습니다."))
                 }
             }
         }

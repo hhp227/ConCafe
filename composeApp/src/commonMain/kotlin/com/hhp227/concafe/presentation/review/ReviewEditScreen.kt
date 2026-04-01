@@ -35,11 +35,12 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun ReviewEditScreen(
     cafeId: String? = null,
+    reviewId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: ReviewEditViewModel = viewModel(
-        key = "review-edit-${cafeId ?: "unknown"}",
+        key = "review-edit-${cafeId ?: "unknown"}-${reviewId ?: "new"}",
         factory = viewModelFactory {
-            initializer { GlobalContext.get().get<ReviewEditViewModel> { parametersOf(cafeId) } }
+            initializer { GlobalContext.get().get<ReviewEditViewModel> { parametersOf(cafeId, reviewId) } }
         }
     )
 ) {

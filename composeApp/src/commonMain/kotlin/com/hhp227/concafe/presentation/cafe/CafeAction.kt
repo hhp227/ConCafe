@@ -20,4 +20,10 @@ sealed interface CafeAction {
     data object Refresh : CafeAction
 
     data object ConsumeScrollToTopOnReturn : CafeAction
+
+    data class EditReview(val reviewId: String) : CafeAction
+
+    data class DeleteReview(val reviewId: String) : CafeAction
+
+    data class ReportReview(val reviewId: String) : CafeAction
 }

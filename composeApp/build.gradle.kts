@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
             implementation(libs.google.maps.compose)
+            implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.messaging.ktx)
             implementation(libs.kakao.user)
             implementation(libs.coil.compose)

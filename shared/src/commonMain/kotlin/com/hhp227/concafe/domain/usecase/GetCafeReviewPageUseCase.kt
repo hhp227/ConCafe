@@ -64,6 +64,7 @@ class GetCafeReviewPageUseCase(
 
                         CafeDetailReview(
                             id = review.id,
+                            userId = review.userId,
                             userNickname = userNickname,
                             rating = review.rating,
                             content = review.content,

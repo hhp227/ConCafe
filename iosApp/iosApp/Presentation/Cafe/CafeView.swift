@@ -13,6 +13,8 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
+    @State private var alertMessage: String?
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
@@ -30,11 +32,21 @@ struct CafeView: View {
                     onNavigationAction(.navigateBack)
                 case .navigateToCast(let id):
                     onNavigationAction(.navigateToCast(id: id))
-                case .navigateToReviewEdit(let cafeId):
-                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+                case .navigateToReviewEdit(let cafeId, let reviewId):
+                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
+                case .showMessage(let message):
+                    alertMessage = message
                 }
+            }
+            .alert("알림", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button("확인", role: .cancel) { alertMessage = nil }
+            } message: {
+                Text(alertMessage ?? "")
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
                 guard shouldScroll else { return }
@@ -280,7 +292,9 @@ private struct CafeContentView: View {
                 reviews: uiState.reviews,
                 canLoadMore: uiState.canLoadMoreReviews,
                 isLoadingMore: uiState.isLoadingMoreReviews,
-                onLoadMore: { onAction(.loadMoreReviews) }
+                currentUserId: uiState.currentUserId,
+                onLoadMore: { onAction(.loadMoreReviews) },
+                onAction: onAction
             )
         case .notices:
             CafeNoticeView(

@@ -6,7 +6,10 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            AppNavigationView()
+            AppNavigationView(
+                hasUnreadNotifications: viewModel.uiState.hasUnreadNotifications,
+                onRefreshUnreadNotificationCount: { viewModel.onAction(.refreshUnreadNotificationCount) }
+            )
             if let networkAlertState = viewModel.uiState.networkAlertState, networkAlertState.isVisible {
                 NetworkStatusBannerView(
                     message: networkAlertState.message,
@@ -24,11 +27,13 @@ struct ContentView: View {
             switch event {
             case .syncPushToken:
                 let token = PushTokenBridge.shared.currentToken()
+
                 viewModel.onAction(.syncPushToken(token: token))
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .pushTokenUpdated)) { notification in
             let token = notification.userInfo?["token"] as? String ?? ""
+
             viewModel.onAction(.syncPushToken(token: token))
         }
     }

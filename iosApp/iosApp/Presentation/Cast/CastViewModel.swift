@@ -96,7 +96,9 @@ final class CastViewModel: ObservableObject {
                         detail: feed.detail,
                         recentReviews: feed.recentReviews,
                         isFollowing: feed.isFollowing,
-                        isLoggedIn: feed.isLoggedIn
+                        isLoggedIn: feed.isLoggedIn,
+                        todayAttendanceStatus: feed.todayAttendanceStatus,
+                        isSelfCast: feed.isSelfCast
                     )
                 } else {
                     uiState.isLoading = false

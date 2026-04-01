@@ -21,7 +21,7 @@ enum NavigationAction {
     case navigateToSchedule(castId: String? = nil)
     case navigateToMenuGoods(id: String)
     case navigateToMenuGoodsEdit(cafeId: String, itemId: String? = nil)
-    case navigateToReviewEdit(cafeId: String)
+    case navigateToReviewEdit(cafeId: String, reviewId: String? = nil)
     case navigateToSignIn
     case navigateToSignUp
     case navigateToResetPassword
@@ -32,4 +32,5 @@ enum NavigationAction {
     case navigateToInquiry
     case navigateToChangePassword
     case navigateBack
+    case refreshUnreadNotificationCount
 }

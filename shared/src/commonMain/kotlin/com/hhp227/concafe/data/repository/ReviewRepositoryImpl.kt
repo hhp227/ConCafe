@@ -42,6 +42,16 @@ class ReviewRepositoryImpl(
         return pagingDataSource.toPaged(items, cursor, pageSize)
     }
 
+    override suspend fun getReview(reviewId: String): Review {
+        val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
+
+        if (firestoreDataSource != null) {
+            return firestoreDataSource.getReviewRemote(reviewId)
+        }
+        return reviewDataSource.reviews.firstOrNull { it.id == reviewId }
+            ?: throw NoSuchElementException("review not found: $reviewId")
+    }
+
     override suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review> {
         val safeLimit = if (limit > 0) limit else 1
         val firestoreDataSource = reviewDataSource as? FirestoreConCafeDataSource
