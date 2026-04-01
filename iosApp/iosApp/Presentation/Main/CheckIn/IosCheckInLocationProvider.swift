@@ -43,8 +43,6 @@ final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
                 requiresSettings: true
             )
         }
-        locationManager.delegate = self
-
         let status = locationManager.authorizationStatus
         let resolvedStatus = await resolveAuthorizationStatus(status)
 
@@ -156,5 +154,10 @@ final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
             )
         )
         continuation = nil
+    }
+
+    override init() {
+        super.init()
+        locationManager.delegate = self
     }
 }
