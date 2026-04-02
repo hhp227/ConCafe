@@ -17,6 +17,39 @@ class AuthRepositoryImpl(
     private val authTokenProvider: FirestoreAuthTokenProvider,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : AuthRepository {
+    private suspend fun resolveEffectiveRole(
+        userId: String,
+        baseRole: UserRole
+    ): UserRole {
+        val linkedCast = runCatching {
+            castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        }.getOrNull()
+        val resolvedRole = if (baseRole == UserRole.VISITOR && linkedCast != null) UserRole.CAST else baseRole
+        return resolvedRole
+    }
+
+    private suspend fun normalizeRoleIfNeeded(user: User): User {
+        val resolvedRole = resolveEffectiveRole(
+            userId = user.id,
+            baseRole = user.role
+        )
+        val normalizedUser = if (resolvedRole != user.role) {
+            user.copy(role = resolvedRole)
+        } else {
+            user
+        }
+        if (normalizedUser.role != user.role) {
+            runCatching {
+                firestoreSyncDataSource.pushUser(normalizedUser)
+            }
+            println(
+                "TEST, AuthRepositoryImpl normalizeRoleIfNeeded role-updated: " +
+                    "userId=${user.id} from=${user.role} to=${normalizedUser.role}"
+            )
+        }
+        return normalizedUser
+    }
+
     override suspend fun signIn(email: String, password: String): User {
         if (email.isBlank() || password.isBlank()) {
             throw IllegalArgumentException("email/password is required")
@@ -241,15 +274,19 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(userId)
 
         if (remoteUser != null) {
-            return remoteUser
+            return normalizeRoleIfNeeded(remoteUser)
         }
 
+        val fallbackRole = resolveEffectiveRole(
+            userId = userId,
+            baseRole = UserRole.VISITOR
+        )
         val createdUser = User(
             id = userId,
             email = email,
             nickname = resolveInitialNickname(email, displayName),
             profileImage = null,
-            role = UserRole.VISITOR,
+            role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc()
         )
@@ -277,7 +314,7 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
 
         if (remoteUser != null) {
-            return remoteUser
+            return normalizeRoleIfNeeded(remoteUser)
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
@@ -285,12 +322,16 @@ class AuthRepositoryImpl(
         if (currentUserEmail.isNullOrBlank()) {
             return null
         }
+        val fallbackRole = resolveEffectiveRole(
+            userId = currentUserId,
+            baseRole = UserRole.VISITOR
+        )
         val fallbackUser = User(
             id = currentUserId,
             email = currentUserEmail,
             nickname = resolveInitialNickname(currentUserEmail, null),
             profileImage = null,
-            role = UserRole.VISITOR,
+            role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc()
         )

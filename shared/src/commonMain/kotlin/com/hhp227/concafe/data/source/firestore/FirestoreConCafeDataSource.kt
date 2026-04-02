@@ -2386,16 +2386,14 @@ class FirestoreConCafeDataSource(
     suspend fun refreshCastByLinkedUserId(userId: String): Cast? {
         require(userId.isNotBlank()) { "userId is required" }
         val idToken = tokenProvider.getIdToken()
-        val documents = runCatching {
-            runCastByLinkedUserIdQuery(userId = userId, idToken = idToken)
-        }.recoverCatching {
-            runCastByLinkedUserIdQuery(userId = userId, idToken = null)
-        }.getOrElse {
-            emptyList()
-        }
+        val documents = resolveCastDocumentsByUser(userId = userId, idToken = idToken)
         val firstDocument = documents.firstOrNull() ?: return null
         val name = firstDocument["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val cafeId = extractCafeIdFromCastDocumentName(name) ?: return null
+        println(
+            "TEST, refreshCastByLinkedUserId result: " +
+                "userId=$userId documents=${documents.size} cafeId=$cafeId"
+        )
         return parseCastDocument(cafeId = cafeId, document = firstDocument)
     }
 
@@ -3892,6 +3890,108 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runCastByUserFieldQuery(
+        userId: String,
+        idToken: String?,
+        fieldPath: String
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  {
+                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
+                    "allDescendants": true
+                  }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "${escapeFirestoreQueryString(fieldPath)}" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
+                  }
+                },
+                "limit": 1
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
+    private suspend fun resolveCastDocumentsByUser(
+        userId: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val byLinkedUserId = runCatching {
+            runCastByLinkedUserIdQuery(userId = userId, idToken = idToken)
+        }.recoverCatching {
+            runCastByLinkedUserIdQuery(userId = userId, idToken = null)
+        }.getOrElse {
+            emptyList()
+        }
+        if (byLinkedUserId.isNotEmpty()) {
+            return byLinkedUserId
+        }
+
+        val byUserIdField = runCatching {
+            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "userId")
+        }.recoverCatching {
+            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "userId")
+        }.getOrElse {
+            emptyList()
+        }
+        if (byUserIdField.isNotEmpty()) {
+            return byUserIdField
+        }
+
+        val byUidField = runCatching {
+            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "uid")
+        }.recoverCatching {
+            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "uid")
+        }.getOrElse {
+            emptyList()
+        }
+        if (byUidField.isNotEmpty()) {
+            return byUidField
+        }
+
+        val affiliatedCafeId = runCatching {
+            fetchAffiliatedCafeIdRemote(userId)
+        }.getOrNull()
+        if (affiliatedCafeId.isNullOrBlank()) {
+            return emptyList()
+        }
+        val cafeCastDocuments = runCatching {
+            runCafeCastQuery(
+                cafeId = affiliatedCafeId,
+                cursor = null,
+                limit = 200,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runCafeCastQuery(
+                cafeId = affiliatedCafeId,
+                cursor = null,
+                limit = 200,
+                idToken = null
+            )
+        }.getOrElse {
+            emptyList()
+        }
+        return cafeCastDocuments.filter { document ->
+            val fields = document["fields"]?.jsonObject ?: return@filter false
+            val linked = fields.getFirestoreString("linkedUserId")
+            val legacyUserId = fields.getFirestoreString("userId")
+            val legacyUid = fields.getFirestoreString("uid")
+            linked == userId || legacyUserId == userId || legacyUid == userId
+        }
+    }
+
     private suspend fun runCastByBirthdayKeyQuery(
         birthdayKey: String,
         idToken: String?,
@@ -4613,6 +4713,59 @@ class FirestoreConCafeDataSource(
         castId: String,
         idToken: String?
     ): String? {
+        val tokenUserId = tokenProvider.getCurrentUserId()
+        val selfCastDocuments = if (tokenUserId.isNullOrBlank()) {
+            emptyList()
+        } else {
+            resolveCastDocumentsByUser(
+                userId = tokenUserId,
+                idToken = idToken
+            )
+        }
+        val selfMatchedCafeId = selfCastDocuments.firstNotNullOfOrNull { document ->
+            val name = document["name"]?.jsonPrimitive?.contentOrNull
+            if (name.isNullOrBlank()) {
+                null
+            } else {
+                if (name.endsWith("/$castId")) {
+                    extractCafeIdFromCastDocumentName(name)
+                } else {
+                    null
+                }
+            }
+        }
+        if (selfMatchedCafeId != null) {
+            println(
+                "TEST, resolveCafeIdByCastId hit self-cast mapping: " +
+                    "castId=$castId userId=$tokenUserId cafeId=$selfMatchedCafeId"
+            )
+            return selfMatchedCafeId
+        }
+
+        val affiliatedCafeId = if (tokenUserId.isNullOrBlank()) {
+            null
+        } else {
+            runCatching {
+                fetchAffiliatedCafeIdRemote(tokenUserId)
+            }.getOrNull()
+        }
+        val affiliatedMatchedCast = if (affiliatedCafeId.isNullOrBlank()) {
+            null
+        } else {
+            resolveCafeCastById(
+                cafeId = affiliatedCafeId,
+                castId = castId,
+                idToken = idToken
+            )
+        }
+        if (affiliatedMatchedCast != null && !affiliatedCafeId.isNullOrBlank()) {
+            println(
+                "TEST, resolveCafeIdByCastId hit affiliated-cafe mapping: " +
+                    "castId=$castId userId=$tokenUserId cafeId=$affiliatedCafeId"
+            )
+            return affiliatedCafeId
+        }
+
         val cafes = fetchAllCafesRemote()
 
         cafes.forEach { cafe ->
@@ -5188,11 +5341,14 @@ class FirestoreConCafeDataSource(
         val fields = document["fields"]?.jsonObject ?: return null
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val castId = name.substringAfterLast("/")
+        val linkedUserId = fields.getFirestoreString("linkedUserId")
+            ?: fields.getFirestoreString("userId")
+            ?: fields.getFirestoreString("uid")
         return Cast(
             id = castId,
             cafeId = cafeId,
             name = fields.getFirestoreString("name").orEmpty(),
-            linkedUserId = fields.getFirestoreString("linkedUserId"),
+            linkedUserId = linkedUserId,
             profileImage = fields.getFirestoreString("profileImage"),
             desc = fields.getFirestoreString("desc").orEmpty(),
             birthday = fields.getFirestoreString("birthday"),

@@ -109,11 +109,22 @@ class GetMyInfoUseCase(
                     val firestoreUser = firestoreUserDeferred.await()
                     val castDetailDeferred = if (firestoreUser.role == UserRole.CAST) {
                         async {
-                            runCatching {
-                                castRepository.getCastByLinkedUserId(currentUser.id)?.id?.let { castId ->
+                            val castDetail = runCatching {
+                                castRepository.getCastByLinkedUserId(firestoreUser.id)?.id?.let { castId ->
                                     castRepository.getCastDetail(castId)
                                 }
+                            }.onFailure { error ->
+                                println(
+                                    "TEST, GetMyInfoUseCase castDetail load failed: " +
+                                        "userId=${firestoreUser.id} error=${error.message}"
+                                )
                             }.getOrNull()
+                            if (castDetail == null) {
+                                println(
+                                    "TEST, GetMyInfoUseCase castDetail empty: userId=${firestoreUser.id}"
+                                )
+                            }
+                            castDetail
                         }
                     } else {
                         null
