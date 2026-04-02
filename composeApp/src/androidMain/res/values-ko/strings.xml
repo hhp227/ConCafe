@@ -1,7 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ConCafe</string>
-    <string name="kakao_native_app_key" translatable="false">af25c4820b65d3fe2a9145156351ccaf</string>
-    <string name="kakao_scheme" translatable="false">kakaoaf25c4820b65d3fe2a9145156351ccaf</string>
+    <string name="app_name">콘카</string>
     <string name="main_tab_home">홈</string>
     <string name="main_tab_explore">탐색</string>
     <string name="main_tab_checkin">체크인</string>
@@ -10,6 +9,4 @@
     <string name="main_tab_admin_operations">운영관리</string>
     <string name="main_tab_ranking">랭킹</string>
     <string name="main_tab_my_info">내 정보</string>
-    <string name="push_channel_name" translatable="false">ConCafe 알림</string>
-    <string name="push_channel_description" translatable="false">ConCafe 푸시 알림 채널</string>
 </resources>
