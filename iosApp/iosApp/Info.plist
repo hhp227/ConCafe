@@ -37,5 +37,7 @@
 		<string>goyangdeogyang_bold.ttf</string>
 		<string>goyangdeogyang_extrabold.ttf</string>
 	</array>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
 </dict>
 </plist>
