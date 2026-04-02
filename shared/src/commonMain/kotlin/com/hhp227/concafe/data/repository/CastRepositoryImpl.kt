@@ -200,17 +200,22 @@ class CastRepositoryImpl(
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
         val safeLimit = if (limit > 0) limit else 1
-        val allCasts = castRemoteDataSource.fetchAllCasts()
-        val sourceCasts = allCasts
-            .asSequence()
-            .sortedWith(
-                compareByDescending<Cast> { cast -> cast.followerCount }
-                    .thenBy { cast -> cast.id }
-            )
-            .take(safeLimit)
-            .toList()
-        val cafeNameById = cafeRemoteDataSource.fetchAllCafes()
-            .associate { cafe -> cafe.id to cafe.name }
+        val sourceCasts = castRemoteDataSource.searchCastsRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CastSort.POPULAR,
+            cursor = null,
+            pageSize = safeLimit
+        ).items
+        val cafeNameById = sourceCasts
+            .map { cast -> cast.cafeId }
+            .distinct()
+            .associateWith { cafeId ->
+                runCatching {
+                    cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe.name
+                }.getOrNull()
+            }
 
         return sourceCasts.map { cast ->
             val cafeName = cafeNameById[cast.cafeId] ?: cast.cafeId

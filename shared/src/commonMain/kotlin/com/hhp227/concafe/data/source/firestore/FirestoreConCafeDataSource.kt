@@ -510,12 +510,14 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
         val noticeId = nextFirestoreEntityId("notice-management")
         val createdAt = Clock.System.now().toString()
+        val cafeName = resolveCafeNameForNoticeWrite(cafeId = input.cafeId, idToken = idToken)
         val statusLabel = if (input.reservedAt.isNullOrBlank()) "게시 중" else "임시 저장"
         val statusAccent = if (input.reservedAt.isNullOrBlank()) NoticeStatusAccent.PUBLISHED else NoticeStatusAccent.DRAFT
         val body = firestoreDocumentBody(
             mapOf(
                 "title" to firestoreString(input.title.trim()),
                 "content" to firestoreString(input.content.trim()),
+                "cafeName" to firestoreString(cafeName),
                 "createdAt" to firestoreString(createdAt),
                 "isPinned" to firestoreBoolean(input.isPinned),
                 "statusLabel" to firestoreString(statusLabel),
@@ -541,11 +543,13 @@ class FirestoreConCafeDataSource(
 
     suspend fun updateCafeNoticeRemote(input: CafeNoticeUpdate): CafeNoticeManagementItem {
         val idToken = tokenProvider.getIdToken()
+        val cafeName = resolveCafeNameForNoticeWrite(cafeId = input.cafeId, idToken = idToken)
         val statusLabel = if (input.reservedAt.isNullOrBlank()) "게시 중" else "임시 저장"
         val statusAccent = if (input.reservedAt.isNullOrBlank()) NoticeStatusAccent.PUBLISHED else NoticeStatusAccent.DRAFT
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_NOTICES}/${input.noticeId}" +
             "?updateMask.fieldPaths=title" +
             "&updateMask.fieldPaths=content" +
+            "&updateMask.fieldPaths=cafeName" +
             "&updateMask.fieldPaths=isPinned" +
             "&updateMask.fieldPaths=statusLabel" +
             "&updateMask.fieldPaths=statusAccent" +
@@ -554,6 +558,7 @@ class FirestoreConCafeDataSource(
             mapOf(
                 "title" to firestoreString(input.title.trim()),
                 "content" to firestoreString(input.content.trim()),
+                "cafeName" to firestoreString(cafeName),
                 "isPinned" to firestoreBoolean(input.isPinned),
                 "statusLabel" to firestoreString(statusLabel),
                 "statusAccent" to firestoreString(statusAccent.name),
@@ -695,7 +700,7 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { throwable ->
-            throw IllegalStateException("Failed to load cafe notice page: $cafeId", throwable)
+            throw IllegalStateException("Failed to load cafe notice page($cafeId): ${throwable.message}", throwable)
         }
         val pageDocuments = documents.take(safePageSize)
         val hasNext = documents.size > safePageSize
@@ -714,6 +719,7 @@ class FirestoreConCafeDataSource(
                 item.title.contains(normalizedQuery, ignoreCase = true) ||
                 item.content.contains(normalizedQuery, ignoreCase = true)
         }
+
         return PagedResult(
             items = pageItems,
             nextCursor = nextCursorToken,
@@ -816,7 +822,7 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { throwable ->
-            throw IllegalStateException("Failed to load recent notices", throwable)
+            throw IllegalStateException("Failed to load recent notices: ${throwable.message}", throwable)
         }
 
         if (noticeDocuments.isEmpty()) {
@@ -829,7 +835,10 @@ class FirestoreConCafeDataSource(
             val cafeId = documentName?.toCafeIdFromNoticeDocumentName()
                 ?: fields?.getFirestoreString("cafeId")
                 ?: return@mapNotNull null
-            val cafeName = fields?.getFirestoreString("cafeName")
+            val cafeName = fields
+                ?.getFirestoreString("cafeName")
+                ?.trim()
+                ?.takeIf { value -> value.isNotEmpty() }
                 ?: cafeId
 
             parseNoticeDocument(
@@ -959,7 +968,8 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val visitDocuments = runCatching {
+        val tokenUserId = tokenProvider.getCurrentUserId()
+        val primaryVisitDocuments = runCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.VISITS,
                 userId = userId,
@@ -975,10 +985,62 @@ class FirestoreConCafeDataSource(
                 orderByFieldPath = "visitedAt",
                 orderByDescending = true
             )
-        }.getOrElse { emptyList() }
-        val items = visitDocuments
+        }.getOrElse { error ->
+            println(
+                "TEST, fetchVisitsByUserPageRemote query failed: " +
+                    "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                    "sameUser=${tokenUserId == userId} message=${error.message}"
+            )
+            emptyList()
+        }
+        val legacyVisitDocuments = if (primaryVisitDocuments.isEmpty()) {
+            runLegacyUserFieldQuery(
+                collectionId = FirestorePaths.VISITS,
+                userId = userId,
+                idToken = idToken,
+                legacyFieldPath = "uid"
+            )
+        } else {
+            emptyList()
+        }
+        val visitDocuments = (primaryVisitDocuments + legacyVisitDocuments)
+            .distinctBy { document ->
+                document["name"]?.jsonPrimitive?.contentOrNull ?: document.toString()
+            }
+        val mappedVisits = visitDocuments
             .mapNotNull { document -> parseVisitDocument(document) }
             .sortedByDescending { visit -> visit.visitedAt }
+        val legacyRecentVisitCafeIds = if (mappedVisits.isEmpty()) {
+            loadUserIdListFromProfileDocument(
+                userId = userId,
+                idToken = idToken,
+                candidates = RECENT_VISIT_CAFE_ID_FIELD_CANDIDATES
+            )
+        } else {
+            emptyList()
+        }
+        val items = if (mappedVisits.isNotEmpty()) {
+            mappedVisits
+        } else {
+            legacyRecentVisitCafeIds.mapIndexed { index, cafeId ->
+                Visit(
+                    id = "legacy_recent_visit_${sanitizeDocumentIdPart(userId)}_$index",
+                    userId = userId,
+                    cafeId = cafeId,
+                    visitedAt = "",
+                    memo = null,
+                    verified = false
+                )
+            }
+        }
+        println(
+            "TEST, fetchVisitsByUserPageRemote result: " +
+                "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                "sameUser=${tokenUserId == userId} " +
+                "documents=${visitDocuments.size} visits=${items.size} " +
+                "legacyDocuments=${legacyVisitDocuments.size} " +
+                "legacyRecentVisitCafeIds=${legacyRecentVisitCafeIds.size}"
+        )
         return toPaged(items, cursor, pageSize)
     }
 
@@ -1102,6 +1164,7 @@ class FirestoreConCafeDataSource(
         latitude: Double,
         longitude: Double
     ): Visit {
+        ensureAuthenticatedUserMatch(requestedUserId = userId, action = "createVisitRemote")
         val idToken = tokenProvider.getIdToken()
         val visitId = nextFirestoreEntityId("visit")
         val now = Clock.System.now().toString()
@@ -1412,7 +1475,14 @@ class FirestoreConCafeDataSource(
         }
         val idSet = followedCastIds.toSet()
         return if (resolvedCasts.isNotEmpty()) {
-            resolvedCasts.distinctBy { cast -> cast.id }
+            val resolvedDistinct = resolvedCasts.distinctBy { cast -> cast.id }
+            val unresolvedIds = idSet - resolvedDistinct.map { cast -> cast.id }.toSet()
+            if (unresolvedIds.isEmpty()) {
+                resolvedDistinct
+            } else {
+                (resolvedDistinct + fetchCastsByIdsRemote(unresolvedIds.toList()))
+                    .distinctBy { cast -> cast.id }
+            }
         } else {
             fetchCastsByIdsRemote(idSet.toList())
         }
@@ -1422,7 +1492,8 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val followDocuments = runCatching {
+        val tokenUserId = tokenProvider.getCurrentUserId()
+        val primaryFollowDocuments = runCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.CAST_FOLLOWS,
                 userId = userId,
@@ -1434,13 +1505,65 @@ class FirestoreConCafeDataSource(
                 userId = userId,
                 idToken = null
             )
-        }.getOrElse { emptyList() }
-        return followDocuments
+        }.getOrElse { error ->
+            println(
+                "TEST, fetchFollowedCastIdsRemote query failed: " +
+                    "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                    "sameUser=${tokenUserId == userId} message=${error.message}"
+            )
+            emptyList()
+        }
+        val legacyFieldDocuments = if (primaryFollowDocuments.isEmpty()) {
+            runLegacyUserFieldQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                userId = userId,
+                idToken = idToken,
+                legacyFieldPath = "uid"
+            )
+        } else {
+            emptyList()
+        }
+        val legacyNameDocuments = if (primaryFollowDocuments.isEmpty() && legacyFieldDocuments.isEmpty()) {
+            runDocumentNamePrefixQuery(
+                collectionId = FirestorePaths.CAST_FOLLOWS,
+                documentIdPrefix = "${sanitizeDocumentIdPart(userId)}_",
+                idToken = idToken
+            )
+        } else {
+            emptyList()
+        }
+        val followDocuments = (primaryFollowDocuments + legacyFieldDocuments + legacyNameDocuments)
+            .distinctBy { document ->
+                document["name"]?.jsonPrimitive?.contentOrNull ?: document.toString()
+            }
+        val castIdsFromDocuments = followDocuments
             .mapNotNull { document ->
                 document["fields"]?.jsonObject?.getFirestoreString("castId")
             }
             .distinct()
             .sorted()
+        val legacyProfileCastIds = if (castIdsFromDocuments.isEmpty()) {
+            loadUserIdListFromProfileDocument(
+                userId = userId,
+                idToken = idToken,
+                candidates = FOLLOWED_CAST_ID_FIELD_CANDIDATES
+            )
+        } else {
+            emptyList()
+        }
+        val castIds = (castIdsFromDocuments + legacyProfileCastIds)
+            .filter { value -> value.isNotBlank() }
+            .distinct()
+            .sorted()
+        println(
+            "TEST, fetchFollowedCastIdsRemote result: " +
+                "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                "sameUser=${tokenUserId == userId} " +
+                "documents=${followDocuments.size} castIds=${castIds.size} " +
+                "legacyFieldDocuments=${legacyFieldDocuments.size} legacyNameDocuments=${legacyNameDocuments.size} " +
+                "legacyProfileCastIds=${legacyProfileCastIds.size}"
+        )
+        return castIds
     }
 
     suspend fun refreshFavoriteCafeIds(userId: String) {
@@ -1478,6 +1601,7 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun followCastRemote(userId: String, castId: String) {
+        ensureAuthenticatedUserMatch(requestedUserId = userId, action = "followCastRemote")
         val idToken = tokenProvider.getIdToken()
         val cast = fetchCastsByIdsRemote(listOf(castId))
             .firstOrNull()
@@ -1702,6 +1826,7 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun favoriteCafeRemote(userId: String, cafeId: String) {
+        ensureAuthenticatedUserMatch(requestedUserId = userId, action = "favoriteCafeRemote")
         val idToken = tokenProvider.getIdToken()
 
         val favoriteId = buildCafeFavoriteDocumentId(userId = userId, cafeId = cafeId)
@@ -2065,7 +2190,7 @@ class FirestoreConCafeDataSource(
                     idToken = null
                 )
             }.getOrElse { throwable ->
-                throw IllegalStateException("Failed to search casts", throwable)
+                throw IllegalStateException("Failed to search casts: ${throwable.message}", throwable)
             }
             val batch = documents.take(queryBatchSize)
             val hasMoreBatch = documents.size > queryBatchSize
@@ -2190,10 +2315,36 @@ class FirestoreConCafeDataSource(
 
         if (targetIds.isEmpty()) {
             return emptyList()
-        } else {
-            return fetchAllCastsRemote()
-                .filter { cast -> targetIds.contains(cast.id) }
         }
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val remaining = targetIds.toMutableSet()
+        val resolved = mutableListOf<Cast>()
+        val cafes = runCatching {
+            fetchAllCafesRemote()
+        }.getOrElse {
+            emptyList()
+        }
+
+        cafes.forEach { cafe ->
+            if (remaining.isEmpty()) {
+                return@forEach
+            }
+            val currentIds = remaining.toList()
+
+            currentIds.forEach { castId ->
+                val cast = resolveCafeCastById(
+                    cafeId = cafe.id,
+                    castId = castId,
+                    idToken = idToken
+                ) ?: return@forEach
+                resolved.add(cast)
+                remaining.remove(castId)
+            }
+        }
+
+        return resolved.distinctBy { cast -> cast.id }
     }
 
     suspend fun deleteCastRemote(castId: String): Cast {
@@ -2777,7 +2928,8 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val favoriteDocuments = runCatching {
+        val tokenUserId = tokenProvider.getCurrentUserId()
+        val primaryFavoriteDocuments = runCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.CAFE_FAVORITES,
                 userId = userId,
@@ -2789,14 +2941,65 @@ class FirestoreConCafeDataSource(
                 userId = userId,
                 idToken = null
             )
-        }.getOrElse { emptyList() }
-
-        return favoriteDocuments
+        }.getOrElse { error ->
+            println(
+                "TEST, fetchFavoriteCafeIdsRemote query failed: " +
+                    "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                    "sameUser=${tokenUserId == userId} message=${error.message}"
+            )
+            emptyList()
+        }
+        val legacyFieldDocuments = if (primaryFavoriteDocuments.isEmpty()) {
+            runLegacyUserFieldQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                userId = userId,
+                idToken = idToken,
+                legacyFieldPath = "uid"
+            )
+        } else {
+            emptyList()
+        }
+        val legacyNameDocuments = if (primaryFavoriteDocuments.isEmpty() && legacyFieldDocuments.isEmpty()) {
+            runDocumentNamePrefixQuery(
+                collectionId = FirestorePaths.CAFE_FAVORITES,
+                documentIdPrefix = "${sanitizeDocumentIdPart(userId)}_",
+                idToken = idToken
+            )
+        } else {
+            emptyList()
+        }
+        val favoriteDocuments = (primaryFavoriteDocuments + legacyFieldDocuments + legacyNameDocuments)
+            .distinctBy { document ->
+                document["name"]?.jsonPrimitive?.contentOrNull ?: document.toString()
+            }
+        val cafeIdsFromDocuments = favoriteDocuments
             .mapNotNull { document ->
                 document["fields"]?.jsonObject?.getFirestoreString("cafeId")
             }
             .distinct()
             .sorted()
+        val legacyProfileCafeIds = if (cafeIdsFromDocuments.isEmpty()) {
+            loadUserIdListFromProfileDocument(
+                userId = userId,
+                idToken = idToken,
+                candidates = FAVORITE_CAFE_ID_FIELD_CANDIDATES
+            )
+        } else {
+            emptyList()
+        }
+        val cafeIds = (cafeIdsFromDocuments + legacyProfileCafeIds)
+            .filter { value -> value.isNotBlank() }
+            .distinct()
+            .sorted()
+        println(
+            "TEST, fetchFavoriteCafeIdsRemote result: " +
+                "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
+                "sameUser=${tokenUserId == userId} " +
+                "documents=${favoriteDocuments.size} cafeIds=${cafeIds.size} " +
+                "legacyFieldDocuments=${legacyFieldDocuments.size} legacyNameDocuments=${legacyNameDocuments.size} " +
+                "legacyProfileCafeIds=${legacyProfileCafeIds.size}"
+        )
+        return cafeIds
     }
 
     suspend fun fetchOwnedCafeIdsRemote(userId: String): Set<String> {
@@ -3294,6 +3497,80 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runLegacyUserFieldQuery(
+        collectionId: String,
+        userId: String,
+        idToken: String?,
+        legacyFieldPath: String
+    ): List<JsonObject> {
+        return runCatching {
+            runFieldScopedQuery(
+                collectionId = collectionId,
+                fieldPath = legacyFieldPath,
+                fieldValue = userId,
+                idToken = idToken,
+                orderByCreatedAtDesc = false
+            )
+        }.recoverCatching {
+            runFieldScopedQuery(
+                collectionId = collectionId,
+                fieldPath = legacyFieldPath,
+                fieldValue = userId,
+                idToken = null,
+                orderByCreatedAtDesc = false
+            )
+        }.getOrElse { emptyList() }
+    }
+
+    private suspend fun runDocumentNamePrefixQuery(
+        collectionId: String,
+        documentIdPrefix: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val escapedCollectionId = escapeFirestoreQueryString(collectionId)
+        val escapedPrefix = escapeFirestoreQueryString(documentIdPrefix)
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "$escapedCollectionId" }
+                ],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "__name__" },
+                          "op": "GREATER_THAN_OR_EQUAL",
+                          "value": { "referenceValue": "${config.documentBasePath()}/$collectionId/$escapedPrefix" }
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": { "fieldPath": "__name__" },
+                          "op": "LESS_THAN",
+                          "value": { "referenceValue": "${config.documentBasePath()}/$collectionId/${escapedPrefix}~" }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = runCatching {
+            restApi.post(path = path, body = body, idToken = idToken)
+        }.recoverCatching {
+            restApi.post(path = path, body = body, idToken = null)
+        }.getOrElse { return emptyList() }
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runFieldScopedQuery(
         collectionId: String,
         fieldPath: String,
@@ -3678,10 +3955,6 @@ class FirestoreConCafeDataSource(
                   {
                     "field": { "fieldPath": "followerCount" },
                     "direction": "DESCENDING"
-                  },
-                  {
-                    "field": { "fieldPath": "__name__" },
-                    "direction": "DESCENDING"
                   }
                 ]"""
         }
@@ -3891,7 +4164,7 @@ class FirestoreConCafeDataSource(
         idToken: String?
     ): List<JsonObject> {
         val safeLimit = if (limit > 0) limit else 1
-        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val startAfterSection = cursor.toNoticeStartAfterSection()
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId:runQuery"
         val body = """
             {
@@ -3904,6 +4177,10 @@ class FirestoreConCafeDataSource(
                 "orderBy": [
                   {
                     "field": { "fieldPath": "createdAt" },
+                    "direction": "DESCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
                     "direction": "DESCENDING"
                   }
                 ]$startAfterSection,
@@ -4251,6 +4528,16 @@ class FirestoreConCafeDataSource(
             }
         }
         return parseCastClaimDocument(document)
+    }
+
+    private suspend fun resolveCafeCastById(cafeId: String, castId: String, idToken: String?): Cast? {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_CASTS}/$castId"
+        val document = runCatching {
+            Json.parseToJsonElement(restApi.get(path, idToken)).jsonObject
+        }.recoverCatching {
+            Json.parseToJsonElement(restApi.get(path, null)).jsonObject
+        }.getOrNull() ?: return null
+        return parseCastDocument(cafeId = cafeId, document = document)
     }
 
     private suspend fun updateCastLinkedUserRemote(
@@ -5574,6 +5861,50 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private fun ensureAuthenticatedUserMatch(requestedUserId: String, action: String) {
+        val tokenUserId = tokenProvider.getCurrentUserId()
+        if (!tokenUserId.isNullOrBlank() && tokenUserId != requestedUserId) {
+            throw IllegalStateException(
+                "Auth user mismatch in $action: tokenUserId=$tokenUserId requestedUserId=$requestedUserId"
+            )
+        }
+    }
+
+    private fun sanitizeDocumentIdPart(value: String): String {
+        return value.replace("/", "_")
+    }
+
+    private suspend fun loadUserIdListFromProfileDocument(
+        userId: String,
+        idToken: String?,
+        candidates: List<String>
+    ): List<String> {
+        val userDocument = runCatching {
+            loadUserDocument(userId = userId, idToken = idToken)
+        }.recoverCatching {
+            loadUserDocument(userId = userId, idToken = null)
+        }.getOrNull() ?: return emptyList()
+        val fields = userDocument["fields"]?.jsonObject ?: return emptyList()
+        val stats = fields.getFirestoreMap("stats")
+
+        candidates.forEach { fieldName ->
+            val fromRoot = fields.getFirestoreStringList(fieldName)
+                .map { value -> value.trim() }
+                .filter { value -> value.isNotEmpty() }
+            if (fromRoot.isNotEmpty()) {
+                return fromRoot
+            }
+            val fromStats = stats?.getFirestoreStringList(fieldName)
+                .orEmpty()
+                .map { value -> value.trim() }
+                .filter { value -> value.isNotEmpty() }
+            if (fromStats.isNotEmpty()) {
+                return fromStats
+            }
+        }
+        return emptyList()
+    }
+
     private fun parseStampDocument(document: JsonObject): Stamp? {
         val name = document["name"]?.jsonPrimitive?.content ?: return null
         val fields = document["fields"]?.jsonObject ?: return null
@@ -5596,11 +5927,41 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun resolveCafeNameForNoticeWrite(cafeId: String, idToken: String?): String {
+        val remoteName = runCatching {
+            parseCafeDocument(loadCafeDocument(cafeId = cafeId, idToken = idToken))
+                ?.name
+                ?.trim()
+                ?.takeIf { value -> value.isNotEmpty() }
+        }.recoverCatching {
+            parseCafeDocument(loadCafeDocument(cafeId = cafeId, idToken = null))
+                ?.name
+                ?.trim()
+                ?.takeIf { value -> value.isNotEmpty() }
+        }.getOrNull()
+        return remoteName ?: cafeId
+    }
+
     private companion object {
         const val DEFAULT_OWNER_CLAIM_STATUS = "승인 대기 중"
         const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
         const val RECENT_FOLLOWER_FETCH_LIMIT = 30
         const val BIRTHDAY_KEY_FIELD = "birthdayKey"
+        val FAVORITE_CAFE_ID_FIELD_CANDIDATES = listOf(
+            "favoriteCafeIds",
+            "favorites",
+            "favoriteCafes"
+        )
+        val FOLLOWED_CAST_ID_FIELD_CANDIDATES = listOf(
+            "followedCastIds",
+            "followingCastIds",
+            "followCastIds"
+        )
+        val RECENT_VISIT_CAFE_ID_FIELD_CANDIDATES = listOf(
+            "recentVisitCafeIds",
+            "recentVisitedCafeIds",
+            "visitedCafeIds"
+        )
     }
 }
 
@@ -5933,16 +6294,14 @@ private fun escapeFirestoreQueryString(value: String): String {
 }
 
 private fun JsonObject.toCastQueryCursor(sort: CastSort): String? {
-    val documentName = this["name"]?.jsonPrimitive?.contentOrNull
     val fields = this["fields"]?.jsonObject ?: return null
     return if (sort == CastSort.LATEST) {
-        documentName
+        this["name"]?.jsonPrimitive?.contentOrNull
     } else {
         val followerScore = fields.getFirestoreLong("followerCount")?.toString()
             ?: fields.getFirestoreDouble("followerCount")?.toString()
             ?: "0"
-        val safeDocumentName = documentName ?: return null
-        "$followerScore|$safeDocumentName"
+        followerScore
     }
 }
 
@@ -5975,8 +6334,10 @@ private fun JsonObject.toReviewQueryCursor(): String? {
 }
 
 private fun JsonObject.toNoticeQueryCursor(): String? {
+    val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
     val fields = this["fields"]?.jsonObject ?: return null
-    return fields.getFirestoreString("createdAt")
+    val createdAt = fields.getFirestoreString("createdAt") ?: return null
+    return "$createdAt|$documentName"
 }
 
 private fun JsonObject.toEventQueryCursor(): String? {
@@ -6043,9 +6404,8 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
                 }"""
     } else {
         val scoreRaw = cursorValue.substringBefore("|")
-        val documentName = cursorValue.substringAfter("|", missingDelimiterValue = "")
         val scoreValue = scoreRaw.toDoubleOrNull()
-        if (scoreValue == null || documentName.isBlank()) {
+        if (scoreValue == null) {
             ""
         } else {
             val numericValue = if (scoreRaw.contains(".")) {
@@ -6053,12 +6413,10 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
             } else {
                 """{ "integerValue": "${scoreValue.toLong()}" }"""
             }
-            val escapedDocumentName = escapeFirestoreQueryString(documentName)
             """,
                 "startAt": {
                   "values": [
-                    $numericValue,
-                    { "referenceValue": "$escapedDocumentName" }
+                    $numericValue
                   ],
                   "before": false
                 }"""
@@ -6108,6 +6466,28 @@ private fun String?.toStringFieldStartAfterSection(): String {
                 "startAt": {
                   "values": [
                     { "stringValue": "$escapedFieldValue" }
+                  ],
+                  "before": false
+                }"""
+}
+
+private fun String?.toNoticeStartAfterSection(): String {
+    val cursorValue = this
+    if (cursorValue.isNullOrBlank()) {
+        return ""
+    }
+    val createdAt = cursorValue.substringBefore("|")
+    val documentName = cursorValue.substringAfter("|", missingDelimiterValue = "")
+    if (createdAt.isBlank() || documentName.isBlank()) {
+        return ""
+    }
+    val escapedCreatedAt = escapeFirestoreQueryString(createdAt)
+    val escapedDocumentName = escapeFirestoreQueryString(documentName)
+    return """,
+                "startAt": {
+                  "values": [
+                    { "stringValue": "$escapedCreatedAt" },
+                    { "referenceValue": "$escapedDocumentName" }
                   ],
                   "before": false
                 }"""

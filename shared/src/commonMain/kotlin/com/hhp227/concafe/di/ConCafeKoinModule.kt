@@ -38,7 +38,33 @@ import com.hhp227.concafe.data.source.firestore.FirestoreConfig
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
+import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.event.publisher.*
+import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.CafeDetail
+import com.hhp227.concafe.domain.model.CafeEventCreate
+import com.hhp227.concafe.domain.model.CafeEventUpdate
+import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
+import com.hhp227.concafe.domain.model.CafeNoticeCreate
+import com.hhp227.concafe.domain.model.CafeNoticeUpdate
+import com.hhp227.concafe.domain.model.CafeRegistrationClaim
+import com.hhp227.concafe.domain.model.CafeSort
+import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastClaim
+import com.hhp227.concafe.domain.model.CastClaimStatus
+import com.hhp227.concafe.domain.model.CastDetail
+import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.CastScheduleStatus
+import com.hhp227.concafe.domain.model.CastScheduleUpdate
+import com.hhp227.concafe.domain.model.CastSort
+import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.InquiryCreate
+import com.hhp227.concafe.domain.model.Stamp
+import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
 import org.koin.dsl.module
@@ -58,7 +84,7 @@ val dataSourceModule = module {
     single<BannerRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : BannerRemoteDataSource {
-            override suspend fun fetchHomeBanners(): List<com.hhp227.concafe.domain.model.HomeBanner> {
+            override suspend fun fetchHomeBanners(): List<HomeBanner> {
                 return dataSource.fetchHomeBanners()
             }
         }
@@ -70,29 +96,29 @@ val dataSourceModule = module {
                 query: String?,
                 country: String?,
                 city: String?,
-                sort: com.hhp227.concafe.domain.model.CafeSort,
+                sort: CafeSort,
                 cursor: String?,
                 pageSize: Int
             ) = dataSource.searchCafesRemote(query, country, city, sort, cursor, pageSize)
 
             override suspend fun refreshCafeDetail(cafeId: String) = dataSource.refreshCafeDetail(cafeId)
 
-            override suspend fun fetchCafeDetail(cafeId: String): com.hhp227.concafe.domain.model.CafeDetail {
+            override suspend fun fetchCafeDetail(cafeId: String): CafeDetail {
                 return dataSource.fetchCafeDetailRemote(cafeId) ?: throw NoSuchElementException("cafe detail not found")
             }
 
-            override suspend fun fetchCafeById(cafeId: String): com.hhp227.concafe.domain.model.Cafe? {
+            override suspend fun fetchCafeById(cafeId: String): Cafe? {
                 return dataSource.fetchCafeByIdRemote(cafeId)
             }
 
-            override suspend fun fetchAllCafes(): List<com.hhp227.concafe.domain.model.Cafe> {
+            override suspend fun fetchAllCafes(): List<Cafe> {
                 return dataSource.fetchAllCafesRemote()
             }
 
-            override suspend fun updateCafeInfoRemote(update: com.hhp227.concafe.domain.model.CafeInfoUpdate) =
+            override suspend fun updateCafeInfoRemote(update: CafeInfoUpdate) =
                 dataSource.updateCafeInfoRemote(update)
 
-            override suspend fun upsertCafeMenuGoodsRemote(update: com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert) =
+            override suspend fun upsertCafeMenuGoodsRemote(update: CafeMenuGoodsUpsert) =
                 dataSource.upsertCafeMenuGoodsRemote(update)
 
             override suspend fun deleteCafeMenuGoodsRemote(cafeId: String, itemId: String) =
@@ -119,11 +145,11 @@ val dataSourceModule = module {
                 return dataSource.fetchOwnedCafeIdsRemote(userId)
             }
 
-            override suspend fun fetchPendingCafeOwnerClaims(userId: String): List<com.hhp227.concafe.domain.model.CafeManagementData.PendingClaimSummary> {
+            override suspend fun fetchPendingCafeOwnerClaims(userId: String): List<CafeManagementData.PendingClaimSummary> {
                 return dataSource.fetchPendingCafeOwnerClaimsRemote(userId)
             }
 
-            override suspend fun fetchPendingCafeRegistrationClaims(userId: String): List<com.hhp227.concafe.domain.model.CafeRegistrationClaim> {
+            override suspend fun fetchPendingCafeRegistrationClaims(userId: String): List<CafeRegistrationClaim> {
                 return dataSource.fetchPendingCafeRegistrationClaimsRemote(userId)
             }
 
@@ -139,7 +165,7 @@ val dataSourceModule = module {
                 return dataSource.fetchCafeCheckInCountRemote(cafeId)
             }
 
-            override suspend fun fetchCafeHomeBannerPreview(cafeId: String): com.hhp227.concafe.domain.model.CafeDashboardData.HomeBannerPreview? {
+            override suspend fun fetchCafeHomeBannerPreview(cafeId: String): CafeDashboardData.HomeBannerPreview? {
                 return dataSource.fetchCafeHomeBannerPreviewRemote(cafeId)
             }
 
@@ -155,7 +181,7 @@ val dataSourceModule = module {
                 query: String?,
                 country: String?,
                 city: String?,
-                sort: com.hhp227.concafe.domain.model.CastSort,
+                sort: CastSort,
                 cursor: String?,
                 pageSize: Int
             ) = dataSource.searchCastsRemote(query, country, city, sort, cursor, pageSize)
@@ -168,7 +194,7 @@ val dataSourceModule = module {
 
             override suspend fun refreshCastDetailRemote(castId: String) = dataSource.refreshCastDetailRemote(castId)
 
-            override suspend fun fetchCastDetail(castId: String): com.hhp227.concafe.domain.model.CastDetail {
+            override suspend fun fetchCastDetail(castId: String): CastDetail {
                 dataSource.refreshCastDetailRemote(castId)
                 return dataSource.fetchCastDetailRemote(castId) ?: throw NoSuchElementException("cast detail not found")
             }
@@ -176,7 +202,7 @@ val dataSourceModule = module {
             override suspend fun getCafeCastPageRemote(cafeId: String, cursor: String?, pageSize: Int) =
                 dataSource.getCafeCastPageRemote(cafeId, cursor, pageSize)
 
-            override suspend fun upsertCastRemote(update: com.hhp227.concafe.domain.model.CastUpsert) =
+            override suspend fun upsertCastRemote(update: CastUpsert) =
                 dataSource.upsertCastRemote(update)
 
             override suspend fun deleteCastRemote(castId: String) = dataSource.deleteCastRemote(castId)
@@ -188,7 +214,7 @@ val dataSourceModule = module {
                 castId: String,
                 fromDate: String,
                 toDate: String
-            ): List<com.hhp227.concafe.domain.model.CastSchedule> {
+            ): List<CastSchedule> {
                 return dataSource.fetchCastSchedulesRemote(castId, fromDate, toDate)
             }
 
@@ -196,14 +222,14 @@ val dataSourceModule = module {
                 castId: String,
                 fromDate: String,
                 toDate: String
-            ): Map<String, com.hhp227.concafe.domain.model.CastScheduleStatus> {
+            ): Map<String, CastScheduleStatus> {
                 return dataSource.fetchCastScheduleStatusesRemote(castId, fromDate, toDate)
             }
 
             override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String) =
                 dataSource.getWorkingCastIdsByCafeAndDate(cafeId, date)
 
-            override suspend fun updateCastScheduleRemote(update: com.hhp227.concafe.domain.model.CastScheduleUpdate) =
+            override suspend fun updateCastScheduleRemote(update: CastScheduleUpdate) =
                 dataSource.updateCastScheduleRemote(update)
 
             override suspend fun refreshFollowedCastIds(userId: String) = dataSource.refreshFollowedCastIds(userId)
@@ -216,21 +242,21 @@ val dataSourceModule = module {
 
             override suspend fun refreshCastByLinkedUserId(userId: String) = dataSource.refreshCastByLinkedUserId(userId)
 
-            override suspend fun fetchCastByLinkedUserId(userId: String): com.hhp227.concafe.domain.model.Cast? {
+            override suspend fun fetchCastByLinkedUserId(userId: String): Cast? {
                 return dataSource.refreshCastByLinkedUserId(userId)
             }
 
             override suspend fun refreshCafeCastsRemote(cafeId: String) = dataSource.refreshCafeCastsRemote(cafeId)
 
-            override suspend fun fetchCafeCasts(cafeId: String): List<com.hhp227.concafe.domain.model.Cast> {
+            override suspend fun fetchCafeCasts(cafeId: String): List<Cast> {
                 return dataSource.fetchCafeCastsByCafeIdRemote(cafeId)
             }
 
-            override suspend fun fetchCastsByIds(castIds: List<String>): List<com.hhp227.concafe.domain.model.Cast> {
+            override suspend fun fetchCastsByIds(castIds: List<String>): List<Cast> {
                 return dataSource.fetchCastsByIdsRemote(castIds)
             }
 
-            override suspend fun fetchAllCasts(): List<com.hhp227.concafe.domain.model.Cast> {
+            override suspend fun fetchAllCasts(): List<Cast> {
                 return dataSource.fetchAllCastsRemote()
             }
 
@@ -265,17 +291,17 @@ val dataSourceModule = module {
         object : CastClaimRemoteDataSource {
             override suspend fun refreshCastClaimsForUser(userId: String) = dataSource.refreshCastClaimsForUser(userId)
 
-            override suspend fun fetchCastClaimsForUser(userId: String): List<com.hhp227.concafe.domain.model.CastClaim> {
+            override suspend fun fetchCastClaimsForUser(userId: String): List<CastClaim> {
                 return dataSource.fetchCastClaimsForUserRemote(userId)
             }
 
             override suspend fun refreshCastClaimsForCafe(cafeId: String) = dataSource.refreshCastClaimsForCafe(cafeId)
 
-            override suspend fun fetchCastClaimsForCafe(cafeId: String): List<com.hhp227.concafe.domain.model.CastClaim> {
+            override suspend fun fetchCastClaimsForCafe(cafeId: String): List<CastClaim> {
                 return dataSource.fetchCastClaimsForCafeRemote(cafeId)
             }
 
-            override suspend fun fetchAllCastClaims(): List<com.hhp227.concafe.domain.model.CastClaim> {
+            override suspend fun fetchAllCastClaims(): List<CastClaim> {
                 return dataSource.fetchAllCastClaimsRemote()
             }
 
@@ -292,7 +318,7 @@ val dataSourceModule = module {
             override suspend fun updateCastClaimStatusRemote(
                 claimId: String,
                 reviewedBy: String,
-                status: com.hhp227.concafe.domain.model.CastClaimStatus
+                status: CastClaimStatus
             ) = dataSource.updateCastClaimStatusRemote(claimId, reviewedBy, status)
         }
     }
@@ -302,7 +328,7 @@ val dataSourceModule = module {
             override suspend fun createInquiry(
                 userId: String,
                 userNickname: String,
-                input: com.hhp227.concafe.domain.model.InquiryCreate
+                input: InquiryCreate
             ) = dataSource.createInquiryRemote(userId, userNickname, input)
 
             override suspend fun fetchInquiryPage(cursor: String?, pageSize: Int) =
@@ -328,16 +354,16 @@ val dataSourceModule = module {
                 pageSize: Int
             ) = dataSource.getCafeEventPageRemote(cafeId, query, cursor, pageSize)
 
-            override suspend fun createCafeNotice(input: com.hhp227.concafe.domain.model.CafeNoticeCreate) =
+            override suspend fun createCafeNotice(input: CafeNoticeCreate) =
                 dataSource.createCafeNoticeRemote(input)
 
-            override suspend fun createCafeEvent(input: com.hhp227.concafe.domain.model.CafeEventCreate) =
+            override suspend fun createCafeEvent(input: CafeEventCreate) =
                 dataSource.createCafeEventRemote(input)
 
-            override suspend fun updateCafeNotice(input: com.hhp227.concafe.domain.model.CafeNoticeUpdate) =
+            override suspend fun updateCafeNotice(input: CafeNoticeUpdate) =
                 dataSource.updateCafeNoticeRemote(input)
 
-            override suspend fun updateCafeEvent(input: com.hhp227.concafe.domain.model.CafeEventUpdate) =
+            override suspend fun updateCafeEvent(input: CafeEventUpdate) =
                 dataSource.updateCafeEventRemote(input)
 
             override suspend fun deleteCafeNotice(cafeId: String, noticeId: String): String {
@@ -406,7 +432,7 @@ val dataSourceModule = module {
                 memo: String?,
                 latitude: Double,
                 longitude: Double
-            ): com.hhp227.concafe.domain.model.Visit {
+            ): Visit {
                 return dataSource.createVisitRemote(
                     userId = userId,
                     cafeId = cafeId,
@@ -432,7 +458,7 @@ val dataSourceModule = module {
                 userId: String,
                 cursor: String?,
                 pageSize: Int
-            ): com.hhp227.concafe.domain.common.PagedResult<com.hhp227.concafe.domain.model.Visit> {
+            ): PagedResult<Visit> {
                 return dataSource.fetchVisitsByUserPageRemote(userId, cursor, pageSize)
             }
 
@@ -444,7 +470,7 @@ val dataSourceModule = module {
                 return dataSource.hasVerifiedVisitAtCafe(userId, cafeId)
             }
 
-            override suspend fun fetchStamps(userId: String): List<com.hhp227.concafe.domain.model.Stamp> {
+            override suspend fun fetchStamps(userId: String): List<Stamp> {
                 return dataSource.fetchStampsByUserRemote(userId)
             }
 
