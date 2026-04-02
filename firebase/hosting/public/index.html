@@ -33,6 +33,9 @@
       <main class="container">
         <section class="section section-first" id="home-banner">
           <div class="banner-carousel" aria-live="polite">
+            <div class="banner-loading is-active" id="homeBannerLoading" aria-hidden="true">
+              <span class="banner-loading-bar"></span>
+            </div>
             <div class="banner-track" id="homeBannerTrack"></div>
             <div class="banner-dots" id="homeBannerDots"></div>
           </div>
@@ -99,6 +102,21 @@
           </div>
         </section>
 
+        <section class="section feature-banner-section" aria-label="핵심 기능 소개 이미지">
+          <article class="banner-card with-image feature-image-card">
+            <img
+              class="banner-image"
+              src="/assets/images/landing.jpg"
+              alt="메이드 카페 배경과 콘카 앱 화면 소개 이미지"
+              loading="lazy"
+            />
+            <div class="feature-image-overlay">
+              <h3 class="banner-title">콘카 핵심 기능 미리보기</h3>
+              <p class="banner-subtitle">카페 현장 경험과 앱 사용 흐름을 하나의 배너로 소개합니다.</p>
+            </div>
+          </article>
+        </section>
+
         <section class="section" id="goals-stores">
           <div class="section-header">
             <h2 class="section-title">콘카가 지향하는 서비스 목표</h2>
@@ -156,6 +174,7 @@
         const endpoint = "https://us-central1-concafe-5f7fd.cloudfunctions.net/getPublicHomeBanners?limit=5";
         const track = document.getElementById("homeBannerTrack");
         const dots = document.getElementById("homeBannerDots");
+        const loading = document.getElementById("homeBannerLoading");
 
         if (!track || !dots) {
           return;
@@ -188,6 +207,13 @@
         let currentIndex = 0;
         let timerId = null;
         let items = [];
+
+        function setLoading(isLoading) {
+          if (!loading) {
+            return;
+          }
+          loading.classList.toggle("is-active", isLoading);
+        }
 
         function resolveSlides(nextItems) {
           if (Array.isArray(nextItems) && nextItems.length > 0) {
@@ -301,6 +327,7 @@
         track.addEventListener("mouseenter", stopAutoSlide);
         track.addEventListener("mouseleave", startAutoSlide);
 
+        setLoading(true);
         fetch(endpoint)
           .then((response) => {
             if (!response.ok) {
@@ -317,6 +344,9 @@
             items = resolveSlides([]);
             render();
             startAutoSlide();
+          })
+          .finally(() => {
+            setLoading(false);
           });
       })();
     </script>

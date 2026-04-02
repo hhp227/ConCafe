@@ -33,6 +33,10 @@ body {
   padding: 0;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
   font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   color: var(--text);
@@ -269,6 +273,47 @@ a {
   width: 100%;
 }
 
+.banner-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 4;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.banner-loading.is-active {
+  opacity: 1;
+}
+
+.banner-loading-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 36%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef6797 0%, #da4e84 100%);
+  animation: banner-loading-indeterminate 1.15s ease-in-out infinite;
+}
+
+@keyframes banner-loading-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(105%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
 .banner-track {
   display: flex;
   transition: transform 0.36s ease;
@@ -450,6 +495,36 @@ a {
   gap: 6px;
 }
 
+.feature-banner-section {
+  margin-top: 28px;
+}
+
+.feature-image-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  aspect-ratio: 16 / 9;
+}
+
+.feature-image-card .banner-title {
+  font-size: clamp(22px, 3vw, 34px);
+}
+
+.feature-image-overlay {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: 22px 24px;
+}
+
 .policy-wrap {
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
@@ -580,6 +655,17 @@ a {
 
   .banner-card {
     height: clamp(180px, 44vw, 230px);
+    padding: 18px;
+  }
+
+  .feature-image-card {
+    aspect-ratio: 16 / 9;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .feature-image-overlay {
     padding: 18px;
   }
 
