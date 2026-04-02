@@ -59,6 +59,7 @@ class CafeRegistrationClaimRepositoryImpl(
             claimId = claim.claimId,
             requesterUserId = userId,
             requesterNickname = user.nickname,
+            approvedCafeId = null,
             cafeName = claim.cafeName,
             location = "${claim.region.city} ${claim.region.address}",
             requestedAt = claim.requestedAt,

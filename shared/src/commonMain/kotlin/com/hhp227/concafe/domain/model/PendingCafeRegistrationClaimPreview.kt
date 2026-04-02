@@ -4,6 +4,7 @@ data class PendingCafeRegistrationClaimPreview(
     val claimId: String,
     val requesterUserId: String,
     val requesterNickname: String,
+    val approvedCafeId: String?,
     val cafeName: String,
     val location: String,
     val requestedAt: String,

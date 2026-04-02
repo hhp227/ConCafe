@@ -3351,7 +3351,7 @@ class FirestoreConCafeDataSource(
             newCafeId = newCafeId
         )
         adminPendingCafeRegistrationClaimCache.removeAll { existing -> existing.claimId == claimId }
-        return preview
+        return preview.copy(approvedCafeId = newCafeId)
     }
 
     override suspend fun rejectCafeRegistrationClaimForAdmin(
@@ -6180,6 +6180,7 @@ class FirestoreConCafeDataSource(
             claimId = claimId,
             requesterUserId = requesterUserId,
             requesterNickname = requesterNickname,
+            approvedCafeId = fields.getFirestoreString("approvedCafeId"),
             cafeName = fields.getFirestoreString("cafeName").orEmpty(),
             location = location,
             requestedAt = requestedAt,

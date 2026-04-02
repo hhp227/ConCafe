@@ -196,7 +196,14 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
                 if (event is CafeRegistrationClaimEvent.Approved) {
-                    loadNearbyCafePage(cursor = null, append = false)
+                    val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
+                    val exists = _uiState.value.nearbyCafes.any { cafe -> cafe.id == approvedCafeId }
+
+                    if (approvedCafeId.isEmpty() || exists) {
+                        Unit
+                    } else {
+                        loadNearbyCafePage(cursor = null, append = false)
+                    }
                 }
             }
         }
