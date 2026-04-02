@@ -65,12 +65,14 @@ class CachedFirestoreRestApi(
         return "$key|meta|cachedAt"
     }
 
+    // TTL 사용 지점: cachedAt 기준으로 soft TTL 이내면 캐시를 fresh 로 판단한다.
     private fun isFresh(entry: CacheEntry, policy: CachePolicy, nowEpochMillis: Long): Boolean {
         val ageMillis = nowEpochMillis - entry.cachedAtEpochMillis
         val normalizedAgeMillis = if (ageMillis < 0L) 0L else ageMillis
         return normalizedAgeMillis <= policy.softTtlMillis
     }
 
+    // TTL 사용 지점: network 실패 시 fallback 가능한 max stale TTL 범위를 판단한다.
     private fun canUseStale(entry: CacheEntry, policy: CachePolicy, nowEpochMillis: Long): Boolean {
         val ageMillis = nowEpochMillis - entry.cachedAtEpochMillis
         val normalizedAgeMillis = if (ageMillis < 0L) 0L else ageMillis
@@ -81,6 +83,7 @@ class CachedFirestoreRestApi(
         }
     }
 
+    // fallback + TTL 사용 지점: GET 호출 실패 시 canUseStale/shouldUseStaleForFailure 조건이면 stale 캐시를 반환한다.
     private suspend fun executeGetWithPolicy(path: String, idToken: String?): String {
         val cacheKey = buildGetCacheKey(path)
         val policy = resolvePolicy(path)
@@ -115,6 +118,7 @@ class CachedFirestoreRestApi(
         }
     }
 
+    // fallback + TTL 사용 지점: POST 호출 실패 시 canUseStale/shouldUseStaleForFailure 조건이면 stale 캐시를 반환한다.
     private suspend fun executePostWithPolicy(path: String, body: String, idToken: String?): String {
         val cacheKey = buildPostCacheKey(path, body)
         val policy = resolvePolicy(path)
@@ -211,6 +215,7 @@ class CachedFirestoreRestApi(
     )
 
     private companion object {
+        // TTL 정책 정의 지점: 쿼리 응답은 fresh TTL 0ms, 문서 응답은 fresh TTL 30s를 사용한다.
         private val QUERY_POLICY = CachePolicy(
             softTtlMillis = 0L,
             maxStaleMillis = 24 * 60 * 60 * 1000L

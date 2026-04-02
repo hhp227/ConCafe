@@ -1,7 +1,6 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.AuthDataSource
-import com.hhp227.concafe.data.source.MyInfoDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.User
@@ -9,24 +8,17 @@ import com.hhp227.concafe.domain.repository.UserRepository
 
 class UserRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val myInfoDataSource: MyInfoDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : UserRepository {
     override suspend fun getUser(userId: String): User {
-        val remoteUser = runCatching {
-            firestoreSyncDataSource.fetchUser(userId)
-        }.getOrNull()
-
-        if (remoteUser != null) {
-            val replaced = authDataSource.replaceUser(remoteUser)
-
-            if (!replaced) {
-                authDataSource.addUser(remoteUser)
-            }
-            return remoteUser
-        }
-        return authDataSource.findUserById(userId)
+        val remoteUser = firestoreSyncDataSource.fetchUser(userId)
             ?: throw NoSuchElementException("user not found")
+        val replaced = authDataSource.replaceUser(remoteUser)
+
+        if (!replaced) {
+            authDataSource.addUser(remoteUser)
+        }
+        return remoteUser
     }
 
     override suspend fun updateProfile(userId: String, nickname: String, profileImage: String?) {
@@ -53,14 +45,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun getMyPageSummary(userId: String): MyPageSummary {
-        val remoteSummary = runCatching {
-            firestoreSyncDataSource.fetchMyPageSummary(userId)
-        }.getOrNull()
-
-        if (remoteSummary != null) {
-            return remoteSummary
-        } else {
-            return myInfoDataSource.defaultMyPageSummary(userId)
-        }
+        return firestoreSyncDataSource.fetchMyPageSummary(userId)
+            ?: throw NoSuchElementException("my page summary not found")
     }
 }

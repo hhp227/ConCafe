@@ -1,7 +1,7 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.AuthDataSource
-import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.User
@@ -13,7 +13,7 @@ import kotlinx.datetime.Clock
 
 class AuthRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val castDataSource: CastDataSource,
+    private val castRemoteDataSource: CastRemoteDataSource,
     private val authTokenProvider: FirestoreAuthTokenProvider,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : AuthRepository {
@@ -107,7 +107,7 @@ class AuthRepositoryImpl(
 
         authDataSource.addUser(user)
         if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-            castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+            castRemoteDataSource.setAffiliatedCafeId(user.id, affiliatedCafeId)
         }
         val pushResult = runCatching { firestoreSyncDataSource.pushUser(user) }
 
@@ -115,7 +115,7 @@ class AuthRepositoryImpl(
             authDataSource.removeUser(user.id)
 
             if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-                castDataSource.affiliatedCafeIdByUser.remove(user.id)
+                castRemoteDataSource.clearAffiliatedCafeId(user.id)
             }
             if (signUpSession != null) {
                 runCatching {
