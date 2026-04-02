@@ -1,10 +1,8 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.CastClaimRemoteDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
-import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CastClaim
@@ -17,9 +15,7 @@ import com.hhp227.concafe.domain.repository.CastClaimRepository
 class CastClaimRepositoryImpl(
     private val castClaimRemoteDataSource: CastClaimRemoteDataSource,
     private val castRemoteDataSource: CastRemoteDataSource,
-    private val cafeRemoteDataSource: CafeRemoteDataSource,
-    private val authDataSource: AuthDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val cafeRemoteDataSource: CafeRemoteDataSource
 ) : CastClaimRepository {
     private suspend fun resolveAffiliatedCafeId(userId: String, linkedCast: Cast?): String? {
         val mappedAffiliatedCafeId = castRemoteDataSource.fetchAffiliatedCafeId(userId)
@@ -101,7 +97,7 @@ class CastClaimRepositoryImpl(
                 .filter { cast -> cast.linkedUserId == null }
                 .sortedBy { cast -> cast.name }
                 .map { cast -> CastClaimCandidate(cast.id, cast.name) }
-            return pagingDataSource.toPaged(items, cursor, pageSize)
+            return toPaged(items = items, cursor = cursor, pageSize = pageSize)
         }
     }
 
@@ -112,10 +108,8 @@ class CastClaimRepositoryImpl(
             .filter { claim -> claim.status == CastClaimStatus.PENDING }
             .sortedByDescending { claim -> claim.createdAt }
             .map { claim ->
-                val requester = authDataSource.findUserById(claim.userId)
                 val cast = castsById[claim.castId]
                 val requesterNickname = claim.requesterNickname
-                    ?: requester?.nickname
                     ?: "알 수 없음"
                 PendingCastClaimPreview(
                     claimId = claim.id,
@@ -153,6 +147,22 @@ class CastClaimRepositoryImpl(
                 )
             }
         }
+    }
+
+    private fun <T> toPaged(items: List<T>, cursor: String?, pageSize: Int): PagedResult<T> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val startIndex = cursor?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val safeStartIndex = startIndex.coerceAtMost(items.size)
+        val endIndex = (safeStartIndex + safePageSize).coerceAtMost(items.size)
+        val pagedItems = items.subList(safeStartIndex, endIndex)
+        val hasNext = endIndex < items.size
+        val nextCursor = if (hasNext) endIndex.toString() else null
+
+        return PagedResult(
+            items = pagedItems,
+            nextCursor = nextCursor,
+            hasNext = hasNext
+        )
     }
 
     override suspend fun approveCastClaim(claimId: String, reviewedBy: String): CastClaim {

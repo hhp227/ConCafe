@@ -1,29 +1,21 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.repository.UserRepository
 
 class UserRepositoryImpl(
-    private val authDataSource: AuthDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : UserRepository {
     override suspend fun getUser(userId: String): User {
-        val remoteUser = firestoreSyncDataSource.fetchUser(userId)
+        return firestoreSyncDataSource.fetchUser(userId)
             ?: throw NoSuchElementException("user not found")
-        val replaced = authDataSource.replaceUser(remoteUser)
-
-        if (!replaced) {
-            authDataSource.addUser(remoteUser)
-        }
-        return remoteUser
     }
 
     override suspend fun updateProfile(userId: String, nickname: String, profileImage: String?) {
-        val current = authDataSource.findUserById(userId)
-        if (current == null) {
+        val existingUser = firestoreSyncDataSource.fetchUser(userId)
+        if (existingUser == null) {
             throw NoSuchElementException("user not found")
         }
 
@@ -34,13 +26,6 @@ class UserRepositoryImpl(
             userId = userId,
             nickname = normalizedNickname,
             profileImage = normalizedProfileImage
-        )
-
-        authDataSource.replaceUser(
-            current.copy(
-                nickname = normalizedNickname,
-                profileImage = normalizedProfileImage
-            )
         )
     }
 

@@ -31,9 +31,7 @@ class AuthRepositoryImpl(
                 return user
             }
         }
-        return authDataSource.findUserByEmail(email)?.also {
-            authDataSource.currentUserId = it.id
-        } ?: throw IllegalArgumentException("invalid credentials")
+        throw IllegalArgumentException("invalid credentials")
     }
 
     override suspend fun signInWithGoogleIdToken(idToken: String): User {
@@ -86,10 +84,6 @@ class AuthRepositoryImpl(
             throw IllegalArgumentException("email/password/nickname is required")
         }
 
-        if (authDataSource.isEmailTaken(email)) {
-            throw IllegalArgumentException("email already exists")
-        }
-
         val signUpSession = if (authTokenProvider.supportsEmailPasswordAuth()) {
             authTokenProvider.signUpWithEmailPassword(email, password)
         } else {
@@ -105,15 +99,12 @@ class AuthRepositoryImpl(
             createdAt = nowIsoUtc()
         )
 
-        authDataSource.addUser(user)
         if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
             castRemoteDataSource.setAffiliatedCafeId(user.id, affiliatedCafeId)
         }
         val pushResult = runCatching { firestoreSyncDataSource.pushUser(user) }
 
         if (pushResult.isFailure) {
-            authDataSource.removeUser(user.id)
-
             if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
                 castRemoteDataSource.clearAffiliatedCafeId(user.id)
             }
@@ -163,7 +154,7 @@ class AuthRepositoryImpl(
             ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
-            ?: authDataSource.findUserById(currentUserId)?.email
+            ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
             ?: throw IllegalArgumentException("current user email not found")
         val verifiedSession = try {
             authTokenProvider.signInWithEmailPassword(
@@ -204,7 +195,7 @@ class AuthRepositoryImpl(
             ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
-            ?: authDataSource.findUserById(currentUserId)?.email
+            ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
             ?: throw IllegalArgumentException("current user email not found")
         val verifiedSession = try {
             authTokenProvider.signInWithEmailPassword(
@@ -227,7 +218,6 @@ class AuthRepositoryImpl(
 
         firestoreSyncDataSource.deleteUser(currentUserId)
         authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
-        authDataSource.removeUser(currentUserId)
         authDataSource.currentUserId = null
     }
 
@@ -237,15 +227,6 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
-        val currentUserId = authDataSource.currentUserId
-
-        if (currentUserId != null) {
-            val localUser = authDataSource.findUserById(currentUserId)
-
-            if (localUser != null) {
-                return localUser
-            }
-        }
         syncCurrentUserIdFromFirebase()
         return resolveCurrentUser()
     }
@@ -260,30 +241,7 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(userId)
 
         if (remoteUser != null) {
-            val replaced = authDataSource.replaceUser(remoteUser)
-
-            if (!replaced) {
-                authDataSource.addUser(remoteUser)
-            }
             return remoteUser
-        }
-
-        val foundById = authDataSource.findUserById(userId)
-
-        if (foundById != null) {
-            return foundById
-        }
-
-        val foundByEmail = authDataSource.findUserByEmail(email)
-
-        if (foundByEmail != null) {
-            val migratedUser = foundByEmail.copy(id = userId, email = email)
-            val replaced = authDataSource.replaceUser(migratedUser)
-            return if (replaced) {
-                migratedUser
-            } else {
-                foundByEmail
-            }
         }
 
         val createdUser = User(
@@ -296,16 +254,21 @@ class AuthRepositoryImpl(
             createdAt = nowIsoUtc()
         )
 
-        authDataSource.addUser(createdUser)
         runCatching { firestoreSyncDataSource.pushUser(createdUser) }
         return createdUser
     }
 
     private suspend fun syncCurrentUserIdFromFirebase() {
         if (authTokenProvider.supportsEmailPasswordAuth()) {
-            val idToken = authTokenProvider.getIdToken()
-            val firebaseUserId = if (idToken.isNullOrBlank()) null else authTokenProvider.getCurrentUserId()
-            authDataSource.currentUserId = firebaseUserId
+            val currentUserIdFromSession = runCatching {
+                authTokenProvider.getCurrentUserId()
+            }.getOrNull()
+
+            if (!currentUserIdFromSession.isNullOrBlank()) {
+                authDataSource.currentUserId = currentUserIdFromSession
+            } else {
+                Unit
+            }
         }
     }
 
@@ -314,18 +277,7 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
 
         if (remoteUser != null) {
-            val replaced = authDataSource.replaceUser(remoteUser)
-
-            if (!replaced) {
-                authDataSource.addUser(remoteUser)
-            }
             return remoteUser
-        }
-
-        val localUser = authDataSource.findUserById(currentUserId)
-
-        if (localUser != null) {
-            return localUser
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
@@ -333,20 +285,6 @@ class AuthRepositoryImpl(
         if (currentUserEmail.isNullOrBlank()) {
             return null
         }
-        val foundByEmail = authDataSource.findUserByEmail(currentUserEmail)
-
-        if (foundByEmail != null) {
-            val aligned = if (foundByEmail.id == currentUserId) {
-                foundByEmail
-            } else {
-                val migrated = foundByEmail.copy(id = currentUserId)
-
-                authDataSource.replaceUser(migrated)
-                migrated
-            }
-            return aligned
-        }
-
         val fallbackUser = User(
             id = currentUserId,
             email = currentUserEmail,
@@ -356,7 +294,7 @@ class AuthRepositoryImpl(
             banned = false,
             createdAt = nowIsoUtc()
         )
-        authDataSource.addUser(fallbackUser)
+        runCatching { firestoreSyncDataSource.pushUser(fallbackUser) }
         return fallbackUser
     }
 }

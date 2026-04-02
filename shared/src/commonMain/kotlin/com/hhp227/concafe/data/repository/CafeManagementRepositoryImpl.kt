@@ -1,19 +1,19 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
 
 class CafeManagementRepositoryImpl(
-    private val authDataSource: AuthDataSource,
     private val cafeRemoteDataSource: CafeRemoteDataSource,
-    private val castRemoteDataSource: CastRemoteDataSource
+    private val castRemoteDataSource: CastRemoteDataSource,
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
     override suspend fun getOwnedCafes(userId: String): List<CafeManagementData.OwnedCafeSummary> {
-        val currentUser = authDataSource.findUserById(userId)
+        val currentUser = firestoreSyncDataSource.fetchUser(userId)
         val allCafes = cafeRemoteDataSource.fetchAllCafes()
         val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
@@ -44,7 +44,7 @@ class CafeManagementRepositoryImpl(
     }
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
-        val currentUser = authDataSource.findUserById(userId)
+        val currentUser = firestoreSyncDataSource.fetchUser(userId)
         val allCafes = cafeRemoteDataSource.fetchAllCafes()
         val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {

@@ -52,7 +52,13 @@ class MyInfoViewModel(
 
     private fun observeSession() {
         viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        user = user
+                    )
+                }
                 loadMyInfo()
             }
         }
@@ -89,10 +95,12 @@ class MyInfoViewModel(
                     )
                 }
                 is AppResult.Failure -> {
-                    _uiState.value = empty().copy(
-                        isLoading = false,
-                        errorMessage = result.error.toString()
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.error.toString()
+                        )
+                    }
                 }
             }
         }

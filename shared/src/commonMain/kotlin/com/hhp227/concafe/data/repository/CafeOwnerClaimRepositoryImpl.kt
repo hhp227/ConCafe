@@ -1,6 +1,5 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
@@ -11,12 +10,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class CafeOwnerClaimRepositoryImpl(
-    private val authDataSource: AuthDataSource,
     private val cafeRemoteDataSource: CafeRemoteDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeOwnerClaimRepository {
     override suspend fun createCafeOwnerClaim(userId: String, cafeId: String): PendingCafeOwnerClaimPreview {
-        val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
+        val user = firestoreSyncDataSource.fetchUser(userId) ?: throw NoSuchElementException("user not found")
         val cafe = cafeRemoteDataSource.fetchCafeById(cafeId) ?: throw NoSuchElementException("cafe not found")
         val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
         val pendingClaims = cafeRemoteDataSource.fetchPendingCafeOwnerClaims(userId)

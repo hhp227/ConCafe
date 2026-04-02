@@ -1,6 +1,5 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
@@ -12,7 +11,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class CafeRegistrationClaimRepositoryImpl(
-    private val authDataSource: AuthDataSource,
     private val cafeRemoteDataSource: CafeRemoteDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeRegistrationClaimRepository {
@@ -20,7 +18,7 @@ class CafeRegistrationClaimRepositoryImpl(
         userId: String,
         draft: CafeRegistrationDraft
     ): PendingCafeRegistrationClaimPreview {
-        val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
+        val user = firestoreSyncDataSource.fetchUser(userId) ?: throw NoSuchElementException("user not found")
         if (draft.name.isBlank()) throw IllegalArgumentException("카페명을 입력해 주세요.")
         if (draft.description.isBlank()) throw IllegalArgumentException("카페 소개를 입력해 주세요.")
         if (draft.region.address.isBlank()) throw IllegalArgumentException("주소를 입력해 주세요.")

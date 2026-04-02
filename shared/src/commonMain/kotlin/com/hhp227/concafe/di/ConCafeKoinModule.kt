@@ -21,30 +21,19 @@ import com.hhp227.concafe.data.repository.StorageRepositoryImpl
 import com.hhp227.concafe.data.repository.UserRepositoryImpl
 import com.hhp227.concafe.data.repository.VisitRepositoryImpl
 import com.hhp227.concafe.data.source.AuthDataSource
-import com.hhp227.concafe.data.source.BannerDataSource
 import com.hhp227.concafe.data.source.BannerRemoteDataSource
-import com.hhp227.concafe.data.source.CafeDataSource
 import com.hhp227.concafe.data.source.CafeRemoteDataSource
-import com.hhp227.concafe.data.source.CastClaimDataSource
 import com.hhp227.concafe.data.source.CastClaimRemoteDataSource
-import com.hhp227.concafe.data.source.CastDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
-import com.hhp227.concafe.data.source.InquiryDataSource
 import com.hhp227.concafe.data.source.InquiryRemoteDataSource
 import com.hhp227.concafe.data.source.MyInfoRemoteDataSource
 import com.hhp227.concafe.data.source.NetworkStatusDataSource
 import com.hhp227.concafe.data.source.NoticeRemoteDataSource
-import com.hhp227.concafe.data.source.NoticeDataSource
 import com.hhp227.concafe.data.source.NotificationDataSource
-import com.hhp227.concafe.data.source.PagingDataSource
 import com.hhp227.concafe.data.source.PlatformNetworkStatusDataSource
 import com.hhp227.concafe.data.source.RankingDataSource
 import com.hhp227.concafe.data.source.ReviewRemoteDataSource
-import com.hhp227.concafe.data.source.ReviewDataSource
-import com.hhp227.concafe.data.source.SocialDataSource
-import com.hhp227.concafe.data.source.VisitDataSource
 import com.hhp227.concafe.data.source.VisitRemoteDataSource
-import com.hhp227.concafe.data.source.MyInfoDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConfig
 import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
@@ -66,7 +55,6 @@ val dataSourceModule = module {
         )
     }
     single<AuthDataSource> { get<FirestoreConCafeDataSource>() }
-    single<BannerDataSource> { get<FirestoreConCafeDataSource>() }
     single<BannerRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : BannerRemoteDataSource {
@@ -75,7 +63,6 @@ val dataSourceModule = module {
             }
         }
     }
-    single<CafeDataSource> { get<FirestoreConCafeDataSource>() }
     single<CafeRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : CafeRemoteDataSource {
@@ -91,13 +78,11 @@ val dataSourceModule = module {
             override suspend fun refreshCafeDetail(cafeId: String) = dataSource.refreshCafeDetail(cafeId)
 
             override suspend fun fetchCafeDetail(cafeId: String): com.hhp227.concafe.domain.model.CafeDetail {
-                dataSource.refreshCafeDetail(cafeId)
-                return dataSource.cafeDetail(cafeId) ?: throw NoSuchElementException("cafe detail not found")
+                return dataSource.fetchCafeDetailRemote(cafeId) ?: throw NoSuchElementException("cafe detail not found")
             }
 
             override suspend fun fetchCafeById(cafeId: String): com.hhp227.concafe.domain.model.Cafe? {
-                dataSource.refreshCafeDetail(cafeId)
-                return dataSource.cafeDetail(cafeId)?.cafe
+                return dataSource.fetchCafeByIdRemote(cafeId)
             }
 
             override suspend fun fetchAllCafes(): List<com.hhp227.concafe.domain.model.Cafe> {
@@ -163,7 +148,6 @@ val dataSourceModule = module {
             }
         }
     }
-    single<CastDataSource> { get<FirestoreConCafeDataSource>() }
     single<CastRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : CastRemoteDataSource {
@@ -186,7 +170,7 @@ val dataSourceModule = module {
 
             override suspend fun fetchCastDetail(castId: String): com.hhp227.concafe.domain.model.CastDetail {
                 dataSource.refreshCastDetailRemote(castId)
-                return dataSource.castDetail(castId) ?: throw NoSuchElementException("cast detail not found")
+                return dataSource.fetchCastDetailRemote(castId) ?: throw NoSuchElementException("cast detail not found")
             }
 
             override suspend fun getCafeCastPageRemote(cafeId: String, cursor: String?, pageSize: Int) =
@@ -205,8 +189,7 @@ val dataSourceModule = module {
                 fromDate: String,
                 toDate: String
             ): List<com.hhp227.concafe.domain.model.CastSchedule> {
-                dataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-                return dataSource.castSchedules(castId, fromDate, toDate)
+                return dataSource.fetchCastSchedulesRemote(castId, fromDate, toDate)
             }
 
             override suspend fun fetchCastScheduleStatuses(
@@ -214,8 +197,7 @@ val dataSourceModule = module {
                 fromDate: String,
                 toDate: String
             ): Map<String, com.hhp227.concafe.domain.model.CastScheduleStatus> {
-                dataSource.refreshCastSchedulesRemote(castId, fromDate, toDate)
-                return dataSource.castScheduleStatuses(castId, fromDate, toDate)
+                return dataSource.fetchCastScheduleStatusesRemote(castId, fromDate, toDate)
             }
 
             override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String) =
@@ -278,7 +260,6 @@ val dataSourceModule = module {
             override suspend fun getCastFollowerSnapshots(castId: String) = dataSource.getCastFollowerSnapshots(castId)
         }
     }
-    single<CastClaimDataSource> { get<FirestoreConCafeDataSource>() }
     single<CastClaimRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : CastClaimRemoteDataSource {
@@ -315,7 +296,6 @@ val dataSourceModule = module {
             ) = dataSource.updateCastClaimStatusRemote(claimId, reviewedBy, status)
         }
     }
-    single<InquiryDataSource> { get<FirestoreConCafeDataSource>() }
     single<InquiryRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : InquiryRemoteDataSource {
@@ -329,7 +309,6 @@ val dataSourceModule = module {
                 dataSource.getInquiryPageRemote(cursor, pageSize)
         }
     }
-    single<NoticeDataSource> { get<FirestoreConCafeDataSource>() }
     single<NoticeRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : NoticeRemoteDataSource {
@@ -372,9 +351,7 @@ val dataSourceModule = module {
             }
         }
     }
-    single<PagingDataSource> { get<FirestoreConCafeDataSource>() }
     single<RankingDataSource> { get<FirestoreConCafeDataSource>() }
-    single<ReviewDataSource> { get<FirestoreConCafeDataSource>() }
     single<ReviewRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : ReviewRemoteDataSource {
@@ -413,8 +390,6 @@ val dataSourceModule = module {
                 dataSource.deleteReviewRemote(reviewId, requesterId)
         }
     }
-    single<SocialDataSource> { get<FirestoreConCafeDataSource>() }
-    single<VisitDataSource> { get<FirestoreConCafeDataSource>() }
     single<VisitRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : VisitRemoteDataSource {
@@ -422,7 +397,7 @@ val dataSourceModule = module {
                 cafeId: String,
                 latitude: Double,
                 longitude: Double
-            ) = dataSource.verifyVisitResult(cafeId, latitude, longitude)
+            ) = dataSource.verifyVisitRemote(cafeId, latitude, longitude)
 
             override suspend fun createVisit(
                 userId: String,
@@ -478,18 +453,15 @@ val dataSourceModule = module {
             }
         }
     }
-    single<MyInfoDataSource> { get<FirestoreConCafeDataSource>() }
     single<MyInfoRemoteDataSource> {
         val dataSource = get<FirestoreConCafeDataSource>()
         object : MyInfoRemoteDataSource {
             override suspend fun isReviewPromptDismissed(userId: String, visitId: String): Boolean {
-                return dataSource.dismissedReviewPromptVisitIdsByUser[userId]?.contains(visitId) == true
+                return dataSource.isReviewPromptDismissedRemote(userId, visitId)
             }
 
             override suspend fun dismissReviewPrompt(userId: String, visitId: String) {
-                val dismissedVisitIds = dataSource.dismissedReviewPromptVisitIdsByUser
-                    .getOrPut(userId) { mutableSetOf() }
-                dismissedVisitIds.add(visitId)
+                dataSource.dismissReviewPromptRemote(userId, visitId)
             }
         }
     }
@@ -501,15 +473,15 @@ val dataSourceModule = module {
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
     single<AdminOperationsRepository> { AdminOperationsRepositoryImpl(get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get()) }
     single<BannerRepository> { BannerRepositoryImpl(get(), get()) }
     single<CafeDashboardRepository> { CafeDashboardRepositoryImpl(get(), get()) }
     single<CafeManagementRepository> { CafeManagementRepositoryImpl(get(), get(), get()) }
-    single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get(), get()) }
-    single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get(), get()) }
+    single<CafeOwnerClaimRepository> { CafeOwnerClaimRepositoryImpl(get(), get()) }
+    single<CafeRegistrationClaimRepository> { CafeRegistrationClaimRepositoryImpl(get(), get()) }
     single<CafeRepository> { CafeRepositoryImpl(get(), get()) }
-    single<CastRepository> { CastRepositoryImpl(get(), get(), get()) }
-    single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<CastRepository> { CastRepositoryImpl(get(), get()) }
+    single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get()) }
     single<InquiryRepository> { InquiryRepositoryImpl(get()) }
     single<VisitRepository> { VisitRepositoryImpl(get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get()) }

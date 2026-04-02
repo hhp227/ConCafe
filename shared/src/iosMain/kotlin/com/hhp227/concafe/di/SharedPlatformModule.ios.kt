@@ -4,9 +4,7 @@ import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.IosCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
-import com.hhp227.concafe.data.source.firestore.FirestoreRestCacheStore
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
-import com.hhp227.concafe.data.source.firestore.IosFirestoreRestCacheStore
 import com.hhp227.concafe.data.source.firestore.IosFirebaseAuthSessionStore
 import com.hhp227.concafe.data.source.firestore.KtorFirebaseAuthRestClient
 import com.hhp227.concafe.data.source.firestore.KtorFirestoreRestApi
@@ -20,7 +18,6 @@ actual fun sharedPlatformModules(): List<Module> {
         module {
             single { createPlatformHttpClient() }
             single<CafeExternalLinkLocalStore> { IosCafeExternalLinkLocalStore() }
-            single<FirestoreRestCacheStore> { IosFirestoreRestCacheStore() }
             single<FirestoreRestApi> {
                 KtorFirestoreRestApi(get(), FIREBASE_IOS_API_KEY)
             }

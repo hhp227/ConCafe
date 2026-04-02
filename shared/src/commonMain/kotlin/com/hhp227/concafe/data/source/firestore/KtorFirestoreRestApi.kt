@@ -23,7 +23,6 @@ class KtorFirestoreRestApi(
             contentType(ContentType.Application.Json)
             applyAuthorization(idToken)
         }
-
         return readResponseBodyOrThrow("GET", resolvedPath, response.status, response.bodyAsText())
     }
 
@@ -34,7 +33,6 @@ class KtorFirestoreRestApi(
             setBody(body)
             applyAuthorization(idToken)
         }
-
         return readResponseBodyOrThrow(HttpMethod.Post.value, resolvedPath, response.status, response.bodyAsText())
     }
 
@@ -53,7 +51,6 @@ class KtorFirestoreRestApi(
             setBody(body)
             applyAuthorization(idToken)
         }
-
         return readResponseBodyOrThrow(HttpMethod.Patch.value, resolvedPath, response.status, response.bodyAsText())
     }
 
