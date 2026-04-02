@@ -47,6 +47,10 @@ class NotificationRepositoryImpl(
         )
     }
 
+    override suspend fun disableAllPushTokens(userId: String) {
+        notificationDataSource.disableAllPushTokens(userId = userId)
+    }
+
     override suspend fun sendFanAnnouncement(
         userId: String,
         cafeId: String,

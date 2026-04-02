@@ -180,7 +180,7 @@ val useCaseModule = module {
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { RequestPasswordResetUseCase(get()) }
     factory { SignUpUseCase(get()) }
-    factory { SignOutUseCase(get()) }
+    factory { SignOutUseCase(get(), get()) }
     factory { RequestPhoneVerificationCodeUseCase() }
     factory { VerifyPhoneVerificationCodeUseCase() }
     factory { ShouldShowReviewPromptUseCase(get(), get()) }

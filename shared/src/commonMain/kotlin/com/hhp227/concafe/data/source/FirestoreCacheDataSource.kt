@@ -681,6 +681,14 @@ class FirestoreCacheDataSource :
         }
     }
 
+    override suspend fun disableAllPushTokens(userId: String) {
+        if (userId.isBlank()) {
+            throw IllegalArgumentException("invalid push token payload")
+        } else {
+            Unit
+        }
+    }
+
     override suspend fun sendFanAnnouncement(
         userId: String,
         cafeId: String,

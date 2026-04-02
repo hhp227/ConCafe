@@ -359,6 +359,67 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    override suspend fun disableAllPushTokens(userId: String) {
+        val normalizedUserId = userId.trim()
+
+        if (normalizedUserId.isEmpty()) {
+            throw IllegalArgumentException("invalid push token payload")
+        }
+        val idToken = tokenProvider.getIdToken()
+        val collectionPath = "${config.documentBasePath()}/${FirestorePaths.USERS}/$normalizedUserId/${FirestorePaths.USER_DEVICE_TOKENS}"
+        val documents = runCatching {
+            val response = restApi.get(path = collectionPath, idToken = idToken)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            parsed["documents"]?.jsonArray.orEmpty().map { element -> element.jsonObject }
+        }.recoverCatching {
+            val response = restApi.get(path = collectionPath, idToken = null)
+            val parsed = Json.parseToJsonElement(response).jsonObject
+            parsed["documents"]?.jsonArray.orEmpty().map { element -> element.jsonObject }
+        }.getOrElse { throwable ->
+            throw IllegalStateException("Failed to load push token documents", throwable)
+        }
+
+        if (documents.isEmpty()) {
+            Unit
+        } else {
+            val now = Clock.System.now().toString()
+
+            for (document in documents) {
+                val name = document["name"]?.jsonPrimitive?.contentOrNull
+
+                if (name.isNullOrBlank()) {
+                    continue
+                } else {
+                    val tokenDocumentId = name.substringAfterLast("/")
+                    val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$normalizedUserId/${FirestorePaths.USER_DEVICE_TOKENS}/$tokenDocumentId"
+                    val body = firestoreDocumentBody(
+                        fields = mapOf(
+                            "isEnabled" to firestoreBoolean(false),
+                            "updatedAt" to firestoreString(now)
+                        )
+                    )
+                    runCatching {
+                        restApi.patch(
+                            path = path,
+                            body = body,
+                            idToken = idToken,
+                            updateMask = listOf("isEnabled", "updatedAt")
+                        )
+                    }.recoverCatching {
+                        restApi.patch(
+                            path = path,
+                            body = body,
+                            idToken = null,
+                            updateMask = listOf("isEnabled", "updatedAt")
+                        )
+                    }.getOrElse { throwable ->
+                        throw IllegalStateException("Failed to disable push token", throwable)
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendFanAnnouncement(
         userId: String,
         cafeId: String,
