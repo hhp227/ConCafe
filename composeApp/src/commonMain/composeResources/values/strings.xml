@@ -714,4 +714,22 @@
     <string name="cast_weekday_fri">Fri</string>
     <string name="cast_weekday_sat">Sat</string>
     <string name="cast_weekday_sun">Sun</string>
+    <string name="castedit_accessibility_back">Back</string>
+    <string name="castedit_alert_image_required_title">Please add an image</string>
+    <string name="castedit_alert_image_required_desc">At least one profile or gallery image is required.</string>
+    <string name="castedit_label_name">Cast Name</string>
+    <string name="castedit_placeholder_name">Please enter your display name</string>
+    <string name="castedit_label_concept_role">Concept Role</string>
+    <string name="castedit_placeholder_concept_role">e.g. Lead Maid, Tea Master, Apprentice</string>
+    <string name="castedit_label_intro">Introduction &amp; Bio</string>
+    <string name="castedit_placeholder_intro">Please introduce personality, traits, and specialties...</string>
+    <string name="castedit_birthday_label">Birthday</string>
+    <string name="castedit_birthday_pick">Select Birthday</string>
+    <string name="castedit_profile_photo_title">Cast Profile Photo</string>
+    <string name="castedit_profile_photo_hint">Tap to change the photo</string>
+    <string name="castedit_gallery_title">Gallery Photos</string>
+    <string name="castedit_gallery_guide">Up to %1$d images can be registered in the cast gallery.</string>
+    <string name="castedit_gallery_item_label">Image %1$d</string>
+    <string name="castedit_gallery_add">Add image</string>
+    <string name="castedit_gallery_remove">Remove image</string>
 </resources>

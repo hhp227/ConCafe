@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -164,8 +166,8 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = when (metric.trend) {
-                        MetricTrend.UP -> Icons.Default.TrendingUp
-                        MetricTrend.DOWN -> Icons.Default.TrendingDown
+                        MetricTrend.UP -> Icons.AutoMirrored.Filled.TrendingUp
+                        MetricTrend.DOWN -> Icons.AutoMirrored.Filled.TrendingDown
                         MetricTrend.NEW -> Icons.Default.PendingActions
                     },
                     contentDescription = null,

@@ -5330,19 +5330,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Main Cafe · %@"
+            "value" : "%@ major concept cafes"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "メインカフェ · %@"
+            "value" : "%@ の主要コンセプトカフェ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "메인 카페 · %@"
+            "value" : "%@ 주요 컨셉카페"
           }
         }
       }
@@ -5364,7 +5364,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "근처 컨셉카페"
+            "value" : "주변 컨셉카페 지도"
           }
         }
       }
@@ -15671,6 +15671,132 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Sun" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "日" } },
         "ko" : { "stringUnit" : { "state" : "translated", "value" : "일" } }
+      }
+    },
+    "castedit_accessibility_back" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "戻る" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "뒤로가기" } }
+      }
+    },
+    "castedit_alert_image_required_desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "At least one profile or gallery image is required." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロフィールまたはギャラリー画像のうち最低1枚は必須です。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다." } }
+      }
+    },
+    "castedit_alert_image_required_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please add an image" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像を登録してください" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지를 등록해주세요" } }
+      }
+    },
+    "castedit_birthday_label" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Birthday" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "誕生日" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "생일" } }
+      }
+    },
+    "castedit_birthday_pick" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select Birthday" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "誕生日を選択" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "생일 선택" } }
+      }
+    },
+    "castedit_gallery_add" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add image" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真を追加" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진 추가" } }
+      }
+    },
+    "castedit_gallery_guide" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Up to %lld images can be registered in the cast gallery." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャストギャラリーには最大 %lld 枚まで登録できます。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 갤러리에는 최대 %lld장까지 등록할 수 있습니다." } }
+      }
+    },
+    "castedit_gallery_item_label" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Image %lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像 %lld" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지 %lld" } }
+      }
+    },
+    "castedit_gallery_remove" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove image" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像を削除" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지 삭제" } }
+      }
+    },
+    "castedit_gallery_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gallery Photos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ギャラリー写真" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "갤러리 사진" } }
+      }
+    },
+    "castedit_label_concept_role" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Concept Role" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コンセプト役割" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "컨셉 역할" } }
+      }
+    },
+    "castedit_label_intro" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Introduction & Bio" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紹介とバイオ" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "소개 및 바이오" } }
+      }
+    },
+    "castedit_label_name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cast Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャスト名" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 이름" } }
+      }
+    },
+    "castedit_placeholder_concept_role" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Lead Maid, Tea Master, Apprentice" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "例: リードメイド、ティーマスター、アプレンティス" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "예: 리드 메이드, 티 마스터, 어프렌티스" } }
+      }
+    },
+    "castedit_placeholder_intro" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please introduce personality, traits, and specialties..." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "性格、特徴、特技を紹介してください..." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "성격, 특징, 특기를 소개해주세요..." } }
+      }
+    },
+    "castedit_placeholder_name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter your display name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "活動名を入力してください" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "활동명을 입력해주세요" } }
+      }
+    },
+    "castedit_profile_photo_hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap to change the photo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タップして写真を変更してください" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "탭해서 사진을 변경하세요" } }
+      }
+    },
+    "castedit_profile_photo_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cast Profile Photo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャストプロフィール写真" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 프로필 사진" } }
       }
     },
     "휴무" : {

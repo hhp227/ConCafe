@@ -714,4 +714,22 @@
     <string name="cast_weekday_fri">금</string>
     <string name="cast_weekday_sat">토</string>
     <string name="cast_weekday_sun">일</string>
+    <string name="castedit_accessibility_back">뒤로가기</string>
+    <string name="castedit_alert_image_required_title">이미지를 등록해주세요</string>
+    <string name="castedit_alert_image_required_desc">프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.</string>
+    <string name="castedit_label_name">캐스트 이름</string>
+    <string name="castedit_placeholder_name">활동명을 입력해주세요</string>
+    <string name="castedit_label_concept_role">컨셉 역할</string>
+    <string name="castedit_placeholder_concept_role">예: 리드 메이드, 티 마스터, 어프렌티스</string>
+    <string name="castedit_label_intro">소개 및 바이오</string>
+    <string name="castedit_placeholder_intro">성격, 특징, 특기를 소개해주세요...</string>
+    <string name="castedit_birthday_label">생일</string>
+    <string name="castedit_birthday_pick">생일 선택</string>
+    <string name="castedit_profile_photo_title">캐스트 프로필 사진</string>
+    <string name="castedit_profile_photo_hint">탭해서 사진을 변경하세요</string>
+    <string name="castedit_gallery_title">갤러리 사진</string>
+    <string name="castedit_gallery_guide">캐스트 갤러리에는 최대 %1$d장까지 등록할 수 있습니다.</string>
+    <string name="castedit_gallery_item_label">이미지 %1$d</string>
+    <string name="castedit_gallery_add">사진 추가</string>
+    <string name="castedit_gallery_remove">이미지 삭제</string>
 </resources>

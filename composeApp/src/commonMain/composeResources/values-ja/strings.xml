@@ -714,4 +714,22 @@
     <string name="cast_weekday_fri">金</string>
     <string name="cast_weekday_sat">土</string>
     <string name="cast_weekday_sun">日</string>
+    <string name="castedit_accessibility_back">戻る</string>
+    <string name="castedit_alert_image_required_title">画像を登録してください</string>
+    <string name="castedit_alert_image_required_desc">プロフィールまたはギャラリー画像のうち最低1枚は必須です。</string>
+    <string name="castedit_label_name">キャスト名</string>
+    <string name="castedit_placeholder_name">活動名を入力してください</string>
+    <string name="castedit_label_concept_role">コンセプト役割</string>
+    <string name="castedit_placeholder_concept_role">例: リードメイド、ティーマスター、アプレンティス</string>
+    <string name="castedit_label_intro">紹介とバイオ</string>
+    <string name="castedit_placeholder_intro">性格、特徴、特技を紹介してください...</string>
+    <string name="castedit_birthday_label">誕生日</string>
+    <string name="castedit_birthday_pick">誕生日を選択</string>
+    <string name="castedit_profile_photo_title">キャストプロフィール写真</string>
+    <string name="castedit_profile_photo_hint">タップして写真を変更してください</string>
+    <string name="castedit_gallery_title">ギャラリー写真</string>
+    <string name="castedit_gallery_guide">キャストギャラリーには最大 %1$d 枚まで登録できます。</string>
+    <string name="castedit_gallery_item_label">画像 %1$d</string>
+    <string name="castedit_gallery_add">写真を追加</string>
+    <string name="castedit_gallery_remove">画像を削除</string>
 </resources>
