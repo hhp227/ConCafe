@@ -42,8 +42,41 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cast_accessibility_back
+import concafe.composeapp.generated.resources.cast_action_refresh
+import concafe.composeapp.generated.resources.cast_activity_follower
+import concafe.composeapp.generated.resources.cast_activity_rating
+import concafe.composeapp.generated.resources.cast_activity_visit_cert
+import concafe.composeapp.generated.resources.cast_error_detail_load_failed
+import concafe.composeapp.generated.resources.cast_follow
+import concafe.composeapp.generated.resources.cast_follower_count
+import concafe.composeapp.generated.resources.cast_follower_label
+import concafe.composeapp.generated.resources.cast_following
+import concafe.composeapp.generated.resources.cast_schedule_off
+import concafe.composeapp.generated.resources.cast_schedule_title
+import concafe.composeapp.generated.resources.cast_schedule_work
+import concafe.composeapp.generated.resources.cast_section_intro
+import concafe.composeapp.generated.resources.cast_section_recent_activity
+import concafe.composeapp.generated.resources.cast_section_tagged_reviews
+import concafe.composeapp.generated.resources.cast_tagged_reviews_empty_desc
+import concafe.composeapp.generated.resources.cast_tagged_reviews_empty_title
+import concafe.composeapp.generated.resources.cast_today_check_schedule
+import concafe.composeapp.generated.resources.cast_today_finished
+import concafe.composeapp.generated.resources.cast_today_off
+import concafe.composeapp.generated.resources.cast_today_status_title
+import concafe.composeapp.generated.resources.cast_today_upcoming
+import concafe.composeapp.generated.resources.cast_today_working
+import concafe.composeapp.generated.resources.cast_weekday_fri
+import concafe.composeapp.generated.resources.cast_weekday_mon
+import concafe.composeapp.generated.resources.cast_weekday_sat
+import concafe.composeapp.generated.resources.cast_weekday_sun
+import concafe.composeapp.generated.resources.cast_weekday_thu
+import concafe.composeapp.generated.resources.cast_weekday_tue
+import concafe.composeapp.generated.resources.cast_weekday_wed
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import org.jetbrains.compose.resources.stringResource
 
 private val SummaryTitleTriggerOffset = 22.dp
 
@@ -109,7 +142,7 @@ private fun CastContentScreen(
                     IconButton(onClick = { onAction(CastAction.ClickBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
+                            contentDescription = stringResource(Res.string.cast_accessibility_back),
                             tint = if (topBarVisible) Color(0xFF222222) else Color.White
                         )
                     }
@@ -190,11 +223,11 @@ private fun CastContentScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = uiState.errorMessage ?: "캐스트 상세 데이터를 불러오지 못했습니다.",
+                            text = stringResource(Res.string.cast_error_detail_load_failed),
                             color = MaterialTheme.colorScheme.error
                         )
                         FilledTonalButton(onClick = { onAction(CastAction.Refresh) }) {
-                            Text("새로고침")
+                            Text(stringResource(Res.string.cast_action_refresh))
                         }
                     }
                 }
@@ -409,7 +442,13 @@ private fun CastSummarySection(
                         )
                     }
                 ) {
-                    Text(if (isFollowing) "팔로잉" else "팔로우")
+                    Text(
+                        stringResource(if (isFollowing) {
+                            Res.string.cast_following
+                        } else {
+                            Res.string.cast_follow
+                        })
+                    )
                 }
             }
             Row(
@@ -418,8 +457,8 @@ private fun CastSummarySection(
             ) {
                 CastStatItem(
                     icon = Icons.Default.Groups,
-                    label = "팔로워",
-                    value = "${detail.cast.followerCount}명"
+                    label = stringResource(Res.string.cast_follower_label),
+                    value = stringResource(Res.string.cast_follower_count, detail.cast.followerCount)
                 )
             }
         }
@@ -438,14 +477,14 @@ private fun CastTodaySection(detail: CastDetail) {
         val startMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.startTime)
         val endMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.endTime)
         statusText = when {
-            currentMinutes < startMinutes -> "출근 예정"
-            currentMinutes <= endMinutes -> "근무중"
-            else -> "근무 완료"
+            currentMinutes < startMinutes -> stringResource(Res.string.cast_today_upcoming)
+            currentMinutes <= endMinutes -> stringResource(Res.string.cast_today_working)
+            else -> stringResource(Res.string.cast_today_finished)
         }
         timeText = "${todaySchedule.startTime} - ${todaySchedule.endTime}"
     } else {
-        statusText = "오늘은 휴무"
-        timeText = "다음 스케줄을 확인해 주세요."
+        statusText = stringResource(Res.string.cast_today_off)
+        timeText = stringResource(Res.string.cast_today_check_schedule)
     }
     Surface(
         shape = RoundedCornerShape(24.dp),
@@ -472,7 +511,7 @@ private fun CastTodaySection(detail: CastDetail) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "오늘의 출근 상태",
+                    text = stringResource(Res.string.cast_today_status_title),
                     color = Color.White.copy(alpha = 0.82f)
                 )
                 Text(
@@ -505,7 +544,7 @@ private fun CastScheduleSection(detail: CastDetail) {
                 tint = colorFromHex("EF6797")
             )
             Text(
-                text = "출근 일정",
+                text = stringResource(Res.string.cast_schedule_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp)
@@ -550,7 +589,11 @@ private fun CastScheduleCard(
                 color = if (isWorking) Color.White else Color(0xFF4E4750)
             )
             Text(
-                text = if (isWorking) "출근" else "휴무",
+                text = stringResource(if (isWorking) {
+                    Res.string.cast_schedule_work
+                } else {
+                    Res.string.cast_schedule_off
+                }),
                 fontSize = 12.sp,
                 color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
             )
@@ -565,7 +608,7 @@ private fun CastIntroductionSection(detail: CastDetail) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "소개",
+            text = stringResource(Res.string.cast_section_intro),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -591,7 +634,7 @@ private fun CastRecentActivitySection(detail: CastDetail) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "최근 활동",
+            text = stringResource(Res.string.cast_section_recent_activity),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -603,19 +646,19 @@ private fun CastRecentActivitySection(detail: CastDetail) {
                 modifier = Modifier
                     .weight(1f),
                 value = detail.visitCertificationCount.toString(),
-                label = "방문 인증"
+                label = stringResource(Res.string.cast_activity_visit_cert)
             )
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
                 value = detail.cast.followerCount.toString(),
-                label = "팔로워"
+                label = stringResource(Res.string.cast_activity_follower)
             )
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
                 value = String.format("%.1f", detail.cast.rating),
-                label = "평점"
+                label = stringResource(Res.string.cast_activity_rating)
             )
         }
     }
@@ -661,7 +704,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "함께 언급된 후기",
+            text = stringResource(Res.string.cast_section_tagged_reviews),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -752,12 +795,12 @@ private fun CastRecentReviewEmptyView() {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "아직 함께 언급된 후기가 없어요.",
+                text = stringResource(Res.string.cast_tagged_reviews_empty_title),
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF4E4750)
             )
             Text(
-                text = "이 캐스트가 태그된 카페 리뷰가 표시됩니다.",
+                text = stringResource(Res.string.cast_tagged_reviews_empty_desc),
                 color = Color(0xFF8A8087),
                 fontSize = 12.sp
             )
@@ -808,11 +851,19 @@ private fun heroBrush(index: Int): Brush {
 @Composable
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleItem> {
     val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
-    val orderedDays = listOf("월", "화", "수", "목", "금", "토", "일")
-    return orderedDays.map { dayLabel ->
+    val orderedDays = listOf(
+        "월" to stringResource(Res.string.cast_weekday_mon),
+        "화" to stringResource(Res.string.cast_weekday_tue),
+        "수" to stringResource(Res.string.cast_weekday_wed),
+        "목" to stringResource(Res.string.cast_weekday_thu),
+        "금" to stringResource(Res.string.cast_weekday_fri),
+        "토" to stringResource(Res.string.cast_weekday_sat),
+        "일" to stringResource(Res.string.cast_weekday_sun)
+    )
+    return orderedDays.map { day ->
         WeeklyScheduleItem(
-            dayLabel = dayLabel,
-            isWorking = workingDays.contains(dayLabel)
+            dayLabel = day.second,
+            isWorking = workingDays.contains(day.first)
         )
     }
 }

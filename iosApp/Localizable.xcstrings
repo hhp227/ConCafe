@@ -5915,7 +5915,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "인기 카페"
+            "value" : "인기 컨셉 카페"
           }
         }
       }
@@ -5937,7 +5937,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "인기 캐스트"
+            "value" : "오늘의 인기 캐스트"
           }
         }
       }
@@ -5981,7 +5981,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오늘의 방문 요약"
+            "value" : "오늘의 방문"
           }
         }
       }
@@ -6069,7 +6069,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오늘 방문 기록이 생기면 이곳에 표시됩니다."
+            "value" : "지금 체크인하고 첫 방문 기록을 남겨보세요."
           }
         }
       }
@@ -15454,6 +15454,223 @@
             "value" : "리뷰"
           }
         }
+      }
+    },
+    "cast_accessibility_back" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "戻る" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "뒤로가기" } }
+      }
+    },
+    "cast_action_refresh" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再読み込み" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "새로고침" } }
+      }
+    },
+    "cast_error_detail_load_failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load cast details." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャスト詳細データの読み込みに失敗しました。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 상세 데이터를 불러오지 못했습니다." } }
+      }
+    },
+    "cast_follow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロー" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로우" } }
+      }
+    },
+    "cast_following" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Following" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロー中" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로잉" } }
+      }
+    },
+    "cast_follower_label" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Followers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロワー" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로워" } }
+      }
+    },
+    "cast_follower_count" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld followers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld人" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "%lld명" } }
+      }
+    },
+    "cast_today_status_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today's Work Status" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "本日の勤務状態" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "오늘의 출근 상태" } }
+      }
+    },
+    "cast_today_off" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Off Today" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "本日は休み" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "오늘은 휴무" } }
+      }
+    },
+    "cast_today_check_schedule" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please check the next schedule." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のスケジュールを確認してください。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "다음 스케줄을 확인해 주세요." } }
+      }
+    },
+    "cast_today_upcoming" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upcoming Shift" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "出勤予定" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근 예정" } }
+      }
+    },
+    "cast_today_working" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On Duty" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務中" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "근무중" } }
+      }
+    },
+    "cast_today_finished" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shift Finished" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務終了" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "근무 완료" } }
+      }
+    },
+    "cast_schedule_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work Schedule" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務スケジュール" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근 일정" } }
+      }
+    },
+    "cast_schedule_work" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "出勤" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근" } }
+      }
+    },
+    "cast_schedule_off" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Off" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "休み" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "휴무" } }
+      }
+    },
+    "cast_section_intro" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Introduction" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紹介" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "소개" } }
+      }
+    },
+    "cast_section_recent_activity" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent Activity" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近の活動" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "최근 활동" } }
+      }
+    },
+    "cast_activity_visit_cert" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Visit Certifications" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "訪問認証" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "방문 인증" } }
+      }
+    },
+    "cast_activity_follower" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Followers" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロワー" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로워" } }
+      }
+    },
+    "cast_activity_rating" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rating" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "評価" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "평점" } }
+      }
+    },
+    "cast_section_tagged_reviews" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tagged Reviews" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一緒に言及されたレビュー" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "함께 언급된 후기" } }
+      }
+    },
+    "cast_tagged_reviews_empty_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No tagged reviews yet." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "まだ一緒に言及されたレビューがありません。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "아직 함께 언급된 후기가 없어요." } }
+      }
+    },
+    "cast_tagged_reviews_empty_desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cafe reviews tagged with this cast will appear here." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このキャストがタグ付けされたカフェレビューが表示されます。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이 캐스트가 태그된 카페 리뷰가 표시됩니다." } }
+      }
+    },
+    "cast_weekday_mon" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mon" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "月" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "월" } }
+      }
+    },
+    "cast_weekday_tue" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tue" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "火" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "화" } }
+      }
+    },
+    "cast_weekday_wed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wed" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "水" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "수" } }
+      }
+    },
+    "cast_weekday_thu" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thu" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "木" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "목" } }
+      }
+    },
+    "cast_weekday_fri" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fri" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "금" } }
+      }
+    },
+    "cast_weekday_sat" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sat" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "土" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "토" } }
+      }
+    },
+    "cast_weekday_sun" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sun" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "일" } }
       }
     },
     "휴무" : {
