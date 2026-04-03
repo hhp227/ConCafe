@@ -648,7 +648,7 @@
     <string name="checkin_today_visit_empty_title">오늘 방문 기록이 없어요</string>
     <string name="checkin_today_visit_empty_desc">지금 체크인하고 첫 방문 기록을 남겨보세요.</string>
     <string name="checkin_more_visit_label">방문 더보기</string>
-    <string name="checkin_new_visit_cta">새 방문 추가</string>
+    <string name="checkin_new_visit_cta">새 방문 체크인</string>
     <string name="checkin_visit_memo_empty">메모 없음</string>
     <string name="cafe_tab_info">정보</string>
     <string name="cafe_tab_casts">캐스트</string>

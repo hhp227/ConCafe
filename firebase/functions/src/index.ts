@@ -30,6 +30,8 @@ type VisitLike = {
   verified?: unknown;
   location?: unknown;
   verificationDistanceMeters?: unknown;
+  verificationFailureReason?: unknown;
+  allowedRadiusMeters?: unknown;
 };
 
 type CafeFavoriteLike = {
@@ -2589,6 +2591,9 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
     const userId = asNonBlankString(afterData.userId);
     const userLocation = asGeoPoint(afterData.location);
     const allowedRadiusMeters = 100;
+    const currentVerified = afterData.verified === true;
+    const currentDistance = asFiniteNumber(afterData.verificationDistanceMeters);
+    const currentFailureReason = asNonBlankString(afterData.verificationFailureReason);
 
     if (cafeId == null || userId == null || userLocation == null) {
       await visitRef.delete();
@@ -2622,8 +2627,26 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
     const shouldVerify = distanceMeters <= allowedRadiusMeters;
 
     if (!shouldVerify) {
-      await visitRef.delete();
-      logger.info("Deleted visit outside allowed radius.", {
+      const failureReason = "OUT_OF_RADIUS";
+      const isDistanceSynced = currentDistance != null &&
+        Math.abs(currentDistance - distanceMeters) < 0.1;
+      const isAlreadyRejected = !currentVerified &&
+        currentFailureReason === failureReason &&
+        isDistanceSynced;
+
+      if (!isAlreadyRejected) {
+        await visitRef.set(
+          {
+            verified: false,
+            verificationDistanceMeters: distanceMeters,
+            allowedRadiusMeters: allowedRadiusMeters,
+            verificationFailureReason: failureReason,
+            updatedAt: new Date().toISOString(),
+          },
+          {merge: true}
+        );
+      }
+      logger.info("Rejected visit outside allowed radius without deletion.", {
         visitId: visitId,
         cafeId: cafeId,
         userId: userId,
@@ -2632,12 +2655,10 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
       });
       return;
     }
-    const currentVerified = afterData.verified === true;
-    const currentDistance = asFiniteNumber(afterData.verificationDistanceMeters);
     const isDistanceSynced = currentDistance != null &&
       Math.abs(currentDistance - distanceMeters) < 0.1;
 
-    if (currentVerified && isDistanceSynced) {
+    if (currentVerified && isDistanceSynced && currentFailureReason == null) {
       return;
     }
     await visitRef.set(
@@ -2645,6 +2666,7 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
         verified: true,
         verificationDistanceMeters: distanceMeters,
         allowedRadiusMeters: allowedRadiusMeters,
+        verificationFailureReason: FieldValue.delete(),
         verifiedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },

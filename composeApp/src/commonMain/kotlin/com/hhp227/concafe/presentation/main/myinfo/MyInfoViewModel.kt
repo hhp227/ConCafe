@@ -129,9 +129,34 @@ class MyInfoViewModel(
         jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
             visitEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is VisitEvent.Created -> applyVisitCountDelta(1)
-                    is VisitEvent.Deleted -> applyVisitCountDelta(-1)
+                    is VisitEvent.Created -> {
+                        applyVisitCountDelta(1)
+                        refreshRecentVisitsSection()
+                    }
+                    is VisitEvent.Deleted -> {
+                        applyVisitCountDelta(-1)
+                        refreshRecentVisitsSection()
+                    }
                 }
+            }
+        }
+    }
+
+    private fun refreshRecentVisitsSection() {
+        jobs[TaskKey.REFRESH_RECENT_VISITS]?.cancel()
+        jobs[TaskKey.REFRESH_RECENT_VISITS] = viewModelScope.launch {
+            when (val result = getMyInfoUseCase.invoke()) {
+                is AppResult.Success -> {
+                    val normalizedRecentVisits = normalizeCafes(
+                        items = result.data.recentVisits,
+                        maxCount = result.data.recentVisits.size
+                    )
+
+                    _uiState.update { state ->
+                        state.copy(recentVisits = normalizedRecentVisits)
+                    }
+                }
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -374,6 +399,7 @@ class MyInfoViewModel(
 
     private enum class TaskKey {
         LOAD_MY_INFO,
+        REFRESH_RECENT_VISITS,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,
