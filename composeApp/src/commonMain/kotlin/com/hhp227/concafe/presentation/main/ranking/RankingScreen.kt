@@ -40,6 +40,8 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
+private val RankingPromoContentHeight = 160.dp
+
 @Composable
 fun RankingScreen(
     viewModel: RankingViewModel = viewModel(
@@ -62,7 +64,7 @@ fun RankingScreen(
     }
     LaunchedEffect(uiState.ads.size, uiState.selectedAdIndex) {
         if (uiState.ads.size <= 1) return@LaunchedEffect
-        delay(3500)
+        delay(if (uiState.selectedAdIndex == 0) 15_000 else 5_000)
         viewModel.onAction(
             RankingAction.SelectAd((uiState.selectedAdIndex + 1) % uiState.ads.size)
         )
@@ -235,12 +237,14 @@ fun RankingPromoBanner(
             Column(
                 modifier = Modifier
                     .background(Color.White)
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(20.dp)
+                    .height(RankingPromoContentHeight),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 RankingNativeAd(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -268,7 +272,11 @@ fun RankingPromoBanner(
                     )
                     .padding(20.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .height(RankingPromoContentHeight),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -301,9 +309,29 @@ fun RankingPromoBanner(
                                     )
                                 }
                             }
-                            Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                ad.title,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                ad.subtitle,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                ad.desc,
+                                color = Color.White.copy(alpha = 0.92f),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                         Button(
                             onClick = {},

@@ -6,19 +6,18 @@
 //
 
 import SwiftUI
-import Combine
 import Shared
 import UIKit
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
 
+private let rankingPromoContentHeight: CGFloat = 160
+
 struct RankingView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = RankingViewModel()
-
-    @State private var adTimer = Timer.publish(every: 3.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         RankingContentView(
@@ -55,8 +54,11 @@ struct RankingView: View {
         } message: {
             Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
-        .onReceive(adTimer) { _ in
+        .task(id: "\(viewModel.uiState.ads.count)-\(viewModel.uiState.selectedAdIndex)") {
             guard viewModel.uiState.ads.count > 1 else { return }
+            let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 0 ? 15_000_000_000 : 5_000_000_000
+            try? await Task.sleep(nanoseconds: delayNanos)
+            guard !Task.isCancelled else { return }
             let nextIndex = (viewModel.uiState.selectedAdIndex + 1) % viewModel.uiState.ads.count
             viewModel.onAction(.selectAd(nextIndex))
         }
@@ -232,6 +234,7 @@ struct RankingPromoBanner: View {
         ZStack {
             if selectedIndex == 0 {
                 RankingNativeAdCard()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 LinearGradient(
                     colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
@@ -255,12 +258,15 @@ struct RankingPromoBanner: View {
                             Text(ad.title)
                             .font(.title3.weight(.bold))
                             .foregroundStyle(.white)
+                            .lineLimit(1)
                             Text(ad.subtitle)
                             .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
+                            .lineLimit(1)
                             Text(ad.desc)
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.92))
+                            .lineLimit(2)
                         }
                         Spacer(minLength: 8)
                         Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
@@ -273,8 +279,10 @@ struct RankingPromoBanner: View {
                     }
                 }
                 .padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
+        .frame(height: rankingPromoContentHeight)
         .overlay(alignment: .bottom) {
             HStack(spacing: 6) {
                 ForEach(0..<size, id: \.self) { index in
@@ -307,18 +315,35 @@ private struct RankingNativeAdCard: View {
     @StateObject private var loader = RankingNativeAdLoader()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        ZStack {
             if let nativeAd = loader.nativeAd {
                 RankingNativeAdRepresentable(nativeAd: nativeAd)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 190)
+                    .frame(maxHeight: .infinity)
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 190)
+                VStack(alignment: .leading, spacing: 10) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(hex: "FFE9F1"))
+                        .frame(width: 52, height: 20)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(hex: "F2EDF1"))
+                        .frame(height: 20)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(hex: "F2EDF1"))
+                        .frame(height: 16)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(hex: "F2EDF1"))
+                        .frame(width: 180, height: 16)
+                    Spacer()
+                    Text("Ad")
+                        .font(.caption2)
+                        .foregroundStyle(Color(hex: "9A8D95"))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(16)
             }
         }
-        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
     }
 }
@@ -452,6 +477,7 @@ private struct RankingNativeAdCard: View {
                 .foregroundStyle(Color(hex: "6F6670"))
         }
         .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.white)
     }
 }
