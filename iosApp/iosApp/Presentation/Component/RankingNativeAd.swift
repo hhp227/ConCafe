@@ -20,7 +20,7 @@ struct RankingNativeAdCard: View {
             if let nativeAd = loader.nativeAd {
                 RankingNativeAdRepresentable(nativeAd: nativeAd)
                     .frame(maxWidth: .infinity)
-                    .frame(maxHeight: .infinity)
+                    .frame(minHeight: 120)
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -40,11 +40,11 @@ struct RankingNativeAdCard: View {
                         .font(.caption2)
                         .foregroundStyle(Color(hex: "7E5A6E"))
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
                 .padding(20)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
         .background(
             LinearGradient(
                 colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],
@@ -206,7 +206,7 @@ private struct RankingNativeAdCard: View {
                 .foregroundStyle(Color(hex: "6F6670"))
         }
         .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
         .background(
             LinearGradient(
                 colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],

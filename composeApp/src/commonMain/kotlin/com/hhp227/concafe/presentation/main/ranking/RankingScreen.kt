@@ -62,7 +62,7 @@ fun RankingScreen(
     }
     LaunchedEffect(uiState.ads.size, uiState.selectedAdIndex) {
         if (uiState.ads.size <= 1) return@LaunchedEffect
-        delay(if (uiState.selectedAdIndex == 0) 15_000 else 5_000)
+        delay(if (uiState.selectedAdIndex == 1) 15_000 else 5_000)
         viewModel.onAction(
             RankingAction.SelectAd((uiState.selectedAdIndex + 1) % uiState.ads.size)
         )
@@ -231,7 +231,7 @@ fun RankingPromoBanner(
         shape = RoundedCornerShape(28.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        if (selectedIndex == 0) {
+        if (selectedIndex == 1) {
             Box(
                 modifier = Modifier
                     .background(
@@ -243,7 +243,9 @@ fun RankingPromoBanner(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     RankingNativeAd(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -272,7 +274,10 @@ fun RankingPromoBanner(
                     )
                     .padding(20.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(
+                    modifier = Modifier.heightIn(min = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,

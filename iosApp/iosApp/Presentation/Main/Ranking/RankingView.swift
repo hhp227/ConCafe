@@ -54,7 +54,7 @@ struct RankingView: View {
         }
         .task(id: "\(viewModel.uiState.ads.count)-\(viewModel.uiState.selectedAdIndex)") {
             guard viewModel.uiState.ads.count > 1 else { return }
-            let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 0 ? 15_000_000_000 : 5_000_000_000
+            let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 1 ? 15_000_000_000 : 5_000_000_000
             try? await Task.sleep(nanoseconds: delayNanos)
             guard !Task.isCancelled else { return }
             let nextIndex = (viewModel.uiState.selectedAdIndex + 1) % viewModel.uiState.ads.count
@@ -230,8 +230,9 @@ struct RankingPromoBanner: View {
 
     var body: some View {
         ZStack {
-            if selectedIndex == 0 {
+            if selectedIndex == 1 {
                 RankingNativeAdCard()
+                    .frame(minHeight: 120)
             } else {
                 LinearGradient(
                     colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
@@ -273,6 +274,7 @@ struct RankingPromoBanner: View {
                     }
                 }
                 .padding(20)
+                .frame(minHeight: 120, alignment: .topLeading)
             }
         }
         .overlay(alignment: .bottom) {
@@ -294,7 +296,7 @@ struct RankingPromoBanner: View {
     }
 
     private func indicatorColor(for index: Int) -> Color {
-        if selectedIndex == 0 {
+        if selectedIndex == 1 {
             return index == selectedIndex ? Color(hex: "EF6797") : Color(hex: "E3D9E0")
         } else {
             return index == selectedIndex ? Color.white : Color.white.opacity(0.5)
