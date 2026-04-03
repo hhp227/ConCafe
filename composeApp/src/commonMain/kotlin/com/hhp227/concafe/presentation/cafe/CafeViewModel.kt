@@ -140,7 +140,7 @@ class CafeViewModel(
             } else if (result is AppResult.Failure) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                    errorMessage = null
                 )
             }
         }
@@ -277,7 +277,7 @@ class CafeViewModel(
             val result = deleteReviewUseCase.invoke(cafeId, reviewId)
 
             if (result is AppResult.Failure) {
-                _event.emit(CafeEvent.ShowMessage("리뷰 삭제에 실패했습니다."))
+                _event.emit(CafeEvent.ShowReviewDeleteFailedMessage)
             }
         }
     }
@@ -328,7 +328,7 @@ class CafeViewModel(
                     deleteReview(action.reviewId)
                 }
                 is CafeAction.ReportReview -> {
-                    _event.emit(CafeEvent.ShowMessage("신고가 접수되었습니다."))
+                    _event.emit(CafeEvent.ShowReviewReportedMessage)
                 }
             }
         }

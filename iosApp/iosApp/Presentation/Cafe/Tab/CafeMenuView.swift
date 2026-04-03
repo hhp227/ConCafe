@@ -13,7 +13,7 @@ struct CafeMenuView: View {
     
     var body: some View {
         if menus.isEmpty {
-            emptyCard("등록된 메뉴가 없습니다.")
+            emptyCard(String(localized: String.LocalizationValue("cafe_menu_empty"), table: "Localizable"))
         } else {
             VStack(spacing: 12) {
                 ForEach(menus, id: \.id) { menu in
@@ -46,7 +46,13 @@ struct CafeMenuView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(menu.name)
                                 .font(.subheadline.weight(.semibold))
-                            Text("\(menu.price)원")
+                            Text(
+                                String(
+                                    format: String(localized: String.LocalizationValue("cafe_menu_price"), table: "Localizable"),
+                                    locale: Locale.current,
+                                    menu.price
+                                )
+                            )
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color(hex: "EF6797"))
                             Text(menu.desc)

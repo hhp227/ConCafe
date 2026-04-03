@@ -15,6 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_notice_empty
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +30,7 @@ fun CafeNoticeScreen(
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
 
     if (notices.isEmpty()) {
-        EmptyContent(text = "등록된 공지가 없습니다.")
+        EmptyContent(text = stringResource(Res.string.cafe_notice_empty))
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             notices.forEach { notice ->

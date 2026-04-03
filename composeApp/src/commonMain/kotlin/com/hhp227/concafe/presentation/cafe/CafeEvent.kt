@@ -9,5 +9,7 @@ sealed interface CafeEvent {
 
     data object NavigateToSignIn : CafeEvent
 
-    data class ShowMessage(val message: String) : CafeEvent
+    data object ShowReviewDeleteFailedMessage : CafeEvent
+
+    data object ShowReviewReportedMessage : CafeEvent
 }

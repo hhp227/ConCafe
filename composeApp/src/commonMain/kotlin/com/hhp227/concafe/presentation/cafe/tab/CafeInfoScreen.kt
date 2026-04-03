@@ -20,6 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.component.colorFromHex
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_info_action_reserve
+import concafe.composeapp.generated.resources.cafe_info_label_address
+import concafe.composeapp.generated.resources.cafe_info_label_business_hours
+import concafe.composeapp.generated.resources.cafe_info_label_phone
+import concafe.composeapp.generated.resources.cafe_info_placeholder_business_hours
+import concafe.composeapp.generated.resources.cafe_info_placeholder_phone
+import concafe.composeapp.generated.resources.cafe_info_section_description
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeInfoScreen(detail: CafeDetail) {
@@ -43,18 +52,18 @@ private fun InfoCard(detail: CafeDetail) {
         ) {
             InfoRow(
                 icon = Icons.Default.LocationOn,
-                title = "주소",
+                title = stringResource(Res.string.cafe_info_label_address),
                 value = detail.cafe.region.address
             )
             InfoRow(
                 icon = Icons.Default.AccessTime,
-                title = "영업시간",
-                value = detail.businessHours.ifBlank { "운영시간 정보 준비중" }
+                title = stringResource(Res.string.cafe_info_label_business_hours),
+                value = detail.businessHours.ifBlank { stringResource(Res.string.cafe_info_placeholder_business_hours) }
             )
             InfoRow(
                 icon = Icons.Default.Phone,
-                title = "전화번호",
-                value = detail.phoneNumber.ifBlank { "연락처 정보 준비중" }
+                title = stringResource(Res.string.cafe_info_label_phone),
+                value = detail.phoneNumber.ifBlank { stringResource(Res.string.cafe_info_placeholder_phone) }
             )
         }
     }
@@ -100,7 +109,7 @@ private fun DescriptionCard(detail: CafeDetail) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "소개",
+                text = stringResource(Res.string.cafe_info_section_description),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
@@ -128,7 +137,7 @@ private fun ReservationButton() {
         )
     ) {
         Text(
-            text = "예약하기",
+            text = stringResource(Res.string.cafe_info_action_reserve),
             fontWeight = FontWeight.Bold
         )
     }

@@ -36,15 +36,17 @@ struct CafeView: View {
                     onNavigationAction(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
-                case .showMessage(let message):
-                    alertMessage = message
+                case .showReviewDeleteFailedMessage:
+                    alertMessage = String(localized: String.LocalizationValue("cafe_message_review_delete_failed"), table: "Localizable")
+                case .showReviewReportedMessage:
+                    alertMessage = String(localized: String.LocalizationValue("cafe_message_report_received"), table: "Localizable")
                 }
             }
-            .alert("알림", isPresented: Binding(
+            .alert(String(localized: String.LocalizationValue("cafe_alert_title"), table: "Localizable"), isPresented: Binding(
                 get: { alertMessage != nil },
                 set: { if !$0 { alertMessage = nil } }
             )) {
-                Button("확인", role: .cancel) { alertMessage = nil }
+                Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
             } message: {
                 Text(alertMessage ?? "")
             }
@@ -116,7 +118,7 @@ private struct CafeContentView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
-                Text("리뷰 작성")
+                Text(String(localized: String.LocalizationValue("cafe_action_write_review"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
             }
             .foregroundStyle(Color(hex: "2B2330"))
@@ -162,9 +164,9 @@ private struct CafeContentView: View {
             .padding(.top, 160)
         } else {
             VStack(spacing: 12) {
-                Text(uiState.errorMessage ?? "카페 상세 데이터를 불러오지 못했습니다.")
+                Text(String(localized: String.LocalizationValue("cafe_error_detail_load_failed"), table: "Localizable"))
                 .foregroundStyle(.red)
-                Button("새로고침") {
+                Button(String(localized: String.LocalizationValue("cafe_action_refresh"), table: "Localizable")) {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
@@ -260,7 +262,19 @@ private struct CafeContentView: View {
 
     private var tabHeader: some View {
         ScrollableConCafeTabBar(
-            labels: CafeUiState.TabType.allCases.map { $0.rawValue },
+            labels: CafeUiState.TabType.allCases.map { tab in
+                if tab == .info {
+                    return String(localized: String.LocalizationValue("cafe_tab_info"), table: "Localizable")
+                } else if tab == .casts {
+                    return String(localized: String.LocalizationValue("cafe_tab_casts"), table: "Localizable")
+                } else if tab == .menu {
+                    return String(localized: String.LocalizationValue("cafe_tab_menu"), table: "Localizable")
+                } else if tab == .reviews {
+                    return String(localized: String.LocalizationValue("cafe_tab_reviews"), table: "Localizable")
+                } else {
+                    return String(localized: String.LocalizationValue("cafe_tab_notices"), table: "Localizable")
+                }
+            },
             selectedIndex: CafeUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
             backgroundColor: .white,
             onSelect: { index in
@@ -305,6 +319,7 @@ private struct CafeContentView: View {
             )
         }
     }
+
 }
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {

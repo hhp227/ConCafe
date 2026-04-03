@@ -21,19 +21,19 @@ struct CafeInfoView: View {
 
     private func infoCard(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            infoRow(icon: "mappin.and.ellipse", title: "주소", value: detail.cafe.region.address)
+            infoRow(icon: "mappin.and.ellipse", title: String(localized: String.LocalizationValue("cafe_info_label_address"), table: "Localizable"), value: detail.cafe.region.address)
             infoRow(
                 icon: "clock.fill",
-                title: "영업시간",
+                title: String(localized: String.LocalizationValue("cafe_info_label_business_hours"), table: "Localizable"),
                 value: detail.businessHours.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? "운영시간 정보 준비중"
+                    ? String(localized: String.LocalizationValue("cafe_info_placeholder_business_hours"), table: "Localizable")
                     : detail.businessHours
             )
             infoRow(
                 icon: "phone.fill",
-                title: "전화번호",
+                title: String(localized: String.LocalizationValue("cafe_info_label_phone"), table: "Localizable"),
                 value: detail.phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? "연락처 정보 준비중"
+                    ? String(localized: String.LocalizationValue("cafe_info_placeholder_phone"), table: "Localizable")
                     : detail.phoneNumber
             )
         }
@@ -60,7 +60,7 @@ struct CafeInfoView: View {
     
     private func descriptionCard(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("소개")
+            Text(String(localized: String.LocalizationValue("cafe_info_section_description"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
             Text(detail.cafe.desc)
                 .font(.subheadline)
@@ -77,7 +77,7 @@ struct CafeInfoView: View {
         } label: {
             HStack {
                 Spacer()
-                Text("예약하기")
+                Text(String(localized: String.LocalizationValue("cafe_info_action_reserve"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                 Spacer()
             }

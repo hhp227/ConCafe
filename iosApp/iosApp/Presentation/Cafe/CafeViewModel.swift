@@ -139,15 +139,15 @@ final class CafeViewModel: ObservableObject {
                     }
                 } else if result is AppResultFailure {
                     uiState.isLoading = false
-                    uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                uiState.errorMessage = nil
             }
         }
     }
@@ -295,11 +295,11 @@ final class CafeViewModel: ObservableObject {
                 let result = try await deleteReviewUseCase.invoke(cafeId: cafeId, reviewId: reviewId)
 
                 if result is AppResultFailure {
-                    event.send(.showMessage("리뷰 삭제에 실패했습니다."))
+                    event.send(.showReviewDeleteFailedMessage)
                 }
             } catch {
                 if Task.isCancelled { return }
-                event.send(.showMessage("리뷰 삭제에 실패했습니다."))
+                event.send(.showReviewDeleteFailedMessage)
             }
         }
     }
@@ -337,7 +337,7 @@ final class CafeViewModel: ObservableObject {
         case .deleteReview(let reviewId):
             deleteReview(reviewId: reviewId)
         case .reportReview:
-            event.send(.showMessage("신고가 접수되었습니다."))
+            event.send(.showReviewReportedMessage)
         }
     }
 

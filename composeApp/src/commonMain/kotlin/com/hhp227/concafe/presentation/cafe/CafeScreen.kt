@@ -35,9 +35,25 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_accessibility_back
+import concafe.composeapp.generated.resources.cafe_accessibility_favorite
+import concafe.composeapp.generated.resources.cafe_action_refresh
+import concafe.composeapp.generated.resources.cafe_action_write_review
+import concafe.composeapp.generated.resources.cafe_error_detail_load_failed
+import concafe.composeapp.generated.resources.cafe_error_retry_prompt
+import concafe.composeapp.generated.resources.cafe_message_report_received
+import concafe.composeapp.generated.resources.cafe_message_review_delete_failed
+import concafe.composeapp.generated.resources.cafe_tab_casts
+import concafe.composeapp.generated.resources.cafe_tab_info
+import concafe.composeapp.generated.resources.cafe_tab_menu
+import concafe.composeapp.generated.resources.cafe_tab_notices
+import concafe.composeapp.generated.resources.cafe_tab_reviews
 import kotlinx.coroutines.flow.distinctUntilChanged
+import org.jetbrains.compose.resources.getString
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeScreen(
@@ -63,7 +79,12 @@ fun CafeScreen(
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId, event.reviewId))
                 }
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
-                is CafeEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
+                CafeEvent.ShowReviewDeleteFailedMessage -> snackbarHostState.showSnackbar(
+                    getString(Res.string.cafe_message_review_delete_failed)
+                )
+                CafeEvent.ShowReviewReportedMessage -> snackbarHostState.showSnackbar(
+                    getString(Res.string.cafe_message_report_received)
+                )
             }
         }
     }
@@ -89,6 +110,13 @@ fun CafeContentScreen(
     listState: LazyListState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
+    val tabLabels = listOf(
+        stringResource(Res.string.cafe_tab_info),
+        stringResource(Res.string.cafe_tab_casts),
+        stringResource(Res.string.cafe_tab_menu),
+        stringResource(Res.string.cafe_tab_reviews),
+        stringResource(Res.string.cafe_tab_notices)
+    )
     val isTopBarVisible = uiState.detail != null && (
             listState.firstVisibleItemIndex > 1 ||
                     (listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 1 }?.offset
@@ -161,7 +189,7 @@ fun CafeContentScreen(
                     IconButton(onClick = { onAction(CafeAction.ClickBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
+                            contentDescription = stringResource(Res.string.cafe_accessibility_back),
                             tint = if (isTopBarVisible) Color(0xFF222222) else Color.White
                         )
                     }
@@ -170,7 +198,7 @@ fun CafeContentScreen(
                     IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
                         Icon(
                             imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "즐겨찾기",
+                            contentDescription = stringResource(Res.string.cafe_accessibility_favorite),
                             tint = if (uiState.isFavorite) {
                                 colorFromHex("EF6797")
                             } else {
@@ -196,7 +224,7 @@ fun CafeContentScreen(
                     contentColor = Color(0xFF2B2330),
                     text = {
                         Text(
-                            text = "리뷰 작성",
+                            text = stringResource(Res.string.cafe_action_write_review),
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -239,7 +267,7 @@ fun CafeContentScreen(
                     }
                     item {
                         ScrollableConCafeTabBar(
-                            labels = CafeUiState.TabType.entries.map { it.label },
+                            labels = tabLabels,
                             selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
                             modifier = Modifier.fillMaxWidth(),
                             backgroundColor = Color.White,
@@ -289,15 +317,15 @@ fun CafeContentScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = uiState.errorMessage ?: "카페 상세 데이터를 불러오지 못했습니다.",
+                                text = stringResource(Res.string.cafe_error_detail_load_failed),
                                 color = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                text = "다시 시도해 주세요.",
+                                text = stringResource(Res.string.cafe_error_retry_prompt),
                                 color = Color(0xFF777777)
                             )
                             Text(
-                                text = "새로고침",
+                                text = stringResource(Res.string.cafe_action_refresh),
                                 color = Color.White,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
@@ -319,7 +347,7 @@ fun CafeContentScreen(
                     .alpha(if (isTabPinned) 1f else 0f)
             ) {
                 ScrollableConCafeTabBar(
-                    labels = CafeUiState.TabType.entries.map { it.label },
+                    labels = tabLabels,
                     selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
                     modifier = Modifier.fillMaxWidth(),
                     backgroundColor = Color.White,

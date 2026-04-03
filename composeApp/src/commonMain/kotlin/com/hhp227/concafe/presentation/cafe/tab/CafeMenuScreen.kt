@@ -19,11 +19,15 @@ import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_menu_empty
+import concafe.composeapp.generated.resources.cafe_menu_price
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeMenuScreen(menus: List<CafeMenu>) {
     if (menus.isEmpty()) {
-        EmptyContent(text = "등록된 메뉴가 없습니다.")
+        EmptyContent(text = stringResource(Res.string.cafe_menu_empty))
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             menus.forEach { menu ->
@@ -78,7 +82,7 @@ fun CafeMenuScreen(menus: List<CafeMenu>) {
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "${menu.price}원",
+                                text = stringResource(Res.string.cafe_menu_price, menu.price),
                                 color = colorFromHex("EF6797"),
                                 fontWeight = FontWeight.SemiBold
                             )

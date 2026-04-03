@@ -21,7 +21,7 @@ struct CafeNoticeView: View {
 
     var body: some View {
         if notices.isEmpty {
-            emptyCard("등록된 공지가 없습니다.")
+            emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
         } else {
             LazyVStack(spacing: 12) {
                 ForEach(notices, id: \.id) { notice in
