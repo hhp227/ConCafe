@@ -40,7 +40,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
-private val RankingPromoContentHeight = 160.dp
+private val RankingPromoContentHeight = 140.dp
 
 @Composable
 fun RankingScreen(
@@ -236,7 +236,11 @@ fun RankingPromoBanner(
         if (selectedIndex == 0) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFFFFEAF3), Color(0xFFFFDCEB))
+                        )
+                    )
                     .padding(20.dp)
                     .height(RankingPromoContentHeight),
                 verticalArrangement = Arrangement.SpaceBetween

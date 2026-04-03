@@ -87,42 +87,41 @@ actual fun RankingNativeAd(
     } else {
         Column(
             modifier = modifier
-                .background(Color.White)
                 .padding(8.dp)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.24f)
                     .height(20.dp)
-                    .background(Color(0xFFFFE9F1), shape = androidx.compose.foundation.shape.RoundedCornerShape(999.dp))
+                    .background(Color(0x66FFFFFF), shape = androidx.compose.foundation.shape.RoundedCornerShape(999.dp))
             )
             Spacer(modifier = Modifier.height(12.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.78f)
                     .height(22.dp)
-                    .background(Color(0xFFF2EDF1), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                    .background(Color(0x80FFFFFF), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
                     .height(16.dp)
-                    .background(Color(0xFFF2EDF1), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                    .background(Color(0x73FFFFFF), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.height(6.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.66f)
                     .height(16.dp)
-                    .background(Color(0xFFF2EDF1), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                    .background(Color(0x73FFFFFF), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.weight(1f))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.BottomStart) {
                 Text(
                     text = "Ad",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A8D95)
+                    color = Color(0xFF7E5A6E)
                 )
             }
         }

@@ -33,7 +33,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         FirebaseApp.configure()
 #if canImport(GoogleMobileAds)
-        MobileAds.shared.start(completionHandler: nil)
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
 #endif
         KakaoSDK.initSDK(appKey: "af25c4820b65d3fe2a9145156351ccaf")
         Messaging.messaging().delegate = self

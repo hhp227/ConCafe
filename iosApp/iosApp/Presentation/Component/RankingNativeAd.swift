@@ -24,28 +24,34 @@ struct RankingNativeAdCard: View {
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(hex: "FFE9F1"))
+                        .fill(Color.white.opacity(0.46))
                         .frame(width: 52, height: 20)
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(hex: "F2EDF1"))
+                        .fill(Color.white.opacity(0.62))
                         .frame(height: 20)
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(hex: "F2EDF1"))
+                        .fill(Color.white.opacity(0.56))
                         .frame(height: 16)
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(hex: "F2EDF1"))
+                        .fill(Color.white.opacity(0.56))
                         .frame(width: 180, height: 16)
                     Spacer()
                     Text("Ad")
                         .font(.caption2)
-                        .foregroundStyle(Color(hex: "9A8D95"))
+                        .foregroundStyle(Color(hex: "7E5A6E"))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(16)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
     }
 }
 
@@ -168,7 +174,7 @@ private struct RankingNativeAdCard: View {
                 .foregroundStyle(Color(hex: "B74D73"))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color(hex: "FFE9F1"))
+                .background(Color.white.opacity(0.46))
                 .clipShape(Capsule())
             Text(String(localized: String.LocalizationValue("ranking_native_ad_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
@@ -179,7 +185,13 @@ private struct RankingNativeAdCard: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.white)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
     }
 }
 #endif

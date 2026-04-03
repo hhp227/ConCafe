@@ -12,7 +12,7 @@ import UIKit
 import GoogleMobileAds
 #endif
 
-private let rankingPromoContentHeight: CGFloat = 160
+private let rankingPromoContentHeight: CGFloat = 140
 
 struct RankingView: View {
     let onNavigationAction: (NavigationAction) -> Void
