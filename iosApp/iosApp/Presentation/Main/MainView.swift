@@ -37,7 +37,7 @@ struct MainView: View {
                     .tag("myinfo")
             }
         }
-        .navigationTitle("ConCafe")
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -121,6 +121,20 @@ struct MainView: View {
             }
     }
 
+    private var navigationTitle: String {
+        if selectedTab == "home" {
+            return "홈"
+        } else if selectedTab == "explore" {
+            return "탐색"
+        } else if selectedTab == "ranking" {
+            return "랭킹"
+        } else if selectedTab == "myinfo" {
+            return "내 정보"
+        } else {
+            return viewModel.uiState.thirdTab.title
+        }
+    }
+
     init(
         initialTab: String? = nil,
         hasUnreadNotifications: Bool = false,
@@ -158,4 +172,3 @@ struct MainView_Previews: PreviewProvider {
         MainView(initialTab: "home", hasUnreadNotifications: false, onNavigationAction: { _ in })
     }
 }
-
