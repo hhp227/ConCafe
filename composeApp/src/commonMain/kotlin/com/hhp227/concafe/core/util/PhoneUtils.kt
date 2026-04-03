@@ -40,6 +40,8 @@ fun normalizeKoreanPhoneToE164(input: String): String? {
         "+$digitsOnly"
     } else if (digitsOnly.startsWith("0")) {
         "+82${digitsOnly.drop(1)}"
+    } else if (digitsOnly.startsWith("10")) {
+        "+82$digitsOnly"
     } else {
         null
     }

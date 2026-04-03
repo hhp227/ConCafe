@@ -14,7 +14,15 @@ func formatKoreanPhoneNumber(_ input: String) -> String {
 }
 
 func normalizeKoreanPhoneToE164(_ input: String) -> String? {
-    let digitsOnly = input.filter(\.isNumber)
+    let digitsOnly = input
+        .compactMap { char -> String? in
+            if let value = char.wholeNumberValue {
+                return String(value)
+            } else {
+                return nil
+            }
+        }
+        .joined()
 
     if digitsOnly.isEmpty {
         return nil
@@ -22,6 +30,8 @@ func normalizeKoreanPhoneToE164(_ input: String) -> String? {
         return "+\(digitsOnly)"
     } else if digitsOnly.hasPrefix("0") {
         return "+82\(digitsOnly.dropFirst())"
+    } else if digitsOnly.hasPrefix("10") {
+        return "+82\(digitsOnly)"
     } else {
         return nil
     }

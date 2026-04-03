@@ -171,7 +171,9 @@ class SignUpViewModel(
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (phoneAuthProvider.sendCode(normalizedPhone)) {
+            val result = phoneAuthProvider.sendCode(normalizedPhone)
+
+            when (result) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -187,7 +189,7 @@ class SignUpViewModel(
                         it.copy(
                             isLoading = false,
                             hasRequestedVerification = false,
-                            errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678",
+                            errorMessage = resolvePhoneVerificationRequestErrorMessage(result.error),
                             infoMessage = null
                         )
                     }
@@ -262,6 +264,28 @@ class SignUpViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private fun resolvePhoneVerificationRequestErrorMessage(error: AppError): String {
+        val reason = when (error) {
+            is AppError.ValidationFailed -> error.reason.uppercase()
+            is AppError.Unknown -> (error.cause ?: "").uppercase()
+            else -> ""
+        }
+        return if (reason.contains("INVALID_PHONE_NUMBER")) {
+            "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
+        } else if (reason.contains("QUOTA_EXCEEDED")
+            || reason.contains("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+            "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if (reason.contains("CAPTCHA_CHECK_FAILED")) {
+            "인증 검증에 실패했습니다. 잠시 후 다시 시도해주세요."
+        } else if (reason.contains("MISSING_APP_TOKEN")) {
+            "앱 인증 설정이 필요합니다. 앱을 재실행 후 다시 시도해주세요."
+        } else if (reason.contains("APP_NOT_VERIFIED")) {
+            "앱 인증 상태를 확인할 수 없습니다. 잠시 후 다시 시도해주세요."
+        } else {
+            "인증번호 요청에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해주세요."
         }
     }
 
@@ -454,9 +478,7 @@ class SignUpViewModel(
             normalizedReason.contains("NETWORK")
         ) {
             "네트워크 오류로 회원가입에 실패했습니다."
-        } else if (reason.isNotBlank()) {
-            reason
-        } else {
+        } else reason.ifBlank {
             "회원가입에 실패했습니다. 입력값을 확인해주세요."
         }
     }
