@@ -19,8 +19,6 @@ struct ExploreView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("탐색")
-        .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCast(let id):
