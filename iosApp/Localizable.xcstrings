@@ -46,12 +46,6 @@
     "%d pt" : {
 
     },
-    "%d개 리뷰" : {
-
-    },
-    "%d원" : {
-
-    },
     "%f" : {
 
     },
@@ -61,16 +55,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld / %2$lld"
-          }
-        }
-      }
-    },
-    "%lld/%lld자 이상" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld/%2$lld자 이상"
           }
         }
       }
@@ -1148,6 +1132,33 @@
           }
         }
       }
+    },
+    "admin_banner_card_description" : {
+
+    },
+    "admin_banner_card_title" : {
+
+    },
+    "admin_inquiry_empty" : {
+
+    },
+    "admin_inquiry_load_more" : {
+
+    },
+    "admin_inquiry_title" : {
+
+    },
+    "admin_pending_owner_claim_title" : {
+
+    },
+    "admin_pending_section_title" : {
+
+    },
+    "admin_quick_menu_title" : {
+
+    },
+    "admin_writer" : {
+
     },
     "auth_login_required_message" : {
       "localizations" : {
@@ -3242,6 +3253,736 @@
     "Cafe" : {
 
     },
+    "cafe_accessibility_back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "戻る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "뒤로가기"
+          }
+        }
+      }
+    },
+    "cafe_accessibility_favorite" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즐겨찾기"
+          }
+        }
+      }
+    },
+    "cafe_accessibility_more" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もっと見る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "더보기"
+          }
+        }
+      }
+    },
+    "cafe_action_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再読み込み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로고침"
+          }
+        }
+      }
+    },
+    "cafe_action_write_review" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write Review"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レビュー作成"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "리뷰 작성"
+          }
+        }
+      }
+    },
+    "cafe_alert_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お知らせ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림"
+          }
+        }
+      }
+    },
+    "cafe_cast_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No casts have been registered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登録されたキャストがいません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "등록된 캐스트가 없습니다."
+          }
+        }
+      }
+    },
+    "cafe_error_detail_load_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load cafe details."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェ詳細データの読み込みに失敗しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 상세 데이터를 불러오지 못했습니다."
+          }
+        }
+      }
+    },
+    "cafe_error_retry_prompt" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "cafe_info_action_reserve" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reserve"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予約する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예약하기"
+          }
+        }
+      }
+    },
+    "cafe_info_label_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "住所"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주소"
+          }
+        }
+      }
+    },
+    "cafe_info_label_business_hours" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business Hours"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "営業時間"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영업시간"
+          }
+        }
+      }
+    },
+    "cafe_info_label_phone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone Number"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電話番号"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전화번호"
+          }
+        }
+      }
+    },
+    "cafe_info_placeholder_business_hours" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business hours are being prepared."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "営業時間情報を準備中です"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "운영시간 정보 준비중"
+          }
+        }
+      }
+    },
+    "cafe_info_placeholder_phone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact information is being prepared."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連絡先情報を準備中です"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연락처 정보 준비중"
+          }
+        }
+      }
+    },
+    "cafe_info_section_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紹介"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소개"
+          }
+        }
+      }
+    },
+    "cafe_menu_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No menus have been registered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登録されたメニューがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "등록된 메뉴가 없습니다."
+          }
+        }
+      }
+    },
+    "cafe_menu_price" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "₩%lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "₩%lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld원"
+          }
+        }
+      }
+    },
+    "cafe_message_report_received" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your report has been received."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通報が受け付けられました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신고가 접수되었습니다."
+          }
+        }
+      }
+    },
+    "cafe_message_review_delete_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to delete the review."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レビューの削除に失敗しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "리뷰 삭제에 실패했습니다."
+          }
+        }
+      }
+    },
+    "cafe_notice_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No notices have been registered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登録されたお知らせがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "등록된 공지가 없습니다."
+          }
+        }
+      }
+    },
+    "cafe_review_action_delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "삭제하기"
+          }
+        }
+      }
+    },
+    "cafe_review_action_edit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수정하기"
+          }
+        }
+      }
+    },
+    "cafe_review_action_report" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通報する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신고하기"
+          }
+        }
+      }
+    },
+    "cafe_review_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reviews"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld件のレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개 리뷰"
+          }
+        }
+      }
+    },
+    "cafe_review_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No reviews have been posted yet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ登録されたレビューがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 등록된 리뷰가 없습니다."
+          }
+        }
+      }
+    },
+    "cafe_review_load_more_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll to load more."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクロールするとさらに読み込まれます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크롤하면 더 불러옵니다."
+          }
+        }
+      }
+    },
+    "cafe_review_verified" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verified Visit"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訪問認証"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "방문인증"
+          }
+        }
+      }
+    },
+    "cafe_tab_casts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Casts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트"
+          }
+        }
+      }
+    },
+    "cafe_tab_info" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情報"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보"
+          }
+        }
+      }
+    },
+    "cafe_tab_menu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴"
+          }
+        }
+      }
+    },
+    "cafe_tab_notices" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notices"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お知らせ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공지"
+          }
+        }
+      }
+    },
+    "cafe_tab_reviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviews"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "리뷰"
+          }
+        }
+      }
+    },
     "cafeinfo_action_manage_exception" : {
       "localizations" : {
         "en" : {
@@ -4660,6 +5401,1091 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "내 카페"
+          }
+        }
+      }
+    },
+    "cast_accessibility_back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "戻る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "뒤로가기"
+          }
+        }
+      }
+    },
+    "cast_action_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再読み込み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로고침"
+          }
+        }
+      }
+    },
+    "cast_activity_follower" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Followers"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォロワー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팔로워"
+          }
+        }
+      }
+    },
+    "cast_activity_rating" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rating"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "評価"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "평점"
+          }
+        }
+      }
+    },
+    "cast_activity_visit_cert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visit Certifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訪問認証"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "방문 인증"
+          }
+        }
+      }
+    },
+    "cast_error_detail_load_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load cast details."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャスト詳細データの読み込みに失敗しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트 상세 데이터를 불러오지 못했습니다."
+          }
+        }
+      }
+    },
+    "cast_follow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォロー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팔로우"
+          }
+        }
+      }
+    },
+    "cast_follower_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld followers"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld人"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld명"
+          }
+        }
+      }
+    },
+    "cast_follower_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Followers"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォロワー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팔로워"
+          }
+        }
+      }
+    },
+    "cast_following" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Following"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォロー中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팔로잉"
+          }
+        }
+      }
+    },
+    "cast_schedule_off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "休み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴무"
+          }
+        }
+      }
+    },
+    "cast_schedule_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work Schedule"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勤務スケジュール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "출근 일정"
+          }
+        }
+      }
+    },
+    "cast_schedule_work" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出勤"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "출근"
+          }
+        }
+      }
+    },
+    "cast_section_intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduction"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紹介"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소개"
+          }
+        }
+      }
+    },
+    "cast_section_recent_activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent Activity"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近の活動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 활동"
+          }
+        }
+      }
+    },
+    "cast_section_tagged_reviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tagged Reviews"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一緒に言及されたレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "함께 언급된 후기"
+          }
+        }
+      }
+    },
+    "cast_tagged_reviews_empty_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe reviews tagged with this cast will appear here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このキャストがタグ付けされたカフェレビューが表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 캐스트가 태그된 카페 리뷰가 표시됩니다."
+          }
+        }
+      }
+    },
+    "cast_tagged_reviews_empty_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tagged reviews yet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ一緒に言及されたレビューがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 함께 언급된 후기가 없어요."
+          }
+        }
+      }
+    },
+    "cast_today_check_schedule" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please check the next schedule."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次のスケジュールを確認してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 스케줄을 확인해 주세요."
+          }
+        }
+      }
+    },
+    "cast_today_finished" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shift Finished"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勤務終了"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근무 완료"
+          }
+        }
+      }
+    },
+    "cast_today_off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off Today"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日は休み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘은 휴무"
+          }
+        }
+      }
+    },
+    "cast_today_status_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's Work Status"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日の勤務状態"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘의 출근 상태"
+          }
+        }
+      }
+    },
+    "cast_today_upcoming" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upcoming Shift"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出勤予定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "출근 예정"
+          }
+        }
+      }
+    },
+    "cast_today_working" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On Duty"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勤務中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근무중"
+          }
+        }
+      }
+    },
+    "cast_weekday_fri" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fri"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "金"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "금"
+          }
+        }
+      }
+    },
+    "cast_weekday_mon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mon"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "월"
+          }
+        }
+      }
+    },
+    "cast_weekday_sat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sat"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "土"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "토"
+          }
+        }
+      }
+    },
+    "cast_weekday_sun" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sun"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일"
+          }
+        }
+      }
+    },
+    "cast_weekday_thu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "木"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목"
+          }
+        }
+      }
+    },
+    "cast_weekday_tue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tue"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "火"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화"
+          }
+        }
+      }
+    },
+    "cast_weekday_wed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수"
+          }
+        }
+      }
+    },
+    "castedit_accessibility_back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "戻る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "뒤로가기"
+          }
+        }
+      }
+    },
+    "castedit_alert_image_required_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At least one profile or gallery image is required."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロフィールまたはギャラリー画像のうち最低1枚は必須です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다."
+          }
+        }
+      }
+    },
+    "castedit_alert_image_required_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please add an image"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を登録してください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지를 등록해주세요"
+          }
+        }
+      }
+    },
+    "castedit_birthday_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birthday"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誕生日"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "생일"
+          }
+        }
+      }
+    },
+    "castedit_birthday_pick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Birthday"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誕生日を選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "생일 선택"
+          }
+        }
+      }
+    },
+    "castedit_gallery_add" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add image"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真を追加"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 추가"
+          }
+        }
+      }
+    },
+    "castedit_gallery_guide" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to %lld images can be registered in the cast gallery."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャストギャラリーには最大 %lld 枚まで登録できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트 갤러리에는 최대 %lld장까지 등록할 수 있습니다."
+          }
+        }
+      }
+    },
+    "castedit_gallery_item_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像 %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지 %lld"
+          }
+        }
+      }
+    },
+    "castedit_gallery_remove" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove image"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지 삭제"
+          }
+        }
+      }
+    },
+    "castedit_gallery_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gallery Photos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ギャラリー写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갤러리 사진"
+          }
+        }
+      }
+    },
+    "castedit_label_concept_role" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concept Role"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンセプト役割"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컨셉 역할"
+          }
+        }
+      }
+    },
+    "castedit_label_intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduction & Bio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紹介とバイオ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소개 및 바이오"
+          }
+        }
+      }
+    },
+    "castedit_label_name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast Name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャスト名"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트 이름"
+          }
+        }
+      }
+    },
+    "castedit_placeholder_concept_role" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Lead Maid, Tea Master, Apprentice"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例: リードメイド、ティーマスター、アプレンティス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예: 리드 메이드, 티 마스터, 어프렌티스"
+          }
+        }
+      }
+    },
+    "castedit_placeholder_intro" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please introduce personality, traits, and specialties..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "性格、特徴、特技を紹介してください..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "성격, 특징, 특기를 소개해주세요..."
+          }
+        }
+      }
+    },
+    "castedit_placeholder_name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter your display name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活動名を入力してください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "활동명을 입력해주세요"
+          }
+        }
+      }
+    },
+    "castedit_profile_photo_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to change the photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タップして写真を変更してください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "탭해서 사진을 변경하세요"
+          }
+        }
+      }
+    },
+    "castedit_profile_photo_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast Profile Photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャストプロフィール写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트 프로필 사진"
           }
         }
       }
@@ -6228,6 +8054,30 @@
         }
       }
     },
+    "dashboard_action_add" : {
+
+    },
+    "dashboard_action_approve" : {
+
+    },
+    "dashboard_action_create_banner" : {
+
+    },
+    "dashboard_action_load_more" : {
+
+    },
+    "dashboard_action_loading" : {
+
+    },
+    "dashboard_action_reject" : {
+
+    },
+    "dashboard_action_schedule_management" : {
+
+    },
+    "dashboard_action_view_all" : {
+
+    },
     "dashboard_banner_period_days" : {
       "localizations" : {
         "en" : {
@@ -6319,6 +8169,12 @@
         }
       }
     },
+    "dashboard_delete_cast_message" : {
+
+    },
+    "dashboard_delete_cast_title" : {
+
+    },
     "dashboard_external_link_add" : {
       "localizations" : {
         "en" : {
@@ -6363,6 +8219,18 @@
         }
       }
     },
+    "dashboard_external_link_guide" : {
+
+    },
+    "dashboard_external_link_label_title" : {
+
+    },
+    "dashboard_external_link_label_url" : {
+
+    },
+    "dashboard_external_link_placeholder_title" : {
+
+    },
     "dashboard_external_link_save" : {
       "localizations" : {
         "en" : {
@@ -6384,6 +8252,12 @@
           }
         }
       }
+    },
+    "dashboard_external_link_section_subtitle" : {
+
+    },
+    "dashboard_hero_subtitle" : {
+
     },
     "dashboard_info_cast_claim_approved" : {
       "extractionState" : "stale",
@@ -6615,6 +8489,36 @@
         }
       }
     },
+    "dashboard_metric_rating" : {
+
+    },
+    "dashboard_metric_today_checkin" : {
+
+    },
+    "dashboard_metric_today_review" : {
+
+    },
+    "dashboard_pending_claim_title" : {
+
+    },
+    "dashboard_section_cast_management" : {
+
+    },
+    "dashboard_section_home_banner" : {
+
+    },
+    "dashboard_section_menu_subtitle" : {
+
+    },
+    "dashboard_section_menu_title" : {
+
+    },
+    "dashboard_section_metrics_subtitle" : {
+
+    },
+    "dashboard_section_metrics_title" : {
+
+    },
     "dashboard_shortcut_cafe_settings" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6708,7 +8612,6 @@
       }
     },
     "dashboard_shortcut_external_links" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6775,6 +8678,9 @@
           }
         }
       }
+    },
+    "dashboard_title" : {
+
     },
     "explore_cast_followers" : {
       "localizations" : {
@@ -11845,6 +13751,45 @@
         }
       }
     },
+    "reviewedit_atmosphere_negative" : {
+
+    },
+    "reviewedit_atmosphere_positive" : {
+
+    },
+    "reviewedit_atmosphere_question" : {
+
+    },
+    "reviewedit_cast_tag_title" : {
+
+    },
+    "reviewedit_photo_add" : {
+
+    },
+    "reviewedit_photo_helper" : {
+
+    },
+    "reviewedit_photo_remove" : {
+
+    },
+    "reviewedit_photo_section_title" : {
+
+    },
+    "reviewedit_rating_question" : {
+
+    },
+    "reviewedit_review_detail_hint" : {
+
+    },
+    "reviewedit_review_detail_title" : {
+
+    },
+    "reviewedit_review_length" : {
+
+    },
+    "reviewedit_verified_visit" : {
+
+    },
     "schedule_action_close" : {
       "localizations" : {
         "en" : {
@@ -14460,9 +16405,6 @@
         }
       }
     },
-    "갤러리 사진" : {
-
-    },
     "공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다." : {
 
     },
@@ -14472,133 +16414,22 @@
     "닫기" : {
 
     },
-    "더 보기" : {
-
-    },
-    "등록된 문의가 없습니다." : {
-
-    },
-    "리뷰 사진 추가" : {
-
-    },
-    "리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다." : {
-
-    },
-    "리뷰 작성" : {
-
-    },
     "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다." : {
-
-    },
-    "문의 더 불러오기" : {
-
-    },
-    "문의하기" : {
-
-    },
-    "반려" : {
-
-    },
-    "방문 인증됨" : {
-
-    },
-    "방문인증" : {
-
-    },
-    "배너 등록" : {
-
-    },
-    "분위기가 좋았나요?" : {
-
-    },
-    "불러오는 중" : {
-
-    },
-    "사진 등록 (선택)" : {
-
-    },
-    "삭제하기" : {
-
-    },
-    "상세 리뷰" : {
-
-    },
-    "새 배너 등록" : {
-
-    },
-    "새 배너 등록하기" : {
-
-    },
-    "새로고침" : {
-
-    },
-    "생일" : {
-
-    },
-    "생일 선택" : {
-
-    },
-    "선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다." : {
 
     },
     "셉" : {
 
     },
-    "소개" : {
-
-    },
-    "소속 캐스트 관리" : {
-
-    },
-    "수정하기" : {
-
-    },
-    "스크롤하면 더 불러옵니다." : {
-
-    },
-    "승인" : {
-
-    },
-    "승인 대기 요청" : {
-
-    },
-    "신고하기" : {
-
-    },
-    "아직 함께 언급된 후기가 없어요." : {
-
-    },
     "안내" : {
-
-    },
-    "알림" : {
 
     },
     "앨범에서 사진 선택" : {
 
     },
-    "앱 외부로 연결할 링크를 관리합니다." : {
-
-    },
     "연결 요청 보내기" : {
 
     },
-    "예약하기" : {
-
-    },
-    "오늘의 출근 상태" : {
-
-    },
-    "외부 링크" : {
-
-    },
     "요청 보내는 중..." : {
-
-    },
-    "운영 퀵메뉴" : {
-
-    },
-    "이 캐스트가 태그된 카페 리뷰가 표시됩니다." : {
 
     },
     "이미지 로딩 중" : {
@@ -14607,22 +16438,7 @@
     "이미지 선택" : {
 
     },
-    "이미지를 등록해주세요" : {
-
-    },
     "이번 주 스케줄" : {
-
-    },
-    "작성자 %@" : {
-
-    },
-    "전체 보기" : {
-
-    },
-    "전체보기" : {
-
-    },
-    "제거" : {
 
     },
     "즐겨찾기" : {
@@ -14631,25 +16447,13 @@
     "최근 방문" : {
 
     },
-    "최근 활동" : {
-
-    },
-    "추가" : {
-
-    },
     "출근" : {
 
     },
     "출근 관리에서 일정을 바로 조정할 수 있습니다." : {
 
     },
-    "출근 일정" : {
-
-    },
     "출근중" : {
-
-    },
-    "출근표 관리" : {
 
     },
     "취소" : {
@@ -14658,34 +16462,10 @@
     "카" : {
 
     },
-    "카페 경험은 어떠셨나요?" : {
-
-    },
-    "캐스트 갤러리에는 최대 %lld장까지 등록할 수 있습니다." : {
-
-    },
-    "캐스트 프로필 사진" : {
-
-    },
-    "캐스트 프로필 삭제" : {
-
-    },
-    "캐스트 프로필을 삭제하시겠습니까?" : {
-
-    },
     "콘" : {
 
     },
-    "탭해서 사진을 변경하세요" : {
-
-    },
-    "팔로우" : {
-
-    },
     "팔로우한 캐스트" : {
-
-    },
-    "팔로잉" : {
 
     },
     "팬 공지 작성하기" : {
@@ -14697,31 +16477,10 @@
     "페" : {
 
     },
-    "프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다." : {
-
-    },
     "프로필 연결 상태 보기" : {
 
     },
-    "프로필 연결 요청" : {
-
-    },
-    "플랫폼 공지 또는 프로모션 배너를 바로 등록합니다." : {
-
-    },
-    "함께 언급된 후기" : {
-
-    },
-    "함께 언급한 캐스트" : {
-
-    },
     "항목 이미지 선택" : {
-
-    },
-    "홈 배너 관리" : {
-
-    },
-    "홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다." : {
 
     },
     "확인" : {
@@ -14729,1075 +16488,6 @@
     },
     "활동 뱃지" : {
 
-    },
-    "cafe_accessibility_back" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "戻る"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "뒤로가기"
-          }
-        }
-      }
-    },
-    "cafe_accessibility_favorite" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorite"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お気に入り"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "즐겨찾기"
-          }
-        }
-      }
-    },
-    "cafe_accessibility_more" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "もっと見る"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "더보기"
-          }
-        }
-      }
-    },
-    "cafe_action_refresh" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refresh"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "再読み込み"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "새로고침"
-          }
-        }
-      }
-    },
-    "cafe_action_write_review" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write Review"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "レビュー作成"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "리뷰 작성"
-          }
-        }
-      }
-    },
-    "cafe_alert_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notice"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お知らせ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "알림"
-          }
-        }
-      }
-    },
-    "cafe_cast_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No casts have been registered."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "登録されたキャストがいません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "등록된 캐스트가 없습니다."
-          }
-        }
-      }
-    },
-    "cafe_error_detail_load_failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to load cafe details."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カフェ詳細データの読み込みに失敗しました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카페 상세 데이터를 불러오지 못했습니다."
-          }
-        }
-      }
-    },
-    "cafe_error_retry_prompt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please try again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "다시 시도해 주세요."
-          }
-        }
-      }
-    },
-    "cafe_info_action_reserve" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reserve"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "予約する"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "예약하기"
-          }
-        }
-      }
-    },
-    "cafe_info_label_address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Address"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "住所"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "주소"
-          }
-        }
-      }
-    },
-    "cafe_info_label_business_hours" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Business Hours"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "営業時間"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "영업시간"
-          }
-        }
-      }
-    },
-    "cafe_info_label_phone" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Phone Number"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "電話番号"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "전화번호"
-          }
-        }
-      }
-    },
-    "cafe_info_placeholder_business_hours" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Business hours are being prepared."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "営業時間情報を準備中です"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "운영시간 정보 준비중"
-          }
-        }
-      }
-    },
-    "cafe_info_placeholder_phone" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contact information is being prepared."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "連絡先情報を準備中です"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연락처 정보 준비중"
-          }
-        }
-      }
-    },
-    "cafe_info_section_description" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Description"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "紹介"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "소개"
-          }
-        }
-      }
-    },
-    "cafe_menu_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No menus have been registered."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "登録されたメニューがありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "등록된 메뉴가 없습니다."
-          }
-        }
-      }
-    },
-    "cafe_menu_price" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "₩%lld"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "₩%lld"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld원"
-          }
-        }
-      }
-    },
-    "cafe_message_report_received" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your report has been received."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通報が受け付けられました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "신고가 접수되었습니다."
-          }
-        }
-      }
-    },
-    "cafe_message_review_delete_failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to delete the review."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "レビューの削除に失敗しました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "리뷰 삭제에 실패했습니다."
-          }
-        }
-      }
-    },
-    "cafe_notice_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No notices have been registered."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "登録されたお知らせがありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "등록된 공지가 없습니다."
-          }
-        }
-      }
-    },
-    "cafe_review_action_delete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "削除する"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "삭제하기"
-          }
-        }
-      }
-    },
-    "cafe_review_action_edit" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "編集する"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "수정하기"
-          }
-        }
-      }
-    },
-    "cafe_review_action_report" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Report"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通報する"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "신고하기"
-          }
-        }
-      }
-    },
-    "cafe_review_count" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld reviews"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld件のレビュー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld개 리뷰"
-          }
-        }
-      }
-    },
-    "cafe_review_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No reviews have been posted yet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まだ登録されたレビューがありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아직 등록된 리뷰가 없습니다."
-          }
-        }
-      }
-    },
-    "cafe_review_load_more_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scroll to load more."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スクロールするとさらに読み込まれます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크롤하면 더 불러옵니다."
-          }
-        }
-      }
-    },
-    "cafe_review_verified" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verified Visit"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "訪問認証"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "방문인증"
-          }
-        }
-      }
-    },
-    "cafe_tab_casts" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Casts"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "キャスト"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "캐스트"
-          }
-        }
-      }
-    },
-    "cafe_tab_info" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Info"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "情報"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정보"
-          }
-        }
-      }
-    },
-    "cafe_tab_menu" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menu"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "メニュー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "메뉴"
-          }
-        }
-      }
-    },
-    "cafe_tab_notices" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notices"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お知らせ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "공지"
-          }
-        }
-      }
-    },
-    "cafe_tab_reviews" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reviews"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "レビュー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "리뷰"
-          }
-        }
-      }
-    },
-    "cast_accessibility_back" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "戻る" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "뒤로가기" } }
-      }
-    },
-    "cast_action_refresh" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再読み込み" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "새로고침" } }
-      }
-    },
-    "cast_error_detail_load_failed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load cast details." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャスト詳細データの読み込みに失敗しました。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 상세 데이터를 불러오지 못했습니다." } }
-      }
-    },
-    "cast_follow" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロー" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로우" } }
-      }
-    },
-    "cast_following" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Following" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロー中" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로잉" } }
-      }
-    },
-    "cast_follower_label" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Followers" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロワー" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로워" } }
-      }
-    },
-    "cast_follower_count" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld followers" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld人" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "%lld명" } }
-      }
-    },
-    "cast_today_status_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today's Work Status" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "本日の勤務状態" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "오늘의 출근 상태" } }
-      }
-    },
-    "cast_today_off" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Off Today" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "本日は休み" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "오늘은 휴무" } }
-      }
-    },
-    "cast_today_check_schedule" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please check the next schedule." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のスケジュールを確認してください。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "다음 스케줄을 확인해 주세요." } }
-      }
-    },
-    "cast_today_upcoming" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upcoming Shift" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "出勤予定" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근 예정" } }
-      }
-    },
-    "cast_today_working" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "On Duty" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務中" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "근무중" } }
-      }
-    },
-    "cast_today_finished" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shift Finished" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務終了" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "근무 완료" } }
-      }
-    },
-    "cast_schedule_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work Schedule" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "勤務スケジュール" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근 일정" } }
-      }
-    },
-    "cast_schedule_work" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "出勤" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "출근" } }
-      }
-    },
-    "cast_schedule_off" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Off" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "休み" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "휴무" } }
-      }
-    },
-    "cast_section_intro" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Introduction" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紹介" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "소개" } }
-      }
-    },
-    "cast_section_recent_activity" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent Activity" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近の活動" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "최근 활동" } }
-      }
-    },
-    "cast_activity_visit_cert" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Visit Certifications" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "訪問認証" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "방문 인증" } }
-      }
-    },
-    "cast_activity_follower" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Followers" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォロワー" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "팔로워" } }
-      }
-    },
-    "cast_activity_rating" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rating" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "評価" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "평점" } }
-      }
-    },
-    "cast_section_tagged_reviews" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tagged Reviews" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一緒に言及されたレビュー" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "함께 언급된 후기" } }
-      }
-    },
-    "cast_tagged_reviews_empty_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No tagged reviews yet." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "まだ一緒に言及されたレビューがありません。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "아직 함께 언급된 후기가 없어요." } }
-      }
-    },
-    "cast_tagged_reviews_empty_desc" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cafe reviews tagged with this cast will appear here." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このキャストがタグ付けされたカフェレビューが表示されます。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이 캐스트가 태그된 카페 리뷰가 표시됩니다." } }
-      }
-    },
-    "cast_weekday_mon" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mon" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "月" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "월" } }
-      }
-    },
-    "cast_weekday_tue" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tue" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "火" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "화" } }
-      }
-    },
-    "cast_weekday_wed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wed" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "水" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "수" } }
-      }
-    },
-    "cast_weekday_thu" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thu" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "木" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "목" } }
-      }
-    },
-    "cast_weekday_fri" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fri" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "금" } }
-      }
-    },
-    "cast_weekday_sat" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sat" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "土" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "토" } }
-      }
-    },
-    "cast_weekday_sun" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sun" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "일" } }
-      }
-    },
-    "castedit_accessibility_back" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "戻る" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "뒤로가기" } }
-      }
-    },
-    "castedit_alert_image_required_desc" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "At least one profile or gallery image is required." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロフィールまたはギャラリー画像のうち最低1枚は必須です。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다." } }
-      }
-    },
-    "castedit_alert_image_required_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please add an image" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像を登録してください" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지를 등록해주세요" } }
-      }
-    },
-    "castedit_birthday_label" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Birthday" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "誕生日" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "생일" } }
-      }
-    },
-    "castedit_birthday_pick" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select Birthday" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "誕生日を選択" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "생일 선택" } }
-      }
-    },
-    "castedit_gallery_add" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add image" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真を追加" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진 추가" } }
-      }
-    },
-    "castedit_gallery_guide" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Up to %lld images can be registered in the cast gallery." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャストギャラリーには最大 %lld 枚まで登録できます。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 갤러리에는 최대 %lld장까지 등록할 수 있습니다." } }
-      }
-    },
-    "castedit_gallery_item_label" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Image %lld" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像 %lld" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지 %lld" } }
-      }
-    },
-    "castedit_gallery_remove" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove image" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像を削除" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "이미지 삭제" } }
-      }
-    },
-    "castedit_gallery_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gallery Photos" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ギャラリー写真" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "갤러리 사진" } }
-      }
-    },
-    "castedit_label_concept_role" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Concept Role" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コンセプト役割" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "컨셉 역할" } }
-      }
-    },
-    "castedit_label_intro" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Introduction & Bio" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紹介とバイオ" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "소개 및 바이오" } }
-      }
-    },
-    "castedit_label_name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cast Name" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャスト名" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 이름" } }
-      }
-    },
-    "castedit_placeholder_concept_role" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Lead Maid, Tea Master, Apprentice" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "例: リードメイド、ティーマスター、アプレンティス" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "예: 리드 메이드, 티 마스터, 어프렌티스" } }
-      }
-    },
-    "castedit_placeholder_intro" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please introduce personality, traits, and specialties..." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "性格、特徴、特技を紹介してください..." } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "성격, 특징, 특기를 소개해주세요..." } }
-      }
-    },
-    "castedit_placeholder_name" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter your display name" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "活動名を入力してください" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "활동명을 입력해주세요" } }
-      }
-    },
-    "castedit_profile_photo_hint" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap to change the photo" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タップして写真を変更してください" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "탭해서 사진을 변경하세요" } }
-      }
-    },
-    "castedit_profile_photo_title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cast Profile Photo" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャストプロフィール写真" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "캐스트 프로필 사진" } }
-      }
     },
     "휴무" : {
 
