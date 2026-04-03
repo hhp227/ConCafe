@@ -35,6 +35,38 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.menugoods_edit_back_content_description
+import concafe.composeapp.generated.resources.menugoods_edit_category_dessert
+import concafe.composeapp.generated.resources.menugoods_edit_category_drink
+import concafe.composeapp.generated.resources.menugoods_edit_category_food
+import concafe.composeapp.generated.resources.menugoods_edit_category_goods
+import concafe.composeapp.generated.resources.menugoods_edit_desc_placeholder
+import concafe.composeapp.generated.resources.menugoods_edit_info_enter_name
+import concafe.composeapp.generated.resources.menugoods_edit_info_enter_price
+import concafe.composeapp.generated.resources.menugoods_edit_info_image_upload_failed
+import concafe.composeapp.generated.resources.menugoods_edit_info_image_upload_next_step
+import concafe.composeapp.generated.resources.menugoods_edit_info_item_not_found
+import concafe.composeapp.generated.resources.menugoods_edit_info_load_failed
+import concafe.composeapp.generated.resources.menugoods_edit_info_price_number_only
+import concafe.composeapp.generated.resources.menugoods_edit_info_save_failed
+import concafe.composeapp.generated.resources.menugoods_edit_label_category
+import concafe.composeapp.generated.resources.menugoods_edit_label_desc
+import concafe.composeapp.generated.resources.menugoods_edit_label_name
+import concafe.composeapp.generated.resources.menugoods_edit_label_price
+import concafe.composeapp.generated.resources.menugoods_edit_loading
+import concafe.composeapp.generated.resources.menugoods_edit_placeholder_name_example
+import concafe.composeapp.generated.resources.menugoods_edit_save_create
+import concafe.composeapp.generated.resources.menugoods_edit_save_update
+import concafe.composeapp.generated.resources.menugoods_edit_stock_available
+import concafe.composeapp.generated.resources.menugoods_edit_stock_sold_out
+import concafe.composeapp.generated.resources.menugoods_edit_stock_title
+import concafe.composeapp.generated.resources.menugoods_edit_title_add
+import concafe.composeapp.generated.resources.menugoods_edit_title_edit
+import concafe.composeapp.generated.resources.menugoods_edit_upload_desc
+import concafe.composeapp.generated.resources.menugoods_edit_upload_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -78,14 +110,21 @@ private fun MenuGoodsEditContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = uiState.screenTitle,
+                        text = stringResource(if (uiState.isEditMode) {
+                            Res.string.menugoods_edit_title_edit
+                        } else {
+                            Res.string.menugoods_edit_title_add
+                        }),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MenuGoodsEditAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.menugoods_edit_back_content_description)
+                        )
                     }
                 }
             )
@@ -115,7 +154,11 @@ private fun MenuGoodsEditContentScreen(
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
                         Text(
-                            text = uiState.saveButtonLabel,
+                            text = stringResource(if (uiState.isEditMode) {
+                                Res.string.menugoods_edit_save_update
+                            } else {
+                                Res.string.menugoods_edit_save_create
+                            }),
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -149,10 +192,20 @@ private fun MenuGoodsEditContentScreen(
                         )
                     }
                 }
-                uiState.infoMessage?.let { message ->
+                uiState.infoMessageKey?.let { messageKey ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when (messageKey) {
+                                "menugoods_edit_info_item_not_found" -> stringResource(Res.string.menugoods_edit_info_item_not_found)
+                                "menugoods_edit_info_load_failed" -> stringResource(Res.string.menugoods_edit_info_load_failed)
+                                "menugoods_edit_info_enter_name" -> stringResource(Res.string.menugoods_edit_info_enter_name)
+                                "menugoods_edit_info_enter_price" -> stringResource(Res.string.menugoods_edit_info_enter_price)
+                                "menugoods_edit_info_price_number_only" -> stringResource(Res.string.menugoods_edit_info_price_number_only)
+                                "menugoods_edit_info_save_failed" -> stringResource(Res.string.menugoods_edit_info_save_failed)
+                                "menugoods_edit_info_image_upload_failed" -> stringResource(Res.string.menugoods_edit_info_image_upload_failed)
+                                "menugoods_edit_info_image_upload_next_step" -> stringResource(Res.string.menugoods_edit_info_image_upload_next_step)
+                                else -> messageKey
+                            },
                             onDismiss = { onAction(MenuGoodsEditAction.DismissInfoMessage) }
                         )
                     }
@@ -164,22 +217,22 @@ private fun MenuGoodsEditContentScreen(
                 } else {
                     item {
                         RoundedTextField(
-                            label = "항목 이름",
+                            label = stringResource(Res.string.menugoods_edit_label_name),
                             value = uiState.itemName,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangeName(it)) },
-                            placeholder = "예: 딸기 메이드 파르페"
+                            placeholder = stringResource(Res.string.menugoods_edit_placeholder_name_example)
                         )
                     }
                     item {
                         PriceField(
-                            label = "가격",
+                            label = stringResource(Res.string.menugoods_edit_label_price),
                             value = uiState.price,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangePrice(it)) }
                         )
                     }
                     item {
                         FormField(
-                            label = "카테고리"
+                            label = stringResource(Res.string.menugoods_edit_label_category)
                         ) {
                             CategoryGrid(
                                 selectedCategoryId = uiState.selectedCategoryId,
@@ -189,7 +242,7 @@ private fun MenuGoodsEditContentScreen(
                     }
                     item {
                         DescriptionField(
-                            label = "설명",
+                            label = stringResource(Res.string.menugoods_edit_label_desc),
                             value = uiState.description,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangeDescription(it)) }
                         )
@@ -246,12 +299,12 @@ private fun PhotoUploadCard(
                     )
                 }
                 Text(
-                    text = "항목 사진 업로드",
+                    text = stringResource(Res.string.menugoods_edit_upload_title),
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF2B2330)
                 )
                 Text(
-                    text = "JPG, PNG 최대 5MB",
+                    text = stringResource(Res.string.menugoods_edit_upload_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF7A6671)
                 )
@@ -410,12 +463,13 @@ private fun CategoryButton(
     }
 }
 
+@Composable
 private fun categoryLabel(categoryId: String): String {
     return when (categoryId) {
-        "food" -> "Food"
-        "dessert" -> "Dessert"
-        "goods" -> "Goods"
-        else -> "Drink"
+        "food" -> stringResource(Res.string.menugoods_edit_category_food)
+        "dessert" -> stringResource(Res.string.menugoods_edit_category_dessert)
+        "goods" -> stringResource(Res.string.menugoods_edit_category_goods)
+        else -> stringResource(Res.string.menugoods_edit_category_drink)
     }
 }
 
@@ -438,7 +492,7 @@ private fun DescriptionField(
         label = label,
         value = value,
         onValueChange = onValueChange,
-        placeholder = "재료 또는 특징을 설명해주세요...",
+        placeholder = stringResource(Res.string.menugoods_edit_desc_placeholder),
         minLines = 5,
         singleLine = false
     )
@@ -472,12 +526,16 @@ private fun StockCard(
                 )
                 Column {
                     Text(
-                        text = "재고 상태",
+                        text = stringResource(Res.string.menugoods_edit_stock_title),
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF2B2330)
                     )
                     Text(
-                        text = if (isInStock) "현재 판매 가능 상태입니다." else "현재 품절 상태입니다.",
+                        text = stringResource(if (isInStock) {
+                            Res.string.menugoods_edit_stock_available
+                        } else {
+                            Res.string.menugoods_edit_stock_sold_out
+                        }),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7A6671)
                     )
@@ -515,7 +573,7 @@ private fun InfoBanner(
                 color = Color(0xFF6B5320)
             )
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.common_close),
                 modifier = Modifier
                     .padding(start = 12.dp)
                     .clickable(onClick = onDismiss),
@@ -544,7 +602,7 @@ private fun LoadingCard() {
         ) {
             CircularProgressIndicator(color = Color(0xFFFF8AA8))
             Text(
-                text = "항목 정보를 준비하고 있습니다.",
+                text = stringResource(Res.string.menugoods_edit_loading),
                 color = Color(0xFF7A6671),
                 textAlign = TextAlign.Center
             )

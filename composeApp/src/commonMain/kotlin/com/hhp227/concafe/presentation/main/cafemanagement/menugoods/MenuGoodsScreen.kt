@@ -34,6 +34,36 @@ import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.changepw_back_content_description
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.menugoods_add_new_item
+import concafe.composeapp.generated.resources.menugoods_available
+import concafe.composeapp.generated.resources.menugoods_context_default_title
+import concafe.composeapp.generated.resources.menugoods_context_subtitle
+import concafe.composeapp.generated.resources.menugoods_delete_confirm
+import concafe.composeapp.generated.resources.menugoods_delete_content_description
+import concafe.composeapp.generated.resources.menugoods_delete_message
+import concafe.composeapp.generated.resources.menugoods_delete_title
+import concafe.composeapp.generated.resources.menugoods_edit_content_description
+import concafe.composeapp.generated.resources.menugoods_empty_default_desc
+import concafe.composeapp.generated.resources.menugoods_empty_default_title
+import concafe.composeapp.generated.resources.menugoods_empty_search_desc
+import concafe.composeapp.generated.resources.menugoods_empty_search_title
+import concafe.composeapp.generated.resources.menugoods_goods_desc
+import concafe.composeapp.generated.resources.menugoods_info_availability_save_failed
+import concafe.composeapp.generated.resources.menugoods_info_delete_failed
+import concafe.composeapp.generated.resources.menugoods_info_delete_success
+import concafe.composeapp.generated.resources.menugoods_info_load_failed
+import concafe.composeapp.generated.resources.menugoods_search_action
+import concafe.composeapp.generated.resources.menugoods_search_placeholder
+import concafe.composeapp.generated.resources.menugoods_sold_out
+import concafe.composeapp.generated.resources.menugoods_stock
+import concafe.composeapp.generated.resources.menugoods_tab_goods
+import concafe.composeapp.generated.resources.menugoods_tab_menu
+import concafe.composeapp.generated.resources.menugoods_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -72,16 +102,16 @@ fun MenuGoodsScreen(
     uiState.pendingDeleteItemId?.let { itemId ->
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) },
-            title = { Text("항목 삭제") },
-            text = { Text("항목을 삭제 하시겠습니까?") },
+            title = { Text(stringResource(Res.string.menugoods_delete_title)) },
+            text = { Text(stringResource(Res.string.menugoods_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(itemId)) }) {
-                    Text("삭제", color = Color(0xFFD96B7A))
+                    Text(stringResource(Res.string.menugoods_delete_confirm), color = Color(0xFFD96B7A))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(MenuGoodsAction.CancelDeleteItem) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -101,19 +131,19 @@ private fun MenuGoodsContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "메뉴&굿즈 관리",
+                        text = stringResource(Res.string.menugoods_title),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MenuGoodsAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.changepw_back_content_description))
                     }
                 },
                 actions = {
                     IconButton(onClick = { onAction(MenuGoodsAction.ClickSearch) }) {
-                        Icon(Icons.Default.Search, contentDescription = "검색")
+                        Icon(Icons.Default.Search, contentDescription = stringResource(Res.string.menugoods_search_action))
                     }
                 }
             )
@@ -126,7 +156,7 @@ private fun MenuGoodsContentScreen(
                     contentColor = Color(0xFF2B2330),
                     text = {
                         Text(
-                            text = "새 항목 추가",
+                            text = stringResource(Res.string.menugoods_add_new_item),
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -179,7 +209,13 @@ private fun MenuGoodsContentScreen(
                 uiState.infoMessage?.let { message ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when (message) {
+                                "menugoods_info_load_failed" -> stringResource(Res.string.menugoods_info_load_failed)
+                                "menugoods_info_availability_save_failed" -> stringResource(Res.string.menugoods_info_availability_save_failed)
+                                "menugoods_info_delete_success" -> stringResource(Res.string.menugoods_info_delete_success)
+                                "menugoods_info_delete_failed" -> stringResource(Res.string.menugoods_info_delete_failed)
+                                else -> message
+                            },
                             onDismiss = { onAction(MenuGoodsAction.DismissInfoMessage) }
                         )
                     }
@@ -250,13 +286,13 @@ private fun CafeContextCard(cafeName: String) {
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = if (cafeName.isBlank()) "카페 판매 항목" else cafeName,
+                    text = if (cafeName.isBlank()) stringResource(Res.string.menugoods_context_default_title) else cafeName,
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "메뉴와 굿즈 판매 상태를 한 화면에서 관리합니다.",
+                    text = stringResource(Res.string.menugoods_context_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.88f)
                 )
@@ -282,13 +318,13 @@ private fun CollectionTabRow(
         ) {
             CollectionTabButton(
                 modifier = Modifier.weight(1f),
-                label = "메뉴",
+                label = stringResource(Res.string.menugoods_tab_menu),
                 selected = selectedCollection == MenuGoodsUiState.CollectionTab.MENU,
                 onClick = { onSelect(MenuGoodsUiState.CollectionTab.MENU) }
             )
             CollectionTabButton(
                 modifier = Modifier.weight(1f),
-                label = "굿즈",
+                label = stringResource(Res.string.menugoods_tab_goods),
                 selected = selectedCollection == MenuGoodsUiState.CollectionTab.GOODS,
                 onClick = { onSelect(MenuGoodsUiState.CollectionTab.GOODS) }
             )
@@ -355,7 +391,7 @@ private fun SearchField(
                 decorationBox = { innerTextField ->
                     if (value.isBlank()) {
                         Text(
-                            text = "항목명, 카테고리, 키워드 검색",
+                            text = stringResource(Res.string.menugoods_search_placeholder),
                             color = Color(0xFFB395A8),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -376,7 +412,8 @@ private fun CategoryChipRow(
 ) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         items(chips, key = { it.id ?: "all" }) { chip ->
-            val selected = chip.id == selectedCategoryId || (chip.id == null && selectedCategoryId == null)
+            val selected = chip.id == selectedCategoryId
+
             Surface(
                 shape = RoundedCornerShape(999.dp),
                 color = if (selected) Color(0xFFFFD1DC) else Color(0x33FFD1DC),
@@ -438,7 +475,7 @@ private fun InfoBanner(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "안내 닫기",
+                    contentDescription = stringResource(Res.string.common_close),
                     tint = Color(0xFF6B5320)
                 )
             }
@@ -489,17 +526,17 @@ private fun EmptyStateCard(
                 )
             }
             Text(
-                text = if (isSearchMode) "검색 결과가 없습니다." else "등록된 항목이 없습니다.",
+                text = stringResource(if (isSearchMode) Res.string.menugoods_empty_search_title else Res.string.menugoods_empty_default_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B2330)
             )
             Text(
-                text = if (isSearchMode) {
-                    "검색어 또는 카테고리를 바꿔 다시 확인해보세요."
+                text = stringResource(if (isSearchMode) {
+                    Res.string.menugoods_empty_search_desc
                 } else {
-                    "새 메뉴나 굿즈를 등록하면 이 목록에 표시됩니다."
-                },
+                    Res.string.menugoods_empty_default_desc
+                }),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF7B6B75)
             )
@@ -560,10 +597,10 @@ private fun MenuItemCard(
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                            Icon(Icons.Default.Edit, contentDescription = "편집", tint = Color(0xFF7A6671))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF7A6671))
                         }
                         IconButton(onClick = onDelete) {
-                            Icon(Icons.Default.Delete, contentDescription = "삭제", tint = Color(0xFFD96B7A))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFFD96B7A))
                         }
                     }
                 }
@@ -593,7 +630,7 @@ private fun MenuItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isAvailable) "판매 중" else "품절",
+                        text = stringResource(if (isAvailable) Res.string.menugoods_available else Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
                         fontWeight = FontWeight.SemiBold
@@ -661,10 +698,10 @@ private fun GoodsItemCard(
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                            Icon(Icons.Default.Edit, contentDescription = "편집", tint = Color(0xFF7A6671))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF7A6671))
                         }
                         IconButton(onClick = onDelete) {
-                            Icon(Icons.Default.Delete, contentDescription = "삭제", tint = Color(0xFFD96B7A))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFFD96B7A))
                         }
                     }
                 }
@@ -681,14 +718,14 @@ private fun GoodsItemCard(
                     )
                 }
                 Text(
-                    text = "카페 굿즈 판매 항목",
+                    text = stringResource(Res.string.menugoods_goods_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF7B6B75),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "재고 ${item.stock}",
+                    text = stringResource(Res.string.menugoods_stock, item.stock),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF8B7A84),
                     fontWeight = FontWeight.Medium
@@ -700,7 +737,7 @@ private fun GoodsItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isAvailable) "판매 중" else "품절",
+                        text = if (isAvailable) stringResource(Res.string.menugoods_available) else stringResource(Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
                         fontWeight = FontWeight.SemiBold

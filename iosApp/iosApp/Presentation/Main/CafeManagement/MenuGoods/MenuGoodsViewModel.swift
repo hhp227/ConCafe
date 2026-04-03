@@ -43,12 +43,12 @@ final class MenuGoodsViewModel: ObservableObject {
                     applyDetail(feed.detail)
                 } else {
                     uiState.isLoading = false
-                    uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.loadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.loadFailed
             }
         }
     }
@@ -209,12 +209,12 @@ final class MenuGoodsViewModel: ObservableObject {
                     )
                     if result is AppResultFailure {
                         uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
-                        uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                        uiState.infoMessage = MessageKey.availabilitySaveFailed
                     }
                 } catch {
                     if Task.isCancelled { return }
                     uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
-                    uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                    uiState.infoMessage = MessageKey.availabilitySaveFailed
                 }
             }
         case .goods:
@@ -240,12 +240,12 @@ final class MenuGoodsViewModel: ObservableObject {
                     )
                     if result is AppResultFailure {
                         uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
-                        uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                        uiState.infoMessage = MessageKey.availabilitySaveFailed
                     }
                 } catch {
                     if Task.isCancelled { return }
                     uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
-                    uiState.infoMessage = "판매 상태 저장에 실패했습니다."
+                    uiState.infoMessage = MessageKey.availabilitySaveFailed
                 }
             }
         }
@@ -267,17 +267,17 @@ final class MenuGoodsViewModel: ObservableObject {
                 do {
                     let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
                     if result is AppResultSuccess<AnyObject> {
-                        uiState.infoMessage = "항목이 삭제되었습니다."
+                        uiState.infoMessage = MessageKey.deleteSuccess
                     } else {
-                        uiState.infoMessage = "항목 삭제에 실패했습니다."
+                        uiState.infoMessage = MessageKey.deleteFailed
                     }
                 } catch {
                     if Task.isCancelled { return }
-                    uiState.infoMessage = "항목 삭제에 실패했습니다."
+                    uiState.infoMessage = MessageKey.deleteFailed
                 }
             }
         } else {
-            uiState.infoMessage = "삭제할 항목을 찾을 수 없습니다."
+            uiState.infoMessage = MessageKey.deleteFailed
         }
     }
 
@@ -376,5 +376,12 @@ final class MenuGoodsViewModel: ObservableObject {
         case load
         case detailEvent
         case toggleAvailability
+    }
+
+    private enum MessageKey {
+        static let loadFailed = "menugoods_info_load_failed"
+        static let availabilitySaveFailed = "menugoods_info_availability_save_failed"
+        static let deleteSuccess = "menugoods_info_delete_success"
+        static let deleteFailed = "menugoods_info_delete_failed"
     }
 }

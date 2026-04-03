@@ -98,14 +98,13 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private func clickClaimCafe(_ cafeId: String) {
-        let cafeName = uiState.searchableCafes.first(where: { $0.id == cafeId })?.name ?? "선택한 카페"
         Task {
             do {
                 let result = try await createCafeOwnerClaimUseCase.invoke(cafeId: cafeId)
 
                 if result is AppResultSuccess<AnyObject> {
                     refreshPendingClaims(resetMessage: false)
-                    uiState.infoMessage = "\(cafeName) 운영자 신청을 등록했습니다."
+                    uiState.infoMessage = MessageKey.ownerClaimRegistered
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
                 }
@@ -284,6 +283,10 @@ final class CafeManagementViewModel: ObservableObject {
         case cafeDetailEvent
         case cafeRegistrationClaimEvent
         case claimPolling
+    }
+
+    private enum MessageKey {
+        static let ownerClaimRegistered = "cafemgmt_info_owner_claim_registered"
     }
 }
 

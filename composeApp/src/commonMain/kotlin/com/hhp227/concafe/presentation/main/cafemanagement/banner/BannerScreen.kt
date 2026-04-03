@@ -29,6 +29,9 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -59,7 +62,14 @@ fun BannerScreen(
                         )
                     )
                 }
-                is BannerEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
+                is BannerEvent.ShowMessage -> snackbarHostState.showSnackbar(
+                    when (event.message) {
+                        "banner_info_load_failed" -> getString(Res.string.banner_info_load_failed)
+                        "banner_info_deleted" -> getString(Res.string.banner_info_deleted)
+                        "banner_info_delete_failed" -> getString(Res.string.banner_info_delete_failed)
+                        else -> event.message
+                    }
+                )
             }
         }
     }
@@ -71,16 +81,16 @@ fun BannerScreen(
     uiState.pendingDeleteBanner?.let { banner ->
         AlertDialog(
             onDismissRequest = { viewModel.onAction(BannerAction.DismissDeleteBannerDialog) },
-            title = { Text("배너 삭제") },
-            text = { Text("'${banner.title}' 배너를 삭제하시겠습니까?") },
+            title = { Text(stringResource(Res.string.banner_dialog_delete_title)) },
+            text = { Text(stringResource(Res.string.banner_dialog_delete_message, banner.title)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(BannerAction.ConfirmDeleteBanner) }) {
-                    Text("삭제")
+                    Text(stringResource(Res.string.banner_action_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(BannerAction.DismissDeleteBannerDialog) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.banner_action_cancel))
                 }
             }
         )
@@ -105,21 +115,28 @@ private fun BannerContentScreen(
             ) {
                 CenterAlignedTopAppBar(
                     title = {
-                        Text(uiState.screenTitle, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.banner_screen_title), fontWeight = FontWeight.Bold)
                     },
                     navigationIcon = {
                         IconButton(onClick = { onAction(BannerAction.ClickBack) }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.banner_content_back))
                         }
                     },
                     actions = {
                         IconButton(onClick = { }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.banner_content_more))
                         }
                     }
                 )
                 ConCafeTabBar(
-                    labels = BannerTab.entries.map { it.label },
+                    labels = BannerTab.entries.map {
+                        when (it.labelKey) {
+                            "banner_section_active" -> stringResource(Res.string.banner_section_active)
+                            "banner_section_scheduled" -> stringResource(Res.string.banner_section_scheduled)
+                            "banner_section_ended" -> stringResource(Res.string.banner_section_ended)
+                            else -> it.labelKey
+                        }
+                    },
                     selectedIndex = BannerTab.entries.indexOf(uiState.selectedTab),
                     modifier = Modifier.fillMaxWidth(),
                     onTabSelected = { index ->
@@ -148,7 +165,7 @@ private fun BannerContentScreen(
                 ) {
                     Icon(Icons.Default.AddCircle, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("새 배너 등록", fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.banner_action_create), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -172,13 +189,21 @@ private fun BannerContentScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = uiState.sectionCountLabel,
+                        text = stringResource(
+                            Res.string.banner_section_count,
+                            when (uiState.selectedTab) {
+                                BannerTab.ACTIVE -> stringResource(Res.string.banner_section_active)
+                                BannerTab.SCHEDULED -> stringResource(Res.string.banner_section_scheduled)
+                                BannerTab.ENDED -> stringResource(Res.string.banner_section_ended)
+                            },
+                            uiState.filteredBanners.size
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF7A707A)
                     )
                     Text(
-                        text = uiState.locationLabel,
+                        text = stringResource(Res.string.banner_location_home_top),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFEF6797)
@@ -194,7 +219,7 @@ private fun BannerContentScreen(
             }
             item {
                 Text(
-                    text = "최대 5개의 배너를 동시에 노출할 수 있습니다.",
+                    text = stringResource(Res.string.banner_info_max_five),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
@@ -239,7 +264,12 @@ private fun BannerCard(
                         color = Color(0x33FFD1DC)
                     ) {
                         Text(
-                            text = banner.statusLabel,
+                            text = when (banner.statusLabelKey) {
+                                "banner_status_active" -> stringResource(Res.string.banner_status_active)
+                                "banner_status_scheduled" -> stringResource(Res.string.banner_status_scheduled)
+                                "banner_status_ended" -> stringResource(Res.string.banner_status_ended)
+                                else -> banner.statusLabelKey
+                            },
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
@@ -248,10 +278,10 @@ private fun BannerCard(
                     }
                     Row {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = "배너 편집", tint = Color(0xFF8F848F))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.banner_content_edit), tint = Color(0xFF8F848F))
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Delete, contentDescription = "배너 삭제", tint = Color(0xFF8F848F))
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.banner_content_delete), tint = Color(0xFF8F848F))
                         }
                     }
                 }
@@ -283,7 +313,7 @@ private fun BannerCard(
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = banner.periodText,
+                        text = stringResource(Res.string.banner_period_days, banner.periodDays),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF9A8E97)
                     )

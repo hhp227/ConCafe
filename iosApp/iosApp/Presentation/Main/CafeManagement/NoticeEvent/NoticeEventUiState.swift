@@ -33,32 +33,32 @@ struct NoticeEventUiState {
 
     var formSheetTitle: String {
         if selectedTab == .notice {
-            return formEditingId == nil ? "공지사항 등록" : "공지사항 수정"
+            return formEditingId == nil ? String(localized: String.LocalizationValue("noticeevent_form_sheet_title_notice_create"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_sheet_title_notice_edit"), table: "Localizable")
         }
-        return formEditingId == nil ? "이벤트 등록" : "이벤트 수정"
+        return formEditingId == nil ? String(localized: String.LocalizationValue("noticeevent_form_sheet_title_event_create"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_sheet_title_event_edit"), table: "Localizable")
     }
 
     var formTitlePlaceholder: String {
-        selectedTab == .notice ? "제목을 입력해 주세요" : "이벤트 제목을 입력해 주세요"
+        selectedTab == .notice ? String(localized: String.LocalizationValue("noticeevent_form_title_placeholder_notice"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_title_placeholder_event"), table: "Localizable")
     }
 
     var formContentPlaceholder: String {
-        selectedTab == .notice ? "공지사항 내용을 입력해 주세요" : "이벤트 상세 내용을 입력해 주세요"
+        selectedTab == .notice ? String(localized: String.LocalizationValue("noticeevent_form_content_placeholder_notice"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_content_placeholder_event"), table: "Localizable")
     }
 
     var formSubmitLabel: String {
         if selectedTab == .notice {
-            return formEditingId == nil ? "등록하기" : "수정하기"
+            return formEditingId == nil ? String(localized: String.LocalizationValue("noticeevent_form_submit_notice_create"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_submit_notice_edit"), table: "Localizable")
         }
-        return formEditingId == nil ? "이벤트 등록하기" : "이벤트 수정하기"
+        return formEditingId == nil ? String(localized: String.LocalizationValue("noticeevent_form_submit_event_create"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_submit_event_edit"), table: "Localizable")
     }
 
     var formScheduleLabel: String {
-        selectedTab == .notice ? "게시글 예약" : "이벤트 기간"
+        selectedTab == .notice ? String(localized: String.LocalizationValue("noticeevent_form_schedule_label_notice"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_schedule_label_event"), table: "Localizable")
     }
 
     var formSchedulePlaceholder: String {
-        selectedTab == .notice ? "게시 날짜 및 시간 선택" : "이벤트 기간 선택"
+        selectedTab == .notice ? String(localized: String.LocalizationValue("noticeevent_form_schedule_placeholder_notice"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_schedule_placeholder_event"), table: "Localizable")
     }
 
     var showsPinnedSection: Bool {
@@ -74,11 +74,11 @@ struct NoticeEventUiState {
     }
 
     var formImageTitle: String {
-        hasAttachedImage ? "대표 이미지 1장 첨부됨" : "대표 이미지 첨부"
+        hasAttachedImage ? String(localized: String.LocalizationValue("noticeevent_form_image_title_attached"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_form_image_title_empty"), table: "Localizable")
     }
 
     var formImageDescription: String {
-        "이벤트 카드에 노출되는 대표 이미지입니다. 한 장만 첨부할 수 있습니다."
+        String(localized: String.LocalizationValue("noticeevent_form_image_description"), table: "Localizable")
     }
 
     var isCurrentTabLoading: Bool {
@@ -102,7 +102,7 @@ struct NoticeEventUiState {
 }
 
 enum NoticeEventTab: String, CaseIterable {
-    case notice = "공지사항"
-    case event = "이벤트"
+    case notice = "noticeevent_tab_notice"
+    case event = "noticeevent_tab_event"
 }
 

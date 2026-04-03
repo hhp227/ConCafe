@@ -22,6 +22,23 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.inquiry_back_content_description
+import concafe.composeapp.generated.resources.inquiry_input_section_desc
+import concafe.composeapp.generated.resources.inquiry_input_section_title
+import concafe.composeapp.generated.resources.inquiry_message_label
+import concafe.composeapp.generated.resources.inquiry_message_placeholder
+import concafe.composeapp.generated.resources.inquiry_screen_title
+import concafe.composeapp.generated.resources.inquiry_submit
+import concafe.composeapp.generated.resources.inquiry_submitting
+import concafe.composeapp.generated.resources.inquiry_title_label
+import concafe.composeapp.generated.resources.inquiry_title_placeholder
+import concafe.composeapp.generated.resources.inquiry_type_bug_report
+import concafe.composeapp.generated.resources.inquiry_type_section_desc
+import concafe.composeapp.generated.resources.inquiry_type_section_title
+import concafe.composeapp.generated.resources.inquiry_type_service
+import concafe.composeapp.generated.resources.inquiry_type_suggestion
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,10 +81,13 @@ private fun InquiryLinkContentScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("문의하기") },
+                title = { Text(stringResource(Res.string.inquiry_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(InquiryLinkAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.inquiry_back_content_description)
+                        )
                     }
                 }
             )
@@ -99,7 +119,11 @@ private fun InquiryLinkContentScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                         Text(
-                            text = if (uiState.isSubmitting) "접수 중..." else "문의 접수",
+                            text = if (uiState.isSubmitting) {
+                                stringResource(Res.string.inquiry_submitting)
+                            } else {
+                                stringResource(Res.string.inquiry_submit)
+                            },
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -130,24 +154,24 @@ private fun InquiryLinkContentScreen(
                     )
                 }
                 item {
-                    InquirySectionCard(title = "문의 입력") {
+                    InquirySectionCard(title = stringResource(Res.string.inquiry_input_section_title)) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
-                                text = "입력한 문의는 서버에 저장되어 운영팀이 확인합니다.",
+                                text = stringResource(Res.string.inquiry_input_section_desc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF6F6673)
                             )
                             ConCafeFormField(
-                                label = "제목",
+                                label = stringResource(Res.string.inquiry_title_label),
                                 value = uiState.title,
                                 onValueChange = { onAction(InquiryLinkAction.ChangeTitle(it)) },
-                                placeholder = "문의 제목을 입력하세요"
+                                placeholder = stringResource(Res.string.inquiry_title_placeholder)
                             )
                             ConCafeFormField(
-                                label = "문의 내용",
+                                label = stringResource(Res.string.inquiry_message_label),
                                 value = uiState.message,
                                 onValueChange = { onAction(InquiryLinkAction.ChangeMessage(it)) },
-                                placeholder = "상세 내용을 입력해 주세요",
+                                placeholder = stringResource(Res.string.inquiry_message_placeholder),
                                 minLines = 7,
                                 singleLine = false
                             )
@@ -171,9 +195,9 @@ private fun InquiryTypeCard(
     selectedType: InquiryType,
     onSelect: (InquiryType) -> Unit
 ) {
-    InquirySectionCard(title = "문의 유형") {
+    InquirySectionCard(title = stringResource(Res.string.inquiry_type_section_title)) {
         Text(
-            text = "문의 성격에 맞는 항목을 선택해 주세요.",
+            text = stringResource(Res.string.inquiry_type_section_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF6F6673)
         )
@@ -205,7 +229,7 @@ private fun InquiryTypeDropdown(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = selectedType.title,
+                    text = localizedInquiryTypeTitle(selectedType),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color(0xFF2B2330)
                 )
@@ -223,7 +247,7 @@ private fun InquiryTypeDropdown(
         ) {
             InquiryType.entries.forEach { type ->
                 DropdownMenuItem(
-                    text = { Text(type.title) },
+                    text = { Text(localizedInquiryTypeTitle(type)) },
                     onClick = {
                         onSelect(type)
                         expanded = false
@@ -231,6 +255,17 @@ private fun InquiryTypeDropdown(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun localizedInquiryTypeTitle(
+    type: InquiryType
+): String {
+    return when (type) {
+        InquiryType.SERVICE -> stringResource(Res.string.inquiry_type_service)
+        InquiryType.BUG_REPORT -> stringResource(Res.string.inquiry_type_bug_report)
+        InquiryType.SUGGESTION -> stringResource(Res.string.inquiry_type_suggestion)
     }
 }
 

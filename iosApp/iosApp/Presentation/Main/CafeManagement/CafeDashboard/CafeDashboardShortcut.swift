@@ -20,13 +20,13 @@ enum CafeDashboardShortcut: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .castManagement: return "캐스트 관리"
-        case .castSchedule: return "출근표"
-        case .eventManagement: return "공지&이벤트"
-        case .cafeSettings: return "카페 정보 관리"
-        case .menuGoods: return "메뉴&굿즈"
-        case .homeBanner: return "홈 배너"
-        case .externalLinks: return "외부 링크"
+        case .castManagement: return "dashboard_shortcut_cast_management"
+        case .castSchedule: return "dashboard_shortcut_cast_schedule"
+        case .eventManagement: return "dashboard_shortcut_event_management"
+        case .cafeSettings: return "dashboard_shortcut_cafe_settings"
+        case .menuGoods: return "dashboard_shortcut_menu_goods"
+        case .homeBanner: return "dashboard_shortcut_home_banner"
+        case .externalLinks: return "dashboard_shortcut_external_links"
         }
     }
 }

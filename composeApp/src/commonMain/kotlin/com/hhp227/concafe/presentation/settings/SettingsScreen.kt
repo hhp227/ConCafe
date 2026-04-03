@@ -22,6 +22,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.settings_account_desc
+import concafe.composeapp.generated.resources.settings_account_title
+import concafe.composeapp.generated.resources.settings_app_info_desc
+import concafe.composeapp.generated.resources.settings_app_info_title
+import concafe.composeapp.generated.resources.settings_inquiry_desc
+import concafe.composeapp.generated.resources.settings_inquiry_title
+import concafe.composeapp.generated.resources.settings_notification_desc
+import concafe.composeapp.generated.resources.settings_notification_title
+import concafe.composeapp.generated.resources.settings_privacy_desc
+import concafe.composeapp.generated.resources.settings_privacy_title
+import concafe.composeapp.generated.resources.settings_sign_out_desc
+import concafe.composeapp.generated.resources.settings_sign_out_title
+import concafe.composeapp.generated.resources.settings_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,12 +75,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("설정") },
+                title = { Text(stringResource(Res.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(SettingsAction.ClickBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            contentDescription = null
                         )
                     }
                 }
@@ -176,47 +191,48 @@ private fun SettingsItemCard(
     }
 }
 
+@Composable
 private fun settingsItems(appVersion: String): List<SettingsItem> = listOf(
     SettingsItem(
         id = "account",
-        title = "계정 관리",
-        description = "프로필과 로그인 정보를 관리합니다.",
+        title = stringResource(Res.string.settings_account_title),
+        description = stringResource(Res.string.settings_account_desc),
         icon = Icons.Default.PersonOutline,
         action = SettingsAction.ClickAccountSettings
     ),
     SettingsItem(
         id = "notification",
-        title = "알림 설정",
-        description = "출근, 생일, 공지 알림 설정 영역입니다.",
+        title = stringResource(Res.string.settings_notification_title),
+        description = stringResource(Res.string.settings_notification_desc),
         icon = Icons.Default.Notifications,
         action = SettingsAction.ClickNotificationSettings
     ),
     SettingsItem(
         id = "inquiry",
-        title = "문의하기",
-        description = "불편사항이나 제안을 입력 폼으로 전달합니다.",
+        title = stringResource(Res.string.settings_inquiry_title),
+        description = stringResource(Res.string.settings_inquiry_desc),
         icon = Icons.Default.QuestionAnswer,
         action = SettingsAction.ClickInquiry
     ),
     SettingsItem(
         id = "privacyPolicy",
-        title = "개인정보 처리방침",
-        description = "개인정보 처리방침 외부 링크를 확인합니다.",
+        title = stringResource(Res.string.settings_privacy_title),
+        description = stringResource(Res.string.settings_privacy_desc),
         icon = Icons.Default.Policy,
         action = SettingsAction.ClickPrivacyPolicy
     ),
     SettingsItem(
         id = "appInfo",
-        title = "앱 정보",
-        description = "현재 설치된 앱 버전을 확인합니다.",
+        title = stringResource(Res.string.settings_app_info_title),
+        description = stringResource(Res.string.settings_app_info_desc),
         icon = Icons.Default.Info,
         action = null,
         trailingLabel = "v$appVersion"
     ),
     SettingsItem(
         id = "signout",
-        title = "로그아웃",
-        description = "현재 계정에서 로그아웃합니다.",
+        title = stringResource(Res.string.settings_sign_out_title),
+        description = stringResource(Res.string.settings_sign_out_desc),
         icon = Icons.AutoMirrored.Filled.Logout,
         action = SettingsAction.ClickSignOut
     )

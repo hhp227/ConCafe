@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import concafe.composeapp.generated.resources.Res
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
@@ -33,6 +34,31 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.dashboard_banner_period_days
+import concafe.composeapp.generated.resources.dashboard_banner_status_active
+import concafe.composeapp.generated.resources.dashboard_banner_status_hidden
+import concafe.composeapp.generated.resources.dashboard_banner_status_scheduled
+import concafe.composeapp.generated.resources.dashboard_external_link_add
+import concafe.composeapp.generated.resources.dashboard_external_link_edit
+import concafe.composeapp.generated.resources.dashboard_external_link_save
+import concafe.composeapp.generated.resources.dashboard_info_cast_claim_approved
+import concafe.composeapp.generated.resources.dashboard_info_cast_claim_rejected
+import concafe.composeapp.generated.resources.dashboard_info_cast_deleted
+import concafe.composeapp.generated.resources.dashboard_info_cast_list_load_failed
+import concafe.composeapp.generated.resources.dashboard_info_external_link_added
+import concafe.composeapp.generated.resources.dashboard_info_external_link_deleted
+import concafe.composeapp.generated.resources.dashboard_info_external_link_input_required
+import concafe.composeapp.generated.resources.dashboard_info_external_link_updated
+import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_delete
+import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_schedule
+import concafe.composeapp.generated.resources.dashboard_shortcut_cafe_settings
+import concafe.composeapp.generated.resources.dashboard_shortcut_cast_management
+import concafe.composeapp.generated.resources.dashboard_shortcut_cast_schedule
+import concafe.composeapp.generated.resources.dashboard_shortcut_event_management
+import concafe.composeapp.generated.resources.dashboard_shortcut_external_links
+import concafe.composeapp.generated.resources.dashboard_shortcut_home_banner
+import concafe.composeapp.generated.resources.dashboard_shortcut_menu_goods
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -180,7 +206,19 @@ private fun CafeDashboardContentScreen(
                     uiState.infoMessage?.let { message ->
                         item {
                             InfoBanner(
-                                message = message,
+                                message = when (message) {
+                                    "dashboard_info_cast_list_load_failed" -> stringResource(Res.string.dashboard_info_cast_list_load_failed)
+                                    "dashboard_info_select_cast_for_schedule" -> stringResource(Res.string.dashboard_info_select_cast_for_schedule)
+                                    "dashboard_info_external_link_input_required" -> stringResource(Res.string.dashboard_info_external_link_input_required)
+                                    "dashboard_info_external_link_updated" -> stringResource(Res.string.dashboard_info_external_link_updated)
+                                    "dashboard_info_external_link_added" -> stringResource(Res.string.dashboard_info_external_link_added)
+                                    "dashboard_info_external_link_deleted" -> stringResource(Res.string.dashboard_info_external_link_deleted)
+                                    "dashboard_info_select_cast_for_delete" -> stringResource(Res.string.dashboard_info_select_cast_for_delete)
+                                    "dashboard_info_cast_deleted" -> stringResource(Res.string.dashboard_info_cast_deleted)
+                                    "dashboard_info_cast_claim_approved" -> stringResource(Res.string.dashboard_info_cast_claim_approved)
+                                    "dashboard_info_cast_claim_rejected" -> stringResource(Res.string.dashboard_info_cast_claim_rejected)
+                                    else -> message
+                                },
                                 onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
                             )
                         }
@@ -280,7 +318,11 @@ private fun ExternalLinkSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = uiState.externalLinkSheetTitle,
+            text = stringResource(if (uiState.editingExternalLinkId == null) {
+                Res.string.dashboard_external_link_add
+            } else {
+                Res.string.dashboard_external_link_edit
+            }),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -313,7 +355,14 @@ private fun ExternalLinkSheetContent(
                 disabledContentColor = Color(0xFF7F7078)
             )
         ) {
-            Text(uiState.externalLinkSubmitLabel, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(if (uiState.editingExternalLinkId == null) {
+                    Res.string.dashboard_external_link_add
+                } else {
+                    Res.string.dashboard_external_link_save
+                }),
+                fontWeight = FontWeight.Bold
+            )
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
@@ -755,7 +804,15 @@ private fun ShortcutCard(
                 )
             }
             Text(
-                text = shortcut.title,
+                text = stringResource(when (shortcut) {
+                    CafeDashboardShortcut.CAST_MANAGEMENT -> Res.string.dashboard_shortcut_cast_management
+                    CafeDashboardShortcut.CAST_SCHEDULE -> Res.string.dashboard_shortcut_cast_schedule
+                    CafeDashboardShortcut.EVENT_MANAGEMENT -> Res.string.dashboard_shortcut_event_management
+                    CafeDashboardShortcut.CAFE_SETTINGS -> Res.string.dashboard_shortcut_cafe_settings
+                    CafeDashboardShortcut.MENU_GOODS -> Res.string.dashboard_shortcut_menu_goods
+                    CafeDashboardShortcut.HOME_BANNER -> Res.string.dashboard_shortcut_home_banner
+                    CafeDashboardShortcut.EXTERNAL_LINKS -> Res.string.dashboard_shortcut_external_links
+                }),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF2B2330)
@@ -1119,7 +1176,12 @@ private fun HomeBannerSection(
                                 color = Color(0xFF2B2330)
                             )
                             Text(
-                                text = banner.period,
+                                text = if (banner.period.startsWith("dashboard_banner_period_days:")) {
+                                    val days = banner.period.substringAfter(':').toIntOrNull() ?: 0
+                                    stringResource(Res.string.dashboard_banner_period_days, days)
+                                } else {
+                                    banner.period
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF7E7480)
                             )
@@ -1128,7 +1190,12 @@ private fun HomeBannerSection(
                                 color = Color(0xFFE8F7EE)
                             ) {
                                 Text(
-                                    text = banner.statusLabel,
+                                    text = when (banner.statusLabel) {
+                                        "dashboard_banner_status_active" -> stringResource(Res.string.dashboard_banner_status_active)
+                                        "dashboard_banner_status_scheduled" -> stringResource(Res.string.dashboard_banner_status_scheduled)
+                                        "dashboard_banner_status_hidden" -> stringResource(Res.string.dashboard_banner_status_hidden)
+                                        else -> banner.statusLabel
+                                    },
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFF2F8B57),

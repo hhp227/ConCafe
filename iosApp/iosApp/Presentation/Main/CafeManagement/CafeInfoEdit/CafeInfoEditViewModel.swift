@@ -54,7 +54,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.address = detail.cafe.region.address
                     uiState.mapLatitude = detail.cafe.region.location.latitude
                     uiState.mapLongitude = detail.cafe.region.location.longitude
-                    uiState.contactNumber = detail.phoneNumber == "연락처 정보 준비중" ? "" : detail.phoneNumber
+                    uiState.contactNumber = detail.phoneNumber == MessageKey.contactPlaceholder ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -63,13 +63,13 @@ final class CafeInfoEditViewModel: ObservableObject {
                 } else {
                     uiState.detail = nil
                     uiState.isLoading = false
-                    uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.loadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.detail = nil
                 uiState.isLoading = false
-                uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.loadFailed
             }
         }
     }
@@ -78,7 +78,7 @@ final class CafeInfoEditViewModel: ObservableObject {
         if (uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
             && uiState.galleryImages.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
             uiState.isImageRequiredAlertVisible = true
-            uiState.infoMessage = "대표 이미지 또는 갤러리 이미지 1장 이상이 필요합니다."
+            uiState.infoMessage = MessageKey.imageRequiredOneOrMore
             return
         }
 
@@ -136,7 +136,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.address = detail.cafe.region.address
                     uiState.mapLatitude = detail.cafe.region.location.latitude
                     uiState.mapLongitude = detail.cafe.region.location.longitude
-                    uiState.contactNumber = detail.phoneNumber == "연락처 정보 준비중" ? "" : detail.phoneNumber
+                    uiState.contactNumber = detail.phoneNumber == MessageKey.contactPlaceholder ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -145,12 +145,12 @@ final class CafeInfoEditViewModel: ObservableObject {
                     event.send(.navigateBack)
                 } else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "카페 정보 저장에 실패했습니다."
+                    uiState.infoMessage = MessageKey.saveFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSaving = false
-                uiState.infoMessage = "카페 정보 저장에 실패했습니다."
+                uiState.infoMessage = MessageKey.saveFailed
             }
         }
     }
@@ -158,7 +158,7 @@ final class CafeInfoEditViewModel: ObservableObject {
     private func submitCafeRegistration() {
         if uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
             uiState.isImageRequiredAlertVisible = true
-            uiState.infoMessage = "등록 신청에는 대표 이미지 1장이 필요합니다."
+            uiState.infoMessage = MessageKey.registrationRepRequired
             return
         }
 
@@ -251,7 +251,7 @@ final class CafeInfoEditViewModel: ObservableObject {
             uiState.representativeImageUrl = imageUrl
         case .addGalleryImage(let imageUrl):
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
-                showInfo("카페 갤러리는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+                showInfo("\(MessageKey.galleryMaxExceeded):\(uiState.galleryMaxCount)")
                 return
             }
             if imageUrl.isEmpty { return }
@@ -261,12 +261,12 @@ final class CafeInfoEditViewModel: ObservableObject {
         case .clickAddGalleryImage:
             break
         case .clickPinLocation:
-            showInfo("지도를 탭해서 위치를 지정해 주세요.")
+            showInfo(MessageKey.pinLocationHint)
         case .setPinnedLocation(let latitude, let longitude):
             uiState.mapLatitude = latitude
             uiState.mapLongitude = longitude
         case .clickManageExceptionDates:
-            showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
+            showInfo(MessageKey.exceptionNextStep)
         case .dismissImageRequiredAlert:
             uiState.isImageRequiredAlertVisible = false
         case .clickSave:
@@ -327,7 +327,7 @@ final class CafeInfoEditViewModel: ObservableObject {
         if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
             throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
         }
-        throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
+        throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: MessageKey.imageUploadFailed])
     }
 
     private func uploadImagesIfNeeded(_ imageUrls: [String], folder: String) async throws -> [String] {
@@ -338,5 +338,17 @@ final class CafeInfoEditViewModel: ObservableObject {
             }
         }
         return uploaded
+    }
+
+    private enum MessageKey {
+        static let loadFailed = "cafeinfo_info_load_failed"
+        static let imageRequiredOneOrMore = "cafeinfo_info_image_required_one_or_more"
+        static let saveFailed = "cafeinfo_info_save_failed"
+        static let registrationRepRequired = "cafeinfo_info_registration_rep_required"
+        static let galleryMaxExceeded = "cafeinfo_info_gallery_max_exceeded"
+        static let pinLocationHint = "cafeinfo_info_pin_location_hint"
+        static let exceptionNextStep = "cafeinfo_info_exception_next_step"
+        static let imageUploadFailed = "cafeinfo_info_image_upload_failed"
+        static let contactPlaceholder = "연락처 정보 준비중"
     }
 }

@@ -111,12 +111,12 @@ class CafeDashboardViewModel(
                     }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoadingMoreCasts = false,
-                            infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
-                        )
-                    }
+                        _uiState.update {
+                            it.copy(
+                                isLoadingMoreCasts = false,
+                                infoMessage = "dashboard_info_cast_list_load_failed"
+                            )
+                        }
                 }
             }
         }
@@ -170,7 +170,7 @@ class CafeDashboardViewModel(
                 val selectedCastId = _uiState.value.selectedCastId
                 if (selectedCastId == null) {
                     _uiState.update {
-                        it.copy(infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요.")
+                        it.copy(infoMessage = "dashboard_info_select_cast_for_schedule")
                     }
                 } else {
                     viewModelScope.launch {
@@ -228,7 +228,7 @@ class CafeDashboardViewModel(
     private fun submitExternalLink() {
         val currentState = _uiState.value
         if (!currentState.isExternalLinkSubmitEnabled) {
-            _uiState.update { it.copy(infoMessage = "제목과 링크 URL을 모두 입력해 주세요.") }
+            _uiState.update { it.copy(infoMessage = "dashboard_info_external_link_input_required") }
             return
         }
         val isEdit = currentState.editingExternalLinkId != null
@@ -252,7 +252,7 @@ class CafeDashboardViewModel(
                 editingExternalLinkId = null,
                 externalLinkTitle = "",
                 externalLinkUrl = "",
-                infoMessage = if (isEdit) "외부 링크를 수정했습니다." else "외부 링크를 추가했습니다."
+                infoMessage = if (isEdit) "dashboard_info_external_link_updated" else "dashboard_info_external_link_added"
             )
         }
     }
@@ -289,7 +289,7 @@ class CafeDashboardViewModel(
         _uiState.update {
             it.copy(
                 externalLinks = updatedLinks,
-                infoMessage = "외부 링크를 삭제했습니다."
+                infoMessage = "dashboard_info_external_link_deleted"
             )
         }
     }
@@ -310,7 +310,7 @@ class CafeDashboardViewModel(
     private fun clickDeleteCast() {
         val selectedCastId = _uiState.value.selectedCastId
         if (selectedCastId == null) {
-            _uiState.update { it.copy(infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요.") }
+            _uiState.update { it.copy(infoMessage = "dashboard_info_select_cast_for_delete") }
             return
         }
         _uiState.update { it.copy(isDeleteCastDialogVisible = true, infoMessage = null) }
@@ -326,7 +326,7 @@ class CafeDashboardViewModel(
             _uiState.update {
                 it.copy(
                     isDeleteCastDialogVisible = false,
-                    infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+                    infoMessage = "dashboard_info_select_cast_for_delete"
                 )
             }
             return
@@ -338,7 +338,7 @@ class CafeDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             isDeleteCastDialogVisible = false,
-                            infoMessage = "캐스트 프로필을 삭제했습니다."
+                            infoMessage = "dashboard_info_cast_deleted"
                         )
                     }
                 }
@@ -358,7 +358,7 @@ class CafeDashboardViewModel(
         viewModelScope.launch {
             when (val result = approveCastClaimUseCase.invoke(claimId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 승인했습니다.") }
+                    _uiState.update { it.copy(infoMessage = "dashboard_info_cast_claim_approved") }
                     refreshClaimData(resetMessage = false)
                     refreshCastPreviews(resetMessage = false)
                 }
@@ -373,7 +373,7 @@ class CafeDashboardViewModel(
         viewModelScope.launch {
             when (val result = rejectCastClaimUseCase.invoke(claimId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 반려했습니다.") }
+                    _uiState.update { it.copy(infoMessage = "dashboard_info_cast_claim_rejected") }
                     refreshClaimData(resetMessage = false)
                 }
                 is AppResult.Failure -> {
@@ -450,15 +450,15 @@ class CafeDashboardViewModel(
             } else {
                 val currentPreview = currentCafe.homeBannerPreview
                 val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
-                    "ACTIVE" -> "노출 중"
-                    "SCHEDULED" -> "예약 중"
-                    else -> "미노출"
+                    "ACTIVE" -> "dashboard_banner_status_active"
+                    "SCHEDULED" -> "dashboard_banner_status_scheduled"
+                    else -> "dashboard_banner_status_hidden"
                 }
                 state.copy(
                     cafe = currentCafe.copy(
                         homeBannerPreview = currentPreview.copy(
                             title = updatedBanner.title,
-                            period = "노출 ${updatedBanner.displayDays}일",
+                            period = "dashboard_banner_period_days:${updatedBanner.displayDays}",
                             statusLabel = statusLabel,
                             imageUrl = updatedBanner.imageUrl
                         )

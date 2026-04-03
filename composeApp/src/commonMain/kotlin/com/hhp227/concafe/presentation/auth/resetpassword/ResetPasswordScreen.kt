@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
@@ -54,7 +53,22 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.reset_password_email_label
+import concafe.composeapp.generated.resources.reset_password_email_placeholder
+import concafe.composeapp.generated.resources.reset_password_guide_1
+import concafe.composeapp.generated.resources.reset_password_guide_2
+import concafe.composeapp.generated.resources.reset_password_guide_3
+import concafe.composeapp.generated.resources.reset_password_guide_title
+import concafe.composeapp.generated.resources.reset_password_hero_desc
+import concafe.composeapp.generated.resources.reset_password_hero_title
+import concafe.composeapp.generated.resources.reset_password_input_desc
+import concafe.composeapp.generated.resources.reset_password_input_title
+import concafe.composeapp.generated.resources.reset_password_sending
+import concafe.composeapp.generated.resources.reset_password_submit
+import concafe.composeapp.generated.resources.reset_password_title
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,10 +95,10 @@ fun ResetPasswordScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("비밀번호 재설정") },
+                title = { Text(stringResource(Res.string.reset_password_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(ResetPasswordAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 }
             )
@@ -133,9 +147,9 @@ private fun ResetPasswordContentScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.Email, contentDescription = null, tint = Color.White)
-                        Text("이메일로 비밀번호를 재설정하세요", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.reset_password_hero_title), color = Color.White, fontWeight = FontWeight.Bold)
                         Text(
-                            "가입한 이메일 주소로 재설정 링크를 보내드립니다.",
+                            stringResource(Res.string.reset_password_hero_desc),
                             color = Color.White.copy(alpha = 0.92f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -150,20 +164,20 @@ private fun ResetPasswordContentScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "입력 정보",
+                        text = stringResource(Res.string.reset_password_input_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "계정에 등록된 이메일을 입력하면 비밀번호 재설정 메일을 발송합니다.",
+                        text = stringResource(Res.string.reset_password_input_desc),
                         color = Color(0xFF7C7480),
                         style = MaterialTheme.typography.bodySmall
                     )
                     ConCafeFormField(
-                        label = "이메일",
+                        label = stringResource(Res.string.reset_password_email_label),
                         value = uiState.email,
                         onValueChange = { onAction(ResetPasswordAction.ChangeEmail(it)) },
-                        placeholder = "가입한 이메일을 입력하세요",
+                        placeholder = stringResource(Res.string.reset_password_email_placeholder),
                         keyboardType = KeyboardType.Email,
                         trailingContent = {
                             Icon(
@@ -183,13 +197,13 @@ private fun ResetPasswordContentScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "안내",
+                        text = stringResource(Res.string.reset_password_guide_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    ResetPasswordGuideRow("메일 수신까지 1~3분 정도 소요될 수 있습니다.")
-                    ResetPasswordGuideRow("메일이 보이지 않으면 스팸함을 확인해 주세요.")
-                    ResetPasswordGuideRow("링크를 통해 새 비밀번호를 설정할 수 있습니다.")
+                    ResetPasswordGuideRow(stringResource(Res.string.reset_password_guide_1))
+                    ResetPasswordGuideRow(stringResource(Res.string.reset_password_guide_2))
+                    ResetPasswordGuideRow(stringResource(Res.string.reset_password_guide_3))
                 }
             }
         }
@@ -207,7 +221,11 @@ private fun ResetPasswordContentScreen(
                 )
             ) {
                 Text(
-                    text = if (uiState.isSubmitting) "발송 중..." else "재설정 메일 발송",
+                    text = if (uiState.isSubmitting) {
+                        stringResource(Res.string.reset_password_sending)
+                    } else {
+                        stringResource(Res.string.reset_password_submit)
+                    },
                     fontWeight = FontWeight.Bold
                 )
             }

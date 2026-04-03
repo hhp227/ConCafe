@@ -85,14 +85,14 @@ private struct SignUpContentView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .navigationTitle("회원가입")
+        .navigationTitle(String(localized: String.LocalizationValue("signup_title"), table: "Localizable"))
     }
 
     private var introSection: some View {
         VStack(spacing: 8) {
-            Text("회원 유형 선택")
+            Text(String(localized: String.LocalizationValue("signup_select_type_title"), table: "Localizable"))
                 .font(.title2.weight(.bold))
-            Text("어떤 방법으로 가입하시겠어요?")
+            Text(String(localized: String.LocalizationValue("signup_select_type_subtitle"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -101,9 +101,9 @@ private struct SignUpContentView: View {
 
     private var footer: some View {
         HStack(spacing: 6) {
-            Text("이미 계정이 있으신가요?")
+            Text(String(localized: String.LocalizationValue("signup_footer_has_account"), table: "Localizable"))
                 .foregroundStyle(.secondary)
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signup_footer_sign_in"), table: "Localizable")) {
                 onAction(.signInInsteadTapped)
             }
             .font(.system(size: 16, weight: .semibold))
@@ -178,8 +178,8 @@ private struct SignUpContentView: View {
     private func formSection(_ type: SignUpUiState.UserType) -> some View {
         VStack(spacing: 14) {
             textField(
-                title: "이메일",
-                placeholder: "email@example.com",
+                title: String(localized: String.LocalizationValue("signup_email_label"), table: "Localizable"),
+                placeholder: String(localized: String.LocalizationValue("signup_email_placeholder"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.email },
                     set: { onAction(.emailChanged($0)) }
@@ -188,8 +188,8 @@ private struct SignUpContentView: View {
             )
             if type == .cafeOwner {
                 textField(
-                    title: "이름",
-                    placeholder: "실명을 입력하세요",
+                    title: String(localized: String.LocalizationValue("signup_name_label"), table: "Localizable"),
+                    placeholder: String(localized: String.LocalizationValue("signup_name_placeholder"), table: "Localizable"),
                     text: Binding(
                         get: { uiState.name },
                         set: { onAction(.nameChanged($0)) }
@@ -197,14 +197,14 @@ private struct SignUpContentView: View {
                 )
                 phoneVerificationSection
                 cafeSelectionSection(
-                    title: "운영 카페 연결 (선택)",
-                    placeholder: "가입 전에 연결할 카페를 1개 선택할 수 있습니다"
+                    title: String(localized: String.LocalizationValue("signup_owner_cafe_link_title"), table: "Localizable"),
+                    placeholder: String(localized: String.LocalizationValue("signup_owner_cafe_link_placeholder"), table: "Localizable")
                 )
                 ownerCafeGuideCard
             } else {
                 textField(
-                    title: type == .cast ? "활동명 (닉네임)" : "닉네임",
-                    placeholder: type == .cast ? "활동할 이름을 입력하세요" : "사용할 닉네임을 입력하세요",
+                    title: type == .cast ? String(localized: String.LocalizationValue("signup_cast_nickname_label"), table: "Localizable") : String(localized: String.LocalizationValue("signup_nickname_label"), table: "Localizable"),
+                    placeholder: type == .cast ? String(localized: String.LocalizationValue("signup_cast_nickname_placeholder"), table: "Localizable") : String(localized: String.LocalizationValue("signup_nickname_placeholder"), table: "Localizable"),
                     text: Binding(
                         get: { uiState.nickname },
                         set: { onAction(.nicknameChanged($0)) }
@@ -212,26 +212,26 @@ private struct SignUpContentView: View {
                 )
                 if type == .cast {
                     cafeSelectionSection(
-                        title: "소속 카페",
-                        placeholder: "소속 카페를 선택하세요"
+                        title: String(localized: String.LocalizationValue("signup_cast_cafe_title"), table: "Localizable"),
+                        placeholder: String(localized: String.LocalizationValue("signup_cast_cafe_placeholder"), table: "Localizable")
                     )
-                    Text("* 소속 카페의 승인이 필요합니다")
+                    Text(String(localized: String.LocalizationValue("signup_cast_cafe_approval_required"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             secureField(
-                title: "비밀번호",
-                placeholder: "8자 이상 입력하세요",
+                title: String(localized: String.LocalizationValue("signup_password_label"), table: "Localizable"),
+                placeholder: String(localized: String.LocalizationValue("signup_password_placeholder"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.password },
                     set: { onAction(.passwordChanged($0)) }
                 )
             )
             secureField(
-                title: "비밀번호 확인",
-                placeholder: "비밀번호를 다시 입력하세요",
+                title: String(localized: String.LocalizationValue("signup_confirm_password_label"), table: "Localizable"),
+                placeholder: String(localized: String.LocalizationValue("signup_confirm_password_placeholder"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.confirmPassword },
                     set: { onAction(.confirmPasswordChanged($0)) }
@@ -252,7 +252,7 @@ private struct SignUpContentView: View {
             Button {
                 onAction(.submitTapped)
             } label: {
-                Text(uiState.isLoading ? "처리 중..." : type.submitLabel)
+                Text(uiState.isLoading ? String(localized: String.LocalizationValue("signup_processing"), table: "Localizable") : type.submitLabel)
                     .font(.headline)
                     .foregroundStyle(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
@@ -262,7 +262,7 @@ private struct SignUpContentView: View {
             }
             .disabled(uiState.isLoading)
             if type == .cast {
-                Text("가입 후 소속 카페의 승인이 완료되면 활동을 시작할 수 있습니다")
+                Text(String(localized: String.LocalizationValue("signup_cast_after_signup_notice"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -278,21 +278,21 @@ private struct SignUpContentView: View {
         VStack(spacing: 10) {
             HStack(alignment: .bottom, spacing: 10) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("휴대폰 번호")
+                    Text(String(localized: String.LocalizationValue("signup_phone_label"), table: "Localizable"))
                         .font(.subheadline.weight(.semibold))
                     PhoneTextField(
                         text: Binding(
                             get: { uiState.phone },
                             set: { onAction(.phoneChanged($0)) }
                         ),
-                        placeholder: "010-1234-5678"
+                        placeholder: String(localized: String.LocalizationValue("signup_phone_placeholder"), table: "Localizable")
                     )
                     .frame(height: 52)
                     .padding(.horizontal, 16)
                     .background(Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                Button(uiState.isPhoneVerified ? "인증완료" : "인증요청") {
+                Button(uiState.isPhoneVerified ? String(localized: String.LocalizationValue("signup_phone_verified"), table: "Localizable") : String(localized: String.LocalizationValue("signup_phone_request"), table: "Localizable")) {
                     onAction(.sendVerificationTapped)
                 }
                 .font(.subheadline.weight(.semibold))
@@ -306,15 +306,15 @@ private struct SignUpContentView: View {
             if uiState.hasRequestedVerification && !uiState.isPhoneVerified {
                 HStack(alignment: .bottom, spacing: 10) {
                     textField(
-                        title: "인증번호",
-                        placeholder: "인증번호 6자리",
+                        title: String(localized: String.LocalizationValue("signup_verification_code_label"), table: "Localizable"),
+                        placeholder: String(localized: String.LocalizationValue("signup_verification_code_placeholder"), table: "Localizable"),
                         text: Binding(
                             get: { uiState.verificationCode },
                             set: { onAction(.verificationCodeChanged($0)) }
                         ),
                         keyboardType: .numberPad
                     )
-                    Button("확인") {
+                    Button(String(localized: String.LocalizationValue("signup_verification_confirm"), table: "Localizable")) {
                         onAction(.verifyCodeTapped)
                     }
                     .font(.subheadline.weight(.semibold))
@@ -329,7 +329,7 @@ private struct SignUpContentView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color(hex: "2E8B57"))
-                    Text("휴대폰 인증이 완료되었습니다")
+                    Text(String(localized: String.LocalizationValue("signup_phone_verified_message"), table: "Localizable"))
                         .foregroundStyle(Color(hex: "2E8B57"))
                         .font(.subheadline.weight(.semibold))
                     Spacer()
@@ -344,10 +344,10 @@ private struct SignUpContentView: View {
 
     private var ownerCafeGuideCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("운영 카페 연결 안내")
+            Text(String(localized: String.LocalizationValue("signup_owner_cafe_guide_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "5F3AA2"))
-            Text("회원가입 단계에서는 카페 1개만 미리 선택할 수 있습니다. 선택하지 않아도 가입 가능하며, 가입 후 카페관리 탭에서 기존 카페 검색이나 새 카페 등록으로 추가 연결할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("signup_owner_cafe_guide_message"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5A82"))
                 .fixedSize(horizontal: false, vertical: true)
@@ -386,7 +386,7 @@ private struct SignUpContentView: View {
                 )
             }
             if uiState.selectedCafe != nil {
-                Button("선택한 카페 지우기") {
+                Button(String(localized: String.LocalizationValue("signup_clear_selected_cafe"), table: "Localizable")) {
                     onAction(.clearCafeTapped)
                 }
                 .font(.footnote.weight(.semibold))
@@ -395,8 +395,8 @@ private struct SignUpContentView: View {
             if uiState.isCafeSearchVisible {
                 VStack(spacing: 0) {
                     textField(
-                        title: "카페 검색",
-                        placeholder: "카페 이름 검색...",
+                        title: String(localized: String.LocalizationValue("signup_search_cafe_label"), table: "Localizable"),
+                        placeholder: String(localized: String.LocalizationValue("signup_search_cafe_placeholder"), table: "Localizable"),
                         text: Binding(
                             get: { uiState.cafeSearchQuery },
                             set: { onAction(.cafeSearchQueryChanged($0)) }
@@ -404,7 +404,7 @@ private struct SignUpContentView: View {
                     )
                     .padding(12)
                     if filteredCafes.isEmpty {
-                        Text("검색 결과가 없습니다")
+                        Text(String(localized: String.LocalizationValue("signup_search_no_results"), table: "Localizable"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
@@ -426,7 +426,7 @@ private struct SignUpContentView: View {
                                         }
                                         Spacer()
                                         if cafe.approved {
-                                            Text("인증")
+                                            Text(String(localized: String.LocalizationValue("signup_cafe_verified_badge"), table: "Localizable"))
                                                 .font(.caption2.weight(.bold))
                                                 .foregroundStyle(.white)
                                                 .padding(.horizontal, 10)
@@ -456,7 +456,7 @@ private struct SignUpContentView: View {
     private var socialButtons: some View {
         VStack(spacing: 12) {
             SignInSocialButton(
-                title: "카카오로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_kakao"), table: "Localizable"),
                 icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
                 foreground: .black,
@@ -466,7 +466,7 @@ private struct SignUpContentView: View {
                 }
             )
             SignInSocialButton(
-                title: "구글로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_google"), table: "Localizable"),
                 icon: "google_logo",
                 background: .white,
                 foreground: Color(hex: "222222"),
@@ -570,11 +570,11 @@ private struct SignUpContentView: View {
     private func description(for type: SignUpUiState.UserType) -> String {
         switch type {
         case .visitor:
-            return "간편하게 시작하세요!"
+            return String(localized: String.LocalizationValue("signup_desc_visitor"), table: "Localizable")
         case .cast:
-            return "소속 카페를 등록하세요"
+            return String(localized: String.LocalizationValue("signup_desc_cast"), table: "Localizable")
         case .cafeOwner:
-            return "휴대폰 인증 후 운영 카페를 선택하거나 나중에 연결할 수 있습니다"
+            return String(localized: String.LocalizationValue("signup_desc_owner"), table: "Localizable")
         }
     }
 }

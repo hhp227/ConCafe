@@ -21,7 +21,7 @@ struct MenuGoodsView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("메뉴&굿즈 관리")
+        .navigationTitle(String(localized: String.LocalizationValue("menugoods_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -41,20 +41,20 @@ struct MenuGoodsView: View {
             }
         }
         .alert(
-            "항목 삭제",
+            String(localized: String.LocalizationValue("menugoods_delete_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.pendingDeleteItemId != nil },
                 set: { _ in }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.cancelDeleteItem)
             }
-            Button("삭제", role: .destructive) {
+            Button(String(localized: String.LocalizationValue("menugoods_delete_confirm"), table: "Localizable"), role: .destructive) {
                 viewModel.onAction(.confirmDeleteItem)
             }
         } message: {
-            Text("항목을 삭제 하시겠습니까?")
+            Text(String(localized: String.LocalizationValue("menugoods_delete_message"), table: "Localizable"))
         }
     }
 
@@ -83,7 +83,19 @@ private struct MenuGoodsContentView: View {
                 }
                 categoryChips
                 if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
+                    infoBanner(
+                        message: {
+                            switch infoMessage {
+                            case "menugoods_info_load_failed",
+                                 "menugoods_info_availability_save_failed",
+                                 "menugoods_info_delete_success",
+                                 "menugoods_info_delete_failed":
+                                return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                            default:
+                                return infoMessage
+                            }
+                        }()
+                    )
                 }
                 if uiState.isLoading {
                     loadingCard
@@ -124,7 +136,7 @@ private struct MenuGoodsContentView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus")
-                        Text("새 항목 추가")
+                        Text(String(localized: String.LocalizationValue("menugoods_add_new_item"), table: "Localizable"))
                             .font(.subheadline.weight(.bold))
                     }
                     .foregroundStyle(Color(hex: "2B2330"))
@@ -144,10 +156,10 @@ private struct MenuGoodsContentView: View {
 
     private var cafeContextCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(uiState.cafeName.isEmpty ? "카페 판매 항목" : uiState.cafeName)
+            Text(uiState.cafeName.isEmpty ? String(localized: String.LocalizationValue("menugoods_context_default_title"), table: "Localizable") : uiState.cafeName)
                 .font(.title3.weight(.bold))
                 .foregroundStyle(.white)
-            Text("메뉴와 굿즈 판매 상태를 한 화면에서 관리합니다.")
+            Text(String(localized: String.LocalizationValue("menugoods_context_subtitle"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.88))
         }
@@ -165,8 +177,8 @@ private struct MenuGoodsContentView: View {
 
     private var collectionTabs: some View {
         HStack(spacing: 8) {
-            collectionTabButton(title: "메뉴", tab: .menu)
-            collectionTabButton(title: "굿즈", tab: .goods)
+            collectionTabButton(title: String(localized: String.LocalizationValue("menugoods_tab_menu"), table: "Localizable"), tab: .menu)
+            collectionTabButton(title: String(localized: String.LocalizationValue("menugoods_tab_goods"), table: "Localizable"), tab: .goods)
         }
         .padding(4)
         .background(Color(hex: "FFD1DC").opacity(0.12))
@@ -194,7 +206,7 @@ private struct MenuGoodsContentView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color(hex: "9A7D8E"))
             TextField(
-                "항목명, 카테고리, 키워드 검색",
+                String(localized: String.LocalizationValue("menugoods_search_placeholder"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.searchQuery },
                     set: { onAction(.changeSearchQuery($0)) }
@@ -217,7 +229,7 @@ private struct MenuGoodsContentView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 ForEach(uiState.visibleCategories, id: \.self) { chip in
-                    let selected = chip.id == uiState.selectedCategoryId || (chip.id == nil && uiState.selectedCategoryId == nil)
+                    let selected = chip.id == uiState.selectedCategoryId
                     
                     Button {
                         onAction(.selectCategory(chip.id))
@@ -285,13 +297,13 @@ private struct MenuGoodsContentView: View {
                 .frame(width: 44, height: 44)
                 .background(Color(hex: "FCE7EF"))
                 .clipShape(Circle())
-            Text(uiState.searchQuery.isEmpty ? "등록된 항목이 없습니다." : "검색 결과가 없습니다.")
+            Text(uiState.searchQuery.isEmpty ? String(localized: String.LocalizationValue("menugoods_empty_default_title"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_empty_search_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             Text(
                 uiState.searchQuery.isEmpty
-                    ? "새 메뉴나 굿즈를 등록하면 이 목록에 표시됩니다."
-                    : "검색어 또는 카테고리를 바꿔 다시 확인해보세요."
+                    ? String(localized: String.LocalizationValue("menugoods_empty_default_desc"), table: "Localizable")
+                    : String(localized: String.LocalizationValue("menugoods_empty_search_desc"), table: "Localizable")
             )
             .font(.subheadline)
             .foregroundStyle(Color(hex: "7B6B75"))
@@ -363,7 +375,7 @@ private struct MenuGoodsContentView: View {
                 Divider()
                     .overlay(Color(hex: "F4E7EE"))
                 HStack {
-                    Text(isAvailable ? "판매 중" : "품절")
+                    Text(isAvailable ? String(localized: String.LocalizationValue("menugoods_available"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_sold_out"), table: "Localizable"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
                     Spacer()
@@ -433,17 +445,23 @@ private struct MenuGoodsContentView: View {
                     .padding(.vertical, 5)
                     .background(Color(hex: "FCE7EF"))
                     .clipShape(Capsule())
-                Text("카페 굿즈 판매 항목")
+                Text(String(localized: String.LocalizationValue("menugoods_goods_desc"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7B6B75"))
                     .lineLimit(2)
-                Text("재고 \(item.stock)")
+                Text(
+                    String(
+                        format: String(localized: String.LocalizationValue("menugoods_stock"), table: "Localizable"),
+                        locale: Locale.current,
+                        item.stock
+                    )
+                )
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Color(hex: "8B7A84"))
                 Divider()
                     .overlay(Color(hex: "F4E7EE"))
                 HStack {
-                    Text(isAvailable ? "판매 중" : "품절")
+                    Text(isAvailable ? String(localized: String.LocalizationValue("menugoods_available"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_sold_out"), table: "Localizable"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
                     Spacer()

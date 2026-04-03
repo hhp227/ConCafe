@@ -41,11 +41,11 @@ final class BannerViewModel: ObservableObject {
                         uiState.pendingDeleteBannerId = nil
                     }
                 } else {
-                    event.send(.showMessage("배너 목록을 불러오지 못했습니다."))
+                    event.send(.showMessage(MessageKey.bannerLoadFailed))
                 }
             } catch {
                 if Task.isCancelled { return }
-                event.send(.showMessage("배너 목록을 불러오지 못했습니다."))
+                event.send(.showMessage(MessageKey.bannerLoadFailed))
             }
         }
     }
@@ -142,15 +142,16 @@ final class BannerViewModel: ObservableObject {
                 let result = try await deleteHomeBannerUseCase.invoke(bannerId: bannerId)
                 if result is AppResultSuccess<AnyObject> {
                     removeBanner(id: bannerId)
-                    event.send(.showMessage("배너를 삭제했습니다."))
+                    event.send(.showMessage(MessageKey.bannerDeleted))
                 } else if let failure = result as? AppResultFailure {
-                    event.send(.showMessage("\(failure.error)"))
+                    let _ = failure
+                    event.send(.showMessage(MessageKey.bannerDeleteFailed))
                 } else {
-                    event.send(.showMessage("배너 삭제에 실패했습니다."))
+                    event.send(.showMessage(MessageKey.bannerDeleteFailed))
                 }
             } catch {
                 if Task.isCancelled { return }
-                event.send(.showMessage("배너 삭제에 실패했습니다."))
+                event.send(.showMessage(MessageKey.bannerDeleteFailed))
             }
         }
     }
@@ -180,6 +181,12 @@ final class BannerViewModel: ObservableObject {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
+
+    private enum MessageKey {
+        static let bannerLoadFailed = "banner_info_load_failed"
+        static let bannerDeleted = "banner_info_deleted"
+        static let bannerDeleteFailed = "banner_info_delete_failed"
+    }
 }
 
 private enum TaskKey {
@@ -199,14 +206,14 @@ private extension HomeBanner {
         default:
             tab = .active
         }
-        let statusLabel: String
+        let statusLabelKey: String
         switch tab {
         case .active:
-            statusLabel = "진행 중"
+            statusLabelKey = "banner_status_active"
         case .scheduled:
-            statusLabel = "예약"
+            statusLabelKey = "banner_status_scheduled"
         case .ended:
-            statusLabel = "종료"
+            statusLabelKey = "banner_status_ended"
         }
         let icon: String
         switch targetType {
@@ -224,8 +231,8 @@ private extension HomeBanner {
             cafeId: cafeId,
             title: title,
             description: subtitle,
-            periodText: "노출 \(displayDays)일",
-            statusLabel: statusLabel,
+            periodDays: displayDays,
+            statusLabelKey: statusLabelKey,
             tab: tab,
             accentHex: startColorHex,
             imageIcon: icon,

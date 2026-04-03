@@ -37,7 +37,7 @@ struct HomeView: View {
             }
         }
         .alert(
-            "로그인이 필요합니다",
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isLoginPromptVisible },
                 set: { presented in
@@ -47,14 +47,14 @@ struct HomeView: View {
                 }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissLoginPrompt)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 viewModel.onAction(.loginPromptSignInTapped)
             }
         } message: {
-            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
         .onAppear {
             if currentBannerPage >= viewModel.uiState.banners.count {
@@ -149,8 +149,8 @@ private struct HomeContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
                 icon: "heart.fill",
-                title: "인기 캐스트",
-                actionTitle: uiState.canLoadMorePopularCasts ? "더보기" : nil,
+                title: String(localized: String.LocalizationValue("home_section_popular_cast"), table: "Localizable"),
+                actionTitle: uiState.canLoadMorePopularCasts ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
                 onAction: { onAction(.loadMorePopularCasts) }
             )
             ScrollView(.horizontal, showsIndicators: false) {
@@ -161,15 +161,15 @@ private struct HomeContentView: View {
                                 name: maid.name,
                                 subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
                                 imageUrl: maid.profileImage,
-                                metaText: "팔로워 \(maid.followerCount)",
+                                metaText: String(format: String(localized: String.LocalizationValue("home_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount),
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
                             )
                             .frame(width: 132, alignment: .leading)
                         }
                     } else {
                         HomeSectionPlaceholderCard(
-                            title: "인기 캐스트 데이터가 없어요",
-                            description: "팔로우와 방문이 쌓이면 이 영역에 표시됩니다."
+                            title: String(localized: String.LocalizationValue("home_popular_cast_empty_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("home_popular_cast_empty_desc"), table: "Localizable")
                         )
                     }
                 }
@@ -186,8 +186,8 @@ private struct HomeContentView: View {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
                     icon: "mappin.and.ellipse",
-                    title: "근처 컨셉카페",
-                    actionTitle: uiState.canLoadMoreNearbyCafes ? "더보기" : nil,
+                    title: String(localized: String.LocalizationValue("home_section_nearby_cafe"), table: "Localizable"),
+                    actionTitle: uiState.canLoadMoreNearbyCafes ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
                 )
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -209,8 +209,8 @@ private struct HomeContentView: View {
                             }
                         } else {
                             HomeSectionPlaceholderCard(
-                                title: "근처 카페가 아직 없어요",
-                                description: "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요."
+                                title: String(localized: String.LocalizationValue("home_nearby_cafe_empty_title"), table: "Localizable"),
+                                description: String(localized: String.LocalizationValue("home_nearby_cafe_empty_desc"), table: "Localizable")
                             )
                             .frame(width: max(contentWidth - 32, 0), alignment: .leading)
                         }
@@ -237,7 +237,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: birthdaySectionIconName, title: "생일인 캐스트")
+            SectionTitle(icon: birthdaySectionIconName, title: String(localized: String.LocalizationValue("home_section_birthday_cast"), table: "Localizable"))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
@@ -282,7 +282,7 @@ private struct HomeContentView: View {
 
     private var noticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "megaphone.fill", title: "최근 카페 공지")
+            SectionTitle(icon: "megaphone.fill", title: String(localized: String.LocalizationValue("home_section_notice"), table: "Localizable"))
             VStack(spacing: 10) {
                 if !uiState.notices.isEmpty {
                     ForEach(uiState.notices, id: \.id) { notice in
@@ -305,8 +305,8 @@ private struct HomeContentView: View {
                     }
                 } else {
                     HomeSectionPlaceholderCard(
-                        title: "최근 공지가 없어요",
-                        description: "새 공지가 등록되면 이 영역에 표시됩니다."
+                        title: String(localized: String.LocalizationValue("home_notice_empty_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("home_notice_empty_desc"), table: "Localizable")
                     )
                 }
             }
@@ -392,10 +392,10 @@ private struct HomeBannerPlaceholderCard: View {
                 endPoint: .bottomTrailing
             )
             VStack(alignment: .leading, spacing: 6) {
-                Text("홈 배너 준비 중")
+                Text(String(localized: String.LocalizationValue("home_banner_placeholder_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "6E6671"))
-                Text("곧 새로운 소식을 보여드릴게요.")
+                Text(String(localized: String.LocalizationValue("home_banner_placeholder_desc"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(Color(hex: "8E8794"))
             }

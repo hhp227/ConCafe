@@ -29,10 +29,13 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 import kotlin.math.round
-import kotlinx.coroutines.launch
 
 @Composable
 fun CafeInfoEditScreen(
@@ -54,7 +57,7 @@ fun CafeInfoEditScreen(
             when (event) {
                 CafeInfoEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 CafeInfoEvent.ShowSaveSuccessMessage -> {
-                    snackbarHostState.showSnackbar("카페 정보가 저장되었습니다.")
+                    snackbarHostState.showSnackbar(getString(Res.string.cafeinfo_info_saved))
                 }
             }
         }
@@ -67,11 +70,11 @@ fun CafeInfoEditScreen(
     if (uiState.isImageRequiredAlertVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) },
-            title = { Text("이미지 등록 필요") },
-            text = { Text("카페 등록/수정에는 대표 이미지 또는 갤러리 이미지가 필요합니다.") },
+            title = { Text(stringResource(Res.string.cafeinfo_alert_image_title)) },
+            text = { Text(stringResource(Res.string.cafeinfo_alert_image_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.banner_action_ok))
                 }
             }
         )
@@ -95,11 +98,18 @@ private fun CafeInfoEditContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.screenTitle, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(if (uiState.isRegistrationMode) {
+                            Res.string.cafeinfo_screen_title_registration
+                        } else {
+                            Res.string.cafeinfo_screen_title_edit
+                        }),
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeInfoEditAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.banner_content_back))
                     }
                 }
             )
@@ -130,7 +140,11 @@ private fun CafeInfoEditContent(
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
                         Text(
-                            text = uiState.submitButtonText,
+                            text = stringResource(if (uiState.isRegistrationMode) {
+                                Res.string.cafeinfo_submit_registration
+                            } else {
+                                Res.string.cafeinfo_submit_edit
+                            }),
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -170,21 +184,37 @@ private fun CafeInfoEditContent(
                 uiState.infoMessage?.let { message ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when {
+                                message == "cafeinfo_info_saved" -> stringResource(Res.string.cafeinfo_info_saved)
+                                message == "cafeinfo_info_load_failed" -> stringResource(Res.string.cafeinfo_info_load_failed)
+                                message == "cafeinfo_info_image_required_one_or_more" -> stringResource(Res.string.cafeinfo_info_image_required_one_or_more)
+                                message == "cafeinfo_info_save_failed" -> stringResource(Res.string.cafeinfo_info_save_failed)
+                                message == "cafeinfo_info_registration_rep_required" -> stringResource(Res.string.cafeinfo_info_registration_rep_required)
+                                message == "cafeinfo_info_rep_upload_next_step" -> stringResource(Res.string.cafeinfo_info_rep_upload_next_step)
+                                message == "cafeinfo_info_gallery_add_next_step" -> stringResource(Res.string.cafeinfo_info_gallery_add_next_step)
+                                message == "cafeinfo_info_pin_location_hint" -> stringResource(Res.string.cafeinfo_info_pin_location_hint)
+                                message == "cafeinfo_info_exception_next_step" -> stringResource(Res.string.cafeinfo_info_exception_next_step)
+                                message == "cafeinfo_info_image_upload_failed" -> stringResource(Res.string.cafeinfo_info_image_upload_failed)
+                                message.startsWith("cafeinfo_info_gallery_max_exceeded:") -> {
+                                    val count = message.substringAfter(':').toIntOrNull() ?: 0
+                                    stringResource(Res.string.cafeinfo_info_gallery_max_exceeded, count)
+                                }
+                                else -> message
+                            },
                             onDismiss = { onAction(CafeInfoEditAction.DismissInfoMessage) }
                         )
                     }
                 }
                 item {
-                    EditSectionCard(title = "기본 정보") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_basic)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             CafeInfoTextField(
-                                label = "카페명",
+                                label = stringResource(Res.string.cafeinfo_label_name),
                                 value = uiState.cafeName,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeCafeName(it)) }
                             )
                             CafeInfoTextField(
-                                label = "카페 소개",
+                                label = stringResource(Res.string.cafeinfo_label_description),
                                 value = uiState.cafeDescription,
                                 minLines = 5,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeCafeDescription(it)) }
@@ -193,7 +223,7 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "대표 이미지") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_representative)) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             CompatImagePicker(
                                 onImageSelected = { imageUrl ->
@@ -226,7 +256,7 @@ private fun CafeInfoEditContent(
                                                 modifier = Modifier.size(34.dp)
                                             )
                                             Text(
-                                                text = uiState.representativeImageTitle,
+                                                text = stringResource(Res.string.cafeinfo_representative_title),
                                                 color = Color(0xFF5A4954),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold
@@ -241,7 +271,7 @@ private fun CafeInfoEditContent(
                                 }
                             }
                             Text(
-                                text = "검색 결과에 노출되는 대표 이미지입니다",
+                                text = stringResource(Res.string.cafeinfo_representative_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF8A8088),
                                 modifier = Modifier.fillMaxWidth()
@@ -252,9 +282,13 @@ private fun CafeInfoEditContent(
                 if (!uiState.isRegistrationMode) {
                     item {
                         EditSectionCard(
-                            title = "카페 갤러리",
+                            title = stringResource(Res.string.cafeinfo_section_gallery),
                             trailing = {
-                                Text(uiState.galleryLimitText, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    stringResource(Res.string.cafeinfo_gallery_limit, uiState.galleryLimitCount, uiState.galleryMaxCount),
+                                    color = Color(0xFFEF6797),
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         ) {
                             FlowRow(
@@ -264,7 +298,7 @@ private fun CafeInfoEditContent(
                             ) {
                                 uiState.galleryImages.forEachIndexed { index, imageUrl ->
                                     GalleryImageTile(
-                                        label = "이미지 ${index + 1}",
+                                        label = stringResource(Res.string.cafeinfo_image_label_prefix, index + 1),
                                         imageUrl = imageUrl,
                                         index = index
                                     )
@@ -283,10 +317,10 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "위치 및 연락처") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_location_contact)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             CafeInfoTextField(
-                                label = "지역 / 주소",
+                                label = stringResource(Res.string.cafeinfo_label_address),
                                 value = uiState.address,
                                 trailingIcon = {
                                     IconButton(
@@ -294,7 +328,7 @@ private fun CafeInfoEditContent(
                                             coroutineScope.launch {
                                                 val resolved = resolveCafeAddress(uiState.address)
                                                 if (resolved == null) {
-                                                    snackbarHostState.showSnackbar("입력한 주소를 찾지 못했습니다.")
+                                                    snackbarHostState.showSnackbar(getString(Res.string.cafeinfo_info_address_not_found))
                                                 } else {
                                                     onAction(
                                                         CafeInfoEditAction.SetPinnedLocation(
@@ -309,7 +343,7 @@ private fun CafeInfoEditContent(
                                     ) {
                                         Icon(
                                             Icons.Default.LocationOn,
-                                            contentDescription = "주소로 위치 찾기",
+                                            contentDescription = stringResource(Res.string.cafeinfo_content_find_by_address),
                                             tint = Color(0xFFEF6797)
                                         )
                                     }
@@ -327,12 +361,19 @@ private fun CafeInfoEditContent(
                                     longitude = uiState.mapLongitude,
                                     onLocationSelected = { latitude, longitude, address ->
                                         onAction(CafeInfoEditAction.SetPinnedLocation(latitude, longitude))
-                                        val resolvedAddress = if (address.isNullOrBlank()) {
-                                            "위도 ${formatCoordinate(latitude)}, 경도 ${formatCoordinate(longitude)}"
+                                        if (address.isNullOrBlank()) {
+                                            coroutineScope.launch {
+                                                val fallbackAddress = getString(
+                                                    Res.string.cafeinfo_coordinate_fallback,
+                                                    formatCoordinate(latitude),
+                                                    formatCoordinate(longitude)
+                                                )
+
+                                                onAction(CafeInfoEditAction.ChangeAddress(fallbackAddress))
+                                            }
                                         } else {
-                                            address
+                                            onAction(CafeInfoEditAction.ChangeAddress(address))
                                         }
-                                        onAction(CafeInfoEditAction.ChangeAddress(resolvedAddress))
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -348,7 +389,7 @@ private fun CafeInfoEditContent(
                                     border = BorderStroke(1.dp, Color(0x33FFD1DC))
                                 ) {
                                     Text(
-                                        text = "위치 지정",
+                                        text = stringResource(Res.string.cafeinfo_action_pin_location),
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
@@ -356,12 +397,16 @@ private fun CafeInfoEditContent(
                                 }
                             }
                             Text(
-                                text = "선택 좌표: ${formatCoordinate(uiState.mapLatitude)}, ${formatCoordinate(uiState.mapLongitude)}",
+                                text = stringResource(
+                                    Res.string.cafeinfo_selected_coordinate,
+                                    formatCoordinate(uiState.mapLatitude),
+                                    formatCoordinate(uiState.mapLongitude)
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF7E737B)
                             )
                             PhoneNumberTextField(
-                                label = "연락처",
+                                label = stringResource(Res.string.cafeinfo_label_contact),
                                 value = uiState.contactNumber,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeContactNumber(it)) }
                             )
@@ -369,17 +414,17 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "영업시간") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_business_hours)) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             HoursRow(
-                                label = "평일",
+                                label = stringResource(Res.string.cafeinfo_label_weekday),
                                 open = uiState.weekdayOpen,
                                 close = uiState.weekdayClose,
                                 onOpenChange = { onAction(CafeInfoEditAction.ChangeWeekdayOpen(it)) },
                                 onCloseChange = { onAction(CafeInfoEditAction.ChangeWeekdayClose(it)) }
                             )
                             HoursRow(
-                                label = "주말",
+                                label = stringResource(Res.string.cafeinfo_label_weekend),
                                 open = uiState.weekendOpen,
                                 close = uiState.weekendClose,
                                 onOpenChange = { onAction(CafeInfoEditAction.ChangeWeekendOpen(it)) },
@@ -390,7 +435,7 @@ private fun CafeInfoEditContent(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.EditCalendar, contentDescription = null, tint = Color(0xFFEF6797))
-                                Text("예외 영업일 관리", color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(Res.string.cafeinfo_action_manage_exception), color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -511,7 +556,7 @@ private fun AddGalleryTile(onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "이미지 추가",
+                contentDescription = stringResource(Res.string.cafeinfo_content_add_image),
                 tint = Color(0xFFEF6797),
                 modifier = Modifier.padding(14.dp)
             )
@@ -537,7 +582,7 @@ private fun HoursRow(
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
         SmallTimeField(value = open, onValueChange = onOpenChange)
-        Text("—", color = Color(0xFF8A8088))
+        Text(stringResource(Res.string.cafeinfo_dash), color = Color(0xFF8A8088))
         SmallTimeField(value = close, onValueChange = onCloseChange)
     }
 }
@@ -570,7 +615,7 @@ private fun SmallTimeField(
             trailingIcon = {
                 Icon(
                     imageVector = Icons.Default.AccessTime,
-                    contentDescription = "시간 선택",
+                    contentDescription = stringResource(Res.string.cafeinfo_content_select_time),
                     tint = Color(0xFF8A8088),
                     modifier = Modifier.size(18.dp)
                 )
@@ -591,7 +636,7 @@ private fun SmallTimeField(
 
         AlertDialog(
             onDismissRequest = { isTimePickerVisible = false },
-            title = { Text("시간 선택") },
+            title = { Text(stringResource(Res.string.cafeinfo_time_picker_title)) },
             text = { TimePicker(state = timePickerState) },
             confirmButton = {
                 TextButton(
@@ -600,12 +645,12 @@ private fun SmallTimeField(
                         isTimePickerVisible = false
                     }
                 ) {
-                    Text("확인")
+                    Text(stringResource(Res.string.banner_action_ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isTimePickerVisible = false }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.banner_action_cancel))
                 }
             }
         )
@@ -636,7 +681,7 @@ private fun InfoBanner(
                 color = Color(0xFF6B5320)
             )
             TextButton(onClick = onDismiss) {
-                Text("닫기", color = Color(0xFF6B5320))
+                Text(stringResource(Res.string.banneredit_action_close), color = Color(0xFF6B5320))
             }
         }
     }

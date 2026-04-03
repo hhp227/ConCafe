@@ -108,7 +108,25 @@ private struct CafeDashboardContentView: View {
                             heroCard
                         }
                         if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
+                            infoBanner(
+                                message: {
+                                    switch infoMessage {
+                                    case "dashboard_info_cast_list_load_failed",
+                                         "dashboard_info_select_cast_for_schedule",
+                                         "dashboard_info_external_link_input_required",
+                                         "dashboard_info_external_link_updated",
+                                         "dashboard_info_external_link_added",
+                                         "dashboard_info_external_link_deleted",
+                                         "dashboard_info_select_cast_for_delete",
+                                         "dashboard_info_cast_deleted",
+                                         "dashboard_info_cast_claim_approved",
+                                         "dashboard_info_cast_claim_rejected":
+                                        return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                                    default:
+                                        return infoMessage
+                                    }
+                                }()
+                            )
                         }
                         if uiState.cafe != nil {
                             metricGrid
@@ -326,7 +344,7 @@ private struct CafeDashboardContentView: View {
                     Image(systemName: iconName)
                         .foregroundStyle(Color(hex: "EF6797"))
                 }
-                Text(shortcut.title)
+                Text(String(localized: String.LocalizationValue(shortcut.title), table: "Localizable"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -546,10 +564,35 @@ private struct CafeDashboardContentView: View {
                         Text(cafe.homeBannerPreview.title)
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color(hex: "2B2330"))
-                        Text(cafe.homeBannerPreview.period)
+                        Text(
+                            {
+                                let period = cafe.homeBannerPreview.period
+                                if period.hasPrefix("dashboard_banner_period_days:") {
+                                    let days = Int(period.split(separator: ":").last ?? "0") ?? 0
+                                    return String(
+                                        format: String(localized: String.LocalizationValue("dashboard_banner_period_days"), table: "Localizable"),
+                                        days
+                                    )
+                                } else {
+                                    return period
+                                }
+                            }()
+                        )
                             .font(.caption)
                             .foregroundStyle(Color(hex: "7E7480"))
-                        Text(cafe.homeBannerPreview.statusLabel)
+                        Text(
+                            {
+                                let statusLabel = cafe.homeBannerPreview.statusLabel
+                                switch statusLabel {
+                                case "dashboard_banner_status_active",
+                                     "dashboard_banner_status_scheduled",
+                                     "dashboard_banner_status_hidden":
+                                    return String(localized: String.LocalizationValue(statusLabel), table: "Localizable")
+                                default:
+                                    return statusLabel
+                                }
+                            }()
+                        )
                             .font(.caption2.weight(.bold))
                             .foregroundStyle(Color(hex: "2F8B57"))
                             .padding(.horizontal, 8)
@@ -682,7 +725,7 @@ private struct CafeDashboardContentView: View {
                 Button {
                     onAction(.clickShortcut(.externalLinks))
                 } label: {
-                    Text("외부 링크 추가")
+                    Text(String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable"))
                         .fontWeight(.bold)
                         .foregroundStyle(Color(hex: "2B2330"))
                         .frame(maxWidth: .infinity)
@@ -717,7 +760,11 @@ private struct ExternalLinkInputSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(uiState.externalLinkSheetTitle)
+            Text(
+                uiState.editingExternalLinkId == nil
+                ? String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable")
+                : String(localized: String.LocalizationValue("dashboard_external_link_edit"), table: "Localizable")
+            )
                 .font(.title3.weight(.bold))
             Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
                 .font(.subheadline)
@@ -741,7 +788,11 @@ private struct ExternalLinkInputSheet: View {
             Button {
                 onAction(.submitExternalLink)
             } label: {
-                Text(uiState.externalLinkSubmitLabel)
+                Text(
+                    uiState.editingExternalLinkId == nil
+                    ? String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable")
+                    : String(localized: String.LocalizationValue("dashboard_external_link_save"), table: "Localizable")
+                )
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)

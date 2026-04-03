@@ -40,6 +40,30 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.RatingBox
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.navigation.NavigationAction.*
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.home_show_more
+import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_desc
+import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_title
+import concafe.composeapp.generated.resources.myinfo_guest_feature_bookmark_desc
+import concafe.composeapp.generated.resources.myinfo_guest_feature_bookmark_title
+import concafe.composeapp.generated.resources.myinfo_guest_feature_checkin_desc
+import concafe.composeapp.generated.resources.myinfo_guest_feature_checkin_title
+import concafe.composeapp.generated.resources.myinfo_guest_feature_membership_desc
+import concafe.composeapp.generated.resources.myinfo_guest_feature_membership_title
+import concafe.composeapp.generated.resources.myinfo_guest_popular_empty_desc
+import concafe.composeapp.generated.resources.myinfo_guest_popular_empty_title
+import concafe.composeapp.generated.resources.myinfo_guest_features_title
+import concafe.composeapp.generated.resources.myinfo_guest_popular_cafes_title
+import concafe.composeapp.generated.resources.myinfo_guest_start_subtitle
+import concafe.composeapp.generated.resources.myinfo_guest_start_title
+import concafe.composeapp.generated.resources.myinfo_guest_signin_cta
+import concafe.composeapp.generated.resources.myinfo_guest_welcome_subtitle
+import concafe.composeapp.generated.resources.myinfo_guest_welcome_title
+import concafe.composeapp.generated.resources.signin_sign_up
+import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -48,6 +72,7 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
@@ -92,16 +117,16 @@ fun MyInfoScreen(
     if (uiState.isLoginPromptVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MyInfoAction.DismissLoginPrompt) },
-            title = { Text("로그인이 필요합니다") },
-            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(MyInfoAction.ClickLoginPromptSignIn) }) {
-                    Text("로그인")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(MyInfoAction.DismissLoginPrompt) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -114,10 +139,10 @@ private fun GuestMyInfoScreen(
     onAction: (MyInfoAction) -> Unit
 ) {
     val features = listOf(
-        GuestFeatureItem(Icons.Filled.Place, "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", Color(0xFFEF6797), Color(0xFFF57AA8)),
-        GuestFeatureItem(Icons.Filled.Favorite, "즐겨찾기", "좋아하는 카페와 캐스트를\n저장하세요", Color(0xFF9C6ADE), Color(0xFFB388EB)),
-        GuestFeatureItem(Icons.Filled.Star, "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", Color(0xFFF0B429), Color(0xFFF5C857)),
-        GuestFeatureItem(Icons.Filled.CardGiftcard, "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", Color(0xFF4C8BF5), Color(0xFF71A7FF))
+        GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), Color(0xFFEF6797), Color(0xFFF57AA8)),
+        GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), Color(0xFF9C6ADE), Color(0xFFB388EB)),
+        GuestFeatureItem(Icons.Filled.Star, stringResource(Res.string.myinfo_guest_feature_badge_title), stringResource(Res.string.myinfo_guest_feature_badge_desc), Color(0xFFF0B429), Color(0xFFF5C857)),
+        GuestFeatureItem(Icons.Filled.CardGiftcard, stringResource(Res.string.myinfo_guest_feature_membership_title), stringResource(Res.string.myinfo_guest_feature_membership_desc), Color(0xFF4C8BF5), Color(0xFF71A7FF))
     )
 
     LazyColumn(
@@ -140,8 +165,8 @@ private fun GuestMyInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("💗", style = MaterialTheme.typography.headlineLarge)
-                    Text("콘카에 오신 것을\n환영합니다!", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text("로그인하고 컨셉카페의 모든 것을 즐겨보세요", color = Color.White.copy(alpha = 0.9f))
+                    Text(stringResource(Res.string.myinfo_guest_welcome_title), color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.myinfo_guest_welcome_subtitle), color = Color.White.copy(alpha = 0.9f))
                     Button(
                         onClick = { onAction(MyInfoAction.ClickSignIn) },
                         modifier = Modifier
@@ -157,7 +182,7 @@ private fun GuestMyInfoScreen(
                         )
                         Box(modifier = Modifier.width(6.dp))
                         Text(
-                            "로그인하기",
+                            stringResource(Res.string.myinfo_guest_signin_cta),
                             color = Color(0xFFEF6797),
                             fontWeight = FontWeight.Bold
                         )
@@ -166,7 +191,7 @@ private fun GuestMyInfoScreen(
             }
         }
         item {
-            Text("로그인 후 이용 가능한 기능", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.myinfo_guest_features_title), fontWeight = FontWeight.Bold)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -217,12 +242,12 @@ private fun GuestMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("인기 카페 둘러보기", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.myinfo_guest_popular_cafes_title), fontWeight = FontWeight.Bold)
                 Row(
                     modifier = Modifier.clickable { },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("더보기", color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.home_show_more), color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
@@ -282,8 +307,8 @@ private fun GuestMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "둘러볼 인기 카페가 없어요",
-                        description = "활동 데이터가 쌓이면 추천 카페가 표시됩니다."
+                        title = stringResource(Res.string.myinfo_guest_popular_empty_title),
+                        description = stringResource(Res.string.myinfo_guest_popular_empty_desc)
                     )
                 }
             }
@@ -301,9 +326,9 @@ private fun GuestMyInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("✨", style = MaterialTheme.typography.headlineMedium)
-                    Text("지금 바로 시작하세요!", fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.myinfo_guest_start_title), fontWeight = FontWeight.Bold)
                     Text(
-                        "콘카 회원만의 특별한 혜택을 누려보세요",
+                        stringResource(Res.string.myinfo_guest_start_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7E7E7E)
                     )
@@ -312,7 +337,7 @@ private fun GuestMyInfoScreen(
                         modifier = Modifier.padding(top = 10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797))
                     ) {
-                        Text("회원가입하기", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.signin_sign_up), color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }

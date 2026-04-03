@@ -30,6 +30,15 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.NotificationListItem
 import com.hhp227.concafe.domain.model.NotificationSection
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_notification
+import concafe.composeapp.generated.resources.notification_login_required_desc
+import concafe.composeapp.generated.resources.notification_login_required_title
+import concafe.composeapp.generated.resources.notification_summary_desc
+import concafe.composeapp.generated.resources.notification_summary_title
+import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,12 +78,12 @@ private fun NotificationContentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("알림") },
+                title = { Text(stringResource(Res.string.common_notification)) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(NotificationAction.ClickBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            contentDescription = stringResource(Res.string.signin_back_content_description)
                         )
                     }
                 }
@@ -139,13 +148,13 @@ private fun NotificationSignInRequiredScreen(
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    text = "알림은 로그인 후 확인할 수 있어요",
+                    text = stringResource(Res.string.notification_login_required_title),
                     modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "팔로우/출근/공지 알림을 보려면 로그인해 주세요.",
+                    text = stringResource(Res.string.notification_login_required_desc),
                     modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFF7C7480),
                     style = MaterialTheme.typography.bodyMedium,
@@ -155,7 +164,7 @@ private fun NotificationSignInRequiredScreen(
                     onClick = { onAction(NotificationAction.ClickSignIn) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("로그인하기")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             }
         }
@@ -192,9 +201,9 @@ private fun NotificationSectionsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("새 알림 ${uiState.unreadCount}개", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.notification_summary_title, uiState.unreadCount), color = Color.White, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("출근, 생일, 공지를 섹션별로 빠르게 확인하세요.", color = Color.White.copy(alpha = 0.92f))
+                        Text(stringResource(Res.string.notification_summary_desc), color = Color.White.copy(alpha = 0.92f))
                     }
                     Icon(
                         imageVector = Icons.Filled.Notifications,

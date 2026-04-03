@@ -6,11 +6,6 @@ import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 
 data class BannerEditUiState(
     val editingBannerId: String? = null,
-    val screenTitle: String = "새 배너 등록",
-    val submitButtonText: String = "배너 등록하기",
-    val imageSectionTitle: String = "배너 이미지 업로드",
-    val imageGuideText: String = "권장 비율 16:9 (1080x600px)",
-    val imageButtonText: String = "이미지 선택",
     val selectedImageLabel: String? = null,
     val originalImageUrl: String? = null,
     val title: String = "",
@@ -30,18 +25,21 @@ data class BannerEditUiState(
     val isAdmin: Boolean = false,
     val isImageRequiredAlertVisible: Boolean = false,
     val isSaving: Boolean = false,
-    val infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
+    val infoMessage: String? = null
 ) {
-    val displayDaysLabel: String
-        get() = "${displayDays}일"
+    val isEditMode: Boolean
+        get() = !editingBannerId.isNullOrBlank()
 
-    val targetFieldPlaceholder: String
+    val displayDaysLabelValue: Int
+        get() = displayDays
+
+    val targetFieldPlaceholderKey: String
         get() = selectedTarget.placeholder
 
-    val selectorTitle: String
+    val selectorTitleKey: String
         get() = selectorType?.title.orEmpty()
 
-    val selectorSearchPlaceholder: String
+    val selectorSearchPlaceholderKey: String
         get() = selectorType?.searchPlaceholder.orEmpty()
 
     val selectedCafeOption: CafeManagementData.OwnedCafeSummary?
@@ -94,17 +92,17 @@ data class BannerEditUiState(
             targetValue.isNotBlank() &&
             !isSaving
 
-    val targetSelectionLabel: String
+    val targetSelectionLabelKey: String
         get() = when (selectedTarget) {
-            BannerTargetType.NOTICE -> "공지사항 선택"
-            BannerTargetType.EVENT_DETAIL -> "이벤트 선택"
+            BannerTargetType.NOTICE -> "banneredit_target_notice_select_label"
+            BannerTargetType.EVENT_DETAIL -> "banneredit_target_event_select_label"
             else -> ""
         }
 
-    val targetSelectionPlaceholder: String
+    val targetSelectionPlaceholderKey: String
         get() = when (selectedTarget) {
-            BannerTargetType.NOTICE -> "공지사항을 검색하고 선택해주세요"
-            BannerTargetType.EVENT_DETAIL -> "이벤트를 검색하고 선택해주세요"
+            BannerTargetType.NOTICE -> "banneredit_target_notice_select_placeholder"
+            BannerTargetType.EVENT_DETAIL -> "banneredit_target_event_select_placeholder"
             else -> ""
         }
 }
@@ -113,17 +111,17 @@ enum class BannerTargetType(
     val label: String,
     val placeholder: String
 ) {
-    CAFE_DETAIL("카페 상세", "운영 카페를 선택해주세요"),
-    EVENT_DETAIL("이벤트 상세", "이벤트를 검색하고 선택해주세요"),
-    NOTICE("공지사항", "공지사항을 검색하고 선택해주세요"),
-    EXTERNAL_LINK("외부 링크", "외부 URL을 입력해주세요")
+    CAFE_DETAIL("banneredit_target_cafe_detail", "banneredit_target_placeholder_cafe"),
+    EVENT_DETAIL("banneredit_target_event_detail", "banneredit_target_placeholder_event"),
+    NOTICE("banneredit_target_notice", "banneredit_target_placeholder_notice"),
+    EXTERNAL_LINK("banneredit_target_external_link", "banneredit_target_placeholder_external")
 }
 
 enum class BannerSelectorType(
     val title: String,
     val searchPlaceholder: String
 ) {
-    CAFE("운영 카페 선택", "운영 카페 이름을 검색해주세요"),
-    NOTICE("공지사항 선택", "공지 제목을 검색해주세요"),
-    EVENT("이벤트 선택", "이벤트 제목을 검색해주세요")
+    CAFE("banneredit_selector_title_cafe", "banneredit_selector_search_cafe"),
+    NOTICE("banneredit_selector_title_notice", "banneredit_selector_search_notice"),
+    EVENT("banneredit_selector_title_event", "banneredit_selector_search_event")
 }

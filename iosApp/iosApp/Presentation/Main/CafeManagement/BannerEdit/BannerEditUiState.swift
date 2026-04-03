@@ -10,11 +10,6 @@ import Shared
 
 struct BannerEditUiState {
     var editingBannerId: String? = nil
-    var screenTitle = "새 배너 등록"
-    var submitButtonText = "배너 등록하기"
-    var imageSectionTitle = "배너 이미지 업로드"
-    var imageGuideText = "권장 비율 16:9 (1080x600px)"
-    var imageButtonText = "이미지 선택"
     var selectedImageLabel: String? = nil
     var originalImageUrl: String? = nil
     var title = ""
@@ -34,21 +29,25 @@ struct BannerEditUiState {
     var isAdmin = false
     var isImageRequiredAlertVisible = false
     var isSaving = false
-    var infoMessage: String? = "현재 활성화된 배너 슬롯이 가득 찬 경우, 등록된 배너는 예약 상태(SCHEDULED)로 대기하며 기존 배너 종료 시 자동으로 노출됩니다."
+    var infoMessage: String? = nil
 
-    var displayDaysLabel: String {
-        "\(displayDays)일"
+    var isEditMode: Bool {
+        !(editingBannerId?.isEmpty ?? true)
     }
 
-    var targetFieldPlaceholder: String {
+    var displayDaysLabelValue: Int {
+        displayDays
+    }
+
+    var targetFieldPlaceholderKey: String {
         selectedTarget.placeholder
     }
 
-    var selectorTitle: String {
+    var selectorTitleKey: String {
         selectorType?.title ?? ""
     }
 
-    var selectorSearchPlaceholder: String {
+    var selectorSearchPlaceholderKey: String {
         selectorType?.searchPlaceholder ?? ""
     }
 
@@ -106,23 +105,23 @@ struct BannerEditUiState {
         }
     }
 
-    var targetSelectionLabel: String {
+    var targetSelectionLabelKey: String {
         switch selectedTarget {
         case .notice:
-            return "공지사항 선택"
+            return "banneredit_target_notice_select_label"
         case .eventDetail:
-            return "이벤트 선택"
+            return "banneredit_target_event_select_label"
         default:
             return ""
         }
     }
 
-    var targetSelectionPlaceholder: String {
+    var targetSelectionPlaceholderKey: String {
         switch selectedTarget {
         case .notice:
-            return "공지사항을 검색하고 선택해주세요"
+            return "banneredit_target_notice_select_placeholder"
         case .eventDetail:
-            return "이벤트를 검색하고 선택해주세요"
+            return "banneredit_target_event_select_placeholder"
         default:
             return ""
         }
@@ -138,23 +137,23 @@ struct BannerEditUiState {
 }
 
 enum BannerTargetType: String, CaseIterable, Identifiable {
-    case cafeDetail = "카페 상세"
-    case eventDetail = "이벤트 상세"
-    case notice = "공지사항"
-    case externalLink = "외부 링크"
+    case cafeDetail = "banneredit_target_cafe_detail"
+    case eventDetail = "banneredit_target_event_detail"
+    case notice = "banneredit_target_notice"
+    case externalLink = "banneredit_target_external_link"
 
     var id: String { rawValue }
 
     var placeholder: String {
         switch self {
         case .cafeDetail:
-            return "운영 카페를 선택해주세요"
+            return "banneredit_target_placeholder_cafe"
         case .eventDetail:
-            return "이벤트를 검색하고 선택해주세요"
+            return "banneredit_target_placeholder_event"
         case .notice:
-            return "공지사항을 검색하고 선택해주세요"
+            return "banneredit_target_placeholder_notice"
         case .externalLink:
-            return "외부 URL을 입력해주세요"
+            return "banneredit_target_placeholder_external"
         }
     }
 }
@@ -166,17 +165,17 @@ enum BannerSelectorType {
 
     var title: String {
         switch self {
-        case .cafe: return "운영 카페 선택"
-        case .notice: return "공지사항 선택"
-        case .event: return "이벤트 선택"
+        case .cafe: return "banneredit_selector_title_cafe"
+        case .notice: return "banneredit_selector_title_notice"
+        case .event: return "banneredit_selector_title_event"
         }
     }
 
     var searchPlaceholder: String {
         switch self {
-        case .cafe: return "운영 카페 이름을 검색해주세요"
-        case .notice: return "공지 제목을 검색해주세요"
-        case .event: return "이벤트 제목을 검색해주세요"
+        case .cafe: return "banneredit_selector_search_cafe"
+        case .notice: return "banneredit_selector_search_notice"
+        case .event: return "banneredit_selector_search_event"
         }
     }
 }

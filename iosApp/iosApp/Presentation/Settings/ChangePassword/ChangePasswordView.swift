@@ -20,11 +20,11 @@ struct ChangePasswordView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "lock.fill")
                         .foregroundStyle(.white)
-                    Text("새 비밀번호를 설정하세요")
+                    Text(String(localized: String.LocalizationValue("changepw_hero_title"), table: "Localizable"))
                         .font(.headline)
                         .bold()
                         .foregroundStyle(.white)
-                    Text("현재 비밀번호를 확인한 뒤 새 비밀번호를 등록합니다.")
+                    Text(String(localized: String.LocalizationValue("changepw_hero_desc"), table: "Localizable"))
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.92))
                 }
@@ -38,45 +38,45 @@ struct ChangePasswordView: View {
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                settingsCard(title: "입력 정보", symbol: "key.horizontal") {
-                    Text("비밀번호는 전용 화면에서만 변경되며, 변경 전 현재 비밀번호 확인이 필요합니다.")
+                settingsCard(title: String(localized: String.LocalizationValue("changepw_info_title"), table: "Localizable"), symbol: "key.horizontal") {
+                    Text(String(localized: String.LocalizationValue("changepw_info_desc"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ConCafeFormField(
-                        label: "현재 비밀번호",
+                        label: String(localized: String.LocalizationValue("changepw_current_password_label"), table: "Localizable"),
                         text: Binding(
                             get: { viewModel.uiState.currentPassword },
                             set: { viewModel.onAction(.currentPasswordChanged($0)) }
                         ),
-                        placeholder: "현재 비밀번호를 입력하세요"
+                        placeholder: String(localized: String.LocalizationValue("changepw_current_password_placeholder"), table: "Localizable")
                     )
                     ConCafeFormField(
-                        label: "새 비밀번호",
+                        label: String(localized: String.LocalizationValue("changepw_new_password_label"), table: "Localizable"),
                         text: Binding(
                             get: { viewModel.uiState.newPassword },
                             set: { viewModel.onAction(.newPasswordChanged($0)) }
                         ),
-                        placeholder: "8자 이상 입력하세요"
+                        placeholder: String(localized: String.LocalizationValue("changepw_new_password_placeholder"), table: "Localizable")
                     )
                     ConCafeFormField(
-                        label: "새 비밀번호 확인",
+                        label: String(localized: String.LocalizationValue("changepw_new_password_confirm_label"), table: "Localizable"),
                         text: Binding(
                             get: { viewModel.uiState.confirmPassword },
                             set: { viewModel.onAction(.confirmPasswordChanged($0)) }
                         ),
-                        placeholder: "새 비밀번호를 다시 입력하세요"
+                        placeholder: String(localized: String.LocalizationValue("changepw_new_password_confirm_placeholder"), table: "Localizable")
                     )
                 }
-                settingsCard(title: "안내", symbol: "checkmark.shield") {
-                    guideRow("새 비밀번호는 8자 이상이어야 합니다.")
-                    guideRow("새 비밀번호 확인 입력값까지 일치해야 합니다.")
-                    guideRow("변경 즉시 다음 로그인부터 새 비밀번호가 적용됩니다.")
+                settingsCard(title: String(localized: String.LocalizationValue("changepw_guide_title"), table: "Localizable"), symbol: "checkmark.shield") {
+                    guideRow(String(localized: String.LocalizationValue("changepw_guide_1"), table: "Localizable"))
+                    guideRow(String(localized: String.LocalizationValue("changepw_guide_2"), table: "Localizable"))
+                    guideRow(String(localized: String.LocalizationValue("changepw_guide_3"), table: "Localizable"))
                 }
                 Button {
                     viewModel.onAction(.submitTapped)
                 } label: {
-                    Text(viewModel.uiState.isSubmitting ? "변경 중..." : "비밀번호 변경")
+                    Text(viewModel.uiState.isSubmitting ? String(localized: String.LocalizationValue("changepw_submitting"), table: "Localizable") : String(localized: String.LocalizationValue("changepw_submit"), table: "Localizable"))
                         .font(.headline)
                         .fontWeight(.bold)
                         .foregroundStyle(Color(hex: "2B2330"))
@@ -100,15 +100,15 @@ struct ChangePasswordView: View {
                 alertMessage = message
             }
         }
-        .alert("비밀번호 변경", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("changepw_title"), table: "Localizable"), isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { alertMessage = nil }
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
         } message: {
             Text(alertMessage ?? "")
         }
-        .navigationTitle("비밀번호 변경")
+        .navigationTitle(String(localized: String.LocalizationValue("changepw_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 

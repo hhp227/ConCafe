@@ -17,7 +17,7 @@ struct ExternalLinkView: View {
         ExternalLinkContentView(
             uiState: viewModel.uiState
         )
-        .navigationTitle(viewModel.uiState.displayTitle)
+        .navigationTitle(viewModel.uiState.displayTitle.isEmpty ? String(localized: String.LocalizationValue("externallink_title"), table: "Localizable") : viewModel.uiState.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {

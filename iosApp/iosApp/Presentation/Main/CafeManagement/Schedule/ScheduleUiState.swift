@@ -37,12 +37,14 @@ struct ScheduleUiState {
     }
 
     var totalWorkDurationLabel: String {
-        guard isEditingWorking else { return "0시간" }
+        guard isEditingWorking else { return "schedule_duration_hours_only:0" }
         let duration = TimeUtils.computeDurationMinutes(start: editStartTime, end: editEndTime)
         let actual = max(duration - 60, 0)
         let hours = actual / 60
         let minutes = actual % 60
-        return minutes == 0 ? "\(hours)시간" : "\(hours)시간 \(minutes)분"
+        return minutes == 0
+            ? "schedule_duration_hours_only:\(hours)"
+            : "schedule_duration_hours_minutes:\(hours):\(minutes)"
     }
 
     struct CastSummary {

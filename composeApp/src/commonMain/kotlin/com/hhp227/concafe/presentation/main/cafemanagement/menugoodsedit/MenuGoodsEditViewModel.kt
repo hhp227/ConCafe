@@ -34,15 +34,13 @@ class MenuGoodsEditViewModel(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    isEditMode = false,
-                    screenTitle = "새 항목 추가",
-                    saveButtonLabel = "항목 생성"
+                    isEditMode = false
                 )
             }
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, infoMessage = null) }
+            _uiState.update { it.copy(isLoading = true, infoMessageKey = null) }
             when (val result = getCafeDetailUseCase.invoke(cafeId)) {
                 is AppResult.Success -> {
                     val detail = result.data.detail
@@ -52,10 +50,10 @@ class MenuGoodsEditViewModel(
                     when {
                         menu != null -> applyMenu(menu)
                         goods != null -> applyGoods(goods)
-                        else -> showInfoAndStop("편집할 항목 정보를 찾을 수 없습니다.")
+                        else -> showInfoAndStop(MSG_ITEM_NOT_FOUND)
                     }
                 }
-                is AppResult.Failure -> showInfoAndStop("항목 정보를 불러오지 못했습니다.")
+                is AppResult.Failure -> showInfoAndStop(MSG_LOAD_FAILED)
             }
         }
     }
@@ -69,11 +67,11 @@ class MenuGoodsEditViewModel(
     private fun clickSave() {
         val currentState = _uiState.value
         when {
-            currentState.itemName.isBlank() -> showInfo("항목 이름을 입력해주세요.")
-            currentState.price.isBlank() -> showInfo("가격을 입력해주세요.")
-            currentState.price.toIntOrNull() == null -> showInfo("가격은 숫자로 입력해주세요.")
+            currentState.itemName.isBlank() -> showInfo(MSG_ENTER_NAME)
+            currentState.price.isBlank() -> showInfo(MSG_ENTER_PRICE)
+            currentState.price.toIntOrNull() == null -> showInfo(MSG_PRICE_NUMBER_ONLY)
             else -> {
-                _uiState.update { it.copy(infoMessage = null) }
+                _uiState.update { it.copy(infoMessageKey = null) }
                 viewModelScope.launch {
                     val uploadedImageUrl = uploadImage(currentState.imageUrl, "cafe-items")
                     if (!currentState.imageUrl.isNullOrBlank() && uploadedImageUrl == null) {
@@ -96,15 +94,15 @@ class MenuGoodsEditViewModel(
                         is AppResult.Success -> {
                             _event.emit(MenuGoodsEditEvent.NavigateBack)
                         }
-                        is AppResult.Failure -> showInfo("항목 저장에 실패했습니다.")
+                        is AppResult.Failure -> showInfo(MSG_SAVE_FAILED)
                     }
                 }
             }
         }
     }
 
-    private fun showInfo(message: String) {
-        _uiState.update { it.copy(infoMessage = message) }
+    private fun showInfo(messageKey: String) {
+        _uiState.update { it.copy(infoMessageKey = messageKey) }
     }
 
     private suspend fun uploadImage(imageUrl: String?, folder: String): String? {
@@ -114,7 +112,7 @@ class MenuGoodsEditViewModel(
             is AppResult.Failure -> {
                 _uiState.update {
                     it.copy(
-                        infoMessage = "이미지를 업로드하지 못했습니다."
+                        infoMessageKey = MSG_IMAGE_UPLOAD_FAILED
                     )
                 }
                 null
@@ -127,8 +125,6 @@ class MenuGoodsEditViewModel(
             it.copy(
                 isLoading = false,
                 isEditMode = true,
-                screenTitle = "항목 편집",
-                saveButtonLabel = "항목 저장",
                 itemName = menu.name,
                 price = menu.price.toString(),
                 selectedCategoryId = when (menu.category.lowercase()) {
@@ -147,8 +143,6 @@ class MenuGoodsEditViewModel(
             it.copy(
                 isLoading = false,
                 isEditMode = true,
-                screenTitle = "항목 편집",
-                saveButtonLabel = "항목 저장",
                 itemName = goods.name,
                 price = goods.price.toString(),
                 selectedCategoryId = "goods",
@@ -159,11 +153,11 @@ class MenuGoodsEditViewModel(
         }
     }
 
-    private fun showInfoAndStop(message: String) {
+    private fun showInfoAndStop(messageKey: String) {
         _uiState.update {
             it.copy(
                 isLoading = false,
-                infoMessage = message
+                infoMessageKey = messageKey
             )
         }
     }
@@ -171,7 +165,7 @@ class MenuGoodsEditViewModel(
     fun onAction(action: MenuGoodsEditAction) {
         when (action) {
             MenuGoodsEditAction.ClickBack -> clickBack()
-            MenuGoodsEditAction.ClickPhotoUpload -> showInfo("이미지 업로드는 다음 단계에서 연결됩니다.")
+            MenuGoodsEditAction.ClickPhotoUpload -> showInfo(MSG_IMAGE_UPLOAD_NEXT_STEP)
             is MenuGoodsEditAction.ChangeName -> _uiState.update { it.copy(itemName = action.value) }
             is MenuGoodsEditAction.ChangePrice -> _uiState.update { it.copy(price = action.value.filter(Char::isDigit)) }
             is MenuGoodsEditAction.SelectPhoto -> _uiState.update { it.copy(imageUrl = action.imageUrl) }
@@ -179,11 +173,22 @@ class MenuGoodsEditViewModel(
             is MenuGoodsEditAction.ChangeDescription -> _uiState.update { it.copy(description = action.value) }
             is MenuGoodsEditAction.ToggleStock -> _uiState.update { it.copy(isInStock = action.isInStock) }
             MenuGoodsEditAction.ClickSave -> clickSave()
-            MenuGoodsEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
+            MenuGoodsEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessageKey = null) }
         }
     }
 
     init {
         loadInitialValue()
+    }
+
+    companion object {
+        private const val MSG_ITEM_NOT_FOUND = "menugoods_edit_info_item_not_found"
+        private const val MSG_LOAD_FAILED = "menugoods_edit_info_load_failed"
+        private const val MSG_ENTER_NAME = "menugoods_edit_info_enter_name"
+        private const val MSG_ENTER_PRICE = "menugoods_edit_info_enter_price"
+        private const val MSG_PRICE_NUMBER_ONLY = "menugoods_edit_info_price_number_only"
+        private const val MSG_SAVE_FAILED = "menugoods_edit_info_save_failed"
+        private const val MSG_IMAGE_UPLOAD_FAILED = "menugoods_edit_info_image_upload_failed"
+        private const val MSG_IMAGE_UPLOAD_NEXT_STEP = "menugoods_edit_info_image_upload_next_step"
     }
 }

@@ -16,7 +16,7 @@ struct SignInLogoSection: View {
                 .frame(width: 96, height: 96)
                 .clipShape(Circle())
             ConCafeLogo(color: Color(hex: "DA4E84"))
-            Text("컨셉카페의 모든 것")
+            Text(String(localized: String.LocalizationValue("signin_logo_subtitle"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -31,7 +31,7 @@ struct SignInDivider: View {
             Rectangle()
                 .fill(Color(hex: "E5DEE6"))
                 .frame(height: 1)
-            Text("또는")
+            Text(String(localized: String.LocalizationValue("signin_divider_or"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Rectangle()

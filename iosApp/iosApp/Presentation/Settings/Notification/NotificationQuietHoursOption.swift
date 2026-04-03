@@ -17,22 +17,22 @@ enum NotificationQuietHoursOption: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .off:
-            return "즉시 받기"
+            return String(localized: String.LocalizationValue("notification_quiet_off_title"), table: "Localizable")
         case .night:
-            return "밤 시간만 조용히"
+            return String(localized: String.LocalizationValue("notification_quiet_night_title"), table: "Localizable")
         case .allDay:
-            return "요약만 받기"
+            return String(localized: String.LocalizationValue("notification_quiet_all_day_title"), table: "Localizable")
         }
     }
 
     var description: String {
         switch self {
         case .off:
-            return "중요 알림을 포함해 들어오는 즉시 알려드려요."
+            return String(localized: String.LocalizationValue("notification_quiet_off_desc"), table: "Localizable")
         case .night:
-            return "밤 11시부터 오전 8시까지는 조용히 보관해요."
+            return String(localized: String.LocalizationValue("notification_quiet_night_desc"), table: "Localizable")
         case .allDay:
-            return "하루 동안 모아 저녁 시간에 한 번 정리해드려요."
+            return String(localized: String.LocalizationValue("notification_quiet_all_day_desc"), table: "Localizable")
         }
     }
 }

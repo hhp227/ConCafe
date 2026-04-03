@@ -21,11 +21,11 @@ struct ResetPasswordView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "envelope.fill")
                         .foregroundStyle(.white)
-                    Text("이메일로 비밀번호를 재설정하세요")
+                    Text(String(localized: String.LocalizationValue("reset_password_hero_title"), table: "Localizable"))
                         .font(.headline)
                         .bold()
                         .foregroundStyle(.white)
-                    Text("가입한 이메일 주소로 재설정 링크를 보내드립니다.")
+                    Text(String(localized: String.LocalizationValue("reset_password_hero_desc"), table: "Localizable"))
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.92))
                 }
@@ -39,18 +39,18 @@ struct ResetPasswordView: View {
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                settingsCard(title: "입력 정보", symbol: "envelope") {
-                    Text("계정에 등록된 이메일을 입력하면 비밀번호 재설정 메일을 발송합니다.")
+                settingsCard(title: String(localized: String.LocalizationValue("reset_password_input_title"), table: "Localizable"), symbol: "envelope") {
+                    Text(String(localized: String.LocalizationValue("reset_password_input_desc"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ConCafeFormField(
-                        label: "이메일",
+                        label: String(localized: String.LocalizationValue("reset_password_email_label"), table: "Localizable"),
                         text: Binding(
                             get: { viewModel.uiState.email },
                             set: { viewModel.onAction(.emailChanged($0)) }
                         ),
-                        placeholder: "가입한 이메일을 입력하세요",
+                        placeholder: String(localized: String.LocalizationValue("reset_password_email_placeholder"), table: "Localizable"),
                         keyboardType: .emailAddress,
                         trailingContent: {
                             Image(systemName: "envelope")
@@ -58,15 +58,15 @@ struct ResetPasswordView: View {
                         }
                     )
                 }
-                settingsCard(title: "안내", symbol: "checkmark.shield") {
-                    guideRow("메일 수신까지 1~3분 정도 소요될 수 있습니다.")
-                    guideRow("메일이 보이지 않으면 스팸함을 확인해 주세요.")
-                    guideRow("링크를 통해 새 비밀번호를 설정할 수 있습니다.")
+                settingsCard(title: String(localized: String.LocalizationValue("reset_password_guide_title"), table: "Localizable"), symbol: "checkmark.shield") {
+                    guideRow(String(localized: String.LocalizationValue("reset_password_guide_1"), table: "Localizable"))
+                    guideRow(String(localized: String.LocalizationValue("reset_password_guide_2"), table: "Localizable"))
+                    guideRow(String(localized: String.LocalizationValue("reset_password_guide_3"), table: "Localizable"))
                 }
                 Button {
                     viewModel.onAction(.submitTapped)
                 } label: {
-                    Text(viewModel.uiState.isSubmitting ? "발송 중..." : "재설정 메일 발송")
+                    Text(viewModel.uiState.isSubmitting ? String(localized: String.LocalizationValue("reset_password_sending"), table: "Localizable") : String(localized: String.LocalizationValue("reset_password_submit"), table: "Localizable"))
                         .font(.headline)
                         .fontWeight(.bold)
                         .foregroundStyle(Color(hex: "2B2330"))
@@ -90,15 +90,15 @@ struct ResetPasswordView: View {
                 alertMessage = message
             }
         }
-        .alert("비밀번호 재설정", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("reset_password_title"), table: "Localizable"), isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { alertMessage = nil }
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
         } message: {
             Text(alertMessage ?? "")
         }
-        .navigationTitle("비밀번호 재설정")
+        .navigationTitle(String(localized: String.LocalizationValue("reset_password_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 

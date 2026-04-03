@@ -26,34 +26,6 @@ data class NoticeEventUiState(
     val formPinned: Boolean = false,
     val formReservedAt: String = ""
 ) {
-    val formSheetTitle: String
-        get() = when {
-            selectedTab == NoticeEventTab.NOTICE && formEditingId != null -> "공지사항 수정"
-            selectedTab == NoticeEventTab.NOTICE -> "공지사항 등록"
-            formEditingId != null -> "이벤트 수정"
-            else -> "이벤트 등록"
-        }
-
-    val formTitlePlaceholder: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "제목을 입력해 주세요" else "이벤트 제목을 입력해 주세요"
-
-    val formContentPlaceholder: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "공지사항 내용을 입력해 주세요" else "이벤트 상세 내용을 입력해 주세요"
-
-    val formSubmitLabel: String
-        get() = when {
-            selectedTab == NoticeEventTab.NOTICE && formEditingId != null -> "수정하기"
-            selectedTab == NoticeEventTab.NOTICE -> "등록하기"
-            formEditingId != null -> "이벤트 수정하기"
-            else -> "이벤트 등록하기"
-        }
-
-    val formScheduleLabel: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "게시글 예약" else "이벤트 기간"
-
-    val formSchedulePlaceholder: String
-        get() = if (selectedTab == NoticeEventTab.NOTICE) "게시 날짜 및 시간 선택" else "이벤트 기간 선택"
-
     val showsPinnedSection: Boolean
         get() = selectedTab == NoticeEventTab.NOTICE
 
@@ -62,12 +34,6 @@ data class NoticeEventUiState(
 
     val hasAttachedImage: Boolean
         get() = formImageUrl.isNotBlank()
-
-    val formImageTitle: String
-        get() = if (hasAttachedImage) "대표 이미지 1장 첨부됨" else "대표 이미지 첨부"
-
-    val formImageDescription: String
-        get() = "이벤트 카드에 노출되는 대표 이미지입니다. 한 장만 첨부할 수 있습니다."
 
     val isCurrentTabLoading: Boolean
         get() = if (selectedTab == NoticeEventTab.NOTICE) isLoadingNotices else isLoadingEvents
@@ -82,8 +48,8 @@ data class NoticeEventUiState(
         get() = !isSubmittingForm && formTitle.isNotBlank() && formContent.isNotBlank() && (!showsImageSection || hasAttachedImage)
 }
 
-enum class NoticeEventTab(val title: String) {
-    NOTICE("공지사항"),
-    EVENT("이벤트")
+enum class NoticeEventTab {
+    NOTICE,
+    EVENT
 }
 
