@@ -20,8 +20,6 @@ struct FanManagementView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("팬 관리")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAction(.refresh)
         }

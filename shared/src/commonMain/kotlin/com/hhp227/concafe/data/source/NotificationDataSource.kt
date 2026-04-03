@@ -5,8 +5,6 @@ import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.UserNotificationSettings
 
 interface NotificationDataSource {
-    val notifications: MutableList<AppNotification>
-
     suspend fun getNotifications(userId: String, cursor: String?, pageSize: Int): PagedResult<AppNotification>
 
     suspend fun markNotificationAsRead(userId: String, notificationId: String)

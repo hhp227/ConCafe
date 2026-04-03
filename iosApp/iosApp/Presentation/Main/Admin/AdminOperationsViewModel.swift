@@ -440,7 +440,7 @@ final class AdminOperationsViewModel: ObservableObject {
 }
 
 private let adminBannerMenuId = "banner"
-private let claimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+private let claimPollingIntervalNanoseconds: UInt64 = 60_000_000_000
 private let adminInquiryPageSize: Int32 = 10
 
 private struct AdminPendingSnapshot {

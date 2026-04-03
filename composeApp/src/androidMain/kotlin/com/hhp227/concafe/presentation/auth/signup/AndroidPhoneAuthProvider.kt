@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.auth.signup
 import android.app.Activity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
@@ -32,8 +33,13 @@ class AndroidPhoneAuthProvider(
 
                 override fun onVerificationFailed(e: FirebaseException) {
                     if (continuation.isActive) {
+                        val reason = if (e is FirebaseAuthException) {
+                            e.errorCode.ifBlank { e.message ?: "phone verification failed" }
+                        } else {
+                            e.message ?: "phone verification failed"
+                        }
                         continuation.resume(
-                            AppResult.Failure(AppError.ValidationFailed(e.message ?: "phone verification failed"))
+                            AppResult.Failure(AppError.ValidationFailed(reason))
                         )
                     }
                 }
@@ -66,7 +72,8 @@ class AndroidPhoneAuthProvider(
             auth.signOut()
             AppResult.Success(Unit)
         } catch (e: FirebaseAuthInvalidCredentialsException) {
-            AppResult.Failure(AppError.ValidationFailed("invalid code"))
+            val reason = e.errorCode.ifBlank { "invalid code" }
+            AppResult.Failure(AppError.ValidationFailed(reason))
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }

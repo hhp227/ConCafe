@@ -577,4 +577,4 @@ private data class ClaimUiState(
     val claimSheet: FanManagementUiState.CastClaimSheet?
 )
 
-private const val CLAIM_STATUS_POLLING_INTERVAL_MILLIS = 5_000L
+private const val CLAIM_STATUS_POLLING_INTERVAL_MILLIS = 30_000L

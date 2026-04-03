@@ -52,61 +52,134 @@ class GetMyInfoUseCase(
             } else {
                 val loaded = coroutineScope {
                     val popularCafesDeferred = async {
-                        fetchPopularCafes(limit = 3)
+                        runCatching {
+                            fetchPopularCafes(limit = 3)
+                        }.getOrElse { emptyList() }
                     }
                     val firestoreUserDeferred = async {
-                        userRepository.getUser(currentUser.id)
+                        runCatching {
+                            userRepository.getUser(currentUser.id)
+                        }.getOrElse { currentUser }
                     }
                     val summaryDeferred = async {
-                        userRepository.getMyPageSummary(currentUser.id)
+                        runCatching {
+                            userRepository.getMyPageSummary(currentUser.id)
+                        }.getOrElse {
+                            MyPageSummary(
+                                userId = currentUser.id,
+                                totalVisits = 0,
+                                favoritesCount = 0,
+                                followedCastsCount = 0,
+                                badgesCount = 0,
+                                level = 1
+                            )
+                        }
                     }
                     val recentVisitCafeIdsDeferred = async {
-                        visitRepository.getVisits(
-                            userId = currentUser.id,
-                            cursor = null,
-                            pageSize = 100
-                        ).items
+                        runCatching {
+                            visitRepository.getVisits(
+                                userId = currentUser.id,
+                                cursor = null,
+                                pageSize = 100
+                            ).items
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase getVisits failed: ${error.message}")
+                            emptyList()
+                        }
                             .map { it.cafeId }
                             .distinct()
                             .take(3)
                     }
                     val favoriteCafeIdsDeferred = async {
-                        cafeRepository.getFavoriteCafeIds(currentUser.id)
+                        runCatching {
+                            cafeRepository.getFavoriteCafeIds(currentUser.id)
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase getFavoriteCafeIds failed: ${error.message}")
+                            emptyList()
+                        }
                     }
                     val followedCastIdsDeferred = async {
-                        castRepository.getFollowedCastIds(currentUser.id)
+                        runCatching {
+                            castRepository.getFollowedCastIds(currentUser.id)
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase getFollowedCastIds failed: ${error.message}")
+                            emptyList()
+                        }
                     }
                     val firestoreUser = firestoreUserDeferred.await()
                     val castDetailDeferred = if (firestoreUser.role == UserRole.CAST) {
                         async {
-                            castRepository.getCastByLinkedUserId(currentUser.id)?.id?.let { castId ->
-                                castRepository.getCastDetail(castId)
+                            val castDetail = runCatching {
+                                castRepository.getCastByLinkedUserId(firestoreUser.id)?.id?.let { castId ->
+                                    castRepository.getCastDetail(castId)
+                                }
+                            }.onFailure { error ->
+                                println(
+                                    "TEST, GetMyInfoUseCase castDetail load failed: " +
+                                        "userId=${firestoreUser.id} error=${error.message}"
+                                )
+                            }.getOrNull()
+                            if (castDetail == null) {
+                                println(
+                                    "TEST, GetMyInfoUseCase castDetail empty: userId=${firestoreUser.id}"
+                                )
                             }
+                            castDetail
                         }
                     } else {
                         null
                     }
                     val ownedCafesDeferred = if (firestoreUser.role == UserRole.CAFE_OWNER) {
                         async {
-                            cafeManagementRepository.getOwnedCafes(currentUser.id)
+                            runCatching {
+                                cafeManagementRepository.getOwnedCafes(currentUser.id)
+                            }.getOrElse { emptyList() }
                         }
                     } else {
                         null
                     }
                     val recentVisitsDeferred = async {
-                        fetchCafesByIdsInOrder(recentVisitCafeIdsDeferred.await())
+                        runCatching {
+                            fetchCafesByIdsInOrder(recentVisitCafeIdsDeferred.await())
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase recentVisits resolve failed: ${error.message}")
+                            emptyList()
+                        }
                     }
                     val favoritesDeferred = async {
-                        cafeRepository.getCafesByIds(favoriteCafeIdsDeferred.await())
-                            .sortedByDescending { it.ratingAvg }
+                        runCatching {
+                            cafeRepository.getCafesByIds(favoriteCafeIdsDeferred.await())
+                                .sortedByDescending { it.ratingAvg }
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase favorites resolve failed: ${error.message}")
+                            emptyList()
+                        }
                     }
                     val followedMaidsDeferred = async {
-                        castRepository.getFollowedCasts(currentUser.id)
-                            .sortedByDescending { it.followerCount }
+                        runCatching {
+                            castRepository.getFollowedCasts(currentUser.id)
+                                .sortedByDescending { it.followerCount }
+                        }.getOrElse { error ->
+                            println("TEST, GetMyInfoUseCase followedCasts resolve failed: ${error.message}")
+                            emptyList()
+                        }
                     }
                     val followedCastCountDeferred = async {
                         followedCastIdsDeferred.await().size
                     }
+                    val recentVisitCafeIds = recentVisitCafeIdsDeferred.await()
+                    val favoriteCafeIds = favoriteCafeIdsDeferred.await()
+                    val followedCastIds = followedCastIdsDeferred.await()
+                    val recentVisits = recentVisitsDeferred.await()
+                    val favorites = favoritesDeferred.await()
+                    val followedMaids = followedMaidsDeferred.await()
+                    println(
+                        "TEST, GetMyInfoUseCase counts: " +
+                            "userId=${currentUser.id} " +
+                            "recentVisitCafeIds=${recentVisitCafeIds.size} recentVisits=${recentVisits.size} " +
+                            "favoriteCafeIds=${favoriteCafeIds.size} favorites=${favorites.size} " +
+                            "followedCastIds=${followedCastIds.size} followedMaids=${followedMaids.size}"
+                    )
                     LoadedMyInfoDependencies(
                         popularCafes = popularCafesDeferred.await(),
                         firestoreUser = firestoreUser,
@@ -115,9 +188,9 @@ class GetMyInfoUseCase(
                         ),
                         castDetail = castDetailDeferred?.await(),
                         ownedCafes = ownedCafesDeferred?.await().orEmpty(),
-                        recentVisits = recentVisitsDeferred.await(),
-                        favorites = favoritesDeferred.await(),
-                        followedMaids = followedMaidsDeferred.await()
+                        recentVisits = recentVisits,
+                        favorites = favorites,
+                        followedMaids = followedMaids
                     )
                 }
                 val unlockedBadges = loaded.summary.badgesCount.coerceAtLeast(0)

@@ -4,6 +4,7 @@ import UIKit
 import UserNotifications
 import FirebaseCore
 import FirebaseMessaging
+import FirebaseAuth
 import KakaoSDKCommon
 import KakaoSDKAuth
 
@@ -42,7 +43,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         open url: URL,
         options: [UIApplication.OpenURLOptionsKey : Any] = [:]
     ) -> Bool {
-        if AuthApi.isKakaoTalkLoginUrl(url) {
+        if Auth.auth().canHandle(url) {
+            return true
+        } else if AuthApi.isKakaoTalkLoginUrl(url) {
             return AuthController.handleOpenUrl(url: url)
         } else {
             return false
@@ -56,7 +59,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         let callbackUrl = userActivity.webpageURL
 
-        if let callbackUrl, AuthApi.isKakaoTalkLoginUrl(callbackUrl) {
+        if let callbackUrl, Auth.auth().canHandle(callbackUrl) {
+            return true
+        } else if let callbackUrl, AuthApi.isKakaoTalkLoginUrl(callbackUrl) {
             return AuthController.handleOpenUrl(url: callbackUrl)
         } else {
             return false
@@ -67,7 +72,27 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
+        Auth.auth().setAPNSToken(deviceToken, type: .unknown)
         Messaging.messaging().apnsToken = deviceToken
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        print("APNs registration failed: \(error.localizedDescription)")
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        if Auth.auth().canHandleNotification(userInfo) {
+            completionHandler(.noData)
+        } else {
+            completionHandler(.newData)
+        }
     }
 
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {

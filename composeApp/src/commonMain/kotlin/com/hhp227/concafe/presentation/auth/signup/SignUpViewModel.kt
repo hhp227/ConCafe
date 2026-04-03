@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.hhp227.concafe.core.util.normalizeKoreanPhoneToE164
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
@@ -157,14 +158,22 @@ class SignUpViewModel(
 
     private fun sendVerification() {
         val phone = uiState.value.phone.trim()
+        val normalizedPhone = normalizeKoreanPhoneToE164(phone)
 
-        if (phone.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "휴대폰 번호를 입력해주세요.", infoMessage = null) }
+        if (normalizedPhone == null) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678",
+                    infoMessage = null
+                )
+            }
             return
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (phoneAuthProvider.sendCode(phone)) {
+            val result = phoneAuthProvider.sendCode(normalizedPhone)
+
+            when (result) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -180,7 +189,7 @@ class SignUpViewModel(
                         it.copy(
                             isLoading = false,
                             hasRequestedVerification = false,
-                            errorMessage = "휴대폰 번호를 다시 확인해주세요.",
+                            errorMessage = resolvePhoneVerificationRequestErrorMessage(result.error),
                             infoMessage = null
                         )
                     }
@@ -190,9 +199,33 @@ class SignUpViewModel(
     }
 
     private fun verifyCode() {
+        val code = uiState.value.verificationCode.filter { char -> char.isDigit() }
+
+        if (code.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isPhoneVerified = false,
+                    errorMessage = "인증번호를 입력해주세요.",
+                    infoMessage = null
+                )
+            }
+            return
+        } else if (code.length != 6) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isPhoneVerified = false,
+                    errorMessage = "인증번호 6자리를 입력해주세요.",
+                    infoMessage = null
+                )
+            }
+            return
+        }
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (phoneAuthProvider.verifyCode(uiState.value.verificationCode)) {
+            when (val result = phoneAuthProvider.verifyCode(code)) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -209,7 +242,7 @@ class SignUpViewModel(
                         it.copy(
                             isLoading = false,
                             isPhoneVerified = false,
-                            errorMessage = "인증번호가 일치하지 않습니다.",
+                            errorMessage = resolvePhoneVerificationCodeErrorMessage(result.error),
                             infoMessage = null
                         )
                     }
@@ -255,6 +288,47 @@ class SignUpViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private fun resolvePhoneVerificationRequestErrorMessage(error: AppError): String {
+        val reason = when (error) {
+            is AppError.ValidationFailed -> error.reason.uppercase()
+            is AppError.Unknown -> (error.cause ?: "").uppercase()
+            else -> ""
+        }
+        return if (reason.contains("INVALID_PHONE_NUMBER")) {
+            "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
+        } else if (reason.contains("QUOTA_EXCEEDED")
+            || reason.contains("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+            "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if (reason.contains("CAPTCHA_CHECK_FAILED")) {
+            "인증 검증에 실패했습니다. 잠시 후 다시 시도해주세요."
+        } else if (reason.contains("MISSING_APP_TOKEN")) {
+            "앱 인증 설정이 필요합니다. 앱을 재실행 후 다시 시도해주세요."
+        } else if (reason.contains("APP_NOT_VERIFIED")) {
+            "앱 인증 상태를 확인할 수 없습니다. 잠시 후 다시 시도해주세요."
+        } else {
+            "인증번호 요청에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해주세요."
+        }
+    }
+
+    private fun resolvePhoneVerificationCodeErrorMessage(error: AppError): String {
+        val reason = when (error) {
+            is AppError.ValidationFailed -> error.reason.uppercase()
+            is AppError.Unknown -> (error.cause ?: "").uppercase()
+            else -> ""
+        }
+
+        return if (reason.contains("INVALID_VERIFICATION_CODE")) {
+            "인증번호가 일치하지 않습니다."
+        } else if (reason.contains("SESSION_EXPIRED")
+            || reason.contains("INVALID_VERIFICATION_ID")) {
+            "인증 세션이 만료되었습니다. 인증번호를 다시 요청해주세요."
+        } else if (reason.contains("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+            "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else {
+            "인증번호 확인에 실패했습니다. 다시 시도해주세요."
         }
     }
 
@@ -447,9 +521,7 @@ class SignUpViewModel(
             normalizedReason.contains("NETWORK")
         ) {
             "네트워크 오류로 회원가입에 실패했습니다."
-        } else if (reason.isNotBlank()) {
-            reason
-        } else {
+        } else reason.ifBlank {
             "회원가입에 실패했습니다. 입력값을 확인해주세요."
         }
     }
