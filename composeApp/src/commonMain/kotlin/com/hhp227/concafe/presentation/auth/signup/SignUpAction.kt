@@ -22,6 +22,7 @@ sealed interface SignUpAction {
     data object ClickSubmit : SignUpAction
     data class ClickSocialSignUp(val provider: SignUpProvider) : SignUpAction
     data object ClickSignInInstead : SignUpAction
+    data object CleanupIncompleteAccount : SignUpAction
 }
 
 enum class SignUpProvider {

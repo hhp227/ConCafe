@@ -33,6 +33,7 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +57,14 @@ fun MainScreen(
 
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.event.collectLatest { event ->
+            when (event) {
+                is MainEvent.ShowError -> Unit
+                MainEvent.NavigateToSignUp -> onNavigationAction(NavigationAction.NavigateToSignUp)
+            }
+        }
     }
     LaunchedEffect(initialTab) {
         if (initialTab != null) {

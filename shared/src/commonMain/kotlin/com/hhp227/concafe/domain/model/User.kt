@@ -7,5 +7,7 @@ data class User(
     val profileImage: String?,
     val role: UserRole,
     val banned: Boolean,
-    val createdAt: String
+    val createdAt: String,
+    val phoneNumber: String? = null,
+    val signupCompleted: Boolean = true
 )

@@ -9,4 +9,5 @@ import Foundation
 
 enum MainEvent {
     case showError(message: String)
+    case navigateToSignUp
 }
