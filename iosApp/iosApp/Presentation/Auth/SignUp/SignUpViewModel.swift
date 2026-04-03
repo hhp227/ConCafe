@@ -277,6 +277,7 @@ class SignUpViewModel: ObservableObject {
     private func resolvePhoneVerificationRequestErrorMessage(_ error: Error) -> String {
         let nsError = error as NSError
         let authErrorCode = AuthErrorCode.Code(rawValue: nsError.code)
+        let detailMessage = nsError.localizedDescription
 
         if authErrorCode == .invalidPhoneNumber {
             return "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
@@ -288,8 +289,14 @@ class SignUpViewModel: ObservableObject {
             return "앱 인증 설정이 필요합니다. 앱을 재실행 후 다시 시도해주세요."
         } else if authErrorCode == .appNotVerified {
             return "앱 인증 상태를 확인할 수 없습니다. 잠시 후 다시 시도해주세요."
+        } else if authErrorCode == .networkError {
+            return "네트워크 오류로 인증번호 요청에 실패했습니다. 네트워크 상태를 확인해주세요."
+        } else if authErrorCode == .webContextCancelled {
+            return "인증 웹 화면이 취소되었습니다. 다시 시도해주세요."
+        } else if authErrorCode == .webContextAlreadyPresented {
+            return "인증 화면이 이미 열려 있습니다. 잠시 후 다시 시도해주세요."
         } else {
-            return "인증번호 요청에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해주세요."
+            return "인증번호 요청에 실패했습니다. (\(nsError.code)) \(detailMessage)"
         }
     }
 
