@@ -36,6 +36,8 @@ class SignUpViewModel: ObservableObject {
 
     private var phoneVerificationID: String?
 
+    private var pendingPhoneCredential: PhoneAuthCredential?
+
     private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 
     @Published private(set) var uiState = SignUpUiState.empty
@@ -55,6 +57,8 @@ class SignUpViewModel: ObservableObject {
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        phoneVerificationID = nil
+        pendingPhoneCredential = nil
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
         uiState.isCafeSearchVisible = false
@@ -76,6 +80,8 @@ class SignUpViewModel: ObservableObject {
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        phoneVerificationID = nil
+        pendingPhoneCredential = nil
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
         uiState.isCafeSearchVisible = false
@@ -87,6 +93,7 @@ class SignUpViewModel: ObservableObject {
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        pendingPhoneCredential = nil
         clearMessages()
     }
 
@@ -137,6 +144,7 @@ class SignUpViewModel: ObservableObject {
             do {
                 let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(requestedPhone, uiDelegate: nil)
                 phoneVerificationID = verificationID
+                pendingPhoneCredential = nil
                 uiState.isLoading = false
                 uiState.hasRequestedVerification = true
                 uiState.infoMessage = "인증번호가 전송되었습니다."
@@ -156,32 +164,23 @@ class SignUpViewModel: ObservableObject {
             uiState.infoMessage = nil
             return
         }
+        let verificationCode = uiState.verificationCode.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        uiState.isLoading = true
-        clearMessages()
-
-        requestTask?.cancel()
-        requestTask = Task {
-            do {
-                let credential = PhoneAuthProvider.provider().credential(
-                    withVerificationID: verificationID,
-                    verificationCode: uiState.verificationCode
-                )
-                try await Auth.auth().signIn(with: credential)
-                try Auth.auth().signOut()
-                uiState.isLoading = false
-                uiState.hasRequestedVerification = true
-                uiState.isPhoneVerified = true
-                uiState.errorMessage = nil
-                uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
-            } catch {
-                if Task.isCancelled { return }
-                uiState.isLoading = false
-                uiState.isPhoneVerified = false
-                uiState.errorMessage = "인증번호가 일치하지 않습니다."
-                uiState.infoMessage = nil
-            }
+        if verificationCode.isEmpty {
+            uiState.errorMessage = "인증번호를 입력해주세요."
+            uiState.infoMessage = nil
+            return
         }
+
+        clearMessages()
+        pendingPhoneCredential = PhoneAuthProvider.provider().credential(
+            withVerificationID: verificationID,
+            verificationCode: verificationCode
+        )
+        uiState.hasRequestedVerification = true
+        uiState.isPhoneVerified = true
+        uiState.errorMessage = nil
+        uiState.infoMessage = "휴대폰 인증이 확인되었습니다."
     }
 
     private func submit() {
@@ -209,6 +208,12 @@ class SignUpViewModel: ObservableObject {
                 )
 
                 if result is AppResultSuccess<AnyObject> {
+                    let phoneLinkResult = await linkPhoneCredentialIfNeeded(role: role)
+
+                    if phoneLinkResult == false {
+                        uiState.isLoading = false
+                        return
+                    }
                     await createOwnerCafeClaimIfNeeded(role: role, selectedCafeId: selectedCafeId)
                     uiState.isLoading = false
                     event.send(.signedUp)
@@ -224,6 +229,48 @@ class SignUpViewModel: ObservableObject {
                 uiState.isLoading = false
                 uiState.errorMessage = error.localizedDescription
             }
+        }
+    }
+
+    private func linkPhoneCredentialIfNeeded(role: UserRole) async -> Bool {
+        if role != .cafeOwner {
+            return true
+        }
+        guard let credential = pendingPhoneCredential else {
+            uiState.errorMessage = "휴대폰 인증을 다시 진행해주세요."
+            uiState.infoMessage = nil
+            return false
+        }
+        guard let currentUser = Auth.auth().currentUser else {
+            uiState.errorMessage = "로그인 세션을 확인할 수 없습니다. 다시 시도해주세요."
+            uiState.infoMessage = nil
+            return false
+        }
+
+        do {
+            _ = try await currentUser.link(with: credential)
+            phoneVerificationID = nil
+            pendingPhoneCredential = nil
+            return true
+        } catch {
+            uiState.errorMessage = resolvePhoneLinkErrorMessage(error)
+            uiState.infoMessage = nil
+            return false
+        }
+    }
+
+    private func resolvePhoneLinkErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        let authErrorCode = AuthErrorCode(rawValue: nsError.code)
+
+        if authErrorCode == .credentialAlreadyInUse {
+            return "이미 다른 계정에 연결된 휴대폰 번호입니다."
+        } else if authErrorCode == .invalidVerificationCode {
+            return "인증번호가 올바르지 않습니다."
+        } else if authErrorCode == .invalidVerificationID {
+            return "인증 세션이 만료되었습니다. 다시 요청해주세요."
+        } else {
+            return "휴대폰 번호 연결에 실패했습니다. 다시 시도해주세요."
         }
     }
 
