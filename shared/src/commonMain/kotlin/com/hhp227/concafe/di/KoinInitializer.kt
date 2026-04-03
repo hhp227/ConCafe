@@ -79,6 +79,7 @@ import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
+import com.hhp227.concafe.domain.usecase.CompleteSignUpForCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
@@ -523,6 +524,13 @@ fun resolveRestoreSessionUseCase(): RestoreSessionUseCase {
 }
 
 fun resolveSignUpUseCase(): SignUpUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCompleteSignUpForCurrentUserUseCase(): CompleteSignUpForCurrentUserUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

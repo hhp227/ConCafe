@@ -46,6 +46,7 @@ class FakeCafeRegistrationClaimRepository(
             claimId = claim.claimId,
             requesterUserId = userId,
             requesterNickname = user.nickname,
+            approvedCafeId = null,
             cafeName = claim.cafeName,
             location = "${claim.region.city} ${claim.region.address}",
             requestedAt = claim.requestedAt,
@@ -115,7 +116,7 @@ class FakeCafeRegistrationClaimRepository(
             period = "승인 완료",
             statusLabel = "노출 준비"
         )
-        return resolved.preview
+        return resolved.preview.copy(approvedCafeId = newCafeId)
     }
 
     override suspend fun rejectCafeRegistrationClaim(claimId: String, reviewedBy: String): PendingCafeRegistrationClaimPreview {
@@ -163,6 +164,7 @@ class FakeCafeRegistrationClaimRepository(
             claimId = claimId,
             requesterUserId = userId,
             requesterNickname = requesterNickname,
+            approvedCafeId = null,
             cafeName = cafeName,
             location = "${region.city} ${region.address}",
             requestedAt = requestedAt,

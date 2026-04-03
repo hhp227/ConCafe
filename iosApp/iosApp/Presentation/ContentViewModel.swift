@@ -134,4 +134,4 @@ final class ContentViewModel: ObservableObject {
     }
 }
 
-private let unreadNotificationPollIntervalNanoseconds: UInt64 = 30_000_000_000
+private let unreadNotificationPollIntervalNanoseconds: UInt64 = 60_000_000_000

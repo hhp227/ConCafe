@@ -1,51 +1,42 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.CastDataSource
-import com.hhp227.concafe.data.source.NoticeDataSource
-import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.CafeRemoteDataSource
+import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
 
 class CafeManagementRepositoryImpl(
-    private val authDataSource: AuthDataSource,
-    private val cafeDataSource: CafeDataSource,
-    private val castDataSource: CastDataSource,
-    private val noticeDataSource: NoticeDataSource,
+    private val cafeRemoteDataSource: CafeRemoteDataSource,
+    private val castRemoteDataSource: CastRemoteDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
     override suspend fun getOwnedCafes(userId: String): List<CafeManagementData.OwnedCafeSummary> {
-        val hadCachedOwnedCafeIds = cafeDataSource.ownedCafeIdsByUser.containsKey(userId)
-        val refreshResult = runCatching {
-            firestoreSyncDataSource.refreshCafeManagementData(userId)
-        }
-
-        if (refreshResult.isFailure && !hadCachedOwnedCafeIds) {
-            throw refreshResult.exceptionOrNull() ?: IllegalStateException("failed to load cafe management data")
-        }
-        val currentUser = authDataSource.findUserById(userId)
+        val currentUser = firestoreSyncDataSource.fetchUser(userId)
+        val allCafes = cafeRemoteDataSource.fetchAllCafes()
+        val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
-            cafeDataSource.cafes
+            allCafes
         } else {
-            cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
+            allCafes.filter { ownedCafeIds.contains(it.id) }
         }
         return manageableCafes.map { cafe ->
-            val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
-            val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
+            val cafeCasts = castRemoteDataSource.fetchCafeCasts(cafe.id)
+            val noticeCount = cafeRemoteDataSource.fetchNoticeCount(cafe.id)
+            val cafeCheckInCount = cafeRemoteDataSource.fetchCafeCheckInCount(cafe.id)
 
             CafeManagementData.OwnedCafeSummary(
                 id = cafe.id,
                 name = cafe.name,
                 city = cafe.region.city,
                 isApproved = cafe.approved,
-                todayVisitors = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0,
-                todayCheckIns = (cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
+                todayVisitors = cafeCheckInCount,
+                todayCheckIns = cafeCheckInCount / 4,
                 todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
                 rating = cafe.ratingAvg,
                 castCount = cafeCasts.size,
-                noticeCount = cafeNotices.size,
+                noticeCount = noticeCount,
                 externalLinkCount = 3,
                 thumbnailImage = cafe.thumbnailImage
             )
@@ -53,49 +44,43 @@ class CafeManagementRepositoryImpl(
     }
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
-        val hadCachedOwnedCafeIds = cafeDataSource.ownedCafeIdsByUser.containsKey(userId)
-        val refreshResult = runCatching {
-            firestoreSyncDataSource.refreshCafeManagementData(userId)
-        }
-
-        if (refreshResult.isFailure && !hadCachedOwnedCafeIds) {
-            throw refreshResult.exceptionOrNull() ?: IllegalStateException("failed to load cafe management data")
-        }
-        val currentUser = authDataSource.findUserById(userId)
+        val currentUser = firestoreSyncDataSource.fetchUser(userId)
+        val allCafes = cafeRemoteDataSource.fetchAllCafes()
+        val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
         val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
-            cafeDataSource.cafes
+            allCafes
         } else {
-            cafeDataSource.cafes.filter { cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(it.id) }
+            allCafes.filter { ownedCafeIds.contains(it.id) }
         }
         val ownedCafes = manageableCafes.map { cafe ->
-            val cafeCasts = castDataSource.casts.filter { it.cafeId == cafe.id }
-            val cafeNotices = noticeDataSource.notices.filter { it.cafeId == cafe.id }
+            val cafeCasts = castRemoteDataSource.fetchCafeCasts(cafe.id)
+            val noticeCount = cafeRemoteDataSource.fetchNoticeCount(cafe.id)
+            val cafeCheckInCount = cafeRemoteDataSource.fetchCafeCheckInCount(cafe.id)
 
             CafeManagementData.OwnedCafeSummary(
                 id = cafe.id,
                 name = cafe.name,
                 city = cafe.region.city,
                 isApproved = cafe.approved,
-                todayVisitors = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0,
-                todayCheckIns = (cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0) / 4,
+                todayVisitors = cafeCheckInCount,
+                todayCheckIns = cafeCheckInCount / 4,
                 todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
                 rating = cafe.ratingAvg,
                 castCount = cafeCasts.size,
-                noticeCount = cafeNotices.size,
+                noticeCount = noticeCount,
                 externalLinkCount = 3,
                 thumbnailImage = cafe.thumbnailImage
             )
         }
-        val searchableCafes = cafeDataSource.cafes.map { cafe ->
+        val searchableCafes = allCafes.map { cafe ->
             CafeManagementData.SearchableCafeSummary(
                 id = cafe.id,
                 name = cafe.name,
                 location = "${cafe.region.city} ${cafe.region.address}"
             )
         }
-        val pendingCafeOwnerClaims = cafeDataSource.pendingCafeClaimsByUser[userId].orEmpty()
-        val pendingCafeRegistrationClaims = cafeDataSource.pendingCafeRegistrationClaimsByUser[userId]
-            .orEmpty()
+        val pendingCafeOwnerClaims = cafeRemoteDataSource.fetchPendingCafeOwnerClaims(userId)
+        val pendingCafeRegistrationClaims = cafeRemoteDataSource.fetchPendingCafeRegistrationClaims(userId)
             .map { claim ->
                 CafeManagementData.PendingClaimSummary(
                     claimId = claim.claimId,

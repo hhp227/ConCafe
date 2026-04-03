@@ -23,7 +23,6 @@ class KtorFirestoreRestApi(
             contentType(ContentType.Application.Json)
             applyAuthorization(idToken)
         }
-
         return readResponseBodyOrThrow("GET", resolvedPath, response.status, response.bodyAsText())
     }
 
@@ -34,8 +33,14 @@ class KtorFirestoreRestApi(
             setBody(body)
             applyAuthorization(idToken)
         }
-
-        return readResponseBodyOrThrow(HttpMethod.Post.value, resolvedPath, response.status, response.bodyAsText())
+        val responseBody = response.bodyAsText()
+        return readResponseBodyOrThrow(
+            method = HttpMethod.Post.value,
+            path = resolvedPath,
+            status = response.status,
+            body = responseBody,
+            requestBody = body
+        )
     }
 
     override suspend fun patch(path: String, body: String, idToken: String?, updateMask: List<String>): String {
@@ -53,7 +58,6 @@ class KtorFirestoreRestApi(
             setBody(body)
             applyAuthorization(idToken)
         }
-
         return readResponseBodyOrThrow(HttpMethod.Patch.value, resolvedPath, response.status, response.bodyAsText())
     }
 
@@ -80,9 +84,27 @@ private fun String.withApiKey(apiKey: String): String {
     }
 }
 
-private fun readResponseBodyOrThrow(method: String, path: String, status: HttpStatusCode, body: String): String {
+private fun readResponseBodyOrThrow(
+    method: String,
+    path: String,
+    status: HttpStatusCode,
+    body: String,
+    requestBody: String? = null
+): String {
     if (status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
-        throw IllegalStateException("Firestore $method request failed(${status.value}) at $path: $body")
+        val redactedPath = path.substringBefore("?")
+        val compactBody = body
+            .replace("\n", " ")
+            .replace(Regex("\\s+"), " ")
+            .take(1200)
+        val compactRequest = requestBody
+            ?.replace("\n", " ")
+            ?.replace(Regex("\\s+"), " ")
+            ?.take(1200)
+        val requestPart = if (compactRequest.isNullOrBlank()) "" else " | request=$compactRequest"
+        throw IllegalStateException(
+            "Firestore $method request failed(${status.value}) at $redactedPath: response=$compactBody$requestPart"
+        )
     }
 
     return body

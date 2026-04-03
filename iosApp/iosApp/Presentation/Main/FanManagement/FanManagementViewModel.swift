@@ -796,7 +796,7 @@ final class FanManagementViewModel: ObservableObject {
         let claimSheet: FanManagementUiState.CastClaimSheet?
     }
 
-    private let claimStatusPollingIntervalNanoseconds: UInt64 = 5_000_000_000
+    private let claimStatusPollingIntervalNanoseconds: UInt64 = 30_000_000_000
 }
 
 private extension FanManagementViewModel {

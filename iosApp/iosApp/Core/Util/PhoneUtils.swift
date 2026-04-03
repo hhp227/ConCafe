@@ -13,6 +13,30 @@ func formatKoreanPhoneNumber(_ input: String) -> String {
     return "\(digits.prefix(3))-\(digits.dropFirst(3).prefix(4))-\(digits.dropFirst(7))"
 }
 
+func normalizeKoreanPhoneToE164(_ input: String) -> String? {
+    let digitsOnly = input
+        .compactMap { char -> String? in
+            if let value = char.wholeNumberValue {
+                return String(value)
+            } else {
+                return nil
+            }
+        }
+        .joined()
+
+    if digitsOnly.isEmpty {
+        return nil
+    } else if digitsOnly.hasPrefix("82") {
+        return "+\(digitsOnly)"
+    } else if digitsOnly.hasPrefix("0") {
+        return "+82\(digitsOnly.dropFirst())"
+    } else if digitsOnly.hasPrefix("10") {
+        return "+82\(digitsOnly)"
+    } else {
+        return nil
+    }
+}
+
 /// 전화번호 전용 UITextField wrapper.
 /// 숫자만 허용하며 010-XXXX-XXXX 포맷으로 자동 변환,
 /// 대시 삽입 후에도 커서를 항상 끝에 유지한다.

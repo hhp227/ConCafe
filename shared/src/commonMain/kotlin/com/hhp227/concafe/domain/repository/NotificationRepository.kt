@@ -15,6 +15,8 @@ interface NotificationRepository {
 
     suspend fun registerPushToken(userId: String, platform: String, token: String)
 
+    suspend fun disableAllPushTokens(userId: String)
+
     suspend fun sendFanAnnouncement(
         userId: String,
         cafeId: String,

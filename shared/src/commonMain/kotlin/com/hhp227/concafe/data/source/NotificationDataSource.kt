@@ -5,8 +5,6 @@ import com.hhp227.concafe.domain.model.AppNotification
 import com.hhp227.concafe.domain.model.UserNotificationSettings
 
 interface NotificationDataSource {
-    val notifications: MutableList<AppNotification>
-
     suspend fun getNotifications(userId: String, cursor: String?, pageSize: Int): PagedResult<AppNotification>
 
     suspend fun markNotificationAsRead(userId: String, notificationId: String)
@@ -16,6 +14,8 @@ interface NotificationDataSource {
     suspend fun updateNotificationSettings(userId: String, settings: UserNotificationSettings): UserNotificationSettings
 
     suspend fun registerPushToken(userId: String, platform: String, token: String)
+
+    suspend fun disableAllPushTokens(userId: String)
 
     suspend fun sendFanAnnouncement(
         userId: String,

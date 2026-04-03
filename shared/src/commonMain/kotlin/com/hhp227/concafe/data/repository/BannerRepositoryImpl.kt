@@ -1,11 +1,8 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.BannerDataSource
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
+import com.hhp227.concafe.data.source.BannerRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
-import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeBannerCreate
 import com.hhp227.concafe.domain.repository.BannerRepository
@@ -18,21 +15,17 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 class BannerRepositoryImpl(
-    private val bannerDataSource: BannerDataSource,
-    private val cafeDataSource: CafeDataSource,
+    private val bannerRemoteDataSource: BannerRemoteDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : BannerRepository {
     override suspend fun getAllHomeBanners(): List<HomeBanner> {
-        normalizeBannerSlots()
-        return bannerDataSource.banners.toList()
+        val latestBanners = bannerRemoteDataSource.fetchHomeBanners()
+        return normalizeBannerSlots(latestBanners)
     }
 
     override suspend fun getHomeBanners(limit: Int): List<HomeBanner> {
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-
-        firestoreDataSource?.refreshHomeBanners()
-        normalizeBannerSlots()
-        return bannerDataSource.banners
+        val latestBanners = bannerRemoteDataSource.fetchHomeBanners()
+        return normalizeBannerSlots(latestBanners)
             .asSequence()
             .filter { it.statusLabel == STATUS_ACTIVE }
             .take(limit.coerceAtLeast(1))
@@ -45,10 +38,10 @@ class BannerRepositoryImpl(
         if (input.targetValue.isBlank()) throw IllegalArgumentException("banner target is required")
         if (input.displayDays !in 1..10) throw IllegalArgumentException("displayDays must be between 1 and 10")
 
-        normalizeBannerSlots()
+        val currentBanners = normalizeBannerSlots(bannerRemoteDataSource.fetchHomeBanners())
         val palette = resolvePalette(input.targetType)
         val now = Clock.System.now().toEpochMilliseconds()
-        val activeCount = bannerDataSource.banners.count { it.statusLabel == STATUS_ACTIVE }
+        val activeCount = currentBanners.count { it.statusLabel == STATUS_ACTIVE }
         val statusLabel = if (activeCount >= ACTIVE_BANNER_LIMIT) STATUS_SCHEDULED else STATUS_ACTIVE
         val created = HomeBanner(
             id = nextEntityId("banner"),
@@ -65,18 +58,9 @@ class BannerRepositoryImpl(
             createdAtEpochMillis = now,
             activatedAtEpochMillis = if (statusLabel == STATUS_ACTIVE) now else 0L
         )
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            firestoreSyncDataSource.pushHomeBanner(created)
-            firestoreSyncDataSource.refreshHomeBanners()
-            rebuildCafeHomeBannerPreviewCache()
-            return bannerDataSource.banners.firstOrNull { banner -> banner.id == created.id } ?: created
-        } else {
-            bannerDataSource.banners.add(0, created)
-            rebuildCafeHomeBannerPreviewCache()
-        }
-        return created
+        firestoreSyncDataSource.pushHomeBanner(created)
+        val latestBanners = normalizeBannerSlots(bannerRemoteDataSource.fetchHomeBanners())
+        return latestBanners.firstOrNull { banner -> banner.id == created.id } ?: created
     }
 
     override suspend fun updateHomeBanner(bannerId: String, input: HomeBannerCreate): HomeBanner {
@@ -85,13 +69,13 @@ class BannerRepositoryImpl(
         if (input.targetValue.isBlank()) throw IllegalArgumentException("banner target is required")
         if (input.displayDays !in 1..10) throw IllegalArgumentException("displayDays must be between 1 and 10")
 
-        normalizeBannerSlots()
-        val index = bannerDataSource.banners.indexOfFirst { it.id == bannerId }
+        val currentBanners = normalizeBannerSlots(bannerRemoteDataSource.fetchHomeBanners())
+        val index = currentBanners.indexOfFirst { it.id == bannerId }
         if (index == -1) {
             throw NoSuchElementException("banner not found")
         }
 
-        val existing = bannerDataSource.banners[index]
+        val existing = currentBanners[index]
         val palette = resolvePalette(input.targetType)
         val updated = existing.copy(
             title = input.title.trim(),
@@ -104,63 +88,47 @@ class BannerRepositoryImpl(
             targetValue = input.targetValue.trim(),
             displayDays = input.displayDays
         )
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            firestoreSyncDataSource.pushHomeBanner(updated)
-            firestoreSyncDataSource.refreshHomeBanners()
-            rebuildCafeHomeBannerPreviewCache()
-            return bannerDataSource.banners.firstOrNull { banner -> banner.id == bannerId } ?: updated
-        } else {
-            bannerDataSource.banners[index] = updated
-            rebuildCafeHomeBannerPreviewCache()
-        }
-        return updated
+        firestoreSyncDataSource.pushHomeBanner(updated)
+        val latestBanners = normalizeBannerSlots(bannerRemoteDataSource.fetchHomeBanners())
+        return latestBanners.firstOrNull { banner -> banner.id == bannerId } ?: updated
     }
 
     override suspend fun deleteHomeBanner(bannerId: String): HomeBanner {
-        normalizeBannerSlots()
-        val index = bannerDataSource.banners.indexOfFirst { it.id == bannerId }
+        val currentBanners = normalizeBannerSlots(bannerRemoteDataSource.fetchHomeBanners())
+        val index = currentBanners.indexOfFirst { it.id == bannerId }
         if (index == -1) {
             throw NoSuchElementException("banner not found")
         }
 
-        val deleted = bannerDataSource.banners[index]
-        val firestoreDataSource = bannerDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            firestoreSyncDataSource.deleteHomeBanner(bannerId)
-            firestoreSyncDataSource.refreshHomeBanners()
-            rebuildCafeHomeBannerPreviewCache()
-            return deleted
-        }
-
-        bannerDataSource.banners.removeAt(index)
-        normalizeBannerSlots()
-        rebuildCafeHomeBannerPreviewCache()
+        val deleted = currentBanners[index]
+        firestoreSyncDataSource.deleteHomeBanner(bannerId)
+        bannerRemoteDataSource.fetchHomeBanners()
         return deleted
     }
 
-    private fun normalizeBannerSlots() {
+    private fun normalizeBannerSlots(sourceBanners: List<HomeBanner>): List<HomeBanner> {
+        val mutableBanners = sourceBanners.toMutableList()
         val now = Clock.System.now().toEpochMilliseconds()
-        val expiredIds = bannerDataSource.banners
+        val expiredIds = mutableBanners
             .filter { it.statusLabel == STATUS_ACTIVE && it.isExpired(now) }
             .map { it.id }
             .toSet()
 
         if (expiredIds.isNotEmpty()) {
-            bannerDataSource.banners.indices.forEach { index ->
-                val banner = bannerDataSource.banners[index]
+            mutableBanners.indices.forEach { index ->
+                val banner = mutableBanners[index]
                 if (banner.id in expiredIds) {
-                    bannerDataSource.banners[index] = banner.copy(statusLabel = STATUS_ENDED)
+                    mutableBanners[index] = banner.copy(statusLabel = STATUS_ENDED)
                 }
             }
         }
 
-        val activeCount = bannerDataSource.banners.count { it.statusLabel == STATUS_ACTIVE }
-        if (activeCount >= ACTIVE_BANNER_LIMIT) return
+        val activeCount = mutableBanners.count { it.statusLabel == STATUS_ACTIVE }
+        if (activeCount >= ACTIVE_BANNER_LIMIT) {
+            return mutableBanners
+        }
 
-        val scheduledBanners = bannerDataSource.banners
+        val scheduledBanners = mutableBanners
             .filter { it.statusLabel == STATUS_SCHEDULED }
             .sortedBy { it.createdAtEpochMillis }
 
@@ -169,51 +137,22 @@ class BannerRepositoryImpl(
             .map { it.id }
             .toSet()
 
-        if (activateIds.isEmpty()) return
+        if (activateIds.isEmpty()) {
+            return mutableBanners
+        }
 
-        bannerDataSource.banners.indices.forEach { index ->
-            val banner = bannerDataSource.banners[index]
+        mutableBanners.indices.forEach { index ->
+            val banner = mutableBanners[index]
             if (banner.id in activateIds) {
-                bannerDataSource.banners[index] = banner.copy(
+                mutableBanners[index] = banner.copy(
                     statusLabel = STATUS_ACTIVE,
                     activatedAtEpochMillis = now
                 )
             }
         }
+        return mutableBanners
     }
 
-    private fun rebuildCafeHomeBannerPreviewCache() {
-        val previewByCafeId = bannerDataSource.banners
-            .asSequence()
-            .mapNotNull { banner ->
-                val cafeId = banner.cafeId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-                cafeId to banner
-            }
-            .groupBy(keySelector = { it.first }, valueTransform = { it.second })
-            .mapValues { entry ->
-                entry.value
-                    .sortedWith(
-                        compareByDescending<HomeBanner> { banner -> banner.statusLabel.uppercase() == STATUS_ACTIVE }
-                            .thenByDescending { banner -> banner.createdAtEpochMillis }
-                    )
-                    .first()
-            }
-
-        cafeDataSource.cafeHomeBannerPreviewByCafeId.clear()
-        previewByCafeId.forEach { entry ->
-            val statusLabel = when (entry.value.statusLabel.uppercase()) {
-                STATUS_ACTIVE -> "노출 중"
-                STATUS_SCHEDULED -> "예약 중"
-                else -> "미노출"
-            }
-            cafeDataSource.cafeHomeBannerPreviewByCafeId[entry.key] = CafeDashboardData.HomeBannerPreview(
-                title = entry.value.title,
-                period = resolvePeriodLabel(entry.value.displayDays),
-                statusLabel = statusLabel,
-                imageUrl = entry.value.imageUrl
-            )
-        }
-    }
 }
 
 private const val ACTIVE_BANNER_LIMIT = 5

@@ -319,8 +319,15 @@ final class HomeViewModel: ObservableObject {
         tasks[.cafeRegistrationClaimEvent] = Task {
             do {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
-                    if event is CafeRegistrationClaimEvent.Approved {
-                        self.loadNearbyCafePage(cursor: nil, append: false)
+                    if let approved = event as? CafeRegistrationClaimEvent.Approved {
+                        let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        let exists = uiState.nearbyCafes.contains(where: { $0.id == approvedCafeId })
+
+                        if approvedCafeId.isEmpty || exists {
+                            continue
+                        } else {
+                            self.loadNearbyCafePage(cursor: nil, append: false)
+                        }
                     }
                 }
             } catch {

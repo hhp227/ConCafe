@@ -76,13 +76,19 @@ struct SignUpUiState {
 
     var name: String = ""
 
+    var isCafeOwner: Bool = false
+
     var phone: String = ""
+
+    var phoneVerificationId: String?
 
     var verificationCode: String = ""
 
     var hasRequestedVerification: Bool = false
 
     var isPhoneVerified: Bool = false
+
+    var signupCompleted: Bool = false
 
     var selectedCafe: Cafe?
 

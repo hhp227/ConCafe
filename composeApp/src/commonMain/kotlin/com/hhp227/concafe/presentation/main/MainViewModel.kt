@@ -32,6 +32,9 @@ class MainViewModel(
         viewModelScope.launch {
             when (val result = getMainNavigationUseCase.invoke(preferredRoute)) {
                 is AppResult.Success -> {
+                    if (result.data.currentUser?.signupCompleted == false) {
+                        _event.emit(MainEvent.NavigateToSignUp)
+                    }
                     _uiState.update {
                         it.copy(
                             currentUser = result.data.currentUser,

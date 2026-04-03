@@ -1,7 +1,7 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.AuthDataSource
-import com.hhp227.concafe.data.source.CastDataSource
+import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.User
@@ -13,10 +13,43 @@ import kotlinx.datetime.Clock
 
 class AuthRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val castDataSource: CastDataSource,
+    private val castRemoteDataSource: CastRemoteDataSource,
     private val authTokenProvider: FirestoreAuthTokenProvider,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : AuthRepository {
+    private suspend fun resolveEffectiveRole(
+        userId: String,
+        baseRole: UserRole
+    ): UserRole {
+        val linkedCast = runCatching {
+            castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        }.getOrNull()
+        val resolvedRole = if (baseRole == UserRole.VISITOR && linkedCast != null) UserRole.CAST else baseRole
+        return resolvedRole
+    }
+
+    private suspend fun normalizeRoleIfNeeded(user: User): User {
+        val resolvedRole = resolveEffectiveRole(
+            userId = user.id,
+            baseRole = user.role
+        )
+        val normalizedUser = if (resolvedRole != user.role) {
+            user.copy(role = resolvedRole)
+        } else {
+            user
+        }
+        if (normalizedUser.role != user.role) {
+            runCatching {
+                firestoreSyncDataSource.pushUser(normalizedUser)
+            }
+            println(
+                "TEST, AuthRepositoryImpl normalizeRoleIfNeeded role-updated: " +
+                    "userId=${user.id} from=${user.role} to=${normalizedUser.role}"
+            )
+        }
+        return normalizedUser
+    }
+
     override suspend fun signIn(email: String, password: String): User {
         if (email.isBlank() || password.isBlank()) {
             throw IllegalArgumentException("email/password is required")
@@ -31,9 +64,7 @@ class AuthRepositoryImpl(
                 return user
             }
         }
-        return authDataSource.findUserByEmail(email)?.also {
-            authDataSource.currentUserId = it.id
-        } ?: throw IllegalArgumentException("invalid credentials")
+        throw IllegalArgumentException("invalid credentials")
     }
 
     override suspend fun signInWithGoogleIdToken(idToken: String): User {
@@ -86,10 +117,6 @@ class AuthRepositoryImpl(
             throw IllegalArgumentException("email/password/nickname is required")
         }
 
-        if (authDataSource.isEmailTaken(email)) {
-            throw IllegalArgumentException("email already exists")
-        }
-
         val signUpSession = if (authTokenProvider.supportsEmailPasswordAuth()) {
             authTokenProvider.signUpWithEmailPassword(email, password)
         } else {
@@ -102,20 +129,18 @@ class AuthRepositoryImpl(
             profileImage = null,
             role = role,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
 
-        authDataSource.addUser(user)
         if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-            castDataSource.affiliatedCafeIdByUser[user.id] = affiliatedCafeId
+            castRemoteDataSource.setAffiliatedCafeId(user.id, affiliatedCafeId)
         }
         val pushResult = runCatching { firestoreSyncDataSource.pushUser(user) }
 
         if (pushResult.isFailure) {
-            authDataSource.removeUser(user.id)
-
             if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
-                castDataSource.affiliatedCafeIdByUser.remove(user.id)
+                castRemoteDataSource.clearAffiliatedCafeId(user.id)
             }
             if (signUpSession != null) {
                 runCatching {
@@ -130,6 +155,48 @@ class AuthRepositoryImpl(
             )
         }
 
+        authDataSource.currentUserId = user.id
+        return user
+    }
+
+    override suspend fun completeSignUpForCurrentUser(
+        email: String,
+        nickname: String,
+        role: UserRole,
+        affiliatedCafeId: String?,
+        phoneNumber: String?
+    ): User {
+        val normalizedEmail = email.trim()
+        val normalizedNickname = nickname.trim()
+        val normalizedPhoneNumber = phoneNumber?.trim()?.ifBlank { null }
+
+        if (normalizedEmail.isBlank() || normalizedNickname.isBlank()) {
+            throw IllegalArgumentException("email/nickname is required")
+        }
+        val currentUserId = authTokenProvider.getCurrentUserId()
+            ?: authDataSource.currentUserId
+            ?: throw IllegalArgumentException("no signed in user")
+        val existingUser = firestoreSyncDataSource.fetchUser(currentUserId)
+        val resolvedRole = resolveEffectiveRole(
+            userId = currentUserId,
+            baseRole = role
+        )
+        val user = User(
+            id = currentUserId,
+            email = normalizedEmail,
+            nickname = normalizedNickname,
+            profileImage = existingUser?.profileImage,
+            role = resolvedRole,
+            banned = existingUser?.banned ?: false,
+            createdAt = existingUser?.createdAt ?: nowIsoUtc(),
+            phoneNumber = normalizedPhoneNumber ?: existingUser?.phoneNumber,
+            signupCompleted = true
+        )
+
+        if (resolvedRole == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+            castRemoteDataSource.setAffiliatedCafeId(currentUserId, affiliatedCafeId)
+        }
+        firestoreSyncDataSource.pushUser(user)
         authDataSource.currentUserId = user.id
         return user
     }
@@ -163,7 +230,7 @@ class AuthRepositoryImpl(
             ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
-            ?: authDataSource.findUserById(currentUserId)?.email
+            ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
             ?: throw IllegalArgumentException("current user email not found")
         val verifiedSession = try {
             authTokenProvider.signInWithEmailPassword(
@@ -204,7 +271,7 @@ class AuthRepositoryImpl(
             ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
-            ?: authDataSource.findUserById(currentUserId)?.email
+            ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
             ?: throw IllegalArgumentException("current user email not found")
         val verifiedSession = try {
             authTokenProvider.signInWithEmailPassword(
@@ -227,7 +294,6 @@ class AuthRepositoryImpl(
 
         firestoreSyncDataSource.deleteUser(currentUserId)
         authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
-        authDataSource.removeUser(currentUserId)
         authDataSource.currentUserId = null
     }
 
@@ -237,15 +303,6 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
-        val currentUserId = authDataSource.currentUserId
-
-        if (currentUserId != null) {
-            val localUser = authDataSource.findUserById(currentUserId)
-
-            if (localUser != null) {
-                return localUser
-            }
-        }
         syncCurrentUserIdFromFirebase()
         return resolveCurrentUser()
     }
@@ -260,52 +317,39 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(userId)
 
         if (remoteUser != null) {
-            val replaced = authDataSource.replaceUser(remoteUser)
-
-            if (!replaced) {
-                authDataSource.addUser(remoteUser)
-            }
-            return remoteUser
+            return normalizeRoleIfNeeded(remoteUser)
         }
 
-        val foundById = authDataSource.findUserById(userId)
-
-        if (foundById != null) {
-            return foundById
-        }
-
-        val foundByEmail = authDataSource.findUserByEmail(email)
-
-        if (foundByEmail != null) {
-            val migratedUser = foundByEmail.copy(id = userId, email = email)
-            val replaced = authDataSource.replaceUser(migratedUser)
-            return if (replaced) {
-                migratedUser
-            } else {
-                foundByEmail
-            }
-        }
-
+        val fallbackRole = resolveEffectiveRole(
+            userId = userId,
+            baseRole = UserRole.VISITOR
+        )
         val createdUser = User(
             id = userId,
             email = email,
             nickname = resolveInitialNickname(email, displayName),
             profileImage = null,
-            role = UserRole.VISITOR,
+            role = fallbackRole,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
 
-        authDataSource.addUser(createdUser)
         runCatching { firestoreSyncDataSource.pushUser(createdUser) }
         return createdUser
     }
 
     private suspend fun syncCurrentUserIdFromFirebase() {
         if (authTokenProvider.supportsEmailPasswordAuth()) {
-            val idToken = authTokenProvider.getIdToken()
-            val firebaseUserId = if (idToken.isNullOrBlank()) null else authTokenProvider.getCurrentUserId()
-            authDataSource.currentUserId = firebaseUserId
+            val currentUserIdFromSession = runCatching {
+                authTokenProvider.getCurrentUserId()
+            }.getOrNull()
+
+            if (!currentUserIdFromSession.isNullOrBlank()) {
+                authDataSource.currentUserId = currentUserIdFromSession
+            } else {
+                Unit
+            }
         }
     }
 
@@ -314,18 +358,7 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
 
         if (remoteUser != null) {
-            val replaced = authDataSource.replaceUser(remoteUser)
-
-            if (!replaced) {
-                authDataSource.addUser(remoteUser)
-            }
-            return remoteUser
-        }
-
-        val localUser = authDataSource.findUserById(currentUserId)
-
-        if (localUser != null) {
-            return localUser
+            return normalizeRoleIfNeeded(remoteUser)
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
@@ -333,30 +366,21 @@ class AuthRepositoryImpl(
         if (currentUserEmail.isNullOrBlank()) {
             return null
         }
-        val foundByEmail = authDataSource.findUserByEmail(currentUserEmail)
-
-        if (foundByEmail != null) {
-            val aligned = if (foundByEmail.id == currentUserId) {
-                foundByEmail
-            } else {
-                val migrated = foundByEmail.copy(id = currentUserId)
-
-                authDataSource.replaceUser(migrated)
-                migrated
-            }
-            return aligned
-        }
-
+        val fallbackRole = resolveEffectiveRole(
+            userId = currentUserId,
+            baseRole = UserRole.VISITOR
+        )
         val fallbackUser = User(
             id = currentUserId,
             email = currentUserEmail,
             nickname = resolveInitialNickname(currentUserEmail, null),
             profileImage = null,
-            role = UserRole.VISITOR,
+            role = fallbackRole,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
-        authDataSource.addUser(fallbackUser)
+        runCatching { firestoreSyncDataSource.pushUser(fallbackUser) }
         return fallbackUser
     }
 }

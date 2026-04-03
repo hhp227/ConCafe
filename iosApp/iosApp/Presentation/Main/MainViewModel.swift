@@ -31,6 +31,9 @@ final class MainViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let state = success.data as? MainNavigationState {
+                    if state.currentUser?.signupCompleted == false {
+                        event.send(.navigateToSignUp)
+                    }
                     uiState = MainUiState(
                         currentUser: state.currentUser,
                         tabs: state.tabs,

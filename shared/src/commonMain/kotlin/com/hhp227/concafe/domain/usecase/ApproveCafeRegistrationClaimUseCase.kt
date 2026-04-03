@@ -27,7 +27,8 @@ class ApproveCafeRegistrationClaimUseCase(
                 cafeRegistrationClaimEventPublisher.publish(
                     CafeRegistrationClaimEvent.Approved(
                         requesterUserId = preview.requesterUserId,
-                        claimId = claimId
+                        claimId = claimId,
+                        approvedCafeId = preview.approvedCafeId
                     )
                 )
                 AppResult.Success(preview)

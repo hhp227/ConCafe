@@ -27,7 +27,6 @@ final class CafeManagementViewModel: ObservableObject {
     let event = PassthroughSubject<CafeManagementEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-    private var currentUserId: String?
 
     private func loadCafeManagement() {
         tasks[.loadCafeManagement]?.cancel()
@@ -132,8 +131,7 @@ final class CafeManagementViewModel: ObservableObject {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
             do {
-                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    self.currentUserId = user?.id
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
                     self.loadCafeManagement()
                 }
             } catch {
@@ -162,15 +160,20 @@ final class CafeManagementViewModel: ObservableObject {
         tasks[.cafeRegistrationClaimEvent] = Task {
             do {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
-                    guard let currentUserId = self.currentUserId else { return }
                     let shouldRefresh: Bool
                     switch event {
                     case let created as CafeRegistrationClaimEvent.Created:
-                        shouldRefresh = created.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == created.claimId
+                        })
                     case let approved as CafeRegistrationClaimEvent.Approved:
-                        shouldRefresh = approved.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == approved.claimId
+                        })
                     case let rejected as CafeRegistrationClaimEvent.Rejected:
-                        shouldRefresh = rejected.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == rejected.claimId
+                        })
                     default:
                         shouldRefresh = false
                     }
@@ -284,4 +287,4 @@ final class CafeManagementViewModel: ObservableObject {
     }
 }
 
-private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 60_000_000_000

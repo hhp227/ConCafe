@@ -12,9 +12,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
@@ -26,6 +28,7 @@ class ExploreViewModel(
     private val getExploreCafePageUseCase: GetExploreCafePageUseCase,
     private val getExploreCastPageUseCase: GetExploreCastPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -36,6 +39,39 @@ class ExploreViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()
+
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeCafeRegistrationClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
+            cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
+                if (event is CafeRegistrationClaimEvent.Approved) {
+                    val approvedCafeId = event.approvedCafeId
+                    val shouldLoadCafePage = !approvedCafeId.isNullOrBlank() &&
+                            _uiState.value.cafes.none { cafe -> cafe.id == approvedCafeId }
+
+                    if (shouldLoadCafePage) {
+                        loadCafePage(cursor = null, append = false)
+                    } else {
+                        Unit
+                    }
+                }
+            }
+        }
+    }
 
     private fun refreshCurrentTab() {
         jobs[TaskKey.CAFE_PAGE]?.cancel()
@@ -175,20 +211,6 @@ class ExploreViewModel(
         }
     }
 
-    private fun observeSession() {
-        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
-        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest { user ->
-                _uiState.update {
-                    it.copy(
-                        isLoggedIn = user != null,
-                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
-                    )
-                }
-            }
-        }
-    }
-
     private fun patchCafe(cafe: Cafe) {
         _uiState.update { state ->
             val cafeMatches = matchesCafeFilters(state, cafe)
@@ -289,6 +311,7 @@ class ExploreViewModel(
 
     init {
         observeSession()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -301,6 +324,7 @@ class ExploreViewModel(
     }
 
     private enum class TaskKey {
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,

@@ -1,7 +1,6 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.AuthDataSource
+import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
@@ -11,21 +10,20 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class CafeOwnerClaimRepositoryImpl(
-    private val authDataSource: AuthDataSource,
-    private val cafeDataSource: CafeDataSource,
+    private val cafeRemoteDataSource: CafeRemoteDataSource,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeOwnerClaimRepository {
     override suspend fun createCafeOwnerClaim(userId: String, cafeId: String): PendingCafeOwnerClaimPreview {
-        firestoreSyncDataSource.refreshCafeManagementData(userId)
-        val user = authDataSource.findUserById(userId) ?: throw NoSuchElementException("user not found")
-        val cafe = cafeDataSource.cafes.firstOrNull { it.id == cafeId } ?: throw NoSuchElementException("cafe not found")
+        val user = firestoreSyncDataSource.fetchUser(userId) ?: throw NoSuchElementException("user not found")
+        val cafe = cafeRemoteDataSource.fetchCafeById(cafeId) ?: throw NoSuchElementException("cafe not found")
+        val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
+        val pendingClaims = cafeRemoteDataSource.fetchPendingCafeOwnerClaims(userId)
 
-        if (cafeDataSource.ownedCafeIdsByUser[userId].orEmpty().contains(cafeId)) {
+        if (ownedCafeIds.contains(cafeId)) {
             throw IllegalArgumentException("이미 운영 중인 카페입니다.")
         }
 
-        val claims = cafeDataSource.pendingCafeClaimsByUser.getOrPut(userId) { mutableListOf() }
-        val existingPending = claims.firstOrNull { it.cafeId == cafeId && it.status == "승인 대기 중" }
+        val existingPending = pendingClaims.firstOrNull { it.cafeId == cafeId && it.status == "승인 대기 중" }
         if (existingPending != null) {
             throw IllegalArgumentException("이미 승인 대기 중인 카페 신청입니다.")
         }
@@ -38,7 +36,6 @@ class CafeOwnerClaimRepositoryImpl(
             status = "승인 대기 중",
             message = "관리자 승인 후 내 카페 목록에 자동 연결됩니다"
         )
-        claims.add(0, claim)
         try {
             firestoreSyncDataSource.pushCafeOwnerClaim(
                 requesterUserId = userId,
@@ -47,7 +44,6 @@ class CafeOwnerClaimRepositoryImpl(
                 imageUrl = cafe.thumbnailImage
             )
         } catch (e: Exception) {
-            claims.removeAll { existing -> existing.claimId == claim.claimId }
             throw e
         }
         return PendingCafeOwnerClaimPreview(

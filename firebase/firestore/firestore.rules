@@ -353,6 +353,18 @@ service cloud.firestore {
       }
     }
 
+    // Collection group query support for nested cafe subcollections.
+    // Required for runQuery(allDescendants=true) against "casts"/"notices".
+    match /{documentPath=**}/casts/{castId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{documentPath=**}/notices/{noticeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Legacy top-level collections support (read-only)
     match /casts/{castId} {
       allow read: if true;

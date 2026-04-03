@@ -60,6 +60,11 @@ fun SignUpScreen(
             }
         }
     }
+    DisposableEffect(viewModel) {
+        onDispose {
+            viewModel.onAction(SignUpAction.CleanupIncompleteAccount)
+        }
+    }
     SignUpContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction
@@ -498,7 +503,7 @@ private fun PhoneVerificationSection(
                     SignUpTextField(
                         value = uiState.verificationCode,
                         label = "인증번호",
-                        placeholder = "인증번호 4자리",
+                        placeholder = "인증번호 6자리",
                         keyboardType = KeyboardType.Number,
                         onValueChange = { onAction(SignUpAction.ChangeVerificationCode(it)) }
                     )

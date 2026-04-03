@@ -1,12 +1,7 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.CastDataSource
-import com.hhp227.concafe.data.source.PagingDataSource
-import com.hhp227.concafe.data.source.ReviewDataSource
-import com.hhp227.concafe.data.source.ScheduleStatusDataSource
-import com.hhp227.concafe.data.source.SocialDataSource
-import com.hhp227.concafe.data.source.firestore.FirestoreConCafeDataSource
+import com.hhp227.concafe.data.source.CafeRemoteDataSource
+import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
@@ -21,16 +16,12 @@ import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class CastRepositoryImpl(
-    private val castDataSource: CastDataSource,
-    private val cafeDataSource: CafeDataSource,
-    private val reviewDataSource: ReviewDataSource,
-    private val socialDataSource: SocialDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val cafeRemoteDataSource: CafeRemoteDataSource,
+    private val castRemoteDataSource: CastRemoteDataSource
 ) : CastRepository {
     override suspend fun searchCasts(
         query: String?,
@@ -40,19 +31,7 @@ class CastRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.searchCastsRemote(
-                query = query,
-                country = country,
-                city = city,
-                sort = sort,
-                cursor = cursor,
-                pageSize = pageSize
-            )
-        }
-        return searchCastsFromCache(
+        return castRemoteDataSource.searchCastsRemote(
             query = query,
             country = country,
             city = city,
@@ -63,17 +42,10 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.getHomePopularCastPageRemote(
-                cursor = cursor,
-                pageSize = pageSize
-            )
-        }
-        val sorted = castDataSource.casts
-            .sortedByDescending { it.followerCount }
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return castRemoteDataSource.getHomePopularCastPageRemote(
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     override suspend fun getBirthdayCasts(
@@ -81,53 +53,26 @@ class CastRepositoryImpl(
         dayOfMonth: Int,
         limit: Int
     ): List<Cast> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.fetchBirthdayCastsRemote(
-                month = month,
-                dayOfMonth = dayOfMonth,
-                limit = safeLimit
-            ).take(safeLimit)
-        }
-        return castDataSource.casts
-            .asSequence()
-            .filter { cast ->
-                cast.birthday.matchesMonthAndDay(month = month, dayOfMonth = dayOfMonth)
-            }
-            .sortedByDescending { cast -> cast.id }
-            .take(safeLimit)
-            .toList()
+        val safeLimit = if (limit > 0) limit else 1
+        return castRemoteDataSource.fetchBirthdayCastsRemote(
+            month = month,
+            dayOfMonth = dayOfMonth,
+            limit = safeLimit
+        ).take(safeLimit)
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
-        var detail = castDataSource.castDetail(castId)
-
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.refreshCastDetailRemote(castId)
-            detail = castDataSource.castDetail(castId) ?: detail
-        }
-        return detail ?: throw NoSuchElementException("cast detail not found")
+        return castRemoteDataSource.fetchCastDetail(castId)
     }
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
         val workingCastIds = resolveWorkingCastIds(cafeId)
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-        val page = if (firestoreDataSource != null) {
-            firestoreDataSource.getCafeCastPageRemote(
-                cafeId = cafeId,
-                cursor = cursor,
-                pageSize = pageSize
-            )
-        } else {
-            null
-        }
-        val source = page?.items ?: castDataSource.casts.filter { it.cafeId == cafeId }
+        val page = castRemoteDataSource.getCafeCastPageRemote(
+            cafeId = cafeId,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+        val source = page.items
         val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
@@ -141,26 +86,21 @@ class CastRepositoryImpl(
                     profileImage = cast.profileImage
                 )
             }
-        return if (page != null) {
-            PagedResult(
-                items = sorted,
-                nextCursor = page.nextCursor,
-                hasNext = page.hasNext
-            )
-        } else {
-            pagingDataSource.toPaged(sorted, cursor, pageSize)
-        }
+        return PagedResult(
+            items = sorted,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext
+        )
     }
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
         val workingCastIds = resolveWorkingCastIds(cafeId)
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-        val page = firestoreDataSource?.getCafeCastPageRemote(
+        val page = castRemoteDataSource.getCafeCastPageRemote(
             cafeId = cafeId,
             cursor = cursor,
             pageSize = pageSize
         )
-        val source = page?.items ?: castDataSource.casts.filter { it.cafeId == cafeId }
+        val source = page.items
         val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { workingCastIds.contains(it.id) }
@@ -172,34 +112,23 @@ class CastRepositoryImpl(
                     isWorking = workingCastIds.contains(cast.id)
                 )
             }
-        return if (page != null) {
-            PagedResult(
-                items = sorted,
-                nextCursor = page.nextCursor,
-                hasNext = page.hasNext
-            )
-        } else {
-            pagingDataSource.toPaged(sorted, cursor, pageSize)
-        }
+        return PagedResult(
+            items = sorted,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext
+        )
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            return firestoreDataSource.upsertCastRemote(update)
-        }
-        return castDataSource.upsertCast(update)
+        return castRemoteDataSource.upsertCastRemote(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            return firestoreDataSource.deleteCastRemote(castId)
-        }
-        return castDataSource.deleteCast(castId)
+        return castRemoteDataSource.deleteCastRemote(castId)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
-        (castDataSource as? FirestoreConCafeDataSource)?.refreshCastSchedulesRemote(castId, fromDate, toDate)
-        return castDataSource.castSchedules(castId, fromDate, toDate)
+        return castRemoteDataSource.fetchCastSchedules(castId, fromDate, toDate)
     }
 
     override suspend fun getCastScheduleStatuses(
@@ -207,34 +136,15 @@ class CastRepositoryImpl(
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
-        (castDataSource as? FirestoreConCafeDataSource)?.refreshCastSchedulesRemote(castId, fromDate, toDate)
-        return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
+        return castRemoteDataSource.fetchCastScheduleStatuses(castId, fromDate, toDate)
     }
 
     override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            return firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = date)
-        }
-        val scheduleStatusDataSource = castDataSource as? ScheduleStatusDataSource
-        val cafeCastIds = castDataSource.casts
-            .asSequence()
-            .filter { cast -> cast.cafeId == cafeId }
-            .map { cast -> cast.id }
-            .toSet()
-        return scheduleStatusDataSource?.castScheduleStatusByCastId
-            ?.asSequence()
-            ?.filter { (castId, _) -> cafeCastIds.contains(castId) }
-            ?.filter { (_, statuses) -> statuses[date] == CastScheduleStatus.WORK }
-            ?.map { (castId, _) -> castId }
-            ?.toSet()
-            .orEmpty()
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = date)
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            return firestoreDataSource.updateCastScheduleRemote(update)
-        }
-        return castDataSource.updateCastSchedule(update)
+        return castRemoteDataSource.updateCastScheduleRemote(update)
     }
 
     private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
@@ -242,167 +152,72 @@ class CastRepositoryImpl(
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
             .toString()
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
-        } else {
-            return cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty()
-        }
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
-        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowedCastIds(userId)
-        return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
+        val followedCastIds = castRemoteDataSource.fetchFollowedCastIds(userId)
+        return followedCastIds.contains(castId)
     }
 
     override suspend fun getFollowedCastIds(userId: String): List<String> {
-        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowedCastIds(userId)
-        return socialDataSource.followedCastIdsByUser[userId]
-            ?.toList()
-            .orEmpty()
-            .sorted()
+        return castRemoteDataSource.fetchFollowedCastIds(userId)
     }
 
     override suspend fun getFollowedCasts(userId: String): List<Cast> {
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.getFollowedCastsRemote(userId)
-        }
-        val followedCastIds = getFollowedCastIds(userId)
-        val idSet = followedCastIds.toSet()
-        return castDataSource.casts
-            .asSequence()
-            .filter { cast -> idSet.contains(cast.id) }
-            .toList()
+        return castRemoteDataSource.getFollowedCastsRemote(userId)
     }
 
     override suspend fun getCastsByIds(castIds: List<String>): List<Cast> {
-        val idSet = castIds.toSet()
-        return castDataSource.casts
-            .asSequence()
-            .filter { cast -> idSet.contains(cast.id) }
-            .toList()
+        return castRemoteDataSource.fetchCastsByIds(castIds)
     }
 
     override suspend fun getCastByLinkedUserId(userId: String): Cast? {
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            val remote = runCatching {
-                firestoreDataSource.refreshCastByLinkedUserId(userId)
-            }.getOrNull()
-
-            if (remote != null) {
-                return remote
-            }
-        }
-        return castDataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
+        return castRemoteDataSource.fetchCastByLinkedUserId(userId)
     }
 
     override suspend fun followCast(userId: String, castId: String) {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.followCastRemote(
-                userId = userId,
-                castId = castId
-            )
-            return
-        }
-        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
-        set.add(castId)
-        val followerSet = socialDataSource.followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
-
-        followerSet.add(userId)
-        updateFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+        castRemoteDataSource.followCastRemote(
+            userId = userId,
+            castId = castId
+        )
     }
 
     override suspend fun unfollowCast(userId: String, castId: String) {
-        (castDataSource as? FirestoreConCafeDataSource)?.let { firestoreDataSource ->
-            firestoreDataSource.unfollowCastRemote(
-                userId = userId,
-                castId = castId
-            )
-            return
-        }
-        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
-        set.remove(castId)
-        val followerSet = socialDataSource.followerUserIdsByCastId.getOrPut(castId) { mutableSetOf() }
-        followerSet.remove(userId)
-        updateFollowerCountInCache(castId = castId, followerCount = followerSet.size)
+        castRemoteDataSource.unfollowCastRemote(
+            userId = userId,
+            castId = castId
+        )
     }
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
-        (castDataSource as? FirestoreConCafeDataSource)?.refreshFollowerUserIds(castId)
-        return socialDataSource.followerUserIdsByCastId[castId]
-            ?.toList()
-            ?.sorted()
-            .orEmpty()
+        return castRemoteDataSource.fetchFollowerUserIds(castId)
     }
 
     override suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
-        val firestoreDataSource = castDataSource as? FirestoreConCafeDataSource
-
-        if (firestoreDataSource != null) {
-            return firestoreDataSource.getCastFollowerSnapshots(castId)
-        }
-        return getFollowerUserIds(castId)
-            .map { followerUserId ->
-                CastFollowerSnapshot(
-                    userId = followerUserId,
-                    followedAt = ""
-                )
-            }
+        return castRemoteDataSource.getCastFollowerSnapshots(castId)
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
         val safeLimit = if (limit > 0) limit else 1
-        val todayTagCountByCastId = mutableMapOf<String, Int>()
-
-        reviewDataSource.reviews.forEach { review ->
-            val isTodayReview = isTodayDate(review.createdAt)
-            val isVerifiedVisit = review.visitVerified
-
-            if (isTodayReview && isVerifiedVisit) {
-                review.taggedCastIds
-                    .asSequence()
-                    .map { castId -> castId.trim() }
-                    .filter { castId -> castId.isNotEmpty() }
-                    .distinct()
-                    .forEach { castId ->
-                        val currentCount = todayTagCountByCastId[castId] ?: 0
-
-                        todayTagCountByCastId[castId] = currentCount + 1
-                    }
+        val sourceCasts = castRemoteDataSource.searchCastsRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CastSort.POPULAR,
+            cursor = null,
+            pageSize = safeLimit
+        ).items
+        val cafeNameById = sourceCasts
+            .map { cast -> cast.cafeId }
+            .distinct()
+            .associateWith { cafeId ->
+                runCatching {
+                    cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe.name
+                }.getOrNull()
             }
-        }
-
-        val hasTodayTagData = todayTagCountByCastId.isNotEmpty()
-        val sourceCasts = if (hasTodayTagData) {
-            castDataSource.casts
-                .asSequence()
-                .filter { cast -> (todayTagCountByCastId[cast.id] ?: 0) > 0 }
-                .sortedWith(
-                    compareByDescending<Cast> { cast -> todayTagCountByCastId[cast.id] ?: 0 }
-                        .thenByDescending { cast -> cast.followerCount }
-                        .thenBy { cast -> cast.id }
-                )
-                .take(safeLimit)
-                .toList()
-        } else {
-            castDataSource.casts
-                .asSequence()
-                .sortedWith(
-                    compareByDescending<Cast> { cast -> cast.followerCount }
-                        .thenBy { cast -> cast.id }
-                )
-                .take(safeLimit)
-                .toList()
-        }
-
         return sourceCasts.map { cast ->
-            val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
-            val resolvedTodayVisit = todayTagCountByCastId[cast.id] ?: 0
+            val cafeName = cafeNameById[cast.cafeId] ?: cast.cafeId
 
             CheckInCastSummary(
                 id = cast.id,
@@ -410,104 +225,9 @@ class CastRepositoryImpl(
                 cafeName = cafeName,
                 name = cast.name,
                 profileImage = cast.profileImage,
-                todayVisit = resolvedTodayVisit
+                todayVisit = 0
             )
         }
     }
 
-    private fun todayDateText(): String {
-        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val month = today.monthNumber.toString().padStart(2, '0')
-        val day = today.dayOfMonth.toString().padStart(2, '0')
-        return "${today.year}-$month-$day"
-    }
-
-    private fun isTodayDate(rawDateTime: String): Boolean {
-        val today = todayDateText()
-        val normalizedDate = runCatching {
-            Instant.parse(rawDateTime)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-                .date
-                .toString()
-        }.getOrNull()
-        return if (normalizedDate == null) {
-            rawDateTime.startsWith(today)
-        } else {
-            normalizedDate == today
-        }
-    }
-
-    private fun updateFollowerCountInCache(castId: String, followerCount: Int) {
-        val mutableCasts = castDataSource.casts as? MutableList<Cast> ?: return
-        val index = mutableCasts.indexOfFirst { cast -> cast.id == castId }
-
-        if (index >= 0) {
-            mutableCasts[index] = mutableCasts[index].copy(followerCount = followerCount)
-        }
-    }
-
-    private fun searchCastsFromCache(
-        query: String?,
-        country: String?,
-        city: String?,
-        sort: CastSort,
-        cursor: String?,
-        pageSize: Int
-    ): PagedResult<Cast> {
-        var filtered = castDataSource.casts
-
-        if (!query.isNullOrBlank()) {
-            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
-        }
-        if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
-            val validCafeIds = cafeDataSource.cafes.filter { cafe ->
-                val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
-                val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
-                countryMatched && cityMatched
-            }.map { it.id }.toSet()
-            filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
-        }
-        filtered = when (sort) {
-            CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
-            CastSort.LATEST -> filtered.sortedByDescending { it.id }
-            CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
-        }
-        return pagingDataSource.toPaged(filtered, cursor, pageSize)
-    }
-}
-
-private fun String?.matchesMonthAndDay(month: Int, dayOfMonth: Int): Boolean {
-    val monthDay = this?.toBirthMonthDayOrNull()
-    if (monthDay == null) {
-        return false
-    }
-    val birthMonth = monthDay.first
-    val birthDay = monthDay.second
-
-    return birthMonth == month && birthDay == dayOfMonth
-}
-
-private fun String.toBirthMonthDayOrNull(): Pair<Int, Int>? {
-    val normalized = trim()
-    val isoParts = normalized.split("-")
-
-    if (isoParts.size == 3) {
-        val month = isoParts[1].toIntOrNull()
-        val day = isoParts[2].toIntOrNull()
-
-        if (month != null && day != null) {
-            return month to day
-        }
-    }
-    val slashParts = normalized.split("/")
-
-    if (slashParts.size == 3) {
-        val month = slashParts[0].toIntOrNull()
-        val day = slashParts[1].toIntOrNull()
-
-        if (month != null && day != null) {
-            return month to day
-        }
-    }
-    return null
 }

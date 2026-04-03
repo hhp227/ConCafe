@@ -612,5 +612,5 @@ final class CafeDashboardViewModel: ObservableObject {
         case castClaimPolling
     }
 
-    private let castClaimPollingIntervalNanoseconds: UInt64 = 5_000_000_000
+    private let castClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
 }

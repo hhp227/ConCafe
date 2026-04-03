@@ -18,6 +18,8 @@ class ExploreViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
@@ -36,6 +38,29 @@ class ExploreViewModel: ObservableObject {
                     uiState.isLoggedIn = user != nil
                     if user != nil {
                         uiState.isLoginPromptVisible = false
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeCafeRegistrationClaimEvent() {
+        tasks[.cafeRegistrationClaimEvent]?.cancel()
+        tasks[.cafeRegistrationClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    if let approved = event as? CafeRegistrationClaimEvent.Approved {
+                        let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        let shouldLoadCafePage = !approvedCafeId.isEmpty
+                            && uiState.cafes.contains(where: { $0.id == approvedCafeId }) == false
+
+                        if shouldLoadCafePage {
+                            self.loadCafePage(cursor: nil, append: false)
+                        } else {
+                            continue
+                        }
                     }
                 }
             } catch {
@@ -285,16 +310,19 @@ class ExploreViewModel: ObservableObject {
         getExploreCafePageUseCase: GetExploreCafePageUseCase = KoinInitializerKt.resolveGetExploreCafePageUseCase(),
         getExploreCastPageUseCase: GetExploreCastPageUseCase = KoinInitializerKt.resolveGetExploreCastPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getExploreCafePageUseCase = getExploreCafePageUseCase
         self.getExploreCastPageUseCase = getExploreCastPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
 
         observeSession()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -307,6 +335,7 @@ class ExploreViewModel: ObservableObject {
 
     private enum TaskKey {
         case session
+        case cafeRegistrationClaimEvent
         case cafeDetailEvent
         case castEvent
         case cafePage

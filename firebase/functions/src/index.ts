@@ -1,5 +1,5 @@
 import {setGlobalOptions} from "firebase-functions";
-import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {onDocumentDeleted, onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
@@ -2878,6 +2878,47 @@ export const onCastWrittenMarkRankingDirty = onDocumentWritten(
       cafeId: event.params.cafeId,
       castId: event.params.castId,
     });
+  }
+);
+
+export const onCastDeletedCleanupImages = onDocumentDeleted(
+  "cafes/{cafeId}/casts/{castId}",
+  async (event) => {
+    const castId = asNonBlankString(event.params.castId) ?? "unknown_cast";
+    const beforeData = event.data?.data() as Record<string, unknown> | undefined;
+    const profileImageUrl = asNonBlankString(beforeData?.profileImage);
+    const galleryImageUrls = asStringArray(beforeData?.galleryImages);
+    const imageUrls = [
+      ...galleryImageUrls,
+      ...(profileImageUrl == null ? [] : [profileImageUrl]),
+    ]
+      .map((imageUrl) => imageUrl.trim())
+      .filter((imageUrl) => imageUrl.length > 0);
+    const uniqueImageUrls = Array.from(new Set(imageUrls));
+
+    if (uniqueImageUrls.length == 0) {
+      return;
+    }
+    const results = await Promise.allSettled(
+      uniqueImageUrls.map((imageUrl) => deleteStorageFileByUrl(imageUrl))
+    );
+    const failedImageUrls = results
+      .map((result, index) => ({result, imageUrl: uniqueImageUrls[index]}))
+      .filter((entry) => entry.result.status === "rejected")
+      .map((entry) => entry.imageUrl);
+
+    if (failedImageUrls.length > 0) {
+      logger.warn("Failed to cleanup some cast images after cast deletion.", {
+        castId: castId,
+        failedCount: failedImageUrls.length,
+        failedImageUrls: failedImageUrls,
+      });
+    } else {
+      logger.info("Cleaned up cast images after cast deletion.", {
+        castId: castId,
+        deletedImageCount: uniqueImageUrls.length,
+      });
+    }
   }
 );
 

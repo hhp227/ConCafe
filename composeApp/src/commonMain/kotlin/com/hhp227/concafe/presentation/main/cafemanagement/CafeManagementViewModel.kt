@@ -36,7 +36,6 @@ class CafeManagementViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()
-    private var currentUserId: String? = null
 
     private fun loadCafeManagement() {
         jobs[TaskKey.LOAD_CAFE_MANAGEMENT]?.cancel()
@@ -159,8 +158,7 @@ class CafeManagementViewModel(
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest { user ->
-                currentUserId = user?.id
+            observeCurrentUserUseCase.invoke().collectLatest {
                 loadCafeManagement()
             }
         }
@@ -181,11 +179,13 @@ class CafeManagementViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { claimEvent ->
-                val userId = currentUserId ?: return@collectLatest
                 val shouldRefresh = when (claimEvent) {
-                    is CafeRegistrationClaimEvent.Created -> claimEvent.requesterUserId == userId
-                    is CafeRegistrationClaimEvent.Approved -> claimEvent.requesterUserId == userId
-                    is CafeRegistrationClaimEvent.Rejected -> claimEvent.requesterUserId == userId
+                    is CafeRegistrationClaimEvent.Created -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeRegistrationClaimEvent.Approved -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeRegistrationClaimEvent.Rejected -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
                 }
                 if (shouldRefresh) {
                     refreshPendingClaims(resetMessage = false)
@@ -269,4 +269,4 @@ class CafeManagementViewModel(
     }
 }
 
-private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 60_000L

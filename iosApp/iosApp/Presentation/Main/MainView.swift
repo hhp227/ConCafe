@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Shared
 
 struct MainView: View {
     let initialTab: String?
@@ -37,7 +38,7 @@ struct MainView: View {
                     .tag("myinfo")
             }
         }
-        .navigationTitle("ConCafe")
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -89,7 +90,14 @@ struct MainView: View {
                 viewModel.onAction(.selectTab(route: newValue))
             }
         }
-        .onReceive(viewModel.event) { _ in }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .showError:
+                break
+            case .navigateToSignUp:
+                onNavigationAction(.navigateToSignUp)
+            }
+        }
     }
 
     @ViewBuilder
@@ -119,6 +127,29 @@ struct MainView: View {
                     systemImage: compatSystemImageName(iOS16: "trophy.fill", fallback: "star.fill")
                 )
             }
+    }
+
+    private var navigationTitle: String {
+        switch selectedTab {
+        case MainNavigationTab.home.route:
+            return "홈"
+        case MainNavigationTab.explore.route:
+            return "탐색"
+        case MainNavigationTab.checkIn.route:
+            return "체크인"
+        case MainNavigationTab.fanManagement.route:
+            return "팬관리"
+        case MainNavigationTab.cafeManagement.route:
+            return "카페관리"
+        case MainNavigationTab.adminOperations.route:
+            return "운영관리"
+        case MainNavigationTab.ranking.route:
+            return "랭킹"
+        case MainNavigationTab.myInfo.route:
+            return "내 정보"
+        default:
+            return "홈"
+        }
     }
 
     init(
@@ -158,4 +189,3 @@ struct MainView_Previews: PreviewProvider {
         MainView(initialTab: "home", hasUnreadNotifications: false, onNavigationAction: { _ in })
     }
 }
-

@@ -26,6 +26,14 @@ interface AuthRepository {
         affiliatedCafeId: String? = null
     ): User
 
+    suspend fun completeSignUpForCurrentUser(
+        email: String,
+        nickname: String,
+        role: UserRole,
+        affiliatedCafeId: String? = null,
+        phoneNumber: String? = null
+    ): User
+
     suspend fun signOut()
 
     suspend fun requestPasswordReset(email: String)
