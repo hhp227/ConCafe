@@ -20,7 +20,6 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
@@ -135,18 +134,17 @@ private fun createRankingNativeAdView(context: android.content.Context): NativeA
     val headline = TextView(context)
     val body = TextView(context)
     val cta = Button(context)
-    val media = MediaView(context)
 
     root.layoutParams = LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.MATCH_PARENT
+        LinearLayout.LayoutParams.WRAP_CONTENT
     )
 
     container.orientation = LinearLayout.VERTICAL
     container.setPadding(24, 24, 24, 24)
     container.layoutParams = LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.MATCH_PARENT
+        LinearLayout.LayoutParams.WRAP_CONTENT
     )
 
     adBadge.text = "Ad"
@@ -166,15 +164,6 @@ private fun createRankingNativeAdView(context: android.content.Context): NativeA
     body.textSize = 13f
     body.setTextColor("#6F6670".toColorInt())
 
-    media.layoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        0
-    ).apply {
-        weight = 1f
-        topMargin = 16
-        bottomMargin = 16
-    }
-
     cta.textSize = 14f
     cta.setTextColor("#2B2330".toColorInt())
     cta.setBackgroundColor("#FFD1DC".toColorInt())
@@ -182,14 +171,12 @@ private fun createRankingNativeAdView(context: android.content.Context): NativeA
     container.addView(adBadge)
     container.addView(headline)
     container.addView(body)
-    container.addView(media)
     container.addView(cta)
 
     root.addView(container)
     root.headlineView = headline
     root.bodyView = body
     root.callToActionView = cta
-    root.mediaView = media
 
     return root
 }
@@ -201,7 +188,6 @@ private fun bindRankingNativeAd(
     val headlineView = nativeAdView.headlineView as? TextView
     val bodyView = nativeAdView.bodyView as? TextView
     val callToActionView = nativeAdView.callToActionView as? Button
-    val mediaView = nativeAdView.mediaView
 
     headlineView?.text = nativeAd.headline
     bodyView?.text = nativeAd.body ?: ""
@@ -219,7 +205,5 @@ private fun bindRankingNativeAd(
     } else {
         callToActionView?.visibility = View.VISIBLE
     }
-
-    mediaView?.mediaContent = nativeAd.mediaContent
     nativeAdView.setNativeAd(nativeAd)
 }

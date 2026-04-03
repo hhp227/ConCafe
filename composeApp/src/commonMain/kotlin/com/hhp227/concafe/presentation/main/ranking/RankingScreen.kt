@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -39,8 +38,6 @@ import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
-
-private val RankingPromoContentHeight = 140.dp
 
 @Composable
 fun RankingScreen(
@@ -234,7 +231,7 @@ fun RankingPromoBanner(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         if (selectedIndex == 0) {
-            Column(
+            Box(
                 modifier = Modifier
                     .background(
                         Brush.linearGradient(
@@ -242,27 +239,25 @@ fun RankingPromoBanner(
                         )
                     )
                     .padding(20.dp)
-                    .height(RankingPromoContentHeight),
-                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                RankingNativeAd(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(size) { index ->
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 3.dp)
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFFE3D9E0))
-                                .clickable { onSelect(index) }
-                                .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    RankingNativeAd(
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(size) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 3.dp)
+                                    .clip(RoundedCornerShape(999.dp))
+                                    .background(if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFFE3D9E0))
+                                    .clickable { onSelect(index) }
+                                    .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -276,11 +271,7 @@ fun RankingPromoBanner(
                     )
                     .padding(20.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .height(RankingPromoContentHeight),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -313,29 +304,9 @@ fun RankingPromoBanner(
                                     )
                                 }
                             }
-                            Text(
-                                ad.title,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                ad.subtitle,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                ad.desc,
-                                color = Color.White.copy(alpha = 0.92f),
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
                         }
                         Button(
                             onClick = {},

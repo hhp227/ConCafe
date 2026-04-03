@@ -41,7 +41,7 @@ struct RankingNativeAdCard: View {
                         .foregroundStyle(Color(hex: "7E5A6E"))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(16)
+                .padding(20)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -109,13 +109,17 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         nativeAdView.addSubview(container)
 
         NSLayoutConstraint.activate([
-            container.leadingAnchor.constraint(equalTo: nativeAdView.leadingAnchor, constant: 16),
-            container.trailingAnchor.constraint(equalTo: nativeAdView.trailingAnchor, constant: -16),
-            container.topAnchor.constraint(equalTo: nativeAdView.topAnchor, constant: 16),
-            container.bottomAnchor.constraint(equalTo: nativeAdView.bottomAnchor, constant: -16)
+            container.leadingAnchor.constraint(equalTo: nativeAdView.leadingAnchor, constant: 20),
+            container.trailingAnchor.constraint(equalTo: nativeAdView.trailingAnchor, constant: -20),
+            container.topAnchor.constraint(equalTo: nativeAdView.topAnchor, constant: 20),
+            container.bottomAnchor.constraint(equalTo: nativeAdView.bottomAnchor, constant: -20)
         ])
 
-        badgeLabel.text = String(localized: String.LocalizationValue("ranking_native_ad_badge"), table: "Localizable")
+        badgeLabel.text = String(
+            localized: "ranking_native_ad_badge",
+            defaultValue: "광고",
+            table: "Localizable"
+        )
         badgeLabel.font = .systemFont(ofSize: 12, weight: .bold)
         badgeLabel.textColor = UIColor(Color(hex: "B74D73"))
         badgeLabel.backgroundColor = UIColor(Color(hex: "FFE9F1"))
@@ -169,17 +173,35 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
 private struct RankingNativeAdCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: String.LocalizationValue("ranking_native_ad_badge"), table: "Localizable"))
+            Text(
+                String(
+                    localized: "ranking_native_ad_badge",
+                    defaultValue: "광고",
+                    table: "Localizable"
+                )
+            )
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(Color(hex: "B74D73"))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.46))
                 .clipShape(Capsule())
-            Text(String(localized: String.LocalizationValue("ranking_native_ad_title"), table: "Localizable"))
+            Text(
+                String(
+                    localized: "ranking_native_ad_title",
+                    defaultValue: "랭킹 프로모션",
+                    table: "Localizable"
+                )
+            )
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            Text(String(localized: String.LocalizationValue("ranking_native_ad_desc"), table: "Localizable"))
+            Text(
+                String(
+                    localized: "ranking_native_ad_desc",
+                    defaultValue: "ConCafe의 최신 소식을 확인해보세요.",
+                    table: "Localizable"
+                )
+            )
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6F6670"))
         }

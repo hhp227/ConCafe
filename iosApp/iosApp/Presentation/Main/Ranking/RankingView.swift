@@ -12,8 +12,6 @@ import UIKit
 import GoogleMobileAds
 #endif
 
-private let rankingPromoContentHeight: CGFloat = 140
-
 struct RankingView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
@@ -234,7 +232,6 @@ struct RankingPromoBanner: View {
         ZStack {
             if selectedIndex == 0 {
                 RankingNativeAdCard()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 LinearGradient(
                     colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
@@ -258,15 +255,12 @@ struct RankingPromoBanner: View {
                             Text(ad.title)
                             .font(.title3.weight(.bold))
                             .foregroundStyle(.white)
-                            .lineLimit(1)
                             Text(ad.subtitle)
                             .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
-                            .lineLimit(1)
                             Text(ad.desc)
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.92))
-                            .lineLimit(2)
                         }
                         Spacer(minLength: 8)
                         Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
@@ -279,10 +273,8 @@ struct RankingPromoBanner: View {
                     }
                 }
                 .padding(20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
-        .frame(height: rankingPromoContentHeight)
         .overlay(alignment: .bottom) {
             HStack(spacing: 6) {
                 ForEach(0..<size, id: \.self) { index in
