@@ -165,6 +165,36 @@ class FakeAuthRepository(
         return user
     }
 
+    override suspend fun completeSignUpForCurrentUser(
+        email: String,
+        nickname: String,
+        role: UserRole,
+        affiliatedCafeId: String?,
+        phoneNumber: String?
+    ): User {
+        val currentUserId = dataSource.currentUserId
+            ?: throw IllegalArgumentException("no signed in user")
+        val currentUserIndex = dataSource.users.indexOfFirst { user -> user.id == currentUserId }
+
+        if (currentUserIndex < 0) {
+            throw IllegalArgumentException("current user not found")
+        }
+        val currentUser = dataSource.users[currentUserIndex]
+        val updatedUser = currentUser.copy(
+            email = email,
+            nickname = nickname,
+            role = role,
+            phoneNumber = phoneNumber
+        )
+
+        dataSource.users[currentUserIndex] = updatedUser
+        if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+            dataSource.affiliatedCafeIdByUser[updatedUser.id] = affiliatedCafeId
+        }
+        currentUserFlow.value = updatedUser
+        return updatedUser
+    }
+
     override suspend fun signOut() {
         dataSource.currentUserId = null
         currentUserFlow.value = null

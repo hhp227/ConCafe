@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Shared
 
 struct MainView: View {
     let initialTab: String?
@@ -89,7 +90,14 @@ struct MainView: View {
                 viewModel.onAction(.selectTab(route: newValue))
             }
         }
-        .onReceive(viewModel.event) { _ in }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .showError:
+                break
+            case .navigateToSignUp:
+                onNavigationAction(.navigateToSignUp)
+            }
+        }
     }
 
     @ViewBuilder

@@ -15,6 +15,8 @@ struct SignUpView: View {
 
     @StateObject private var viewModel = SignUpViewModel()
 
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         SignUpContentView(
             uiState: viewModel.uiState,
@@ -26,6 +28,14 @@ struct SignUpView: View {
                 onNavigationAction(.navigateToMain())
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            }
+        }
+        .onDisappear {
+            viewModel.onAction(.cleanupIncompleteAccount)
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .background {
+                viewModel.onAction(.cleanupIncompleteAccount)
             }
         }
     }
@@ -297,7 +307,7 @@ private struct SignUpContentView: View {
                 HStack(alignment: .bottom, spacing: 10) {
                     textField(
                         title: "인증번호",
-                        placeholder: "인증번호 4자리",
+                        placeholder: "인증번호 6자리",
                         text: Binding(
                             get: { uiState.verificationCode },
                             set: { onAction(.verificationCodeChanged($0)) }

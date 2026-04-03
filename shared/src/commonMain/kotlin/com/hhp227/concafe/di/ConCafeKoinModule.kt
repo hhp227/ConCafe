@@ -602,6 +602,7 @@ val useCaseModule = module {
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { RequestPasswordResetUseCase(get()) }
     factory { SignUpUseCase(get()) }
+    factory { CompleteSignUpForCurrentUserUseCase(get()) }
     factory { SignOutUseCase(get(), get()) }
     factory { RequestPhoneVerificationCodeUseCase() }
     factory { VerifyPhoneVerificationCodeUseCase() }

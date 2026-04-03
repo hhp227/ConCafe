@@ -60,6 +60,11 @@ fun SignUpScreen(
             }
         }
     }
+    DisposableEffect(viewModel) {
+        onDispose {
+            viewModel.onAction(SignUpAction.CleanupIncompleteAccount)
+        }
+    }
     SignUpContentScreen(
         uiState = uiState,
         onAction = viewModel::onAction

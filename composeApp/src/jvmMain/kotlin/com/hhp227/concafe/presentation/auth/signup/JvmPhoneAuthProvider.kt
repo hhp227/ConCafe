@@ -11,4 +11,12 @@ class JvmPhoneAuthProvider : PhoneAuthProvider {
     override suspend fun verifyCode(code: String): AppResult<Unit> {
         return AppResult.Failure(AppError.Unknown("phone verification is not supported on desktop"))
     }
+
+    override suspend fun linkEmail(email: String, password: String): AppResult<Unit> {
+        return AppResult.Failure(AppError.Unknown("phone verification is not supported on desktop"))
+    }
+
+    override suspend fun cleanupIncompleteAccount(): AppResult<Unit> {
+        return AppResult.Success(Unit)
+    }
 }

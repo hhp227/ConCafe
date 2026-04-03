@@ -2761,6 +2761,8 @@ class FirestoreConCafeDataSource(
                 "role" to firestoreString(user.role.name),
                 "banned" to firestoreBoolean(user.banned),
                 "createdAt" to firestoreString(user.createdAt),
+                "phoneNumber" to firestoreNullableString(user.phoneNumber),
+                "signupCompleted" to firestoreBoolean(user.signupCompleted),
                 "affiliatedCafeId" to firestoreNullableString(existingAffiliatedCafeId)
             )
         )
@@ -5234,6 +5236,10 @@ class FirestoreConCafeDataSource(
         val role = fields.getFirestoreString("role")?.toUserRoleOrNull() ?: UserRole.VISITOR
         val createdAt = fields.getFirestoreString("createdAt") ?: "1970-01-01T00:00:00Z"
         val profileImage = fields.getFirestoreString("profileImage")
+        val phoneNumber = fields.getFirestoreString("phoneNumber")
+            ?: fields.getFirestoreString("contactNumber")
+            ?: fields.getFirestoreString("phone")
+        val signupCompleted = fields.getFirestoreBoolean("signupCompleted") ?: true
         val banned = fields.getFirestoreBoolean("banned") ?: false
         return User(
             id = userId,
@@ -5242,7 +5248,9 @@ class FirestoreConCafeDataSource(
             profileImage = profileImage,
             role = role,
             banned = banned,
-            createdAt = createdAt
+            createdAt = createdAt,
+            phoneNumber = phoneNumber,
+            signupCompleted = signupCompleted
         )
     }
 

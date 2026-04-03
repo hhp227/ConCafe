@@ -129,7 +129,8 @@ class AuthRepositoryImpl(
             profileImage = null,
             role = role,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
 
         if (role == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
@@ -154,6 +155,48 @@ class AuthRepositoryImpl(
             )
         }
 
+        authDataSource.currentUserId = user.id
+        return user
+    }
+
+    override suspend fun completeSignUpForCurrentUser(
+        email: String,
+        nickname: String,
+        role: UserRole,
+        affiliatedCafeId: String?,
+        phoneNumber: String?
+    ): User {
+        val normalizedEmail = email.trim()
+        val normalizedNickname = nickname.trim()
+        val normalizedPhoneNumber = phoneNumber?.trim()?.ifBlank { null }
+
+        if (normalizedEmail.isBlank() || normalizedNickname.isBlank()) {
+            throw IllegalArgumentException("email/nickname is required")
+        }
+        val currentUserId = authTokenProvider.getCurrentUserId()
+            ?: authDataSource.currentUserId
+            ?: throw IllegalArgumentException("no signed in user")
+        val existingUser = firestoreSyncDataSource.fetchUser(currentUserId)
+        val resolvedRole = resolveEffectiveRole(
+            userId = currentUserId,
+            baseRole = role
+        )
+        val user = User(
+            id = currentUserId,
+            email = normalizedEmail,
+            nickname = normalizedNickname,
+            profileImage = existingUser?.profileImage,
+            role = resolvedRole,
+            banned = existingUser?.banned ?: false,
+            createdAt = existingUser?.createdAt ?: nowIsoUtc(),
+            phoneNumber = normalizedPhoneNumber ?: existingUser?.phoneNumber,
+            signupCompleted = true
+        )
+
+        if (resolvedRole == UserRole.CAST && !affiliatedCafeId.isNullOrBlank()) {
+            castRemoteDataSource.setAffiliatedCafeId(currentUserId, affiliatedCafeId)
+        }
+        firestoreSyncDataSource.pushUser(user)
         authDataSource.currentUserId = user.id
         return user
     }
@@ -288,7 +331,8 @@ class AuthRepositoryImpl(
             profileImage = null,
             role = fallbackRole,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
 
         runCatching { firestoreSyncDataSource.pushUser(createdUser) }
@@ -333,7 +377,8 @@ class AuthRepositoryImpl(
             profileImage = null,
             role = fallbackRole,
             banned = false,
-            createdAt = nowIsoUtc()
+            createdAt = nowIsoUtc(),
+            signupCompleted = true
         )
         runCatching { firestoreSyncDataSource.pushUser(fallbackUser) }
         return fallbackUser
