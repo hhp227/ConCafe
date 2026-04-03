@@ -72,12 +72,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        #if DEBUG
-        Auth.auth().setAPNSToken(deviceToken, type: .sandbox)
-        #else
-        Auth.auth().setAPNSToken(deviceToken, type: .prod)
-        #endif
+        Auth.auth().setAPNSToken(deviceToken, type: .unknown)
         Messaging.messaging().apnsToken = deviceToken
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        print("APNs registration failed: \(error.localizedDescription)")
     }
 
     func application(

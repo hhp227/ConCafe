@@ -281,6 +281,8 @@ class SignUpViewModel: ObservableObject {
 
         if authErrorCode == .invalidPhoneNumber {
             return "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
+        } else if authErrorCode == .invalidAppCredential {
+            return "앱 인증 토큰이 유효하지 않습니다. 푸시 인증서/APNs 설정을 확인해주세요."
         } else if authErrorCode == .quotaExceeded {
             return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
         } else if authErrorCode == .captchaCheckFailed {

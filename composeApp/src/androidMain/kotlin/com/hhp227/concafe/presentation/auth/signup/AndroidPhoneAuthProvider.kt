@@ -72,7 +72,8 @@ class AndroidPhoneAuthProvider(
             auth.signOut()
             AppResult.Success(Unit)
         } catch (e: FirebaseAuthInvalidCredentialsException) {
-            AppResult.Failure(AppError.ValidationFailed("invalid code"))
+            val reason = e.errorCode.ifBlank { "invalid code" }
+            AppResult.Failure(AppError.ValidationFailed(reason))
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
