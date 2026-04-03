@@ -34,13 +34,38 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.cafe_accessibility_back
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.common_confirm
+import concafe.composeapp.generated.resources.dashboard_accessibility_cast_add
+import concafe.composeapp.generated.resources.dashboard_accessibility_cast_delete
+import concafe.composeapp.generated.resources.dashboard_accessibility_cast_load_more
+import concafe.composeapp.generated.resources.dashboard_accessibility_external_link_delete
+import concafe.composeapp.generated.resources.dashboard_accessibility_external_link_edit
+import concafe.composeapp.generated.resources.dashboard_action_add
+import concafe.composeapp.generated.resources.dashboard_action_approve
+import concafe.composeapp.generated.resources.dashboard_action_create_banner
+import concafe.composeapp.generated.resources.dashboard_action_load_more
+import concafe.composeapp.generated.resources.dashboard_action_loading
+import concafe.composeapp.generated.resources.dashboard_action_reject
+import concafe.composeapp.generated.resources.dashboard_action_schedule_management
+import concafe.composeapp.generated.resources.dashboard_action_view_all
 import concafe.composeapp.generated.resources.dashboard_banner_period_days
 import concafe.composeapp.generated.resources.dashboard_banner_status_active
 import concafe.composeapp.generated.resources.dashboard_banner_status_hidden
 import concafe.composeapp.generated.resources.dashboard_banner_status_scheduled
+import concafe.composeapp.generated.resources.dashboard_delete_cast_message
+import concafe.composeapp.generated.resources.dashboard_delete_cast_title
 import concafe.composeapp.generated.resources.dashboard_external_link_add
 import concafe.composeapp.generated.resources.dashboard_external_link_edit
+import concafe.composeapp.generated.resources.dashboard_external_link_guide
+import concafe.composeapp.generated.resources.dashboard_external_link_label_title
+import concafe.composeapp.generated.resources.dashboard_external_link_label_url
+import concafe.composeapp.generated.resources.dashboard_external_link_placeholder_title
 import concafe.composeapp.generated.resources.dashboard_external_link_save
+import concafe.composeapp.generated.resources.dashboard_external_link_section_subtitle
+import concafe.composeapp.generated.resources.dashboard_hero_subtitle
 import concafe.composeapp.generated.resources.dashboard_info_cast_claim_approved
 import concafe.composeapp.generated.resources.dashboard_info_cast_claim_rejected
 import concafe.composeapp.generated.resources.dashboard_info_cast_deleted
@@ -51,6 +76,16 @@ import concafe.composeapp.generated.resources.dashboard_info_external_link_input
 import concafe.composeapp.generated.resources.dashboard_info_external_link_updated
 import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_delete
 import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_schedule
+import concafe.composeapp.generated.resources.dashboard_metric_rating
+import concafe.composeapp.generated.resources.dashboard_metric_today_checkin
+import concafe.composeapp.generated.resources.dashboard_metric_today_review
+import concafe.composeapp.generated.resources.dashboard_pending_claim_title
+import concafe.composeapp.generated.resources.dashboard_section_cast_management
+import concafe.composeapp.generated.resources.dashboard_section_home_banner
+import concafe.composeapp.generated.resources.dashboard_section_menu_subtitle
+import concafe.composeapp.generated.resources.dashboard_section_menu_title
+import concafe.composeapp.generated.resources.dashboard_section_metrics_subtitle
+import concafe.composeapp.generated.resources.dashboard_section_metrics_title
 import concafe.composeapp.generated.resources.dashboard_shortcut_cafe_settings
 import concafe.composeapp.generated.resources.dashboard_shortcut_cast_management
 import concafe.composeapp.generated.resources.dashboard_shortcut_cast_schedule
@@ -58,6 +93,7 @@ import concafe.composeapp.generated.resources.dashboard_shortcut_event_managemen
 import concafe.composeapp.generated.resources.dashboard_shortcut_external_links
 import concafe.composeapp.generated.resources.dashboard_shortcut_home_banner
 import concafe.composeapp.generated.resources.dashboard_shortcut_menu_goods
+import concafe.composeapp.generated.resources.dashboard_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -116,16 +152,16 @@ fun CafeDashboardScreen(
     if (uiState.isDeleteCastDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) },
-            title = { Text("캐스트 프로필 삭제") },
-            text = { Text("캐스트 프로필을 삭제하시겠습니까?") },
+            title = { Text(stringResource(Res.string.dashboard_delete_cast_title)) },
+            text = { Text(stringResource(Res.string.dashboard_delete_cast_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(CafeDashboardAction.ConfirmDeleteCast) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.common_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -162,11 +198,11 @@ private fun CafeDashboardContentScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(cafe?.name ?: "카페 관리")
+                    Text(cafe?.name ?: stringResource(Res.string.dashboard_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeDashboardAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.cafe_accessibility_back))
                     }
                 }
             )
@@ -327,18 +363,18 @@ private fun ExternalLinkSheetContent(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.",
+            text = stringResource(Res.string.dashboard_external_link_guide),
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF7A707A)
         )
         ConCafeFormField(
-            label = "제목",
+            label = stringResource(Res.string.dashboard_external_link_label_title),
             value = uiState.externalLinkTitle,
             onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkTitle(it)) },
-            placeholder = "예: 공식 X 계정"
+            placeholder = stringResource(Res.string.dashboard_external_link_placeholder_title)
         )
         ConCafeFormField(
-            label = "링크 URL",
+            label = stringResource(Res.string.dashboard_external_link_label_url),
             value = uiState.externalLinkUrl,
             onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkUrl(it)) },
             placeholder = "https://"
@@ -368,7 +404,7 @@ private fun ExternalLinkSheetContent(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("닫기")
+            Text(stringResource(Res.string.common_close))
         }
     }
 }
@@ -398,19 +434,19 @@ private fun ExternalLinkSection(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "외부 링크",
+                        text = stringResource(Res.string.dashboard_shortcut_external_links),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF8C7A83)
                     )
                     Text(
-                        text = "앱 외부로 연결할 링크를 관리합니다.",
+                        text = stringResource(Res.string.dashboard_external_link_section_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7E7480)
                     )
                 }
                 TextButton(onClick = onAddClick) {
-                    Text("추가", color = Color(0xFFEF6797))
+                    Text(stringResource(Res.string.dashboard_action_add), color = Color(0xFFEF6797))
                 }
             }
             Surface(
@@ -471,14 +507,14 @@ private fun ExternalLinkSection(
                             IconButton(onClick = { onEditClick(link.id) }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "외부 링크 수정",
+                                    contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_edit),
                                     tint = Color(0xFF8F848F)
                                 )
                             }
                             IconButton(onClick = { onDeleteClick(link.id) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = "외부 링크 삭제",
+                                    contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_delete),
                                     tint = Color(0xFF8F848F)
                                 )
                             }
@@ -493,7 +529,7 @@ private fun ExternalLinkSection(
                             contentColor = Color(0xFF2B2330)
                         )
                     ) {
-                        Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.dashboard_external_link_add), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -509,7 +545,7 @@ private fun PendingCastClaimSection(
     onReject: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("프로필 연결 요청", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.dashboard_pending_claim_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         claims.take(3).forEach { claim ->
             Card(
                 shape = RoundedCornerShape(18.dp),
@@ -544,14 +580,14 @@ private fun PendingCastClaimSection(
                                 contentColor = Color(0xFF2B2330)
                             )
                         ) {
-                            Text("승인", fontWeight = FontWeight.Bold)
+                            Text(stringResource(Res.string.dashboard_action_approve), fontWeight = FontWeight.Bold)
                         }
                         OutlinedButton(
                             onClick = { onReject(claim.claimId) },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("반려", fontWeight = FontWeight.Bold)
+                            Text(stringResource(Res.string.dashboard_action_reject), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -609,7 +645,7 @@ private fun DashboardHeroCard(
                     }
                 }
                 Text(
-                    text = "선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다.",
+                    text = stringResource(Res.string.dashboard_hero_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
@@ -642,7 +678,7 @@ private fun InfoBanner(
                 color = Color(0xFF6B5320)
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "안내 닫기", tint = Color(0xFF6B5320))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = Color(0xFF6B5320))
             }
         }
     }
@@ -654,8 +690,8 @@ private fun DashboardMetricGrid(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
-            title = "운영 대시보드",
-            subtitle = "오늘 기준 핵심 수치"
+            title = stringResource(Res.string.dashboard_section_metrics_title),
+            subtitle = stringResource(Res.string.dashboard_section_metrics_subtitle)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -663,19 +699,19 @@ private fun DashboardMetricGrid(
         ) {
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "오늘 체크인",
+                title = stringResource(Res.string.dashboard_metric_today_checkin),
                 value = cafe.todayCheckIns.toString(),
                 accent = Color(0xFFEF6797)
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "오늘 리뷰",
+                title = stringResource(Res.string.dashboard_metric_today_review),
                 value = cafe.todayReviews.toString(),
                 accent = Color(0xFF47A88B)
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "평점",
+                title = stringResource(Res.string.dashboard_metric_rating),
                 value = formatRating(cafe.rating),
                 accent = Color(0xFFF59E0B)
             )
@@ -723,8 +759,8 @@ private fun ShortcutGrid(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionHeader(
-            title = "관리 메뉴",
-            subtitle = "선택한 카페 컨텍스트로 이동"
+            title = stringResource(Res.string.dashboard_section_menu_title),
+            subtitle = stringResource(Res.string.dashboard_section_menu_subtitle)
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -849,7 +885,7 @@ private fun CastManagementSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "소속 캐스트 관리",
+                    text = stringResource(Res.string.dashboard_section_cast_management),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8C7A83)
@@ -867,7 +903,7 @@ private fun CastManagementSection(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "캐스트 삭제"
+                            contentDescription = stringResource(Res.string.dashboard_accessibility_cast_delete)
                         )
                     }
                     Surface(
@@ -887,7 +923,7 @@ private fun CastManagementSection(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "출근표 관리",
+                                text = stringResource(Res.string.dashboard_action_schedule_management),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Color(0xFFEF6797),
                                 fontWeight = FontWeight.Bold
@@ -1047,14 +1083,14 @@ private fun LoadMoreCastItem(
                 } else {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "캐스트 더 보기",
+                        contentDescription = stringResource(Res.string.dashboard_accessibility_cast_load_more),
                         tint = Color(0xFF8F848F)
                     )
                 }
             }
         }
         Text(
-            text = if (isLoading) "불러오는 중" else "더 보기",
+            text = if (isLoading) stringResource(Res.string.dashboard_action_loading) else stringResource(Res.string.dashboard_action_load_more),
             style = MaterialTheme.typography.labelMedium,
             color = Color(0xFF8F848F),
             fontWeight = FontWeight.Bold
@@ -1081,13 +1117,13 @@ private fun AddCastItem(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "캐스트 추가",
+                    contentDescription = stringResource(Res.string.dashboard_accessibility_cast_add),
                     tint = Color(0xFFB8AEB7)
                 )
             }
         }
         Text(
-            text = "추가",
+            text = stringResource(Res.string.dashboard_action_add),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF8F848F)
@@ -1116,13 +1152,13 @@ private fun HomeBannerSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "홈 배너 관리",
+                    text = stringResource(Res.string.dashboard_section_home_banner),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8C7A83)
                 )
                 TextButton(onClick = onBannerClick) {
-                    Text("전체 보기")
+                    Text(stringResource(Res.string.dashboard_action_view_all))
                 }
             }
             Card(
@@ -1218,7 +1254,7 @@ private fun HomeBannerSection(
                             contentDescription = null
                         )
                         Text(
-                            text = "새 배너 등록하기",
+                            text = stringResource(Res.string.dashboard_action_create_banner),
                             modifier = Modifier.padding(start = 6.dp),
                             fontWeight = FontWeight.Bold
                         )

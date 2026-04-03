@@ -14213,6 +14213,623 @@
         }
       }
     },
+    "reviewedit_accessibility_back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "戻る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "뒤로가기"
+          }
+        }
+      }
+    },
+    "reviewedit_verified_visit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verified Visit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "訪問認証済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방문 인증됨"
+          }
+        }
+      }
+    },
+    "reviewedit_rating_question": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How was your cafe experience?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カフェ体験はいかがでしたか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카페 경험은 어떠셨나요?"
+          }
+        }
+      }
+    },
+    "reviewedit_photo_section_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo Upload (Optional)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真登録（任意）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진 등록 (선택)"
+          }
+        }
+      }
+    },
+    "reviewedit_photo_add": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Review Photo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビュー写真を追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리뷰 사진 추가"
+          }
+        }
+      }
+    },
+    "reviewedit_photo_remove": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제거"
+          }
+        }
+      }
+    },
+    "reviewedit_photo_helper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review photos are optional, and only one photo can be uploaded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビュー写真は任意で、最大1枚まで登録できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다."
+          }
+        }
+      }
+    },
+    "reviewedit_review_detail_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailed Review"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細レビュー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상세 리뷰"
+          }
+        }
+      }
+    },
+    "reviewedit_review_detail_hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share your honest experience about atmosphere, taste, and service (minimum 10 characters)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カフェの雰囲気、味、サービスについて率直な感想を残してください（最低10文字以上）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)"
+          }
+        }
+      }
+    },
+    "reviewedit_review_length": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d/%2$d+ characters"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d/%2$d文字以上"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d/%2$d자 이상"
+          }
+        }
+      }
+    },
+    "reviewedit_atmosphere_question": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was the atmosphere good?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "雰囲気は良かったですか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "분위기가 좋았나요?"
+          }
+        }
+      }
+    },
+    "reviewedit_atmosphere_positive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はい"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네"
+          }
+        }
+      }
+    },
+    "reviewedit_atmosphere_negative": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いいえ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아니요"
+          }
+        }
+      }
+    },
+    "reviewedit_cast_tag_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentioned Cast"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一緒に言及したキャスト"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "함께 언급한 캐스트"
+          }
+        }
+      }
+    },
+    "reviewedit_rating_accessibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating %1$d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "評価 %1$d"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "평점 %1$d"
+          }
+        }
+      }
+    },
+    "dashboard_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cafe Management" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "カフェ管理" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "카페 관리" } }
+      }
+    },
+    "dashboard_delete_cast_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete Cast Profile" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャストプロフィール削除" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "캐스트 프로필 삭제" } }
+      }
+    },
+    "dashboard_delete_cast_message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Do you want to delete this cast profile?" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャストプロフィールを削除しますか？" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "캐스트 프로필을 삭제하시겠습니까?" } }
+      }
+    },
+    "dashboard_hero_subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Check selected cafe metrics and management entry points on one screen." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "選択したカフェの運営指標と管理導線を1画面で確認できます。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다." } }
+      }
+    },
+    "dashboard_section_metrics_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Operations Dashboard" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "運営ダッシュボード" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "운영 대시보드" } }
+      }
+    },
+    "dashboard_section_metrics_subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Key metrics as of today" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "本日時点の主要指標" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "오늘 기준 핵심 수치" } }
+      }
+    },
+    "dashboard_metric_today_checkin": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Today's Check-ins" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "本日のチェックイン" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "오늘 체크인" } }
+      }
+    },
+    "dashboard_metric_today_review": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Today's Reviews" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "本日のレビュー" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "오늘 리뷰" } }
+      }
+    },
+    "dashboard_metric_rating": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rating" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "評価" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "평점" } }
+      }
+    },
+    "dashboard_pending_claim_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Profile Link Requests" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プロフィール連携リクエスト" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "프로필 연결 요청" } }
+      }
+    },
+    "dashboard_action_approve": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Approve" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "承認" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "승인" } }
+      }
+    },
+    "dashboard_action_reject": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reject" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "却下" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "반려" } }
+      }
+    },
+    "dashboard_section_menu_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Management Menu" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "管理メニュー" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "관리 메뉴" } }
+      }
+    },
+    "dashboard_section_menu_subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Navigate with selected cafe context" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "選択したカフェのコンテキストで移動" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "선택한 카페 컨텍스트로 이동" } }
+      }
+    },
+    "dashboard_section_cast_management": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Affiliated Cast Management" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "所属キャスト管理" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "소속 캐스트 관리" } }
+      }
+    },
+    "dashboard_action_schedule_management": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Schedule Management" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "シフト表管理" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "출근표 관리" } }
+      }
+    },
+    "dashboard_action_add": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "追加" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "추가" } }
+      }
+    },
+    "dashboard_action_load_more": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Load More" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "もっと見る" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "더 보기" } }
+      }
+    },
+    "dashboard_action_loading": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Loading" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "読み込み中" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "불러오는 중" } }
+      }
+    },
+    "dashboard_section_home_banner": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Home Banner Management" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ホームバナー管理" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "홈 배너 관리" } }
+      }
+    },
+    "dashboard_action_view_all": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "View All" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "全体表示" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "전체 보기" } }
+      }
+    },
+    "dashboard_action_create_banner": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Create New Banner" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "新しいバナーを登録" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "새 배너 등록하기" } }
+      }
+    },
+    "dashboard_external_link_section_subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Manage links that open outside the app." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アプリ外に遷移するリンクを管理します。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "앱 외부로 연결할 링크를 관리합니다." } }
+      }
+    },
+    "dashboard_external_link_guide": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Quickly add external links shown on home or cafe screens." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ホームまたはカフェ画面に表示する外部リンクを簡単に登録します。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다." } }
+      }
+    },
+    "dashboard_external_link_label_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Title" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "タイトル" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "제목" } }
+      }
+    },
+    "dashboard_external_link_label_url": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Link URL" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "リンクURL" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "링크 URL" } }
+      }
+    },
+    "dashboard_external_link_placeholder_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "e.g. Official X account" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "例: 公式Xアカウント" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "예: 공식 X 계정" } }
+      }
+    },
+    "dashboard_accessibility_cast_delete": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete cast" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャスト削除" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "캐스트 삭제" } }
+      }
+    },
+    "dashboard_accessibility_cast_load_more": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Load more casts" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャストをさらに表示" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "캐스트 더 보기" } }
+      }
+    },
+    "dashboard_accessibility_cast_add": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add cast" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャスト追加" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "캐스트 추가" } }
+      }
+    },
+    "dashboard_accessibility_external_link_edit": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Edit external link" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "外部リンク編集" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "외부 링크 수정" } }
+      }
+    },
+    "dashboard_accessibility_external_link_delete": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete external link" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "外部リンク削除" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "외부 링크 삭제" } }
+      }
+    },
+    "admin_banner_card_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Banner Registration" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "バナー登録" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "배너 등록" } }
+      }
+    },
+    "admin_banner_card_description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Register platform notices or promotional banners quickly." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プラットフォーム告知やプロモーションバナーをすぐに登録します。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "플랫폼 공지 또는 프로모션 배너를 바로 등록합니다." } }
+      }
+    },
+    "admin_pending_section_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pending Approval Requests" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "承認待ちリクエスト" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "승인 대기 요청" } }
+      }
+    },
+    "admin_pending_owner_claim_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Owner Permission Request - %1$@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "店長権限申請 - %1$@" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "점장 권한 신청 - %1$@" } }
+      }
+    },
+    "admin_inquiry_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Inquiries" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "お問い合わせ" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "문의하기" } }
+      }
+    },
+    "admin_inquiry_empty": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No inquiries have been registered." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "登録されたお問い合わせはありません。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "등록된 문의가 없습니다." } }
+      }
+    },
+    "admin_inquiry_load_more": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Load More Inquiries" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "お問い合わせをさらに読み込む" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "문의 더 불러오기" } }
+      }
+    },
+    "admin_writer": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Writer %1$@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "作成者 %1$@" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "작성자 %1$@" } }
+      }
+    },
+    "admin_quick_menu_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Operations Quick Menu" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "運営クイックメニュー" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "운영 퀵메뉴" } }
+      }
+    },
     "dashboard_shortcut_external_links": {
       "localizations": {
         "en": {

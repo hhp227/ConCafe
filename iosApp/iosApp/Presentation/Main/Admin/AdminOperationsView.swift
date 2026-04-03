@@ -85,10 +85,10 @@ struct AdminOperationsView: View {
     private var pendingSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("승인 대기 요청")
+                Text(String(localized: String.LocalizationValue("admin_pending_section_title"), table: "Localizable"))
                     .font(.title3.weight(.bold))
                 Spacer()
-                Button("전체보기") {
+                Button(String(localized: String.LocalizationValue("dashboard_action_view_all"), table: "Localizable")) {
                     viewModel.onAction(.clickSeeAllPending)
                 }
                 .font(.subheadline.weight(.semibold))
@@ -138,7 +138,11 @@ struct AdminOperationsView: View {
     private func pendingOwnerClaimCard(_ claim: PendingCafeOwnerClaimPreview) -> some View {
         pendingCard(
             claimId: claim.claimId,
-            title: "점장 권한 신청 - \(claim.requesterNickname)",
+            title: String(
+                format: String(localized: String.LocalizationValue("admin_pending_owner_claim_title"), table: "Localizable"),
+                locale: Locale.current,
+                claim.requesterNickname
+            ),
             subtitle: claim.location,
             requestedAt: claim.requestedAt,
             imageUrl: claim.imageUrl
@@ -183,7 +187,7 @@ struct AdminOperationsView: View {
                     Button {
                         viewModel.onAction(.approvePending(claimId))
                     } label: {
-                        Text("승인")
+                        Text(String(localized: String.LocalizationValue("dashboard_action_approve"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
@@ -194,7 +198,7 @@ struct AdminOperationsView: View {
                     Button {
                         viewModel.onAction(.rejectPending(claimId))
                     } label: {
-                        Text("반려")
+                        Text(String(localized: String.LocalizationValue("dashboard_action_reject"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
@@ -228,7 +232,7 @@ struct AdminOperationsView: View {
 
     private var quickMenuSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("운영 퀵메뉴")
+            Text(String(localized: String.LocalizationValue("admin_quick_menu_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
             ForEach(viewModel.uiState.quickMenus) { menu in
                 Button {
@@ -265,10 +269,10 @@ struct AdminOperationsView: View {
 
     private var inquirySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("문의하기")
+            Text(String(localized: String.LocalizationValue("admin_inquiry_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
             if viewModel.uiState.inquiries.isEmpty {
-                Text("등록된 문의가 없습니다.")
+                Text(String(localized: String.LocalizationValue("admin_inquiry_empty"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(Color(hex: "7A707A"))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -288,7 +292,7 @@ struct AdminOperationsView: View {
                                 ProgressView()
                                     .progressViewStyle(.circular)
                             } else {
-                                Text("문의 더 불러오기")
+                                Text(String(localized: String.LocalizationValue("admin_inquiry_load_more"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
                             }
                         }
@@ -320,7 +324,13 @@ struct AdminOperationsView: View {
             Text(inquiry.content)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6F6670"))
-            Text("작성자 \(inquiry.userNickname)")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("admin_writer"), table: "Localizable"),
+                    locale: Locale.current,
+                    inquiry.userNickname
+                )
+            )
                 .font(.caption2)
                 .foregroundStyle(Color(hex: "8B7F8A"))
         }
@@ -336,7 +346,7 @@ struct AdminOperationsView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 viewModel.onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -351,9 +361,9 @@ struct AdminOperationsView: View {
 
     private var bannerRegisterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("배너 등록")
+            Text(String(localized: String.LocalizationValue("admin_banner_card_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
-            Text("플랫폼 공지 또는 프로모션 배너를 바로 등록합니다.")
+            Text(String(localized: String.LocalizationValue("admin_banner_card_description"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "7A707A"))
             Button {
@@ -361,7 +371,7 @@ struct AdminOperationsView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
-                    Text("새 배너 등록")
+                    Text(String(localized: String.LocalizationValue("dashboard_action_create_banner"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
                 .foregroundStyle(Color(hex: "2B2330"))

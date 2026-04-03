@@ -32,6 +32,22 @@ import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.admin_banner_card_description
+import concafe.composeapp.generated.resources.admin_banner_card_title
+import concafe.composeapp.generated.resources.admin_inquiry_empty
+import concafe.composeapp.generated.resources.admin_inquiry_load_more
+import concafe.composeapp.generated.resources.admin_inquiry_title
+import concafe.composeapp.generated.resources.admin_pending_owner_claim_title
+import concafe.composeapp.generated.resources.admin_pending_section_title
+import concafe.composeapp.generated.resources.admin_quick_menu_title
+import concafe.composeapp.generated.resources.admin_writer
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.dashboard_action_approve
+import concafe.composeapp.generated.resources.dashboard_action_create_banner
+import concafe.composeapp.generated.resources.dashboard_action_reject
+import concafe.composeapp.generated.resources.dashboard_action_view_all
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -110,9 +126,9 @@ private fun BannerRegisterCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("배너 등록", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.admin_banner_card_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "플랫폼 공지 또는 프로모션 배너를 바로 등록합니다.",
+                stringResource(Res.string.admin_banner_card_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF7A707A)
             )
@@ -125,7 +141,7 @@ private fun BannerRegisterCard(
             ) {
                 Icon(Icons.Default.Campaign, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("새 배너 등록", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.dashboard_action_create_banner), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -200,9 +216,9 @@ private fun PendingSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("승인 대기 요청", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.admin_pending_section_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
-                text = "전체보기",
+                text = stringResource(Res.string.dashboard_action_view_all),
                 color = Color(0xFFEF6797),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
@@ -260,14 +276,14 @@ private fun InquirySection(
     onAction: (AdminOperationsAction) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("문의하기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.admin_inquiry_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         if (uiState.inquiries.isEmpty()) {
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Text(
-                    text = "등록된 문의가 없습니다.",
+                    text = stringResource(Res.string.admin_inquiry_empty),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
                     color = Color(0xFF7A707A)
                 )
@@ -293,7 +309,7 @@ private fun InquirySection(
                             color = Color(0xFF8B7F8A)
                         )
                     } else {
-                        Text("문의 더 불러오기", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.admin_inquiry_load_more), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -341,7 +357,7 @@ private fun InquiryCard(
                 color = Color(0xFF6F6670)
             )
             Text(
-                text = "작성자 ${inquiry.userNickname}",
+                text = stringResource(Res.string.admin_writer, inquiry.userNickname),
                 style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF8B7F8A)
             )
@@ -372,7 +388,7 @@ private fun PendingCafeOwnerClaimCard(
     onReject: () -> Unit
 ) {
     PendingClaimCard(
-        title = "점장 권한 신청 - ${claim.requesterNickname}",
+        title = stringResource(Res.string.admin_pending_owner_claim_title, claim.requesterNickname),
         subtitle = claim.location,
         requestedAt = claim.requestedAt,
         imageUrl = claim.imageUrl,
@@ -439,7 +455,7 @@ private fun PendingClaimCard(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("승인", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.dashboard_action_approve), fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = onReject,
@@ -450,7 +466,7 @@ private fun PendingClaimCard(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("반려", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.dashboard_action_reject), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -464,7 +480,7 @@ private fun QuickMenuSection(
     onAction: (AdminOperationsAction) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("운영 퀵메뉴", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.admin_quick_menu_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         uiState.quickMenus.forEach { menu ->
             Card(
                 modifier = Modifier.fillMaxWidth().clickable { onAction(AdminOperationsAction.ClickQuickMenu(menu.id)) },
@@ -510,7 +526,7 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         Text(message, modifier = Modifier.weight(1f), color = Color(0xFF6B5320), style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = "닫기",
+            text = stringResource(Res.string.common_close),
             color = Color(0xFF6B5320),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,

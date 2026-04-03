@@ -29,6 +29,24 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.reviewedit_accessibility_back
+import concafe.composeapp.generated.resources.reviewedit_atmosphere_negative
+import concafe.composeapp.generated.resources.reviewedit_atmosphere_positive
+import concafe.composeapp.generated.resources.reviewedit_atmosphere_question
+import concafe.composeapp.generated.resources.reviewedit_cast_tag_title
+import concafe.composeapp.generated.resources.reviewedit_photo_add
+import concafe.composeapp.generated.resources.reviewedit_photo_helper
+import concafe.composeapp.generated.resources.reviewedit_photo_remove
+import concafe.composeapp.generated.resources.reviewedit_photo_section_title
+import concafe.composeapp.generated.resources.reviewedit_rating_accessibility
+import concafe.composeapp.generated.resources.reviewedit_rating_question
+import concafe.composeapp.generated.resources.reviewedit_review_detail_hint
+import concafe.composeapp.generated.resources.reviewedit_review_detail_title
+import concafe.composeapp.generated.resources.reviewedit_review_length
+import concafe.composeapp.generated.resources.reviewedit_verified_visit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -78,7 +96,10 @@ private fun ReviewEditContentScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(ReviewEditAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.reviewedit_accessibility_back)
+                        )
                     }
                 },
                 actions = {
@@ -223,7 +244,7 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = "방문 인증됨",
+                        text = stringResource(Res.string.reviewedit_verified_visit),
                         color = Color(0xFFEF6797),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
@@ -259,7 +280,7 @@ private fun RatingSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            text = "카페 경험은 어떠셨나요?",
+            text = stringResource(Res.string.reviewedit_rating_question),
             style = MaterialTheme.typography.titleMedium,
             color = Color(0xFF2B2330),
             fontWeight = FontWeight.Bold
@@ -272,7 +293,7 @@ private fun RatingSection(
                 val isSelected = index <= uiState.rating
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = "평점 $index",
+                    contentDescription = stringResource(Res.string.reviewedit_rating_accessibility, index),
                     tint = if (isSelected) Color(0xFFFFC94D) else Color(0x33EF6797),
                     modifier = Modifier
                         .size(38.dp)
@@ -302,7 +323,7 @@ private fun PhotoSection(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "사진 등록 (선택)",
+            text = stringResource(Res.string.reviewedit_photo_section_title),
             style = MaterialTheme.typography.titleMedium,
             color = Color(0xFF2B2330),
             fontWeight = FontWeight.Bold
@@ -340,7 +361,7 @@ private fun PhotoSection(
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
-                            text = "리뷰 사진 추가",
+                            text = stringResource(Res.string.reviewedit_photo_add),
                             color = Color(0xFF5A4954),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
@@ -362,7 +383,7 @@ private fun PhotoSection(
                         color = Color.White
                     ) {
                         Text(
-                            text = "제거",
+                            text = stringResource(Res.string.reviewedit_photo_remove),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = Color(0xFF8B5164),
@@ -373,7 +394,7 @@ private fun PhotoSection(
             }
         }
         Text(
-            text = "리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다.",
+            text = stringResource(Res.string.reviewedit_photo_helper),
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF8A8088)
         )
@@ -393,18 +414,22 @@ private fun ReviewFormSection(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         ConCafeFormField(
-            label = "상세 리뷰",
+            label = stringResource(Res.string.reviewedit_review_detail_title),
             value = uiState.content,
             onValueChange = { onAction(ReviewEditAction.ChangeReviewText(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp),
-            placeholder = "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)",
+            placeholder = stringResource(Res.string.reviewedit_review_detail_hint),
             minLines = 8,
             singleLine = false
         )
         Text(
-            text = "${uiState.reviewLength}/${ReviewEditUiState.minimumReviewLength}자 이상",
+            text = stringResource(
+                Res.string.reviewedit_review_length,
+                uiState.reviewLength,
+                ReviewEditUiState.minimumReviewLength
+            ),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.End,
             color = if (uiState.reviewLength >= ReviewEditUiState.minimumReviewLength) {
@@ -438,7 +463,7 @@ private fun CastTagSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            text = "함께 언급한 캐스트",
+            text = stringResource(Res.string.reviewedit_cast_tag_title),
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF665A63),
             fontWeight = FontWeight.Medium
@@ -505,7 +530,7 @@ private fun AtmosphereQuestionCard(
                 )
             }
             Text(
-                text = "분위기가 좋았나요?",
+                text = stringResource(Res.string.reviewedit_atmosphere_question),
                 color = Color(0xFF2B2330),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
@@ -513,12 +538,12 @@ private fun AtmosphereQuestionCard(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AnswerChip(
-                label = "네",
+                label = stringResource(Res.string.reviewedit_atmosphere_positive),
                 selected = isSelected == true,
                 onClick = { onSelect(true) }
             )
             AnswerChip(
-                label = "아니요",
+                label = stringResource(Res.string.reviewedit_atmosphere_negative),
                 selected = isSelected == false,
                 onClick = { onSelect(false) }
             )
@@ -584,7 +609,7 @@ private fun InfoBanner(
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
         ) {
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.common_close),
                 color = Color(0xFF6B5320),
                 fontWeight = FontWeight.Bold
             )

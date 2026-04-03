@@ -21,9 +21,9 @@ struct CafeDashboardView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle(viewModel.uiState.cafe?.name ?? "카페 관리")
+        .navigationTitle(viewModel.uiState.cafe?.name ?? String(localized: String.LocalizationValue("dashboard_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
-        .alert("캐스트 프로필 삭제", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("dashboard_delete_cast_title"), table: "Localizable"), isPresented: Binding(
             get: { viewModel.uiState.isDeleteCastDialogVisible },
             set: { isPresented in
                 if !isPresented {
@@ -31,14 +31,14 @@ struct CafeDashboardView: View {
                 }
             }
         )) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissDeleteCastDialog)
             }
-            Button("확인", role: .destructive) {
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .destructive) {
                 viewModel.onAction(.confirmDeleteCast)
             }
         } message: {
-            Text("캐스트 프로필을 삭제하시겠습니까?")
+            Text(String(localized: String.LocalizationValue("dashboard_delete_cast_message"), table: "Localizable"))
         }
         .fullScreenCover(isPresented: Binding(
             get: { viewModel.uiState.isExternalLinkSheetVisible },
@@ -175,7 +175,7 @@ private struct CafeDashboardContentView: View {
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
-            Text("선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다.")
+            Text(String(localized: String.LocalizationValue("dashboard_hero_subtitle"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.9))
         }
@@ -218,18 +218,21 @@ private struct CafeDashboardContentView: View {
     private var metricGrid: some View {
         let cafe = uiState.cafe!
         return VStack(alignment: .leading, spacing: 12) {
-            sectionHeader(title: "운영 대시보드", subtitle: "오늘 기준 핵심 수치")
+            sectionHeader(
+                title: String(localized: String.LocalizationValue("dashboard_section_metrics_title"), table: "Localizable"),
+                subtitle: String(localized: String.LocalizationValue("dashboard_section_metrics_subtitle"), table: "Localizable")
+            )
             HStack(spacing: 12) {
-                dashboardMetricCard(title: "오늘 체크인", value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
-                dashboardMetricCard(title: "오늘 리뷰", value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
-                dashboardMetricCard(title: "평점", value: formatRating(cafe.rating), accent: Color(hex: "F59E0B"))
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_checkin"), table: "Localizable"), value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_review"), table: "Localizable"), value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_rating"), table: "Localizable"), value: formatRating(cafe.rating), accent: Color(hex: "F59E0B"))
             }
         }
     }
 
     private var pendingCastClaimSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("프로필 연결 요청")
+            Text(String(localized: String.LocalizationValue("dashboard_pending_claim_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
             ForEach(Array(uiState.pendingCastClaims.prefix(3)), id: \.claimId) { claim in
                 VStack(alignment: .leading, spacing: 10) {
@@ -247,7 +250,7 @@ private struct CafeDashboardContentView: View {
                             .foregroundStyle(Color(hex: "5C5760"))
                     }
                     HStack(spacing: 10) {
-                        Button("승인") {
+                        Button(String(localized: String.LocalizationValue("dashboard_action_approve"), table: "Localizable")) {
                             onAction(.clickApproveCastClaim(claim.claimId))
                         }
                         .font(.subheadline.weight(.bold))
@@ -256,7 +259,7 @@ private struct CafeDashboardContentView: View {
                         .background(Color(hex: "FFD1DC"))
                         .foregroundStyle(Color(hex: "2B2330"))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        Button("반려") {
+                        Button(String(localized: String.LocalizationValue("dashboard_action_reject"), table: "Localizable")) {
                             onAction(.clickRejectCastClaim(claim.claimId))
                         }
                         .font(.subheadline.weight(.bold))
@@ -302,7 +305,10 @@ private struct CafeDashboardContentView: View {
 
     private var shortcutGrid: some View {
         VStack(alignment: .leading, spacing: 14) {
-            sectionHeader(title: "관리 메뉴", subtitle: "선택한 카페 컨텍스트로 이동")
+            sectionHeader(
+                title: String(localized: String.LocalizationValue("dashboard_section_menu_title"), table: "Localizable"),
+                subtitle: String(localized: String.LocalizationValue("dashboard_section_menu_subtitle"), table: "Localizable")
+            )
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                 spacing: 12
@@ -364,7 +370,7 @@ private struct CafeDashboardContentView: View {
     private var castManagementSection: some View {
         return VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("소속 캐스트 관리")
+                Text(String(localized: String.LocalizationValue("dashboard_section_cast_management"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "8C7A83"))
                 Spacer()
@@ -387,7 +393,7 @@ private struct CafeDashboardContentView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "calendar")
                             .font(.caption)
-                        Text("출근표 관리")
+                        Text(String(localized: String.LocalizationValue("dashboard_action_schedule_management"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                     }
                     .foregroundStyle(Color(hex: "EF6797"))
@@ -411,7 +417,7 @@ private struct CafeDashboardContentView: View {
                                 Image(systemName: "plus")
                                     .foregroundStyle(Color(hex: "B8AEB7"))
                             }
-                            Text("추가")
+                            Text(String(localized: String.LocalizationValue("dashboard_action_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(Color(hex: "8F848F"))
                         }
@@ -438,7 +444,11 @@ private struct CafeDashboardContentView: View {
                                             .foregroundStyle(Color(hex: "8F848F"))
                                     }
                                 }
-                                Text(uiState.isLoadingMoreCasts ? "불러오는 중" : "더 보기")
+                                Text(
+                                    uiState.isLoadingMoreCasts
+                                    ? String(localized: String.LocalizationValue("dashboard_action_loading"), table: "Localizable")
+                                    : String(localized: String.LocalizationValue("dashboard_action_load_more"), table: "Localizable")
+                                )
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(Color(hex: "8F848F"))
                             }
@@ -521,11 +531,11 @@ private struct CafeDashboardContentView: View {
         let cafe = uiState.cafe!
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("홈 배너 관리")
+                Text(String(localized: String.LocalizationValue("dashboard_section_home_banner"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "8C7A83"))
                 Spacer()
-                Button("전체 보기") {
+                Button(String(localized: String.LocalizationValue("dashboard_action_view_all"), table: "Localizable")) {
                     onAction(.clickShortcut(.homeBanner))
                 }
                 .font(.caption.weight(.semibold))
@@ -607,7 +617,7 @@ private struct CafeDashboardContentView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "photo.on.rectangle.angled")
-                        Text("새 배너 등록하기")
+                        Text(String(localized: String.LocalizationValue("dashboard_action_create_banner"), table: "Localizable"))
                             .fontWeight(.bold)
                     }
                     .foregroundStyle(Color(hex: "2B2330"))
@@ -658,15 +668,15 @@ private struct CafeDashboardContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("외부 링크")
+                    Text(String(localized: String.LocalizationValue("dashboard_shortcut_external_links"), table: "Localizable"))
                         .font(.headline.weight(.bold))
                         .foregroundStyle(Color(hex: "8C7A83"))
-                    Text("앱 외부로 연결할 링크를 관리합니다.")
+                    Text(String(localized: String.LocalizationValue("dashboard_external_link_section_subtitle"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(Color(hex: "7E7480"))
                 }
                 Spacer()
-                Button("추가") {
+                Button(String(localized: String.LocalizationValue("dashboard_action_add"), table: "Localizable")) {
                     onAction(.clickShortcut(.externalLinks))
                 }
                 .font(.caption.weight(.semibold))
@@ -766,19 +776,19 @@ private struct ExternalLinkInputSheet: View {
                 : String(localized: String.LocalizationValue("dashboard_external_link_edit"), table: "Localizable")
             )
                 .font(.title3.weight(.bold))
-            Text("홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.")
+            Text(String(localized: String.LocalizationValue("dashboard_external_link_guide"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "7A707A"))
             ConCafeFormField(
-                label: "제목",
+                label: String(localized: String.LocalizationValue("dashboard_external_link_label_title"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.externalLinkTitle },
                     set: { onAction(.changeExternalLinkTitle($0)) }
                 ),
-                placeholder: "예: 공식 X 계정"
+                placeholder: String(localized: String.LocalizationValue("dashboard_external_link_placeholder_title"), table: "Localizable")
             )
             ConCafeFormField(
-                label: "링크 URL",
+                label: String(localized: String.LocalizationValue("dashboard_external_link_label_url"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.externalLinkUrl },
                     set: { onAction(.changeExternalLinkUrl($0)) }
@@ -802,7 +812,7 @@ private struct ExternalLinkInputSheet: View {
             }
             .buttonStyle(.plain)
             .disabled(!uiState.isExternalLinkSubmitEnabled)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissExternalLinkSheet)
             }
             .font(.subheadline.weight(.semibold))
