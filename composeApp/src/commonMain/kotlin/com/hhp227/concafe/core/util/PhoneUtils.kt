@@ -31,6 +31,20 @@ fun formatKoreanPhoneNumber(input: String): String {
     }
 }
 
+fun normalizeKoreanPhoneToE164(input: String): String? {
+    val digitsOnly = input.filter { char -> char.isDigit() }
+
+    return if (digitsOnly.isBlank()) {
+        null
+    } else if (digitsOnly.startsWith("82")) {
+        "+$digitsOnly"
+    } else if (digitsOnly.startsWith("0")) {
+        "+82${digitsOnly.drop(1)}"
+    } else {
+        null
+    }
+}
+
 /**
  * 전화번호 전용 입력 필드. 숫자만 허용하며 010-XXXX-XXXX 포맷으로 자동 변환,
  * 대시 삽입 후에도 커서를 항상 끝에 유지한다.

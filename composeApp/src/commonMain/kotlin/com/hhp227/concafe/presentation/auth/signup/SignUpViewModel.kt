@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.hhp227.concafe.core.util.normalizeKoreanPhoneToE164
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
@@ -157,14 +158,20 @@ class SignUpViewModel(
 
     private fun sendVerification() {
         val phone = uiState.value.phone.trim()
+        val normalizedPhone = normalizeKoreanPhoneToE164(phone)
 
-        if (phone.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "휴대폰 번호를 입력해주세요.", infoMessage = null) }
+        if (normalizedPhone == null) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678",
+                    infoMessage = null
+                )
+            }
             return
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (phoneAuthProvider.sendCode(phone)) {
+            when (phoneAuthProvider.sendCode(normalizedPhone)) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -180,7 +187,7 @@ class SignUpViewModel(
                         it.copy(
                             isLoading = false,
                             hasRequestedVerification = false,
-                            errorMessage = "휴대폰 번호를 다시 확인해주세요.",
+                            errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678",
                             infoMessage = null
                         )
                     }

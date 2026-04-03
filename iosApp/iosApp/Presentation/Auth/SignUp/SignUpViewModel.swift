@@ -118,9 +118,13 @@ class SignUpViewModel: ObservableObject {
 
     private func sendVerification() {
         let trimmedPhone = uiState.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedPhone = normalizeKoreanPhoneToE164(trimmedPhone)
+        let requestedPhone: String
 
-        guard !trimmedPhone.isEmpty else {
-            uiState.errorMessage = "휴대폰 번호를 입력해주세요."
+        if let normalizedPhone {
+            requestedPhone = normalizedPhone
+        } else {
+            uiState.errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
             uiState.infoMessage = nil
             return
         }
@@ -131,7 +135,7 @@ class SignUpViewModel: ObservableObject {
         requestTask?.cancel()
         requestTask = Task {
             do {
-                let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(trimmedPhone, uiDelegate: nil)
+                let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(requestedPhone, uiDelegate: nil)
                 phoneVerificationID = verificationID
                 uiState.isLoading = false
                 uiState.hasRequestedVerification = true
@@ -140,7 +144,7 @@ class SignUpViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
                 uiState.hasRequestedVerification = false
-                uiState.errorMessage = "휴대폰 번호를 다시 확인해주세요."
+                uiState.errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
                 uiState.infoMessage = nil
             }
         }
