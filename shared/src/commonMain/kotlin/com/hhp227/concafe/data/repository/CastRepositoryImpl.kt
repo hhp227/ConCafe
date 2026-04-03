@@ -216,7 +216,6 @@ class CastRepositoryImpl(
                     cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe.name
                 }.getOrNull()
             }
-
         return sourceCasts.map { cast ->
             val cafeName = cafeNameById[cast.cafeId] ?: cast.cafeId
 

@@ -177,6 +177,7 @@ class FirestoreConCafeDataSource(
                 "readAt" to firestoreString(Clock.System.now().toString())
             )
         )
+
         runCatching {
             restApi.patch(
                 path = path,
@@ -198,17 +199,16 @@ class FirestoreConCafeDataSource(
             restApi.get(path = path, idToken = null)
         }.getOrNull()
 
-        if (document.isNullOrBlank()) {
-            return UserNotificationSettings.default()
+        return if (document.isNullOrBlank()) {
+            UserNotificationSettings.default()
         } else {
             val parsed = runCatching {
                 Json.parseToJsonElement(document).jsonObject
             }.getOrNull()
-
             if (parsed == null || parsed["fields"] == null) {
-                return UserNotificationSettings.default()
+                UserNotificationSettings.default()
             } else {
-                return parseNotificationSettingsDocument(parsed)
+                parseNotificationSettingsDocument(parsed)
             }
         }
     }
@@ -232,6 +232,7 @@ class FirestoreConCafeDataSource(
                 "updatedAt" to firestoreString(Clock.System.now().toString())
             )
         )
+
         runCatching {
             restApi.patch(path = path, body = body, idToken = idToken)
         }.recoverCatching {
@@ -266,6 +267,7 @@ class FirestoreConCafeDataSource(
                 "createdAt" to firestoreString(now)
             )
         )
+
         runCatching {
             restApi.patch(path = path, body = body, idToken = idToken)
         }.recoverCatching {
@@ -314,6 +316,7 @@ class FirestoreConCafeDataSource(
                             "updatedAt" to firestoreString(now)
                         )
                     )
+
                     runCatching {
                         restApi.patch(
                             path = path,
@@ -412,6 +415,7 @@ class FirestoreConCafeDataSource(
         }.recoverCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_EVENTS, null)
         }.getOrElse { emptyList() }
+
         noticesDocuments.mapNotNull { document ->
             parseNoticeManagementDocument(cafeId = cafeId, document = document)
         }.sortedByDescending { item -> item.createdAt }
@@ -719,7 +723,6 @@ class FirestoreConCafeDataSource(
                 item.title.contains(normalizedQuery, ignoreCase = true) ||
                 item.content.contains(normalizedQuery, ignoreCase = true)
         }
-
         return PagedResult(
             items = pageItems,
             nextCursor = nextCursorToken,
@@ -828,7 +831,6 @@ class FirestoreConCafeDataSource(
         if (noticeDocuments.isEmpty()) {
             return emptyList()
         }
-
         return noticeDocuments.mapNotNull { document ->
             val documentName = document["name"]?.jsonPrimitive?.contentOrNull
             val fields = document["fields"]?.jsonObject
@@ -950,6 +952,7 @@ class FirestoreConCafeDataSource(
         }.getOrElse { throwable ->
             throw IllegalStateException("Failed to refresh visits for user: $userId", throwable)
         }
+
         visitDocuments.mapNotNull { document -> parseVisitDocument(document) }
     }
 
@@ -1019,9 +1022,7 @@ class FirestoreConCafeDataSource(
         } else {
             emptyList()
         }
-        val items = if (mappedVisits.isNotEmpty()) {
-            mappedVisits
-        } else {
+        val items = mappedVisits.ifEmpty {
             legacyRecentVisitCafeIds.mapIndexed { index, cafeId ->
                 Visit(
                     id = "legacy_recent_visit_${sanitizeDocumentIdPart(userId)}_$index",
@@ -1811,7 +1812,6 @@ class FirestoreConCafeDataSource(
             reviewedBy = reviewedBy,
             reviewedAt = reviewedAt
         )
-
         return updated
     }
 
@@ -1845,7 +1845,6 @@ class FirestoreConCafeDataSource(
 
     suspend fun unfavoriteCafeRemote(userId: String, cafeId: String) {
         val idToken = tokenProvider.getIdToken()
-
         val favoriteId = buildCafeFavoriteDocumentId(userId = userId, cafeId = cafeId)
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_FAVORITES}/$favoriteId"
 
@@ -1934,11 +1933,7 @@ class FirestoreConCafeDataSource(
         restApi.patch(path, body, idToken)
         val updated = fetchCafeDetailRemote(update.cafeId)
 
-        return if (updated == null) {
-            throw NoSuchElementException("cafe detail not found")
-        } else {
-            updated
-        }
+        return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
     suspend fun upsertCastRemote(update: CastUpsert): CastDetail {
@@ -2419,7 +2414,6 @@ class FirestoreConCafeDataSource(
         toDate: String
     ): List<CastSchedule> {
         require(castId.isNotBlank()) { "castId is required" }
-
         return fetchCastSchedulesRemoteInternal(
             castId = castId,
             fromDate = fromDate,
@@ -2451,7 +2445,6 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { emptyList() }
-
         return documents.mapNotNull { document ->
             val entry = parseCastScheduleDocument(document) ?: return@mapNotNull null
             entry.date to entry.status
@@ -2469,7 +2462,6 @@ class FirestoreConCafeDataSource(
         }.getOrNull() ?: return false
         val fields = userDocument["fields"]?.jsonObject ?: return false
         val dismissedVisitIds = fields.getFirestoreStringList("dismissedReviewPromptVisitIds")
-
         return dismissedVisitIds.contains(visitId)
     }
 
@@ -2626,12 +2618,7 @@ class FirestoreConCafeDataSource(
             }
         }
         val updated = fetchCafeDetailRemote(update.cafeId)
-
-        return if (updated == null) {
-            throw NoSuchElementException("cafe detail not found")
-        } else {
-            updated
-        }
+        return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
     suspend fun deleteCafeMenuGoodsRemote(cafeId: String, itemId: String): CafeDetail {
@@ -2653,12 +2640,7 @@ class FirestoreConCafeDataSource(
             throw NoSuchElementException("menu goods item not found")
         }
         val updated = fetchCafeDetailRemote(cafeId)
-
-        return if (updated == null) {
-            throw NoSuchElementException("cafe detail not found")
-        } else {
-            updated
-        }
+        return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
     suspend fun fetchAffiliatedCafeIdRemote(userId: String): String? {
@@ -2670,7 +2652,6 @@ class FirestoreConCafeDataSource(
         }.recoverCatching {
             loadUserDocument(userId = userId, idToken = null)
         }.getOrNull()
-
         return if (userDocument == null) {
             null
         } else {
@@ -2823,6 +2804,7 @@ class FirestoreConCafeDataSource(
                 )
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -2846,6 +2828,7 @@ class FirestoreConCafeDataSource(
                 "message" to firestoreString(claim.message)
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -2866,6 +2849,7 @@ class FirestoreConCafeDataSource(
                 "activatedAtEpochMillis" to firestoreLong(banner.activatedAtEpochMillis)
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -3081,7 +3065,6 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { emptyList() }
-
         return ownerClaimDocuments
             .mapNotNull { document -> parsePendingCafeOwnerClaimDocument(document) }
             .sortedByDescending { claim -> claim.requestedAt }
@@ -3104,7 +3087,6 @@ class FirestoreConCafeDataSource(
                 idToken = null
             )
         }.getOrElse { emptyList() }
-
         return registrationClaimDocuments
             .mapNotNull { document -> parseCafeRegistrationClaimDocument(document) }
             .sortedByDescending { claim -> claim.requestedAt }
@@ -3143,7 +3125,6 @@ class FirestoreConCafeDataSource(
                     .thenByDescending { banner -> banner.createdAtEpochMillis }
             )
             .firstOrNull()
-
         return if (targetBanner == null) {
             null
         } else {
@@ -3621,7 +3602,6 @@ class FirestoreConCafeDataSource(
         val pagedItems = items.subList(safeStartIndex, endIndex)
         val hasNext = endIndex < items.size
         val nextCursor = if (hasNext) endIndex.toString() else null
-
         return PagedResult(
             items = pagedItems,
             nextCursor = nextCursor,
@@ -4379,11 +4359,7 @@ class FirestoreConCafeDataSource(
         limit: Int,
         idToken: String?
     ): List<JsonObject> {
-        val safeLimit = if (limit > 0) {
-            limit
-        } else {
-            1
-        }
+        val safeLimit = if (limit > 0) limit else 1
         val startAfterSection = cursor.toStringFieldStartAfterSection()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId:runQuery"
         val body = """
@@ -4859,7 +4835,6 @@ class FirestoreConCafeDataSource(
         }.getOrElse {
             emptyList()
         }
-
         return documents.mapNotNull { document ->
             parseCafeDocument(document)?.id
         }.toSet()
@@ -4937,6 +4912,7 @@ class FirestoreConCafeDataSource(
                 "approvedCafeId" to firestoreNullableString(approvedCafeId)
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -4960,6 +4936,7 @@ class FirestoreConCafeDataSource(
                 "reviewedAt" to firestoreString(Clock.System.now().toString())
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -5023,6 +5000,7 @@ class FirestoreConCafeDataSource(
                 "ownerIds" to firestoreStringArray(existingIds)
             )
         )
+
         restApi.patch(path, body, idToken)
     }
 
@@ -5858,7 +5836,6 @@ class FirestoreConCafeDataSource(
         val parsedGoods = goodsDocuments
             .mapNotNull { document -> parseGoodsDocument(document) }
             .sortedBy { goods -> goods.name.lowercase() }
-
         return CafeDetail(
             cafe = cafe,
             images = detailMetadata.images ?: listOfNotNull(cafe.thumbnailImage),
@@ -5904,7 +5881,6 @@ class FirestoreConCafeDataSource(
             toDate = toDate,
             idToken = idToken
         )
-
         return CastDetail(
             cast = cast,
             cafe = cafe,
@@ -5961,11 +5937,10 @@ class FirestoreConCafeDataSource(
                 equalsFilterValue = firestoreString(userId)
             )
         }.getOrNull()
-
-        if (aggregatedVisitCount != null) {
-            return aggregatedVisitCount
+        return if (aggregatedVisitCount != null) {
+            aggregatedVisitCount
         } else {
-            return fallbackVisitCount
+            fallbackVisitCount
         }
     }
 
@@ -5982,11 +5957,10 @@ class FirestoreConCafeDataSource(
                 equalsFilterValue = firestoreString(userId)
             )
         }.getOrNull()
-
-        if (aggregatedStampCount != null) {
-            return aggregatedStampCount
+        return if (aggregatedStampCount != null) {
+            aggregatedStampCount
         } else {
-            return fallbackStampCount
+            fallbackStampCount
         }
     }
 
@@ -6011,7 +5985,6 @@ class FirestoreConCafeDataSource(
                 orderByCreatedAtDesc = false
             )
         }.getOrElse { emptyList() }
-
         return visitDocuments.mapNotNull { document ->
             parseVisitDocument(document)
         }
@@ -6019,6 +5992,7 @@ class FirestoreConCafeDataSource(
 
     private fun ensureAuthenticatedUserMatch(requestedUserId: String, action: String) {
         val tokenUserId = tokenProvider.getCurrentUserId()
+
         if (!tokenUserId.isNullOrBlank() && tokenUserId != requestedUserId) {
             throw IllegalStateException(
                 "Auth user mismatch in $action: tokenUserId=$tokenUserId requestedUserId=$requestedUserId"
@@ -6069,11 +6043,10 @@ class FirestoreConCafeDataSource(
         val cafeId = fields.getFirestoreString("cafeId").orEmpty()
         val visitId = fields.getFirestoreString("visitId").orEmpty()
         val earnedAt = fields.getFirestoreString("earnedAt").orEmpty()
-
-        if (stampId.isBlank() || userId.isBlank() || cafeId.isBlank() || visitId.isBlank() || earnedAt.isBlank()) {
-            return null
+        return if (stampId.isBlank() || userId.isBlank() || cafeId.isBlank() || visitId.isBlank() || earnedAt.isBlank()) {
+            null
         } else {
-            return Stamp(
+            Stamp(
                 id = stampId,
                 userId = userId,
                 cafeId = cafeId,
