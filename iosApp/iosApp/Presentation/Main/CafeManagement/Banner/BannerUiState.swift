@@ -36,7 +36,7 @@ struct BannerItem: Identifiable {
 }
 
 enum BannerTab: String, CaseIterable {
-    case active = "banner_status_active"
-    case scheduled = "banner_status_scheduled"
-    case ended = "banner_status_ended"
+    case active = "banner_section_active"
+    case scheduled = "banner_section_scheduled"
+    case ended = "banner_section_ended"
 }

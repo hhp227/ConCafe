@@ -30,7 +30,7 @@ data class BannerItem(
 )
 
 enum class BannerTab(val labelKey: String) {
-    ACTIVE("banner_status_active"),
-    SCHEDULED("banner_status_scheduled"),
-    ENDED("banner_status_ended")
+    ACTIVE("banner_section_active"),
+    SCHEDULED("banner_section_scheduled"),
+    ENDED("banner_section_ended")
 }
