@@ -122,16 +122,25 @@ struct MainView: View {
     }
 
     private var navigationTitle: String {
-        if selectedTab == "home" {
+        switch selectedTab {
+        case MainNavigationTab.home.route:
             return "홈"
-        } else if selectedTab == "explore" {
+        case MainNavigationTab.explore.route:
             return "탐색"
-        } else if selectedTab == "ranking" {
+        case MainNavigationTab.checkIn.route:
+            return "체크인"
+        case MainNavigationTab.fanManagement.route:
+            return "팬관리"
+        case MainNavigationTab.cafeManagement.route:
+            return "카페관리"
+        case MainNavigationTab.adminOperations.route:
+            return "운영관리"
+        case MainNavigationTab.ranking.route:
             return "랭킹"
-        } else if selectedTab == "myinfo" {
+        case MainNavigationTab.myInfo.route:
             return "내 정보"
-        } else {
-            return viewModel.uiState.thirdTab.title
+        default:
+            return "홈"
         }
     }
 
