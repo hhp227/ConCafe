@@ -15,14 +15,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -224,6 +229,11 @@ fun RankingPromoBanner(
     size: Int,
     onSelect: (Int) -> Unit
 ) {
+    var measuredMockHeightPx by remember { mutableIntStateOf(0) }
+    val measuredMockHeightDp: Dp = with(androidx.compose.ui.platform.LocalDensity.current) {
+        measuredMockHeightPx.toDp()
+    }
+
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -241,11 +251,20 @@ fun RankingPromoBanner(
                     )
                     .padding(20.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(
+                    modifier = if (measuredMockHeightPx > 0) Modifier.height(measuredMockHeightDp) else Modifier,
+                    verticalArrangement = if (measuredMockHeightPx > 0) Arrangement.SpaceBetween else Arrangement.spacedBy(16.dp)
+                ) {
                     RankingNativeAd(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 120.dp)
+                            .then(
+                                if (measuredMockHeightPx > 0) {
+                                    Modifier.weight(1f)
+                                } else {
+                                    Modifier.heightIn(min = 120.dp)
+                                }
+                            )
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -275,7 +294,13 @@ fun RankingPromoBanner(
                     .padding(20.dp)
             ) {
                 Column(
-                    modifier = Modifier.heightIn(min = 120.dp),
+                    modifier = Modifier
+                        .heightIn(min = 120.dp)
+                        .onSizeChanged { sizeInfo ->
+                            if (sizeInfo.height > measuredMockHeightPx) {
+                                measuredMockHeightPx = sizeInfo.height
+                            }
+                        },
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Row(
