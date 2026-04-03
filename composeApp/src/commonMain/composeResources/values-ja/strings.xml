@@ -639,7 +639,7 @@
     <string name="checkin_timeline_empty_title">まだ訪問履歴がありません</string>
     <string name="checkin_timeline_empty_desc">チェックイン履歴がここに表示されます。</string>
     <string name="checkin_load_more_visits">さらに表示</string>
-    <string name="checkin_main_cafe_label">メインカフェ</string>
+    <string name="checkin_main_cafe_label">%1$s の主要コンセプトカフェ</string>
     <string name="checkin_nearby_label">近く</string>
     <string name="checkin_map_title">近くのコンセプトカフェ</string>
     <string name="checkin_button">チェックイン</string>

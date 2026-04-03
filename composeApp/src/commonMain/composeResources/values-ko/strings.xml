@@ -639,9 +639,9 @@
     <string name="checkin_timeline_empty_title">방문 기록이 아직 없어요</string>
     <string name="checkin_timeline_empty_desc">체크인 기록이 이곳에 표시됩니다.</string>
     <string name="checkin_load_more_visits">더보기</string>
-    <string name="checkin_main_cafe_label">메인 카페</string>
+    <string name="checkin_main_cafe_label">%1$s 주요 컨셉카페</string>
     <string name="checkin_nearby_label">근처</string>
-    <string name="checkin_map_title">근처 컨셉카페</string>
+    <string name="checkin_map_title">주변 컨셉카페 지도</string>
     <string name="checkin_button">체크인</string>
     <string name="checkin_count_label">체크인 %1$d회</string>
     <string name="checkin_today_visit_count">오늘 방문 %1$d회</string>

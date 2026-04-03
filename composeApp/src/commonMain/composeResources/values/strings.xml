@@ -639,7 +639,7 @@
     <string name="checkin_timeline_empty_title">No visit history yet</string>
     <string name="checkin_timeline_empty_desc">Your check-in history will appear here.</string>
     <string name="checkin_load_more_visits">Load More</string>
-    <string name="checkin_main_cafe_label">Main Cafe</string>
+    <string name="checkin_main_cafe_label">%1$s major concept cafes</string>
     <string name="checkin_nearby_label">Nearby</string>
     <string name="checkin_map_title">Nearby Concept Cafes</string>
     <string name="checkin_button">Check In</string>
