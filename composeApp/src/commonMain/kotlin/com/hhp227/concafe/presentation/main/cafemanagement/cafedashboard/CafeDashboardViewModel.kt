@@ -596,4 +596,4 @@ class CafeDashboardViewModel(
     }
 }
 
-private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 5_000L
+private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L

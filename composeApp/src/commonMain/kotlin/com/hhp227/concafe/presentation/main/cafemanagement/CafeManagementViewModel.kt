@@ -269,4 +269,4 @@ class CafeManagementViewModel(
     }
 }
 
-private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 60_000L

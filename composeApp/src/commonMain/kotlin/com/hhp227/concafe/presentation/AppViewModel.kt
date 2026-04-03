@@ -120,4 +120,4 @@ class AppViewModel(
     }
 }
 
-private const val UNREAD_NOTIFICATION_POLL_INTERVAL_MILLIS = 30_000L
+private const val UNREAD_NOTIFICATION_POLL_INTERVAL_MILLIS = 60_000L

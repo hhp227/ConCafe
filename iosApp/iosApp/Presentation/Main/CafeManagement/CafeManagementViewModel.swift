@@ -287,4 +287,4 @@ final class CafeManagementViewModel: ObservableObject {
     }
 }
 
-private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 60_000_000_000

@@ -6635,16 +6635,15 @@ private fun haversineMeters(
     longitude2: Double
 ): Double {
     val earthRadiusMeters = 6_371_000.0
-    val latitudeDelta = Math.toRadians(latitude2 - latitude1)
-    val longitudeDelta = Math.toRadians(longitude2 - longitude1)
-    val startLatitudeRadians = Math.toRadians(latitude1)
-    val endLatitudeRadians = Math.toRadians(latitude2)
+    val latitudeDelta = (latitude2 - latitude1) * (kotlin.math.PI / 180.0)
+    val longitudeDelta = (longitude2 - longitude1) * (kotlin.math.PI / 180.0)
+    val startLatitudeRadians = latitude1 * (kotlin.math.PI / 180.0)
+    val endLatitudeRadians = latitude2 * (kotlin.math.PI / 180.0)
     val sinLatitude = kotlin.math.sin(latitudeDelta / 2.0)
     val sinLongitude = kotlin.math.sin(longitudeDelta / 2.0)
     val a = sinLatitude * sinLatitude +
         kotlin.math.cos(startLatitudeRadians) * kotlin.math.cos(endLatitudeRadians) * sinLongitude * sinLongitude
     val c = 2.0 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1.0 - a))
-
     return earthRadiusMeters * c
 }
 
