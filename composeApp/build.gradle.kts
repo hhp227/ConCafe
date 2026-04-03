@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
+            implementation(libs.google.play.services.ads)
             implementation(libs.google.maps.compose)
             implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.messaging.ktx)

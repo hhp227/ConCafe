@@ -828,4 +828,8 @@
     <string name="admin_inquiry_load_more">문의 더 불러오기</string>
     <string name="admin_writer">작성자 %1$s</string>
     <string name="admin_quick_menu_title">운영 퀵메뉴</string>
+    <string name="ranking_native_ad_badge">광고</string>
+    <string name="ranking_native_ad_title">ConCafe Plus 멤버십</string>
+    <string name="ranking_native_ad_desc">프리미엄 캐스트 혜택, 스페셜 스탬프, 깜짝 쿠폰을 Plus에서 만나보세요.</string>
+    <string name="ranking_native_ad_sponsor">ConCafe 제공 광고</string>
 </resources>

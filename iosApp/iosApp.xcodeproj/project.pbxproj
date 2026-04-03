@@ -1066,6 +1066,7 @@
 				EBA100052F90000100AAA001 /* KakaoSDKCommon */,
 				EBA100062F90000100AAA001 /* KakaoSDKAuth */,
 				EBA100072F90000100AAA001 /* KakaoSDKUser */,
+				ADA100052F90000100AAA001 /* GoogleMobileAds */,
 			);
 			productName = iosApp;
 			productReference = FEA9D4AD37B8EF9BE110840A /* ConCafe.app */;
@@ -1100,6 +1101,7 @@
 				0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */,
 				FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				EBA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			productRefGroup = 7332ACCB08708982CBFABD2D /* Products */;
 			projectDirPath = "";
@@ -1615,6 +1617,14 @@
 				minimumVersion = 10.24.0;
 			};
 		};
+		ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1647,6 +1657,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		ADA100052F90000100AAA001 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

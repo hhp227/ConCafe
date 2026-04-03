@@ -14830,6 +14830,34 @@
         "ko": { "stringUnit": { "state": "translated", "value": "운영 퀵메뉴" } }
       }
     },
+    "ranking_native_ad_badge": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sponsored" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "広告" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "광고" } }
+      }
+    },
+    "ranking_native_ad_title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ConCafe Plus Membership" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ConCafe Plus メンバーシップ" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "ConCafe Plus 멤버십" } }
+      }
+    },
+    "ranking_native_ad_desc": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock premium cast perks, special stamps, and surprise coupons with Plus." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プレミアムキャスト特典、スペシャルスタンプ、サプライズクーポンをPlusでご利用ください。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "프리미엄 캐스트 혜택, 스페셜 스탬프, 깜짝 쿠폰을 Plus에서 만나보세요." } }
+      }
+    },
+    "ranking_native_ad_sponsor": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Ad provided by ConCafe" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ConCafe提供広告" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "ConCafe 제공 광고" } }
+      }
+    },
     "dashboard_shortcut_external_links": {
       "localizations": {
         "en": {

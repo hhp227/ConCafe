@@ -828,4 +828,8 @@
     <string name="admin_inquiry_load_more">お問い合わせをさらに読み込む</string>
     <string name="admin_writer">作成者 %1$s</string>
     <string name="admin_quick_menu_title">運営クイックメニュー</string>
+    <string name="ranking_native_ad_badge">広告</string>
+    <string name="ranking_native_ad_title">ConCafe Plus メンバーシップ</string>
+    <string name="ranking_native_ad_desc">プレミアムキャスト特典、スペシャルスタンプ、サプライズクーポンをPlusでご利用ください。</string>
+    <string name="ranking_native_ad_sponsor">ConCafe提供広告</string>
 </resources>
