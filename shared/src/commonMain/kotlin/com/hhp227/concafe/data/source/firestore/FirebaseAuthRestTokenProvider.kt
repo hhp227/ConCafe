@@ -16,10 +16,7 @@ class FirebaseAuthRestTokenProvider(
     private var currentSession: FirebaseAuthSession? = null
 
     override suspend fun getIdToken(): String? {
-        val session = currentSession ?: runCatching {
-            signInAnonymously()
-        }.getOrNull()
-        ?: return null
+        val session = currentSession ?: return null
         val refreshed = refreshSessionIfNeeded(session)
         currentSession = refreshed
         return refreshed.idToken

@@ -334,8 +334,6 @@ class AuthRepositoryImpl(
             createdAt = nowIsoUtc(),
             signupCompleted = true
         )
-
-        runCatching { firestoreSyncDataSource.pushUser(createdUser) }
         return createdUser
     }
 
@@ -380,7 +378,6 @@ class AuthRepositoryImpl(
             createdAt = nowIsoUtc(),
             signupCompleted = true
         )
-        runCatching { firestoreSyncDataSource.pushUser(fallbackUser) }
         return fallbackUser
     }
 }
