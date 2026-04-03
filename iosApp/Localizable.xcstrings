@@ -1133,6 +1133,9 @@
         }
       }
     },
+    "Ad" : {
+
+    },
     "admin_banner_card_description" : {
 
     },
@@ -13395,6 +13398,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아직 집계된 랭킹이 없어요"
+          }
+        }
+      }
+    },
+    "ranking_native_ad_badge" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "광고"
           }
         }
       }
