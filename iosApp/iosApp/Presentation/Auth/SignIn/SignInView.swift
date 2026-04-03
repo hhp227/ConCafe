@@ -67,7 +67,7 @@ private struct SignInContentView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .navigationTitle("로그인")
+        .navigationTitle(String(localized: String.LocalizationValue("signin_title"), table: "Localizable"))
     }
     
     private var logoSection: some View {
@@ -77,7 +77,7 @@ private struct SignInContentView: View {
     private var formCard: some View {
         VStack(spacing: 14) {
             VStack(spacing: 12) {
-                TextField("이메일", text: Binding(
+                TextField(String(localized: String.LocalizationValue("signin_email_label"), table: "Localizable"), text: Binding(
                     get: { uiState.email },
                     set: { onAction(.emailChanged($0)) }
                 ))
@@ -88,7 +88,7 @@ private struct SignInContentView: View {
                 .frame(height: 52)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                SecureField("비밀번호", text: Binding(
+                SecureField(String(localized: String.LocalizationValue("signin_password_label"), table: "Localizable"), text: Binding(
                     get: { uiState.password },
                     set: { onAction(.passwordChanged($0)) }
                 ))
@@ -106,7 +106,7 @@ private struct SignInContentView: View {
             Button {
                 onAction(.signInTapped)
             } label: {
-                Text(uiState.isLoading ? "로그인 중..." : "로그인")
+                Text(uiState.isLoading ? String(localized: String.LocalizationValue("signin_loading"), table: "Localizable") : String(localized: String.LocalizationValue("signin_submit"), table: "Localizable"))
                     .font(.headline)
                     .foregroundStyle(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
@@ -125,7 +125,7 @@ private struct SignInContentView: View {
     private var socialButtons: some View {
         VStack(spacing: 12) {
             SignInSocialButton(
-                title: "카카오로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_kakao"), table: "Localizable"),
                 icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
                 foreground: .black,
@@ -135,7 +135,7 @@ private struct SignInContentView: View {
                 }
             )
             SignInSocialButton(
-                title: "구글로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_google"), table: "Localizable"),
                 icon: "google_logo",
                 background: .white,
                 foreground: Color(hex: "222222"),
@@ -170,12 +170,12 @@ private struct SignInContentView: View {
     private var footerLinks: some View {
         HStack(spacing: 8) {
             Button(action: onResetPassword) {
-                Text("비밀번호 찾기")
+                Text(String(localized: String.LocalizationValue("signin_forgot_password"), table: "Localizable"))
             }
             .buttonStyle(.plain)
             Text("|")
             Button(action: onSignUp) {
-                Text("회원가입")
+                Text(String(localized: String.LocalizationValue("signin_sign_up"), table: "Localizable"))
             }
             .buttonStyle(.plain)
         }

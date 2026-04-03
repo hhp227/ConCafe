@@ -117,13 +117,12 @@ class CafeManagementViewModel(
     }
 
     private fun clickClaimCafe(cafeId: String) {
-        val cafeName = _uiState.value.searchableCafes.firstOrNull { it.id == cafeId }?.name ?: "선택한 카페"
         viewModelScope.launch {
             when (val result = createCafeOwnerClaimUseCase.invoke(cafeId)) {
                 is AppResult.Success -> {
                     refreshPendingClaims(resetMessage = false)
                     _uiState.update {
-                        it.copy(infoMessage = "$cafeName 운영자 신청을 등록했습니다.")
+                        it.copy(infoMessage = MSG_OWNER_CLAIM_REGISTERED)
                     }
                 }
                 is AppResult.Failure -> {
@@ -266,6 +265,10 @@ class CafeManagementViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         POLL_CLAIM
+    }
+
+    companion object {
+        private const val MSG_OWNER_CLAIM_REGISTERED = "cafemgmt_info_owner_claim_registered"
     }
 }
 

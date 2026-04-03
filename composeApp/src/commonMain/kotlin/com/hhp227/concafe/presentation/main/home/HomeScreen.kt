@@ -43,7 +43,27 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.home_banner_placeholder_desc
+import concafe.composeapp.generated.resources.home_banner_placeholder_title
+import concafe.composeapp.generated.resources.home_cast_followers
+import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
+import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
+import concafe.composeapp.generated.resources.home_notice_empty_desc
+import concafe.composeapp.generated.resources.home_notice_empty_title
+import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
+import concafe.composeapp.generated.resources.home_popular_cast_empty_title
+import concafe.composeapp.generated.resources.home_section_birthday_cast
+import concafe.composeapp.generated.resources.home_section_nearby_cafe
+import concafe.composeapp.generated.resources.home_section_notice
+import concafe.composeapp.generated.resources.home_section_popular_cast
+import concafe.composeapp.generated.resources.home_show_more
+import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -92,16 +112,16 @@ fun HomeScreen(
     if (uiState.isLoginPromptVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(HomeAction.DismissLoginPrompt) },
-            title = { Text("로그인이 필요합니다") },
-            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(HomeAction.ClickLoginPromptSignIn) }) {
-                    Text("로그인")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(HomeAction.DismissLoginPrompt) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -178,9 +198,9 @@ fun HomeContentScreen(
             }
         item {
             SectionTitle(
-                text = "인기 캐스트",
+                text = stringResource(Res.string.home_section_popular_cast),
                 leading = Icons.Default.Favorite,
-                actionLabel = if (uiState.canLoadMorePopularCasts) "더보기" else null,
+                actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
                 onAction = { onAction(HomeAction.LoadMorePopularCasts) }
             )
             Spacer(Modifier.height(10.dp))
@@ -195,15 +215,15 @@ fun HomeContentScreen(
                             subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
                             imageUrl = maid.profileImage,
                             modifier = Modifier.width(132.dp),
-                            metaText = "팔로워 ${maid.followerCount}",
+                            metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
                             onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
                         )
                     }
                 } else {
                     item {
                         HomeSectionPlaceholderCard(
-                            title = "인기 캐스트 데이터가 없어요",
-                            description = "팔로우와 방문이 쌓이면 이 영역에 표시됩니다.",
+                            title = stringResource(Res.string.home_popular_cast_empty_title),
+                            description = stringResource(Res.string.home_popular_cast_empty_desc),
                             modifier = Modifier.fillParentMaxWidth()
                         )
                     }
@@ -217,9 +237,9 @@ fun HomeContentScreen(
 
                 Column {
                     SectionTitle(
-                        text = "근처 컨셉카페",
+                        text = stringResource(Res.string.home_section_nearby_cafe),
                         leading = Icons.Default.Place,
-                        actionLabel = if (uiState.canLoadMoreNearbyCafes) "더보기" else null,
+                        actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
                         onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
                     )
                     Spacer(Modifier.height(10.dp))
@@ -245,8 +265,8 @@ fun HomeContentScreen(
                         } else {
                             item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                                 HomeSectionPlaceholderCard(
-                                    title = "근처 카페가 아직 없어요",
-                                    description = "지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요.",
+                                    title = stringResource(Res.string.home_nearby_cafe_empty_title),
+                                    description = stringResource(Res.string.home_nearby_cafe_empty_desc),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -257,7 +277,7 @@ fun HomeContentScreen(
         }
         if (uiState.birthdayCasts.isNotEmpty()) {
             item {
-                SectionTitle("생일인 캐스트", Icons.Default.Cake)
+                SectionTitle(stringResource(Res.string.home_section_birthday_cast), Icons.Default.Cake)
                 Spacer(Modifier.height(10.dp))
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -290,7 +310,7 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle("최근 카페 공지", Icons.Default.Campaign)
+            SectionTitle(stringResource(Res.string.home_section_notice), Icons.Default.Campaign)
             Spacer(Modifier.height(10.dp))
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -319,8 +339,8 @@ fun HomeContentScreen(
                     }
                 } else {
                     HomeSectionPlaceholderCard(
-                        title = "최근 공지가 없어요",
-                        description = "새 공지가 등록되면 이 영역에 표시됩니다."
+                        title = stringResource(Res.string.home_notice_empty_title),
+                        description = stringResource(Res.string.home_notice_empty_desc)
                     )
                 }
             }
@@ -463,13 +483,13 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "홈 배너 준비 중",
+                    text = stringResource(Res.string.home_banner_placeholder_title),
                     color = Color(0xFF6E6671),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "곧 새로운 소식을 보여드릴게요.",
+                    text = stringResource(Res.string.home_banner_placeholder_desc),
                     color = Color(0xFF8E8794),
                     style = MaterialTheme.typography.bodyMedium
                 )

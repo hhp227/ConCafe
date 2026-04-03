@@ -49,7 +49,7 @@ class BannerViewModel(
                     }
                 }
                 is AppResult.Failure -> {
-                    _event.emit(BannerEvent.ShowMessage("배너 목록을 불러오지 못했습니다."))
+                    _event.emit(BannerEvent.ShowMessage(MSG_BANNER_LOAD_FAILED))
                 }
             }
         }
@@ -126,11 +126,11 @@ class BannerViewModel(
             when (val result = deleteHomeBannerUseCase.invoke(bannerId)) {
                 is AppResult.Success -> {
                     removeBanner(bannerId)
-                    _event.emit(BannerEvent.ShowMessage("배너를 삭제했습니다."))
+                    _event.emit(BannerEvent.ShowMessage(MSG_BANNER_DELETED))
                 }
                 is AppResult.Failure -> {
                     _uiState.update { it.copy(pendingDeleteBannerId = null) }
-                    _event.emit(BannerEvent.ShowMessage(result.error.toString()))
+                    _event.emit(BannerEvent.ShowMessage(MSG_BANNER_DELETE_FAILED))
                 }
             }
         }
@@ -168,6 +168,12 @@ class BannerViewModel(
         observeBannerEvent()
         loadBanners()
     }
+
+    companion object {
+        private const val MSG_BANNER_LOAD_FAILED = "banner_info_load_failed"
+        private const val MSG_BANNER_DELETED = "banner_info_deleted"
+        private const val MSG_BANNER_DELETE_FAILED = "banner_info_delete_failed"
+    }
 }
 
 private fun HomeBanner.toBannerItem(): BannerItem {
@@ -177,9 +183,9 @@ private fun HomeBanner.toBannerItem(): BannerItem {
         else -> BannerTab.ACTIVE
     }
     val status = when (tab) {
-        BannerTab.ACTIVE -> "진행 중"
-        BannerTab.SCHEDULED -> "예약"
-        BannerTab.ENDED -> "종료"
+        BannerTab.ACTIVE -> "banner_status_active"
+        BannerTab.SCHEDULED -> "banner_status_scheduled"
+        BannerTab.ENDED -> "banner_status_ended"
     }
     val icon = when (targetType) {
         BannerLinkTargetType.CAFE_DETAIL -> "local_cafe"
@@ -192,8 +198,8 @@ private fun HomeBanner.toBannerItem(): BannerItem {
         cafeId = cafeId,
         title = title,
         description = subtitle,
-        periodText = "노출 ${displayDays}일",
-        statusLabel = status,
+        periodDays = displayDays.toInt(),
+        statusLabelKey = status,
         tab = tab,
         accentColorHex = startColorHex,
         imageIcon = icon,

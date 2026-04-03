@@ -10,8 +10,6 @@ class PersistedFirebaseAuthTokenProvider(
 ) : FirestoreAuthTokenProvider {
     private var cachedSession: FirebaseAuthSession? = sessionStore.load()
 
-    private var hasTriedAnonymousSignIn = false
-
     private val tokenMutex = Mutex()
 
     override suspend fun getIdToken(): String? {
@@ -19,20 +17,6 @@ class PersistedFirebaseAuthTokenProvider(
             val currentSession = cachedSession
 
             if (currentSession == null) {
-                if (hasTriedAnonymousSignIn) {
-                    return@withLock null
-                }
-                val anonymousSession = runCatching {
-                    delegate.signInAnonymously()
-                }.onFailure { error ->
-                    println("TEST, ${error.message}")
-                }.getOrNull()
-                hasTriedAnonymousSignIn = true
-
-                if (anonymousSession != null) {
-                    persistSession(anonymousSession)
-                    return@withLock anonymousSession.idToken
-                }
                 return@withLock null
             } else {
                 val refreshed = refreshSessionIfNeeded(currentSession)
@@ -142,10 +126,8 @@ class PersistedFirebaseAuthTokenProvider(
 
         if (session == null) {
             sessionStore.clear()
-            hasTriedAnonymousSignIn = false
         } else {
             sessionStore.save(session)
-            hasTriedAnonymousSignIn = false
         }
     }
 

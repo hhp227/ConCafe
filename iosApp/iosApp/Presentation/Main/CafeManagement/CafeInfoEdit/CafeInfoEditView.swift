@@ -39,7 +39,11 @@ struct CafeInfoEditView: View {
                 isPhotoPickerPresented = true
             }
         )
-        .navigationTitle(viewModel.uiState.screenTitle)
+        .navigationTitle(
+            viewModel.uiState.isRegistrationMode
+            ? String(localized: String.LocalizationValue("cafeinfo_screen_title_registration"), table: "Localizable")
+            : String(localized: String.LocalizationValue("cafeinfo_screen_title_edit"), table: "Localizable")
+        )
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
@@ -50,7 +54,7 @@ struct CafeInfoEditView: View {
             }
         }
         .alert(
-            "이미지 등록 필요",
+            String(localized: String.LocalizationValue("cafeinfo_alert_image_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isImageRequiredAlertVisible },
                 set: { presented in
@@ -60,11 +64,11 @@ struct CafeInfoEditView: View {
                 }
             )
         ) {
-            Button("확인") {
+            Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
                 viewModel.onAction(.dismissImageRequiredAlert)
             }
         } message: {
-            Text("카페 등록/수정에는 대표 이미지 또는 갤러리 이미지가 필요합니다.")
+            Text(String(localized: String.LocalizationValue("cafeinfo_alert_image_message"), table: "Localizable"))
         }
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
@@ -170,7 +174,32 @@ private struct CafeInfoEditContentView: View {
                             .padding(.vertical, 32)
                     }
                     if let infoMessage = uiState.infoMessage {
-                        infoBanner(message: infoMessage)
+                        infoBanner(
+                            message: {
+                                switch infoMessage {
+                                case "cafeinfo_info_saved",
+                                     "cafeinfo_info_load_failed",
+                                     "cafeinfo_info_image_required_one_or_more",
+                                     "cafeinfo_info_save_failed",
+                                     "cafeinfo_info_registration_rep_required",
+                                     "cafeinfo_info_rep_upload_next_step",
+                                     "cafeinfo_info_gallery_add_next_step",
+                                     "cafeinfo_info_pin_location_hint",
+                                     "cafeinfo_info_exception_next_step",
+                                     "cafeinfo_info_image_upload_failed":
+                                    return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                                default:
+                                    if infoMessage.hasPrefix("cafeinfo_info_gallery_max_exceeded:") {
+                                        let value = infoMessage.split(separator: ":").last.flatMap { Int($0) } ?? 0
+                                        return String(
+                                            format: String(localized: String.LocalizationValue("cafeinfo_info_gallery_max_exceeded"), table: "Localizable"),
+                                            value
+                                        )
+                                    }
+                                    return infoMessage
+                                }
+                            }()
+                        )
                     }
                     basicInformationSection
                     representativeImageSection
@@ -189,16 +218,16 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var basicInformationSection: some View {
-        editSectionCard(title: "기본 정보") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_basic"), table: "Localizable")) {
             ConCafeFormField(
-                label: "카페명",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_name"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.cafeName },
                     set: { onAction(.changeCafeName($0)) }
                 )
             )
             ConCafeFormEditor(
-                label: "카페 소개",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_description"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.cafeDescription },
                     set: { onAction(.changeCafeDescription($0)) }
@@ -208,7 +237,7 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var representativeImageSection: some View {
-        editSectionCard(title: "대표 이미지") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_representative"), table: "Localizable")) {
             Button {
                 onRepresentativeImagePick()
             } label: {
@@ -231,7 +260,7 @@ private struct CafeInfoEditContentView: View {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 32, weight: .semibold))
                                             .foregroundStyle(Color(hex: "8B5164"))
-                                        Text(uiState.representativeImageTitle)
+                                        Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                             .font(.subheadline.weight(.bold))
                                             .foregroundStyle(Color(hex: "5A4954"))
                                     }
@@ -248,7 +277,7 @@ private struct CafeInfoEditContentView: View {
                                 Image(systemName: "camera.fill")
                                     .font(.system(size: 32, weight: .semibold))
                                     .foregroundStyle(Color(hex: "8B5164"))
-                                Text(uiState.representativeImageTitle)
+                                Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(Color(hex: "5A4954"))
                             }
@@ -262,7 +291,7 @@ private struct CafeInfoEditContentView: View {
                 .frame(height: 200)
             }
             .buttonStyle(.plain)
-            Text("검색 결과에 노출되는 대표 이미지입니다")
+            Text(String(localized: String.LocalizationValue("cafeinfo_representative_hint"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -270,8 +299,8 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var gallerySection: some View {
-        editSectionCard(title: "카페 갤러리", trailing: {
-            Text(uiState.galleryLimitText)
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_gallery"), table: "Localizable"), trailing: {
+            Text(String(format: String(localized: String.LocalizationValue("cafeinfo_gallery_limit"), table: "Localizable"), uiState.galleryLimitCount, uiState.galleryMaxCount))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color(hex: "EF6797"))
         }) {
@@ -285,7 +314,7 @@ private struct CafeInfoEditContentView: View {
             ) {
                 ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
                     galleryItem(
-                        label: "이미지 \(index + 1)",
+                        label: String(format: String(localized: String.LocalizationValue("cafeinfo_image_label_prefix"), table: "Localizable"), index + 1),
                         imageUrl: imageUrl,
                         index: index
                     )
@@ -298,9 +327,9 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var locationContactSection: some View {
-        editSectionCard(title: "위치 및 연락처") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_location_contact"), table: "Localizable")) {
             ConCafeFormField(
-                label: "지역 / 주소",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_address"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.address },
                     set: { onAction(.changeAddress($0)) }
@@ -325,7 +354,7 @@ private struct CafeInfoEditContentView: View {
                     if let address, !address.isEmpty {
                         resolvedAddress = address
                     } else {
-                        resolvedAddress = "위도 \(formatCoordinate(latitude)), 경도 \(formatCoordinate(longitude))"
+                        resolvedAddress = String(format: String(localized: String.LocalizationValue("cafeinfo_coordinate_fallback"), table: "Localizable"), formatCoordinate(latitude), formatCoordinate(longitude))
                     }
                     onAction(.changeAddress(resolvedAddress))
                 }
@@ -334,7 +363,7 @@ private struct CafeInfoEditContentView: View {
                 Button {
                     onAction(.clickPinLocation)
                 } label: {
-                    Text("위치 지정")
+                    Text(String(localized: String.LocalizationValue("cafeinfo_action_pin_location"), table: "Localizable"))
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color(hex: "2B2330"))
                         .padding(.horizontal, 12)
@@ -349,12 +378,12 @@ private struct CafeInfoEditContentView: View {
                 .buttonStyle(.plain)
                 .padding(10)
             }
-            Text("선택 좌표: \(formatCoordinate(uiState.mapLatitude)), \(formatCoordinate(uiState.mapLongitude))")
+            Text(String(format: String(localized: String.LocalizationValue("cafeinfo_selected_coordinate"), table: "Localizable"), formatCoordinate(uiState.mapLatitude), formatCoordinate(uiState.mapLongitude)))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "7E737B"))
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .leading, spacing: 8) {
-                Text("연락처")
+                Text(String(localized: String.LocalizationValue("cafeinfo_label_contact"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 PhoneTextField(
@@ -362,7 +391,7 @@ private struct CafeInfoEditContentView: View {
                         get: { uiState.contactNumber },
                         set: { onAction(.changeContactNumber($0)) }
                     ),
-                    placeholder: "010-1234-5678"
+                    placeholder: String(localized: String.LocalizationValue("cafeinfo_label_contact_placeholder"), table: "Localizable")
                 )
                 .frame(height: 52)
                 .padding(.horizontal, 16)
@@ -377,9 +406,9 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var businessHoursSection: some View {
-        editSectionCard(title: "영업시간") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_business_hours"), table: "Localizable")) {
             hoursRow(
-                label: "평일",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_weekday"), table: "Localizable"),
                 open: Binding(
                     get: { uiState.weekdayOpen },
                     set: { onAction(.changeWeekdayOpen($0)) }
@@ -390,7 +419,7 @@ private struct CafeInfoEditContentView: View {
                 )
             )
             hoursRow(
-                label: "주말",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_weekend"), table: "Localizable"),
                 open: Binding(
                     get: { uiState.weekendOpen },
                     set: { onAction(.changeWeekendOpen($0)) }
@@ -405,7 +434,7 @@ private struct CafeInfoEditContentView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar.badge.clock")
-                    Text("예외 영업일 관리")
+                    Text(String(localized: String.LocalizationValue("cafeinfo_action_manage_exception"), table: "Localizable"))
                         .fontWeight(.semibold)
                 }
                 .foregroundStyle(Color(hex: "EF6797"))
@@ -429,7 +458,11 @@ private struct CafeInfoEditContentView: View {
                         ProgressView()
                             .progressViewStyle(.circular)
                     } else {
-                        Text(uiState.submitButtonText)
+                        Text(
+                            uiState.isRegistrationMode
+                            ? String(localized: String.LocalizationValue("cafeinfo_submit_registration"), table: "Localizable")
+                            : String(localized: String.LocalizationValue("cafeinfo_submit_edit"), table: "Localizable")
+                        )
                             .font(.headline.weight(.bold))
                     }
                     Spacer()
@@ -567,7 +600,7 @@ private struct CafeInfoEditContentView: View {
                 .font(.subheadline.weight(.medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
             TimeFieldPicker(text: open)
-            Text("—")
+            Text(String(localized: String.LocalizationValue("cafeinfo_dash"), table: "Localizable"))
                 .foregroundStyle(Color(hex: "8A8088"))
             TimeFieldPicker(text: close)
         }
@@ -582,7 +615,7 @@ private struct CafeInfoEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("banneredit_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -630,10 +663,10 @@ private struct TimeFieldPicker: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $isPresented) {
-            CompatNavigationContainer(title: "시간 선택") {
+            CompatNavigationContainer(title: String(localized: String.LocalizationValue("cafeinfo_time_picker_title"), table: "Localizable")) {
                 VStack {
                     DatePicker(
-                        "시간 선택",
+                        String(localized: String.LocalizationValue("cafeinfo_time_picker_title"), table: "Localizable"),
                         selection: $selectedTime,
                         displayedComponents: .hourAndMinute
                     )
@@ -645,7 +678,7 @@ private struct TimeFieldPicker: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("확인") {
+                    Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
                         text = TimeUtils.formatHourMinute(selectedTime)
                         isPresented = false
                     }

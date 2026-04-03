@@ -43,12 +43,21 @@ private struct CafeManagementContentView: View {
                     VStack(spacing: 18) {
                         heroCard
                         if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
+                            infoBanner(
+                                message: {
+                                    switch infoMessage {
+                                    case "cafemgmt_info_owner_claim_registered":
+                                        return String(localized: String.LocalizationValue("cafemgmt_info_owner_claim_registered"), table: "Localizable")
+                                    default:
+                                        return infoMessage
+                                    }
+                                }()
+                            )
                         }
                         if uiState.hasOwnedCafes {
                             sectionHeader(
-                                title: "내 카페",
-                                subtitle: "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
+                                title: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_title"), table: "Localizable"),
+                                subtitle: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_subtitle"), table: "Localizable")
                             )
                             VStack(spacing: 12) {
                                 ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
@@ -60,8 +69,8 @@ private struct CafeManagementContentView: View {
                             }
                             if !uiState.pendingClaims.isEmpty {
                                 sectionHeader(
-                                    title: "운영자 신청 상태",
-                                    subtitle: "기존 카페 연결 요청 현황"
+                                    title: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_title"), table: "Localizable"),
+                                    subtitle: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_subtitle"), table: "Localizable")
                                 )
                                 VStack(spacing: 12) {
                                     ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
@@ -100,17 +109,23 @@ private struct CafeManagementContentView: View {
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Cafe Manage")
+            Text(String(localized: String.LocalizationValue("cafemgmt_hero_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(.white)
             Text(
                 uiState.featuredCafe != nil
-                    ? "운영 중인 카페를 확인하고 각 카페의 관리 화면으로 이동할 수 있습니다."
-                    : "운영 카페 연결 상태를 확인하고 기존 카페 검색 또는 새 카페 등록을 시작하세요."
+                    ? String(localized: String.LocalizationValue("cafemgmt_hero_desc_with_cafe"), table: "Localizable")
+                    : String(localized: String.LocalizationValue("cafemgmt_hero_desc_empty"), table: "Localizable")
             )
             .font(.subheadline)
             .foregroundStyle(.white.opacity(0.9))
-            Text("운영 카페 \(uiState.ownedCafes.count)개")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("cafemgmt_hero_count"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.ownedCafes.count
+                )
+            )
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
@@ -250,8 +265,12 @@ private struct CafeManagementContentView: View {
             HStack {
                 Text(
                     uiState.isShowingAllCafes
-                        ? "카페 목록 접기"
-                        : "나머지 카페 \((uiState.ownedCafes.count - uiState.visibleOwnedCafes.count))개 더 보기"
+                        ? String(localized: String.LocalizationValue("cafemgmt_fold_cafe_list"), table: "Localizable")
+                        : String(
+                            format: String(localized: String.LocalizationValue("cafemgmt_more_cafe_list"), table: "Localizable"),
+                            locale: Locale.current,
+                            (uiState.ownedCafes.count - uiState.visibleOwnedCafes.count)
+                        )
                 )
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "5E4F5D"))
@@ -273,13 +292,13 @@ private struct CafeManagementContentView: View {
 
     private var addCafeCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("새 카페 추가")
+            Text(String(localized: String.LocalizationValue("cafemgmt_add_cafe_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            Text("신규 카페를 등록해 운영 카페 목록에 추가할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("cafemgmt_add_cafe_desc"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
-            Button("새 카페 등록") {
+            Button(String(localized: String.LocalizationValue("cafemgmt_register_new_cafe"), table: "Localizable")) {
                 onAction(.clickCreateCafe)
             }
             .font(.subheadline.weight(.semibold))
@@ -304,14 +323,14 @@ private struct CafeManagementContentView: View {
         let visibleSearchableCafes = uiState.filteredSearchableCafes.filter { !ownedCafeIds.contains($0.id) }
         return VStack(alignment: .leading, spacing: 12) {
             sectionHeader(
-                title: "기존 카페 검색",
-                subtitle: "기등록되어있는 카페를 검색해서 등록할수 있습니다."
+                title: String(localized: String.LocalizationValue("cafemgmt_search_existing_title"), table: "Localizable"),
+                subtitle: String(localized: String.LocalizationValue("cafemgmt_search_existing_subtitle"), table: "Localizable")
             )
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color(hex: "8E8794"))
                 TextField(
-                    "카페 이름 또는 지역 검색",
+                    String(localized: String.LocalizationValue("cafemgmt_search_placeholder"), table: "Localizable"),
                     text: Binding(
                         get: { uiState.cafeSearchQuery },
                         set: { onAction(.changeCafeSearchQuery($0)) }
@@ -331,7 +350,7 @@ private struct CafeManagementContentView: View {
             if !uiState.cafeSearchQuery.isEmpty {
                 VStack(spacing: 0) {
                     if visibleSearchableCafes.isEmpty {
-                        Text("검색 결과가 없습니다")
+                        Text(String(localized: String.LocalizationValue("cafemgmt_search_no_result"), table: "Localizable"))
                             .font(.subheadline)
                             .foregroundStyle(Color(hex: "8E8794"))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -370,7 +389,7 @@ private struct CafeManagementContentView: View {
                     .foregroundStyle(Color(hex: "8E8794"))
             }
             Spacer()
-            Button("등록") {
+            Button(String(localized: String.LocalizationValue("cafemgmt_register"), table: "Localizable")) {
                 onAction(.clickClaimCafe(cafe.id))
             }
             .font(.subheadline.weight(.semibold))
@@ -394,13 +413,13 @@ private struct CafeManagementContentView: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
             }
-            Text("아직 연결된 운영 카페가 없습니다")
+            Text(String(localized: String.LocalizationValue("cafemgmt_empty_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            Text("검색으로 기존 카페를 찾거나 새 카페를 등록해 운영 권한을 연결하세요.")
+            Text(String(localized: String.LocalizationValue("cafemgmt_empty_desc"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
-            Button("새 카페 등록") {
+            Button(String(localized: String.LocalizationValue("cafemgmt_register_new_cafe"), table: "Localizable")) {
                 onAction(.clickCreateCafe)
             }
             .font(.subheadline.weight(.semibold))
@@ -411,7 +430,7 @@ private struct CafeManagementContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             if !uiState.pendingClaims.isEmpty {
-                Text("운영자 신청 상태")
+                Text(String(localized: String.LocalizationValue("cafemgmt_section_claim_status_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "2B2330"))
 

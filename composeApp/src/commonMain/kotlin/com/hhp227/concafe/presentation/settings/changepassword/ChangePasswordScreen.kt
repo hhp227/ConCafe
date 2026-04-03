@@ -20,6 +20,26 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.changepw_back_content_description
+import concafe.composeapp.generated.resources.changepw_current_password_label
+import concafe.composeapp.generated.resources.changepw_current_password_placeholder
+import concafe.composeapp.generated.resources.changepw_guide_1
+import concafe.composeapp.generated.resources.changepw_guide_2
+import concafe.composeapp.generated.resources.changepw_guide_3
+import concafe.composeapp.generated.resources.changepw_guide_title
+import concafe.composeapp.generated.resources.changepw_hero_desc
+import concafe.composeapp.generated.resources.changepw_hero_title
+import concafe.composeapp.generated.resources.changepw_info_desc
+import concafe.composeapp.generated.resources.changepw_info_title
+import concafe.composeapp.generated.resources.changepw_new_password_confirm_label
+import concafe.composeapp.generated.resources.changepw_new_password_confirm_placeholder
+import concafe.composeapp.generated.resources.changepw_new_password_label
+import concafe.composeapp.generated.resources.changepw_new_password_placeholder
+import concafe.composeapp.generated.resources.changepw_submit
+import concafe.composeapp.generated.resources.changepw_submitting
+import concafe.composeapp.generated.resources.changepw_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,10 +66,10 @@ fun ChangePasswordScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("비밀번호 변경") },
+                title = { Text(stringResource(Res.string.changepw_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(ChangePasswordAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.changepw_back_content_description))
                     }
                 }
             )
@@ -97,9 +117,9 @@ private fun ChangePasswordContentScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White)
-                        Text("비밀번호 보안을 다시 설정하세요", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.changepw_hero_title), color = Color.White, fontWeight = FontWeight.Bold)
                         Text(
-                            "현재 비밀번호를 확인한 뒤 새 비밀번호를 등록합니다.",
+                            stringResource(Res.string.changepw_hero_desc),
                             color = Color.White.copy(alpha = 0.92f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -114,20 +134,20 @@ private fun ChangePasswordContentScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "입력 정보",
+                        text = stringResource(Res.string.changepw_info_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "비밀번호는 전용 화면에서만 변경되며, 변경 전 현재 비밀번호 확인이 필요합니다.",
+                        text = stringResource(Res.string.changepw_info_desc),
                         color = Color(0xFF7C7480),
                         style = MaterialTheme.typography.bodySmall
                     )
                     ConCafeFormField(
-                        label = "현재 비밀번호",
+                        label = stringResource(Res.string.changepw_current_password_label),
                         value = uiState.currentPassword,
                         onValueChange = { onAction(ChangePasswordAction.ChangeCurrentPassword(it)) },
-                        placeholder = "현재 비밀번호를 입력하세요",
+                        placeholder = stringResource(Res.string.changepw_current_password_placeholder),
                         trailingContent = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -137,10 +157,10 @@ private fun ChangePasswordContentScreen(
                         }
                     )
                     ConCafeFormField(
-                        label = "새 비밀번호",
+                        label = stringResource(Res.string.changepw_new_password_label),
                         value = uiState.newPassword,
                         onValueChange = { onAction(ChangePasswordAction.ChangeNewPassword(it)) },
-                        placeholder = "8자 이상 입력하세요",
+                        placeholder = stringResource(Res.string.changepw_new_password_placeholder),
                         trailingContent = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -150,10 +170,10 @@ private fun ChangePasswordContentScreen(
                         }
                     )
                     ConCafeFormField(
-                        label = "새 비밀번호 확인",
+                        label = stringResource(Res.string.changepw_new_password_confirm_label),
                         value = uiState.confirmPassword,
                         onValueChange = { onAction(ChangePasswordAction.ChangeConfirmPassword(it)) },
-                        placeholder = "새 비밀번호를 다시 입력하세요",
+                        placeholder = stringResource(Res.string.changepw_new_password_confirm_placeholder),
                         trailingContent = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -172,13 +192,13 @@ private fun ChangePasswordContentScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "안내",
+                        text = stringResource(Res.string.changepw_guide_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    PasswordGuideRow("새 비밀번호는 8자 이상이어야 합니다.")
-                    PasswordGuideRow("새 비밀번호 확인 입력값까지 일치해야 합니다.")
-                    PasswordGuideRow("변경 즉시 다음 로그인부터 새 비밀번호가 적용됩니다.")
+                    PasswordGuideRow(stringResource(Res.string.changepw_guide_1))
+                    PasswordGuideRow(stringResource(Res.string.changepw_guide_2))
+                    PasswordGuideRow(stringResource(Res.string.changepw_guide_3))
                 }
             }
         }
@@ -196,7 +216,7 @@ private fun ChangePasswordContentScreen(
                 )
             ) {
                 Text(
-                    text = if (uiState.isSubmitting) "변경 중..." else "비밀번호 변경",
+                    text = if (uiState.isSubmitting) stringResource(Res.string.changepw_submitting) else stringResource(Res.string.changepw_submit),
                     fontWeight = FontWeight.Bold
                 )
             }

@@ -8,29 +8,12 @@
 import Foundation
 
 struct BannerUiState {
-    var screenTitle = "배너 관리"
     var selectedTab: BannerTab = .active
-    var locationLabel = "홈 화면 상단"
     var banners: [BannerItem] = []
     var pendingDeleteBannerId: String? = nil
 
     var filteredBanners: [BannerItem] {
         banners.filter { $0.tab == selectedTab }
-    }
-
-    var sectionTitle: String {
-        switch selectedTab {
-        case .active:
-            return "현재 노출 중인 배너"
-        case .scheduled:
-            return "노출 예정 배너"
-        case .ended:
-            return "종료된 배너"
-        }
-    }
-
-    var sectionCountLabel: String {
-        "\(sectionTitle) (\(filteredBanners.count))"
     }
 
     var pendingDeleteBanner: BannerItem? {
@@ -44,8 +27,8 @@ struct BannerItem: Identifiable {
     let cafeId: String?
     let title: String
     let description: String
-    let periodText: String
-    let statusLabel: String
+    let periodDays: Int32
+    let statusLabelKey: String
     let tab: BannerTab
     let accentHex: String
     let imageIcon: String
@@ -53,7 +36,7 @@ struct BannerItem: Identifiable {
 }
 
 enum BannerTab: String, CaseIterable {
-    case active = "진행 중"
-    case scheduled = "예약"
-    case ended = "종료"
+    case active = "banner_section_active"
+    case scheduled = "banner_section_scheduled"
+    case ended = "banner_section_ended"
 }

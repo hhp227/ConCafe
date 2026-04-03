@@ -31,7 +31,7 @@ struct SettingsView: View {
                 onNavigationAction(.navigateToExternalLink(title: title, url: url))
             }
         }
-        .navigationTitle("설정")
+        .navigationTitle(String(localized: String.LocalizationValue("settings_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -108,16 +108,16 @@ private struct SettingsItem {
 
     static let account = SettingsItem(
         icon: "person.crop.circle",
-        title: "계정 관리",
-        description: "프로필과 로그인 정보를 관리합니다.",
+        title: String(localized: String.LocalizationValue("settings_account_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_account_desc"), table: "Localizable"),
         foregroundColor: Color(hex: "EF6797"),
         trailingText: nil
     )
 
     static let notification = SettingsItem(
         icon: "bell.badge",
-        title: "알림 설정",
-        description: "출근, 생일, 공지 알림 설정 영역입니다.",
+        title: String(localized: String.LocalizationValue("settings_notification_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_notification_desc"), table: "Localizable"),
         foregroundColor: Color(hex: "EF6797"),
         trailingText: nil
     )
@@ -125,8 +125,8 @@ private struct SettingsItem {
     static func appInfo(version: String) -> SettingsItem {
         SettingsItem(
             icon: "info.circle",
-            title: "앱 정보",
-            description: "현재 설치된 앱 버전을 확인합니다.",
+            title: String(localized: String.LocalizationValue("settings_app_info_title"), table: "Localizable"),
+            description: String(localized: String.LocalizationValue("settings_app_info_desc"), table: "Localizable"),
             foregroundColor: Color(hex: "EF6797"),
             trailingText: "v\(version)"
         )
@@ -134,24 +134,24 @@ private struct SettingsItem {
 
     static let inquiry = SettingsItem(
         icon: "bubble.left.and.text.bubble.right",
-        title: "문의하기",
-        description: "불편사항이나 제안을 입력 폼으로 전달합니다.",
+        title: String(localized: String.LocalizationValue("settings_inquiry_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_inquiry_desc"), table: "Localizable"),
         foregroundColor: Color(hex: "EF6797"),
         trailingText: nil
     )
 
     static let privacyPolicy = SettingsItem(
         icon: "lock.doc",
-        title: "개인정보 처리방침",
-        description: "개인정보 처리방침 외부 링크를 확인합니다.",
+        title: String(localized: String.LocalizationValue("settings_privacy_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_privacy_desc"), table: "Localizable"),
         foregroundColor: Color(hex: "EF6797"),
         trailingText: nil
     )
 
     static let signOut = SettingsItem(
         icon: "rectangle.portrait.and.arrow.right",
-        title: "로그아웃",
-        description: "현재 계정에서 로그아웃합니다.",
+        title: String(localized: String.LocalizationValue("settings_sign_out_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_sign_out_desc"), table: "Localizable"),
         foregroundColor: .red,
         trailingText: nil
     )

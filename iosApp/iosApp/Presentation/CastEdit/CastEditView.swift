@@ -67,7 +67,7 @@ struct CastEditView: View {
             )
         }
         .alert(
-            "이미지를 등록해주세요",
+            String(localized: String.LocalizationValue("castedit_alert_image_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isImageRequiredAlertVisible },
                 set: { presented in
@@ -77,11 +77,11 @@ struct CastEditView: View {
                 }
             )
         ) {
-            Button("확인") {
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
                 viewModel.onAction(.dismissImageRequiredAlert)
             }
         } message: {
-            Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.")
+            Text(String(localized: String.LocalizationValue("castedit_alert_image_required_desc"), table: "Localizable"))
         }
     }
 
@@ -129,14 +129,14 @@ private struct CastEditContentView: View {
                                 infoBanner(message: infoMessage)
                             }
                             ConCafeFormField(
-                                label: "캐스트 이름",
+                                label: String(localized: String.LocalizationValue("castedit_label_name"), table: "Localizable"),
                                 text: Binding(
                                     get: { uiState.castName },
                                     set: { onAction(.changeCastName($0)) }
                                 )
                             )
                             ConCafeFormField(
-                                label: "컨셉 역할",
+                                label: String(localized: String.LocalizationValue("castedit_label_concept_role"), table: "Localizable"),
                                 text: Binding(
                                     get: { uiState.conceptRole },
                                     set: { onAction(.changeConceptRole($0)) }
@@ -153,7 +153,7 @@ private struct CastEditContentView: View {
                                 }
                             )
                             ConCafeFormEditor(
-                                label: "소개 및 바이오",
+                                label: String(localized: String.LocalizationValue("castedit_label_intro"), table: "Localizable"),
                                 text: Binding(
                                     get: { uiState.introduction },
                                     set: { onAction(.changeIntroduction($0)) }
@@ -178,10 +178,10 @@ private struct CastEditContentView: View {
         )
         .background(Color(hex: "F8F5F6"))
         .sheet(isPresented: $isBirthdayPickerPresented) {
-            CompatNavigationContainer(title: "생일 선택") {
+            CompatNavigationContainer(title: String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable")) {
                 VStack {
                     DatePicker(
-                        "생일 선택",
+                        String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable"),
                         selection: $selectedBirthdayDate,
                         displayedComponents: .date
                     )
@@ -193,7 +193,7 @@ private struct CastEditContentView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("확인") {
+                    Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
                         onAction(.changeBirthday(TimeUtils.formatBirthdayDate(selectedBirthdayDate)))
                         isBirthdayPickerPresented = false
                     }
@@ -245,10 +245,10 @@ private struct CastEditContentView: View {
                 .frame(width: 128, height: 128)
             }
             .buttonStyle(.plain)
-            Text("캐스트 프로필 사진")
+            Text(String(localized: String.LocalizationValue("castedit_profile_photo_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            Text("탭해서 사진을 변경하세요")
+            Text(String(localized: String.LocalizationValue("castedit_profile_photo_hint"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8C7E87"))
         }
@@ -259,7 +259,7 @@ private struct CastEditContentView: View {
         let galleryLimitText = "\(uiState.galleryImages.count) / \(uiState.galleryMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("갤러리 사진")
+                Text(String(localized: String.LocalizationValue("castedit_gallery_title"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "665A63"))
                 Spacer()
@@ -277,7 +277,11 @@ private struct CastEditContentView: View {
             ) {
                 ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
                     castGalleryItem(
-                        label: "이미지 \(index + 1)",
+                        label: String(
+                            format: String(localized: String.LocalizationValue("castedit_gallery_item_label"), table: "Localizable"),
+                            locale: Locale.current,
+                            index + 1
+                        ),
                         imageUrl: imageUrl,
                         index: index,
                         onRemoveTap: {
@@ -289,7 +293,13 @@ private struct CastEditContentView: View {
                     addGalleryItem
                 }
             }
-            Text("캐스트 갤러리에는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("castedit_gallery_guide"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.galleryMaxCount
+                )
+            )
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -424,7 +434,7 @@ private struct CastEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -449,7 +459,7 @@ private struct BirthdayInputField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("생일")
+            Text(String(localized: String.LocalizationValue("castedit_birthday_label"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: "665A63"))
             HStack(spacing: 8) {
@@ -552,6 +562,7 @@ private struct CastEditProfileImageView: View {
 
 private struct CastEditImageView<Placeholder: View>: View {
     let imageUrl: String
+
     let placeholder: () -> Placeholder
 
     var body: some View {

@@ -20,6 +20,16 @@ import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.colorFromHex
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_accessibility_more
+import concafe.composeapp.generated.resources.cafe_review_action_delete
+import concafe.composeapp.generated.resources.cafe_review_action_edit
+import concafe.composeapp.generated.resources.cafe_review_action_report
+import concafe.composeapp.generated.resources.cafe_review_count
+import concafe.composeapp.generated.resources.cafe_review_empty
+import concafe.composeapp.generated.resources.cafe_review_load_more_hint
+import concafe.composeapp.generated.resources.cafe_review_verified
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeReviewScreen(
@@ -57,14 +67,14 @@ fun CafeReviewScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${detail.cafe.reviewCount}개 리뷰",
+                        text = stringResource(Res.string.cafe_review_count, detail.cafe.reviewCount),
                         color = Color(0xFF777777)
                     )
                 }
             }
         }
         if (reviews.isEmpty()) {
-            EmptyContent(text = "아직 등록된 리뷰가 없습니다.")
+            EmptyContent(text = stringResource(Res.string.cafe_review_empty))
         } else {
             reviews.forEach { review ->
                 Card(
@@ -109,7 +119,7 @@ fun CafeReviewScreen(
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Text(
-                                            text = "방문인증",
+                                            text = stringResource(Res.string.cafe_review_verified),
                                             color = Color.White,
                                             style = MaterialTheme.typography.labelSmall
                                         )
@@ -132,7 +142,7 @@ fun CafeReviewScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
-                                            contentDescription = "더보기",
+                                            contentDescription = stringResource(Res.string.cafe_accessibility_more),
                                             tint = Color(0xFF999999),
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -143,14 +153,14 @@ fun CafeReviewScreen(
                                     ) {
                                         if (currentUserId != null && review.userId == currentUserId) {
                                             DropdownMenuItem(
-                                                text = { Text("수정하기") },
+                                                text = { Text(stringResource(Res.string.cafe_review_action_edit)) },
                                                 onClick = {
                                                     menuExpanded = false
                                                     onAction(CafeAction.EditReview(review.id))
                                                 }
                                             )
                                             DropdownMenuItem(
-                                                text = { Text("삭제하기") },
+                                                text = { Text(stringResource(Res.string.cafe_review_action_delete)) },
                                                 onClick = {
                                                     menuExpanded = false
                                                     onAction(CafeAction.DeleteReview(review.id))
@@ -158,7 +168,7 @@ fun CafeReviewScreen(
                                             )
                                         } else {
                                             DropdownMenuItem(
-                                                text = { Text("신고하기") },
+                                                text = { Text(stringResource(Res.string.cafe_review_action_report)) },
                                                 onClick = {
                                                     menuExpanded = false
                                                     onAction(CafeAction.ReportReview(review.id))
@@ -218,7 +228,7 @@ fun CafeReviewScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "스크롤하면 더 불러옵니다.",
+                        text = stringResource(Res.string.cafe_review_load_more_hint),
                         color = Color(0xFF999999),
                         style = MaterialTheme.typography.bodySmall
                     )

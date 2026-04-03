@@ -33,12 +33,16 @@ data class ScheduleUiState(
 
     val totalWorkDurationLabel: String
         get() {
-            if (!isEditingWorking) return "0시간"
+            if (!isEditingWorking) return "schedule_duration_hours_only:0"
             val durationMinutes = TimeUtils.computeDurationMinutes(editStartTime, editEndTime)
             val actualMinutes = (durationMinutes - 60).coerceAtLeast(0)
             val hours = actualMinutes / 60
             val minutes = actualMinutes % 60
-            return if (minutes == 0) "${hours}시간" else "${hours}시간 ${minutes}분"
+            return if (minutes == 0) {
+                "schedule_duration_hours_only:$hours"
+            } else {
+                "schedule_duration_hours_minutes:$hours:$minutes"
+            }
         }
 
     data class CastSummary(

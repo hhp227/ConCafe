@@ -54,7 +54,7 @@ final class NoticeEventViewModel: ObservableObject {
     
     private func openEditNoticeForm(_ id: String) {
         guard let target = uiState.notices.first(where: { $0.id == id }) else {
-            uiState.infoMessage = "수정할 공지사항을 찾지 못했습니다."
+            uiState.infoMessage = MessageKey.noticeEditTargetNotFound
             return
         }
 
@@ -72,7 +72,7 @@ final class NoticeEventViewModel: ObservableObject {
 
     private func openEditEventForm(_ id: String) {
         guard let target = uiState.events.first(where: { $0.id == id }) else {
-            uiState.infoMessage = "수정할 이벤트를 찾지 못했습니다."
+            uiState.infoMessage = MessageKey.eventEditTargetNotFound
             return
         }
 
@@ -120,13 +120,13 @@ final class NoticeEventViewModel: ObservableObject {
                 } else {
                     uiState.isLoadingNotices = false
                     uiState.isLoadingMoreNotices = false
-                    uiState.infoMessage = "공지사항을 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.noticeLoadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoadingNotices = false
                 uiState.isLoadingMoreNotices = false
-                uiState.infoMessage = "공지사항을 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.noticeLoadFailed
             }
         }
     }
@@ -163,13 +163,13 @@ final class NoticeEventViewModel: ObservableObject {
                 } else {
                     uiState.isLoadingEvents = false
                     uiState.isLoadingMoreEvents = false
-                    uiState.infoMessage = "이벤트를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.eventLoadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoadingEvents = false
                 uiState.isLoadingMoreEvents = false
-                uiState.infoMessage = "이벤트를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.eventLoadFailed
             }
         }
     }
@@ -265,11 +265,26 @@ final class NoticeEventViewModel: ObservableObject {
 
                 if let failure = result as? AppResultFailure {
                     if let validation = failure.error as? AppErrorValidationFailed {
-                        uiState.infoMessage = validation.reason.toNoticeEventValidationMessage()
+                        switch validation.reason {
+                        case "cafeId is required":
+                            uiState.infoMessage = "noticeevent_validation_cafe_required"
+                        case "noticeId is required":
+                            uiState.infoMessage = "noticeevent_validation_notice_required"
+                        case "eventId is required":
+                            uiState.infoMessage = "noticeevent_validation_event_required"
+                        case "notice title is required", "event title is required":
+                            uiState.infoMessage = "noticeevent_validation_title_required"
+                        case "notice content is required", "event content is required":
+                            uiState.infoMessage = "noticeevent_validation_content_required"
+                        case "event image is required":
+                            uiState.infoMessage = "noticeevent_validation_event_image_required"
+                        default:
+                            uiState.infoMessage = validation.reason
+                        }
                     } else if selectedTab == .notice {
-                        uiState.infoMessage = isEditing ? "공지사항 수정에 실패했습니다." : "공지사항 등록에 실패했습니다."
+                        uiState.infoMessage = isEditing ? MessageKey.noticeUpdateFailed : MessageKey.noticeCreateFailed
                     } else {
-                        uiState.infoMessage = isEditing ? "이벤트 수정에 실패했습니다." : "이벤트 등록에 실패했습니다."
+                        uiState.infoMessage = isEditing ? MessageKey.eventUpdateFailed : MessageKey.eventCreateFailed
                     }
                     uiState.isSubmittingForm = false
                     return
@@ -284,18 +299,18 @@ final class NoticeEventViewModel: ObservableObject {
                 uiState.formPinned = false
                 uiState.formReservedAt = ""
                 if selectedTab == .notice {
-                    uiState.infoMessage = isEditing ? "공지사항이 수정되었습니다." : "공지사항이 등록되었습니다."
+                    uiState.infoMessage = isEditing ? MessageKey.noticeUpdated : MessageKey.noticeCreated
                 } else {
-                    uiState.infoMessage = isEditing ? "이벤트가 수정되었습니다." : "이벤트가 등록되었습니다."
+                    uiState.infoMessage = isEditing ? MessageKey.eventUpdated : MessageKey.eventCreated
                 }
                 refreshCurrentTab()
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSubmittingForm = false
                 if selectedTab == .notice {
-                    uiState.infoMessage = isEditing ? "공지사항 수정에 실패했습니다." : "공지사항 등록에 실패했습니다."
+                    uiState.infoMessage = isEditing ? MessageKey.noticeUpdateFailed : MessageKey.noticeCreateFailed
                 } else {
-                    uiState.infoMessage = isEditing ? "이벤트 수정에 실패했습니다." : "이벤트 등록에 실패했습니다."
+                    uiState.infoMessage = isEditing ? MessageKey.eventUpdateFailed : MessageKey.eventCreateFailed
                 }
             }
         }
@@ -309,10 +324,10 @@ final class NoticeEventViewModel: ObservableObject {
             do {
                 let result = try await deleteCafeNoticeUseCase.invoke(cafeId: cafeId, noticeId: id)
                 if Task.isCancelled { return }
-                uiState.infoMessage = result is AppResultSuccess<AnyObject> ? "공지사항이 삭제되었습니다." : "공지사항 삭제에 실패했습니다."
+                uiState.infoMessage = result is AppResultSuccess<AnyObject> ? MessageKey.noticeDeleteSuccess : MessageKey.noticeDeleteFailed
             } catch {
                 if Task.isCancelled { return }
-                uiState.infoMessage = "공지사항 삭제에 실패했습니다."
+                uiState.infoMessage = MessageKey.noticeDeleteFailed
             }
         }
     }
@@ -325,10 +340,10 @@ final class NoticeEventViewModel: ObservableObject {
             do {
                 let result = try await deleteCafeEventUseCase.invoke(cafeId: cafeId, eventId: id)
                 if Task.isCancelled { return }
-                uiState.infoMessage = result is AppResultSuccess<AnyObject> ? "이벤트가 삭제되었습니다." : "이벤트 삭제에 실패했습니다."
+                uiState.infoMessage = result is AppResultSuccess<AnyObject> ? MessageKey.eventDeleteSuccess : MessageKey.eventDeleteFailed
             } catch {
                 if Task.isCancelled { return }
-                uiState.infoMessage = "이벤트 삭제에 실패했습니다."
+                uiState.infoMessage = MessageKey.eventDeleteFailed
             }
         }
     }
@@ -407,7 +422,7 @@ final class NoticeEventViewModel: ObservableObject {
         case .clickRegister:
             openCreateForm()
         case .clickMoreEvents:
-            uiState.infoMessage = "이벤트 전체 목록 연결은 다음 단계에서 이어집니다."
+            uiState.infoMessage = MessageKey.moreEventsNextStep
         case .clickEditNotice(let id):
             openEditNoticeForm(id)
         case .clickDeleteNotice(let id):
@@ -427,14 +442,14 @@ final class NoticeEventViewModel: ObservableObject {
             uiState.formImageUrl = value
             uiState.infoMessage = nil
         case .clickFormImage:
-            uiState.infoMessage = "이미지를 첨부하려면 이미지 선택 기능을 사용해 주세요."
+            uiState.infoMessage = MessageKey.imagePickRequired
         case .clickRemoveFormImage:
             uiState.formImageUrl = ""
             uiState.infoMessage = nil
         case .changeFormPinned(let value):
             uiState.formPinned = value
         case .clickReserveSchedule:
-            uiState.infoMessage = "게시 예약 기능은 다음 단계에서 연결됩니다."
+            uiState.infoMessage = MessageKey.reserveScheduleNextStep
         case .clickSubmitForm:
             submitForm()
         case .dismissInfoMessage:
@@ -483,7 +498,7 @@ final class NoticeEventViewModel: ObservableObject {
         if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
             throw NSError(domain: "NoticeEvent", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
         }
-        throw NSError(domain: "NoticeEvent", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
+        throw NSError(domain: "NoticeEvent", code: 1, userInfo: [NSLocalizedDescriptionKey: MessageKey.imageUploadFailed])
     }
 
     deinit {
@@ -498,25 +513,27 @@ final class NoticeEventViewModel: ObservableObject {
         case delete
         case noticeManagementEvent
     }
-}
 
-private extension String {
-    func toNoticeEventValidationMessage() -> String {
-        switch self {
-        case "cafeId is required":
-            return "카페 정보를 찾을 수 없습니다."
-        case "noticeId is required":
-            return "공지사항 정보를 찾을 수 없습니다."
-        case "eventId is required":
-            return "이벤트 정보를 찾을 수 없습니다."
-        case "notice title is required", "event title is required":
-            return "제목을 입력해 주세요."
-        case "notice content is required", "event content is required":
-            return "내용을 입력해 주세요."
-        case "event image is required":
-            return "이벤트 대표 이미지를 첨부해 주세요."
-        default:
-            return self
-        }
+    private enum MessageKey {
+        static let noticeEditTargetNotFound = "noticeevent_info_notice_edit_target_not_found"
+        static let eventEditTargetNotFound = "noticeevent_info_event_edit_target_not_found"
+        static let noticeLoadFailed = "noticeevent_info_notice_load_failed"
+        static let eventLoadFailed = "noticeevent_info_event_load_failed"
+        static let noticeCreated = "noticeevent_info_notice_created"
+        static let noticeUpdated = "noticeevent_info_notice_updated"
+        static let eventCreated = "noticeevent_info_event_created"
+        static let eventUpdated = "noticeevent_info_event_updated"
+        static let noticeCreateFailed = "noticeevent_info_notice_create_failed"
+        static let noticeUpdateFailed = "noticeevent_info_notice_update_failed"
+        static let eventCreateFailed = "noticeevent_info_event_create_failed"
+        static let eventUpdateFailed = "noticeevent_info_event_update_failed"
+        static let noticeDeleteSuccess = "noticeevent_info_notice_delete_success"
+        static let noticeDeleteFailed = "noticeevent_info_notice_delete_failed"
+        static let eventDeleteSuccess = "noticeevent_info_event_delete_success"
+        static let eventDeleteFailed = "noticeevent_info_event_delete_failed"
+        static let imageUploadFailed = "noticeevent_info_image_upload_failed"
+        static let moreEventsNextStep = "noticeevent_info_more_events_next_step"
+        static let imagePickRequired = "noticeevent_info_image_pick_required"
+        static let reserveScheduleNextStep = "noticeevent_info_reserve_schedule_next_step"
     }
 }

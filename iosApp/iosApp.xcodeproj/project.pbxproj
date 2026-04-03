@@ -140,6 +140,7 @@
 		0A6B6AC62F60707C00E395C2 /* CafeInfoEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */; };
 		0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */; };
 		0A707BC82F67EC63007F52D1 /* CafeEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A707BC72F67EC63007F52D1 /* CafeEventView.swift */; };
+		0A73D7662F7FF8BB00096821 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 0A73D7652F7FF8BB00096821 /* Localizable.xcstrings */; };
 		0A74A38B2F66EE810038EA4E /* NotificationQuietHoursOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */; };
 		0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C932F5A76B8004037A8 /* HomeAction.swift */; };
 		0A785C962F5A76D7004037A8 /* HomeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C952F5A76D7004037A8 /* HomeEvent.swift */; };
@@ -360,6 +361,7 @@
 		0A6B6AC52F60707C00E395C2 /* CafeInfoEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditAction.swift; sourceTree = "<group>"; };
 		0A6B6AC72F60709700E395C2 /* CafeInfoEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeInfoEditEvent.swift; sourceTree = "<group>"; };
 		0A707BC72F67EC63007F52D1 /* CafeEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventView.swift; sourceTree = "<group>"; };
+		0A73D7652F7FF8BB00096821 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		0A74A38A2F66EE810038EA4E /* NotificationQuietHoursOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationQuietHoursOption.swift; sourceTree = "<group>"; };
 		0A785C932F5A76B8004037A8 /* HomeAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeAction.swift; sourceTree = "<group>"; };
 		0A785C952F5A76D7004037A8 /* HomeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEvent.swift; sourceTree = "<group>"; };
@@ -1032,6 +1034,7 @@
 		FBFDA0ED57CE363227DB6AC1 = {
 			isa = PBXGroup;
 			children = (
+				0A73D7652F7FF8BB00096821 /* Localizable.xcstrings */,
 				0A5F07AB2F7826050064CCB3 /* ConCafePush.entitlements */,
 				C98E98B4AE0F51EAF578C098 /* Configuration */,
 				1030E2EB8EFBD5F27A20D64D /* iosApp */,
@@ -1114,6 +1117,7 @@
 			files = (
 				0AB609342F69031C00591FEE /* goyangdeogyang_extrabold.ttf in Resources */,
 				A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */,
+				0A73D7662F7FF8BB00096821 /* Localizable.xcstrings in Resources */,
 				0A47F5962F6D684F00EA453E /* GoogleService-Info.plist in Resources */,
 				0A90EBF42F7798F900CEFB85 /* LaunchScreen.storyboard in Resources */,
 				0AFF00072F9B000000FF0007 /* InfoPlist.xcstrings in Resources */,

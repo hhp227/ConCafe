@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -36,9 +37,65 @@ import com.hhp227.concafe.presentation.component.SignInSocialButton
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
+import concafe.composeapp.generated.resources.signup_cast_after_signup_notice
+import concafe.composeapp.generated.resources.signup_cast_cafe_approval_required
+import concafe.composeapp.generated.resources.signup_cast_cafe_placeholder
+import concafe.composeapp.generated.resources.signup_cast_cafe_title
+import concafe.composeapp.generated.resources.signup_cast_nickname_label
+import concafe.composeapp.generated.resources.signup_cast_nickname_placeholder
+import concafe.composeapp.generated.resources.signup_cafe_verified_badge
+import concafe.composeapp.generated.resources.signup_clear_selected_cafe
+import concafe.composeapp.generated.resources.signup_confirm_password_label
+import concafe.composeapp.generated.resources.signup_confirm_password_placeholder
+import concafe.composeapp.generated.resources.signup_desc_cast
+import concafe.composeapp.generated.resources.signup_desc_owner
+import concafe.composeapp.generated.resources.signup_desc_visitor
+import concafe.composeapp.generated.resources.signup_email_label
+import concafe.composeapp.generated.resources.signup_email_placeholder
+import concafe.composeapp.generated.resources.signup_footer_has_account
+import concafe.composeapp.generated.resources.signup_footer_sign_in
 import concafe.composeapp.generated.resources.google_logo
 import concafe.composeapp.generated.resources.kakao_icon
+import concafe.composeapp.generated.resources.signup_name_label
+import concafe.composeapp.generated.resources.signup_name_placeholder
+import concafe.composeapp.generated.resources.signup_nickname_label
+import concafe.composeapp.generated.resources.signup_nickname_placeholder
+import concafe.composeapp.generated.resources.signup_owner_cafe_guide_message
+import concafe.composeapp.generated.resources.signup_owner_cafe_guide_title
+import concafe.composeapp.generated.resources.signup_owner_cafe_link_placeholder
+import concafe.composeapp.generated.resources.signup_owner_cafe_link_title
+import concafe.composeapp.generated.resources.signup_password_label
+import concafe.composeapp.generated.resources.signup_password_placeholder
+import concafe.composeapp.generated.resources.signup_phone_label
+import concafe.composeapp.generated.resources.signup_phone_placeholder
+import concafe.composeapp.generated.resources.signup_phone_request
+import concafe.composeapp.generated.resources.signup_phone_verified
+import concafe.composeapp.generated.resources.signup_phone_verified_message
+import concafe.composeapp.generated.resources.signup_processing
+import concafe.composeapp.generated.resources.signup_search_cafe_label
+import concafe.composeapp.generated.resources.signup_search_cafe_placeholder
+import concafe.composeapp.generated.resources.signup_search_no_results
+import concafe.composeapp.generated.resources.signup_select_type_subtitle
+import concafe.composeapp.generated.resources.signup_select_type_title
+import concafe.composeapp.generated.resources.signup_social_google
+import concafe.composeapp.generated.resources.signup_social_kakao
+import concafe.composeapp.generated.resources.signup_social_apple
+import concafe.composeapp.generated.resources.signup_submit
+import concafe.composeapp.generated.resources.signup_submit_cast
+import concafe.composeapp.generated.resources.signup_user_type_cast_badge
+import concafe.composeapp.generated.resources.signup_user_type_cast_subtitle
+import concafe.composeapp.generated.resources.signup_user_type_cast_title
+import concafe.composeapp.generated.resources.signup_user_type_owner_badge
+import concafe.composeapp.generated.resources.signup_user_type_owner_subtitle
+import concafe.composeapp.generated.resources.signup_user_type_owner_title
+import concafe.composeapp.generated.resources.signup_user_type_visitor_badge
+import concafe.composeapp.generated.resources.signup_user_type_visitor_subtitle
+import concafe.composeapp.generated.resources.signup_user_type_visitor_title
+import concafe.composeapp.generated.resources.signup_verification_code_label
+import concafe.composeapp.generated.resources.signup_verification_code_placeholder
+import concafe.composeapp.generated.resources.signup_verification_confirm
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -118,12 +175,12 @@ private fun SignUpContentScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "이미 계정이 있으신가요?",
+                                text = stringResource(Res.string.signup_footer_has_account),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF8E8794)
                             )
                             TextButton(onClick = { onAction(SignUpAction.ClickSignInInstead) }) {
-                                Text("로그인")
+                                Text(stringResource(Res.string.signup_footer_sign_in))
                             }
                         }
                     }
@@ -142,14 +199,14 @@ private fun SignUpContentScreen(
                         item {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 SignInSocialButton(
-                                    label = "카카오로 시작하기",
+                                    label = stringResource(Res.string.signup_social_kakao),
                                     icon = painterResource(Res.drawable.kakao_icon),
                                     containerColor = Color(0xFFFEE500),
                                     contentColor = Color.Black,
                                     onClick = { onAction(SignUpAction.ClickSocialSignUp(SignUpProvider.KAKAO)) }
                                 )
                                 SignInSocialButton(
-                                    label = "구글로 시작하기",
+                                    label = stringResource(Res.string.signup_social_google),
                                     icon = painterResource(Res.drawable.google_logo),
                                     containerColor = Color.White,
                                     contentColor = Color(0xFF222222),
@@ -157,7 +214,7 @@ private fun SignUpContentScreen(
                                     onClick = { onAction(SignUpAction.ClickSocialSignUp(SignUpProvider.GOOGLE)) }
                                 )
                                 SignInSocialButton(
-                                    label = "애플로 시작하기",
+                                    label = stringResource(Res.string.signup_social_apple),
                                     icon = painterResource(Res.drawable.apple_icon),
                                     containerColor = Color(0xFF111111),
                                     contentColor = Color.White,
@@ -173,12 +230,12 @@ private fun SignUpContentScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "이미 계정이 있으신가요?",
+                                text = stringResource(Res.string.signup_footer_has_account),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF8E8794)
                             )
                             TextButton(onClick = { onAction(SignUpAction.ClickSignInInstead) }) {
-                                Text("로그인")
+                                Text(stringResource(Res.string.signup_footer_sign_in))
                             }
                         }
                     }
@@ -191,7 +248,7 @@ private fun SignUpContentScreen(
                     .statusBarsPadding()
                     .padding(start = 5.dp, top = 8.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
             }
         }
     }
@@ -201,13 +258,13 @@ private fun SignUpContentScreen(
 private fun SignUpIntroSection() {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "회원 유형 선택",
+            text = stringResource(Res.string.signup_select_type_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "어떤 방법으로 가입하시겠어요?",
+            text = stringResource(Res.string.signup_select_type_subtitle),
             color = Color(0xFF7C7480)
         )
     }
@@ -252,14 +309,14 @@ private fun UserTypeCard(
                 Icon(icon, contentDescription = null, tint = Color.White)
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(type.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(userTypeTitle(type), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    text = type.subtitle,
+                    text = userTypeSubtitle(type),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF6E6671)
                 )
                 Text(
-                    text = type.badge,
+                    text = userTypeBadge(type),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFFDA4E84)
                 )
@@ -281,9 +338,9 @@ private fun SignUpFormHeader(type: SignUpUiState.UserType) {
         SignUpUiState.UserType.CAFE_OWNER -> listOf(Color(0xFFA78BFA), Color(0xFF8B5CF6))
     }
     val description = when (type) {
-        SignUpUiState.UserType.VISITOR -> "간편하게 시작하세요!"
-        SignUpUiState.UserType.CAST -> "소속 카페를 등록하세요"
-        SignUpUiState.UserType.CAFE_OWNER -> "휴대폰 인증 후 운영 카페를 선택하거나 나중에 연결할 수 있습니다"
+        SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_desc_visitor)
+        SignUpUiState.UserType.CAST -> stringResource(Res.string.signup_desc_cast)
+        SignUpUiState.UserType.CAFE_OWNER -> stringResource(Res.string.signup_desc_owner)
     }
 
     Surface(
@@ -299,7 +356,7 @@ private fun SignUpFormHeader(type: SignUpUiState.UserType) {
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, tint = Color.White)
-                Text(type.title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(userTypeTitle(type), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             Text(description, color = Color.White.copy(alpha = 0.92f))
         }
@@ -321,22 +378,22 @@ private fun SignUpFormSection(
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SignUpTextField(
             value = uiState.email,
-            label = "이메일",
-            placeholder = "email@example.com",
+            label = stringResource(Res.string.signup_email_label),
+            placeholder = stringResource(Res.string.signup_email_placeholder),
             keyboardType = KeyboardType.Email,
             onValueChange = { onAction(SignUpAction.ChangeEmail(it)) }
         )
         if (selectedType == SignUpUiState.UserType.CAFE_OWNER) {
             SignUpTextField(
                 value = uiState.name,
-                label = "이름",
-                placeholder = "실명을 입력하세요",
+                label = stringResource(Res.string.signup_name_label),
+                placeholder = stringResource(Res.string.signup_name_placeholder),
                 onValueChange = { onAction(SignUpAction.ChangeName(it)) }
             )
             PhoneVerificationSection(uiState = uiState, onAction = onAction)
             CafeSelectionSection(
-                label = "운영 카페 연결 (선택)",
-                placeholder = "가입 전에 연결할 카페를 1개 선택할 수 있습니다",
+                label = stringResource(Res.string.signup_owner_cafe_link_title),
+                placeholder = stringResource(Res.string.signup_owner_cafe_link_placeholder),
                 filteredCafes = filteredCafes,
                 uiState = uiState,
                 onAction = onAction
@@ -345,20 +402,28 @@ private fun SignUpFormSection(
         } else {
             SignUpTextField(
                 value = uiState.nickname,
-                label = if (selectedType == SignUpUiState.UserType.CAST) "활동명 (닉네임)" else "닉네임",
-                placeholder = if (selectedType == SignUpUiState.UserType.CAST) "활동할 이름을 입력하세요" else "사용할 닉네임을 입력하세요",
+                label = if (selectedType == SignUpUiState.UserType.CAST) {
+                    stringResource(Res.string.signup_cast_nickname_label)
+                } else {
+                    stringResource(Res.string.signup_nickname_label)
+                },
+                placeholder = if (selectedType == SignUpUiState.UserType.CAST) {
+                    stringResource(Res.string.signup_cast_nickname_placeholder)
+                } else {
+                    stringResource(Res.string.signup_nickname_placeholder)
+                },
                 onValueChange = { onAction(SignUpAction.ChangeNickname(it)) }
             )
             if (selectedType == SignUpUiState.UserType.CAST) {
                 CafeSelectionSection(
-                    label = "소속 카페",
-                    placeholder = "소속 카페를 선택하세요",
+                    label = stringResource(Res.string.signup_cast_cafe_title),
+                    placeholder = stringResource(Res.string.signup_cast_cafe_placeholder),
                     filteredCafes = filteredCafes,
                     uiState = uiState,
                     onAction = onAction
                 )
                 Text(
-                    text = "* 소속 카페의 승인이 필요합니다",
+                    text = stringResource(Res.string.signup_cast_cafe_approval_required),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF8E8794)
                 )
@@ -366,16 +431,16 @@ private fun SignUpFormSection(
         }
         SignUpTextField(
             value = uiState.password,
-            label = "비밀번호",
-            placeholder = "8자 이상 입력하세요",
+            label = stringResource(Res.string.signup_password_label),
+            placeholder = stringResource(Res.string.signup_password_placeholder),
             keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
             onValueChange = { onAction(SignUpAction.ChangePassword(it)) }
         )
         SignUpTextField(
             value = uiState.confirmPassword,
-            label = "비밀번호 확인",
-            placeholder = "비밀번호를 다시 입력하세요",
+            label = stringResource(Res.string.signup_confirm_password_label),
+            placeholder = stringResource(Res.string.signup_confirm_password_placeholder),
             keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
             onValueChange = { onAction(SignUpAction.ChangeConfirmPassword(it)) }
@@ -398,11 +463,11 @@ private fun SignUpFormSection(
                 .fillMaxWidth()
                 .height(52.dp)
         ) {
-            Text(if (uiState.isLoading) "처리 중..." else selectedType.submitLabel)
+            Text(if (uiState.isLoading) stringResource(Res.string.signup_processing) else submitLabel(selectedType))
         }
         if (selectedType == SignUpUiState.UserType.CAST) {
             Text(
-                text = "가입 후 소속 카페의 승인이 완료되면 활동을 시작할 수 있습니다",
+                text = stringResource(Res.string.signup_cast_after_signup_notice),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF8E8794)
             )
@@ -424,13 +489,13 @@ private fun OwnerCafeGuideCard() {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "운영 카페 연결 안내",
+                text = stringResource(Res.string.signup_owner_cafe_guide_title),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF5F3AA2)
             )
             Text(
-                text = "회원가입 단계에서는 카페 1개만 미리 선택할 수 있습니다. 선택하지 않아도 가입 가능하며, 가입 후 카페관리 탭에서 기존 카페 검색이나 새 카페 등록으로 추가 연결할 수 있습니다.",
+                text = stringResource(Res.string.signup_owner_cafe_guide_message),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF6B5A82)
             )
@@ -445,7 +510,7 @@ private fun SignUpTextField(
     placeholder: String,
     onValueChange: (String) -> Unit,
     keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     OutlinedTextField(
         value = value,
@@ -479,8 +544,8 @@ private fun PhoneVerificationSection(
                         phoneFieldValue = TextFieldValue(formatted, TextRange(formatted.length))
                         onAction(SignUpAction.ChangePhone(formatted))
                     },
-                    label = { Text("휴대폰 번호") },
-                    placeholder = { Text("010-1234-5678") },
+                    label = { Text(stringResource(Res.string.signup_phone_label)) },
+                    placeholder = { Text(stringResource(Res.string.signup_phone_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     shape = RoundedCornerShape(16.dp),
@@ -494,7 +559,7 @@ private fun PhoneVerificationSection(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
                 modifier = Modifier.height(56.dp)
             ) {
-                Text(if (uiState.isPhoneVerified) "인증완료" else "인증요청")
+                Text(if (uiState.isPhoneVerified) stringResource(Res.string.signup_phone_verified) else stringResource(Res.string.signup_phone_request))
             }
         }
         if (uiState.hasRequestedVerification && !uiState.isPhoneVerified) {
@@ -502,8 +567,8 @@ private fun PhoneVerificationSection(
                 Box(modifier = Modifier.weight(1f)) {
                     SignUpTextField(
                         value = uiState.verificationCode,
-                        label = "인증번호",
-                        placeholder = "인증번호 6자리",
+                        label = stringResource(Res.string.signup_verification_code_label),
+                        placeholder = stringResource(Res.string.signup_verification_code_placeholder),
                         keyboardType = KeyboardType.Number,
                         onValueChange = { onAction(SignUpAction.ChangeVerificationCode(it)) }
                     )
@@ -514,7 +579,7 @@ private fun PhoneVerificationSection(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF7D2E1), contentColor = Color(0xFF6B3050)),
                     modifier = Modifier.height(56.dp)
                 ) {
-                    Text("확인")
+                    Text(stringResource(Res.string.signup_verification_confirm))
                 }
             }
         }
@@ -528,7 +593,7 @@ private fun PhoneVerificationSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E8B57))
-                Text("휴대폰 인증이 완료되었습니다", color = Color(0xFF2E8B57))
+                Text(stringResource(Res.string.signup_phone_verified_message), color = Color(0xFF2E8B57))
             }
         }
     }
@@ -571,7 +636,7 @@ private fun CafeSelectionSection(
                 onClick = { onAction(SignUpAction.ClickClearCafe) },
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Text("선택한 카페 지우기")
+                Text(stringResource(Res.string.signup_clear_selected_cafe))
             }
         }
         if (uiState.isCafeSearchVisible) {
@@ -582,14 +647,14 @@ private fun CafeSelectionSection(
                 Column {
                     SignUpTextField(
                         value = uiState.cafeSearchQuery,
-                        label = "카페 검색",
-                        placeholder = "카페 이름 검색...",
+                        label = stringResource(Res.string.signup_search_cafe_label),
+                        placeholder = stringResource(Res.string.signup_search_cafe_placeholder),
                         onValueChange = { onAction(SignUpAction.ChangeCafeSearchQuery(it)) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (filteredCafes.isEmpty()) {
                         Text(
-                            text = "검색 결과가 없습니다",
+                            text = stringResource(Res.string.signup_search_no_results),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
                             color = Color(0xFF8E8794)
                         )
@@ -634,12 +699,48 @@ private fun CafeSearchItem(
                 color = Color(0xFFEF6797)
             ) {
                 Text(
-                    text = "인증",
+                    text = stringResource(Res.string.signup_cafe_verified_badge),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun userTypeTitle(type: SignUpUiState.UserType): String {
+    return when (type) {
+        SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_user_type_visitor_title)
+        SignUpUiState.UserType.CAST -> stringResource(Res.string.signup_user_type_cast_title)
+        SignUpUiState.UserType.CAFE_OWNER -> stringResource(Res.string.signup_user_type_owner_title)
+    }
+}
+
+@Composable
+private fun userTypeSubtitle(type: SignUpUiState.UserType): String {
+    return when (type) {
+        SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_user_type_visitor_subtitle)
+        SignUpUiState.UserType.CAST -> stringResource(Res.string.signup_user_type_cast_subtitle)
+        SignUpUiState.UserType.CAFE_OWNER -> stringResource(Res.string.signup_user_type_owner_subtitle)
+    }
+}
+
+@Composable
+private fun userTypeBadge(type: SignUpUiState.UserType): String {
+    return when (type) {
+        SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_user_type_visitor_badge)
+        SignUpUiState.UserType.CAST -> stringResource(Res.string.signup_user_type_cast_badge)
+        SignUpUiState.UserType.CAFE_OWNER -> stringResource(Res.string.signup_user_type_owner_badge)
+    }
+}
+
+@Composable
+private fun submitLabel(type: SignUpUiState.UserType): String {
+    return if (type == SignUpUiState.UserType.CAST) {
+        stringResource(Res.string.signup_submit_cast)
+    } else {
+        stringResource(Res.string.signup_submit)
     }
 }

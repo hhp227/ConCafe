@@ -129,7 +129,7 @@ private struct ReviewEditContentView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.caption)
-                        Text("방문 인증됨")
+                        Text(String(localized: String.LocalizationValue("reviewedit_verified_visit"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                     }
                     .foregroundStyle(Color(hex: "EF6797"))
@@ -150,7 +150,7 @@ private struct ReviewEditContentView: View {
 
     private var ratingSection: some View {
         VStack(spacing: 10) {
-            Text("카페 경험은 어떠셨나요?")
+            Text(String(localized: String.LocalizationValue("reviewedit_rating_question"), table: "Localizable"))
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             HStack(spacing: 6) {
@@ -176,7 +176,7 @@ private struct ReviewEditContentView: View {
 
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("사진 등록 (선택)")
+            Text(String(localized: String.LocalizationValue("reviewedit_photo_section_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             GeometryReader { proxy in
@@ -199,14 +199,14 @@ private struct ReviewEditContentView: View {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 32, weight: .semibold))
                                 .foregroundStyle(Color(hex: "8B5164"))
-                            Text("리뷰 사진 추가")
+                            Text(String(localized: String.LocalizationValue("reviewedit_photo_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(Color(hex: "5A4954"))
                         }
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
                     if uiState.photoImageUrl != nil {
-                        Button("제거") {
+                        Button(String(localized: String.LocalizationValue("reviewedit_photo_remove"), table: "Localizable")) {
                             onAction(.removePhoto)
                         }
                         .font(.caption.weight(.bold))
@@ -228,7 +228,7 @@ private struct ReviewEditContentView: View {
                 onAction(.clickAddPhoto)
                 onPickPhoto()
             }
-            Text("리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("reviewedit_photo_helper"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -241,7 +241,7 @@ private struct ReviewEditContentView: View {
 
     private var reviewSection: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("상세 리뷰")
+            Text(String(localized: String.LocalizationValue("reviewedit_review_detail_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             ConCafeFormEditor(
@@ -250,9 +250,16 @@ private struct ReviewEditContentView: View {
                     get: { uiState.content },
                     set: { onAction(.changeReviewText($0)) }
                 ),
-                placeholder: "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)"
+                placeholder: String(localized: String.LocalizationValue("reviewedit_review_detail_hint"), table: "Localizable")
             )
-            Text("\(uiState.reviewLength)/\(ReviewEditUiState.minimumReviewLength)자 이상")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("reviewedit_review_length"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.reviewLength,
+                    ReviewEditUiState.minimumReviewLength
+                )
+            )
                 .font(.caption)
                 .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : Color(hex: "9A8D95"))
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -276,18 +283,18 @@ private struct ReviewEditContentView: View {
                         Image(systemName: "face.smiling")
                             .foregroundStyle(Color(hex: "EF6797"))
                     }
-                Text("분위기가 좋았나요?")
+                Text(String(localized: String.LocalizationValue("reviewedit_atmosphere_question"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color(hex: "2B2330"))
             }
             HStack(spacing: 8) {
                 answerChip(
-                    title: "네",
+                    title: String(localized: String.LocalizationValue("reviewedit_atmosphere_positive"), table: "Localizable"),
                     isSelected: uiState.atmosphereAnswer == true,
                     action: { onAction(.selectAtmosphereAnswer(true)) }
                 )
                 answerChip(
-                    title: "아니요",
+                    title: String(localized: String.LocalizationValue("reviewedit_atmosphere_negative"), table: "Localizable"),
                     isSelected: uiState.atmosphereAnswer == false,
                     action: { onAction(.selectAtmosphereAnswer(false)) }
                 )
@@ -300,7 +307,7 @@ private struct ReviewEditContentView: View {
 
     private var castTagSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("함께 언급한 캐스트")
+            Text(String(localized: String.LocalizationValue("reviewedit_cast_tag_title"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: "665A63"))
             ScrollView(.horizontal, showsIndicators: false) {
@@ -391,7 +398,7 @@ private struct ReviewEditContentView: View {
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
-                Text("닫기")
+                Text(String(localized: String.LocalizationValue("common_close"), table: "Localizable"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color(hex: "6B5320"))
             }

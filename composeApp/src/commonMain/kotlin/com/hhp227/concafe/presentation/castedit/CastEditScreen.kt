@@ -36,8 +36,31 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.castedit_accessibility_back
+import concafe.composeapp.generated.resources.castedit_alert_image_required_desc
+import concafe.composeapp.generated.resources.castedit_alert_image_required_title
+import concafe.composeapp.generated.resources.castedit_birthday_label
+import concafe.composeapp.generated.resources.castedit_birthday_pick
+import concafe.composeapp.generated.resources.castedit_gallery_add
+import concafe.composeapp.generated.resources.castedit_gallery_guide
+import concafe.composeapp.generated.resources.castedit_gallery_item_label
+import concafe.composeapp.generated.resources.castedit_gallery_remove
+import concafe.composeapp.generated.resources.castedit_gallery_title
+import concafe.composeapp.generated.resources.castedit_label_concept_role
+import concafe.composeapp.generated.resources.castedit_label_intro
+import concafe.composeapp.generated.resources.castedit_label_name
+import concafe.composeapp.generated.resources.castedit_placeholder_concept_role
+import concafe.composeapp.generated.resources.castedit_placeholder_intro
+import concafe.composeapp.generated.resources.castedit_placeholder_name
+import concafe.composeapp.generated.resources.castedit_profile_photo_hint
+import concafe.composeapp.generated.resources.castedit_profile_photo_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.common_confirm
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CastEditScreen(
@@ -67,11 +90,11 @@ fun CastEditScreen(
     if (uiState.isImageRequiredAlertVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) },
-            title = { Text("이미지를 등록해주세요") },
-            text = { Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.") },
+            title = { Text(stringResource(Res.string.castedit_alert_image_required_title)) },
+            text = { Text(stringResource(Res.string.castedit_alert_image_required_desc)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.common_confirm))
                 }
             }
         )
@@ -101,7 +124,10 @@ private fun CastEditContentScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CastEditAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.castedit_accessibility_back)
+                        )
                     }
                 }
             )
@@ -196,18 +222,18 @@ private fun CastEditContentScreen(
                     }
                     item {
                         ConCafeFormField(
-                            label = "캐스트 이름",
+                            label = stringResource(Res.string.castedit_label_name),
                             value = uiState.castName,
                             onValueChange = { onAction(CastEditAction.ChangeCastName(it)) },
-                            placeholder = "활동명을 입력해주세요"
+                            placeholder = stringResource(Res.string.castedit_placeholder_name)
                         )
                     }
                     item {
                         ConCafeFormField(
-                            label = "컨셉 역할",
+                            label = stringResource(Res.string.castedit_label_concept_role),
                             value = uiState.conceptRole,
                             onValueChange = { onAction(CastEditAction.ChangeConceptRole(it)) },
-                            placeholder = "예: 리드 메이드, 티 마스터, 어프렌티스"
+                            placeholder = stringResource(Res.string.castedit_placeholder_concept_role)
                         )
                     }
                     item {
@@ -219,10 +245,10 @@ private fun CastEditContentScreen(
                     }
                     item {
                         ConCafeFormField(
-                            label = "소개 및 바이오",
+                            label = stringResource(Res.string.castedit_label_intro),
                             value = uiState.introduction,
                             onValueChange = { onAction(CastEditAction.ChangeIntroduction(it)) },
-                            placeholder = "성격, 특징, 특기를 소개해주세요...",
+                            placeholder = stringResource(Res.string.castedit_placeholder_intro),
                             minLines = 4,
                             singleLine = false
                         )
@@ -265,12 +291,12 @@ private fun CastEditContentScreen(
                         isBirthdayPickerVisible = false
                     }
                 ) {
-                    Text("확인")
+                    Text(stringResource(Res.string.common_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isBirthdayPickerVisible = false }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         ) {
@@ -299,7 +325,7 @@ private fun BirthdayInputField(
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "생일",
+            text = stringResource(Res.string.castedit_birthday_label),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF665A63)
@@ -325,7 +351,7 @@ private fun BirthdayInputField(
                 IconButton(onClick = onClickCalendar) {
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "생일 선택",
+                        contentDescription = stringResource(Res.string.castedit_birthday_pick),
                         tint = Color(0xFFB1A3AC)
                     )
                 }
@@ -388,8 +414,16 @@ private fun ProfilePhotoSection(
                     )
                 }
             }
-            Text("캐스트 프로필 사진", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("탭해서 사진을 변경하세요", style = MaterialTheme.typography.bodySmall, color = Color(0xFF8C7E87))
+            Text(
+                stringResource(Res.string.castedit_profile_photo_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                stringResource(Res.string.castedit_profile_photo_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8C7E87)
+            )
         }
     }
 }
@@ -409,7 +443,12 @@ private fun GallerySection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("갤러리 사진", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
+            Text(
+                stringResource(Res.string.castedit_gallery_title),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF665A63)
+            )
             Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
         }
         CastGalleryGrid(
@@ -419,7 +458,7 @@ private fun GallerySection(
             onRemoveClick = onRemoveClick
         )
         Text(
-            text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
+            text = stringResource(Res.string.castedit_gallery_guide, galleryMaxCount),
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF8A8088)
         )
@@ -441,7 +480,7 @@ private fun CastGalleryGrid(
     ) {
         galleryImages.forEachIndexed { index, imageUrl ->
             CastGalleryImageTile(
-                label = "이미지 ${index + 1}",
+                label = stringResource(Res.string.castedit_gallery_item_label, index + 1),
                 imageUrl = imageUrl,
                 index = index,
                 onRemoveClick = { onRemoveClick(index) }
@@ -457,7 +496,11 @@ private fun CastGalleryGrid(
                     .clickable(onClick = onAddClick),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Add, contentDescription = "사진 추가", tint = Color(0xFFEF6797))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(Res.string.castedit_gallery_add),
+                    tint = Color(0xFFEF6797)
+                )
             }
         }
     }
@@ -517,7 +560,7 @@ private fun CastGalleryImageTile(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "이미지 삭제",
+                contentDescription = stringResource(Res.string.castedit_gallery_remove),
                 tint = Color.White,
                 modifier = Modifier
                     .padding(4.dp)
@@ -551,7 +594,11 @@ private fun InfoBanner(
                 color = Color(0xFF6B5320)
             )
             TextButton(onClick = onDismiss) {
-                Text("닫기", color = Color(0xFF6B5320), fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(Res.string.common_close),
+                    color = Color(0xFF6B5320),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

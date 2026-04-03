@@ -107,15 +107,15 @@ struct CheckInView: View {
             }
         }
         .alert(
-            "위치 권한 필요",
+            String(localized: String.LocalizationValue("checkin_location_permission_title"), table: "Localizable"),
             isPresented: $isLocationSettingsAlertVisible
         ) {
-            Button("취소", role: .cancel) {}
-            Button("설정으로 이동") {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {}
+            Button(String(localized: String.LocalizationValue("checkin_location_permission_open_settings"), table: "Localizable")) {
                 openLocationSettings()
             }
         } message: {
-            Text("체크인을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.")
+            Text(String(localized: String.LocalizationValue("checkin_location_permission_desc"), table: "Localizable"))
         }
     }
 
@@ -146,7 +146,7 @@ private struct CheckInGuestContentView: View {
                 .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
                 CheckInSectionTitle(
-                    title: "인기 컨셉 카페",
+                    title: String(localized: String.LocalizationValue("checkin_section_popular_cafe_title"), table: "Localizable"),
                     trailing: nil,
                     leadingSystemImage: "flame.fill"
                 )
@@ -161,7 +161,7 @@ private struct CheckInGuestContentView: View {
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,
                                     showLocationIcon: false,
-                                    trailingLabel: "체크인 \(cafe.checkInCount)",
+                                    trailingLabel: String(format: String(localized: String.LocalizationValue("checkin_count_label"), table: "Localizable"), locale: Locale.current, cafe.checkInCount),
                                     onTap: { onAction(.cafeTapped(id: cafe.id)) }
                                 )
                                 .frame(width: 220)
@@ -171,13 +171,13 @@ private struct CheckInGuestContentView: View {
                     }
                 } else {
                     CheckInSectionPlaceholderCard(
-                        title: "인기 카페가 아직 없어요",
-                        description: "주변 카페 데이터가 들어오면 여기에 표시됩니다."
+                        title: String(localized: String.LocalizationValue("checkin_popular_cafe_empty_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("checkin_popular_cafe_empty_desc"), table: "Localizable")
                     )
                     .padding(.horizontal, 16)
                 }
                 CheckInSectionTitle(
-                    title: "오늘 인기 캐스트",
+                    title: String(localized: String.LocalizationValue("checkin_section_popular_cast_title"), table: "Localizable"),
                     trailing: nil,
                     leadingSystemImage: "cup.and.saucer.fill"
                 )
@@ -195,8 +195,8 @@ private struct CheckInGuestContentView: View {
                     .padding(.bottom, 8)
                 } else {
                     CheckInSectionPlaceholderCard(
-                        title: "인기 캐스트가 아직 없어요",
-                        description: "활동이 누적되면 추천 캐스트를 볼 수 있어요."
+                        title: String(localized: String.LocalizationValue("checkin_popular_cast_empty_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("checkin_popular_cast_empty_desc"), table: "Localizable")
                     )
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
@@ -228,13 +228,13 @@ private struct CheckInUserContentView: View {
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
                 .padding(.top, 16)
-                CheckInPrimaryButton(title: "새 방문 체크인") {
+                CheckInPrimaryButton(title: String(localized: String.LocalizationValue("checkin_new_visit_cta"), table: "Localizable")) {
                     onAction(.checkInTapped)
                 }
                 .padding(.horizontal, 64)
                 .padding(.vertical, 12)
                 CheckInSectionTitle(
-                    title: "오늘의 방문",
+                    title: String(localized: String.LocalizationValue("checkin_section_today_visit_title"), table: "Localizable"),
                     trailing: TimeUtils.currentMonthDayLabelKorean(),
                     leadingSystemImage: nil
                 )
@@ -242,7 +242,7 @@ private struct CheckInUserContentView: View {
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(
-                    title: "최근 타임라인",
+                    title: String(localized: String.LocalizationValue("checkin_section_timeline_title"), table: "Localizable"),
                     trailing: nil,
                     leadingSystemImage: "clock.fill"
                 )
@@ -277,12 +277,12 @@ private struct CheckInMapSection: View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("주변 컨셉카페 지도")
+                    Text(String(localized: String.LocalizationValue("checkin_map_title"), table: "Localizable"))
                         .font(.headline)
                         .fontWeight(.bold)
                     Menu {
                         ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
-                            Button(region == .all ? "근처" : region.label) {
+                            Button(region == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : region.label) {
                                 selectedRegion = region
                             }
                         }
@@ -290,7 +290,13 @@ private struct CheckInMapSection: View {
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.and.ellipse")
                                 .foregroundStyle(Color(hex: "EF6797"))
-                            Text("\((selectedRegion == .all ? "근처" : selectedRegion.label)) 주요 메이드카페")
+                            Text(
+                                String(
+                                    format: String(localized: String.LocalizationValue("checkin_main_cafe_label"), table: "Localizable"),
+                                    locale: Locale.current,
+                                    (selectedRegion == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : selectedRegion.label)
+                                )
+                            )
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(Color(hex: "7B7480"))
                             Image(systemName: "chevron.down")
@@ -301,7 +307,7 @@ private struct CheckInMapSection: View {
                     .buttonStyle(.plain)
                 }
                 Spacer()
-                Button("체크인", action: onCheckInTap)
+                Button(String(localized: String.LocalizationValue("checkin_button"), table: "Localizable"), action: onCheckInTap)
                     .buttonStyle(.bordered)
                     .tint(Color(hex: "EF6797"))
             }
@@ -455,21 +461,21 @@ private struct CheckInLoginPromotionSection: View {
                 HStack {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.white)
-                    Text("로그인하고 체크인을 시작해보세요")
+                    Text(String(localized: String.LocalizationValue("checkin_login_promo_title"), table: "Localizable"))
                         .font(.headline.weight(.bold))
                         .foregroundStyle(.white)
                 }
-                Text("방문 기록 저장, 팬 레벨, 배지 획득 기능을 사용할 수 있습니다.")
+                Text(String(localized: String.LocalizationValue("checkin_login_required_desc"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.9))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("• 방문 기록 저장").foregroundStyle(.white)
-                    Text("• 체크인 히스토리 관리").foregroundStyle(.white)
-                    Text("• 배지와 활동 기록 누적").foregroundStyle(.white)
+                    Text(String(localized: String.LocalizationValue("checkin_login_promo_feature_visit"), table: "Localizable")).foregroundStyle(.white)
+                    Text(String(localized: String.LocalizationValue("checkin_login_promo_feature_fan_level"), table: "Localizable")).foregroundStyle(.white)
+                    Text(String(localized: String.LocalizationValue("checkin_login_promo_feature_badge"), table: "Localizable")).foregroundStyle(.white)
                 }
                 .font(.caption)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 onAction(.signInTapped)
             }
             .frame(maxWidth: .infinity)
@@ -536,7 +542,7 @@ private struct CheckInCastCard: View {
                 }
             }
             HStack {
-                Text("오늘 방문 \(cast.todayVisit)")
+                Text(String(format: String(localized: String.LocalizationValue("checkin_today_visit_count"), table: "Localizable"), locale: Locale.current, cast.todayVisit))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
                     .padding(.horizontal, 12)
@@ -562,8 +568,8 @@ private struct CheckInTodayVisitsRow: View {
     var body: some View {
         if visits.isEmpty {
             CheckInEmptyState(
-                title: "오늘 방문 기록이 아직 없어요",
-                description: "지금 체크인하고 첫 방문 기록을 남겨보세요."
+                title: String(localized: String.LocalizationValue("checkin_today_visit_empty_title"), table: "Localizable"),
+                description: String(localized: String.LocalizationValue("checkin_today_visit_empty_desc"), table: "Localizable")
             )
         } else {
             HStack(spacing: 12) {
@@ -665,7 +671,7 @@ private struct CheckInMoreVisitCard: View {
                 Text("+\(remainingCount)")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(Color(hex: "EF6797"))
-                Text("더 방문했어요")
+                Text(String(localized: String.LocalizationValue("checkin_more_visit_label"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(Color(hex: "7C7480"))
             }
@@ -709,8 +715,8 @@ private struct CheckInTimelineList: View {
     var body: some View {
         if visits.isEmpty {
             CheckInEmptyState(
-                title: "최근 타임라인이 비어 있어요",
-                description: "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
+                title: String(localized: String.LocalizationValue("checkin_timeline_empty_title"), table: "Localizable"),
+                description: String(localized: String.LocalizationValue("checkin_timeline_empty_desc"), table: "Localizable")
             )
         } else {
             VStack(spacing: 12) {
@@ -725,7 +731,7 @@ private struct CheckInTimelineList: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                 } else if canLoadMore {
-                    Button("최근 방문 더 보기") {
+                    Button(String(localized: String.LocalizationValue("checkin_load_more_visits"), table: "Localizable")) {
                         onLoadMore()
                     }
                     .font(.caption.weight(.semibold))
@@ -776,7 +782,7 @@ private struct CheckInTimelineItem: View {
                     .background(Color(hex: "F5F5F5"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                Text(visit.memo ?? "방문 메모 없음")
+                Text(visit.memo ?? String(localized: String.LocalizationValue("checkin_visit_memo_empty"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
@@ -861,15 +867,15 @@ private struct CheckInLoginPromptSheet: View {
                 .frame(width: 42, height: 5)
                 .padding(.top, 8)
             VStack(spacing: 10) {
-                Text("로그인이 필요합니다")
+                Text(String(localized: String.LocalizationValue("checkin_login_required_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                Text("로그인 후 방문 기록 저장, 팬 레벨, 배지 획득 기능을 사용할 수 있습니다.")
+                Text(String(localized: String.LocalizationValue("checkin_login_required_desc"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 12)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 onAction(.signInTapped)
             }
             .frame(maxWidth: .infinity)
@@ -893,16 +899,16 @@ private struct CheckInReviewPromptSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("리뷰를 작성하면 어떠세요?")
+            Text(String(localized: String.LocalizationValue("checkin_review_prompt_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundColor(Color(hex: "24161E"))
-            Text("\(cafeName) 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.")
+            Text(String(format: String(localized: String.LocalizationValue("checkin_review_prompt_desc"), table: "Localizable"), locale: Locale.current, cafeName))
                 .font(.subheadline)
                 .foregroundColor(Color(hex: "6F6670"))
             Button {
                 onAction(.writeReviewPromptTapped)
             } label: {
-                Text("지금 작성")
+                Text(String(localized: String.LocalizationValue("checkin_review_prompt_primary"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .foregroundColor(Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
@@ -914,7 +920,7 @@ private struct CheckInReviewPromptSheet: View {
             Button {
                 onAction(.dismissReviewPrompt)
             } label: {
-                Text("나중에")
+                Text(String(localized: String.LocalizationValue("checkin_review_prompt_later"), table: "Localizable"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -956,7 +962,7 @@ private struct CheckInNewVisitSheet: View {
                         .frame(width: 42, height: 5)
                     HStack {
                         Spacer()
-                        Text("방문 추가")
+                        Text(String(localized: String.LocalizationValue("checkin_new_visit_title"), table: "Localizable"))
                             .font(.title3.weight(.bold))
                         Spacer()
                         Button {
@@ -967,21 +973,21 @@ private struct CheckInNewVisitSheet: View {
                                 .padding(4)
                         }
                     }
-                    Text("방문을 기록할 카페를 선택해주세요.")
+                    Text(String(localized: String.LocalizationValue("checkin_new_visit_desc"), table: "Localizable"))
                         .font(.footnote)
                         .foregroundStyle(Color(hex: "7C7480"))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     VStack(spacing: 10) {
                         if cafes.isEmpty {
                             VStack(spacing: 6) {
-                                Text("현재 선택 가능한 카페가 없습니다.")
+                                Text(String(localized: String.LocalizationValue("checkin_new_visit_no_cafe"), table: "Localizable"))
                                     .font(.footnote)
                                     .foregroundStyle(Color(hex: "7C7480"))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 ConCafeFormField(
-                                    label: "카페 선택",
+                                    label: String(localized: String.LocalizationValue("checkin_new_visit_cafe_label"), table: "Localizable"),
                                     text: .constant(""),
-                                    placeholder: "선택 가능한 카페가 없습니다.",
+                                    placeholder: String(localized: String.LocalizationValue("checkin_new_visit_cafe_unavailable_placeholder"), table: "Localizable"),
                                     isEditable: false
                                 )
                             }
@@ -995,9 +1001,9 @@ private struct CheckInNewVisitSheet: View {
                                     }
                                 } label: {
                                     ConCafeFormField(
-                                        label: "카페 선택",
+                                        label: String(localized: String.LocalizationValue("checkin_new_visit_cafe_label"), table: "Localizable"),
                                         text: .constant(selectedCafeName),
-                                        placeholder: "카페를 선택하세요.",
+                                        placeholder: String(localized: String.LocalizationValue("checkin_new_visit_cafe_placeholder"), table: "Localizable"),
                                         isEditable: false,
                                         trailingContent: {
                                             Image(systemName: "chevron.down")
@@ -1011,9 +1017,9 @@ private struct CheckInNewVisitSheet: View {
                         }
                         ZStack {
                             ConCafeFormField(
-                                label: "방문 시간",
+                                label: String(localized: String.LocalizationValue("checkin_new_visit_time_label"), table: "Localizable"),
                                 text: .constant(TimeUtils.formatHourMinute(visitTime)),
-                                placeholder: "방문 시간을 선택하세요.",
+                                placeholder: String(localized: String.LocalizationValue("checkin_new_visit_time_placeholder"), table: "Localizable"),
                                 isEditable: false,
                                 trailingContent: {
                                     Image(systemName: "clock")
@@ -1028,9 +1034,9 @@ private struct CheckInNewVisitSheet: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                         ConCafeFormEditor(
-                            label: "메모 (선택)",
+                            label: String(localized: String.LocalizationValue("checkin_new_visit_memo_label"), table: "Localizable"),
                             text: $memo,
-                            placeholder: "방문 후기를 남겨보세요."
+                            placeholder: String(localized: String.LocalizationValue("checkin_new_visit_memo_placeholder"), table: "Localizable")
                         )
                     }
                 }
@@ -1060,7 +1066,7 @@ private struct CheckInNewVisitSheet: View {
                             .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
                     )
                 }
-                Button("체크인 완료") {
+                Button(String(localized: String.LocalizationValue("checkin_new_visit_submit"), table: "Localizable")) {
                     guard let cafeId = selectedCafeId else { return }
                     let normalizedMemo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -1102,10 +1108,10 @@ private struct CheckInNewVisitSheet: View {
         )
         .background(Color(hex: "F8F5F6"))
         .sheet(isPresented: $isTimePickerPresented) {
-            CompatNavigationContainer(title: "방문 시간 선택") {
+            CompatNavigationContainer(title: String(localized: String.LocalizationValue("checkin_new_visit_time_picker_title"), table: "Localizable")) {
                 VStack {
                     DatePicker(
-                        "방문 시간",
+                        String(localized: String.LocalizationValue("checkin_new_visit_time_label"), table: "Localizable"),
                         selection: $visitTime,
                         displayedComponents: .hourAndMinute
                     )
@@ -1117,7 +1123,7 @@ private struct CheckInNewVisitSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("확인") {
+                    Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
                         isTimePickerPresented = false
                     }
                 }

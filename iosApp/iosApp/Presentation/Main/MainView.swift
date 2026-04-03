@@ -24,17 +24,17 @@ struct MainView: View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
                 HomeView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label("홈", systemImage: "house.fill") }
+                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
                     .tag("home")
                 ExploreView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label("탐색", systemImage: "magnifyingglass") }
+                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable"), systemImage: "magnifyingglass") }
                     .tag("explore")
                 roleBasedThirdTabView
                     .tag(viewModel.uiState.thirdTab.route)
                 rankingTabView
                     .tag("ranking")
                 MyInfoView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label("내 정보", systemImage: "person") }
+                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
                     .tag("myinfo")
             }
         }
@@ -54,7 +54,7 @@ struct MainView: View {
                 } label: {
                     if selectedTab == "myinfo" && viewModel.uiState.currentUser != nil {
                         Image(systemName: "gearshape")
-                            .accessibilityLabel("설정")
+                            .accessibilityLabel(String(localized: String.LocalizationValue("common_settings"), table: "Localizable"))
                     } else {
                         // [변경] contentViewModel.uiState.hasUnreadNotifications → hasUnreadNotifications 파라미터 직접 사용
                         Image(systemName: "bell")
@@ -66,7 +66,7 @@ struct MainView: View {
                                         .offset(x: 2, y: -2)
                                 }
                             }
-                            .accessibilityLabel("알림")
+                            .accessibilityLabel(String(localized: String.LocalizationValue("common_notification"), table: "Localizable"))
                     }
                 }
             }
@@ -105,16 +105,16 @@ struct MainView: View {
         switch viewModel.uiState.thirdTab {
         case .fanManagement:
             FanManagementView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("팬관리", systemImage: "person.2.fill") }
+                .tabItem { Label(String(localized: String.LocalizationValue("main_tab_fan_management"), table: "Localizable"), systemImage: "person.2.fill") }
         case .cafeManagement:
             CafeManagementView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("카페관리", systemImage: "storefront.fill") }
+                .tabItem { Label(String(localized: String.LocalizationValue("main_tab_cafe_management"), table: "Localizable"), systemImage: "storefront.fill") }
         case .adminOperations:
             AdminOperationsView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("운영관리", systemImage: "shield.lefthalf.filled") }
+                .tabItem { Label(String(localized: String.LocalizationValue("main_tab_admin_operations"), table: "Localizable"), systemImage: "shield.lefthalf.filled") }
         default:
             CheckInView(onNavigationAction: onNavigationAction)
-                .tabItem { Label("체크인", systemImage: "checkmark.seal.fill") }
+                .tabItem { Label(String(localized: String.LocalizationValue("main_tab_checkin"), table: "Localizable"), systemImage: "checkmark.seal.fill") }
         }
     }
 
@@ -123,7 +123,7 @@ struct MainView: View {
         RankingView(onNavigationAction: onNavigationAction)
             .tabItem {
                 Label(
-                    "랭킹",
+                    String(localized: String.LocalizationValue("main_tab_ranking"), table: "Localizable"),
                     systemImage: compatSystemImageName(iOS16: "trophy.fill", fallback: "star.fill")
                 )
             }
@@ -132,23 +132,23 @@ struct MainView: View {
     private var navigationTitle: String {
         switch selectedTab {
         case MainNavigationTab.home.route:
-            return "홈"
+            return String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable")
         case MainNavigationTab.explore.route:
-            return "탐색"
+            return String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable")
         case MainNavigationTab.checkIn.route:
-            return "체크인"
+            return String(localized: String.LocalizationValue("main_tab_checkin"), table: "Localizable")
         case MainNavigationTab.fanManagement.route:
-            return "팬관리"
+            return String(localized: String.LocalizationValue("main_tab_fan_management"), table: "Localizable")
         case MainNavigationTab.cafeManagement.route:
-            return "카페관리"
+            return String(localized: String.LocalizationValue("main_tab_cafe_management"), table: "Localizable")
         case MainNavigationTab.adminOperations.route:
-            return "운영관리"
+            return String(localized: String.LocalizationValue("main_tab_admin_operations"), table: "Localizable")
         case MainNavigationTab.ranking.route:
-            return "랭킹"
+            return String(localized: String.LocalizationValue("main_tab_ranking"), table: "Localizable")
         case MainNavigationTab.myInfo.route:
-            return "내 정보"
+            return String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable")
         default:
-            return "홈"
+            return String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable")
         }
     }
 

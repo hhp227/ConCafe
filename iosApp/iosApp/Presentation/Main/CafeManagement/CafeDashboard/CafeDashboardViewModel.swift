@@ -102,11 +102,11 @@ final class CafeDashboardViewModel: ObservableObject {
                     uiState.isLoadingMoreCasts = false
                 } else {
                     uiState.isLoadingMoreCasts = false
-                    uiState.infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_list_load_failed"
                 }
             } catch {
                 uiState.isLoadingMoreCasts = false
-                uiState.infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                uiState.infoMessage = "dashboard_info_cast_list_load_failed"
             }
         }
     }
@@ -147,7 +147,7 @@ final class CafeDashboardViewModel: ObservableObject {
             event.send(.navigateToMenuGoods(cafeId: cafeId))
         case .castSchedule:
             guard let selectedCastId = uiState.selectedCastId else {
-                uiState.infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요."
+                uiState.infoMessage = "dashboard_info_select_cast_for_schedule"
                 return
             }
             event.send(.navigateToSchedule(castId: selectedCastId))
@@ -191,7 +191,7 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private func submitExternalLink() {
         guard uiState.isExternalLinkSubmitEnabled else {
-            uiState.infoMessage = "제목과 링크 URL을 모두 입력해 주세요."
+            uiState.infoMessage = "dashboard_info_external_link_input_required"
             return
         }
 
@@ -216,7 +216,7 @@ final class CafeDashboardViewModel: ObservableObject {
         uiState.editingExternalLinkId = nil
         uiState.externalLinkTitle = ""
         uiState.externalLinkUrl = ""
-        uiState.infoMessage = isEdit ? "외부 링크를 수정했습니다." : "외부 링크를 추가했습니다."
+        uiState.infoMessage = isEdit ? "dashboard_info_external_link_updated" : "dashboard_info_external_link_added"
     }
 
     private func clickExternalLinkItem(_ linkId: String) {
@@ -242,7 +242,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 url: item.url
             )
         }
-        uiState.infoMessage = "외부 링크를 삭제했습니다."
+        uiState.infoMessage = "dashboard_info_external_link_deleted"
     }
 
     private func dismissInfoMessage() {
@@ -256,7 +256,7 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private func clickDeleteCast() {
         guard uiState.selectedCastId != nil else {
-            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            uiState.infoMessage = "dashboard_info_select_cast_for_delete"
             return
         }
         uiState.isDeleteCastDialogVisible = true
@@ -270,7 +270,7 @@ final class CafeDashboardViewModel: ObservableObject {
     private func confirmDeleteCast() {
         guard let selectedCastId = uiState.selectedCastId else {
             uiState.isDeleteCastDialogVisible = false
-            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            uiState.infoMessage = "dashboard_info_select_cast_for_delete"
             return
         }
 
@@ -279,7 +279,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 let result = try await deleteCastUseCase.invoke(castId: selectedCastId)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isDeleteCastDialogVisible = false
-                    uiState.infoMessage = "캐스트 프로필을 삭제했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_deleted"
                 } else if let failure = result as? AppResultFailure {
                     uiState.isDeleteCastDialogVisible = false
                     uiState.infoMessage = "\(failure.error)"
@@ -296,7 +296,7 @@ final class CafeDashboardViewModel: ObservableObject {
             do {
                 let result = try await approveCastClaimUseCase.invoke(claimId: claimId)
                 if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "캐스트 프로필 연결 요청을 승인했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_claim_approved"
                     refreshClaimData(resetMessage: false)
                     refreshCastPreviews(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
@@ -313,7 +313,7 @@ final class CafeDashboardViewModel: ObservableObject {
             do {
                 let result = try await rejectCastClaimUseCase.invoke(claimId: claimId)
                 if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "캐스트 프로필 연결 요청을 반려했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_claim_rejected"
                     refreshClaimData(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
@@ -399,11 +399,11 @@ final class CafeDashboardViewModel: ObservableObject {
             let statusLabel: String
             switch updatedBanner.statusLabel.uppercased() {
             case "ACTIVE":
-                statusLabel = "노출 중"
+                statusLabel = "dashboard_banner_status_active"
             case "SCHEDULED":
-                statusLabel = "예약 중"
+                statusLabel = "dashboard_banner_status_scheduled"
             default:
-                statusLabel = "미노출"
+                statusLabel = "dashboard_banner_status_hidden"
             }
             uiState.cafe = CafeDashboardData(
                 id: current.id,
@@ -415,7 +415,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 castPreviews: current.castPreviews,
                 homeBannerPreview: CafeDashboardData.HomeBannerPreview(
                     title: updatedBanner.title,
-                    period: "노출 \(updatedBanner.displayDays)일",
+                    period: "dashboard_banner_period_days:\(updatedBanner.displayDays)",
                     statusLabel: statusLabel,
                     imageUrl: updatedBanner.imageUrl
                 )

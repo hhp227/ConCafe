@@ -22,11 +22,52 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import concafe.composeapp.generated.resources.Res
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.schedule_action_close
+import concafe.composeapp.generated.resources.schedule_apply_edit
+import concafe.composeapp.generated.resources.schedule_badge_cast_member
+import concafe.composeapp.generated.resources.schedule_break_notice
+import concafe.composeapp.generated.resources.schedule_calendar
+import concafe.composeapp.generated.resources.schedule_concept_butler
+import concafe.composeapp.generated.resources.schedule_concept_idol
+import concafe.composeapp.generated.resources.schedule_concept_maid
+import concafe.composeapp.generated.resources.schedule_content_back
+import concafe.composeapp.generated.resources.schedule_content_edit
+import concafe.composeapp.generated.resources.schedule_content_more
+import concafe.composeapp.generated.resources.schedule_duration_hours_minutes
+import concafe.composeapp.generated.resources.schedule_duration_hours_only
+import concafe.composeapp.generated.resources.schedule_edit_title
+import concafe.composeapp.generated.resources.schedule_error_end_after_start
+import concafe.composeapp.generated.resources.schedule_error_end_required
+import concafe.composeapp.generated.resources.schedule_error_save_failed
+import concafe.composeapp.generated.resources.schedule_error_start_required
+import concafe.composeapp.generated.resources.schedule_error_week_save_failed
+import concafe.composeapp.generated.resources.schedule_event_week_saved
+import concafe.composeapp.generated.resources.schedule_info_calendar_next_step
+import concafe.composeapp.generated.resources.schedule_info_edit_applied
+import concafe.composeapp.generated.resources.schedule_info_load_failed
+import concafe.composeapp.generated.resources.schedule_info_more_next_step
+import concafe.composeapp.generated.resources.schedule_info_no_changes
+import concafe.composeapp.generated.resources.schedule_info_saved_off
+import concafe.composeapp.generated.resources.schedule_info_saved_vacation
+import concafe.composeapp.generated.resources.schedule_info_saved_work
+import concafe.composeapp.generated.resources.schedule_label_end_time
+import concafe.composeapp.generated.resources.schedule_label_start_time
+import concafe.composeapp.generated.resources.schedule_save
+import concafe.composeapp.generated.resources.schedule_save_in_progress
+import concafe.composeapp.generated.resources.schedule_status_off
+import concafe.composeapp.generated.resources.schedule_status_vacation
+import concafe.composeapp.generated.resources.schedule_status_work
+import concafe.composeapp.generated.resources.schedule_title
+import concafe.composeapp.generated.resources.schedule_total_prefix
+import concafe.composeapp.generated.resources.schedule_total_work
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -50,7 +91,44 @@ fun ScheduleScreen(
         viewModel.event.collect { event ->
             when (event) {
                 ScheduleEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
-                is ScheduleEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
+                is ScheduleEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(
+                        when (event.message) {
+                            "schedule_info_saved_work",
+                            "schedule_info_saved_off",
+                            "schedule_info_saved_vacation",
+                            "schedule_info_load_failed",
+                            "schedule_info_more_next_step",
+                            "schedule_info_calendar_next_step",
+                            "schedule_error_end_after_start",
+                            "schedule_info_edit_applied",
+                            "schedule_info_no_changes",
+                            "schedule_error_start_required",
+                            "schedule_error_end_required",
+                            "schedule_error_save_failed",
+                            "schedule_error_week_save_failed",
+                            "schedule_event_week_saved" -> getString(
+                                when (event.message) {
+                                    "schedule_info_saved_work" -> Res.string.schedule_info_saved_work
+                                    "schedule_info_saved_off" -> Res.string.schedule_info_saved_off
+                                    "schedule_info_saved_vacation" -> Res.string.schedule_info_saved_vacation
+                                    "schedule_info_load_failed" -> Res.string.schedule_info_load_failed
+                                    "schedule_info_more_next_step" -> Res.string.schedule_info_more_next_step
+                                    "schedule_info_calendar_next_step" -> Res.string.schedule_info_calendar_next_step
+                                    "schedule_error_end_after_start" -> Res.string.schedule_error_end_after_start
+                                    "schedule_info_edit_applied" -> Res.string.schedule_info_edit_applied
+                                    "schedule_info_no_changes" -> Res.string.schedule_info_no_changes
+                                    "schedule_error_start_required" -> Res.string.schedule_error_start_required
+                                    "schedule_error_end_required" -> Res.string.schedule_error_end_required
+                                    "schedule_error_save_failed" -> Res.string.schedule_error_save_failed
+                                    "schedule_error_week_save_failed" -> Res.string.schedule_error_week_save_failed
+                                    else -> Res.string.schedule_event_week_saved
+                                }
+                            )
+                            else -> event.message
+                        }
+                    )
+                }
             }
         }
     }
@@ -73,11 +151,12 @@ fun ScheduleScreen(
     )
 }
 
+@Composable
 private fun statusLabel(status: CastScheduleStatus): String {
     return when (status) {
-        CastScheduleStatus.WORK -> "근무"
-        CastScheduleStatus.OFF -> "휴무"
-        CastScheduleStatus.VACATION -> "휴가"
+        CastScheduleStatus.WORK -> stringResource(Res.string.schedule_status_work)
+        CastScheduleStatus.OFF -> stringResource(Res.string.schedule_status_off)
+        CastScheduleStatus.VACATION -> stringResource(Res.string.schedule_status_vacation)
     }
 }
 
@@ -106,7 +185,7 @@ private fun ScheduleEditSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text("근무 시간 수정", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.schedule_edit_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(uiState.editingScheduleTitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF7A707A))
         }
         Surface(
@@ -146,7 +225,7 @@ private fun ScheduleEditSheet(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             TimeDropdownField(
                 modifier = Modifier.weight(1f),
-                label = "시작 시간",
+                label = stringResource(Res.string.schedule_label_start_time),
                 value = uiState.editStartTime,
                 enabled = uiState.isEditingWorking,
                 options = uiState.timeOptions,
@@ -154,7 +233,7 @@ private fun ScheduleEditSheet(
             )
             TimeDropdownField(
                 modifier = Modifier.weight(1f),
-                label = "종료 시간",
+                label = stringResource(Res.string.schedule_label_end_time),
                 value = uiState.editEndTime,
                 enabled = uiState.isEditingWorking,
                 options = uiState.timeOptions,
@@ -172,7 +251,7 @@ private fun ScheduleEditSheet(
             ) {
                 Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFEF6797), modifier = Modifier.size(16.dp))
                 Text(
-                    "휴게 시간 1시간(12:00 - 13:00)이 자동으로 포함되어 총 근무 시간에서 제외됩니다.",
+                    stringResource(Res.string.schedule_break_notice),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF6B5A63)
                 )
@@ -183,10 +262,10 @@ private fun ScheduleEditSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("실제 근무 합계", color = Color(0xFF7A707A), fontWeight = FontWeight.Medium)
+            Text(stringResource(Res.string.schedule_total_work), color = Color(0xFF7A707A), fontWeight = FontWeight.Medium)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
-                Text("총", color = Color(0xFF7A707A), style = MaterialTheme.typography.bodySmall)
-                Text(uiState.totalWorkDurationLabel, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.schedule_total_prefix), color = Color(0xFF7A707A), style = MaterialTheme.typography.bodySmall)
+                Text(resolveScheduleDurationLabel(uiState.totalWorkDurationLabel), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             }
         }
         Button(
@@ -196,7 +275,7 @@ private fun ScheduleEditSheet(
             shape = RoundedCornerShape(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            Text("편집 내용 반영하기", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.schedule_apply_edit), fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(4.dp))
     }
@@ -278,19 +357,19 @@ private fun ScheduleContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "주간 출근표 관리",
+                        text = stringResource(Res.string.schedule_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(ScheduleAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.schedule_content_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { onAction(ScheduleAction.ClickMore) }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.schedule_content_more))
                     }
                 }
             )
@@ -314,7 +393,7 @@ private fun ScheduleContentScreen(
                     Icon(Icons.Default.Save, contentDescription = null, tint = Color(0xFF24161E))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (uiState.isSaving) "저장 중..." else "주간 시간표 저장하기",
+                        text = stringResource(if (uiState.isSaving) Res.string.schedule_save_in_progress else Res.string.schedule_save),
                         color = Color(0xFF24161E),
                         fontWeight = FontWeight.Bold
                     )
@@ -394,7 +473,10 @@ private fun ScheduleCastSummaryCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = castSummary.badge,
+                    text = when (castSummary.badge) {
+                        "schedule_badge_cast_member" -> stringResource(Res.string.schedule_badge_cast_member)
+                        else -> castSummary.badge
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFEF6797)
@@ -406,7 +488,7 @@ private fun ScheduleCastSummaryCard(
                     color = Color(0xFF24161E)
                 )
                 Text(
-                    text = castSummary.subtitle,
+                    text = resolveScheduleCastSubtitle(castSummary.subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF7A707A)
                 )
@@ -464,7 +546,7 @@ private fun WeekSelectorSection(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "달력보기",
+                    text = stringResource(Res.string.schedule_calendar),
                     style = MaterialTheme.typography.labelLarge,
                     color = Color(0xFFEF6797),
                     fontWeight = FontWeight.Bold
@@ -546,7 +628,7 @@ private fun ScheduleInfoBanner(
                 color = Color(0xFF6B5320)
             )
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.schedule_action_close),
                 modifier = Modifier.clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
@@ -637,7 +719,7 @@ private fun DayScheduleCard(
                             color = if (schedule.isWorking) Color(0x4DFFD1DC) else Color(0xFFF2EDF0)
                         ) {
                             Text(
-                                text = schedule.statusLabel,
+                                text = resolveScheduleStatusLabel(schedule.statusLabel, schedule.status),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
@@ -646,7 +728,7 @@ private fun DayScheduleCard(
                         }
                     }
                     Text(
-                        text = schedule.timeLabel,
+                        text = resolveScheduleTimeLabel(schedule.timeLabel, schedule.status),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (schedule.isWorking) Color(0xFF7A707A) else Color(0xFFB0A3AC)
                     )
@@ -663,7 +745,7 @@ private fun DayScheduleCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "수정",
+                            contentDescription = stringResource(Res.string.schedule_content_edit),
                             tint = Color(0xFF7A707A)
                         )
                     }
@@ -671,4 +753,69 @@ private fun DayScheduleCard(
             }
         }
     }
+}
+
+@Composable
+private fun resolveScheduleDurationLabel(value: String): String {
+    return when {
+        value.startsWith("schedule_duration_hours_only:") -> {
+            val hours = value.substringAfter(':').toIntOrNull() ?: 0
+            stringResource(Res.string.schedule_duration_hours_only, hours)
+        }
+        value.startsWith("schedule_duration_hours_minutes:") -> {
+            val tokens = value.split(':')
+            val hours = tokens.getOrNull(1)?.toIntOrNull() ?: 0
+            val minutes = tokens.getOrNull(2)?.toIntOrNull() ?: 0
+            stringResource(Res.string.schedule_duration_hours_minutes, hours, minutes)
+        }
+        else -> value
+    }
+}
+
+@Composable
+private fun resolveScheduleStatusLabel(statusLabel: String, status: CastScheduleStatus): String {
+    return when (statusLabel.lowercase()) {
+        "schedule_status_work", "근무", "work" -> stringResource(Res.string.schedule_status_work)
+        "schedule_status_off", "휴무", "off" -> stringResource(Res.string.schedule_status_off)
+        "schedule_status_vacation", "휴가", "vacation" -> stringResource(Res.string.schedule_status_vacation)
+        else -> {
+            when (status) {
+                CastScheduleStatus.WORK -> stringResource(Res.string.schedule_status_work)
+                CastScheduleStatus.OFF -> stringResource(Res.string.schedule_status_off)
+                CastScheduleStatus.VACATION -> stringResource(Res.string.schedule_status_vacation)
+            }
+        }
+    }
+}
+
+@Composable
+private fun resolveScheduleTimeLabel(timeLabel: String, status: CastScheduleStatus): String {
+    return when (timeLabel.lowercase()) {
+        "schedule_status_off", "휴무", "off" -> stringResource(Res.string.schedule_status_off)
+        "schedule_status_vacation", "휴가", "vacation" -> stringResource(Res.string.schedule_status_vacation)
+        else -> {
+            if (status == CastScheduleStatus.OFF) {
+                stringResource(Res.string.schedule_status_off)
+            } else if (status == CastScheduleStatus.VACATION) {
+                stringResource(Res.string.schedule_status_vacation)
+            } else {
+                timeLabel
+            }
+        }
+    }
+}
+
+@Composable
+private fun resolveScheduleCastSubtitle(subtitle: String): String {
+    val separator = " / "
+    if (!subtitle.contains(separator)) return subtitle
+    val concept = subtitle.substringBefore(separator)
+    val cafeName = subtitle.substringAfter(separator)
+    val resolvedConcept = when (concept) {
+        "schedule_concept_maid" -> stringResource(Res.string.schedule_concept_maid)
+        "schedule_concept_butler" -> stringResource(Res.string.schedule_concept_butler)
+        "schedule_concept_idol" -> stringResource(Res.string.schedule_concept_idol)
+        else -> concept
+    }
+    return "$resolvedConcept$separator$cafeName"
 }

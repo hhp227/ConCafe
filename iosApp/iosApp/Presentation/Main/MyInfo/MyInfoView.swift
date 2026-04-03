@@ -44,7 +44,7 @@ struct MyInfoView: View {
             }
         }
         .alert(
-            "로그인이 필요합니다",
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isLoginPromptVisible },
                 set: { presented in
@@ -54,14 +54,14 @@ struct MyInfoView: View {
                 }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissLoginPrompt)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 viewModel.onAction(.loginPromptSignInTapped)
             }
         } message: {
-            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
     }
 }
@@ -73,10 +73,10 @@ private struct GuestMyInfoView: View {
     let onAction: @MainActor (MyInfoAction) -> Void
 
     let features = [
-        ("mappin.and.ellipse", "체크인 기록", "방문한 카페를 기록하고\n추억을 남겨보세요", "EF6797", "F57AA8"),
-        ("heart.fill", "즐겨찾기", "좋아하는 카페와 캐스트를\n저장하세요", "9C6ADE", "B388EB"),
-        ("star.fill", "배지 수집", "다양한 활동으로\n특별한 배지를 모아보세요", "F0B429", "F5C857"),
-        ("gift.fill", "멤버십 혜택", "특별한 이벤트와\n할인 혜택을 받으세요", "4C8BF5", "71A7FF")
+        ("mappin.and.ellipse", String(localized: String.LocalizationValue("myinfo_guest_feature_checkin_title"), table: "Localizable"), String(localized: String.LocalizationValue("myinfo_guest_feature_checkin_desc"), table: "Localizable"), "EF6797", "F57AA8"),
+        ("heart.fill", String(localized: String.LocalizationValue("myinfo_guest_feature_bookmark_title"), table: "Localizable"), String(localized: String.LocalizationValue("myinfo_guest_feature_bookmark_desc"), table: "Localizable"), "9C6ADE", "B388EB"),
+        ("star.fill", String(localized: String.LocalizationValue("myinfo_guest_feature_badge_title"), table: "Localizable"), String(localized: String.LocalizationValue("myinfo_guest_feature_badge_desc"), table: "Localizable"), "F0B429", "F5C857"),
+        ("gift.fill", String(localized: String.LocalizationValue("myinfo_guest_feature_membership_title"), table: "Localizable"), String(localized: String.LocalizationValue("myinfo_guest_feature_membership_desc"), table: "Localizable"), "4C8BF5", "71A7FF")
     ]
 
     var body: some View {
@@ -85,12 +85,12 @@ private struct GuestMyInfoView: View {
                 VStack(spacing: 8) {
                     Text("💗")
                         .font(.system(size: 42))
-                    Text("콘카에 오신 것을\n환영합니다!")
+                    Text(String(localized: String.LocalizationValue("myinfo_guest_welcome_title"), table: "Localizable"))
                         .font(.headline)
                         .bold()
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
-                    Text("로그인하고 컨셉카페의 모든 것을 즐겨보세요")
+                    Text(String(localized: String.LocalizationValue("myinfo_guest_welcome_subtitle"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
                     Button {
@@ -99,7 +99,7 @@ private struct GuestMyInfoView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
                                 .font(.system(size: 14, weight: .bold))
-                            Text("로그인하기")
+                            Text(String(localized: String.LocalizationValue("myinfo_guest_signin_cta"), table: "Localizable"))
                                 .fontWeight(.bold)
                         }
                         .frame(maxWidth: .infinity)
@@ -116,7 +116,7 @@ private struct GuestMyInfoView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("로그인 후 이용 가능한 기능")
+                    Text(String(localized: String.LocalizationValue("myinfo_guest_features_title"), table: "Localizable"))
                         .font(.headline)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(Array(features.enumerated()), id: \.offset) { _, item in
@@ -152,13 +152,13 @@ private struct GuestMyInfoView: View {
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("인기 카페 둘러보기")
+                        Text(String(localized: String.LocalizationValue("myinfo_guest_popular_cafes_title"), table: "Localizable"))
                             .font(.headline)
                         Spacer()
                         Button {
                         } label: {
                             HStack(spacing: 2) {
-                                Text("더보기")
+                                Text(String(localized: String.LocalizationValue("home_show_more"), table: "Localizable"))
                                     .font(.caption)
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 11, weight: .semibold))
@@ -218,23 +218,23 @@ private struct GuestMyInfoView: View {
                         }
                     } else {
                         MyInfoSectionPlaceholderCard(
-                            title: "둘러볼 인기 카페가 없어요",
-                            description: "활동 데이터가 쌓이면 추천 카페가 표시됩니다."
+                            title: String(localized: String.LocalizationValue("myinfo_guest_popular_empty_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("myinfo_guest_popular_empty_desc"), table: "Localizable")
                         )
                     }
                 }
                 VStack(spacing: 8) {
                     Text("✨")
                         .font(.title2)
-                    Text("지금 바로 시작하세요!")
+                    Text(String(localized: String.LocalizationValue("myinfo_guest_start_title"), table: "Localizable"))
                         .font(.headline)
                         .bold()
-                    Text("콘카 회원만의 특별한 혜택을 누려보세요")
+                    Text(String(localized: String.LocalizationValue("myinfo_guest_start_subtitle"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button {
                     } label: {
-                        Text("회원가입하기")
+                        Text(String(localized: String.LocalizationValue("signin_sign_up"), table: "Localizable"))
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 24)

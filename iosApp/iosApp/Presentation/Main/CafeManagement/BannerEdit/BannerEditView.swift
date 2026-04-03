@@ -27,11 +27,15 @@ struct BannerEditView: View {
                 isImagePickerPresented = true
             }
         )
-        .navigationTitle(viewModel.uiState.screenTitle)
+        .navigationTitle(
+            viewModel.uiState.isEditMode
+            ? String(localized: String.LocalizationValue("banneredit_screen_title_edit"), table: "Localizable")
+            : String(localized: String.LocalizationValue("banneredit_screen_title_create"), table: "Localizable")
+        )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("저장") {
+                Button(String(localized: String.LocalizationValue("banneredit_action_save"), table: "Localizable")) {
                     viewModel.onAction(.clickSave)
                 }
                 .font(.system(size: 16, weight: .bold))
@@ -78,7 +82,7 @@ struct BannerEditView: View {
             )
         }
         .alert(
-            "이미지를 등록해주세요",
+            String(localized: String.LocalizationValue("banneredit_alert_image_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isImageRequiredAlertVisible },
                 set: { presented in
@@ -88,11 +92,11 @@ struct BannerEditView: View {
                 }
             )
         ) {
-            Button("확인") {
+            Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
                 viewModel.onAction(.dismissImageRequiredAlert)
             }
         } message: {
-            Text("배너 저장을 위해 대표 이미지는 필수입니다.")
+            Text(String(localized: String.LocalizationValue("banneredit_alert_image_message"), table: "Localizable"))
         }
     }
 
@@ -129,7 +133,34 @@ private struct BannerEditContentView: View {
                     targetSection
                     periodSection
                     if let infoMessage = uiState.infoMessage {
-                        infoBanner(message: infoMessage)
+                        infoBanner(
+                            message: {
+                                switch infoMessage {
+                                case "banneredit_info_slot_full",
+                                     "banneredit_info_owned_cafe_load_failed",
+                                     "banneredit_info_edit_banner_not_found",
+                                     "banneredit_info_edit_banner_load_failed",
+                                     "banneredit_info_select_cafe_first",
+                                     "banneredit_info_notice_list_load_failed",
+                                     "banneredit_info_event_list_load_failed",
+                                     "banneredit_info_image_upload_failed",
+                                     "banneredit_info_saved",
+                                     "banneredit_validation_image_required",
+                                     "banneredit_validation_title_required",
+                                     "banneredit_validation_subtitle_required",
+                                     "banneredit_validation_external_url_required",
+                                     "banneredit_validation_target_required",
+                                     "banneredit_error_unauthorized",
+                                     "banneredit_error_permission_denied",
+                                     "banneredit_error_target_not_found",
+                                     "banneredit_error_network_failed",
+                                     "banneredit_error_save_unknown":
+                                    return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                                default:
+                                    return infoMessage
+                                }
+                            }()
+                        )
                     }
                 }
                 .padding(16)
@@ -169,9 +200,9 @@ private struct BannerEditContentView: View {
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .clipped()
                     } else {
-                        bannerPlaceholder
-                    }
-                }
+                bannerPlaceholder
+            }
+        }
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
@@ -183,10 +214,10 @@ private struct BannerEditContentView: View {
                 onPickImage()
             }
             VStack(spacing: 4) {
-                Text(uiState.imageSectionTitle)
+                Text(String(localized: String.LocalizationValue("banneredit_image_section_title"), table: "Localizable"))
                     .font(.title3.weight(.bold))
                     .multilineTextAlignment(.center)
-                Text(uiState.imageGuideText)
+                Text(String(localized: String.LocalizationValue("banneredit_image_guide"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(Color(hex: "8F848F"))
             }
@@ -194,7 +225,7 @@ private struct BannerEditContentView: View {
                 onAction(.clickImagePicker)
                 onPickImage()
             } label: {
-                Text(uiState.imageButtonText)
+                Text(String(localized: String.LocalizationValue("banneredit_image_button"), table: "Localizable"))
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color(hex: "2B2330"))
                     .padding(.horizontal, 22)
@@ -221,35 +252,35 @@ private struct BannerEditContentView: View {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(Color(hex: "EF6797"))
-            Text("배너 이미지 선택")
+            Text(String(localized: String.LocalizationValue("banneredit_image_placeholder_pick"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color(hex: "5A4954"))
         }
     }
 
     private var basicInformationSection: some View {
-        sectionCard(title: "배너 기본 정보") {
+        sectionCard(title: String(localized: String.LocalizationValue("banneredit_section_basic"), table: "Localizable")) {
             ConCafeFormField(
-                label: "배너 제목",
+                label: String(localized: String.LocalizationValue("banneredit_label_title"), table: "Localizable"),
                 text: Binding(get: { uiState.title }, set: { onAction(.changeTitle($0)) }),
-                placeholder: "배너 제목을 입력해주세요"
+                placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_title"), table: "Localizable")
             )
             ConCafeFormField(
-                label: "서브 문구",
+                label: String(localized: String.LocalizationValue("banneredit_label_subtitle"), table: "Localizable"),
                 text: Binding(get: { uiState.subtitle }, set: { onAction(.changeSubtitle($0)) }),
-                placeholder: "서브 문구를 입력해주세요"
+                placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_subtitle"), table: "Localizable")
             )
         }
     }
 
     private var targetSection: some View {
-        sectionCard(title: "연결 대상 설정 (Target)") {
+        sectionCard(title: String(localized: String.LocalizationValue("banneredit_section_target"), table: "Localizable")) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 8) {
                 ForEach(BannerTargetType.allCases) { target in
                     Button {
                         onAction(.selectTarget(target))
                     } label: {
-                        Text(target.rawValue)
+                        Text(String(localized: String.LocalizationValue(target.rawValue), table: "Localizable"))
                             .font(.subheadline.weight(uiState.selectedTarget == target ? .bold : .medium))
                             .foregroundStyle(uiState.selectedTarget == target ? Color(hex: "23161C") : Color(hex: "7A707A"))
                             .frame(maxWidth: .infinity)
@@ -267,51 +298,51 @@ private struct BannerEditContentView: View {
             switch uiState.selectedTarget {
             case .externalLink:
                 ConCafeFormField(
-                    label: "외부 링크",
+                    label: String(localized: String.LocalizationValue("banneredit_label_external_link"), table: "Localizable"),
                     text: Binding(get: { uiState.targetValue }, set: { onAction(.changeTargetValue($0)) }),
-                    placeholder: uiState.targetFieldPlaceholder
+                    placeholder: String(localized: String.LocalizationValue(uiState.targetFieldPlaceholderKey), table: "Localizable")
                 )
             case .cafeDetail:
                 if uiState.isAdmin {
                     selectionField(
-                        label: "운영 카페",
+                        label: String(localized: String.LocalizationValue("banneredit_label_owned_cafe"), table: "Localizable"),
                         selectedTitle: uiState.selectedCafeOption?.name,
                         selectedSubtitle: uiState.selectedCafeOption?.city,
-                        placeholder: "운영 카페를 선택해주세요"
+                        placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_select_owned_cafe"), table: "Localizable")
                     ) {
                         onAction(.clickCafeSelector)
                     }
                 } else {
                     fixedSelectionField(
-                        label: "적용 카페",
+                        label: String(localized: String.LocalizationValue("banneredit_label_applied_cafe"), table: "Localizable"),
                         selectedTitle: uiState.selectedCafeOption?.name,
                         selectedSubtitle: uiState.selectedCafeOption?.city,
-                        placeholder: "연결할 운영 카페가 없습니다."
+                        placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_no_applied_cafe"), table: "Localizable")
                     )
                 }
             case .notice, .eventDetail:
                 if uiState.isAdmin {
                     selectionField(
-                        label: "운영 카페",
+                        label: String(localized: String.LocalizationValue("banneredit_label_owned_cafe"), table: "Localizable"),
                         selectedTitle: uiState.selectedCafeOption?.name,
                         selectedSubtitle: uiState.selectedCafeOption?.city,
-                        placeholder: "운영 카페를 선택해주세요"
+                        placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_select_owned_cafe"), table: "Localizable")
                     ) {
                         onAction(.clickCafeSelector)
                     }
                 } else {
                     fixedSelectionField(
-                        label: "적용 카페",
+                        label: String(localized: String.LocalizationValue("banneredit_label_applied_cafe"), table: "Localizable"),
                         selectedTitle: uiState.selectedCafeOption?.name,
                         selectedSubtitle: uiState.selectedCafeOption?.city,
-                        placeholder: "연결할 운영 카페가 없습니다."
+                        placeholder: String(localized: String.LocalizationValue("banneredit_placeholder_no_applied_cafe"), table: "Localizable")
                     )
                 }
                 selectionField(
-                    label: uiState.targetSelectionLabel,
+                    label: String(localized: String.LocalizationValue(uiState.targetSelectionLabelKey), table: "Localizable"),
                     selectedTitle: uiState.selectedContentTitle,
                     selectedSubtitle: uiState.selectedContentSubtitle,
-                    placeholder: uiState.targetSelectionPlaceholder
+                    placeholder: String(localized: String.LocalizationValue(uiState.targetSelectionPlaceholderKey), table: "Localizable")
                 ) {
                     onAction(.clickTargetSelector)
                 }
@@ -320,9 +351,9 @@ private struct BannerEditContentView: View {
     }
 
     private var periodSection: some View {
-        sectionCard(title: "노출 기간 설정") {
+        sectionCard(title: String(localized: String.LocalizationValue("banneredit_section_period"), table: "Localizable")) {
             VStack(spacing: 8) {
-                badgeText(uiState.displayDaysLabel)
+                badgeText(String(format: String(localized: String.LocalizationValue("banneredit_display_days"), table: "Localizable"), uiState.displayDaysLabelValue))
                 Slider(
                     value: Binding(
                         get: { Double(uiState.displayDays) },
@@ -333,9 +364,9 @@ private struct BannerEditContentView: View {
                 )
                 .tint(Color(hex: "EF6797"))
                 HStack {
-                    Text("1일")
+                    Text(String(localized: String.LocalizationValue("banneredit_period_min_day"), table: "Localizable"))
                     Spacer()
-                    Text("10일")
+                    Text(String(localized: String.LocalizationValue("banneredit_period_max_day"), table: "Localizable"))
                 }
                 .font(.caption2)
                 .foregroundStyle(Color(hex: "9A8D95"))
@@ -353,7 +384,11 @@ private struct BannerEditContentView: View {
                 } else {
                     Image(systemName: "square.and.arrow.down")
                 }
-                Text(uiState.submitButtonText).fontWeight(.bold)
+                Text(
+                    uiState.isEditMode
+                    ? String(localized: String.LocalizationValue("banneredit_submit_edit"), table: "Localizable")
+                    : String(localized: String.LocalizationValue("banneredit_submit_create"), table: "Localizable")
+                ).fontWeight(.bold)
             }
             .foregroundStyle(Color(hex: "2B2330"))
             .frame(maxWidth: .infinity)
@@ -478,7 +513,7 @@ private struct BannerEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "7A707A"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("banneredit_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -543,13 +578,13 @@ private struct BannerSelectorSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(uiState.selectorTitle)
+            Text(String(localized: String.LocalizationValue(uiState.selectorTitleKey), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .padding(.horizontal, 24)
             ConCafeFormField(
-                label: "검색",
+                label: String(localized: String.LocalizationValue("banneredit_label_search"), table: "Localizable"),
                 text: Binding(get: { uiState.selectorQuery }, set: { onAction(.changeSelectorQuery($0)) }),
-                placeholder: uiState.selectorSearchPlaceholder
+                placeholder: String(localized: String.LocalizationValue(uiState.selectorSearchPlaceholderKey), table: "Localizable")
             )
             .padding(.horizontal, 24)
             if uiState.isSelectorLoading {
@@ -558,7 +593,7 @@ private struct BannerSelectorSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
             } else if uiState.activeSelectorItemCount == 0 {
-                Text("선택 가능한 항목이 없습니다.")
+                Text(String(localized: String.LocalizationValue("banneredit_selector_empty"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(Color(hex: "8F848F"))
                     .padding(.horizontal, 24)

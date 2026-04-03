@@ -36,6 +36,18 @@ import com.hhp227.concafe.presentation.component.CapsuleDropdown
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.explore_empty_cafe_title
+import concafe.composeapp.generated.resources.explore_empty_cast_title
+import concafe.composeapp.generated.resources.explore_empty_hint
+import concafe.composeapp.generated.resources.explore_error_load_failed
+import concafe.composeapp.generated.resources.explore_search_placeholder
+import concafe.composeapp.generated.resources.explore_cast_followers
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import kotlin.math.roundToInt
 
@@ -70,16 +82,16 @@ fun ExploreScreen(
     if (uiState.isLoginPromptVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(ExploreAction.DismissLoginPrompt) },
-            title = { Text("로그인이 필요합니다") },
-            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(ExploreAction.ClickLoginPromptSignIn) }) {
-                    Text("로그인")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(ExploreAction.DismissLoginPrompt) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -125,7 +137,7 @@ fun ExploreContentScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("카페나 캐스트를 검색하세요...") },
+                    placeholder = { Text(stringResource(Res.string.explore_search_placeholder)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -191,7 +203,7 @@ fun ExploreContentScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "탐색 데이터를 불러오지 못했습니다.",
+                        text = stringResource(Res.string.explore_error_load_failed),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -228,8 +240,8 @@ fun ExploreContentScreen(
             } else {
                 item {
                     ExploreEmptyPlaceholder(
-                        title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) "카페 검색 결과가 없어요" else "캐스트 검색 결과가 없어요",
-                        description = "검색어 또는 필터를 바꿔서 다시 찾아보세요."
+                        title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) stringResource(Res.string.explore_empty_cafe_title) else stringResource(Res.string.explore_empty_cast_title),
+                        description = stringResource(Res.string.explore_empty_hint)
                     )
                 }
             }
@@ -385,7 +397,7 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "팔로워 ${maid.followerCount}",
+                    text = stringResource(Res.string.explore_cast_followers, maid.followerCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFEF6797)
                 )

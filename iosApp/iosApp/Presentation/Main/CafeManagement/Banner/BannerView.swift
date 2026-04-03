@@ -21,7 +21,7 @@ struct BannerView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle(viewModel.uiState.screenTitle)
+        .navigationTitle(String(localized: String.LocalizationValue("banner_screen_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -42,7 +42,7 @@ struct BannerView: View {
             }
         }
         .confirmationDialog(
-            "배너 삭제",
+            String(localized: String.LocalizationValue("banner_dialog_delete_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.pendingDeleteBanner != nil },
                 set: { isPresented in
@@ -53,17 +53,17 @@ struct BannerView: View {
             ),
             titleVisibility: .visible
         ) {
-            Button("삭제", role: .destructive) {
+            Button(String(localized: String.LocalizationValue("banner_action_confirm"), table: "Localizable"), role: .destructive) {
                 viewModel.onAction(.confirmDeleteBanner)
             }
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("banner_action_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissDeleteBannerDialog)
             }
         } message: {
-            Text("'\(viewModel.uiState.pendingDeleteBanner?.title ?? "")' 배너를 삭제하시겠습니까?")
+            Text(String(format: String(localized: String.LocalizationValue("banner_dialog_delete_message"), table: "Localizable"), viewModel.uiState.pendingDeleteBanner?.title ?? ""))
         }
         .alert(
-            "안내",
+            String(localized: String.LocalizationValue("banner_alert_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { alertMessage != nil },
                 set: { isPresented in
@@ -74,11 +74,24 @@ struct BannerView: View {
             ),
             presenting: alertMessage
         ) { _ in
-            Button("확인", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable"), role: .cancel) {
                 alertMessage = nil
             }
         } message: { message in
-            Text(message)
+            Text(
+                {
+                    switch message {
+                    case "banner_info_load_failed":
+                        return String(localized: String.LocalizationValue("banner_info_load_failed"), table: "Localizable")
+                    case "banner_info_deleted":
+                        return String(localized: String.LocalizationValue("banner_info_deleted"), table: "Localizable")
+                    case "banner_info_delete_failed":
+                        return String(localized: String.LocalizationValue("banner_info_delete_failed"), table: "Localizable")
+                    default:
+                        return message
+                    }
+                }()
+            )
         }
     }
 
@@ -100,7 +113,7 @@ private struct BannerContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             ConCafeTabBar(
-                labels: BannerTab.allCases.map(\.rawValue),
+                labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
                 backgroundColor: Color(hex: "F8F5F6"),
                 onSelect: { index in
@@ -117,7 +130,7 @@ private struct BannerContentView: View {
                             onDelete: { onAction(.deleteBannerTapped(id: banner.id)) }
                         )
                     }
-                    Text("최대 5개의 배너를 동시에 노출할 수 있습니다.")
+                    Text(String(localized: String.LocalizationValue("banner_info_max_five"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(Color(hex: "9A8E97"))
                         .frame(maxWidth: .infinity)
@@ -135,7 +148,7 @@ private struct BannerContentView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
-                    Text("새 배너 등록")
+                    Text(String(localized: String.LocalizationValue("banner_action_create"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
                 .frame(maxWidth: .infinity)
@@ -154,11 +167,26 @@ private struct BannerContentView: View {
 
     private var headerRow: some View {
         HStack {
-            Text(uiState.sectionCountLabel)
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("banner_section_count"), table: "Localizable"),
+                    {
+                        switch uiState.selectedTab {
+                        case .active:
+                            return String(localized: String.LocalizationValue("banner_section_active"), table: "Localizable")
+                        case .scheduled:
+                            return String(localized: String.LocalizationValue("banner_section_scheduled"), table: "Localizable")
+                        case .ended:
+                            return String(localized: String.LocalizationValue("banner_section_ended"), table: "Localizable")
+                        }
+                    }(),
+                    uiState.filteredBanners.count
+                )
+            )
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: "7A707A"))
             Spacer()
-            Text(uiState.locationLabel)
+            Text(String(localized: String.LocalizationValue("banner_location_home_top"), table: "Localizable"))
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: "EF6797"))
         }
@@ -175,7 +203,7 @@ private struct BannerCardView: View {
             thumbnail
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
-                    Text(banner.statusLabel)
+                    Text(String(localized: String.LocalizationValue(banner.statusLabelKey), table: "Localizable"))
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color(hex: "CE5E87"))
                         .padding(.horizontal, 10)
@@ -199,7 +227,7 @@ private struct BannerCardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
                         .font(.caption2)
-                    Text(banner.periodText)
+                    Text(String(format: String(localized: String.LocalizationValue("banner_period_days"), table: "Localizable"), banner.periodDays))
                         .font(.caption2)
                 }
                 .foregroundStyle(Color(hex: "9A8E97"))

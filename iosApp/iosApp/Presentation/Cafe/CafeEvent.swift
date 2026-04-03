@@ -12,5 +12,6 @@ enum CafeEvent {
     case navigateToCast(id: String)
     case navigateToReviewEdit(cafeId: String, reviewId: String?)
     case navigateToSignIn
-    case showMessage(String)
+    case showReviewDeleteFailedMessage
+    case showReviewReportedMessage
 }

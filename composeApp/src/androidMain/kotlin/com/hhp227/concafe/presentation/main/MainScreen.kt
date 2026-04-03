@@ -42,7 +42,19 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_notification
+import concafe.composeapp.generated.resources.common_settings
+import concafe.composeapp.generated.resources.main_tab_admin_operations
+import concafe.composeapp.generated.resources.main_tab_cafe_management
+import concafe.composeapp.generated.resources.main_tab_checkin
+import concafe.composeapp.generated.resources.main_tab_explore
+import concafe.composeapp.generated.resources.main_tab_fan_management
+import concafe.composeapp.generated.resources.main_tab_home
+import concafe.composeapp.generated.resources.main_tab_my_info
+import concafe.composeapp.generated.resources.main_tab_ranking
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,13 +118,13 @@ fun MainScreen(
                         if (uiState.selectedTab == MainNavigationTab.MY_INFO.route && uiState.currentUser != null) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "설정"
+                                contentDescription = stringResource(Res.string.common_settings)
                             )
                         } else {
                             Box {
                                 Icon(
                                     imageVector = Icons.Default.Notifications,
-                                    contentDescription = "알림"
+                                    contentDescription = stringResource(Res.string.common_notification)
                                 )
                                 if (hasUnreadNotifications) {
                                     Box(
@@ -205,15 +217,16 @@ private fun MainNavigationTab.icon(): ImageVector {
     }
 }
 
+@Composable
 private fun MainNavigationTab.label(): String {
     return when (this) {
-        MainNavigationTab.HOME -> "홈"
-        MainNavigationTab.EXPLORE -> "탐색"
-        MainNavigationTab.CHECK_IN -> "체크인"
-        MainNavigationTab.FAN_MANAGEMENT -> "팬관리"
-        MainNavigationTab.CAFE_MANAGEMENT -> "카페관리"
-        MainNavigationTab.ADMIN_OPERATIONS -> "운영관리"
-        MainNavigationTab.RANKING -> "랭킹"
-        MainNavigationTab.MY_INFO -> "내 정보"
+        MainNavigationTab.HOME -> stringResource(Res.string.main_tab_home)
+        MainNavigationTab.EXPLORE -> stringResource(Res.string.main_tab_explore)
+        MainNavigationTab.CHECK_IN -> stringResource(Res.string.main_tab_checkin)
+        MainNavigationTab.FAN_MANAGEMENT -> stringResource(Res.string.main_tab_fan_management)
+        MainNavigationTab.CAFE_MANAGEMENT -> stringResource(Res.string.main_tab_cafe_management)
+        MainNavigationTab.ADMIN_OPERATIONS -> stringResource(Res.string.main_tab_admin_operations)
+        MainNavigationTab.RANKING -> stringResource(Res.string.main_tab_ranking)
+        MainNavigationTab.MY_INFO -> stringResource(Res.string.main_tab_my_info)
     }
 }

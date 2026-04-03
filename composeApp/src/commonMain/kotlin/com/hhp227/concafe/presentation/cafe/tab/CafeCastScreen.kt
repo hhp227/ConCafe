@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_cast_empty
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeCastScreen(
@@ -24,7 +27,7 @@ fun CafeCastScreen(
     onAction: (CafeAction) -> Unit
 ) {
     if (casts.isEmpty()) {
-        EmptyContent(text = "등록된 캐스트가 없습니다.")
+        EmptyContent(text = stringResource(Res.string.cafe_cast_empty))
     } else {
         val rows = casts.chunked(2)
 

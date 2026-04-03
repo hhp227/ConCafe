@@ -30,7 +30,7 @@ struct ExploreView: View {
             }
         }
         .alert(
-            "로그인이 필요합니다",
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isLoginPromptVisible },
                 set: { presented in
@@ -40,14 +40,14 @@ struct ExploreView: View {
                 }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissLoginPrompt)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 viewModel.onAction(.loginPromptSignInTapped)
             }
         } message: {
-            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
     }
 }
@@ -86,7 +86,7 @@ private struct ExploreContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("카페나 캐스트를 검색하세요...", text: Binding(
+                TextField(String(localized: String.LocalizationValue("explore_search_placeholder"), table: "Localizable"), text: Binding(
                     get: { uiState.query },
                     set: { onAction(.queryChanged($0)) }
                 ))
@@ -147,7 +147,7 @@ private struct ExploreContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else if uiState.errorMessage != nil {
-            Text("탐색 데이터를 불러오지 못했습니다.")
+            Text(String(localized: String.LocalizationValue("explore_error_load_failed"), table: "Localizable"))
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
@@ -178,11 +178,11 @@ private struct ExploreContentView: View {
             if (uiState.selectedTab == .cafe && !uiState.cafes.isEmpty) || (uiState.selectedTab == .maid && !uiState.maids.isEmpty) {
                 EmptyView()
             } else {
-                ExploreEmptyPlaceholderCard(
-                    title: uiState.selectedTab == .cafe ? "카페 검색 결과가 없어요" : "캐스트 검색 결과가 없어요",
-                    description: "검색어 또는 필터를 바꿔서 다시 찾아보세요."
-                )
-            }
+                    ExploreEmptyPlaceholderCard(
+                        title: uiState.selectedTab == .cafe ? String(localized: String.LocalizationValue("explore_empty_cafe_title"), table: "Localizable") : String(localized: String.LocalizationValue("explore_empty_cast_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("explore_empty_hint"), table: "Localizable")
+                    )
+                }
             pagingFooter
         }
     }
@@ -197,7 +197,7 @@ private struct ExploreContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 12)
         } else if canLoadMore {
-            Text("스크롤 하단에서 다음 목록을 불러옵니다.")
+            Text(String(localized: String.LocalizationValue("explore_paging_hint"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
@@ -247,7 +247,7 @@ private struct ExploreContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Text("팔로워 \(maid.followerCount)")
+                Text(String(format: String(localized: String.LocalizationValue("explore_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount))
                     .font(.caption)
                     .foregroundStyle(Color(hex: "EF6797"))
             }

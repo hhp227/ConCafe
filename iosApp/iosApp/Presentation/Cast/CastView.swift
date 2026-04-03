@@ -96,9 +96,9 @@ private struct CastContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             VStack(spacing: 12) {
-                Text(uiState.errorMessage ?? "캐스트 상세 데이터를 불러오지 못했습니다.")
+                Text(String(localized: String.LocalizationValue("cast_error_detail_load_failed"), table: "Localizable"))
                     .foregroundStyle(.red)
-                Button("새로고침") {
+                Button(String(localized: String.LocalizationValue("cast_action_refresh"), table: "Localizable")) {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
@@ -265,7 +265,11 @@ private struct CastSummarySection: View {
                 Button {
                     onAction(.followTapped)
                 } label: {
-                    Text(isFollowing ? "팔로잉" : "팔로우")
+                    Text(
+                        isFollowing
+                        ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
+                        : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
+                    )
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
                         .padding(.horizontal, 18)
@@ -279,7 +283,15 @@ private struct CastSummarySection: View {
                 .opacity(isSelfCast ? 0.5 : 1.0)
             }
             HStack(spacing: 18) {
-                statItem(systemName: "person.2.fill", label: "팔로워", value: "\(detail.cast.followerCount)명")
+                statItem(
+                    systemName: "person.2.fill",
+                    label: String(localized: String.LocalizationValue("cast_follower_label"), table: "Localizable"),
+                    value: String(
+                        format: String(localized: String.LocalizationValue("cast_follower_count"), table: "Localizable"),
+                        locale: Locale.current,
+                        detail.cast.followerCount
+                    )
+                )
             }
         }
         .padding(.horizontal, 20)
@@ -310,24 +322,27 @@ private struct CastTodaySection: View {
         let todaySchedule = detail.schedule.first(where: { $0.date == currentDate })
         let (statusText, timeText): (String, String) = {
             guard let schedule = todaySchedule else {
-                return ("오늘은 휴무", "다음 스케줄을 확인해 주세요.")
+                return (
+                    String(localized: String.LocalizationValue("cast_today_off"), table: "Localizable"),
+                    String(localized: String.LocalizationValue("cast_today_check_schedule"), table: "Localizable")
+                )
             }
             let currentMinutes = TimeUtils.currentTimeMinutes()
             let startMinutes = TimeUtils.parseTimeMinutes(schedule.startTime)
             let endMinutes = TimeUtils.parseTimeMinutes(schedule.endTime)
             let status: String
             if currentMinutes < startMinutes {
-                status = "출근 예정"
+                status = String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
             } else if currentMinutes <= endMinutes {
-                status = "근무중"
+                status = String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
             } else {
-                status = "근무 완료"
+                status = String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
             }
             return (status, "\(schedule.startTime) - \(schedule.endTime)")
         }()
 
         VStack(alignment: .leading, spacing: 6) {
-            Text("오늘의 출근 상태")
+            Text(String(localized: String.LocalizationValue("cast_today_status_title"), table: "Localizable"))
                 .foregroundStyle(Color.white.opacity(0.82))
             Text(statusText)
                 .font(.title3.bold())
@@ -358,7 +373,7 @@ private struct CastScheduleSection: View {
         let weeklyStatus = weeklySchedule(from: detail.schedule)
 
         VStack(alignment: .leading, spacing: 12) {
-            Label("출근 일정", systemImage: "calendar")
+            Label(String(localized: String.LocalizationValue("cast_schedule_title"), table: "Localizable"), systemImage: "calendar")
                 .font(.headline)
                 .foregroundStyle(Color.primary)
             HStack(spacing: 8) {
@@ -384,7 +399,11 @@ private struct CastScheduleCard: View {
             Text(dayLabel)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(isWorking ? Color.white : Color(hex: "4E4750"))
-            Text(isWorking ? "출근" : "휴무")
+            Text(
+                isWorking
+                ? String(localized: String.LocalizationValue("cast_schedule_work"), table: "Localizable")
+                : String(localized: String.LocalizationValue("cast_schedule_off"), table: "Localizable")
+            )
                 .font(.caption)
                 .foregroundStyle(isWorking ? Color.white.opacity(0.92) : Color(hex: "8A8087"))
         }
@@ -400,7 +419,7 @@ private struct CastIntroductionSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("소개")
+            Text(String(localized: String.LocalizationValue("cast_section_intro"), table: "Localizable"))
                 .font(.headline)
             Text(detail.cast.desc)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -419,12 +438,21 @@ private struct CastRecentActivitySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("최근 활동")
+            Text(String(localized: String.LocalizationValue("cast_section_recent_activity"), table: "Localizable"))
                 .font(.headline)
             HStack(spacing: 10) {
-                CastActivityCard(value: "\(detail.visitCertificationCount)", label: "방문 인증")
-                CastActivityCard(value: "\(detail.cast.followerCount)", label: "팔로워")
-                CastActivityCard(value: String(format: "%.1f", detail.cast.rating), label: "평점")
+                CastActivityCard(
+                    value: "\(detail.visitCertificationCount)",
+                    label: String(localized: String.LocalizationValue("cast_activity_visit_cert"), table: "Localizable")
+                )
+                CastActivityCard(
+                    value: "\(detail.cast.followerCount)",
+                    label: String(localized: String.LocalizationValue("cast_activity_follower"), table: "Localizable")
+                )
+                CastActivityCard(
+                    value: String(format: "%.1f", detail.cast.rating),
+                    label: String(localized: String.LocalizationValue("cast_activity_rating"), table: "Localizable")
+                )
             }
         }
         .padding(.horizontal, 16)
@@ -458,7 +486,7 @@ private struct CastRecentReviewSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("함께 언급된 후기")
+            Text(String(localized: String.LocalizationValue("cast_section_tagged_reviews"), table: "Localizable"))
                 .font(.headline)
             if reviews.isEmpty {
                 CastRecentReviewEmptyView()
@@ -516,10 +544,10 @@ private struct CastRecentReviewSection: View {
 private struct CastRecentReviewEmptyView: View {
     var body: some View {
         VStack(spacing: 6) {
-            Text("아직 함께 언급된 후기가 없어요.")
+            Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "4E4750"))
-            Text("이 캐스트가 태그된 카페 리뷰가 표시됩니다.")
+            Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_desc"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
         }
@@ -546,9 +574,17 @@ private struct WeeklyScheduleItem {
 
 private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleItem] {
     let workingDays = Set(schedules.compactMap { TimeUtils.weekdayLabel(fromIsoDate: $0.date) })
-    let orderedDays = ["월", "화", "수", "목", "금", "토", "일"]
-    return orderedDays.map { dayLabel in
-        WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
+    let orderedDays = [
+        ("월", String(localized: String.LocalizationValue("cast_weekday_mon"), table: "Localizable")),
+        ("화", String(localized: String.LocalizationValue("cast_weekday_tue"), table: "Localizable")),
+        ("수", String(localized: String.LocalizationValue("cast_weekday_wed"), table: "Localizable")),
+        ("목", String(localized: String.LocalizationValue("cast_weekday_thu"), table: "Localizable")),
+        ("금", String(localized: String.LocalizationValue("cast_weekday_fri"), table: "Localizable")),
+        ("토", String(localized: String.LocalizationValue("cast_weekday_sat"), table: "Localizable")),
+        ("일", String(localized: String.LocalizationValue("cast_weekday_sun"), table: "Localizable"))
+    ]
+    return orderedDays.map { day in
+        WeeklyScheduleItem(dayLabel: day.1, isWorking: workingDays.contains(day.0))
     }
 }
 

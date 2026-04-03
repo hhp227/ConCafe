@@ -41,6 +41,18 @@ import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.main.checkin.CheckInViewModel
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.ranking_detail
+import concafe.composeapp.generated.resources.ranking_empty_desc
+import concafe.composeapp.generated.resources.ranking_empty_title
+import concafe.composeapp.generated.resources.ranking_period_monthly
+import concafe.composeapp.generated.resources.ranking_period_weekly
+import concafe.composeapp.generated.resources.ranking_title
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -74,16 +86,16 @@ fun RankingScreen(
     if (uiState.isLoginPromptVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(RankingAction.DismissLoginPrompt) },
-            title = { Text("로그인이 필요합니다") },
-            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(RankingAction.ClickLoginPromptSignIn) }) {
-                    Text("로그인")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(RankingAction.DismissLoginPrompt) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -177,15 +189,15 @@ fun RankingHeaderSection(
                 tint = Color(0xFFEF6797)
             )
             Text(
-                text = "랭킹",
+                text = stringResource(Res.string.ranking_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CapsuleDropdown(
-                selected = uiState.selectedPeriod.label,
-                options = listOf(RankingPeriod.WEEKLY, RankingPeriod.MONTHLY).map { it.label to it },
+                selected = periodLabel(uiState.selectedPeriod),
+                options = listOf(RankingPeriod.WEEKLY, RankingPeriod.MONTHLY).map { periodLabel(it) to it },
                 onSelected = onPeriodSelected
             )
             CapsuleDropdown(
@@ -197,11 +209,13 @@ fun RankingHeaderSection(
     }
 }
 
-private val RankingPeriod.label: String
-    get() = when (this) {
-        RankingPeriod.WEEKLY -> "주간"
-        RankingPeriod.MONTHLY -> "월간"
+@Composable
+private fun periodLabel(period: RankingPeriod): String {
+    return when (period) {
+        RankingPeriod.WEEKLY -> stringResource(Res.string.ranking_period_weekly)
+        RankingPeriod.MONTHLY -> stringResource(Res.string.ranking_period_monthly)
     }
+}
 
 @Composable
 fun RankingTabBar(
@@ -286,7 +300,7 @@ fun RankingPromoBanner(
                         ),
                         shape = RoundedCornerShape(999.dp)
                     ) {
-                        Text("자세히", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(Res.string.ranking_detail), fontWeight = FontWeight.SemiBold)
                     }
                 }
                 Row(
@@ -325,13 +339,13 @@ private fun RankingEmptyPlaceholder() {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "아직 집계된 랭킹이 없어요",
+                text = stringResource(Res.string.ranking_empty_title),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF5C525D)
             )
             Text(
-                text = "활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.",
+                text = stringResource(Res.string.ranking_empty_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF8A7F8B)
             )

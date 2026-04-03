@@ -94,7 +94,7 @@ class CastViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                            errorMessage = null
                         )
                     }
                 }

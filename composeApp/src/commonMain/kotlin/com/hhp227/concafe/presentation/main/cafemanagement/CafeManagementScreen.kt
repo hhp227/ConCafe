@@ -58,6 +58,32 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafemgmt_add_cafe_desc
+import concafe.composeapp.generated.resources.cafemgmt_add_cafe_title
+import concafe.composeapp.generated.resources.cafemgmt_cafe_detail_move_content_description
+import concafe.composeapp.generated.resources.cafemgmt_claim_pending_content_description
+import concafe.composeapp.generated.resources.cafemgmt_empty_desc
+import concafe.composeapp.generated.resources.cafemgmt_empty_title
+import concafe.composeapp.generated.resources.cafemgmt_fold_cafe_list
+import concafe.composeapp.generated.resources.cafemgmt_hero_count
+import concafe.composeapp.generated.resources.cafemgmt_hero_desc_empty
+import concafe.composeapp.generated.resources.cafemgmt_hero_desc_with_cafe
+import concafe.composeapp.generated.resources.cafemgmt_hero_title
+import concafe.composeapp.generated.resources.cafemgmt_info_owner_claim_registered
+import concafe.composeapp.generated.resources.cafemgmt_more_cafe_list
+import concafe.composeapp.generated.resources.cafemgmt_register
+import concafe.composeapp.generated.resources.cafemgmt_register_new_cafe
+import concafe.composeapp.generated.resources.cafemgmt_search_existing_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_search_existing_title
+import concafe.composeapp.generated.resources.cafemgmt_search_no_result
+import concafe.composeapp.generated.resources.cafemgmt_search_placeholder
+import concafe.composeapp.generated.resources.cafemgmt_section_claim_status_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_section_claim_status_title
+import concafe.composeapp.generated.resources.cafemgmt_section_my_cafe_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_section_my_cafe_title
+import concafe.composeapp.generated.resources.common_close
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -127,7 +153,10 @@ private fun CafeManagementContentScreen(
                     uiState.infoMessage?.let { message ->
                         item {
                             InfoBanner(
-                                message = message,
+                                message = when (message) {
+                                    "cafemgmt_info_owner_claim_registered" -> stringResource(Res.string.cafemgmt_info_owner_claim_registered)
+                                    else -> message
+                                },
                                 onDismiss = { onAction(CafeManagementAction.DismissInfoMessage) }
                             )
                         }
@@ -135,8 +164,8 @@ private fun CafeManagementContentScreen(
                     if (uiState.hasOwnedCafes) {
                         item {
                             SectionHeader(
-                                title = "내 카페",
-                                subtitle = "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
+                                title = stringResource(Res.string.cafemgmt_section_my_cafe_title),
+                                subtitle = stringResource(Res.string.cafemgmt_section_my_cafe_subtitle)
                             )
                         }
                         items(uiState.visibleOwnedCafes, key = { it.id }) { cafe ->
@@ -158,8 +187,8 @@ private fun CafeManagementContentScreen(
                         if (uiState.pendingClaims.isNotEmpty()) {
                             item {
                                 SectionHeader(
-                                    title = "운영자 신청 상태",
-                                    subtitle = "기존 카페 연결 요청 현황"
+                                    title = stringResource(Res.string.cafemgmt_section_claim_status_title),
+                                    subtitle = stringResource(Res.string.cafemgmt_section_claim_status_subtitle)
                                 )
                             }
                             items(uiState.pendingClaims, key = { it.cafeName + it.requestedAt }) { claim ->
@@ -226,13 +255,13 @@ private fun AddCafeCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "새 카페 추가",
+                text = stringResource(Res.string.cafemgmt_add_cafe_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B2330)
             )
             Text(
-                text = "신규 카페를 등록해 운영 카페 목록에 추가할 수 있습니다.",
+                text = stringResource(Res.string.cafemgmt_add_cafe_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF786E7A)
             )
@@ -244,7 +273,7 @@ private fun AddCafeCard(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(text = "새 카페 등록", fontWeight = FontWeight.SemiBold)
+                Text(text = stringResource(Res.string.cafemgmt_register_new_cafe), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -271,16 +300,16 @@ private fun CafeManagementHeroCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Cafe Manage",
+                    text = stringResource(Res.string.cafemgmt_hero_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = if (featuredCafe != null) {
-                        "운영 중인 카페를 확인하고 각 카페의 관리 화면으로 이동할 수 있습니다."
+                        stringResource(Res.string.cafemgmt_hero_desc_with_cafe)
                     } else {
-                        "운영 카페 연결 상태를 확인하고 기존 카페 검색 또는 새 카페 등록을 시작하세요."
+                        stringResource(Res.string.cafemgmt_hero_desc_empty)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
@@ -290,7 +319,7 @@ private fun CafeManagementHeroCard(
                     color = Color.White.copy(alpha = 0.18f)
                 ) {
                     Text(
-                        text = "운영 카페 ${cafeCount}개",
+                        text = stringResource(Res.string.cafemgmt_hero_count, cafeCount),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                         color = Color.White,
                         style = MaterialTheme.typography.labelLarge,
@@ -326,7 +355,7 @@ private fun InfoBanner(
                 color = Color(0xFF6B5320)
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "안내 닫기", tint = Color(0xFF6B5320))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = Color(0xFF6B5320))
             }
         }
     }
@@ -433,7 +462,7 @@ private fun CompactOwnedCafeCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "카페 상세로 이동",
+                    contentDescription = stringResource(Res.string.cafemgmt_cafe_detail_move_content_description),
                     tint = Color.White
                 )
             }
@@ -465,9 +494,9 @@ private fun ExpandOwnedCafeButton(
         ) {
             Text(
                 text = if (isExpanded) {
-                    "카페 목록 접기"
+                    stringResource(Res.string.cafemgmt_fold_cafe_list)
                 } else {
-                    "나머지 카페 ${hiddenCount}개 더 보기"
+                    stringResource(Res.string.cafemgmt_more_cafe_list, hiddenCount)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -493,8 +522,8 @@ private fun SearchCafeSection(
     val visibleSearchResults = searchResults.filterNot { excludedCafeIds.contains(it.id) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
-            title = "기존 카페 검색",
-            subtitle = "기등록되어있는 카페를 검색해서 등록할수 있습니다."
+            title = stringResource(Res.string.cafemgmt_search_existing_title),
+            subtitle = stringResource(Res.string.cafemgmt_search_existing_subtitle)
         )
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -523,7 +552,7 @@ private fun SearchCafeSection(
                     decorationBox = { innerTextField ->
                         if (searchQuery.isBlank()) {
                             Text(
-                                text = "카페 이름 또는 지역 검색",
+                                text = stringResource(Res.string.cafemgmt_search_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color(0xFF8E8794)
                             )
@@ -543,7 +572,7 @@ private fun SearchCafeSection(
                 Column {
                     if (visibleSearchResults.isEmpty()) {
                         Text(
-                            text = "검색 결과가 없습니다",
+                            text = stringResource(Res.string.cafemgmt_search_no_result),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
                             color = Color(0xFF8E8794)
                         )
@@ -590,13 +619,13 @@ private fun EmptyStateCard(
                 )
             }
             Text(
-                text = "아직 연결된 운영 카페가 없습니다",
+                text = stringResource(Res.string.cafemgmt_empty_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B2330)
             )
             Text(
-                text = "검색으로 기존 카페를 찾거나 새 카페를 등록해 운영 권한을 연결하세요.",
+                text = stringResource(Res.string.cafemgmt_empty_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF786E7A)
             )
@@ -608,12 +637,12 @@ private fun EmptyStateCard(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("새 카페 등록")
+                Text(stringResource(Res.string.cafemgmt_register_new_cafe))
             }
             if (pendingClaims.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "운영자 신청 상태",
+                    text = stringResource(Res.string.cafemgmt_section_claim_status_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2B2330)
@@ -658,7 +687,7 @@ private fun SearchCafeItem(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Text("등록")
+            Text(stringResource(Res.string.cafemgmt_register))
         }
     }
 }
@@ -695,7 +724,7 @@ private fun PendingClaimCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "승인 대기",
+                        contentDescription = stringResource(Res.string.cafemgmt_claim_pending_content_description),
                         tint = Color(0xFF9A6A11),
                         modifier = Modifier.padding(7.dp)
                     )

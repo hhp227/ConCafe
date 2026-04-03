@@ -29,12 +29,10 @@ final class MenuGoodsEditViewModel: ObservableObject {
         guard let itemId else {
             uiState.isLoading = false
             uiState.isEditMode = false
-            uiState.screenTitle = "새 항목 추가"
-            uiState.saveButtonLabel = "항목 생성"
             return
         }
         uiState.isLoading = true
-        uiState.infoMessage = nil
+        uiState.infoMessageKey = nil
 
         Task {
             do {
@@ -50,31 +48,31 @@ final class MenuGoodsEditViewModel: ObservableObject {
                     } else if let goods = detail.goods.first(where: { $0.id == itemId }) {
                         applyGoods(goods)
                     } else {
-                        showInfoAndStop("편집할 항목 정보를 찾을 수 없습니다.")
+                        showInfoAndStop(MessageKey.itemNotFound)
                     }
                 } else {
-                    showInfoAndStop("항목 정보를 불러오지 못했습니다.")
+                    showInfoAndStop(MessageKey.loadFailed)
                 }
             } catch {
                 if Task.isCancelled { return }
-                showInfoAndStop("항목 정보를 불러오지 못했습니다.")
+                showInfoAndStop(MessageKey.loadFailed)
             }
         }
     }
 
     private func saveItem() {
         guard !uiState.itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            uiState.infoMessage = "항목 이름을 입력해주세요."
+            uiState.infoMessageKey = MessageKey.enterName
             return
         }
 
         guard !uiState.price.isEmpty, let price = Int32(uiState.price) else {
-            uiState.infoMessage = "가격을 입력해주세요."
+            uiState.infoMessageKey = MessageKey.enterPrice
             return
         }
 
         uiState.isSaving = true
-        uiState.infoMessage = nil
+        uiState.infoMessageKey = nil
 
         Task {
             do {
@@ -97,17 +95,15 @@ final class MenuGoodsEditViewModel: ObservableObject {
                     uiState.isSaving = false
                     uiState.isLoading = false
                     uiState.isEditMode = true
-                    uiState.screenTitle = "항목 편집"
-                    uiState.saveButtonLabel = "항목 저장"
                     event.send(.navigateBack)
                 } else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "항목 저장에 실패했습니다."
+                    uiState.infoMessageKey = MessageKey.saveFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSaving = false
-                uiState.infoMessage = "항목 저장에 실패했습니다."
+                uiState.infoMessageKey = MessageKey.saveFailed
             }
         }
     }
@@ -115,34 +111,30 @@ final class MenuGoodsEditViewModel: ObservableObject {
     private func applyMenu(_ menu: CafeMenu) {
         uiState.isLoading = false
         uiState.isEditMode = true
-        uiState.screenTitle = "항목 편집"
-        uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = menu.name
         uiState.price = String(menu.price)
         uiState.selectedCategoryId = normalizeCategoryId(menu.category)
         uiState.description = menu.desc
         uiState.isInStock = menu.isAvailable
         uiState.imageUrl = menu.image
-        uiState.infoMessage = nil
+        uiState.infoMessageKey = nil
     }
 
     private func applyGoods(_ goods: Goods) {
         uiState.isLoading = false
         uiState.isEditMode = true
-        uiState.screenTitle = "항목 편집"
-        uiState.saveButtonLabel = "항목 저장"
         uiState.itemName = goods.name
         uiState.price = String(goods.price)
         uiState.selectedCategoryId = "goods"
         uiState.description = "카페 굿즈 판매 항목"
         uiState.isInStock = goods.stock > 0
         uiState.imageUrl = goods.image
-        uiState.infoMessage = nil
+        uiState.infoMessageKey = nil
     }
 
-    private func showInfoAndStop(_ message: String) {
+    private func showInfoAndStop(_ messageKey: String) {
         uiState.isLoading = false
-        uiState.infoMessage = message
+        uiState.infoMessageKey = messageKey
     }
 
     func onAction(_ action: MenuGoodsEditAction) {
@@ -150,7 +142,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         case .clickBack:
             event.send(.navigateBack)
         case .clickPhotoUpload:
-            uiState.infoMessage = "이미지 업로드는 다음 단계에서 연결됩니다."
+            uiState.infoMessageKey = MessageKey.imageUploadNextStep
         case .selectPhoto(let imageUrl):
             uiState.imageUrl = imageUrl
         case .changeName(let value):
@@ -166,7 +158,7 @@ final class MenuGoodsEditViewModel: ObservableObject {
         case .clickSave:
             saveItem()
         case .dismissInfoMessage:
-            uiState.infoMessage = nil
+            uiState.infoMessageKey = nil
         }
     }
 
@@ -207,6 +199,16 @@ final class MenuGoodsEditViewModel: ObservableObject {
         if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
             throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
         }
-        throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
+        throw NSError(domain: "MenuGoodsEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: String(localized: String.LocalizationValue(MessageKey.imageUploadFailed), table: "Localizable")])
+    }
+
+    private enum MessageKey {
+        static let itemNotFound = "menugoods_edit_info_item_not_found"
+        static let loadFailed = "menugoods_edit_info_load_failed"
+        static let enterName = "menugoods_edit_info_enter_name"
+        static let enterPrice = "menugoods_edit_info_enter_price"
+        static let saveFailed = "menugoods_edit_info_save_failed"
+        static let imageUploadNextStep = "menugoods_edit_info_image_upload_next_step"
+        static let imageUploadFailed = "menugoods_edit_info_image_upload_failed"
     }
 }

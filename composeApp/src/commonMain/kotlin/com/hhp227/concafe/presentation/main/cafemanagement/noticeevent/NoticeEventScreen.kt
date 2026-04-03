@@ -33,6 +33,74 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.menugoods_delete_content_description
+import concafe.composeapp.generated.resources.menugoods_edit_content_description
+import concafe.composeapp.generated.resources.noticeevent_empty_event
+import concafe.composeapp.generated.resources.noticeevent_empty_notice
+import concafe.composeapp.generated.resources.noticeevent_form_content_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_content_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_form_image_description
+import concafe.composeapp.generated.resources.noticeevent_form_image_label
+import concafe.composeapp.generated.resources.noticeevent_form_image_title_attached
+import concafe.composeapp.generated.resources.noticeevent_form_image_title_empty
+import concafe.composeapp.generated.resources.noticeevent_form_label_content
+import concafe.composeapp.generated.resources.noticeevent_form_label_title
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_event
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_notice
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_event_create
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_event_edit
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_notice_create
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_notice_edit
+import concafe.composeapp.generated.resources.noticeevent_form_submit_event_create
+import concafe.composeapp.generated.resources.noticeevent_form_submit_event_edit
+import concafe.composeapp.generated.resources.noticeevent_form_submit_notice_create
+import concafe.composeapp.generated.resources.noticeevent_form_submit_notice_edit
+import concafe.composeapp.generated.resources.noticeevent_form_title_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_title_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_info_event_create_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_created
+import concafe.composeapp.generated.resources.noticeevent_info_event_delete_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_delete_success
+import concafe.composeapp.generated.resources.noticeevent_info_event_edit_target_not_found
+import concafe.composeapp.generated.resources.noticeevent_info_event_load_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_update_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_updated
+import concafe.composeapp.generated.resources.noticeevent_info_image_one_only
+import concafe.composeapp.generated.resources.noticeevent_info_image_pick_required
+import concafe.composeapp.generated.resources.noticeevent_info_image_upload_failed
+import concafe.composeapp.generated.resources.noticeevent_info_more_events_next_step
+import concafe.composeapp.generated.resources.noticeevent_info_notice_create_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_created
+import concafe.composeapp.generated.resources.noticeevent_info_notice_delete_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_delete_success
+import concafe.composeapp.generated.resources.noticeevent_info_notice_edit_target_not_found
+import concafe.composeapp.generated.resources.noticeevent_info_notice_load_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_update_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_updated
+import concafe.composeapp.generated.resources.noticeevent_info_reserve_schedule_next_step
+import concafe.composeapp.generated.resources.noticeevent_pinned_desc
+import concafe.composeapp.generated.resources.noticeevent_pinned_title
+import concafe.composeapp.generated.resources.noticeevent_register_cta
+import concafe.composeapp.generated.resources.noticeevent_remove
+import concafe.composeapp.generated.resources.noticeevent_search_close_content_description
+import concafe.composeapp.generated.resources.noticeevent_search_content_description
+import concafe.composeapp.generated.resources.noticeevent_search_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_search_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_tab_event
+import concafe.composeapp.generated.resources.noticeevent_tab_notice
+import concafe.composeapp.generated.resources.noticeevent_title
+import concafe.composeapp.generated.resources.noticeevent_validation_cafe_required
+import concafe.composeapp.generated.resources.noticeevent_validation_content_required
+import concafe.composeapp.generated.resources.noticeevent_validation_event_image_required
+import concafe.composeapp.generated.resources.noticeevent_validation_event_required
+import concafe.composeapp.generated.resources.noticeevent_validation_notice_required
+import concafe.composeapp.generated.resources.noticeevent_validation_title_required
+import concafe.composeapp.generated.resources.signin_back_content_description
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -102,14 +170,18 @@ private fun NoticeEventContent(
                                 .fillMaxWidth()
                                 .padding(end = 8.dp),
                             singleLine = true,
-                            placeholder = if (uiState.selectedTab == NoticeEventTab.NOTICE) "공지사항 검색" else "이벤트 검색",
+                            placeholder = stringResource(if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                                Res.string.noticeevent_search_placeholder_notice
+                            } else {
+                                Res.string.noticeevent_search_placeholder_event
+                            }),
                             leadingContent = {
                                 Icon(Icons.Default.Search, contentDescription = null)
                             }
                         )
                     } else {
                         Text(
-                            text = "공지 및 이벤트 관리",
+                            text = stringResource(Res.string.noticeevent_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -117,7 +189,7 @@ private fun NoticeEventContent(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(NoticeEventAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.signin_back_content_description))
                     }
                 },
                 actions = {
@@ -135,7 +207,11 @@ private fun NoticeEventContent(
                     ) {
                         Icon(
                             imageVector = if (isSearchMode) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = if (isSearchMode) "검색 닫기" else "검색"
+                            contentDescription = stringResource(if (isSearchMode) {
+                                Res.string.noticeevent_search_close_content_description
+                            } else {
+                                Res.string.noticeevent_search_content_description
+                            })
                         )
                     }
                 }
@@ -153,7 +229,7 @@ private fun NoticeEventContent(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("공지/이벤트 등록", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.noticeevent_register_cta), fontWeight = FontWeight.Bold)
             }
         }
     ) { innerPadding ->
@@ -168,7 +244,12 @@ private fun NoticeEventContent(
                 .padding(innerPadding)
         ) {
             ConCafeTabBar(
-                labels = NoticeEventTab.entries.map { it.title },
+                labels = NoticeEventTab.entries.map {
+                    when (it) {
+                        NoticeEventTab.NOTICE -> stringResource(Res.string.noticeevent_tab_notice)
+                        NoticeEventTab.EVENT -> stringResource(Res.string.noticeevent_tab_event)
+                    }
+                },
                 selectedIndex = NoticeEventTab.entries.indexOf(uiState.selectedTab),
                 modifier = Modifier.fillMaxWidth(),
                 onTabSelected = { index ->
@@ -183,7 +264,39 @@ private fun NoticeEventContent(
                 uiState.infoMessage?.let { message ->
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            InfoBanner(message = message, onDismiss = { onAction(NoticeEventAction.DismissInfoMessage) })
+                            InfoBanner(
+                                message = when (message) {
+                                    "noticeevent_validation_cafe_required" -> stringResource(Res.string.noticeevent_validation_cafe_required)
+                                    "noticeevent_validation_notice_required" -> stringResource(Res.string.noticeevent_validation_notice_required)
+                                    "noticeevent_validation_event_required" -> stringResource(Res.string.noticeevent_validation_event_required)
+                                    "noticeevent_validation_title_required" -> stringResource(Res.string.noticeevent_validation_title_required)
+                                    "noticeevent_validation_content_required" -> stringResource(Res.string.noticeevent_validation_content_required)
+                                    "noticeevent_validation_event_image_required" -> stringResource(Res.string.noticeevent_validation_event_image_required)
+                                    "noticeevent_info_notice_edit_target_not_found" -> stringResource(Res.string.noticeevent_info_notice_edit_target_not_found)
+                                    "noticeevent_info_event_edit_target_not_found" -> stringResource(Res.string.noticeevent_info_event_edit_target_not_found)
+                                    "noticeevent_info_notice_load_failed" -> stringResource(Res.string.noticeevent_info_notice_load_failed)
+                                    "noticeevent_info_event_load_failed" -> stringResource(Res.string.noticeevent_info_event_load_failed)
+                                    "noticeevent_info_notice_created" -> stringResource(Res.string.noticeevent_info_notice_created)
+                                    "noticeevent_info_notice_updated" -> stringResource(Res.string.noticeevent_info_notice_updated)
+                                    "noticeevent_info_event_created" -> stringResource(Res.string.noticeevent_info_event_created)
+                                    "noticeevent_info_event_updated" -> stringResource(Res.string.noticeevent_info_event_updated)
+                                    "noticeevent_info_notice_create_failed" -> stringResource(Res.string.noticeevent_info_notice_create_failed)
+                                    "noticeevent_info_notice_update_failed" -> stringResource(Res.string.noticeevent_info_notice_update_failed)
+                                    "noticeevent_info_event_create_failed" -> stringResource(Res.string.noticeevent_info_event_create_failed)
+                                    "noticeevent_info_event_update_failed" -> stringResource(Res.string.noticeevent_info_event_update_failed)
+                                    "noticeevent_info_notice_delete_success" -> stringResource(Res.string.noticeevent_info_notice_delete_success)
+                                    "noticeevent_info_notice_delete_failed" -> stringResource(Res.string.noticeevent_info_notice_delete_failed)
+                                    "noticeevent_info_event_delete_success" -> stringResource(Res.string.noticeevent_info_event_delete_success)
+                                    "noticeevent_info_event_delete_failed" -> stringResource(Res.string.noticeevent_info_event_delete_failed)
+                                    "noticeevent_info_image_upload_failed" -> stringResource(Res.string.noticeevent_info_image_upload_failed)
+                                    "noticeevent_info_more_events_next_step" -> stringResource(Res.string.noticeevent_info_more_events_next_step)
+                                    "noticeevent_info_image_one_only" -> stringResource(Res.string.noticeevent_info_image_one_only)
+                                    "noticeevent_info_image_pick_required" -> stringResource(Res.string.noticeevent_info_image_pick_required)
+                                    "noticeevent_info_reserve_schedule_next_step" -> stringResource(Res.string.noticeevent_info_reserve_schedule_next_step)
+                                    else -> message
+                                },
+                                onDismiss = { onAction(NoticeEventAction.DismissInfoMessage) }
+                            )
                         }
                     }
                 }
@@ -197,13 +310,13 @@ private fun NoticeEventContent(
                 } else if (uiState.selectedTab == NoticeEventTab.NOTICE && uiState.notices.isEmpty()) {
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            EmptyStateCard(message = "등록된 공지사항이 없습니다.")
+                            EmptyStateCard(message = stringResource(Res.string.noticeevent_empty_notice))
                         }
                     }
                 } else if (uiState.selectedTab == NoticeEventTab.EVENT && uiState.events.isEmpty()) {
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            EmptyStateCard(message = "등록된 이벤트가 없습니다.")
+                            EmptyStateCard(message = stringResource(Res.string.noticeevent_empty_event))
                         }
                     }
                 } else if (uiState.selectedTab == NoticeEventTab.NOTICE) {
@@ -272,9 +385,20 @@ private fun NoticeEventFormSheetContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(uiState.formSheetTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(
+                    when {
+                        uiState.selectedTab == NoticeEventTab.NOTICE && uiState.formEditingId != null -> Res.string.noticeevent_form_sheet_title_notice_edit
+                        uiState.selectedTab == NoticeEventTab.NOTICE -> Res.string.noticeevent_form_sheet_title_notice_create
+                        uiState.formEditingId != null -> Res.string.noticeevent_form_sheet_title_event_edit
+                        else -> Res.string.noticeevent_form_sheet_title_event_create
+                    }
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
             IconButton(onClick = { onAction(NoticeEventAction.DismissFormSheet) }) {
-                Icon(Filled.Close, contentDescription = "닫기", tint = Color(0xFF7A707A))
+                Icon(Filled.Close, contentDescription = stringResource(Res.string.common_close), tint = Color(0xFF7A707A))
             }
         }
         LazyColumn(
@@ -284,18 +408,30 @@ private fun NoticeEventFormSheetContent(
         ) {
             item {
                 ConCafeFormField(
-                    label = "제목",
+                    label = stringResource(Res.string.noticeevent_form_label_title),
                     value = uiState.formTitle,
                     onValueChange = { onAction(NoticeEventAction.ChangeFormTitle(it)) },
-                    placeholder = uiState.formTitlePlaceholder
+                    placeholder = stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_title_placeholder_notice
+                        } else {
+                            Res.string.noticeevent_form_title_placeholder_event
+                        }
+                    )
                 )
             }
             item {
                 ConCafeFormField(
-                    label = "내용",
+                    label = stringResource(Res.string.noticeevent_form_label_content),
                     value = uiState.formContent,
                     onValueChange = { onAction(NoticeEventAction.ChangeFormContent(it)) },
-                    placeholder = uiState.formContentPlaceholder,
+                    placeholder = stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_content_placeholder_notice
+                        } else {
+                            Res.string.noticeevent_form_content_placeholder_event
+                        }
+                    ),
                     minLines = 8,
                     singleLine = false
                 )
@@ -325,8 +461,8 @@ private fun NoticeEventFormSheetContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("중요 공지 (Pinned)", fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
-                                Text("목록 상단에 고정됩니다.", style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                                Text(stringResource(Res.string.noticeevent_pinned_title), fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
+                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
                             }
                             Switch(
                                 checked = uiState.formPinned,
@@ -338,7 +474,13 @@ private fun NoticeEventFormSheetContent(
             }
             item {
                 Text(
-                    uiState.formScheduleLabel,
+                    stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_schedule_label_notice
+                        } else {
+                            Res.string.noticeevent_form_schedule_label_event
+                        }
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF665A63),
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -357,7 +499,17 @@ private fun NoticeEventFormSheetContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (uiState.formReservedAt.isBlank()) uiState.formSchedulePlaceholder else uiState.formReservedAt)
+                        Text(
+                            uiState.formReservedAt.ifBlank {
+                                stringResource(
+                                    if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                                        Res.string.noticeevent_form_schedule_placeholder_notice
+                                    } else {
+                                        Res.string.noticeevent_form_schedule_placeholder_event
+                                    }
+                                )
+                            }
+                        )
                         Icon(Icons.Default.CalendarToday, contentDescription = null)
                     }
                 }
@@ -392,7 +544,17 @@ private fun NoticeEventFormSheetContent(
                         disabledContentColor = Color(0xFF7F7078)
                     )
                 ) {
-                    Text(uiState.formSubmitLabel, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(
+                            when {
+                                uiState.selectedTab == NoticeEventTab.NOTICE && uiState.formEditingId != null -> Res.string.noticeevent_form_submit_notice_edit
+                                uiState.selectedTab == NoticeEventTab.NOTICE -> Res.string.noticeevent_form_submit_notice_create
+                                uiState.formEditingId != null -> Res.string.noticeevent_form_submit_event_edit
+                                else -> Res.string.noticeevent_form_submit_event_create
+                            }
+                        ),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -407,7 +569,7 @@ private fun NoticeEventImageSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            text = "대표 이미지",
+            text = stringResource(Res.string.noticeevent_form_image_label),
             fontWeight = FontWeight.Bold,
             color = Color(0xFF665A63),
             modifier = Modifier.padding(start = 4.dp)
@@ -445,7 +607,13 @@ private fun NoticeEventImageSection(
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
-                            text = uiState.formImageTitle,
+                            text = stringResource(
+                                if (uiState.hasAttachedImage) {
+                                    Res.string.noticeevent_form_image_title_attached
+                                } else {
+                                    Res.string.noticeevent_form_image_title_empty
+                                }
+                            ),
                             color = Color(0xFF5A4954),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
@@ -466,13 +634,13 @@ private fun NoticeEventImageSection(
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        Text("제거", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.noticeevent_remove), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
         Text(
-            text = uiState.formImageDescription,
+            text = stringResource(Res.string.noticeevent_form_image_description),
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF8A8088),
             modifier = Modifier.fillMaxWidth()
@@ -520,10 +688,10 @@ private fun NoticeCard(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "편집", tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF9A8D95))
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = "삭제", tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFF9A8D95))
                     }
                 }
             }
@@ -602,12 +770,12 @@ private fun EventCard(
                     modifier = Modifier
                         .padding(12.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (item.statusLabel == "진행 중") Color(0xFFFFD1DC) else Color(0xFF6E6570))
+                        .background(if (!item.isDimmed) Color(0xFFFFD1DC) else Color(0xFF6E6570))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = item.statusLabel,
-                        color = if (item.statusLabel == "진행 중") Color(0xFF2B2330) else Color.White,
+                        color = if (!item.isDimmed) Color(0xFF2B2330) else Color.White,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -633,10 +801,10 @@ private fun EventCard(
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = "수정", tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF9A8D95))
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = "삭제", tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFF9A8D95))
                         }
                     }
                 }
@@ -695,10 +863,11 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
     ) {
         Text(text = message, color = Color(0xFF6B5320), modifier = Modifier.weight(1f))
         Text(
-            text = "닫기",
+            text = stringResource(Res.string.common_close),
             color = Color(0xFF6B5320),
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss).padding(start = 12.dp)
         )
     }
 }
+

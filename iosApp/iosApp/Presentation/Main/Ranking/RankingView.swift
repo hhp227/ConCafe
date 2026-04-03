@@ -32,7 +32,7 @@ struct RankingView: View {
             }
         }
         .alert(
-            "로그인이 필요합니다",
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isLoginPromptVisible },
                 set: { presented in
@@ -42,14 +42,14 @@ struct RankingView: View {
                 }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissLoginPrompt)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 viewModel.onAction(.loginPromptSignInTapped)
             }
         } message: {
-            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
         .onReceive(adTimer) { _ in
             guard viewModel.uiState.ads.count > 1 else { return }
@@ -145,10 +145,10 @@ private struct RankingContentView: View {
 private struct RankingEmptyPlaceholderCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("아직 집계된 랭킹이 없어요")
+            Text(String(localized: String.LocalizationValue("ranking_empty_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "5C525D"))
-            Text("활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.")
+            Text(String(localized: String.LocalizationValue("ranking_empty_desc"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8A7F8B"))
         }
@@ -172,7 +172,7 @@ struct RankingHeaderSection: View {
             HStack(spacing: 8) {
                 Image(systemName: "trophy.fill")
                 .foregroundStyle(Color(hex: "EF6797"))
-                Text("랭킹")
+                Text(String(localized: String.LocalizationValue("ranking_title"), table: "Localizable"))
                 .font(.title2.weight(.bold))
             }
             HStack(spacing: 8) {
@@ -205,9 +205,9 @@ private extension RankingPeriod {
     var label: String {
         switch self {
         case .weekly:
-            return "주간"
+            return String(localized: String.LocalizationValue("ranking_period_weekly"), table: "Localizable")
         case .monthly:
-            return "월간"
+            return String(localized: String.LocalizationValue("ranking_period_monthly"), table: "Localizable")
         default:
             return ""
         }
@@ -256,7 +256,7 @@ struct RankingPromoBanner: View {
                         .foregroundStyle(.white.opacity(0.92))
                     }
                     Spacer(minLength: 8)
-                    Button("자세히") { }
+                    Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.black.opacity(0.85))
                     .padding(.horizontal, 16)

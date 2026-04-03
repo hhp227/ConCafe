@@ -59,7 +59,7 @@ class CafeInfoEditViewModel(
                             mapLatitude = detail.cafe.region.location.latitude,
                             mapLongitude = detail.cafe.region.location.longitude,
                             contactNumber = detail.phoneNumber
-                                .takeUnless { phone -> phone == "연락처 정보 준비중" }
+                                .takeUnless { phone -> phone == CONTACT_PLACEHOLDER }
                                 .orEmpty(),
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
@@ -74,7 +74,7 @@ class CafeInfoEditViewModel(
                         it.copy(
                             detail = null,
                             isLoading = false,
-                            infoMessage = "카페 정보를 불러오지 못했습니다."
+                            infoMessage = MSG_LOAD_FAILED
                         )
                     }
                 }
@@ -88,7 +88,7 @@ class CafeInfoEditViewModel(
             _uiState.update {
                 it.copy(
                     isImageRequiredAlertVisible = true,
-                    infoMessage = "대표 이미지 또는 갤러리 이미지 1장 이상이 필요합니다."
+                    infoMessage = MSG_IMAGE_REQUIRED_ONE_OR_MORE
                 )
             }
             return
@@ -151,7 +151,7 @@ class CafeInfoEditViewModel(
                             mapLatitude = detail.cafe.region.location.latitude,
                             mapLongitude = detail.cafe.region.location.longitude,
                             contactNumber = detail.phoneNumber
-                                .takeUnless { phone -> phone == "연락처 정보 준비중" }
+                                .takeUnless { phone -> phone == CONTACT_PLACEHOLDER }
                                 .orEmpty(),
                             weekdayOpen = parsedHours.weekdayOpen,
                             weekdayClose = parsedHours.weekdayClose,
@@ -166,7 +166,7 @@ class CafeInfoEditViewModel(
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            infoMessage = "카페 정보 저장에 실패했습니다."
+                            infoMessage = MSG_SAVE_FAILED
                         )
                     }
                 }
@@ -180,7 +180,7 @@ class CafeInfoEditViewModel(
             _uiState.update {
                 it.copy(
                     isImageRequiredAlertVisible = true,
-                    infoMessage = "등록 신청에는 대표 이미지 1장이 필요합니다."
+                    infoMessage = MSG_REGISTRATION_REP_REQUIRED
                 )
             }
             return
@@ -271,7 +271,7 @@ class CafeInfoEditViewModel(
                 }
                 val maxCount = _uiState.value.galleryMaxCount
                 if (_uiState.value.galleryImages.size >= maxCount) {
-                    showInfo("카페 갤러리는 최대 ${maxCount}장까지 등록할 수 있습니다.")
+                    showInfo("$MSG_GALLERY_MAX_EXCEEDED:$maxCount")
                     return
                 }
                 _uiState.update { state ->
@@ -281,10 +281,10 @@ class CafeInfoEditViewModel(
                     )
                 }
             }
-            CafeInfoEditAction.ClickRepresentativeImage -> showInfo("대표 이미지 업로드는 다음 단계에서 연결됩니다.")
-            CafeInfoEditAction.ClickAddGalleryImage -> showInfo("갤러리 이미지 추가는 다음 단계에서 연결됩니다.")
-            CafeInfoEditAction.ClickPinLocation -> showInfo("지도를 탭해서 위치를 지정해 주세요.")
-            CafeInfoEditAction.ClickManageExceptionDates -> showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
+            CafeInfoEditAction.ClickRepresentativeImage -> showInfo(MSG_REP_UPLOAD_NEXT_STEP)
+            CafeInfoEditAction.ClickAddGalleryImage -> showInfo(MSG_GALLERY_ADD_NEXT_STEP)
+            CafeInfoEditAction.ClickPinLocation -> showInfo(MSG_PIN_LOCATION_HINT)
+            CafeInfoEditAction.ClickManageExceptionDates -> showInfo(MSG_EXCEPTION_NEXT_STEP)
             CafeInfoEditAction.DismissImageRequiredAlert -> _uiState.update { it.copy(isImageRequiredAlertVisible = false) }
             CafeInfoEditAction.ClickSave -> saveCafeInfo()
             CafeInfoEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
@@ -299,7 +299,7 @@ class CafeInfoEditViewModel(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        infoMessage = "이미지를 업로드하지 못했습니다."
+                        infoMessage = MSG_IMAGE_UPLOAD_FAILED
                     )
                 }
                 null
@@ -338,5 +338,19 @@ class CafeInfoEditViewModel(
         } else {
             loadCafeInfo()
         }
+    }
+
+    companion object {
+        private const val CONTACT_PLACEHOLDER = "연락처 정보 준비중"
+        private const val MSG_LOAD_FAILED = "cafeinfo_info_load_failed"
+        private const val MSG_IMAGE_REQUIRED_ONE_OR_MORE = "cafeinfo_info_image_required_one_or_more"
+        private const val MSG_SAVE_FAILED = "cafeinfo_info_save_failed"
+        private const val MSG_REGISTRATION_REP_REQUIRED = "cafeinfo_info_registration_rep_required"
+        private const val MSG_GALLERY_MAX_EXCEEDED = "cafeinfo_info_gallery_max_exceeded"
+        private const val MSG_REP_UPLOAD_NEXT_STEP = "cafeinfo_info_rep_upload_next_step"
+        private const val MSG_GALLERY_ADD_NEXT_STEP = "cafeinfo_info_gallery_add_next_step"
+        private const val MSG_PIN_LOCATION_HINT = "cafeinfo_info_pin_location_hint"
+        private const val MSG_EXCEPTION_NEXT_STEP = "cafeinfo_info_exception_next_step"
+        private const val MSG_IMAGE_UPLOAD_FAILED = "cafeinfo_info_image_upload_failed"
     }
 }

@@ -21,7 +21,7 @@ struct NoticeEventView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("공지 및 이벤트 관리")
+        .navigationTitle(String(localized: String.LocalizationValue("noticeevent_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .searchable(
             text: Binding(
@@ -29,7 +29,7 @@ struct NoticeEventView: View {
                 set: { viewModel.onAction(.changeQuery($0)) }
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: viewModel.uiState.selectedTab == .notice ? "공지사항 검색" : "이벤트 검색"
+            prompt: viewModel.uiState.selectedTab == .notice ? String(localized: String.LocalizationValue("noticeevent_search_placeholder_notice"), table: "Localizable") : String(localized: String.LocalizationValue("noticeevent_search_placeholder_event"), table: "Localizable")
         )
         .sheet(
             isPresented: Binding(
@@ -80,7 +80,7 @@ private struct NoticeEventContentView: View {
             .ignoresSafeArea()
             VStack(spacing: 0) {
                 ConCafeTabBar(
-                    labels: NoticeEventTab.allCases.map(\.rawValue),
+                    labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                     selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
                     backgroundColor: Color(hex: "F8F5F6"),
                     onSelect: { index in
@@ -90,17 +90,76 @@ private struct NoticeEventContentView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
-                                .padding(.horizontal, 16)
+                            infoBanner(
+                                message: {
+                                    switch infoMessage {
+                                    case "noticeevent_validation_cafe_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_cafe_required"), table: "Localizable")
+                                    case "noticeevent_validation_notice_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_notice_required"), table: "Localizable")
+                                    case "noticeevent_validation_event_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_event_required"), table: "Localizable")
+                                    case "noticeevent_validation_title_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_title_required"), table: "Localizable")
+                                    case "noticeevent_validation_content_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_content_required"), table: "Localizable")
+                                    case "noticeevent_validation_event_image_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_validation_event_image_required"), table: "Localizable")
+                                    case "noticeevent_info_notice_edit_target_not_found":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_edit_target_not_found"), table: "Localizable")
+                                    case "noticeevent_info_event_edit_target_not_found":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_edit_target_not_found"), table: "Localizable")
+                                    case "noticeevent_info_notice_load_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_load_failed"), table: "Localizable")
+                                    case "noticeevent_info_event_load_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_load_failed"), table: "Localizable")
+                                    case "noticeevent_info_notice_created":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_created"), table: "Localizable")
+                                    case "noticeevent_info_notice_updated":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_updated"), table: "Localizable")
+                                    case "noticeevent_info_event_created":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_created"), table: "Localizable")
+                                    case "noticeevent_info_event_updated":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_updated"), table: "Localizable")
+                                    case "noticeevent_info_notice_create_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_create_failed"), table: "Localizable")
+                                    case "noticeevent_info_notice_update_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_update_failed"), table: "Localizable")
+                                    case "noticeevent_info_event_create_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_create_failed"), table: "Localizable")
+                                    case "noticeevent_info_event_update_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_update_failed"), table: "Localizable")
+                                    case "noticeevent_info_notice_delete_success":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_success"), table: "Localizable")
+                                    case "noticeevent_info_notice_delete_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_failed"), table: "Localizable")
+                                    case "noticeevent_info_event_delete_success":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_delete_success"), table: "Localizable")
+                                    case "noticeevent_info_event_delete_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_event_delete_failed"), table: "Localizable")
+                                    case "noticeevent_info_image_upload_failed":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_image_upload_failed"), table: "Localizable")
+                                    case "noticeevent_info_more_events_next_step":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_more_events_next_step"), table: "Localizable")
+                                    case "noticeevent_info_image_pick_required":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_image_pick_required"), table: "Localizable")
+                                    case "noticeevent_info_reserve_schedule_next_step":
+                                        return String(localized: String.LocalizationValue("noticeevent_info_reserve_schedule_next_step"), table: "Localizable")
+                                    default:
+                                        return infoMessage
+                                    }
+                                }()
+                            )
+                            .padding(.horizontal, 16)
                         }
                         if uiState.isCurrentTabLoading && uiState.isCurrentTabEmpty {
                             loadingCard
                                 .padding(.horizontal, 16)
                         } else if uiState.selectedTab == .notice && uiState.notices.isEmpty {
-                            emptyStateCard(message: "등록된 공지사항이 없습니다.")
+                            emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_notice"), table: "Localizable"))
                                 .padding(.horizontal, 16)
                         } else if uiState.selectedTab == .event && uiState.events.isEmpty {
-                            emptyStateCard(message: "등록된 이벤트가 없습니다.")
+                            emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_event"), table: "Localizable"))
                                 .padding(.horizontal, 16)
                         } else if uiState.selectedTab == .notice {
                             ForEach(uiState.notices, id: \.id) { item in
@@ -139,7 +198,7 @@ private struct NoticeEventContentView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
-                    Text("공지/이벤트 등록")
+                    Text(String(localized: String.LocalizationValue("noticeevent_register_cta"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
                 .foregroundStyle(Color(hex: "2B2330"))
@@ -212,8 +271,8 @@ private struct NoticeEventContentView: View {
                 .overlay(item.isDimmed ? Color.white.opacity(0.16) : Color.clear)
                 statusChip(
                     item.statusLabel,
-                    container: item.statusLabel == "진행 중" ? Color(hex: "FFD1DC") : Color(hex: "6E6570"),
-                    content: item.statusLabel == "진행 중" ? Color(hex: "2B2330") : .white
+                    container: item.isDimmed ? Color(hex: "6E6570") : Color(hex: "FFD1DC"),
+                    content: item.isDimmed ? .white : Color(hex: "2B2330")
                 )
                 .padding(12)
             }
@@ -282,7 +341,7 @@ private struct NoticeEventContentView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -358,7 +417,7 @@ private struct NoticeEventFormSheet: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 18) {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("제목")
+                                Text(String(localized: String.LocalizationValue("noticeevent_form_label_title"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(Color(hex: "665A63"))
                                     .padding(.leading, 4)
@@ -372,7 +431,7 @@ private struct NoticeEventFormSheet: View {
                                 )
                             }
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("내용")
+                                Text(String(localized: String.LocalizationValue("noticeevent_form_label_content"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(Color(hex: "665A63"))
                                     .padding(.leading, 4)
@@ -391,10 +450,10 @@ private struct NoticeEventFormSheet: View {
                             if uiState.showsPinnedSection {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("중요 공지 (Pinned)")
+                                        Text(String(localized: String.LocalizationValue("noticeevent_pinned_title"), table: "Localizable"))
                                             .font(.subheadline.weight(.bold))
                                             .foregroundStyle(Color(hex: "23161C"))
-                                        Text("목록 상단에 고정됩니다.")
+                                        Text(String(localized: String.LocalizationValue("noticeevent_pinned_desc"), table: "Localizable"))
                                             .font(.caption)
                                             .foregroundStyle(Color(hex: "8F848F"))
                                     }
@@ -498,7 +557,7 @@ private struct NoticeEventFormSheet: View {
 
     private var representativeImageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("대표 이미지")
+            Text(String(localized: String.LocalizationValue("noticeevent_form_image_label"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color(hex: "665A63"))
                 .padding(.leading, 4)
@@ -528,7 +587,7 @@ private struct NoticeEventFormSheet: View {
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
                     if uiState.hasAttachedImage {
-                        Button("제거") {
+                        Button(String(localized: String.LocalizationValue("noticeevent_remove"), table: "Localizable")) {
                             onAction(.clickRemoveFormImage)
                         }
                         .font(.caption.weight(.bold))

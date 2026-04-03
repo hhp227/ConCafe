@@ -102,12 +102,12 @@ final class CastViewModel: ObservableObject {
                     )
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                uiState.errorMessage = nil
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +30,74 @@ import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.banner_action_ok
+import concafe.composeapp.generated.resources.banner_content_back
+import concafe.composeapp.generated.resources.banneredit_action_close
+import concafe.composeapp.generated.resources.banneredit_action_save
+import concafe.composeapp.generated.resources.banneredit_alert_image_message
+import concafe.composeapp.generated.resources.banneredit_alert_image_title
+import concafe.composeapp.generated.resources.banneredit_display_days
+import concafe.composeapp.generated.resources.banneredit_error_network_failed
+import concafe.composeapp.generated.resources.banneredit_error_permission_denied
+import concafe.composeapp.generated.resources.banneredit_error_save_unknown
+import concafe.composeapp.generated.resources.banneredit_error_target_not_found
+import concafe.composeapp.generated.resources.banneredit_error_unauthorized
+import concafe.composeapp.generated.resources.banneredit_image_button
+import concafe.composeapp.generated.resources.banneredit_image_guide
+import concafe.composeapp.generated.resources.banneredit_image_placeholder_pick
+import concafe.composeapp.generated.resources.banneredit_image_section_title
+import concafe.composeapp.generated.resources.banneredit_info_edit_banner_load_failed
+import concafe.composeapp.generated.resources.banneredit_info_edit_banner_not_found
+import concafe.composeapp.generated.resources.banneredit_info_event_list_load_failed
+import concafe.composeapp.generated.resources.banneredit_info_image_upload_failed
+import concafe.composeapp.generated.resources.banneredit_info_notice_list_load_failed
+import concafe.composeapp.generated.resources.banneredit_info_owned_cafe_load_failed
+import concafe.composeapp.generated.resources.banneredit_info_saved
+import concafe.composeapp.generated.resources.banneredit_info_select_cafe_first
+import concafe.composeapp.generated.resources.banneredit_info_slot_full
+import concafe.composeapp.generated.resources.banneredit_label_applied_cafe
+import concafe.composeapp.generated.resources.banneredit_label_external_link
+import concafe.composeapp.generated.resources.banneredit_label_owned_cafe
+import concafe.composeapp.generated.resources.banneredit_label_search
+import concafe.composeapp.generated.resources.banneredit_label_subtitle
+import concafe.composeapp.generated.resources.banneredit_label_title
+import concafe.composeapp.generated.resources.banneredit_period_max_day
+import concafe.composeapp.generated.resources.banneredit_period_min_day
+import concafe.composeapp.generated.resources.banneredit_placeholder_no_applied_cafe
+import concafe.composeapp.generated.resources.banneredit_placeholder_select_owned_cafe
+import concafe.composeapp.generated.resources.banneredit_placeholder_subtitle
+import concafe.composeapp.generated.resources.banneredit_placeholder_title
+import concafe.composeapp.generated.resources.banneredit_screen_title_create
+import concafe.composeapp.generated.resources.banneredit_screen_title_edit
+import concafe.composeapp.generated.resources.banneredit_section_basic
+import concafe.composeapp.generated.resources.banneredit_section_period
+import concafe.composeapp.generated.resources.banneredit_section_target
+import concafe.composeapp.generated.resources.banneredit_selector_empty
+import concafe.composeapp.generated.resources.banneredit_selector_search_cafe
+import concafe.composeapp.generated.resources.banneredit_selector_search_event
+import concafe.composeapp.generated.resources.banneredit_selector_search_notice
+import concafe.composeapp.generated.resources.banneredit_selector_title_cafe
+import concafe.composeapp.generated.resources.banneredit_selector_title_event
+import concafe.composeapp.generated.resources.banneredit_selector_title_notice
+import concafe.composeapp.generated.resources.banneredit_submit_create
+import concafe.composeapp.generated.resources.banneredit_submit_edit
+import concafe.composeapp.generated.resources.banneredit_target_cafe_detail
+import concafe.composeapp.generated.resources.banneredit_target_event_detail
+import concafe.composeapp.generated.resources.banneredit_target_event_select_label
+import concafe.composeapp.generated.resources.banneredit_target_event_select_placeholder
+import concafe.composeapp.generated.resources.banneredit_target_external_link
+import concafe.composeapp.generated.resources.banneredit_target_notice
+import concafe.composeapp.generated.resources.banneredit_target_notice_select_label
+import concafe.composeapp.generated.resources.banneredit_target_notice_select_placeholder
+import concafe.composeapp.generated.resources.banneredit_target_placeholder_external
+import concafe.composeapp.generated.resources.banneredit_validation_external_url_required
+import concafe.composeapp.generated.resources.banneredit_validation_image_required
+import concafe.composeapp.generated.resources.banneredit_validation_subtitle_required
+import concafe.composeapp.generated.resources.banneredit_validation_target_required
+import concafe.composeapp.generated.resources.banneredit_validation_title_required
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -53,7 +122,7 @@ fun BannerEditScreen(
             when (event) {
                 BannerEditEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 BannerEditEvent.ShowSaveSuccessMessage -> {
-                    snackbarHostState.showSnackbar("배너가 등록되었습니다.")
+                    snackbarHostState.showSnackbar(getString(Res.string.banneredit_info_saved))
                 }
             }
         }
@@ -80,11 +149,11 @@ fun BannerEditScreen(
     if (uiState.isImageRequiredAlertVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(BannerEditAction.DismissImageRequiredAlert) },
-            title = { Text("이미지를 등록해주세요") },
-            text = { Text("배너 저장을 위해 대표 이미지는 필수입니다.") },
+            title = { Text(stringResource(Res.string.banneredit_alert_image_title)) },
+            text = { Text(stringResource(Res.string.banneredit_alert_image_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(BannerEditAction.DismissImageRequiredAlert) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.banner_action_ok))
                 }
             }
         )
@@ -103,10 +172,19 @@ private fun BannerEditContentScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(uiState.screenTitle, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        if (uiState.isEditMode) {
+                            stringResource(Res.string.banneredit_screen_title_edit)
+                        } else {
+                            stringResource(Res.string.banneredit_screen_title_create)
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { onAction(BannerEditAction.ClickBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.banner_content_back))
                     }
                 },
                 actions = {
@@ -114,7 +192,7 @@ private fun BannerEditContentScreen(
                         onClick = { onAction(BannerEditAction.ClickSave) },
                         enabled = uiState.isSaveEnabled
                     ) {
-                        Text("저장", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.banneredit_action_save), fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -154,7 +232,11 @@ private fun BannerEditContentScreen(
                             Icon(Icons.Default.Save, contentDescription = null)
                         }
                         Text(
-                            text = uiState.submitButtonText,
+                            text = if (uiState.isEditMode) {
+                                stringResource(Res.string.banneredit_submit_edit)
+                            } else {
+                                stringResource(Res.string.banneredit_submit_create)
+                            },
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -195,25 +277,25 @@ private fun BannerEditContentScreen(
                     }
                 }
                 item {
-                    BannerSectionCard(title = "배너 기본 정보") {
+                    BannerSectionCard(title = stringResource(Res.string.banneredit_section_basic)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             ConCafeFormField(
-                                label = "배너 제목",
+                                label = stringResource(Res.string.banneredit_label_title),
                                 value = uiState.title,
                                 onValueChange = { onAction(BannerEditAction.ChangeTitle(it)) },
-                                placeholder = "배너 제목을 입력해주세요"
+                                placeholder = stringResource(Res.string.banneredit_placeholder_title)
                             )
                             ConCafeFormField(
-                                label = "서브 문구",
+                                label = stringResource(Res.string.banneredit_label_subtitle),
                                 value = uiState.subtitle,
                                 onValueChange = { onAction(BannerEditAction.ChangeSubtitle(it)) },
-                                placeholder = "서브 문구를 입력해주세요"
+                                placeholder = stringResource(Res.string.banneredit_placeholder_subtitle)
                             )
                         }
                     }
                 }
                 item {
-                    BannerSectionCard(title = "연결 대상 설정 (Target)") {
+                    BannerSectionCard(title = stringResource(Res.string.banneredit_section_target)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             TargetTypeGrid(
                                 selectedTarget = uiState.selectedTarget,
@@ -222,27 +304,30 @@ private fun BannerEditContentScreen(
                             when (uiState.selectedTarget) {
                                 BannerTargetType.EXTERNAL_LINK -> {
                                     ConCafeFormField(
-                                        label = "외부 링크",
+                                        label = stringResource(Res.string.banneredit_label_external_link),
                                         value = uiState.targetValue,
                                         onValueChange = { onAction(BannerEditAction.ChangeTargetValue(it)) },
-                                        placeholder = uiState.targetFieldPlaceholder
+                                        placeholder = when (uiState.targetFieldPlaceholderKey) {
+                                            "banneredit_target_placeholder_external" -> stringResource(Res.string.banneredit_target_placeholder_external)
+                                            else -> uiState.targetFieldPlaceholderKey
+                                        }
                                     )
                                 }
                                 BannerTargetType.CAFE_DETAIL -> {
                                     if (uiState.isAdmin) {
                                         SelectionFieldCard(
-                                            label = "운영 카페",
+                                            label = stringResource(Res.string.banneredit_label_owned_cafe),
                                             selectedTitle = uiState.selectedCafeOption?.name,
                                             selectedSubtitle = uiState.selectedCafeOption?.city,
-                                            placeholder = "운영 카페를 선택해주세요",
+                                            placeholder = stringResource(Res.string.banneredit_placeholder_select_owned_cafe),
                                             onClick = { onAction(BannerEditAction.ClickCafeSelector) }
                                         )
                                     } else {
                                         FixedSelectionCard(
-                                            label = "적용 카페",
+                                            label = stringResource(Res.string.banneredit_label_applied_cafe),
                                             selectedTitle = uiState.selectedCafeOption?.name,
                                             selectedSubtitle = uiState.selectedCafeOption?.city,
-                                            placeholder = "연결할 운영 카페가 없습니다."
+                                            placeholder = stringResource(Res.string.banneredit_placeholder_no_applied_cafe)
                                         )
                                     }
                                 }
@@ -250,25 +335,33 @@ private fun BannerEditContentScreen(
                                 BannerTargetType.EVENT_DETAIL -> {
                                     if (uiState.isAdmin) {
                                         SelectionFieldCard(
-                                            label = "운영 카페",
+                                            label = stringResource(Res.string.banneredit_label_owned_cafe),
                                             selectedTitle = uiState.selectedCafeOption?.name,
                                             selectedSubtitle = uiState.selectedCafeOption?.city,
-                                            placeholder = "운영 카페를 선택해주세요",
+                                            placeholder = stringResource(Res.string.banneredit_placeholder_select_owned_cafe),
                                             onClick = { onAction(BannerEditAction.ClickCafeSelector) }
                                         )
                                     } else {
                                         FixedSelectionCard(
-                                            label = "적용 카페",
+                                            label = stringResource(Res.string.banneredit_label_applied_cafe),
                                             selectedTitle = uiState.selectedCafeOption?.name,
                                             selectedSubtitle = uiState.selectedCafeOption?.city,
-                                            placeholder = "연결할 운영 카페가 없습니다."
+                                            placeholder = stringResource(Res.string.banneredit_placeholder_no_applied_cafe)
                                         )
                                     }
                                     SelectionFieldCard(
-                                        label = uiState.targetSelectionLabel,
+                                        label = when (uiState.targetSelectionLabelKey) {
+                                            "banneredit_target_notice_select_label" -> stringResource(Res.string.banneredit_target_notice_select_label)
+                                            "banneredit_target_event_select_label" -> stringResource(Res.string.banneredit_target_event_select_label)
+                                            else -> uiState.targetSelectionLabelKey
+                                        },
                                         selectedTitle = uiState.selectedContentTitle,
                                         selectedSubtitle = uiState.selectedContentSubtitle,
-                                        placeholder = uiState.targetSelectionPlaceholder,
+                                        placeholder = when (uiState.targetSelectionPlaceholderKey) {
+                                            "banneredit_target_notice_select_placeholder" -> stringResource(Res.string.banneredit_target_notice_select_placeholder)
+                                            "banneredit_target_event_select_placeholder" -> stringResource(Res.string.banneredit_target_event_select_placeholder)
+                                            else -> uiState.targetSelectionPlaceholderKey
+                                        },
                                         onClick = { onAction(BannerEditAction.ClickTargetSelector) }
                                     )
                                 }
@@ -277,9 +370,9 @@ private fun BannerEditContentScreen(
                     }
                 }
                 item {
-                    BannerSectionCard(title = "노출 기간 설정") {
+                    BannerSectionCard(title = stringResource(Res.string.banneredit_section_period)) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BadgeText(label = uiState.displayDaysLabel)
+                            BadgeText(label = stringResource(Res.string.banneredit_display_days, uiState.displayDaysLabelValue))
                             Slider(
                                 value = uiState.displayDays.toFloat(),
                                 onValueChange = { onAction(BannerEditAction.ChangeDisplayDays(it.toInt())) },
@@ -290,8 +383,8 @@ private fun BannerEditContentScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("1일", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
-                                Text("10일", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
+                                Text(stringResource(Res.string.banneredit_period_min_day), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
+                                Text(stringResource(Res.string.banneredit_period_max_day), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
                             }
                         }
                     }
@@ -299,7 +392,28 @@ private fun BannerEditContentScreen(
                 uiState.infoMessage?.let { message ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when (message) {
+                                "banneredit_info_slot_full" -> stringResource(Res.string.banneredit_info_slot_full)
+                                "banneredit_info_saved" -> stringResource(Res.string.banneredit_info_saved)
+                                "banneredit_info_owned_cafe_load_failed" -> stringResource(Res.string.banneredit_info_owned_cafe_load_failed)
+                                "banneredit_info_edit_banner_not_found" -> stringResource(Res.string.banneredit_info_edit_banner_not_found)
+                                "banneredit_info_edit_banner_load_failed" -> stringResource(Res.string.banneredit_info_edit_banner_load_failed)
+                                "banneredit_info_select_cafe_first" -> stringResource(Res.string.banneredit_info_select_cafe_first)
+                                "banneredit_info_notice_list_load_failed" -> stringResource(Res.string.banneredit_info_notice_list_load_failed)
+                                "banneredit_info_event_list_load_failed" -> stringResource(Res.string.banneredit_info_event_list_load_failed)
+                                "banneredit_info_image_upload_failed" -> stringResource(Res.string.banneredit_info_image_upload_failed)
+                                "banneredit_validation_image_required" -> stringResource(Res.string.banneredit_validation_image_required)
+                                "banneredit_validation_title_required" -> stringResource(Res.string.banneredit_validation_title_required)
+                                "banneredit_validation_subtitle_required" -> stringResource(Res.string.banneredit_validation_subtitle_required)
+                                "banneredit_validation_external_url_required" -> stringResource(Res.string.banneredit_validation_external_url_required)
+                                "banneredit_validation_target_required" -> stringResource(Res.string.banneredit_validation_target_required)
+                                "banneredit_error_unauthorized" -> stringResource(Res.string.banneredit_error_unauthorized)
+                                "banneredit_error_permission_denied" -> stringResource(Res.string.banneredit_error_permission_denied)
+                                "banneredit_error_target_not_found" -> stringResource(Res.string.banneredit_error_target_not_found)
+                                "banneredit_error_network_failed" -> stringResource(Res.string.banneredit_error_network_failed)
+                                "banneredit_error_save_unknown" -> stringResource(Res.string.banneredit_error_save_unknown)
+                                else -> message
+                            },
                             onDismiss = { onAction(BannerEditAction.DismissInfoMessage) }
                         )
                     }
@@ -319,17 +433,27 @@ private fun BannerSelectorSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = uiState.selectorTitle,
+            text = when (uiState.selectorTitleKey) {
+                "banneredit_selector_title_cafe" -> stringResource(Res.string.banneredit_selector_title_cafe)
+                "banneredit_selector_title_notice" -> stringResource(Res.string.banneredit_selector_title_notice)
+                "banneredit_selector_title_event" -> stringResource(Res.string.banneredit_selector_title_event)
+                else -> uiState.selectorTitleKey
+            },
             modifier = Modifier.padding(horizontal = 24.dp),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         ConCafeFormField(
-            label = "검색",
+            label = stringResource(Res.string.banneredit_label_search),
             value = uiState.selectorQuery,
             onValueChange = { onAction(BannerEditAction.ChangeSelectorQuery(it)) },
             modifier = Modifier.padding(horizontal = 24.dp),
-            placeholder = uiState.selectorSearchPlaceholder
+            placeholder = when (uiState.selectorSearchPlaceholderKey) {
+                "banneredit_selector_search_cafe" -> stringResource(Res.string.banneredit_selector_search_cafe)
+                "banneredit_selector_search_notice" -> stringResource(Res.string.banneredit_selector_search_notice)
+                "banneredit_selector_search_event" -> stringResource(Res.string.banneredit_selector_search_event)
+                else -> uiState.selectorSearchPlaceholderKey
+            }
         )
         if (uiState.isSelectorLoading) {
             Box(
@@ -347,7 +471,7 @@ private fun BannerSelectorSheet(
                     .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
                 Text(
-                    text = "선택 가능한 항목이 없습니다.",
+                    text = stringResource(Res.string.banneredit_selector_empty),
                     color = Color(0xFF8F848F)
                 )
             }
@@ -431,7 +555,7 @@ private fun BannerImageCard(
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
-                            text = "배너 이미지 선택",
+                            text = stringResource(Res.string.banneredit_image_placeholder_pick),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF5A4954),
                             fontWeight = FontWeight.Bold
@@ -446,14 +570,14 @@ private fun BannerImageCard(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = uiState.imageSectionTitle,
+                    text = stringResource(Res.string.banneredit_image_section_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = uiState.imageGuideText,
+                    text = stringResource(Res.string.banneredit_image_guide),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF8F848F),
                     textAlign = TextAlign.Center
@@ -467,7 +591,10 @@ private fun BannerImageCard(
                 ),
                 shape = RoundedCornerShape(999.dp)
             ) {
-                Text(uiState.imageButtonText, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(Res.string.banneredit_image_button),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -533,7 +660,13 @@ private fun TargetTypeGrid(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = target.label,
+                                text = when (target.label) {
+                                    "banneredit_target_cafe_detail" -> stringResource(Res.string.banneredit_target_cafe_detail)
+                                    "banneredit_target_event_detail" -> stringResource(Res.string.banneredit_target_event_detail)
+                                    "banneredit_target_notice" -> stringResource(Res.string.banneredit_target_notice)
+                                    "banneredit_target_external_link" -> stringResource(Res.string.banneredit_target_external_link)
+                                    else -> target.label
+                                },
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) Color(0xFF23161C) else Color(0xFF7A707A)
@@ -582,7 +715,7 @@ private fun SelectionFieldCard(
                         )
                     }
                 }
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color(0xFF8F848F))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color(0xFF8F848F))
             }
         }
     }
@@ -684,7 +817,7 @@ private fun InfoBanner(
             color = Color(0xFF7A707A)
         )
         TextButton(onClick = onDismiss) {
-            Text("닫기", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.banneredit_action_close), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -696,8 +829,8 @@ private fun BannerEditContentPreview() {
             ownedCafeOptions = listOf(
                 CafeManagementData.OwnedCafeSummary(
                     id = "cafe-1",
-                    name = "루나 메이드 카페",
-                    city = "서울 홍대",
+                    name = "Luna Maid Cafe",
+                    city = "Seoul",
                     isApproved = true,
                     todayVisitors = 0,
                     todayCheckIns = 0,
@@ -715,3 +848,4 @@ private fun BannerEditContentPreview() {
         snackbarHostState = remember { SnackbarHostState() }
     )
 }
+

@@ -30,7 +30,7 @@ struct NotificationView: View {
                 onNavigationAction(.navigateBack)
             }
         }
-        .navigationTitle("알림")
+        .navigationTitle(String(localized: String.LocalizationValue("common_notification"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -69,12 +69,12 @@ private struct NotificationSignInRequiredView: View {
                 Image(systemName: "bell.badge")
                     .font(.system(size: 32, weight: .semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
-                Text("알림은 로그인 후 확인할 수 있어요")
+                Text(String(localized: String.LocalizationValue("notification_login_required_title"), table: "Localizable"))
                     .font(.headline)
                     .bold()
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
-                Text("팔로우/출근/공지 알림을 보려면 로그인해 주세요.")
+                Text(String(localized: String.LocalizationValue("notification_login_required_desc"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
@@ -82,7 +82,7 @@ private struct NotificationSignInRequiredView: View {
                 Button {
                     onAction(.signInTapped)
                 } label: {
-                    Text("로그인하기")
+                    Text(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable"))
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -123,11 +123,11 @@ private struct NotificationSectionsView: View {
     private var summaryCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("새 알림 \(uiState.unreadCount)개")
+                Text(String(format: String(localized: String.LocalizationValue("notification_summary_title"), table: "Localizable"), locale: Locale.current, uiState.unreadCount))
                     .font(.headline)
                     .bold()
                     .foregroundStyle(.white)
-                Text("출근, 생일, 공지를 섹션별로 빠르게 확인하세요.")
+                Text(String(localized: String.LocalizationValue("notification_summary_desc"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.92))
             }

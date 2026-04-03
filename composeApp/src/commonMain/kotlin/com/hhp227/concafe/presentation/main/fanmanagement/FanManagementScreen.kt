@@ -29,8 +29,10 @@ import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +138,7 @@ private fun FanManagementContentScreen(
                 LoadingState()
             }
             uiState.fanManagementData == null && uiState.castClaimStatus == null -> {
-                EmptySectionCard(message = uiState.errorMessage ?: "로그인한 캐스트 정보를 찾을 수 없습니다.")
+                EmptySectionCard(message = uiState.errorMessage ?: stringResource(Res.string.fanmanagement_error_cast_not_found))
             }
             else -> Unit
         }
@@ -225,7 +227,7 @@ private fun CastClaimStatusCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "프로필 연결 상태 보기",
+                    text = stringResource(Res.string.fanmanagement_action_profile_link_status),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFEF6797)
@@ -327,12 +329,12 @@ private fun ProfileSummaryCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "프로필 수정",
+                                contentDescription = stringResource(Res.string.fanmanagement_accessibility_edit_profile),
                                 tint = Color(0xFF7C3F67),
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "수정",
+                                text = stringResource(Res.string.fanmanagement_action_edit),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF7C3F67)
@@ -385,7 +387,7 @@ private fun InfoBanner(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.common_close),
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable(onClick = onDismiss)
@@ -423,7 +425,7 @@ private fun PrimaryAnnouncementButton(
             ) {
                 Icon(imageVector = Icons.Default.Campaign, contentDescription = null)
                 Text(
-                    text = "팬 공지 작성하기",
+                    text = stringResource(Res.string.fanmanagement_announcement_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -478,13 +480,19 @@ private fun QuickActionGrid(
                             )
                         }
                         Text(
-                            text = quickAction.title,
+                            text = when (quickAction) {
+                                FanManagementUiState.QuickAction.WORK_SCHEDULE -> stringResource(Res.string.fanmanagement_quick_action_schedule_title)
+                                FanManagementUiState.QuickAction.CAFE_DASHBOARD -> stringResource(Res.string.fanmanagement_quick_action_profile_title)
+                            },
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF24161E)
                         )
                         Text(
-                            text = quickAction.subtitle,
+                            text = when (quickAction) {
+                                FanManagementUiState.QuickAction.WORK_SCHEDULE -> stringResource(Res.string.fanmanagement_quick_action_schedule_subtitle)
+                                FanManagementUiState.QuickAction.CAFE_DASHBOARD -> stringResource(Res.string.fanmanagement_quick_action_profile_subtitle)
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
                             color = Color(0xFF7A707A)
@@ -526,7 +534,7 @@ private fun CastClaimSheet(
                         Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
                     }
                     TextButton(onClick = onDismiss) {
-                        Text("닫기")
+                        Text(stringResource(Res.string.common_close))
                     }
                 }
             }
@@ -561,7 +569,7 @@ private fun CastClaimSheet(
             if (sheet.canLoadMore || sheet.isLoadingMore) {
                 item {
                     Text(
-                        text = if (sheet.isLoadingMore) "다음 캐스트 목록을 불러오는 중입니다." else "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.",
+                        text = if (sheet.isLoadingMore) stringResource(Res.string.fanmanagement_claim_load_more_loading) else stringResource(Res.string.fanmanagement_claim_load_more_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7A707A)
                     )
@@ -586,7 +594,10 @@ private fun CastClaimSheet(
                         contentColor = Color(0xFF24161E)
                     )
                 ) {
-                    Text(if (sheet.isSubmitting) "요청 보내는 중..." else "연결 요청 보내기", fontWeight = FontWeight.Bold)
+                    Text(
+                        if (sheet.isSubmitting) stringResource(Res.string.fanmanagement_claim_submitting) else stringResource(Res.string.fanmanagement_claim_submit),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -599,10 +610,10 @@ private fun RecentFollowersSection(
     onFollowerClick: (String) -> Unit
 ) {
     SectionCard(
-        title = "최근 팔로워"
+        title = stringResource(Res.string.fanmanagement_section_recent_followers)
     ) {
         if (followers.isEmpty()) {
-            EmptySectionCard(message = "최근 팔로워 데이터가 아직 없습니다.")
+            EmptySectionCard(message = stringResource(Res.string.fanmanagement_followers_empty))
         } else {
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -664,21 +675,22 @@ private fun RecentFollowersSection(
     }
 }
 
+@Composable
 private fun String.toRelativeFollowerTimeLabel(): String {
     val followedAt = runCatching {
         Instant.parse(this)
     }.getOrNull()
     if (followedAt == null) {
-        return "최근"
+        return stringResource(Res.string.fanmanagement_relative_recent)
     }
     val now = Clock.System.now()
     val diffSeconds = (now.epochSeconds - followedAt.epochSeconds).coerceAtLeast(0)
     return when {
-        diffSeconds < 60 -> "방금 전"
-        diffSeconds < 3600 -> "${diffSeconds / 60}분 전"
-        diffSeconds < 86_400 -> "${diffSeconds / 3600}시간 전"
-        diffSeconds < 2_592_000 -> "${diffSeconds / 86_400}일 전"
-        else -> "오래 전"
+        diffSeconds < 60 -> stringResource(Res.string.fanmanagement_relative_just_now)
+        diffSeconds < 3600 -> stringResource(Res.string.fanmanagement_relative_minutes_ago, diffSeconds / 60)
+        diffSeconds < 86_400 -> stringResource(Res.string.fanmanagement_relative_hours_ago, diffSeconds / 3600)
+        diffSeconds < 2_592_000 -> stringResource(Res.string.fanmanagement_relative_days_ago, diffSeconds / 86_400)
+        else -> stringResource(Res.string.fanmanagement_relative_long_ago)
     }
 }
 
@@ -701,12 +713,16 @@ private fun FanAnnouncementSheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "팬 공지 작성하기",
+                text = stringResource(Res.string.fanmanagement_announcement_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = { onAction(FanManagementAction.DismissAnnouncementSheet) }) {
-                Icon(Icons.Default.Close, contentDescription = "닫기", tint = Color(0xFF7A707A))
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.fanmanagement_accessibility_close),
+                    tint = Color(0xFF7A707A)
+                )
             }
         }
         LazyColumn(
@@ -716,25 +732,25 @@ private fun FanAnnouncementSheetContent(
         ) {
             item {
                 ConCafeFormField(
-                    label = "제목",
+                    label = stringResource(Res.string.fanmanagement_announcement_label_title),
                     value = uiState.announcementTitle,
                     onValueChange = { onAction(FanManagementAction.ChangeAnnouncementTitle(it)) },
-                    placeholder = "팬에게 전달할 제목을 입력해 주세요"
+                    placeholder = stringResource(Res.string.fanmanagement_announcement_placeholder_title)
                 )
             }
             item {
                 ConCafeFormField(
-                    label = "내용",
+                    label = stringResource(Res.string.fanmanagement_announcement_label_body),
                     value = uiState.announcementBody,
                     onValueChange = { onAction(FanManagementAction.ChangeAnnouncementBody(it)) },
-                    placeholder = "팬에게 전달할 공지 내용을 입력해 주세요",
+                    placeholder = stringResource(Res.string.fanmanagement_announcement_placeholder_body),
                     minLines = 7,
                     singleLine = false
                 )
             }
             item {
                 Text(
-                    text = "공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다.",
+                    text = stringResource(Res.string.fanmanagement_announcement_hint_push),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF8A8087)
                 )
@@ -776,7 +792,11 @@ private fun FanAnnouncementSheetContent(
                             color = Color(0xFF2B2330)
                         )
                     } else {
-                        Text("팬 공지 전송", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text(
+                            stringResource(Res.string.fanmanagement_announcement_submit),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp
+                        )
                     }
                 }
             }
@@ -790,8 +810,7 @@ private fun WeeklyScheduleSection(
 ) {
     val weeklyStatus = rememberWeeklySchedule(schedule)
 
-    print("TEST, schedule: $schedule")
-    SectionCard(title = "주간 출근") {
+    SectionCard(title = stringResource(Res.string.fanmanagement_section_weekly_work)) {
         Surface(
             shape = RoundedCornerShape(22.dp),
             color = Color.White.copy(alpha = 0.88f),
@@ -823,13 +842,13 @@ private fun WeeklyScheduleSection(
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "이번 주 스케줄",
+                            text = stringResource(Res.string.fanmanagement_weekly_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF24161E)
                         )
                         Text(
-                            text = "출근 관리에서 일정을 바로 조정할 수 있습니다.",
+                            text = stringResource(Res.string.fanmanagement_weekly_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF7A707A)
                         )
@@ -881,7 +900,7 @@ private fun WeeklyScheduleItemCard(
                 color = if (isWorking) Color.White else Color(0xFF4E4750)
             )
             Text(
-                text = if (isWorking) "출근" else "휴무",
+                text = if (isWorking) stringResource(Res.string.schedule_status_work) else stringResource(Res.string.schedule_status_off),
                 fontSize = 12.sp,
                 color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
             )
@@ -911,7 +930,7 @@ private fun AddFollowerButton() {
             )
         }
         Text(
-            text = "팬 확장",
+            text = stringResource(Res.string.fanmanagement_fan_expand),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF7A707A),
@@ -925,11 +944,21 @@ private data class WeeklyScheduleStatus(
     val isWorking: Boolean
 )
 
+@Composable
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleStatus> {
     val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
     return listOf("월", "화", "수", "목", "금", "토", "일").map { dayLabel ->
         WeeklyScheduleStatus(
-            dayLabel = dayLabel,
+            dayLabel = when (dayLabel) {
+                "월" -> stringResource(Res.string.fanmanagement_weekday_mon)
+                "화" -> stringResource(Res.string.fanmanagement_weekday_tue)
+                "수" -> stringResource(Res.string.fanmanagement_weekday_wed)
+                "목" -> stringResource(Res.string.fanmanagement_weekday_thu)
+                "금" -> stringResource(Res.string.fanmanagement_weekday_fri)
+                "토" -> stringResource(Res.string.fanmanagement_weekday_sat)
+                "일" -> stringResource(Res.string.fanmanagement_weekday_sun)
+                else -> dayLabel
+            },
             isWorking = workingDays.contains(dayLabel)
         )
     }
@@ -948,7 +977,7 @@ private fun LoadingState() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "팬관리 정보를 불러오는 중입니다.",
+                text = stringResource(Res.string.fanmanagement_loading),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF7A707A)
             )

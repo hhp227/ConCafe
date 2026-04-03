@@ -60,11 +60,11 @@ final class ScheduleViewModel: ObservableObject {
                             let conceptRole: String
                             switch event.cast.conceptRole.lowercased() {
                             case "maid":
-                                conceptRole = "메이드"
+                                conceptRole = "schedule_concept_maid"
                             case "butler":
-                                conceptRole = "버틀러"
+                                conceptRole = "schedule_concept_butler"
                             case "idol":
-                                conceptRole = "아이돌"
+                                conceptRole = "schedule_concept_idol"
                             default:
                                 conceptRole = event.cast.conceptRole.prefix(1).uppercased() + event.cast.conceptRole.dropFirst()
                             }
@@ -104,11 +104,11 @@ final class ScheduleViewModel: ObservableObject {
                             let message: String
                             switch event.status {
                             case .work:
-                                message = "근무 시간이 저장되었습니다."
+                                message = "schedule_info_saved_work"
                             case .off:
-                                message = "휴무로 변경되었습니다."
+                                message = "schedule_info_saved_off"
                             default:
-                                message = "휴가 일정으로 변경되었습니다."
+                                message = "schedule_info_saved_vacation"
                             }
                             self.event.send(.showMessage(message))
                         }
@@ -146,11 +146,11 @@ final class ScheduleViewModel: ObservableObject {
                     let conceptRole: String
                     switch data.detail.cast.conceptRole.lowercased() {
                     case "maid":
-                        conceptRole = "메이드"
+                        conceptRole = "schedule_concept_maid"
                     case "butler":
-                        conceptRole = "버틀러"
+                        conceptRole = "schedule_concept_butler"
                     case "idol":
-                        conceptRole = "아이돌"
+                        conceptRole = "schedule_concept_idol"
                     default:
                         conceptRole = data.detail.cast.conceptRole.prefix(1).uppercased() + data.detail.cast.conceptRole.dropFirst()
                     }
@@ -162,7 +162,7 @@ final class ScheduleViewModel: ObservableObject {
                         castSummary: .init(
                             title: data.detail.cast.name,
                             subtitle: "\(conceptRole) / \(data.detail.cafe.name)",
-                            badge: "Cast Member",
+                            badge: "schedule_badge_cast_member",
                             initials: String(data.detail.cast.name.prefix(2)).uppercased()
                         ),
                         weekRangeLabel: data.weekRangeLabel,
@@ -177,7 +177,7 @@ final class ScheduleViewModel: ObservableObject {
                     uiState = ScheduleUiState(
                         isLoading: false,
                         isSaving: false,
-                        errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                        errorMessage: "schedule_info_load_failed"
                     )
                 }
             } catch {
@@ -187,7 +187,7 @@ final class ScheduleViewModel: ObservableObject {
                 uiState = ScheduleUiState(
                     isLoading: false,
                     isSaving: false,
-                    errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                    errorMessage: "schedule_info_load_failed"
                 )
             }
         }
@@ -198,9 +198,9 @@ final class ScheduleViewModel: ObservableObject {
         case .clickBack:
             event.send(.navigateBack)
         case .clickMore:
-            uiState.infoMessage = "추가 메뉴는 다음 단계에서 제공합니다."
+            uiState.infoMessage = "schedule_info_more_next_step"
         case .clickCalendar:
-            uiState.infoMessage = "달력 보기 연결은 다음 단계에서 제공합니다."
+            uiState.infoMessage = "schedule_info_calendar_next_step"
         case .selectDay(let id):
             uiState.selectedDayId = id
         case .clickEditDay(let id):
@@ -224,7 +224,7 @@ final class ScheduleViewModel: ObservableObject {
         case .submitEditDay:
             guard let editingId = uiState.editingScheduleId else { return }
             if uiState.editStatus == .work && uiState.editStartTime >= uiState.editEndTime {
-                uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+                uiState.errorMessage = "schedule_error_end_after_start"
                 return
             }
             let pendingUpdate = ScheduleUiState.PendingScheduleUpdate(
@@ -236,7 +236,7 @@ final class ScheduleViewModel: ObservableObject {
             uiState.isEditSheetVisible = false
             uiState.editingScheduleId = nil
             uiState.errorMessage = nil
-            uiState.infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요."
+            uiState.infoMessage = "schedule_info_edit_applied"
             uiState.schedules = uiState.schedules.map { schedule in
                 guard schedule.id == editingId else { return schedule }
                 let timeLabel: String
@@ -244,18 +244,18 @@ final class ScheduleViewModel: ObservableObject {
                 case .work:
                     timeLabel = "\(pendingUpdate.startTime ?? "10:00") - \(pendingUpdate.endTime ?? "19:00")"
                 case .off:
-                    timeLabel = "휴무"
+                    timeLabel = "schedule_status_off"
                 default:
-                    timeLabel = "휴가"
+                    timeLabel = "schedule_status_vacation"
                 }
                 let statusLabel: String
                 switch pendingUpdate.status {
                 case .work:
-                    statusLabel = "근무"
+                    statusLabel = "schedule_status_work"
                 case .off:
-                    statusLabel = "휴무"
+                    statusLabel = "schedule_status_off"
                 default:
-                    statusLabel = "휴가"
+                    statusLabel = "schedule_status_vacation"
                 }
                 return ScheduleManagementDaySchedule(
                     id: pendingUpdate.date,
@@ -280,7 +280,7 @@ final class ScheduleViewModel: ObservableObject {
         case .clickSave:
             guard !uiState.managedCastId.isEmpty else { return }
             if uiState.pendingUpdates.isEmpty {
-                uiState.infoMessage = "저장할 변경사항이 없습니다."
+                uiState.infoMessage = "schedule_info_no_changes"
                 uiState.errorMessage = nil
                 return
             }
@@ -309,27 +309,27 @@ final class ScheduleViewModel: ObservableObject {
                             if let validation = failure.error as? AppErrorValidationFailed {
                                 switch validation.reason {
                                 case "start time is required":
-                                    uiState.errorMessage = "시작 시간을 선택해주세요."
+                                    uiState.errorMessage = "schedule_error_start_required"
                                 case "end time is required":
-                                    uiState.errorMessage = "종료 시간을 선택해주세요."
+                                    uiState.errorMessage = "schedule_error_end_required"
                                 case "end time must be after start time":
-                                    uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+                                    uiState.errorMessage = "schedule_error_end_after_start"
                                 default:
-                                    uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                                    uiState.errorMessage = "schedule_error_save_failed"
                                 }
                             } else {
-                                uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
+                                uiState.errorMessage = "schedule_error_week_save_failed"
                             }
                             uiState.isSaving = false
                             return
                         }
                     }
                     self.loadSchedule(showLoading: false)
-                    self.event.send(.showMessage("주간 시간표를 저장했습니다."))
+                    self.event.send(.showMessage("schedule_event_week_saved"))
                 } catch {
                     if Task.isCancelled { return }
                     uiState.isSaving = false
-                    uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
+                    uiState.errorMessage = "schedule_error_week_save_failed"
                 }
             }
         case .dismissInfoMessage:

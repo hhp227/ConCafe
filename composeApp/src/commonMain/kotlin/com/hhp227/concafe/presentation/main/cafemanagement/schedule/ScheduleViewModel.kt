@@ -56,9 +56,9 @@ class ScheduleViewModel(
                         _uiState.update { state ->
                             val cafeName = state.castSummary.subtitle.substringAfter(" / ", "")
                             val conceptRole = when (event.cast.conceptRole.lowercase()) {
-                                "maid" -> "메이드"
-                                "butler" -> "버틀러"
-                                "idol" -> "아이돌"
+                                "maid" -> SCHEDULE_CONCEPT_MAID
+                                "butler" -> SCHEDULE_CONCEPT_BUTLER
+                                "idol" -> SCHEDULE_CONCEPT_IDOL
                                 else -> event.cast.conceptRole.replaceFirstChar { char -> char.uppercase() }
                             }
                             state.copy(
@@ -91,9 +91,9 @@ class ScheduleViewModel(
                         _event.emit(
                             ScheduleEvent.ShowMessage(
                                 when (event.status) {
-                                    CastScheduleStatus.WORK -> "근무 시간이 저장되었습니다."
-                                    CastScheduleStatus.OFF -> "휴무로 변경되었습니다."
-                                    CastScheduleStatus.VACATION -> "휴가 일정으로 변경되었습니다."
+                                    CastScheduleStatus.WORK -> "schedule_info_saved_work"
+                                    CastScheduleStatus.OFF -> "schedule_info_saved_off"
+                                    CastScheduleStatus.VACATION -> "schedule_info_saved_vacation"
                                 }
                             )
                         )
@@ -125,9 +125,9 @@ class ScheduleViewModel(
                     bindScheduleManagementEvent(result.data.detail.cast.id)
                     val data = result.data
                     val conceptRole = when (data.detail.cast.conceptRole.lowercase()) {
-                        "maid" -> "메이드"
-                        "butler" -> "버틀러"
-                        "idol" -> "아이돌"
+                        "maid" -> SCHEDULE_CONCEPT_MAID
+                        "butler" -> SCHEDULE_CONCEPT_BUTLER
+                        "idol" -> SCHEDULE_CONCEPT_IDOL
                         else -> data.detail.cast.conceptRole.replaceFirstChar { char -> char.uppercase() }
                     }
                     _uiState.value = ScheduleUiState(
@@ -138,7 +138,7 @@ class ScheduleViewModel(
                         castSummary = ScheduleUiState.CastSummary(
                             title = data.detail.cast.name,
                             subtitle = "$conceptRole / ${data.detail.cafe.name}",
-                            badge = "Cast Member",
+                            badge = "schedule_badge_cast_member",
                             initials = data.detail.cast.name.take(2).uppercase()
                         ),
                         weekRangeLabel = data.weekRangeLabel,
@@ -153,7 +153,7 @@ class ScheduleViewModel(
                     jobs.remove(TaskKey.OBSERVE_SCHEDULE_EVENT)?.cancel()
                     _uiState.value = ScheduleUiState(
                         isLoading = false,
-                        errorMessage = "출근표 데이터를 불러오지 못했습니다.",
+                        errorMessage = "schedule_info_load_failed",
                         infoMessage = null
                     )
                 }
@@ -169,7 +169,7 @@ class ScheduleViewModel(
                 }
             }
             ScheduleAction.ClickCalendar -> {
-                _uiState.update { it.copy(infoMessage = "달력 보기 연결은 다음 단계에서 제공합니다.") }
+                _uiState.update { it.copy(infoMessage = "schedule_info_calendar_next_step") }
             }
             is ScheduleAction.SelectDay -> {
                 _uiState.update { state ->
@@ -213,7 +213,7 @@ class ScheduleViewModel(
                 val currentState = _uiState.value
                 val editingId = currentState.editingScheduleId ?: return
                 if (currentState.editStatus == CastScheduleStatus.WORK && currentState.editStartTime >= currentState.editEndTime) {
-                    _uiState.update { it.copy(errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다.") }
+                    _uiState.update { it.copy(errorMessage = "schedule_error_end_after_start") }
                     return
                 }
                 _uiState.update { state ->
@@ -227,19 +227,19 @@ class ScheduleViewModel(
                         isEditSheetVisible = false,
                         editingScheduleId = null,
                         errorMessage = null,
-                        infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요.",
+                        infoMessage = "schedule_info_edit_applied",
                         schedules = state.schedules.map { schedule ->
                             if (schedule.id == editingId) {
                                 val isWorking = pendingUpdate.status == CastScheduleStatus.WORK
                                 val timeLabel = when (pendingUpdate.status) {
                                     CastScheduleStatus.WORK -> "${pendingUpdate.startTime ?: "10:00"} - ${pendingUpdate.endTime ?: "19:00"}"
-                                    CastScheduleStatus.OFF -> "휴무"
-                                    CastScheduleStatus.VACATION -> "휴가"
+                                    CastScheduleStatus.OFF -> "schedule_status_off"
+                                    CastScheduleStatus.VACATION -> "schedule_status_vacation"
                                 }
                                 val statusLabel = when (pendingUpdate.status) {
-                                    CastScheduleStatus.WORK -> "근무"
-                                    CastScheduleStatus.OFF -> "휴무"
-                                    CastScheduleStatus.VACATION -> "휴가"
+                                    CastScheduleStatus.WORK -> "schedule_status_work"
+                                    CastScheduleStatus.OFF -> "schedule_status_off"
+                                    CastScheduleStatus.VACATION -> "schedule_status_vacation"
                                 }
                                 ScheduleManagementDaySchedule(
                                     id = pendingUpdate.date,
@@ -266,13 +266,13 @@ class ScheduleViewModel(
                 }
             }
             ScheduleAction.ClickMore -> {
-                _uiState.update { it.copy(infoMessage = "추가 메뉴는 다음 단계에서 제공합니다.") }
+                _uiState.update { it.copy(infoMessage = "schedule_info_more_next_step") }
             }
             ScheduleAction.ClickSave -> {
                 val currentState = _uiState.value
                 val managedCastId = currentState.managedCastId.ifBlank { return }
                 if (currentState.pendingUpdates.isEmpty()) {
-                    _uiState.update { it.copy(infoMessage = "저장할 변경사항이 없습니다.", errorMessage = null) }
+                    _uiState.update { it.copy(infoMessage = "schedule_info_no_changes", errorMessage = null) }
                     return
                 }
                 _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
@@ -299,12 +299,12 @@ class ScheduleViewModel(
                                         isSaving = false,
                                         errorMessage = when (error) {
                                             is AppError.ValidationFailed -> when (error.reason) {
-                                                "start time is required" -> "시작 시간을 선택해주세요."
-                                                "end time is required" -> "종료 시간을 선택해주세요."
-                                                "end time must be after start time" -> "종료 시간은 시작 시간보다 늦어야 합니다."
-                                                else -> "근무 시간 저장에 실패했습니다."
+                                                "start time is required" -> "schedule_error_start_required"
+                                                "end time is required" -> "schedule_error_end_required"
+                                                "end time must be after start time" -> "schedule_error_end_after_start"
+                                                else -> "schedule_error_save_failed"
                                             }
-                                            else -> "주간 시간표 저장에 실패했습니다."
+                                            else -> "schedule_error_week_save_failed"
                                         }
                                     )
                                 }
@@ -313,7 +313,7 @@ class ScheduleViewModel(
                         }
                     }
                     loadSchedule(showLoading = false)
-                    _event.emit(ScheduleEvent.ShowMessage("주간 시간표를 저장했습니다."))
+                    _event.emit(ScheduleEvent.ShowMessage("schedule_event_week_saved"))
                 }
             }
             ScheduleAction.DismissInfoMessage -> {
@@ -330,6 +330,12 @@ class ScheduleViewModel(
 
     init {
         observeSession()
+    }
+
+    companion object {
+        private const val SCHEDULE_CONCEPT_MAID = "schedule_concept_maid"
+        private const val SCHEDULE_CONCEPT_BUTLER = "schedule_concept_butler"
+        private const val SCHEDULE_CONCEPT_IDOL = "schedule_concept_idol"
     }
 }
 

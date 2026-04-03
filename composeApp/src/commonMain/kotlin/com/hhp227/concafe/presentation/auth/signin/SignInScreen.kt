@@ -57,7 +57,18 @@ import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
 import concafe.composeapp.generated.resources.google_logo
 import concafe.composeapp.generated.resources.kakao_icon
+import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.signin_email_label
+import concafe.composeapp.generated.resources.signin_forgot_password
+import concafe.composeapp.generated.resources.signin_loading
+import concafe.composeapp.generated.resources.signin_password_label
+import concafe.composeapp.generated.resources.signin_sign_up
+import concafe.composeapp.generated.resources.signin_submit
+import concafe.composeapp.generated.resources.signup_social_apple
+import concafe.composeapp.generated.resources.signup_social_google
+import concafe.composeapp.generated.resources.signup_social_kakao
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -134,7 +145,7 @@ private fun SignInContentScreen(
                         OutlinedTextField(
                             value = uiState.email,
                             onValueChange = { onAction(SignInAction.ChangeEmail(it)) },
-                            label = { Text("이메일") },
+                            label = { Text(stringResource(Res.string.signin_email_label)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             shape = RoundedCornerShape(16.dp),
@@ -143,7 +154,7 @@ private fun SignInContentScreen(
                         OutlinedTextField(
                             value = uiState.password,
                             onValueChange = { onAction(SignInAction.ChangePassword(it)) },
-                            label = { Text("비밀번호") },
+                            label = { Text(stringResource(Res.string.signin_password_label)) },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -169,7 +180,7 @@ private fun SignInContentScreen(
                                 .fillMaxWidth()
                                 .height(52.dp)
                         ) {
-                            Text(if (uiState.isLoading) "로그인 중..." else "로그인")
+                            Text(if (uiState.isLoading) stringResource(Res.string.signin_loading) else stringResource(Res.string.signin_submit))
                         }
                     }
                 }
@@ -179,14 +190,14 @@ private fun SignInContentScreen(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         SignInSocialButton(
-                            label = "카카오로 시작하기",
+                            label = stringResource(Res.string.signup_social_kakao),
                             icon = painterResource(Res.drawable.kakao_icon),
                             containerColor = Color(0xFFFEE500),
                             contentColor = Color.Black,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.KAKAO)) }
                         )
                         SignInSocialButton(
-                            label = "구글로 시작하기",
+                            label = stringResource(Res.string.signup_social_google),
                             icon = painterResource(Res.drawable.google_logo),
                             containerColor = Color.White,
                             contentColor = Color(0xFF222222),
@@ -194,7 +205,7 @@ private fun SignInContentScreen(
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.GOOGLE)) }
                         )
                         SignInSocialButton(
-                            label = "애플로 시작하기",
+                            label = stringResource(Res.string.signup_social_apple),
                             icon = painterResource(Res.drawable.apple_icon),
                             containerColor = Color(0xFF111111),
                             contentColor = Color.White,
@@ -213,7 +224,7 @@ private fun SignInContentScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "비밀번호 찾기",
+                                text = stringResource(Res.string.signin_forgot_password),
                                 color = Color(0xFF8E8794),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -228,7 +239,7 @@ private fun SignInContentScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "회원가입",
+                                text = stringResource(Res.string.signin_sign_up),
                                 color = Color(0xFF8E8794),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -245,7 +256,7 @@ private fun SignInContentScreen(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기"
+                    contentDescription = stringResource(Res.string.signin_back_content_description)
                 )
             }
         }

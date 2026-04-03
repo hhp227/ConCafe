@@ -32,7 +32,13 @@ struct CafeReviewView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(format: "%.1f", detail.cafe.ratingAvg))
                         .font(.title2.bold())
-                    Text("\(detail.cafe.reviewCount)개 리뷰")
+                    Text(
+                        String(
+                            format: String(localized: String.LocalizationValue("cafe_review_count"), table: "Localizable"),
+                            locale: Locale.current,
+                            detail.cafe.reviewCount
+                        )
+                    )
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -42,7 +48,7 @@ struct CafeReviewView: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             if reviews.isEmpty {
-                emptyCard("아직 등록된 리뷰가 없습니다.")
+                emptyCard(String(localized: String.LocalizationValue("cafe_review_empty"), table: "Localizable"))
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(Array(reviews.enumerated()), id: \.element.id) { index, review in
@@ -52,7 +58,7 @@ struct CafeReviewView: View {
                                     Text(review.userNickname)
                                         .font(.subheadline.weight(.semibold))
                                     if review.verified {
-                                        Text("방문인증")
+                                        Text(String(localized: String.LocalizationValue("cafe_review_verified"), table: "Localizable"))
                                             .font(.caption2.weight(.semibold))
                                             .foregroundStyle(.white)
                                             .padding(.horizontal, 8)
@@ -68,14 +74,14 @@ struct CafeReviewView: View {
                                         .foregroundStyle(.secondary)
                                     Menu {
                                         if review.userId == currentUserId {
-                                            Button("수정하기") {
+                                            Button(String(localized: String.LocalizationValue("cafe_review_action_edit"), table: "Localizable")) {
                                                 onAction(.editReview(reviewId: review.id))
                                             }
-                                            Button("삭제하기", role: .destructive) {
+                                            Button(String(localized: String.LocalizationValue("cafe_review_action_delete"), table: "Localizable"), role: .destructive) {
                                                 onAction(.deleteReview(reviewId: review.id))
                                             }
                                         } else {
-                                            Button("신고하기", role: .destructive) {
+                                            Button(String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"), role: .destructive) {
                                                 onAction(.reportReview(reviewId: review.id))
                                             }
                                         }
@@ -127,7 +133,7 @@ struct CafeReviewView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     } else if canLoadMore {
-                        Text("스크롤하면 더 불러옵니다.")
+                        Text(String(localized: String.LocalizationValue("cafe_review_load_more_hint"), table: "Localizable"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)

@@ -40,6 +40,58 @@ import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.checkin_button
+import concafe.composeapp.generated.resources.checkin_count_label
+import concafe.composeapp.generated.resources.checkin_load_more_visits
+import concafe.composeapp.generated.resources.checkin_location_permission_desc
+import concafe.composeapp.generated.resources.checkin_location_permission_open_settings
+import concafe.composeapp.generated.resources.checkin_location_permission_title
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_badge
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_fan_level
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_visit
+import concafe.composeapp.generated.resources.checkin_login_promo_title
+import concafe.composeapp.generated.resources.checkin_login_required_desc
+import concafe.composeapp.generated.resources.checkin_login_required_title
+import concafe.composeapp.generated.resources.checkin_main_cafe_label
+import concafe.composeapp.generated.resources.checkin_map_title
+import concafe.composeapp.generated.resources.checkin_more_visit_label
+import concafe.composeapp.generated.resources.checkin_nearby_label
+import concafe.composeapp.generated.resources.checkin_new_visit_cafe_label
+import concafe.composeapp.generated.resources.checkin_new_visit_cafe_unavailable_placeholder
+import concafe.composeapp.generated.resources.checkin_new_visit_cta
+import concafe.composeapp.generated.resources.checkin_new_visit_desc
+import concafe.composeapp.generated.resources.checkin_new_visit_memo_label
+import concafe.composeapp.generated.resources.checkin_new_visit_memo_placeholder
+import concafe.composeapp.generated.resources.checkin_new_visit_no_cafe
+import concafe.composeapp.generated.resources.checkin_new_visit_submit
+import concafe.composeapp.generated.resources.checkin_new_visit_time_label
+import concafe.composeapp.generated.resources.checkin_new_visit_time_picker_title
+import concafe.composeapp.generated.resources.checkin_new_visit_title
+import concafe.composeapp.generated.resources.checkin_partial_load_error
+import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_desc
+import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_title
+import concafe.composeapp.generated.resources.checkin_popular_cast_empty_desc
+import concafe.composeapp.generated.resources.checkin_popular_cast_empty_title
+import concafe.composeapp.generated.resources.checkin_review_prompt_desc
+import concafe.composeapp.generated.resources.checkin_review_prompt_later
+import concafe.composeapp.generated.resources.checkin_review_prompt_primary
+import concafe.composeapp.generated.resources.checkin_review_prompt_title
+import concafe.composeapp.generated.resources.checkin_section_popular_cafe_title
+import concafe.composeapp.generated.resources.checkin_section_popular_cast_title
+import concafe.composeapp.generated.resources.checkin_section_timeline_title
+import concafe.composeapp.generated.resources.checkin_section_today_visit_title
+import concafe.composeapp.generated.resources.checkin_timeline_empty_desc
+import concafe.composeapp.generated.resources.checkin_timeline_empty_title
+import concafe.composeapp.generated.resources.checkin_today_visit_count
+import concafe.composeapp.generated.resources.checkin_today_visit_empty_desc
+import concafe.composeapp.generated.resources.checkin_today_visit_empty_title
+import concafe.composeapp.generated.resources.checkin_visit_memo_empty
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.common_confirm
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
@@ -126,8 +178,8 @@ fun CheckInScreen(
         if (isLocationSettingsAlertVisible) {
             AlertDialog(
                 onDismissRequest = { isLocationSettingsAlertVisible = false },
-                title = { Text("위치 권한 필요") },
-                text = { Text("체크인을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.") },
+                title = { Text(stringResource(Res.string.checkin_location_permission_title)) },
+                text = { Text(stringResource(Res.string.checkin_location_permission_desc)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -135,14 +187,14 @@ fun CheckInScreen(
                             openLocationSettings()
                         }
                     ) {
-                        Text("설정으로 이동")
+                        Text(stringResource(Res.string.checkin_location_permission_open_settings))
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { isLocationSettingsAlertVisible = false }
                     ) {
-                        Text("취소")
+                        Text(stringResource(Res.string.common_cancel))
                     }
                 }
             )
@@ -208,12 +260,12 @@ private fun ReviewPromptBottomSheet(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "리뷰를 작성하면 어떠세요?",
+            text = stringResource(Res.string.checkin_review_prompt_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "$cafeName 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.",
+            text = stringResource(Res.string.checkin_review_prompt_desc, cafeName),
             color = Color(0xFF6F6670),
             style = MaterialTheme.typography.bodyMedium
         )
@@ -226,13 +278,13 @@ private fun ReviewPromptBottomSheet(
                 contentColor = Color(0xFF2B2330)
             )
         ) {
-            Text("지금 작성", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.checkin_review_prompt_primary), fontWeight = FontWeight.Bold)
         }
         TextButton(
             onClick = onDismiss,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("나중에")
+            Text(stringResource(Res.string.checkin_review_prompt_later))
         }
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -298,7 +350,7 @@ private fun CheckInGuestScreen(
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 CheckInGuestSectionTitle(
-                    title = "인기 컨셉 카페",
+                    title = stringResource(Res.string.checkin_section_popular_cafe_title),
                     leadingIcon = Icons.Filled.LocalFireDepartment
                 )
             }
@@ -310,14 +362,14 @@ private fun CheckInGuestScreen(
                     )
                 } else {
                     CheckInSectionPlaceholderCard(
-                        title = "인기 카페가 아직 없어요",
-                        description = "주변 카페 데이터가 들어오면 여기에 표시됩니다."
+                        title = stringResource(Res.string.checkin_popular_cafe_empty_title),
+                        description = stringResource(Res.string.checkin_popular_cafe_empty_desc)
                     )
                 }
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 CheckInGuestSectionTitle(
-                    title = "오늘 인기 캐스트",
+                    title = stringResource(Res.string.checkin_section_popular_cast_title),
                     leadingIcon = Icons.Filled.LocalCafe
                 )
             }
@@ -329,14 +381,14 @@ private fun CheckInGuestScreen(
                     )
                 } else {
                     CheckInSectionPlaceholderCard(
-                        title = "인기 캐스트가 아직 없어요",
-                        description = "활동이 누적되면 추천 캐스트를 볼 수 있어요."
+                        title = stringResource(Res.string.checkin_popular_cast_empty_title),
+                        description = stringResource(Res.string.checkin_popular_cast_empty_desc)
                     )
                 }
             }
             if (uiState.errorMessage != null) {
                 Text(
-                    text = "체크인 탭 데이터를 일부 불러오지 못했습니다.",
+                    text = stringResource(Res.string.checkin_partial_load_error),
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
@@ -373,7 +425,7 @@ private fun CheckInUserScreen(
         }
         item {
             CheckInSectionTitle(
-                title = "오늘의 방문",
+                title = stringResource(Res.string.checkin_section_today_visit_title),
                 trailing = TimeUtils.currentMonthDayLabelKorean(),
                 leadingIcon = null
             )
@@ -388,7 +440,7 @@ private fun CheckInUserScreen(
         }
         item {
             CheckInSectionTitle(
-                title = "최근 타임라인",
+                title = stringResource(Res.string.checkin_section_timeline_title),
                 trailing = null,
                 leadingIcon = Icons.Filled.AccessTime
             )
@@ -396,8 +448,8 @@ private fun CheckInUserScreen(
         if (uiState.recentVisits.isEmpty()) {
             item {
                 EmptyVisitState(
-                    title = "최근 타임라인이 비어 있어요",
-                    description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
+                    title = stringResource(Res.string.checkin_timeline_empty_title),
+                    description = stringResource(Res.string.checkin_timeline_empty_desc)
                 )
             }
         } else {
@@ -431,7 +483,7 @@ private fun CheckInUserScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                     ) {
-                        Text("최근 방문 더 보기")
+                        Text(stringResource(Res.string.checkin_load_more_visits))
                     }
                 }
             }
@@ -449,7 +501,14 @@ private fun CafeMapSection(
 ) {
     var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
-    val selectedRegionLabel = "${if (selectedRegion == ExploreUiState.RegionFilter.ALL) "근처" else selectedRegion.label} 주요 메이드카페"
+    val selectedRegionLabel = stringResource(
+        Res.string.checkin_main_cafe_label,
+        if (selectedRegion == ExploreUiState.RegionFilter.ALL) {
+            stringResource(Res.string.checkin_nearby_label)
+        } else {
+            selectedRegion.label
+        }
+    )
     val mapCameraTarget = resolveCheckInMapCameraTarget(selectedRegion)
 
     Card(
@@ -476,7 +535,7 @@ private fun CafeMapSection(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "주변 컨셉카페 지도",
+                        text = stringResource(Res.string.checkin_map_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -514,7 +573,7 @@ private fun CafeMapSection(
                                     text = {
                                         Text(
                                             if (region == ExploreUiState.RegionFilter.ALL) {
-                                                "근처"
+                                                stringResource(Res.string.checkin_nearby_label)
                                             } else {
                                                 region.label
                                             }
@@ -533,7 +592,7 @@ private fun CafeMapSection(
                     onClick = onCheckInClick,
                     shape = RoundedCornerShape(999.dp)
                 ) {
-                    Text("체크인")
+                    Text(stringResource(Res.string.checkin_button))
                 }
             }
             Box(
@@ -628,7 +687,7 @@ private fun PopularCafeCard(
         showLocationIcon = false,
         modifier = Modifier
             .width(220.dp),
-        trailingLabel = "체크인 ${cafe.checkInCount}",
+        trailingLabel = stringResource(Res.string.checkin_count_label, cafe.checkInCount),
         onClick = onClick
     )
 }
@@ -705,7 +764,7 @@ private fun PopularCastCard(
                 color = Color(0xFFFFEEF5)
             ) {
                 Text(
-                    text = "오늘 방문 ${cast.todayVisit}",
+                    text = stringResource(Res.string.checkin_today_visit_count, cast.todayVisit),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     color = Color(0xFFEF6797),
                     style = MaterialTheme.typography.bodySmall,
@@ -737,15 +796,15 @@ private fun LoginPromotionSection(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = "로그인하고 컨셉카페 방문을 기록해보세요!",
+                text = stringResource(Res.string.checkin_login_promo_title),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("• 방문 기록 저장", color = Color.White)
-                Text("• 카페 팬 레벨 상승", color = Color.White)
-                Text("• 체크인 배지 획득", color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_visit), color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_fan_level), color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_badge), color = Color.White)
             }
             Button(
                 onClick = onSignIn,
@@ -758,7 +817,7 @@ private fun LoginPromotionSection(
             ) {
                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("로그인", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.signin_submit), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -776,12 +835,12 @@ private fun LoginRequiredBottomSheet(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "체크인하려면 로그인이 필요합니다.",
+            text = stringResource(Res.string.checkin_login_required_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "로그인 후 방문 기록 저장, 팬 레벨, 배지 획득 기능을 사용할 수 있습니다.",
+            text = stringResource(Res.string.checkin_login_required_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF6E6872)
         )
@@ -794,7 +853,7 @@ private fun LoginRequiredBottomSheet(
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("로그인", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.signin_submit), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -850,7 +909,7 @@ private fun NewVisitCheckInBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "방문 추가",
+                text = stringResource(Res.string.checkin_new_visit_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -858,30 +917,30 @@ private fun NewVisitCheckInBottomSheet(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "닫기",
+                    contentDescription = stringResource(Res.string.common_close),
                     tint = Color(0xFF7C7480)
                 )
             }
         }
         Text(
-            text = "방문을 기록할 카페를 선택해주세요.",
+            text = stringResource(Res.string.checkin_new_visit_desc),
             style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF7C7480)
         )
         if (cafeOptions.isEmpty()) {
-            Text("현재 선택 가능한 카페가 없습니다.")
+            Text(stringResource(Res.string.checkin_new_visit_no_cafe))
             ConCafeFormField(
-                label = "카페 선택",
+                label = stringResource(Res.string.checkin_new_visit_cafe_label),
                 value = "",
                 onValueChange = {},
-                placeholder = "선택 가능한 카페가 없습니다.",
+                placeholder = stringResource(Res.string.checkin_new_visit_cafe_unavailable_placeholder),
                 readOnly = true,
                 enabled = false
             )
         } else {
             Box(modifier = Modifier.fillMaxWidth()) {
                 ConCafeFormField(
-                    label = "카페 선택",
+                    label = stringResource(Res.string.checkin_new_visit_cafe_label),
                     value = selectedCafeName,
                     onValueChange = {},
                     readOnly = true,
@@ -889,7 +948,7 @@ private fun NewVisitCheckInBottomSheet(
                     trailingContent = {
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "카페 선택",
+                            contentDescription = stringResource(Res.string.checkin_new_visit_cafe_label),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -927,14 +986,14 @@ private fun NewVisitCheckInBottomSheet(
         }
         Box(modifier = Modifier.fillMaxWidth()) {
             ConCafeFormField(
-                label = "방문 시간",
+                label = stringResource(Res.string.checkin_new_visit_time_label),
                 value = TimeUtils.formatHourMinute(visitHour, visitMinute),
                 onValueChange = {},
                 readOnly = true,
                 trailingContent = {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "방문 시간 선택",
+                        contentDescription = stringResource(Res.string.checkin_new_visit_time_picker_title),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -957,7 +1016,7 @@ private fun NewVisitCheckInBottomSheet(
 
             AlertDialog(
                 onDismissRequest = { isTimePickerVisible = false },
-                title = { Text("방문 시간 선택") },
+                title = { Text(stringResource(Res.string.checkin_new_visit_time_picker_title)) },
                 text = { TimePicker(timePickerState) },
                 confirmButton = {
                     TextButton(
@@ -967,21 +1026,21 @@ private fun NewVisitCheckInBottomSheet(
                             isTimePickerVisible = false
                         }
                     ) {
-                        Text("확인")
+                        Text(stringResource(Res.string.common_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { isTimePickerVisible = false }) {
-                        Text("취소")
+                        Text(stringResource(Res.string.common_cancel))
                     }
                 }
             )
         }
         ConCafeFormField(
-            label = "메모 (선택)",
+            label = stringResource(Res.string.checkin_new_visit_memo_label),
             value = memo,
             onValueChange = { memo = it },
-            placeholder = "방문 후기를 남겨보세요.",
+            placeholder = stringResource(Res.string.checkin_new_visit_memo_placeholder),
             modifier = Modifier.height(120.dp),
             minLines = 4,
             singleLine = false
@@ -1036,7 +1095,7 @@ private fun NewVisitCheckInBottomSheet(
                 contentColor = Color(0xFF2B2330)
             )
         ) {
-            Text("체크인 완료", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1114,8 +1173,8 @@ private fun TodayVisitsRow(
 ) {
     if (visits.isEmpty()) {
         EmptyVisitState(
-            title = "오늘 방문 기록이 아직 없어요",
-            description = "지금 체크인하고 첫 방문 기록을 남겨보세요."
+            title = stringResource(Res.string.checkin_today_visit_empty_title),
+            description = stringResource(Res.string.checkin_today_visit_empty_desc)
         )
     } else {
         Row(
@@ -1227,7 +1286,7 @@ private fun MoreVisitCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "더 방문했어요",
+                    text = stringResource(Res.string.checkin_more_visit_label),
                     color = Color(0xFF7C7480),
                     fontSize = 13.sp
                 )
@@ -1266,7 +1325,7 @@ private fun CheckInButton(
     ) {
         Icon(Icons.Default.Add, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
-        Text("새 방문 체크인", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(stringResource(Res.string.checkin_new_visit_cta), fontWeight = FontWeight.Bold, fontSize = 18.sp)
     }
 }
 
@@ -1321,7 +1380,7 @@ fun TimelineItem(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(visit.memo ?: "방문 메모 없음", color = Color.Gray, fontSize = 14.sp)
+                Text(visit.memo ?: stringResource(Res.string.checkin_visit_memo_empty), color = Color.Gray, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }

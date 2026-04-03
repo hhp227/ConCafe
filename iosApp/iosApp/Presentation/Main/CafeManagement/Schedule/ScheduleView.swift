@@ -22,7 +22,7 @@ struct ScheduleView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("주간 출근표 관리")
+        .navigationTitle(String(localized: String.LocalizationValue("schedule_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -56,7 +56,7 @@ struct ScheduleView: View {
             }
         }
         .alert(
-            "안내",
+            String(localized: String.LocalizationValue("schedule_alert_title_info"), table: "Localizable"),
             isPresented: Binding(
                 get: { alertMessage != nil },
                 set: { isPresented in
@@ -67,11 +67,33 @@ struct ScheduleView: View {
             ),
             presenting: alertMessage
         ) { _ in
-            Button("확인", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("schedule_action_confirm"), table: "Localizable"), role: .cancel) {
                 alertMessage = nil
             }
         } message: { message in
-            Text(message)
+            Text(
+                {
+                    switch message {
+                    case "schedule_info_saved_work",
+                         "schedule_info_saved_off",
+                         "schedule_info_saved_vacation",
+                         "schedule_info_load_failed",
+                         "schedule_info_more_next_step",
+                         "schedule_info_calendar_next_step",
+                         "schedule_error_end_after_start",
+                         "schedule_info_edit_applied",
+                         "schedule_info_no_changes",
+                         "schedule_error_start_required",
+                         "schedule_error_end_required",
+                         "schedule_error_save_failed",
+                         "schedule_error_week_save_failed",
+                         "schedule_event_week_saved":
+                        return String(localized: String.LocalizationValue(message), table: "Localizable")
+                    default:
+                        return message
+                    }
+                }()
+            )
         }
         .safeAreaInset(edge: .bottom) {
             Button {
@@ -79,7 +101,7 @@ struct ScheduleView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.down")
-                    Text(viewModel.uiState.isSaving ? "저장 중..." : "주간 시간표 저장하기")
+                    Text(viewModel.uiState.isSaving ? String(localized: String.LocalizationValue("schedule_save_in_progress"), table: "Localizable") : String(localized: String.LocalizationValue("schedule_save"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
                 .frame(maxWidth: .infinity)
@@ -128,7 +150,7 @@ private struct ScheduleEditModal: View {
                     .padding(.bottom, 8)
                 VStack(spacing: 16) {
                     VStack(spacing: 4) {
-                        Text("근무 시간 수정")
+                        Text(String(localized: String.LocalizationValue("schedule_edit_title"), table: "Localizable"))
                             .font(.title3.weight(.bold))
                         Text(uiState.editingScheduleTitle)
                             .font(.subheadline)
@@ -162,14 +184,14 @@ private struct ScheduleEditModal: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(spacing: 12) {
                         TimePickerField(
-                            title: "시작 시간",
+                            title: String(localized: String.LocalizationValue("schedule_label_start_time"), table: "Localizable"),
                             value: uiState.editStartTime,
                             isEnabled: uiState.isEditingWorking,
                             options: uiState.timeOptions,
                             onSelect: { onAction(.changeEditStartTime($0)) }
                         )
                         TimePickerField(
-                            title: "종료 시간",
+                            title: String(localized: String.LocalizationValue("schedule_label_end_time"), table: "Localizable"),
                             value: uiState.editEndTime,
                             isEnabled: uiState.isEditingWorking,
                             options: uiState.timeOptions,
@@ -180,7 +202,7 @@ private struct ScheduleEditModal: View {
                         Image(systemName: "info.circle.fill")
                             .foregroundStyle(Color(hex: "EF6797"))
                             .font(.caption)
-                        Text("휴게 시간 1시간(12:00 - 13:00)이 자동으로 포함되어 총 근무 시간에서 제외됩니다.")
+                        Text(String(localized: String.LocalizationValue("schedule_break_notice"), table: "Localizable"))
                             .font(.caption)
                             .foregroundStyle(Color(hex: "6B5A63"))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -193,21 +215,21 @@ private struct ScheduleEditModal: View {
                             .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
                     )
                     HStack {
-                        Text("실제 근무 합계")
+                        Text(String(localized: String.LocalizationValue("schedule_total_work"), table: "Localizable"))
                             .foregroundStyle(Color(hex: "7A707A"))
                         Spacer()
                         HStack(alignment: .bottom, spacing: 4) {
-                            Text("총")
+                            Text(String(localized: String.LocalizationValue("schedule_total_prefix"), table: "Localizable"))
                                 .font(.caption)
                                 .foregroundStyle(Color(hex: "7A707A"))
-                            Text(uiState.totalWorkDurationLabel)
+                            Text(resolveScheduleDurationLabel(uiState.totalWorkDurationLabel))
                                 .font(.title2.weight(.bold))
                         }
                     }
                     Button {
                         onAction(.submitEditDay)
                     } label: {
-                        Text("편집 내용 반영하기")
+                        Text(String(localized: String.LocalizationValue("schedule_apply_edit"), table: "Localizable"))
                             .font(.headline.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -318,13 +340,13 @@ private struct ScheduleContentView: View {
     private var castSummaryCard: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(uiState.castSummary.badge)
+                Text(String(localized: String.LocalizationValue(uiState.castSummary.badge), table: "Localizable"))
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(Color(hex: "EF6797"))
                 Text(uiState.castSummary.title)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(Color(hex: "24161E"))
-                Text(uiState.castSummary.subtitle)
+                Text(resolveScheduleCastSubtitle(uiState.castSummary.subtitle))
                     .font(.subheadline)
                     .foregroundStyle(Color(hex: "7A707A"))
             }
@@ -366,7 +388,7 @@ private struct ScheduleContentView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "calendar")
-                        Text("달력보기")
+                        Text(String(localized: String.LocalizationValue("schedule_calendar"), table: "Localizable"))
                             .fontWeight(.bold)
                     }
                     .font(.caption)
@@ -408,11 +430,33 @@ private struct ScheduleContentView: View {
 
     private func infoBanner(message: String) -> some View {
         HStack(spacing: 10) {
-            Text(message)
+            Text(
+                {
+                    switch message {
+                    case "schedule_info_saved_work",
+                         "schedule_info_saved_off",
+                         "schedule_info_saved_vacation",
+                         "schedule_info_load_failed",
+                         "schedule_info_more_next_step",
+                         "schedule_info_calendar_next_step",
+                         "schedule_error_end_after_start",
+                         "schedule_info_edit_applied",
+                         "schedule_info_no_changes",
+                         "schedule_error_start_required",
+                         "schedule_error_end_required",
+                         "schedule_error_save_failed",
+                         "schedule_error_week_save_failed",
+                         "schedule_event_week_saved":
+                        return String(localized: String.LocalizationValue(message), table: "Localizable")
+                    default:
+                        return message
+                    }
+                }()
+            )
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("schedule_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
@@ -444,7 +488,7 @@ private struct ScheduleContentView: View {
                             Text(schedule.title)
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(Color(hex: "24161E"))
-                            Text(schedule.statusLabel)
+                            Text(resolveScheduleStatusLabel(schedule.statusLabel, status: schedule.status))
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(schedule.isWorking ? Color(hex: "5B4A57") : Color(hex: "9C8C98"))
                                 .padding(.horizontal, 8)
@@ -452,7 +496,7 @@ private struct ScheduleContentView: View {
                                 .background(schedule.isWorking ? Color(hex: "FFD1DC").opacity(0.30) : Color(hex: "F2EDF0"))
                                 .clipShape(Capsule())
                         }
-                        Text(schedule.timeLabel)
+                        Text(resolveScheduleTimeLabel(schedule.timeLabel, status: schedule.status))
                             .font(.subheadline)
                             .foregroundStyle(schedule.isWorking ? Color(hex: "7A707A") : Color(hex: "B0A3AC"))
                     }
@@ -491,15 +535,86 @@ struct ScheduleView_Previews: PreviewProvider {
     }
 }
 
+private func resolveScheduleDurationLabel(_ value: String) -> String {
+    if value.hasPrefix("schedule_duration_hours_only:") {
+        let hours = Int(value.split(separator: ":").last ?? "0") ?? 0
+        return String(format: String(localized: String.LocalizationValue("schedule_duration_hours_only"), table: "Localizable"), hours)
+    }
+    if value.hasPrefix("schedule_duration_hours_minutes:") {
+        let components = value.split(separator: ":")
+        let hours = Int(components.indices.contains(1) ? components[1] : "0") ?? 0
+        let minutes = Int(components.indices.contains(2) ? components[2] : "0") ?? 0
+        return String(format: String(localized: String.LocalizationValue("schedule_duration_hours_minutes"), table: "Localizable"), hours, minutes)
+    }
+    return value
+}
+
+private func resolveScheduleStatusLabel(_ statusLabel: String, status: CastScheduleStatus) -> String {
+    switch statusLabel.lowercased() {
+    case "schedule_status_work", "근무", "work":
+        return String(localized: String.LocalizationValue("schedule_status_work"), table: "Localizable")
+    case "schedule_status_off", "휴무", "off":
+        return String(localized: String.LocalizationValue("schedule_status_off"), table: "Localizable")
+    case "schedule_status_vacation", "휴가", "vacation":
+        return String(localized: String.LocalizationValue("schedule_status_vacation"), table: "Localizable")
+    default:
+        switch status {
+        case .work:
+            return String(localized: String.LocalizationValue("schedule_status_work"), table: "Localizable")
+        case .off:
+            return String(localized: String.LocalizationValue("schedule_status_off"), table: "Localizable")
+        default:
+            return String(localized: String.LocalizationValue("schedule_status_vacation"), table: "Localizable")
+        }
+    }
+}
+
+private func resolveScheduleTimeLabel(_ timeLabel: String, status: CastScheduleStatus) -> String {
+    switch timeLabel.lowercased() {
+    case "schedule_status_off", "휴무", "off":
+        return String(localized: String.LocalizationValue("schedule_status_off"), table: "Localizable")
+    case "schedule_status_vacation", "휴가", "vacation":
+        return String(localized: String.LocalizationValue("schedule_status_vacation"), table: "Localizable")
+    default:
+        switch status {
+        case .off:
+            return String(localized: String.LocalizationValue("schedule_status_off"), table: "Localizable")
+        case .vacation:
+            return String(localized: String.LocalizationValue("schedule_status_vacation"), table: "Localizable")
+        default:
+            return timeLabel
+        }
+    }
+}
+
+private func resolveScheduleCastSubtitle(_ subtitle: String) -> String {
+    let separator = " / "
+    guard subtitle.contains(separator) else { return subtitle }
+    let components = subtitle.components(separatedBy: separator)
+    guard let conceptRaw = components.first, let cafeName = components.last else { return subtitle }
+    let concept: String
+    switch conceptRaw {
+    case "schedule_concept_maid":
+        concept = String(localized: String.LocalizationValue("schedule_concept_maid"), table: "Localizable")
+    case "schedule_concept_butler":
+        concept = String(localized: String.LocalizationValue("schedule_concept_butler"), table: "Localizable")
+    case "schedule_concept_idol":
+        concept = String(localized: String.LocalizationValue("schedule_concept_idol"), table: "Localizable")
+    default:
+        concept = conceptRaw
+    }
+    return "\(concept)\(separator)\(cafeName)"
+}
+
 private extension CastScheduleStatus {
     var label: String {
         switch self {
         case .work:
-            return "근무"
+            return String(localized: String.LocalizationValue("schedule_status_work"), table: "Localizable")
         case .off:
-            return "휴무"
+            return String(localized: String.LocalizationValue("schedule_status_off"), table: "Localizable")
         default:
-            return "휴가"
+            return String(localized: String.LocalizationValue("schedule_status_vacation"), table: "Localizable")
         }
     }
 }

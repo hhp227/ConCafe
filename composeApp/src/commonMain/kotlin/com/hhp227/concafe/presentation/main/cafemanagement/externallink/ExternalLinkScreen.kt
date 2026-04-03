@@ -16,6 +16,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.externallink_title
+import concafe.composeapp.generated.resources.signin_back_content_description
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -44,12 +48,18 @@ fun ExternalLinkScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(uiState.displayTitle) },
+                title = {
+                    Text(
+                        uiState.displayTitle.ifBlank {
+                            stringResource(Res.string.externallink_title)
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(ExternalLinkAction.ClickBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            contentDescription = stringResource(Res.string.signin_back_content_description)
                         )
                     }
                 }

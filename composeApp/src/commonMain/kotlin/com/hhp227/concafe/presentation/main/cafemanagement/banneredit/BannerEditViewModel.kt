@@ -93,7 +93,7 @@ class BannerEditViewModel(
                     _uiState.update {
                         it.copy(
                             ownedCafeOptions = emptyList(),
-                            infoMessage = "운영 카페 목록을 불러오지 못했습니다."
+                            infoMessage = MSG_OWNED_CAFE_LOAD_FAILED
                         )
                     }
                 }
@@ -108,13 +108,13 @@ class BannerEditViewModel(
                 is AppResult.Success -> {
                     val banner = result.data.firstOrNull { it.id == targetBannerId }
                     if (banner == null) {
-                        _uiState.update { it.copy(infoMessage = "수정할 배너를 찾을 수 없습니다.") }
+                        _uiState.update { it.copy(infoMessage = MSG_EDIT_BANNER_NOT_FOUND) }
                     } else {
                         applyEditingBanner(banner)
                     }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(infoMessage = "수정할 배너 정보를 불러오지 못했습니다.") }
+                    _uiState.update { it.copy(infoMessage = MSG_EDIT_BANNER_LOAD_FAILED) }
                 }
             }
         }
@@ -130,8 +130,6 @@ class BannerEditViewModel(
         _uiState.update { state ->
             state.copy(
                 editingBannerId = banner.id,
-                screenTitle = "배너 수정",
-                submitButtonText = "배너 수정하기",
                 selectedImageLabel = banner.imageUrl,
                 originalImageUrl = banner.imageUrl,
                 title = banner.title,
@@ -214,7 +212,7 @@ class BannerEditViewModel(
         val selectedCafe = currentState.selectedCafeOption
 
         if (selectedCafe == null) {
-            _uiState.update { it.copy(infoMessage = "먼저 운영 카페를 선택해주세요.") }
+            _uiState.update { it.copy(infoMessage = MSG_SELECT_CAFE_FIRST) }
             return
         }
 
@@ -277,7 +275,7 @@ class BannerEditViewModel(
                         it.copy(
                             noticeSelectorOptions = emptyList(),
                             isSelectorLoading = false,
-                            infoMessage = "공지사항 목록을 불러오지 못했습니다."
+                            infoMessage = MSG_NOTICE_LIST_LOAD_FAILED
                         )
                     }
                 }
@@ -303,7 +301,7 @@ class BannerEditViewModel(
                         it.copy(
                             eventSelectorOptions = emptyList(),
                             isSelectorLoading = false,
-                            infoMessage = "이벤트 목록을 불러오지 못했습니다."
+                            infoMessage = MSG_EVENT_LIST_LOAD_FAILED
                         )
                     }
                 }
@@ -378,13 +376,13 @@ class BannerEditViewModel(
         val currentState = _uiState.value
 
         val validationMessage = when {
-            currentState.selectedImageLabel.isNullOrBlank() -> "배너 이미지를 등록해주세요."
-            currentState.title.isBlank() -> "배너 제목을 입력해주세요."
-            currentState.subtitle.isBlank() -> "서브 문구를 입력해주세요."
+            currentState.selectedImageLabel.isNullOrBlank() -> MSG_VALIDATION_IMAGE_REQUIRED
+            currentState.title.isBlank() -> MSG_VALIDATION_TITLE_REQUIRED
+            currentState.subtitle.isBlank() -> MSG_VALIDATION_SUBTITLE_REQUIRED
             currentState.selectedTarget == BannerTargetType.EXTERNAL_LINK &&
-                currentState.targetValue.isBlank() -> "외부 URL을 입력해주세요."
+                currentState.targetValue.isBlank() -> MSG_VALIDATION_EXTERNAL_URL_REQUIRED
             currentState.selectedTarget != BannerTargetType.EXTERNAL_LINK &&
-                currentState.targetValue.isBlank() -> "연결 대상을 선택해주세요."
+                currentState.targetValue.isBlank() -> MSG_VALIDATION_TARGET_REQUIRED
             else -> null
         }
 
@@ -404,7 +402,7 @@ class BannerEditViewModel(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                        infoMessage = MSG_IMAGE_UPLOAD_FAILED
                     )
                 }
                 return@launch
@@ -437,12 +435,12 @@ class BannerEditViewModel(
                 }
                 is AppResult.Failure -> {
                     val userMessage = when (val error = result.error) {
-                        AppError.Unauthorized -> "로그인 후 배너를 등록해주세요."
-                        AppError.PermissionDenied -> "배너 등록 권한이 없습니다."
-                        AppError.NotFound -> "연결 대상을 찾을 수 없습니다."
+                        AppError.Unauthorized -> MSG_UNAUTHORIZED
+                        AppError.PermissionDenied -> MSG_PERMISSION_DENIED
+                        AppError.NotFound -> MSG_TARGET_NOT_FOUND
                         is AppError.ValidationFailed -> error.reason
-                        is AppError.NetworkError -> "배너를 등록하지 못했습니다."
-                        is AppError.Unknown -> "배너 저장 중 오류가 발생했습니다."
+                        is AppError.NetworkError -> MSG_NETWORK_FAILED
+                        is AppError.Unknown -> MSG_SAVE_UNKNOWN
                     }
                     _uiState.update {
                         it.copy(
@@ -505,5 +503,25 @@ class BannerEditViewModel(
         observeSession()
         loadOwnedCafeOptions()
         loadEditingBanner()
+    }
+
+    companion object {
+        private const val MSG_OWNED_CAFE_LOAD_FAILED = "banneredit_info_owned_cafe_load_failed"
+        private const val MSG_EDIT_BANNER_NOT_FOUND = "banneredit_info_edit_banner_not_found"
+        private const val MSG_EDIT_BANNER_LOAD_FAILED = "banneredit_info_edit_banner_load_failed"
+        private const val MSG_SELECT_CAFE_FIRST = "banneredit_info_select_cafe_first"
+        private const val MSG_NOTICE_LIST_LOAD_FAILED = "banneredit_info_notice_list_load_failed"
+        private const val MSG_EVENT_LIST_LOAD_FAILED = "banneredit_info_event_list_load_failed"
+        private const val MSG_VALIDATION_IMAGE_REQUIRED = "banneredit_validation_image_required"
+        private const val MSG_VALIDATION_TITLE_REQUIRED = "banneredit_validation_title_required"
+        private const val MSG_VALIDATION_SUBTITLE_REQUIRED = "banneredit_validation_subtitle_required"
+        private const val MSG_VALIDATION_EXTERNAL_URL_REQUIRED = "banneredit_validation_external_url_required"
+        private const val MSG_VALIDATION_TARGET_REQUIRED = "banneredit_validation_target_required"
+        private const val MSG_IMAGE_UPLOAD_FAILED = "banneredit_info_image_upload_failed"
+        private const val MSG_UNAUTHORIZED = "banneredit_error_unauthorized"
+        private const val MSG_PERMISSION_DENIED = "banneredit_error_permission_denied"
+        private const val MSG_TARGET_NOT_FOUND = "banneredit_error_target_not_found"
+        private const val MSG_NETWORK_FAILED = "banneredit_error_network_failed"
+        private const val MSG_SAVE_UNKNOWN = "banneredit_error_save_unknown"
     }
 }

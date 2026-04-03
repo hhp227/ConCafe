@@ -38,7 +38,7 @@ class MenuGoodsViewModel(
             when (val result = getCafeDetailUseCase.invoke(cafeId)) {
                 is AppResult.Success -> applyDetail(result.data.detail)
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(isLoading = false, infoMessage = "항목 정보를 불러오지 못했습니다.") }
+                    _uiState.update { it.copy(isLoading = false, infoMessage = MSG_LOAD_FAILED) }
                 }
             }
         }
@@ -222,7 +222,7 @@ class MenuGoodsViewModel(
                             _uiState.update { state ->
                                 state.copy(
                                     menuAvailabilityOverrides = state.menuAvailabilityOverrides - itemId,
-                                    infoMessage = "판매 상태 저장에 실패했습니다."
+                                    infoMessage = MSG_AVAILABILITY_SAVE_FAILED
                                 )
                             }
                         }
@@ -259,7 +259,7 @@ class MenuGoodsViewModel(
                             _uiState.update { state ->
                                 state.copy(
                                     goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - itemId,
-                                    infoMessage = "판매 상태 저장에 실패했습니다."
+                                    infoMessage = MSG_AVAILABILITY_SAVE_FAILED
                                 )
                             }
                         }
@@ -278,10 +278,10 @@ class MenuGoodsViewModel(
             _uiState.update { it.copy(infoMessage = null, pendingDeleteItemId = null) }
             when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = itemId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "항목이 삭제되었습니다.") }
+                    _uiState.update { it.copy(infoMessage = MSG_DELETE_SUCCESS) }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(infoMessage = "항목 삭제에 실패했습니다.") }
+                    _uiState.update { it.copy(infoMessage = MSG_DELETE_FAILED) }
                 }
             }
         }
@@ -377,5 +377,12 @@ class MenuGoodsViewModel(
         LOAD,
         OBSERVE_EVENT,
         TOGGLE_AVAILABILITY
+    }
+
+    companion object {
+        private const val MSG_LOAD_FAILED = "menugoods_info_load_failed"
+        private const val MSG_AVAILABILITY_SAVE_FAILED = "menugoods_info_availability_save_failed"
+        private const val MSG_DELETE_SUCCESS = "menugoods_info_delete_success"
+        private const val MSG_DELETE_FAILED = "menugoods_info_delete_failed"
     }
 }

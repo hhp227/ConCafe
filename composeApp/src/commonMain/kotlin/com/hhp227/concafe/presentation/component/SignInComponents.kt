@@ -19,8 +19,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.signin_divider_or
+import concafe.composeapp.generated.resources.signin_logo_subtitle
 import concafe.composeapp.generated.resources.maid_logo
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SignInLogoSection() {
@@ -56,7 +59,7 @@ fun SignInLogoSection() {
         ConCafeLogo(color = Color(0xFFDA4E84))
         Spacer(Modifier.height(6.dp))
         Text(
-            text = "컨셉카페의 모든 것",
+            text = stringResource(Res.string.signin_logo_subtitle),
             color = Color(0xFF7C7180)
         )
     }
@@ -70,7 +73,7 @@ fun SignInDivider() {
     ) {
         Divider(modifier = Modifier.weight(1f))
         Text(
-            text = "또는",
+            text = stringResource(Res.string.signin_divider_or),
             modifier = Modifier.padding(horizontal = 14.dp),
             color = Color(0xFF8E8794)
         )

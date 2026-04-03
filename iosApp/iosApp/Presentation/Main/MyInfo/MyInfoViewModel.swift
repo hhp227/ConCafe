@@ -134,14 +134,36 @@ final class MyInfoViewModel: ObservableObject {
                     switch event {
                     case is VisitEvent.Created:
                         self.applyVisitCountDelta(1)
+                        self.refreshRecentVisitsSection()
                     case is VisitEvent.Deleted:
                         self.applyVisitCountDelta(-1)
+                        self.refreshRecentVisitsSection()
                     default:
                         break
                     }
                 }
             } catch {
                 print("Error: \(error)")
+            }
+        }
+    }
+
+    private func refreshRecentVisitsSection() {
+        tasks[.refreshRecentVisits]?.cancel()
+        tasks[.refreshRecentVisits] = Task {
+            do {
+                let result = try await getMyInfoUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedRecentVisits = normalizeCafes(
+                        feed.recentVisits,
+                        maxCount: feed.recentVisits.count
+                    )
+                    uiState.recentVisits = normalizedRecentVisits
+                }
+            } catch {
+                if Task.isCancelled { return }
             }
         }
     }
@@ -436,6 +458,7 @@ final class MyInfoViewModel: ObservableObject {
 
     private enum TaskKey {
         case loadMyInfo
+        case refreshRecentVisits
         case session
         case cafeDetailEvent
         case castEvent
