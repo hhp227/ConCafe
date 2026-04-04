@@ -179,6 +179,10 @@ final class RankingViewModel: ObservableObject {
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
             uiState.isLoginPromptVisible = false
+        case .updateBannerHeight(let height):
+            if height > uiState.bannerHeight {
+                uiState.bannerHeight = height
+            }
         }
     }
 

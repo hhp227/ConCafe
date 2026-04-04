@@ -110,6 +110,8 @@ private struct RankingContentView: View {
             ad: uiState.currentAd,
             selectedIndex: uiState.selectedAdIndex,
             size: uiState.ads.count,
+            bannerHeight: uiState.bannerHeight,
+            onHeightMeasured: { onAction(.updateBannerHeight($0)) },
             onSelect: { onAction(.selectAd($0)) }
         )
     }
@@ -225,16 +227,20 @@ struct RankingPromoBanner: View {
     let selectedIndex: Int
     
     let size: Int
+
+    let bannerHeight: CGFloat
+
+    let onHeightMeasured: (CGFloat) -> Void
     
     let onSelect: (Int) -> Void
-
-    @State private var measuredMockHeight: CGFloat = 0
 
     var body: some View {
         ZStack {
             if selectedIndex == 1 {
                 RankingNativeAdCard()
-                    .frame(height: measuredMockHeight > 0 ? measuredMockHeight : nil)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: bannerHeight > 0 ? bannerHeight : 120)
+                    .clipped()
             } else {
                 LinearGradient(
                     colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
@@ -276,22 +282,21 @@ struct RankingPromoBanner: View {
                     }
                 }
                 .padding(20)
-                .frame(minHeight: 120, alignment: .topLeading)
                 .background(
                     GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: RankingPromoMockHeightPreferenceKey.self,
-                            value: proxy.size.height
-                        )
+                        Color.clear
+                            .onAppear {
+                                onHeightMeasured(proxy.size.height)
+                            }
+                            .onChange(of: proxy.size.height) { newValue in
+                                onHeightMeasured(newValue)
+                            }
                     }
                 )
+                .frame(minHeight: 120, alignment: .topLeading)
             }
         }
-        .onPreferenceChange(RankingPromoMockHeightPreferenceKey.self) { value in
-            if value > measuredMockHeight {
-                measuredMockHeight = value
-            }
-        }
+        .animation(.easeInOut, value: selectedIndex)
         .overlay(alignment: .bottom) {
             HStack(spacing: 6) {
                 ForEach(0..<size, id: \.self) { index in
@@ -316,14 +321,6 @@ struct RankingPromoBanner: View {
         } else {
             return index == selectedIndex ? Color.white : Color.white.opacity(0.5)
         }
-    }
-}
-
-private struct RankingPromoMockHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
     }
 }
 
@@ -440,14 +437,14 @@ private extension Shared.RankingPromoAd {
 private struct AnyShape: Shape {
     private let pathBuilder: (CGRect) -> Path
 
+    func path(in rect: CGRect) -> Path {
+        pathBuilder(rect)
+    }
+
     init<S: Shape>(_ shape: S) {
         pathBuilder = { rect in
             shape.path(in: rect)
         }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        pathBuilder(rect)
     }
 }
 

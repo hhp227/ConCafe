@@ -11,6 +11,7 @@ import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.presentation.main.ranking.RankingEvent.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -152,16 +153,25 @@ class RankingViewModel(
                 it.copy(selectedAdIndex = action.index.coerceIn(0, lastIndex))
             }
             is RankingAction.ClickMaid -> viewModelScope.launch {
-                requireSignedIn { _event.emit(RankingEvent.NavigateToCast(action.id)) }
+                requireSignedIn { _event.emit(NavigateToCast(action.id)) }
             }
             is RankingAction.ClickCafe -> viewModelScope.launch {
-                requireSignedIn { _event.emit(RankingEvent.NavigateToCafe(action.id)) }
+                requireSignedIn { _event.emit(NavigateToCafe(action.id)) }
             }
             RankingAction.ClickLoginPromptSignIn -> viewModelScope.launch {
                 _uiState.update { it.copy(isLoginPromptVisible = false) }
-                _event.emit(RankingEvent.NavigateToSignIn)
+                _event.emit(NavigateToSignIn)
             }
             RankingAction.DismissLoginPrompt -> _uiState.update { it.copy(isLoginPromptVisible = false) }
+            is RankingAction.UpdateBannerHeight -> {
+                _uiState.update { state ->
+                    if (action.heightPx > state.bannerHeightPx) {
+                        state.copy(bannerHeightPx = action.heightPx)
+                    } else {
+                        state
+                    }
+                }
+            }
         }
     }
 

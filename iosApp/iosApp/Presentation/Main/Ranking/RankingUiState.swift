@@ -56,6 +56,7 @@ struct RankingUiState {
     var ads: [Shared.RankingPromoAd] = []
     var maidRankings: [Shared.RankingFeedEntry] = []
     var cafeRankings: [Shared.RankingFeedEntry] = []
+    var bannerHeight: CGFloat = 0
 
     var currentAd: Shared.RankingPromoAd {
         ads.isEmpty

@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.main.ranking
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -118,11 +120,15 @@ private fun RankingContent(
                 onTabSelected = { onAction(RankingAction.ChangeTab(it)) }
             )
         }
-        item {
+        item(key = "promo_banner") {
             RankingPromoBanner(
                 ad = uiState.currentAd,
                 selectedIndex = uiState.selectedAdIndex,
                 size = uiState.ads.size,
+                bannerHeightPx = uiState.bannerHeightPx,
+                onHeightMeasured = { height ->
+                    onAction(RankingAction.UpdateBannerHeight(height))
+                },
                 onSelect = { index -> onAction(RankingAction.SelectAd(index)) }
             )
         }
@@ -227,11 +233,12 @@ fun RankingPromoBanner(
     ad: RankingPromoAd,
     selectedIndex: Int,
     size: Int,
+    bannerHeightPx: Int,
+    onHeightMeasured: (Int) -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    var measuredMockHeightPx by remember { mutableIntStateOf(0) }
-    val measuredMockHeightDp: Dp = with(androidx.compose.ui.platform.LocalDensity.current) {
-        measuredMockHeightPx.toDp()
+    val bannerHeightDp = with(LocalDensity.current) {
+        bannerHeightPx.toDp()
     }
 
     Card(
@@ -241,128 +248,128 @@ fun RankingPromoBanner(
         shape = RoundedCornerShape(28.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        if (selectedIndex == 1) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        Brush.linearGradient(
-                            listOf(Color(0xFFFFEAF3), Color(0xFFFFDCEB))
+        Crossfade(targetState = selectedIndex) { index ->
+            if (selectedIndex == 1) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Color(0xFFFFEAF3), Color(0xFFFFDCEB))
+                            )
                         )
-                    )
-                    .padding(20.dp)
-            ) {
-                Column(
-                    modifier = if (measuredMockHeightPx > 0) Modifier.height(measuredMockHeightDp) else Modifier,
-                    verticalArrangement = if (measuredMockHeightPx > 0) Arrangement.SpaceBetween else Arrangement.spacedBy(16.dp)
+                        .padding(20.dp)
                 ) {
-                    RankingNativeAd(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                if (measuredMockHeightPx > 0) {
-                                    Modifier.weight(1f)
-                                } else {
-                                    Modifier.heightIn(min = 120.dp)
-                                }
-                            )
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                    Column(
+                        modifier = if (bannerHeightPx > 0) Modifier.height(bannerHeightDp) else Modifier,
+                        verticalArrangement = if (bannerHeightPx > 0) Arrangement.SpaceBetween else Arrangement.spacedBy(16.dp)
                     ) {
-                        repeat(size) { index ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 3.dp)
-                                    .clip(RoundedCornerShape(999.dp))
-                                    .background(if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFFE3D9E0))
-                                    .clickable { onSelect(index) }
-                                    .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
-                            )
+                        RankingNativeAd(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (bannerHeightPx > 0) {
+                                        Modifier.height(bannerHeightDp)
+                                    } else {
+                                        Modifier.heightIn(min = 120.dp)
+                                    }
+                                )
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(size) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 3.dp)
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFFE3D9E0))
+                                        .clickable { onSelect(index) }
+                                        .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .background(
-                        Brush.linearGradient(
-                            listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
-                        )
-                    )
-                    .padding(20.dp)
-            ) {
-                Column(
+            } else {
+                Box(
                     modifier = Modifier
-                        .heightIn(min = 120.dp)
-                        .onSizeChanged { sizeInfo ->
-                            if (sizeInfo.height > measuredMockHeightPx) {
-                                measuredMockHeightPx = sizeInfo.height
-                            }
-                        },
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(999.dp),
-                                color = Color.White.copy(alpha = 0.22f)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = ad.icon(),
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = ad.badge,
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-                            Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
-                        }
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color(0xFF262626)
-                            ),
-                            shape = RoundedCornerShape(999.dp)
-                        ) {
-                            Text(stringResource(Res.string.ranking_detail), fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        repeat(size) { index ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 3.dp)
-                                    .clip(RoundedCornerShape(999.dp))
-                                    .background(if (index == selectedIndex) Color.White else Color.White.copy(alpha = 0.5f))
-                                    .clickable { onSelect(index) }
-                                    .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
                             )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(min = 120.dp)
+                            .onSizeChanged { sizeInfo ->
+                                onHeightMeasured(sizeInfo.height)
+                            },
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = Color.White.copy(alpha = 0.22f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = ad.icon(),
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = ad.badge,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                                Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Button(
+                                onClick = {},
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.White,
+                                    contentColor = Color(0xFF262626)
+                                ),
+                                shape = RoundedCornerShape(999.dp)
+                            ) {
+                                Text(stringResource(Res.string.ranking_detail), fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(size) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 3.dp)
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(if (index == selectedIndex) Color.White else Color.White.copy(alpha = 0.5f))
+                                        .clickable { onSelect(index) }
+                                        .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
