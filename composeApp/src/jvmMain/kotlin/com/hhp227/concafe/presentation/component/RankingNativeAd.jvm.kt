@@ -11,10 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.hhp227.concafe.data.model.NativeAdHandle
 
 @Composable
 actual fun RankingNativeAd(
-    modifier: Modifier
+    modifier: Modifier,
+    nativeAdHandle: NativeAdHandle?
 ) {
     Box(
         modifier = modifier

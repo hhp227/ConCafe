@@ -92,6 +92,8 @@ import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
+import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
@@ -699,6 +701,20 @@ fun resolveUploadImageUseCase(): UploadImageUseCase {
 }
 
 fun resolveDeleteImageUseCase(): DeleteImageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveLoadNativeAdUseCase(): LoadNativeAdUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveClearNativeAdUseCase(): ClearNativeAdUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

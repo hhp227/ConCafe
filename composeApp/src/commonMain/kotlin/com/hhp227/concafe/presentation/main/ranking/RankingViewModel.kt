@@ -9,7 +9,9 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
+import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.ranking.RankingEvent.*
 import kotlinx.coroutines.Job
@@ -19,6 +21,8 @@ import kotlinx.coroutines.launch
 class RankingViewModel(
     private val getRankingFeedUseCase: GetRankingFeedUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val loadNativeAdUseCase: LoadNativeAdUseCase,
+    private val clearNativeAdUseCase: ClearNativeAdUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -137,6 +141,24 @@ class RankingViewModel(
         }
     }
 
+    fun loadNativeAdIfNeeded() {
+        if (_uiState.value.nativeAd != null) return
+        viewModelScope.launch {
+            val ad = loadNativeAdUseCase.invoke()
+
+            _uiState.update {
+                it.copy(nativeAd = ad)
+            }
+        }
+    }
+
+    fun clearAd() {
+        clearNativeAdUseCase.invoke(uiState.value.nativeAd)
+        _uiState.update {
+            it.copy(nativeAd = null)
+        }
+    }
+
     fun onAction(action: RankingAction) {
         when (action) {
             is RankingAction.ChangePeriod -> {
@@ -186,6 +208,7 @@ class RankingViewModel(
     override fun onCleared() {
         jobs.values.forEach(Job::cancel)
         jobs.clear()
+        clearAd()
         super.onCleared()
     }
 
@@ -194,6 +217,7 @@ class RankingViewModel(
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
+        loadNativeAdIfNeeded()
     }
 
     private enum class TaskKey {

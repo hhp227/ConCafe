@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
@@ -125,6 +126,7 @@ private fun RankingContent(
                 ad = uiState.currentAd,
                 selectedIndex = uiState.selectedAdIndex,
                 size = uiState.ads.size,
+                nativeAdHandle = uiState.nativeAd,
                 bannerHeightPx = uiState.bannerHeightPx,
                 onHeightMeasured = { height ->
                     onAction(RankingAction.UpdateBannerHeight(height))
@@ -233,6 +235,7 @@ fun RankingPromoBanner(
     ad: RankingPromoAd,
     selectedIndex: Int,
     size: Int,
+    nativeAdHandle: NativeAdHandle?,
     bannerHeightPx: Int,
     onHeightMeasured: (Int) -> Unit,
     onSelect: (Int) -> Unit
@@ -254,7 +257,7 @@ fun RankingPromoBanner(
                     modifier = Modifier
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFFFEAF3), Color(0xFFFFDCEB))
+                                listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
                             )
                         )
                         .padding(20.dp)
@@ -272,7 +275,8 @@ fun RankingPromoBanner(
                                     } else {
                                         Modifier.heightIn(min = 120.dp)
                                     }
-                                )
+                                ),
+                            nativeAdHandle = nativeAdHandle
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),

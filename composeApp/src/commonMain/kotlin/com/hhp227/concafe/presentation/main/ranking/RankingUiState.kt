@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.main.ranking
 
+import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
@@ -16,7 +17,8 @@ data class RankingUiState(
     val ads: List<RankingPromoAd> = emptyList(),
     val maidRankings: List<RankingFeedEntry> = emptyList(),
     val cafeRankings: List<RankingFeedEntry> = emptyList(),
-    val bannerHeightPx: Int = 0
+    val bannerHeightPx: Int = 0,
+    val nativeAd: NativeAdHandle? = null
 ) {
     enum class TabType(val label: String) {
         MAIDS("캐스트 랭킹"),

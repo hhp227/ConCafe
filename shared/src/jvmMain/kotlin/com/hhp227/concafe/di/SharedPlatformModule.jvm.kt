@@ -1,5 +1,7 @@
 package com.hhp227.concafe.di
 
+import com.hhp227.concafe.data.source.JvmNativeAdDataSource
+import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.JvmCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
@@ -31,6 +33,7 @@ actual fun sharedPlatformModules(): List<Module> {
                     sessionStore = JvmFirebaseAuthSessionStore()
                 )
             }
+            single<NativeAdDataSource> { JvmNativeAdDataSource() }
         }
     )
 }

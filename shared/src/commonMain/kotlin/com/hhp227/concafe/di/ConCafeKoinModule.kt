@@ -12,6 +12,7 @@ import com.hhp227.concafe.data.repository.CastClaimRepositoryImpl
 import com.hhp227.concafe.data.repository.CastRepositoryImpl
 import com.hhp227.concafe.data.repository.DefaultNetworkStatusRepository
 import com.hhp227.concafe.data.repository.InquiryRepositoryImpl
+import com.hhp227.concafe.data.repository.NativeAdRepositoryImpl
 import com.hhp227.concafe.data.repository.NoticeRepositoryImpl
 import com.hhp227.concafe.data.repository.NotificationRepositoryImpl
 import com.hhp227.concafe.data.repository.PlatformImageCompressionRepository
@@ -517,6 +518,7 @@ val repositoryModule = module {
     single<StorageRepository> { StorageRepositoryImpl(get(), get(), get()) }
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
+    single<NativeAdRepository> { NativeAdRepositoryImpl(get()) }
 }
 
 val eventModule = module {
@@ -623,6 +625,8 @@ val useCaseModule = module {
     factory { UpsertCafeMenuGoodsUseCase(get(), get()) }
     factory { UploadImageUseCase(get(), get()) }
     factory { DeleteImageUseCase(get()) }
+    factory { LoadNativeAdUseCase(get()) }
+    factory { ClearNativeAdUseCase() }
 }
 
 val concafeModules = listOf(

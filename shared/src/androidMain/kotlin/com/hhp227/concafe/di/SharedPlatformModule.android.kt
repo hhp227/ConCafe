@@ -1,6 +1,8 @@
 package com.hhp227.concafe.di
 
 import android.content.Context
+import com.hhp227.concafe.data.source.AndroidNativeAdDataSource
+import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.AndroidCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.AndroidFirebaseAuthSessionStore
@@ -31,6 +33,7 @@ actual fun sharedPlatformModules(): List<Module> {
                     sessionStore = AndroidFirebaseAuthSessionStore(get<Context>())
                 )
             }
+            single<NativeAdDataSource> { AndroidNativeAdDataSource(get<Context>()) }
         }
     )
 }
