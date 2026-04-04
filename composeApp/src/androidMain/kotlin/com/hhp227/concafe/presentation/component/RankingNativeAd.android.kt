@@ -142,7 +142,7 @@ actual fun RankingNativeAd(
                     .background(Color(0x73FFFFFF), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.weight(1f))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.BottomStart) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomStart) {
                 Text(
                     text = "Ad",
                     style = MaterialTheme.typography.labelSmall,
@@ -153,7 +153,7 @@ actual fun RankingNativeAd(
     }
 }
 
-private fun createRankingNativeAdView(context: android.content.Context): NativeAdView {
+private fun createRankingNativeAdView(context: Context): NativeAdView {
     val root = NativeAdView(context)
     val container = LinearLayout(context)
     val topRow = LinearLayout(context)

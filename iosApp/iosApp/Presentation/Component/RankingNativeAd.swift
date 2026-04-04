@@ -76,6 +76,14 @@ private final class RankingNativeAdLoader: NSObject, ObservableObject, GADNative
 
     private var adLoader: GADAdLoader?
 
+    func adLoader(_ adLoader: GADAdLoader, didReceive nativeAd: GADNativeAd) {
+        self.nativeAd = nativeAd
+    }
+
+    func adLoader(_ adLoader: GADAdLoader, didFailToReceiveAdWithError error: Error) {
+        print("Ranking native ad load failed: \(error.localizedDescription)")
+    }
+
     override init() {
         super.init()
 
@@ -89,22 +97,14 @@ private final class RankingNativeAdLoader: NSObject, ObservableObject, GADNative
         adLoader = GADAdLoader(
             adUnitID: adUnitId,
             rootViewController: UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap { $0.windows }
-                .first { $0.isKeyWindow }?.rootViewController,
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?.rootViewController,
             adTypes: [.native],
             options: nil
         )
         adLoader?.delegate = self
         adLoader?.load(GADRequest())
-    }
-
-    func adLoader(_ adLoader: GADAdLoader, didReceive nativeAd: GADNativeAd) {
-        self.nativeAd = nativeAd
-    }
-
-    func adLoader(_ adLoader: GADAdLoader, didFailToReceiveAdWithError error: Error) {
-        print("Ranking native ad load failed: \(error.localizedDescription)")
     }
 }
 

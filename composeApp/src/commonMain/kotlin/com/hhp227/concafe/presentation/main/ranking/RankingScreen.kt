@@ -249,7 +249,7 @@ fun RankingPromoBanner(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Crossfade(targetState = selectedIndex) { index ->
-            if (selectedIndex == 1) {
+            if (index == 1) {
                 Box(
                     modifier = Modifier
                         .background(
