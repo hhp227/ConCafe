@@ -1,6 +1,5 @@
 package com.hhp227.concafe.di
 
-import com.hhp227.concafe.data.source.IosNativeAdDataSource
 import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.IosCafeExternalLinkLocalStore
@@ -32,7 +31,6 @@ actual fun sharedPlatformModules(): List<Module> {
                     sessionStore = IosFirebaseAuthSessionStore()
                 )
             }
-            single<NativeAdDataSource> { IosNativeAdDataSource() }
         }
     )
 }
