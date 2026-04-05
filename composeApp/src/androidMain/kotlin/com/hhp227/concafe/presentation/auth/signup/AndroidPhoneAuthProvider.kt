@@ -83,7 +83,6 @@ class AndroidPhoneAuthProvider(
         val currentUser = auth.currentUser
             ?: return AppResult.Failure(AppError.ValidationFailed("NO_CURRENT_USER"))
         val credential = EmailAuthProvider.getCredential(email, password)
-
         return try {
             currentUser.linkWithCredential(credential).await()
             AppResult.Success(Unit)
@@ -97,7 +96,6 @@ class AndroidPhoneAuthProvider(
 
     override suspend fun cleanupIncompleteAccount(): AppResult<Unit> {
         val currentUser = auth.currentUser ?: return AppResult.Success(Unit)
-
         return try {
             currentUser.delete().await()
             verificationId = null

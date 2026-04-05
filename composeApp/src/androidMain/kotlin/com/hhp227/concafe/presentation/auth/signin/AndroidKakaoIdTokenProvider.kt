@@ -100,6 +100,7 @@ class AndroidKakaoIdTokenProvider(
                 } else {
                     val nickname = user?.kakaoAccount?.profile?.nickname?.trim()
                     val email = user?.kakaoAccount?.email?.trim()
+
                     continuation.resume(
                         KakaoProfile(
                             email = email?.ifBlank { null },

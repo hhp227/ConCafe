@@ -46,6 +46,7 @@ actual fun RankingNativeAd(
                             NativeAdContentLayout(nativeAd)
                         }
                     }
+
                     addView(composeView)
                 }
             },
@@ -65,8 +66,6 @@ actual fun RankingNativeAd(
 
 @Composable
 private fun NativeAdContentLayout(nativeAd: NativeAd) {
-    // 부모인 RankingPromoBanner에서 이미 Padding(20.dp)과 배경색을 지정하므로
-    // 여기서는 배경색을 제거하고 레이아웃만 Mock과 일치시킵니다.
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -182,9 +181,7 @@ private fun PlaceholderUI(modifier: Modifier) {
                     .background(Color(0x90FFFFFF), shape = RoundedCornerShape(16.dp))
             )
         }
-
         Spacer(modifier = Modifier.height(14.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()

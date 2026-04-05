@@ -689,7 +689,7 @@
     <string name="cast_follow">팔로우</string>
     <string name="cast_following">팔로잉</string>
     <string name="cast_follower_label">팔로워</string>
-    <string name="cast_follower_count">%1명</string>
+    <string name="cast_follower_count">%1$d명</string>
     <string name="cast_today_status_title">오늘의 출근 상태</string>
     <string name="cast_today_off">오늘은 휴무</string>
     <string name="cast_today_check_schedule">다음 스케줄을 확인해 주세요.</string>

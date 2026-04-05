@@ -7,6 +7,7 @@ import java.util.Locale
 
 actual suspend fun resolveCafeAddress(query: String): CafeResolvedAddress? {
     val normalizedQuery = query.trim()
+
     if (normalizedQuery.isBlank()) {
         return null
     }

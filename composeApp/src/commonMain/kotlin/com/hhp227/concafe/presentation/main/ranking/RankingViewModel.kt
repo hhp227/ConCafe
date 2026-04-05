@@ -141,7 +141,7 @@ class RankingViewModel(
         }
     }
 
-    fun loadNativeAdIfNeeded() {
+    private fun loadNativeAd() {
         if (_uiState.value.nativeAd != null) return
         viewModelScope.launch {
             val ad = loadNativeAdUseCase.invoke()
@@ -217,7 +217,7 @@ class RankingViewModel(
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
-        loadNativeAdIfNeeded()
+        loadNativeAd()
     }
 
     private enum class TaskKey {

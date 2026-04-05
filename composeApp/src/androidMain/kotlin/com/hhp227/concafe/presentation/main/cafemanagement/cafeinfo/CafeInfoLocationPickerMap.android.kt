@@ -45,6 +45,7 @@ actual fun CafeInfoLocationPickerMap(
                 latitude = tapped.latitude,
                 longitude = tapped.longitude
             )
+
             onLocationSelected(tapped.latitude, tapped.longitude, resolvedAddress)
         }
     ) {
