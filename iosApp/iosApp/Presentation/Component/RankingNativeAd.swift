@@ -7,9 +7,68 @@
 
 import SwiftUI
 import UIKit
+import Shared
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
+
+final class IOSNativeAdHandle: NativeAdHandle {
+    let nativeAd: GADNativeAd
+
+    init(_ nativeAd: GADNativeAd) {
+        self.nativeAd = nativeAd
+    }
+
+    func destroy() {
+        // iOS GADNativeAd는 destroy 없음
+        // 대신 strong reference 해제만 하면 됨
+    }
+}
+
+class IosNativeAdDataSourceImpl: NSObject, NativeAdDataSource {
+    private var continuation: CheckedContinuation<NativeAdHandle?, Error>?
+    
+    private var adLoader: GADAdLoader?
+
+    func loadAd() async throws -> (any NativeAdHandle)? {
+        return try await withCheckedThrowingContinuation { continuation in
+            self.continuation = continuation
+
+            let adUnitId: String
+            #if DEBUG
+            adUnitId = "ca-app-pub-3940256099942544/3986624511"
+            #else
+            adUnitId = "ca-app-pub-6216021268300256/5283160617"
+            #endif
+
+            let loader = GADAdLoader(
+                adUnitID: adUnitId,
+                rootViewController: UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .flatMap { $0.windows }
+                    .first { $0.isKeyWindow }?.rootViewController,
+                adTypes: [.native],
+                options: nil
+            )
+
+            loader.delegate = self
+            self.adLoader = loader
+            loader.load(GADRequest())
+        }
+    }
+}
+
+extension IosNativeAdDataSourceImpl: GADNativeAdLoaderDelegate {
+    func adLoader(_ adLoader: GADAdLoader, didReceive nativeAd: GADNativeAd) {
+        continuation?.resume(returning: IOSNativeAdHandle(nativeAd))
+        continuation = nil
+    }
+
+    func adLoader(_ adLoader: GADAdLoader, didFailToReceiveAdWithError error: Error) {
+        continuation?.resume(returning: nil)
+        continuation = nil
+    }
+}
 
 #if canImport(GoogleMobileAds)
 struct RankingNativeAdCard: View {

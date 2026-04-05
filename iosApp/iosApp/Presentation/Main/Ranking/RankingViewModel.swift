@@ -15,6 +15,10 @@ final class RankingViewModel: ObservableObject {
     private let getRankingFeedUseCase: GetRankingFeedUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    
+    //private let loadNativeAdUseCase: LoadNativeAdUseCase
+    
+    //private let clearNativeAdUseCase: ClearNativeAdUseCase
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
@@ -189,11 +193,15 @@ final class RankingViewModel: ObservableObject {
     init(
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        //loadNativeAdUseCase: LoadNativeAdUseCase = KoinInitializerKt.resolveLoadNativeAdUseCase(),
+        //clearNativeAdUseCase: ClearNativeAdUseCase = KoinInitializerKt.resolveClearNativeAdUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        //self.loadNativeAdUseCase = loadNativeAdUseCase
+        //self.clearNativeAdUseCase = clearNativeAdUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
