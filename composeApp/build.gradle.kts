@@ -97,8 +97,8 @@ android {
         applicationId = "com.hhp227.concafe"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 2
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.01"
     }
     packaging {
         resources {

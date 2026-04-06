@@ -52,6 +52,9 @@ struct RankingView: View {
         } message: {
             Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
+        .onAppear {
+            viewModel.onAction(.loadNativeAdIfNeeded)
+        }
         .task(id: "\(viewModel.uiState.ads.count)-\(viewModel.uiState.selectedAdIndex)") {
             guard viewModel.uiState.ads.count > 1 else { return }
             let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 1 ? 15_000_000_000 : 5_000_000_000
@@ -110,6 +113,7 @@ private struct RankingContentView: View {
             ad: uiState.currentAd,
             selectedIndex: uiState.selectedAdIndex,
             size: uiState.ads.count,
+            nativeAdHandle: uiState.nativeAd,
             bannerHeight: uiState.bannerHeight,
             onHeightMeasured: { onAction(.updateBannerHeight($0)) },
             onSelect: { onAction(.selectAd($0)) }
@@ -223,21 +227,23 @@ private extension RankingPeriod {
 
 struct RankingPromoBanner: View {
     let ad: Shared.RankingPromoAd
-    
+
     let selectedIndex: Int
-    
+
     let size: Int
+
+    let nativeAdHandle: (any NativeAdHandle)?
 
     let bannerHeight: CGFloat
 
     let onHeightMeasured: (CGFloat) -> Void
-    
+
     let onSelect: (Int) -> Void
 
     var body: some View {
         ZStack {
             if selectedIndex == 1 {
-                RankingNativeAdCard()
+                RankingNativeAdCard(nativeAdHandle: nativeAdHandle)
                     .frame(maxWidth: .infinity)
                     .frame(height: bannerHeight > 0 ? bannerHeight : 120)
                     .clipped()

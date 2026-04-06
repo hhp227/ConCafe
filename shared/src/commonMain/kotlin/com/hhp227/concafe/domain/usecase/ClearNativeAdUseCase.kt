@@ -1,9 +1,11 @@
 package com.hhp227.concafe.domain.usecase
 
-import com.hhp227.concafe.data.model.NativeAdHandle
+import com.hhp227.concafe.domain.repository.NativeAdRepository
 
-class ClearNativeAdUseCase {
-    operator fun invoke(ad: NativeAdHandle?) {
-        ad?.destroy()
+class ClearNativeAdUseCase(
+    private val repository: NativeAdRepository
+) {
+    operator fun invoke() {
+        repository.clear()
     }
 }

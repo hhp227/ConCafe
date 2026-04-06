@@ -6,6 +6,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
 import com.hhp227.concafe.data.model.AndroidNativeAdHandle
 import com.hhp227.concafe.data.model.NativeAdHandle
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -16,22 +17,27 @@ class AndroidNativeAdDataSource(
 ) : NativeAdDataSource {
     override suspend fun loadAd(): NativeAdHandle? =
         suspendCancellableCoroutine { cont ->
-            val loader = AdLoader.Builder(context, if ((context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-                RANKING_NATIVE_TEST_AD_UNIT_ID
-            } else {
-                RANKING_NATIVE_AD_UNIT_ID
-            })
-                .forNativeAd { ad ->
-                    cont.resume(AndroidNativeAdHandle(ad))
-                }
-                .withAdListener(object : AdListener() {
-                    override fun onAdFailedToLoad(error: LoadAdError) {
-                        cont.resume(null)
-                    }
-                })
-                .build()
+            MobileAds.initialize(context) { _ ->
+                if (!cont.isActive) return@initialize
 
-            loader.loadAd(AdRequest.Builder().build())
+                val adUnitId = if ((context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                    RANKING_NATIVE_TEST_AD_UNIT_ID
+                } else {
+                    RANKING_NATIVE_AD_UNIT_ID
+                }
+                val loader = AdLoader.Builder(context, adUnitId)
+                    .forNativeAd { ad ->
+                        if (cont.isActive) cont.resume(AndroidNativeAdHandle(ad))
+                    }
+                    .withAdListener(object : AdListener() {
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    })
+                    .build()
+
+                loader.loadAd(AdRequest.Builder().build())
+            }
         }
 
     companion object {

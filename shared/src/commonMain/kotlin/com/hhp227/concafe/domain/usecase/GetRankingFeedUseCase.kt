@@ -1,6 +1,5 @@
 package com.hhp227.concafe.domain.usecase
 
-import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.RankingFeed
 import com.hhp227.concafe.domain.model.RankingFeedEntry
@@ -31,21 +30,14 @@ class GetRankingFeedUseCase(
         val castResult = castDeferred.await()
         val cafeResult = cafeDeferred.await()
         val allFailed = castResult.isFailure && cafeResult.isFailure
-        val firstError = castResult.exceptionOrNull() ?: cafeResult.exceptionOrNull()
-
         if (allFailed) {
-            val throwable = firstError
-            return@coroutineScope when (throwable) {
-                is NoSuchElementException -> {
-                    AppResult.Failure(AppError.NotFound)
-                }
-                is IllegalArgumentException -> {
-                    AppResult.Failure(AppError.ValidationFailed(throwable.message ?: "invalid request"))
-                }
-                else -> {
-                    AppResult.Failure(AppError.Unknown(throwable?.message))
-                }
-            }
+            return@coroutineScope AppResult.Success(
+                RankingFeed(
+                    ads = defaultAds(),
+                    castRankings = emptyList(),
+                    cafeRankings = emptyList()
+                )
+            )
         }
         val castRankings = castResult.getOrElse { emptyList() }.mapIndexed { index, item ->
             RankingFeedEntry(

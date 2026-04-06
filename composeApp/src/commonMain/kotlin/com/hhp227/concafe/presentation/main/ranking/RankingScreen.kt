@@ -59,6 +59,9 @@ fun RankingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.onAction(RankingAction.LoadNativeAdIfNeeded)
+    }
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {

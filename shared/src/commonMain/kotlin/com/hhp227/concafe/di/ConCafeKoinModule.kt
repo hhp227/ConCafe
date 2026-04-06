@@ -626,7 +626,7 @@ val useCaseModule = module {
     factory { UploadImageUseCase(get(), get()) }
     factory { DeleteImageUseCase(get()) }
     factory { LoadNativeAdUseCase(get()) }
-    factory { ClearNativeAdUseCase() }
+    factory { ClearNativeAdUseCase(get()) }
 }
 
 val concafeModules = listOf(

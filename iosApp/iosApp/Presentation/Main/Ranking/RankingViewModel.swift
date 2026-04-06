@@ -16,9 +16,9 @@ final class RankingViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
     
-    //private let loadNativeAdUseCase: LoadNativeAdUseCase
+    private let loadNativeAdUseCase: LoadNativeAdUseCase
     
-    //private let clearNativeAdUseCase: ClearNativeAdUseCase
+    private let clearNativeAdUseCase: ClearNativeAdUseCase
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
@@ -157,6 +157,20 @@ final class RankingViewModel: ObservableObject {
         }
     }
 
+    private func loadNativeAd() {
+        guard uiState.nativeAd == nil else { return }
+        guard tasks[.nativeAd] == nil || tasks[.nativeAd]?.isCancelled == true else { return }
+        tasks[.nativeAd] = Task {
+            let ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke())
+            uiState.nativeAd = ad
+        }
+    }
+
+    private func clearNativeAd() {
+        clearNativeAdUseCase.invoke()
+        uiState.nativeAd = nil
+    }
+
     func onAction(_ action: RankingAction) {
         switch action {
         case .changeTab(let tab):
@@ -187,21 +201,23 @@ final class RankingViewModel: ObservableObject {
             if height > uiState.bannerHeight {
                 uiState.bannerHeight = height
             }
+        case .loadNativeAdIfNeeded:
+            loadNativeAd()
         }
     }
 
     init(
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        //loadNativeAdUseCase: LoadNativeAdUseCase = KoinInitializerKt.resolveLoadNativeAdUseCase(),
-        //clearNativeAdUseCase: ClearNativeAdUseCase = KoinInitializerKt.resolveClearNativeAdUseCase(),
+        loadNativeAdUseCase: LoadNativeAdUseCase = KoinInitializerKt.resolveLoadNativeAdUseCase(),
+        clearNativeAdUseCase: ClearNativeAdUseCase = KoinInitializerKt.resolveClearNativeAdUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
-        //self.loadNativeAdUseCase = loadNativeAdUseCase
-        //self.clearNativeAdUseCase = clearNativeAdUseCase
+        self.loadNativeAdUseCase = loadNativeAdUseCase
+        self.clearNativeAdUseCase = clearNativeAdUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
@@ -209,16 +225,19 @@ final class RankingViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
+        loadNativeAd()
     }
 
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
+        clearNativeAdUseCase.invoke()
     }
 
     private enum TaskKey {
         case session
         case cafeDetailEvent
         case castEvent
+        case nativeAd
     }
 }

@@ -41,7 +41,6 @@ class RankingViewModel(
         val period = currentState.selectedPeriod
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
         viewModelScope.launch {
             when (val result = getRankingFeedUseCase.invoke(period, country, city)) {
                 is AppResult.Success -> {
@@ -143,7 +142,8 @@ class RankingViewModel(
 
     private fun loadNativeAd() {
         if (_uiState.value.nativeAd != null) return
-        viewModelScope.launch {
+        if (jobs[TaskKey.LOAD_NATIVE_AD]?.isActive == true) return
+        jobs[TaskKey.LOAD_NATIVE_AD] = viewModelScope.launch {
             val ad = loadNativeAdUseCase.invoke()
 
             _uiState.update {
@@ -152,8 +152,8 @@ class RankingViewModel(
         }
     }
 
-    fun clearAd() {
-        clearNativeAdUseCase.invoke(uiState.value.nativeAd)
+    private fun clearAd() {
+        clearNativeAdUseCase.invoke()
         _uiState.update {
             it.copy(nativeAd = null)
         }
@@ -194,6 +194,7 @@ class RankingViewModel(
                     }
                 }
             }
+            RankingAction.LoadNativeAdIfNeeded -> loadNativeAd()
         }
     }
 
@@ -223,6 +224,7 @@ class RankingViewModel(
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
-        OBSERVE_SESSION
+        OBSERVE_SESSION,
+        LOAD_NATIVE_AD
     }
 }

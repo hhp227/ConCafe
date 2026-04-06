@@ -18,4 +18,5 @@ enum RankingAction {
     case loginPromptSignInTapped
     case dismissLoginPrompt
     case updateBannerHeight(CGFloat)
+    case loadNativeAdIfNeeded
 }

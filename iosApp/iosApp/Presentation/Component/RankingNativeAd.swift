@@ -72,11 +72,15 @@ extension IosNativeAdDataSourceImpl: GADNativeAdLoaderDelegate {
 
 #if canImport(GoogleMobileAds)
 struct RankingNativeAdCard: View {
-    @StateObject private var loader = RankingNativeAdLoader()
+    let nativeAdHandle: (any NativeAdHandle)?
+
+    private var nativeAd: GADNativeAd? {
+        (nativeAdHandle as? IOSNativeAdHandle)?.nativeAd
+    }
 
     var body: some View {
         ZStack {
-            if let nativeAd = loader.nativeAd {
+            if let nativeAd {
                 RankingNativeAdRepresentable(nativeAd: nativeAd)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -127,43 +131,6 @@ struct RankingNativeAdCard: View {
                 endPoint: .bottomTrailing
             )
         )
-    }
-}
-
-private final class RankingNativeAdLoader: NSObject, ObservableObject, GADNativeAdLoaderDelegate {
-    @Published var nativeAd: GADNativeAd?
-
-    private var adLoader: GADAdLoader?
-
-    func adLoader(_ adLoader: GADAdLoader, didReceive nativeAd: GADNativeAd) {
-        self.nativeAd = nativeAd
-    }
-
-    func adLoader(_ adLoader: GADAdLoader, didFailToReceiveAdWithError error: Error) {
-        print("Ranking native ad load failed: \(error.localizedDescription)")
-    }
-
-    override init() {
-        super.init()
-
-        let adUnitId: String
-        #if DEBUG
-        adUnitId = "ca-app-pub-3940256099942544/3986624511"
-        #else
-        adUnitId = "ca-app-pub-6216021268300256/5283160617"
-        #endif
-
-        adLoader = GADAdLoader(
-            adUnitID: adUnitId,
-            rootViewController: UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }?.rootViewController,
-            adTypes: [.native],
-            options: nil
-        )
-        adLoader?.delegate = self
-        adLoader?.load(GADRequest())
     }
 }
 
@@ -288,6 +255,8 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
 }
 #else
 private struct RankingNativeAdCard: View {
+    let nativeAdHandle: (any NativeAdHandle)?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(
@@ -336,5 +305,5 @@ private struct RankingNativeAdCard: View {
 #endif
 
 #Preview {
-    RankingNativeAdCard()
+    RankingNativeAdCard(nativeAdHandle: nil)
 }
