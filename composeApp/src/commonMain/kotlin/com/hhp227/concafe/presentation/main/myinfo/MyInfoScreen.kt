@@ -729,7 +729,6 @@ private fun resolveCurrentWeekScheduleCount(uiState: MyInfoUiState): Int {
     val daysFromSunday = today.dayOfWeek.isoDayNumber % 7
     val weekStart = today.minus(DatePeriod(days = daysFromSunday))
     val weekEnd = weekStart.plus(DatePeriod(days = 6))
-
     return schedules
         .mapNotNull { schedule ->
             val normalizedDate = schedule.date.take(10)

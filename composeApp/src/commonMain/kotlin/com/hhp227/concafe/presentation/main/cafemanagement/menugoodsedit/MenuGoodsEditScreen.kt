@@ -393,6 +393,7 @@ private fun CategoryGrid(
     onSelect: (String) -> Unit
 ) {
     val categoryIds = listOf("drink", "food", "dessert", "goods")
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         val categories = categoryIds.chunked(2)
 
@@ -403,6 +404,7 @@ private fun CategoryGrid(
             ) {
                 rowCategories.forEach { categoryId ->
                     val isSelected = categoryId == selectedCategoryId
+
                     CategoryButton(
                         modifier = Modifier.weight(1f),
                         categoryId = categoryId,
@@ -411,16 +413,11 @@ private fun CategoryGrid(
                     )
                 }
                 if (rowCategories.size == 1) {
-                    SpacerCell(modifier = Modifier.weight(1f))
+                    Box(modifier = Modifier.weight(1f))
                 }
             }
         }
     }
-}
-
-@Composable
-private fun SpacerCell(modifier: Modifier = Modifier) {
-    Box(modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
