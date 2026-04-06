@@ -142,7 +142,7 @@ a {
 
 .hero {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.5fr 0.5fr;
   gap: 24px;
   align-items: stretch;
   margin-top: 10px;
@@ -222,7 +222,7 @@ a {
 }
 
 .panel {
-  padding: 22px;
+  padding: 18px;
   display: grid;
   gap: 14px;
 }
@@ -590,34 +590,64 @@ a {
   gap: 10px;
 }
 
-.store-name {
-  margin: 0;
-  font-size: 16px;
-  color: #4a3645;
+/* ✅ 다운로드 통합 카드 */
+.unified-store {
+  text-align: center;
+  overflow: hidden; /* overflow 방지 */
 }
 
-.store-desc {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.store-button {
-  justify-self: start;
-  display: inline-flex;
+/* ✅ 버튼 컨테이너 */
+.store-buttons {
+  display: flex;
+  flex-direction: column;   /* 🔥 핵심: 세로 정렬 */
   align-items: center;
-  min-height: 38px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid #f2c7d8;
-  background: #fff7fb;
-  color: var(--primary-strong);
-  font-size: 13px;
-  font-weight: 700;
+  gap: 12px;
+  width: 100%;
 }
 
-.store-button.is-placeholder {
-  opacity: 0.85;
+/* ✅ 각 버튼 영역 */
+.store-buttons a {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ✅ 이미지 */
+.store-buttons img {
+  width: 100%;
+  max-width: 260px;   /* 🔥 기존 180 → 260 (적당히 크게) */
+  height: auto;
+  object-fit: contain;
+}
+
+/* ✅ hover 효과 */
+.store-buttons img:hover {
+  transform: scale(1.05);
+}
+
+.notice-store {
+  display: flex;              /* 🔥 grid → flex */
+  justify-content: center;    /* 가운데 정렬 */
+  align-items: center;
+  gap: 8px;
+}
+
+/* 버튼 */
+.notice-store a {
+  display: inline-block;
+}
+
+/* 이미지 */
+.notice-store img {
+  height: 56px;       /* 🔥 크기 고정 (핵심) */
+  width: auto;
+  object-fit: contain;
+}
+
+/* hover */
+.notice-store img:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
 }
 
 @media (max-width: 920px) {
