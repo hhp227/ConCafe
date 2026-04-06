@@ -675,12 +675,12 @@ private struct TimeFieldPicker: View {
                     .padding()
                     Spacer()
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
-                        text = TimeUtils.formatHourMinute(selectedTime)
-                        isPresented = false
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
+                            text = TimeUtils.formatHourMinute(selectedTime)
+                            isPresented = false
+                        }
                     }
                 }
             }
