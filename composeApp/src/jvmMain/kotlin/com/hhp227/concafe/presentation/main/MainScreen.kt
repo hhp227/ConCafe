@@ -6,11 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,9 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveRestoreSessionUseCase
 import com.hhp227.concafe.domain.model.MainNavigationTab
 import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
@@ -33,19 +26,10 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import concafe.composeapp.generated.resources.Res
-import concafe.composeapp.generated.resources.common_notification
-import concafe.composeapp.generated.resources.common_settings
-import concafe.composeapp.generated.resources.main_tab_admin_operations
-import concafe.composeapp.generated.resources.main_tab_cafe_management
-import concafe.composeapp.generated.resources.main_tab_checkin
-import concafe.composeapp.generated.resources.main_tab_explore
-import concafe.composeapp.generated.resources.main_tab_fan_management
-import concafe.composeapp.generated.resources.main_tab_home
-import concafe.composeapp.generated.resources.main_tab_my_info
-import concafe.composeapp.generated.resources.main_tab_ranking
+import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,11 +39,7 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                MainViewModel(
-                    resolveGetMainNavigationUseCase(),
-                    resolveObserveCurrentUserUseCase(),
-                    resolveRestoreSessionUseCase()
-                )
+                GlobalContext.get().get<MainViewModel>()
             }
         }
     ),

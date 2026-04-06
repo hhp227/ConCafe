@@ -7,6 +7,7 @@ import com.hhp227.concafe.presentation.auth.signup.SignUpViewModel
 import com.hhp227.concafe.presentation.cafe.CafeViewModel
 import com.hhp227.concafe.presentation.cast.CastViewModel
 import com.hhp227.concafe.presentation.castedit.CastEditViewModel
+import com.hhp227.concafe.presentation.main.MainViewModel
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerViewModel
@@ -39,6 +40,7 @@ private val composeAppPresentationModule = module {
     factory { SignInViewModel(get(), get(), get(), get(), get(), get()) }
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { MainViewModel(get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
