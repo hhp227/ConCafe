@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
-import Combine
 import Shared
+import UIKit
+#if canImport(GoogleMobileAds)
+import GoogleMobileAds
+#endif
 
 struct RankingView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = RankingViewModel()
-
-    @State private var adTimer = Timer.publish(every: 3.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         RankingContentView(
@@ -51,8 +52,14 @@ struct RankingView: View {
         } message: {
             Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
-        .onReceive(adTimer) { _ in
+        .onAppear {
+            viewModel.onAction(.loadNativeAdIfNeeded)
+        }
+        .task(id: "\(viewModel.uiState.ads.count)-\(viewModel.uiState.selectedAdIndex)") {
             guard viewModel.uiState.ads.count > 1 else { return }
+            let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 1 ? 15_000_000_000 : 5_000_000_000
+            try? await Task.sleep(nanoseconds: delayNanos)
+            guard !Task.isCancelled else { return }
             let nextIndex = (viewModel.uiState.selectedAdIndex + 1) % viewModel.uiState.ads.count
             viewModel.onAction(.selectAd(nextIndex))
         }
@@ -106,6 +113,9 @@ private struct RankingContentView: View {
             ad: uiState.currentAd,
             selectedIndex: uiState.selectedAdIndex,
             size: uiState.ads.count,
+            nativeAdHandle: uiState.nativeAd,
+            bannerHeight: uiState.bannerHeight,
+            onHeightMeasured: { onAction(.updateBannerHeight($0)) },
             onSelect: { onAction(.selectAd($0)) }
         )
     }
@@ -217,69 +227,106 @@ private extension RankingPeriod {
 
 struct RankingPromoBanner: View {
     let ad: Shared.RankingPromoAd
-    
+
     let selectedIndex: Int
-    
+
     let size: Int
-    
+
+    let nativeAdHandle: (any NativeAdHandle)?
+
+    let bannerHeight: CGFloat
+
+    let onHeightMeasured: (CGFloat) -> Void
+
     let onSelect: (Int) -> Void
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(spacing: 16) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 6) {
-                            Image(systemName: ad.systemImageName)
-                            .font(.caption.weight(.semibold))
-                            Text(ad.badge)
-                            .font(.caption2.weight(.semibold))
+            if selectedIndex == 1 {
+                RankingNativeAdCard(nativeAdHandle: nativeAdHandle)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: bannerHeight > 0 ? bannerHeight : 120)
+                    .clipped()
+            } else {
+                LinearGradient(
+                    colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                VStack(spacing: 16) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: ad.systemImageName)
+                                .font(.caption.weight(.semibold))
+                                Text(ad.badge)
+                                .font(.caption2.weight(.semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.22))
+                            .clipShape(Capsule())
+                            Text(ad.title)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(.white)
+                            Text(ad.subtitle)
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            Text(ad.desc)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.92))
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.22))
+                        Spacer(minLength: 8)
+                        Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.black.opacity(0.85))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.white)
                         .clipShape(Capsule())
-                        Text(ad.title)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.white)
-                        Text(ad.subtitle)
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        Text(ad.desc)
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.92))
                     }
-                    Spacer(minLength: 8)
-                    Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.black.opacity(0.85))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(.white)
-                    .clipShape(Capsule())
                 }
-                HStack(spacing: 6) {
-                    ForEach(0..<size, id: \.self) { index in
-                        Capsule()
-                        .fill(index == selectedIndex ? Color.white : Color.white.opacity(0.5))
+                .padding(20)
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                onHeightMeasured(proxy.size.height)
+                            }
+                            .onChange(of: proxy.size.height) { newValue in
+                                onHeightMeasured(newValue)
+                            }
+                    }
+                )
+                .frame(minHeight: 120, alignment: .topLeading)
+            }
+        }
+        .animation(.easeInOut, value: selectedIndex)
+        .overlay(alignment: .bottom) {
+            HStack(spacing: 6) {
+                ForEach(0..<size, id: \.self) { index in
+                    Capsule()
+                        .fill(indicatorColor(for: index))
                         .frame(width: index == selectedIndex ? 22 : 8, height: 8)
                         .onTapGesture {
                             onSelect(index)
                         }
-                    }
                 }
             }
-            .padding(20)
+            .padding(.bottom, 16)
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: Color.black.opacity(0.08), radius: 10, y: 4)
         .padding(.horizontal, 16)
+    }
+
+    private func indicatorColor(for index: Int) -> Color {
+        if selectedIndex == 1 {
+            return index == selectedIndex ? Color(hex: "EF6797") : Color(hex: "E3D9E0")
+        } else {
+            return index == selectedIndex ? Color.white : Color.white.opacity(0.5)
+        }
     }
 }
 
@@ -396,14 +443,14 @@ private extension Shared.RankingPromoAd {
 private struct AnyShape: Shape {
     private let pathBuilder: (CGRect) -> Path
 
+    func path(in rect: CGRect) -> Path {
+        pathBuilder(rect)
+    }
+
     init<S: Shape>(_ shape: S) {
         pathBuilder = { rect in
             shape.path(in: rect)
         }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        pathBuilder(rect)
     }
 }
 

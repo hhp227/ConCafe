@@ -689,7 +689,7 @@
     <string name="cast_follow">フォロー</string>
     <string name="cast_following">フォロー中</string>
     <string name="cast_follower_label">フォロワー</string>
-    <string name="cast_follower_count">%1人</string>
+    <string name="cast_follower_count">%1$d人</string>
     <string name="cast_today_status_title">本日の勤務状態</string>
     <string name="cast_today_off">本日は休み</string>
     <string name="cast_today_check_schedule">次のスケジュールを確認してください。</string>
@@ -828,4 +828,8 @@
     <string name="admin_inquiry_load_more">お問い合わせをさらに読み込む</string>
     <string name="admin_writer">作成者 %1$s</string>
     <string name="admin_quick_menu_title">運営クイックメニュー</string>
+    <string name="ranking_native_ad_badge">広告</string>
+    <string name="ranking_native_ad_title">ConCafe Plus メンバーシップ</string>
+    <string name="ranking_native_ad_desc">プレミアムキャスト特典、スペシャルスタンプ、サプライズクーポンをPlusでご利用ください。</string>
+    <string name="ranking_native_ad_sponsor">ConCafe提供広告</string>
 </resources>

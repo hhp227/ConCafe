@@ -1,6 +1,8 @@
 package com.hhp227.concafe.di
 
+import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
+import org.koin.core.KoinApplication
 import com.hhp227.concafe.data.source.local.IosCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
@@ -12,6 +14,12 @@ import com.hhp227.concafe.data.source.firestore.PersistedFirebaseAuthTokenProvid
 import com.hhp227.concafe.data.source.firestore.createPlatformHttpClient
 import org.koin.core.module.Module
 import org.koin.dsl.module
+
+fun doInitKoinForIos(nativeAdDataSource: NativeAdDataSource): KoinApplication? {
+    return doInitKoin(
+        listOf(module { single<NativeAdDataSource> { nativeAdDataSource } })
+    )
+}
 
 actual fun sharedPlatformModules(): List<Module> {
     return listOf(

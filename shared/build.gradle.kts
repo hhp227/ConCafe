@@ -48,6 +48,7 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
         androidMain.dependencies {
+            implementation(libs.google.play.services.ads)
             implementation(libs.ktor.client.android)
         }
         jvmMain.dependencies {

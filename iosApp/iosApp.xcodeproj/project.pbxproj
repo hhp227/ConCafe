@@ -25,6 +25,8 @@
 		0A0C66A82F5C0EB700B0CDE4 /* SignUpUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66A72F5C0EB700B0CDE4 /* SignUpUiState.swift */; };
 		0A0C66AA2F5C0EE100B0CDE4 /* SignUpAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66A92F5C0EE100B0CDE4 /* SignUpAction.swift */; };
 		0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */; };
+		0A1613FF2F802D0D00088B82 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = ADA100052F90000100AAA001 /* GoogleMobileAds */; };
+		0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1614002F802D5A00088B82 /* RankingNativeAd.swift */; };
 		0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D72F614BF700573900 /* CastManagementUiState.swift */; };
 		0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D92F614C1400573900 /* CastManagementAction.swift */; };
 		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
@@ -245,6 +247,7 @@
 		0A0C66A72F5C0EB700B0CDE4 /* SignUpUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpUiState.swift; sourceTree = "<group>"; };
 		0A0C66A92F5C0EE100B0CDE4 /* SignUpAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpAction.swift; sourceTree = "<group>"; };
 		0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpEvent.swift; sourceTree = "<group>"; };
+		0A1614002F802D5A00088B82 /* RankingNativeAd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingNativeAd.swift; sourceTree = "<group>"; };
 		0A27C8D72F614BF700573900 /* CastManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementUiState.swift; sourceTree = "<group>"; };
 		0A27C8D92F614C1400573900 /* CastManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementAction.swift; sourceTree = "<group>"; };
 		0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementViewModel.swift; sourceTree = "<group>"; };
@@ -449,6 +452,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A1613FF2F802D0D00088B82 /* GoogleMobileAds in Frameworks */,
 				0A9A0B182F6B2B2500B69B62 /* KMPNativeCoroutinesAsync in Frameworks */,
 				FBA100022F90000100AAA001 /* FirebaseMessaging in Frameworks */,
 				FBA200012F90000100AAA001 /* FirebaseAuth in Frameworks */,
@@ -956,6 +960,7 @@
 				0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */,
 				0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */,
 				0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */,
+				0A1614002F802D5A00088B82 /* RankingNativeAd.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1066,6 +1071,7 @@
 				EBA100052F90000100AAA001 /* KakaoSDKCommon */,
 				EBA100062F90000100AAA001 /* KakaoSDKAuth */,
 				EBA100072F90000100AAA001 /* KakaoSDKUser */,
+				ADA100052F90000100AAA001 /* GoogleMobileAds */,
 			);
 			productName = iosApp;
 			productReference = FEA9D4AD37B8EF9BE110840A /* ConCafe.app */;
@@ -1100,6 +1106,7 @@
 				0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */,
 				FBA100032F90000100AAA001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				EBA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			productRefGroup = 7332ACCB08708982CBFABD2D /* Products */;
 			projectDirPath = "";
@@ -1309,6 +1316,7 @@
 				0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */,
 				0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */,
 				0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */,
+				0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
 				0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
@@ -1599,6 +1607,14 @@
 				kind = branch;
 			};
 		};
+		ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
 		EBA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
@@ -1622,6 +1638,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A9A0B162F6B2B2500B69B62 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
 			productName = KMPNativeCoroutinesAsync;
+		};
+		ADA100052F90000100AAA001 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ADA100042F90000100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 		EBA100052F90000100AAA001 /* KakaoSDKCommon */ = {
 			isa = XCSwiftPackageProductDependency;

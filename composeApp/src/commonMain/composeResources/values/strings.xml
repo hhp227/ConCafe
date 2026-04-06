@@ -828,4 +828,8 @@
     <string name="admin_inquiry_load_more">Load More Inquiries</string>
     <string name="admin_writer">Writer %1$s</string>
     <string name="admin_quick_menu_title">Operations Quick Menu</string>
+    <string name="ranking_native_ad_badge">Sponsored</string>
+    <string name="ranking_native_ad_title">ConCafe Plus Membership</string>
+    <string name="ranking_native_ad_desc">Unlock premium cast perks, special stamps, and surprise coupons with Plus.</string>
+    <string name="ranking_native_ad_sponsor">Ad provided by ConCafe</string>
 </resources>

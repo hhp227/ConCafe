@@ -7,6 +7,7 @@ import java.util.Locale
 
 actual suspend fun resolveCafeAddress(query: String): CafeResolvedAddress? {
     val normalizedQuery = query.trim()
+
     if (normalizedQuery.isBlank()) {
         return null
     }
@@ -14,7 +15,6 @@ actual suspend fun resolveCafeAddress(query: String): CafeResolvedAddress? {
     val context = runCatching {
         GlobalContext.get().get<Context>()
     }.getOrNull() ?: return null
-
     return runCatching {
         val geocoder = Geocoder(context, Locale.KOREA)
         @Suppress("DEPRECATION")

@@ -31,7 +31,6 @@ class AndroidGoogleIdTokenProvider(
                 return resourceClientId
             }
         }
-
         return DEFAULT_GOOGLE_WEB_CLIENT_ID
     }
 

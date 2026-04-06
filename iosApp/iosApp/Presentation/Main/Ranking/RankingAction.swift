@@ -17,4 +17,6 @@ enum RankingAction {
     case tapCafe(String)
     case loginPromptSignInTapped
     case dismissLoginPrompt
+    case updateBannerHeight(CGFloat)
+    case loadNativeAdIfNeeded
 }

@@ -7,6 +7,9 @@ import FirebaseMessaging
 import FirebaseAuth
 import KakaoSDKCommon
 import KakaoSDKAuth
+#if canImport(GoogleMobileAds)
+import GoogleMobileAds
+#endif
 
 @main
 struct iOSApp: App {
@@ -19,7 +22,11 @@ struct iOSApp: App {
     }
 
     init() {
+#if canImport(GoogleMobileAds)
+        SharedPlatformModule_iosKt.doInitKoinForIos(nativeAdDataSource: IosNativeAdDataSourceImpl())
+#else
         KoinInitializerKt.doInitKoin()
+#endif
     }
 }
 
@@ -29,6 +36,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
+#if canImport(GoogleMobileAds)
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
+#endif
         KakaoSDK.initSDK(appKey: "af25c4820b65d3fe2a9145156351ccaf")
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self

@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
+            implementation(libs.google.play.services.ads)
             implementation(libs.google.maps.compose)
             implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.messaging.ktx)
@@ -96,8 +97,8 @@ android {
         applicationId = "com.hhp227.concafe"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 2
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.01"
     }
     packaging {
         resources {

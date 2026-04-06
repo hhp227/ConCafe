@@ -28,6 +28,9 @@
         <meta-data
                 android:name="com.google.firebase.messaging.default_notification_color"
                 android:resource="@color/concafe_notification_color" />
+        <meta-data
+                android:name="com.google.android.gms.ads.APPLICATION_ID"
+                android:value="ca-app-pub-6216021268300256~9521788521" />
 
         <activity
                 android:exported="true"
