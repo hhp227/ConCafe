@@ -15,13 +15,13 @@ import GoogleMobileAds
 final class IOSNativeAdHandle: NativeAdHandle {
     let nativeAd: GADNativeAd
 
-    init(_ nativeAd: GADNativeAd) {
-        self.nativeAd = nativeAd
-    }
-
     func destroy() {
         // iOS GADNativeAd는 destroy 없음
         // 대신 strong reference 해제만 하면 됨
+    }
+    
+    init(_ nativeAd: GADNativeAd) {
+        self.nativeAd = nativeAd
     }
 }
 

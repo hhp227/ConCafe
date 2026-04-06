@@ -1133,9 +1133,6 @@
         }
       }
     },
-    "Ad" : {
-
-    },
     "admin_banner_card_description" : {
 
     },
@@ -13409,6 +13406,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "광고"
+          }
+        }
+      }
+    },
+    "ranking_native_ad_sponsor" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ConCafe 제공 광고"
           }
         }
       }

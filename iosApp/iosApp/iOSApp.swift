@@ -23,7 +23,7 @@ struct iOSApp: App {
 
     init() {
 #if canImport(GoogleMobileAds)
-        SharedPlatformModuleIosKt.doInitKoinForIos(nativeAdDataSource: IosNativeAdDataSourceImpl())
+        SharedPlatformModule_iosKt.doInitKoinForIos(nativeAdDataSource: IosNativeAdDataSourceImpl())
 #else
         KoinInitializerKt.doInitKoin()
 #endif
