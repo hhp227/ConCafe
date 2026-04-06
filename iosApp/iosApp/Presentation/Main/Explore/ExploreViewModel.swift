@@ -53,13 +53,11 @@ class ExploreViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
                     if let approved = event as? CafeRegistrationClaimEvent.Approved {
                         let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        let shouldLoadCafePage = !approvedCafeId.isEmpty
-                            && uiState.cafes.contains(where: { $0.id == approvedCafeId }) == false
+                        let alreadyVisible = !approvedCafeId.isEmpty &&
+                            self.uiState.cafes.contains { $0.id == approvedCafeId }
 
-                        if shouldLoadCafePage {
+                        if !alreadyVisible {
                             self.loadCafePage(cursor: nil, append: false)
-                        } else {
-                            continue
                         }
                     }
                 }

@@ -59,14 +59,12 @@ class ExploreViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
                 if (event is CafeRegistrationClaimEvent.Approved) {
-                    val approvedCafeId = event.approvedCafeId
-                    val shouldLoadCafePage = !approvedCafeId.isNullOrBlank() &&
-                            _uiState.value.cafes.none { cafe -> cafe.id == approvedCafeId }
+                    val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
+                    val alreadyVisible = approvedCafeId.isNotEmpty() &&
+                        _uiState.value.cafes.any { cafe -> cafe.id == approvedCafeId }
 
-                    if (shouldLoadCafePage) {
+                    if (!alreadyVisible) {
                         loadCafePage(cursor = null, append = false)
-                    } else {
-                        Unit
                     }
                 }
             }

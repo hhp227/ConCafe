@@ -197,11 +197,10 @@ class HomeViewModel(
             cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
                 if (event is CafeRegistrationClaimEvent.Approved) {
                     val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
-                    val exists = _uiState.value.nearbyCafes.any { cafe -> cafe.id == approvedCafeId }
+                    val alreadyVisible = approvedCafeId.isNotEmpty() &&
+                        _uiState.value.nearbyCafes.any { cafe -> cafe.id == approvedCafeId }
 
-                    if (approvedCafeId.isEmpty() || exists) {
-                        Unit
-                    } else {
+                    if (!alreadyVisible) {
                         loadNearbyCafePage(cursor = null, append = false)
                     }
                 }
@@ -214,7 +213,7 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
             castEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is CastEvent.Created -> Unit
+                    is CastEvent.Created -> loadPopularCastPage(cursor = null, append = false)
                     is CastEvent.Updated -> patchCast(event.cast)
                     is CastEvent.Deleted -> removeCast(event.castId)
                 }

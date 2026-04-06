@@ -2112,10 +2112,10 @@ class FirestoreConCafeDataSource(
             val batch = documents.take(queryBatchSize)
             val hasMoreBatch = documents.size > queryBatchSize
             val lastBatchDocument = batch.lastOrNull()
-            val parsed = batch.mapNotNull { document ->
-                parseCafeDocument(document)
+            val parsedWithDocs = batch.mapNotNull { document ->
+                parseCafeDocument(document)?.let { cafe -> document to cafe }
             }
-            val filtered = parsed.filter { cafe ->
+            val filteredWithDocs = parsedWithDocs.filter { (_, cafe) ->
                 val matchesQuery = if (normalizedQuery == null) {
                     true
                 } else {
@@ -2124,12 +2124,17 @@ class FirestoreConCafeDataSource(
                 cafe.approved && matchesQuery
             }
             val remaining = safePageSize - aggregated.size
+            val takenWithDocs = filteredWithDocs.take(remaining)
 
-            aggregated.addAll(filtered.take(remaining))
-            nextCursorToken = lastBatchDocument?.toCafeQueryCursor(sort)
+            aggregated.addAll(takenWithDocs.map { (_, cafe) -> cafe })
+            nextCursorToken = if (takenWithDocs.size < filteredWithDocs.size) {
+                takenWithDocs.lastOrNull()?.first?.toCafeQueryCursor(sort)
+                    ?: lastBatchDocument?.toCafeQueryCursor(sort)
+            } else {
+                lastBatchDocument?.toCafeQueryCursor(sort)
+            }
             exhausted = !hasMoreBatch
         }
-
         return PagedResult(
             items = aggregated,
             nextCursor = if (exhausted) null else nextCursorToken,
@@ -2207,7 +2212,6 @@ class FirestoreConCafeDataSource(
             nextCursorToken = lastBatchDocument?.toCastQueryCursor(sort)
             exhausted = !hasMoreBatch
         }
-
         return PagedResult(
             items = aggregated,
             nextCursor = if (exhausted) null else nextCursorToken,
@@ -2274,7 +2278,6 @@ class FirestoreConCafeDataSource(
         } else {
             null
         }
-
         return PagedResult(
             items = items,
             nextCursor = nextCursorToken,
@@ -2338,7 +2341,6 @@ class FirestoreConCafeDataSource(
                 remaining.remove(castId)
             }
         }
-
         return resolved.distinctBy { cast -> cast.id }
     }
 

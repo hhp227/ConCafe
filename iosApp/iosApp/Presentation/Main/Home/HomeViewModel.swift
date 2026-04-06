@@ -321,11 +321,10 @@ final class HomeViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
                     if let approved = event as? CafeRegistrationClaimEvent.Approved {
                         let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        let exists = uiState.nearbyCafes.contains(where: { $0.id == approvedCafeId })
+                        let alreadyVisible = !approvedCafeId.isEmpty &&
+                            self.uiState.nearbyCafes.contains(where: { $0.id == approvedCafeId })
 
-                        if approvedCafeId.isEmpty || exists {
-                            continue
-                        } else {
+                        if !alreadyVisible {
                             self.loadNearbyCafePage(cursor: nil, append: false)
                         }
                     }
@@ -342,6 +341,8 @@ final class HomeViewModel: ObservableObject {
             do {
                 for try await event in asyncSequence(for: castEventPublisher.events) {
                     switch event {
+                    case let created as Shared.CastEvent.Created:
+                        self.loadPopularCastPage(cursor: nil, append: false)
                     case let updated as Shared.CastEvent.Updated:
                         self.patchCast(updated.cast)
                     case let deleted as Shared.CastEvent.Deleted:
