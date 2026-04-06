@@ -300,7 +300,8 @@ private fun CafeInfoEditContent(
                                     GalleryImageTile(
                                         label = stringResource(Res.string.cafeinfo_image_label_prefix, index + 1),
                                         imageUrl = imageUrl,
-                                        index = index
+                                        index = index,
+                                        onRemoveClick = { onAction(CafeInfoEditAction.RemoveGalleryImage(index)) }
                                     )
                                 }
                                 if (uiState.galleryImages.size < uiState.galleryMaxCount) {
@@ -503,7 +504,8 @@ private fun CafeInfoTextField(
 private fun GalleryImageTile(
     label: String,
     imageUrl: String,
-    index: Int
+    index: Int,
+    onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
         0xFFFFD8E6L to 0xFFFFF1F6L,
@@ -513,30 +515,50 @@ private fun GalleryImageTile(
     val colors = gradients[index % gradients.size]
 
     Box(
-        modifier = Modifier
-            .size(96.dp)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(colors.first), Color(colors.second))
-                ),
-                RoundedCornerShape(16.dp)
-            )
+        modifier = Modifier.size(96.dp),
+        contentAlignment = Alignment.TopEnd
     ) {
-        if (imageUrl.isNotBlank()) {
-            CompatImageDisplay(
-                imageUrl = imageUrl,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(colors.first), Color(colors.second))
+                    ),
+                    RoundedCornerShape(16.dp)
+                )
+        ) {
+            if (imageUrl.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+                )
+            }
+            Text(
+                text = label,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(10.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFF5A4954),
+                fontWeight = FontWeight.SemiBold
             )
         }
-        Text(
-            text = label,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(10.dp),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF5A4954),
-            fontWeight = FontWeight.SemiBold
-        )
+        Surface(
+            modifier = Modifier.offset(x = 6.dp, y = (-6).dp),
+            shape = CircleShape,
+            color = Color.Black.copy(alpha = 0.52f),
+            onClick = onRemoveClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .size(12.dp)
+            )
+        }
     }
 }
 

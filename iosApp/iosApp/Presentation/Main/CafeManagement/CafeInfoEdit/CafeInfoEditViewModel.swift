@@ -256,6 +256,9 @@ final class CafeInfoEditViewModel: ObservableObject {
             }
             if imageUrl.isEmpty { return }
             uiState.galleryImages.append(imageUrl)
+        case .removeGalleryImage(let index):
+            guard index >= 0 && index < uiState.galleryImages.count else { return }
+            uiState.galleryImages.remove(at: index)
         case .clickRepresentativeImage:
             break
         case .clickAddGalleryImage:
