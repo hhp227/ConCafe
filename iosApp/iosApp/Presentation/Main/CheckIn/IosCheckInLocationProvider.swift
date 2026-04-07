@@ -62,11 +62,16 @@ final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
     }
 
     func getCurrentLocation() async -> IosCheckInLocationResult {
-        let permissionResult = await requestPermissionIfNeeded()
-
-        if permissionResult.isGranted {
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            return await withCheckedContinuation { continuation in
+        let status = locationManager.authorizationStatus
+        guard status == .authorizedAlways || status == .authorizedWhenInUse else {
+            return IosCheckInLocationResult(
+                isSuccess: false,
+                location: fallbackLocation,
+                message: "위치 권한이 없습니다."
+            )
+        }
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        return await withCheckedContinuation { continuation in
                 self.continuation = continuation
                 let timeoutWorkItem = DispatchWorkItem { [weak self] in
                     guard let self else { return }
@@ -87,13 +92,6 @@ final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: timeoutWorkItem)
                 self.locationManager.requestLocation()
             }
-        } else {
-            return IosCheckInLocationResult(
-                isSuccess: false,
-                location: fallbackLocation,
-                message: permissionResult.message
-            )
-        }
     }
 
     private func resolveAuthorizationStatus(_ status: CLAuthorizationStatus) async -> CLAuthorizationStatus {
