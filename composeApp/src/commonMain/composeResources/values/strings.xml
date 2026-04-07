@@ -685,6 +685,8 @@
     <string name="cafe_info_action_reserve">Reserve</string>
     <string name="cafe_menu_empty">No menus have been registered.</string>
     <string name="cafe_menu_price">₩%1$d</string>
+    <string name="cafe_goods_empty">No goods have been registered.</string>
+    <string name="cafe_goods_in_stock">In Stock</string>
     <string name="cafe_cast_empty">No casts have been registered.</string>
     <string name="cafe_notice_empty">No notices have been registered.</string>
     <string name="cafe_review_count">%1$d reviews</string>

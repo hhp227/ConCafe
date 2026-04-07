@@ -521,7 +521,7 @@ private fun CafeTabContent(
             isLoadingMore = uiState.isLoadingMoreCasts,
             onAction = onAction
         )
-        CafeUiState.TabType.MENU -> CafeMenuScreen(detail.menus)
+        CafeUiState.TabType.MENU -> CafeMenuScreen(menus = detail.menus, goods = detail.goods)
         CafeUiState.TabType.REVIEWS -> CafeReviewScreen(
             detail = detail,
             reviews = uiState.reviews,

@@ -306,7 +306,7 @@ private struct CafeContentView: View {
                 onAction: onAction
             )
         case .menu:
-            CafeMenuView(menus: detail.menus)
+            CafeMenuView(menus: detail.menus, goods: detail.goods)
         case .reviews:
             CafeReviewView(
                 detail: detail,
