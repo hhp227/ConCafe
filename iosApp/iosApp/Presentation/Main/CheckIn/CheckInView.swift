@@ -349,13 +349,16 @@ private struct CheckInMapSection: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onAppear {
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
                 .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
                 .onChange(of: selectedRegion) { region in
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: region)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: region)
+                }
+                .onChange(of: userCityKey) { _ in
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
             }
             .frame(height: 240)
@@ -377,16 +380,18 @@ private struct CheckInMapSection: View {
         .padding(.horizontal, 16)
     }
 
-    private var mapPins: [CheckInMapPin] {
-        let filtered: [CheckInCafeSummary]
+    private var filteredCafes: [CheckInCafeSummary] {
         if selectedRegion != .all {
-            filtered = cafes.filter { $0.locationLabel.lowercased().contains(selectedRegion.rawValue) }
+            return cafes.filter { $0.locationLabel.lowercased().contains(selectedRegion.rawValue) }
         } else if let cityKey = userCityKey {
-            filtered = cafes.filter { $0.locationLabel.lowercased().contains(cityKey) }
+            return cafes.filter { $0.locationLabel.lowercased().contains(cityKey) }
         } else {
-            filtered = cafes
+            return cafes
         }
-        return filtered.map { cafe in
+    }
+
+    private var mapPins: [CheckInMapPin] {
+        return filteredCafes.map { cafe in
             CheckInMapPin(
                 id: cafe.id,
                 name: cafe.name,

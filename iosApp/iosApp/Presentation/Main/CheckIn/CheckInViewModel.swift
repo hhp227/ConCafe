@@ -431,6 +431,8 @@ final class CheckInViewModel: ObservableObject {
             if permissionResult.isGranted {
                 uiState.isNewVisitSheetVisible = true
                 uiState.errorMessage = nil
+
+                detectUserCity()
             } else {
                 uiState.isNewVisitSheetVisible = false
                 uiState.errorMessage = permissionResult.message
