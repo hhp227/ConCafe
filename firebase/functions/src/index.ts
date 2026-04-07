@@ -2,6 +2,7 @@ import {setGlobalOptions} from "firebase-functions";
 import {onDocumentDeleted, onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
+import {onUserDeleted} from "firebase-functions/v2/auth";
 import * as logger from "firebase-functions/logger";
 import {initializeApp} from "firebase-admin/app";
 import {FieldPath, getFirestore, FieldValue} from "firebase-admin/firestore";
@@ -3679,3 +3680,47 @@ export const clearMockConCafeData = onRequest(
     }
   }
 );
+
+export const onUserDeletedCleanupOwnership = onUserDeleted(async (event) => {
+  const userId = event.data.uid;
+
+  if (!userId) {
+    return;
+  }
+  const firestore = db();
+  const [cafesSnapshot, castsSnapshot] = await Promise.all([
+    firestore
+      .collection("cafes")
+      .where("ownerIds", "array-contains", userId)
+      .get(),
+    firestore
+      .collectionGroup("casts")
+      .where("linkedUserId", "==", userId)
+      .get(),
+  ]);
+
+  if (cafesSnapshot.empty && castsSnapshot.empty) {
+    return;
+  }
+  const batch = firestore.batch();
+
+  cafesSnapshot.docs.forEach((doc) => {
+    batch.update(doc.ref, {
+      ownerIds: FieldValue.arrayRemove(userId),
+    });
+  });
+  castsSnapshot.docs.forEach((doc) => {
+    batch.update(doc.ref, {
+      linkedUserId: null,
+    });
+  });
+  await batch.commit();
+
+  logger.info("Cleaned up ownership data after user deletion.", {
+    userId,
+    affectedCafeCount: cafesSnapshot.size,
+    affectedCafeIds: cafesSnapshot.docs.map((doc) => doc.id),
+    affectedCastCount: castsSnapshot.size,
+    affectedCastIds: castsSnapshot.docs.map((doc) => doc.id),
+  });
+});
