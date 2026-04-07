@@ -26,10 +26,11 @@ class MainViewModel(
     private val _event = MutableSharedFlow<MainEvent>()
     val event = _event.asSharedFlow()
 
-    private var observeSessionJob: Job? = null
+    private val jobs = mutableMapOf<JobKey, Job>()
 
     private fun refreshNavigation(preferredRoute: String? = null) {
-        viewModelScope.launch {
+        jobs[JobKey.REFRESH_NAVIGATION]?.cancel()
+        jobs[JobKey.REFRESH_NAVIGATION] = viewModelScope.launch {
             when (val result = getMainNavigationUseCase.invoke(preferredRoute)) {
                 is AppResult.Success -> {
                     if (result.data.currentUser?.signupCompleted == false) {
@@ -62,9 +63,21 @@ class MainViewModel(
     }
 
     private fun observeSession() {
-        observeSessionJob = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest {
-                refreshNavigation(_uiState.value.selectedTab)
+        jobs[JobKey.OBSERVE_SESSION]?.cancel()
+        jobs[JobKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { newUser ->
+                val currentState = _uiState.value
+                val roleChanged = newUser?.role != currentState.currentUser?.role
+                val loginStateChanged = (newUser == null) != (currentState.currentUser == null)
+
+                if (roleChanged || loginStateChanged) {
+                    // Only rebuild navigation when login state or role changes to avoid
+                    // spurious selectedTab resets caused by Firestore/auth re-emissions.
+                    refreshNavigation(currentState.selectedTab)
+                } else {
+                    // Same user/role — just sync the user object without touching the tab.
+                    _uiState.update { it.copy(currentUser = newUser) }
+                }
             }
         }
     }
@@ -86,8 +99,19 @@ class MainViewModel(
         }
     }
 
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
     init {
         observeSession()
         restoreSession()
+    }
+
+    private enum class JobKey {
+        OBSERVE_SESSION,
+        REFRESH_NAVIGATION
     }
 }

@@ -74,8 +74,18 @@ fun MainScreen(
             }
         }
     }
+    // Sync ViewModel when the NavController's current route changes (e.g. system Back press
+    // pops a tab — without this, selectedTab stays stale and the next tap on that tab
+    // produces no StateFlow emission, so navigation never fires).
+    LaunchedEffect(currentRoute) {
+        if (currentRoute != null && currentRoute != uiState.selectedTab) {
+            viewModel.onAction(MainAction.SelectTab(currentRoute))
+        }
+    }
     LaunchedEffect(uiState.selectedTab) {
-        if (currentRoute != uiState.selectedTab) {
+        // Guard against null currentRoute during backstack restoration to avoid
+        // navigating to an unintended tab while the navcontroller isn't ready yet.
+        if (currentRoute != null && currentRoute != uiState.selectedTab) {
             bottomNavController.navigate(uiState.selectedTab) {
                 popUpTo(bottomNavController.graph.findStartDestination().id) {
                     saveState = true
