@@ -172,14 +172,6 @@ private fun ScheduleEditSheet(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(48.dp)
-                .height(5.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Color(0xFFE5DDE2))
-        )
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
