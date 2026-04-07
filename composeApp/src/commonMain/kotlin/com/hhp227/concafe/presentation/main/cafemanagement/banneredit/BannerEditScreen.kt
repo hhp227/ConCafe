@@ -644,6 +644,7 @@ private fun TargetTypeGrid(
             ) {
                 row.forEach { target ->
                     val isSelected = selectedTarget == target
+
                     Surface(
                         modifier = Modifier
                             .weight(1f)

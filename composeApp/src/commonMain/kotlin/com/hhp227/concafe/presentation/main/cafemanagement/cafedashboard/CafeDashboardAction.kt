@@ -19,4 +19,13 @@ sealed interface CafeDashboardAction {
     data class ClickRejectCastClaim(val claimId: String) : CafeDashboardAction
     data object ClickLoadMoreCasts : CafeDashboardAction
     data object DismissInfoMessage : CafeDashboardAction
+    data class ChangeSocialMediaInstagram(val value: String) : CafeDashboardAction
+    data class ChangeSocialMediaTwitter(val value: String) : CafeDashboardAction
+    data class ChangeSocialMediaTiktok(val value: String) : CafeDashboardAction
+    data class ChangeSocialMediaYoutube(val value: String) : CafeDashboardAction
+    data object SubmitSocialMedia : CafeDashboardAction
+    data object DismissSocialMediaSheet : CafeDashboardAction
+    data object DismissReservationSheet : CafeDashboardAction
+    data class ChangeReservationUrl(val value: String) : CafeDashboardAction
+    data object SubmitReservation : CafeDashboardAction
 }

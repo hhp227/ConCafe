@@ -86,6 +86,8 @@ import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteImageUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
@@ -582,6 +584,20 @@ fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
 }
 
 fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeSocialMediaUseCase(): UpdateCafeSocialMediaUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeReservationUrlUseCase(): UpdateCafeReservationUrlUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

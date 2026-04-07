@@ -10,6 +10,7 @@ data class CheckInUiState(
     val errorMessage: String? = null,
     val currentUser: User? = null,
     val currentLocationLabel: String = "",
+    val userCityKey: String? = null,
     val mapCafes: List<CheckInCafeSummary> = emptyList(),
     val popularCafes: List<CheckInCafeSummary> = emptyList(),
     val popularCasts: List<CheckInCastSummary> = emptyList(),

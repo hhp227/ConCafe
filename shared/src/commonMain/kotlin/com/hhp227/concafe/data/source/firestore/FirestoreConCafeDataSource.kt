@@ -1936,6 +1936,43 @@ class FirestoreConCafeDataSource(
         return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
+    suspend fun updateCafeSocialMediaRemote(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId" +
+            "?updateMask.fieldPaths=socialMedia"
+        val mapEntries = buildMap<String, JsonElement> {
+            if (instagramId != null) put("instagram", firestoreString(instagramId))
+            if (twitterId != null) put("twitter", firestoreString(twitterId))
+            if (tiktokId != null) put("tiktok", firestoreString(tiktokId))
+            if (youtubeId != null) put("youtube", firestoreString(youtubeId))
+        }
+        val socialMediaValue = JsonObject(
+            mapOf(
+                "mapValue" to JsonObject(
+                    mapOf("fields" to JsonObject(mapEntries))
+                )
+            )
+        )
+        val body = firestoreDocumentBody(mapOf("socialMedia" to socialMediaValue))
+        restApi.patch(path, body, idToken)
+    }
+
+    suspend fun updateCafeReservationUrlRemote(cafeId: String, reservationUrl: String?) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId" +
+            "?updateMask.fieldPaths=reservationUrl"
+        val body = firestoreDocumentBody(
+            mapOf("reservationUrl" to firestoreNullableString(reservationUrl))
+        )
+        restApi.patch(path, body, idToken)
+    }
+
     suspend fun upsertCastRemote(update: CastUpsert): CastDetail {
         require(update.name.isNotBlank()) { "cast name is required" }
         require(update.conceptRole.isNotBlank()) { "concept role is required" }
@@ -2112,10 +2149,10 @@ class FirestoreConCafeDataSource(
             val batch = documents.take(queryBatchSize)
             val hasMoreBatch = documents.size > queryBatchSize
             val lastBatchDocument = batch.lastOrNull()
-            val parsed = batch.mapNotNull { document ->
-                parseCafeDocument(document)
+            val parsedWithDocs = batch.mapNotNull { document ->
+                parseCafeDocument(document)?.let { cafe -> document to cafe }
             }
-            val filtered = parsed.filter { cafe ->
+            val filteredWithDocs = parsedWithDocs.filter { (_, cafe) ->
                 val matchesQuery = if (normalizedQuery == null) {
                     true
                 } else {
@@ -2124,12 +2161,17 @@ class FirestoreConCafeDataSource(
                 cafe.approved && matchesQuery
             }
             val remaining = safePageSize - aggregated.size
+            val takenWithDocs = filteredWithDocs.take(remaining)
 
-            aggregated.addAll(filtered.take(remaining))
-            nextCursorToken = lastBatchDocument?.toCafeQueryCursor(sort)
+            aggregated.addAll(takenWithDocs.map { (_, cafe) -> cafe })
+            nextCursorToken = if (takenWithDocs.size < filteredWithDocs.size) {
+                takenWithDocs.lastOrNull()?.first?.toCafeQueryCursor(sort)
+                    ?: lastBatchDocument?.toCafeQueryCursor(sort)
+            } else {
+                lastBatchDocument?.toCafeQueryCursor(sort)
+            }
             exhausted = !hasMoreBatch
         }
-
         return PagedResult(
             items = aggregated,
             nextCursor = if (exhausted) null else nextCursorToken,
@@ -2207,7 +2249,6 @@ class FirestoreConCafeDataSource(
             nextCursorToken = lastBatchDocument?.toCastQueryCursor(sort)
             exhausted = !hasMoreBatch
         }
-
         return PagedResult(
             items = aggregated,
             nextCursor = if (exhausted) null else nextCursorToken,
@@ -2274,7 +2315,6 @@ class FirestoreConCafeDataSource(
         } else {
             null
         }
-
         return PagedResult(
             items = items,
             nextCursor = nextCursorToken,
@@ -2338,7 +2378,6 @@ class FirestoreConCafeDataSource(
                 remaining.remove(castId)
             }
         }
-
         return resolved.distinctBy { cast -> cast.id }
     }
 
@@ -4082,17 +4121,6 @@ class FirestoreConCafeDataSource(
         }
         val filters = mutableListOf<String>()
 
-        filters.add(
-            """
-            {
-              "fieldFilter": {
-                "field": { "fieldPath": "approved" },
-                "op": "EQUAL",
-                "value": { "booleanValue": true }
-              }
-            }
-            """.trimIndent()
-        )
         if (!country.isNullOrBlank()) {
             filters.add(
                 """
@@ -4119,11 +4147,11 @@ class FirestoreConCafeDataSource(
                 """.trimIndent()
             )
         }
-        val whereSection = if (filters.size == 1) {
-            """,
+        val whereSection = when (filters.size) {
+            0 -> ""
+            1 -> """,
                 "where": ${filters.first()}"""
-        } else {
-            """,
+            else -> """,
                 "where": {
                   "compositeFilter": {
                     "op": "AND",
@@ -5319,7 +5347,19 @@ class FirestoreConCafeDataSource(
                 ?: 0.0,
             reviewCount = fields.getFirestoreLong("reviewCount")?.toInt() ?: 0,
             approved = fields.getFirestoreBoolean("approved") ?: true,
-            conceptType = fields.getFirestoreString("conceptType") ?: "MAID"
+            conceptType = fields.getFirestoreString("conceptType") ?: "MAID",
+            ownerIds = fields.getFirestoreStringList("ownerIds"),
+            socialMedia = run {
+                val mapFields = fields.getFirestoreMap("socialMedia")
+                if (mapFields == null) emptyMap()
+                else buildMap {
+                    mapFields.getFirestoreString("instagram")?.let { put("instagram", it) }
+                    mapFields.getFirestoreString("twitter")?.let { put("twitter", it) }
+                    mapFields.getFirestoreString("tiktok")?.let { put("tiktok", it) }
+                    mapFields.getFirestoreString("youtube")?.let { put("youtube", it) }
+                }
+            },
+            reservationUrl = fields.getFirestoreString("reservationUrl")
         )
     }
 

@@ -522,52 +522,66 @@ private struct CafeInfoEditContentView: View {
             ("FFD9CF", "FFF0EA")
         ]
         let colors = gradients[index % gradients.count]
-        return GeometryReader { proxy in
-            ZStack(alignment: .bottomLeading) {
-                let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
-                if !imageUrl.isEmpty {
-                    CafeInfoImageView(
-                        imageUrl: imageUrl,
-                        placeholder: {
-                            backgroundShape
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+        return ZStack(alignment: .topTrailing) {
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomLeading) {
+                    let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    if !imageUrl.isEmpty {
+                        CafeInfoImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                backgroundShape
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                        },
-                        loading: {
-                            ProgressView()
-                        }
-                    )
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                } else {
-                    backgroundShape
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            },
+                            loading: {
+                                ProgressView()
+                            }
                         )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        backgroundShape
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    Text(label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.32))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.black.opacity(0.32))
-                    .clipShape(Capsule())
-                    .padding(10)
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .aspectRatio(1, contentMode: .fit)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            Button {
+                onAction(.removeGalleryImage(index))
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 22, height: 22)
+                    .background(.black.opacity(0.52))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .offset(x: 6, y: -6)
         }
-        .aspectRatio(1, contentMode: .fit)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {
@@ -675,12 +689,12 @@ private struct TimeFieldPicker: View {
                     .padding()
                     Spacer()
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
-                        text = TimeUtils.formatHourMinute(selectedTime)
-                        isPresented = false
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
+                            text = TimeUtils.formatHourMinute(selectedTime)
+                            isPresented = false
+                        }
                     }
                 }
             }

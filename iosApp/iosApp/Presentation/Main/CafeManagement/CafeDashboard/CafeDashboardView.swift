@@ -53,6 +53,32 @@ struct CafeDashboardView: View {
                 onAction: viewModel.onAction
             )
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isSocialMediaSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissSocialMediaSheet)
+                }
+            }
+        )) {
+            SocialMediaInputSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isReservationSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissReservationSheet)
+                }
+            }
+        )) {
+            ReservationInputSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -120,7 +146,9 @@ private struct CafeDashboardContentView: View {
                                          "dashboard_info_select_cast_for_delete",
                                          "dashboard_info_cast_deleted",
                                          "dashboard_info_cast_claim_approved",
-                                         "dashboard_info_cast_claim_rejected":
+                                         "dashboard_info_cast_claim_rejected",
+                                         "dashboard_info_social_media_saved",
+                                    "dashboard_info_reservation_saved":
                                         return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
                                     default:
                                         return infoMessage
@@ -317,7 +345,9 @@ private struct CafeDashboardContentView: View {
                     CafeDashboardShortcut.eventManagement,
                     .cafeSettings,
                     .menuGoods,
-                    .externalLinks
+                    .externalLinks,
+                    .socialMedia,
+                    .reservation
                 ]) { shortcut in
                     shortcutCard(shortcut: shortcut)
                 }
@@ -337,6 +367,8 @@ private struct CafeDashboardContentView: View {
             case .menuGoods: return "fork.knife"
             case .homeBanner: return "megaphone.fill"
             case .externalLinks: return "link"
+            case .socialMedia: return "square.and.arrow.up"
+            case .reservation: return "bookmark.fill"
             }
         }()
         return Button {
@@ -769,57 +801,185 @@ private struct ExternalLinkInputSheet: View {
     let onAction: (CafeDashboardAction) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(
-                uiState.editingExternalLinkId == nil
-                ? String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable")
-                : String(localized: String.LocalizationValue("dashboard_external_link_edit"), table: "Localizable")
-            )
-                .font(.title3.weight(.bold))
-            Text(String(localized: String.LocalizationValue("dashboard_external_link_guide"), table: "Localizable"))
-                .font(.subheadline)
-                .foregroundStyle(Color(hex: "7A707A"))
-            ConCafeFormField(
-                label: String(localized: String.LocalizationValue("dashboard_external_link_label_title"), table: "Localizable"),
-                text: Binding(
-                    get: { uiState.externalLinkTitle },
-                    set: { onAction(.changeExternalLinkTitle($0)) }
-                ),
-                placeholder: String(localized: String.LocalizationValue("dashboard_external_link_placeholder_title"), table: "Localizable")
-            )
-            ConCafeFormField(
-                label: String(localized: String.LocalizationValue("dashboard_external_link_label_url"), table: "Localizable"),
-                text: Binding(
-                    get: { uiState.externalLinkUrl },
-                    set: { onAction(.changeExternalLinkUrl($0)) }
-                ),
-                placeholder: "https://"
-            )
-            Button {
-                onAction(.submitExternalLink)
-            } label: {
-                Text(
-                    uiState.editingExternalLinkId == nil
-                    ? String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable")
-                    : String(localized: String.LocalizationValue("dashboard_external_link_save"), table: "Localizable")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: String.LocalizationValue("dashboard_external_link_guide"), table: "Localizable"))
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7A707A"))
+                ConCafeFormField(
+                    label: String(localized: String.LocalizationValue("dashboard_external_link_label_title"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.externalLinkTitle },
+                        set: { onAction(.changeExternalLinkTitle($0)) }
+                    ),
+                    placeholder: String(localized: String.LocalizationValue("dashboard_external_link_placeholder_title"), table: "Localizable")
                 )
+                ConCafeFormField(
+                    label: String(localized: String.LocalizationValue("dashboard_external_link_label_url"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.externalLinkUrl },
+                        set: { onAction(.changeExternalLinkUrl($0)) }
+                    ),
+                    placeholder: "https://"
+                )
+                Button {
+                    onAction(.submitExternalLink)
+                } label: {
+                    Text(
+                        uiState.editingExternalLinkId == nil
+                        ? String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable")
+                        : String(localized: String.LocalizationValue("dashboard_external_link_save"), table: "Localizable")
+                    )
+                        .font(.headline.weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
+                        .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(!uiState.isExternalLinkSubmitEnabled)
+                Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
+                    onAction(.dismissExternalLinkSheet)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .background(Color(hex: "FFFBFD"))
+    }
+}
+
+private struct SocialMediaInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: String.LocalizationValue("dashboard_social_media_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
+                Text(String(localized: String.LocalizationValue("dashboard_social_media_section_subtitle"), table: "Localizable"))
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7A707A"))
+                ConCafeFormField(
+                    label: "Instagram",
+                    text: Binding(
+                        get: { uiState.instagramId },
+                        set: { onAction(.changeSocialMediaInstagram($0)) }
+                    ),
+                    placeholder: "@account_id"
+                )
+                ConCafeFormField(
+                    label: "X (Twitter)",
+                    text: Binding(
+                        get: { uiState.twitterId },
+                        set: { onAction(.changeSocialMediaTwitter($0)) }
+                    ),
+                    placeholder: "@account_id"
+                )
+                ConCafeFormField(
+                    label: "TikTok",
+                    text: Binding(
+                        get: { uiState.tiktokId },
+                        set: { onAction(.changeSocialMediaTiktok($0)) }
+                    ),
+                    placeholder: "@account_id"
+                )
+                ConCafeFormField(
+                    label: "YouTube",
+                    text: Binding(
+                        get: { uiState.youtubeId },
+                        set: { onAction(.changeSocialMediaYoutube($0)) }
+                    ),
+                    placeholder: "@channel_id"
+                )
+                Button {
+                    onAction(.submitSocialMedia)
+                } label: {
+                    Group {
+                        if uiState.isSavingSocialMedia {
+                            ProgressView()
+                                .tint(Color(hex: "7F7078"))
+                        } else {
+                            Text(String(localized: String.LocalizationValue("dashboard_social_media_save"), table: "Localizable"))
+                                .font(.headline.weight(.bold))
+                        }
+                    }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
-                    .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .background(uiState.isSavingSocialMedia ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .foregroundStyle(Color(hex: "2B2330"))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(uiState.isSavingSocialMedia)
+                Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
+                    onAction(.dismissSocialMediaSheet)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.plain)
-            .disabled(!uiState.isExternalLinkSubmitEnabled)
-            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
-                onAction(.dismissExternalLinkSheet)
-            }
-            .font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity)
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "FFFBFD"))
+    }
+}
+
+private struct ReservationInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: String.LocalizationValue("dashboard_reservation_title"), table: "Localizable"))
+                    .font(.headline.weight(.bold))
+                Text(String(localized: String.LocalizationValue("dashboard_reservation_guide"), table: "Localizable"))
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7A707A"))
+                ConCafeFormField(
+                    label: String(localized: String.LocalizationValue("dashboard_reservation_label_url"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.reservationUrl },
+                        set: { onAction(.changeReservationUrl($0)) }
+                    ),
+                    placeholder: "https://"
+                )
+                Button {
+                    onAction(.submitReservation)
+                } label: {
+                    Group {
+                        if uiState.isSavingReservation {
+                            ProgressView()
+                                .tint(Color(hex: "7F7078"))
+                        } else {
+                            Text(String(localized: String.LocalizationValue("dashboard_reservation_save"), table: "Localizable"))
+                                .font(.headline.weight(.bold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(uiState.isSavingReservation ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .foregroundStyle(Color(hex: "2B2330"))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(uiState.isSavingReservation)
+                Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
+                    onAction(.dismissReservationSheet)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
         .background(Color(hex: "FFFBFD"))
     }
 }

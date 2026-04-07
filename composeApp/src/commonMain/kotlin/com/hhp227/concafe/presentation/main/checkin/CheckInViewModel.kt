@@ -174,6 +174,23 @@ class CheckInViewModel(
         }
     }
 
+    private fun detectUserCity() {
+        jobs[TaskKey.DETECT_CITY]?.cancel()
+        jobs[TaskKey.DETECT_CITY] = viewModelScope.launch {
+            if (_uiState.value.userCityKey != null) return@launch
+            when (val result = checkInLocationProvider.getCurrentLocation()) {
+                is CheckInLocationResult.Success -> {
+                    val cityKey = cityKeyFromCoordinates(
+                        lat = result.location.latitude,
+                        lng = result.location.longitude
+                    )
+                    _uiState.update { it.copy(userCityKey = cityKey) }
+                }
+                is CheckInLocationResult.Failure -> Unit
+            }
+        }
+    }
+
     private fun submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if (cafeId.isBlank()) {
             _uiState.update { it.copy(errorMessage = "카페를 선택해 주세요.") }
@@ -455,6 +472,7 @@ class CheckInViewModel(
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
+        detectUserCity()
         loadGuestFeed()
     }
 
@@ -473,10 +491,22 @@ class CheckInViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,
-        REVIEW_PROMPT_ACTION
+        REVIEW_PROMPT_ACTION,
+        DETECT_CITY
     }
 
     private companion object {
         private const val TODAY_VISIT_LIMIT = 4
+
+        fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
+            return when {
+                lat in 37.4..37.7 && lng in 126.7..127.2 -> "seoul"
+                lat in 35.0..35.4 && lng in 128.8..129.3 -> "busan"
+                lat in 35.7..36.0 && lng in 128.4..128.8 -> "daegu"
+                lat in 35.5..35.9 && lng in 139.3..139.9 -> "tokyo"
+                lat in 34.5..34.9 && lng in 135.3..135.7 -> "osaka"
+                else -> null
+            }
+        }
     }
 }

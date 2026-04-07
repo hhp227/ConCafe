@@ -53,6 +53,8 @@ struct ExploreUiState {
     enum RegionFilter: String, CaseIterable {
         case all = "all"
         case seoul = "seoul"
+        case busan = "busan"
+        case daegu = "daegu"
         case tokyo = "tokyo"
         case osaka = "osaka"
 
@@ -60,6 +62,8 @@ struct ExploreUiState {
             switch self {
             case .all: return "전체"
             case .seoul: return "서울"
+            case .busan: return "부산"
+            case .daegu: return "대구"
             case .tokyo: return "도쿄"
             case .osaka: return "오사카"
             }

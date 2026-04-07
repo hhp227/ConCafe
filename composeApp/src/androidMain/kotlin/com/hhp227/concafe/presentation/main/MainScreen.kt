@@ -28,9 +28,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.hhp227.concafe.di.resolveGetMainNavigationUseCase
-import com.hhp227.concafe.di.resolveObserveCurrentUserUseCase
-import com.hhp227.concafe.di.resolveRestoreSessionUseCase
 import com.hhp227.concafe.domain.model.MainNavigationTab
 import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
@@ -42,19 +39,10 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import concafe.composeapp.generated.resources.Res
-import concafe.composeapp.generated.resources.common_notification
-import concafe.composeapp.generated.resources.common_settings
-import concafe.composeapp.generated.resources.main_tab_admin_operations
-import concafe.composeapp.generated.resources.main_tab_cafe_management
-import concafe.composeapp.generated.resources.main_tab_checkin
-import concafe.composeapp.generated.resources.main_tab_explore
-import concafe.composeapp.generated.resources.main_tab_fan_management
-import concafe.composeapp.generated.resources.main_tab_home
-import concafe.composeapp.generated.resources.main_tab_my_info
-import concafe.composeapp.generated.resources.main_tab_ranking
+import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,11 +53,7 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                MainViewModel(
-                    resolveGetMainNavigationUseCase(),
-                    resolveObserveCurrentUserUseCase(),
-                    resolveRestoreSessionUseCase()
-                )
+                GlobalContext.get().get<MainViewModel>()
             }
         }
     ),

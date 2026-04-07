@@ -281,6 +281,13 @@ class CafeInfoEditViewModel(
                     )
                 }
             }
+            is CafeInfoEditAction.RemoveGalleryImage -> {
+                _uiState.update { state ->
+                    val updated = state.galleryImages.toMutableList().also { it.removeAt(action.index) }
+
+                    state.copy(galleryImages = updated)
+                }
+            }
             CafeInfoEditAction.ClickRepresentativeImage -> showInfo(MSG_REP_UPLOAD_NEXT_STEP)
             CafeInfoEditAction.ClickAddGalleryImage -> showInfo(MSG_GALLERY_ADD_NEXT_STEP)
             CafeInfoEditAction.ClickPinLocation -> showInfo(MSG_PIN_LOCATION_HINT)

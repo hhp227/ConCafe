@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -390,11 +391,24 @@ private fun CastSummarySection(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = detail.cast.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = detail.cast.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (!detail.cast.linkedUserId.isNullOrBlank()) {
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = null,
+                                tint = Color(0xFF9333EA),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
                     Surface(
                         shape = RoundedCornerShape(999.dp),
                         color = colorFromHex("FFE7F1")

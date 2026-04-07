@@ -9,5 +9,8 @@ data class Cafe(
     val ratingAvg: Double,
     val reviewCount: Int,
     val approved: Boolean,
-    val conceptType: String
+    val conceptType: String,
+    val ownerIds: List<String> = emptyList(),
+    val socialMedia: Map<String, String> = emptyMap(),
+    val reservationUrl: String? = null
 )

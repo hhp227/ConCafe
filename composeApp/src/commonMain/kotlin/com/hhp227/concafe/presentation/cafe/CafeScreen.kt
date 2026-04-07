@@ -449,11 +449,24 @@ private fun CafeSummarySection(detail: CafeDetail) {
             .padding(horizontal = 16.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = detail.cafe.name,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = detail.cafe.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            if (detail.cafe.ownerIds.isNotEmpty()) {
+                Icon(
+                    imageVector = Icons.Default.Verified,
+                    contentDescription = null,
+                    tint = Color(0xFF2563EB),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically

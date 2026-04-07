@@ -92,6 +92,26 @@ class CafeRepositoryImpl(
         }
     }
 
+    override suspend fun updateCafeSocialMedia(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    ) {
+        cafeRemoteDataSource.updateCafeSocialMediaRemote(
+            cafeId = cafeId,
+            instagramId = instagramId,
+            twitterId = twitterId,
+            tiktokId = tiktokId,
+            youtubeId = youtubeId
+        )
+    }
+
+    override suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?) {
+        cafeRemoteDataSource.updateCafeReservationUrlRemote(cafeId, reservationUrl)
+    }
+
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
         val safeLimit = if (limit > 0) limit else 1
         val sourceCafes = cafeRemoteDataSource.searchCafesRemote(
@@ -116,5 +136,4 @@ class CafeRepositoryImpl(
             )
         }
     }
-
 }

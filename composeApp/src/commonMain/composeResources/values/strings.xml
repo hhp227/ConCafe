@@ -609,6 +609,11 @@
     <string name="dashboard_info_external_link_updated">External link has been updated.</string>
     <string name="dashboard_info_external_link_added">External link has been added.</string>
     <string name="dashboard_info_external_link_deleted">External link has been deleted.</string>
+    <string name="dashboard_info_social_media_saved">Social media info has been saved.</string>
+    <string name="dashboard_social_media_title">Social Media</string>
+    <string name="dashboard_social_media_section_subtitle">Enter your cafe's social media account IDs.</string>
+    <string name="dashboard_social_media_save">Save Social Media</string>
+    <string name="dashboard_other_links_title">Other</string>
     <string name="dashboard_info_select_cast_for_delete">Please select a cast from the list to delete.</string>
     <string name="dashboard_info_cast_deleted">Cast profile has been deleted.</string>
     <string name="dashboard_info_cast_claim_approved">Cast profile connection request has been approved.</string>
@@ -627,6 +632,13 @@
     <string name="dashboard_shortcut_menu_goods">Menu &amp; Goods</string>
     <string name="dashboard_shortcut_home_banner">Home Banner</string>
     <string name="dashboard_shortcut_external_links">External Links</string>
+    <string name="dashboard_shortcut_social_media">Social Media</string>
+    <string name="dashboard_shortcut_reservation">Reservation</string>
+    <string name="dashboard_info_reservation_saved">Reservation URL saved.</string>
+    <string name="dashboard_reservation_title">Reservation</string>
+    <string name="dashboard_reservation_guide">Enter the reservation link for your cafe.</string>
+    <string name="dashboard_reservation_label_url">Reservation URL</string>
+    <string name="dashboard_reservation_save">Save Reservation URL</string>
     <string name="checkin_section_popular_cafe_title">Popular Cafes</string>
     <string name="checkin_popular_cafe_empty_title">No popular cafes yet</string>
     <string name="checkin_popular_cafe_empty_desc">Popular cafes will appear when check-ins accumulate.</string>
@@ -669,6 +681,7 @@
     <string name="cafe_info_placeholder_business_hours">Business hours are being prepared.</string>
     <string name="cafe_info_placeholder_phone">Contact information is being prepared.</string>
     <string name="cafe_info_section_description">Description</string>
+    <string name="cafe_info_section_social_media">Social Media</string>
     <string name="cafe_info_action_reserve">Reserve</string>
     <string name="cafe_menu_empty">No menus have been registered.</string>
     <string name="cafe_menu_price">₩%1$d</string>

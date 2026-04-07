@@ -59,14 +59,12 @@ class ExploreViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
                 if (event is CafeRegistrationClaimEvent.Approved) {
-                    val approvedCafeId = event.approvedCafeId
-                    val shouldLoadCafePage = !approvedCafeId.isNullOrBlank() &&
-                            _uiState.value.cafes.none { cafe -> cafe.id == approvedCafeId }
+                    val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
+                    val alreadyVisible = approvedCafeId.isNotEmpty() &&
+                        _uiState.value.cafes.any { cafe -> cafe.id == approvedCafeId }
 
-                    if (shouldLoadCafePage) {
+                    if (!alreadyVisible) {
                         loadCafePage(cursor = null, append = false)
-                    } else {
-                        Unit
                     }
                 }
             }
@@ -344,6 +342,10 @@ private fun matchesCafeFilters(state: ExploreUiState, cafe: Cafe): Boolean {
         ExploreUiState.RegionFilter.ALL -> true
         ExploreUiState.RegionFilter.SEOUL -> cafe.region.country.equals("KR", ignoreCase = true) &&
             cafe.region.city.equals("Seoul", ignoreCase = true)
+        ExploreUiState.RegionFilter.BUSAN -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Busan", ignoreCase = true)
+        ExploreUiState.RegionFilter.DAEGU -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Daegu", ignoreCase = true)
         ExploreUiState.RegionFilter.TOKYO -> cafe.region.country.equals("JP", ignoreCase = true) &&
             cafe.region.city.equals("Tokyo", ignoreCase = true)
         ExploreUiState.RegionFilter.OSAKA -> cafe.region.country.equals("JP", ignoreCase = true) &&

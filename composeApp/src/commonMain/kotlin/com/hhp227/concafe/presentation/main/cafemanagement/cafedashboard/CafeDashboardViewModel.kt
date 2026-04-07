@@ -30,6 +30,8 @@ import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
@@ -39,6 +41,8 @@ class CafeDashboardViewModel(
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase,
+    private val updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase,
+    private val updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
@@ -62,6 +66,11 @@ class CafeDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             cafe = result.data,
+                            instagramId = result.data.socialMedia["instagram"].orEmpty(),
+                            twitterId = result.data.socialMedia["twitter"].orEmpty(),
+                            tiktokId = result.data.socialMedia["tiktok"].orEmpty(),
+                            youtubeId = result.data.socialMedia["youtube"].orEmpty(),
+                            reservationUrl = result.data.reservationUrl.orEmpty(),
                             isLoading = false
                         )
                     }
@@ -186,6 +195,22 @@ class CafeDashboardViewModel(
                     )
                 }
             }
+            CafeDashboardShortcut.SOCIAL_MEDIA -> {
+                _uiState.update {
+                    it.copy(
+                        isSocialMediaSheetVisible = true,
+                        infoMessage = null
+                    )
+                }
+            }
+            CafeDashboardShortcut.RESERVATION -> {
+                _uiState.update {
+                    it.copy(
+                        isReservationSheetVisible = true,
+                        infoMessage = null
+                    )
+                }
+            }
         }
     }
 
@@ -291,6 +316,106 @@ class CafeDashboardViewModel(
                 externalLinks = updatedLinks,
                 infoMessage = "dashboard_info_external_link_deleted"
             )
+        }
+    }
+
+    private fun changeSocialMediaInstagram(value: String) {
+        _uiState.update { it.copy(instagramId = value) }
+    }
+
+    private fun changeSocialMediaTwitter(value: String) {
+        _uiState.update { it.copy(twitterId = value) }
+    }
+
+    private fun changeSocialMediaTiktok(value: String) {
+        _uiState.update { it.copy(tiktokId = value) }
+    }
+
+    private fun changeSocialMediaYoutube(value: String) {
+        _uiState.update { it.copy(youtubeId = value) }
+    }
+
+    private fun submitSocialMedia() {
+        val currentState = _uiState.value
+        _uiState.update { it.copy(isSavingSocialMedia = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeSocialMediaUseCase.invoke(
+                cafeId = cafeId,
+                instagramId = currentState.instagramId.trim().takeIf { it.isNotEmpty() },
+                twitterId = currentState.twitterId.trim().takeIf { it.isNotEmpty() },
+                tiktokId = currentState.tiktokId.trim().takeIf { it.isNotEmpty() },
+                youtubeId = currentState.youtubeId.trim().takeIf { it.isNotEmpty() }
+            )) {
+                is AppResult.Success -> {
+                    println("--ConCafe--, Success ${result.data}")
+                    val newSocialMedia = buildMap {
+                        currentState.instagramId.trim().takeIf { it.isNotEmpty() }?.let { put("instagram", it) }
+                        currentState.twitterId.trim().takeIf { it.isNotEmpty() }?.let { put("twitter", it) }
+                        currentState.tiktokId.trim().takeIf { it.isNotEmpty() }?.let { put("tiktok", it) }
+                        currentState.youtubeId.trim().takeIf { it.isNotEmpty() }?.let { put("youtube", it) }
+                    }
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(socialMedia = newSocialMedia),
+                            isSavingSocialMedia = false,
+                            isSocialMediaSheetVisible = false,
+                            infoMessage = "dashboard_info_social_media_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    println("--ConCafe--, Failure ${result.error}")
+                    _uiState.update {
+                        it.copy(
+                            isSavingSocialMedia = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun dismissSocialMediaSheet() {
+        _uiState.update { it.copy(isSocialMediaSheetVisible = false) }
+    }
+
+    private fun dismissReservationSheet() {
+        _uiState.update { it.copy(isReservationSheetVisible = false, reservationUrl = _uiState.value.cafe?.reservationUrl.orEmpty()) }
+    }
+
+    private fun changeReservationUrl(value: String) {
+        _uiState.update { it.copy(reservationUrl = value) }
+    }
+
+    private fun submitReservation() {
+        val currentState = _uiState.value
+        val url = currentState.reservationUrl.trim()
+        _uiState.update { it.copy(isSavingReservation = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeReservationUrlUseCase.invoke(
+                cafeId = cafeId,
+                reservationUrl = url.takeIf { it.isNotEmpty() }
+            )) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(reservationUrl = url.takeIf { it.isNotEmpty() }),
+                            isSavingReservation = false,
+                            isReservationSheetVisible = false,
+                            infoMessage = "dashboard_info_reservation_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSavingReservation = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -568,6 +693,15 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ClickRejectCastClaim -> clickRejectCastClaim(action.claimId)
             CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
             CafeDashboardAction.DismissInfoMessage -> dismissInfoMessage()
+            is CafeDashboardAction.ChangeSocialMediaInstagram -> changeSocialMediaInstagram(action.value)
+            is CafeDashboardAction.ChangeSocialMediaTwitter -> changeSocialMediaTwitter(action.value)
+            is CafeDashboardAction.ChangeSocialMediaTiktok -> changeSocialMediaTiktok(action.value)
+            is CafeDashboardAction.ChangeSocialMediaYoutube -> changeSocialMediaYoutube(action.value)
+            CafeDashboardAction.SubmitSocialMedia -> submitSocialMedia()
+            CafeDashboardAction.DismissSocialMediaSheet -> dismissSocialMediaSheet()
+            CafeDashboardAction.DismissReservationSheet -> dismissReservationSheet()
+            is CafeDashboardAction.ChangeReservationUrl -> changeReservationUrl(action.value)
+            CafeDashboardAction.SubmitReservation -> submitReservation()
         }
     }
 

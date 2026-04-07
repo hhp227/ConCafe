@@ -22,6 +22,15 @@ struct CafeDashboardUiState {
     var editingExternalLinkId: String?
     var externalLinkTitle = ""
     var externalLinkUrl = ""
+    var instagramId = ""
+    var twitterId = ""
+    var tiktokId = ""
+    var youtubeId = ""
+    var isSavingSocialMedia = false
+    var isSocialMediaSheetVisible = false
+    var reservationUrl = ""
+    var isReservationSheetVisible = false
+    var isSavingReservation = false
     var isLoading = true
     var infoMessage: String?
 

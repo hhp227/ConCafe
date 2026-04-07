@@ -242,8 +242,15 @@ private struct CastSummarySection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(detail.cast.name)
-                        .font(.title2.bold())
+                    HStack(spacing: 6) {
+                        Text(detail.cast.name)
+                            .font(.title2.bold())
+                        if let linkedUserId = detail.cast.linkedUserId, !linkedUserId.isEmpty {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(Color(hex: "9333EA"))
+                                .font(.title2)
+                        }
+                    }
                     Text(detail.cast.conceptRole.capitalized)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "C9527E"))

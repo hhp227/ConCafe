@@ -140,6 +140,7 @@ private struct CheckInGuestContentView: View {
                 CheckInMapSection(
                     currentLocationLabel: uiState.currentLocationLabel,
                     cafes: uiState.mapCafes,
+                    userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
@@ -224,6 +225,7 @@ private struct CheckInUserContentView: View {
                 CheckInMapSection(
                     currentLocationLabel: uiState.currentLocationLabel,
                     cafes: uiState.mapCafes,
+                    userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
@@ -261,6 +263,8 @@ private struct CheckInMapSection: View {
     let currentLocationLabel: String
 
     let cafes: [CheckInCafeSummary]
+
+    let userCityKey: String?
 
     let onCafeTap: (String) -> Void
 
@@ -345,13 +349,16 @@ private struct CheckInMapSection: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onAppear {
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
                 .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
                 .onChange(of: selectedRegion) { region in
-                    mapRegion = resolvedMapRegion(cafes: cafes, selectedRegion: region)
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: region)
+                }
+                .onChange(of: userCityKey) { _ in
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
             }
             .frame(height: 240)
@@ -373,8 +380,18 @@ private struct CheckInMapSection: View {
         .padding(.horizontal, 16)
     }
 
+    private var filteredCafes: [CheckInCafeSummary] {
+        if selectedRegion != .all {
+            return cafes.filter { $0.locationLabel.lowercased().contains(selectedRegion.rawValue) }
+        } else if let cityKey = userCityKey {
+            return cafes.filter { $0.locationLabel.lowercased().contains(cityKey) }
+        } else {
+            return cafes
+        }
+    }
+
     private var mapPins: [CheckInMapPin] {
-        return cafes.map { cafe in
+        return filteredCafes.map { cafe in
             CheckInMapPin(
                 id: cafe.id,
                 name: cafe.name,
@@ -423,19 +440,30 @@ private struct CheckInMapSection: View {
     }
 
     private func regionPreset(for region: ExploreUiState.RegionFilter) -> MKCoordinateRegion? {
-        if region == .all {
+        switch region {
+        case .all:
             return nil
-        } else if region == .seoul {
+        case .seoul:
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
                 span: MKCoordinateSpan(latitudeDelta: 0.10, longitudeDelta: 0.10)
             )
-        } else if region == .tokyo {
+        case .busan:
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.1796, longitude: 129.0756),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        case .daegu:
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.8714, longitude: 128.6014),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        case .tokyo:
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
                 span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
             )
-        } else {
+        case .osaka:
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 34.6937, longitude: 135.5023),
                 span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)

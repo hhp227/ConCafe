@@ -53,7 +53,9 @@ class CafeDashboardRepositoryImpl(
             todayReviews = cafeRemoteDataSource.fetchCafeTodayReviewCount(cafe.id),
             rating = cafe.ratingAvg,
             castPreviews = castPreviews,
-            homeBannerPreview = homeBannerPreview
+            homeBannerPreview = homeBannerPreview,
+            socialMedia = cafe.socialMedia,
+            reservationUrl = cafe.reservationUrl
         )
     }
 }

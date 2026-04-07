@@ -60,10 +60,10 @@ class AndroidCheckInLocationProvider(
     }
 
     override suspend fun getCurrentLocation(): CheckInLocationResult {
-        return when (val permissionResult = requestPermissionIfNeeded()) {
-            CheckInLocationPermissionResult.Granted -> resolveCurrentLocation()
-            is CheckInLocationPermissionResult.Failure -> CheckInLocationResult.Failure(permissionResult.message)
+        if (!hasLocationPermission()) {
+            return CheckInLocationResult.Failure("위치 권한이 없습니다.")
         }
+        return resolveCurrentLocation()
     }
 
     private suspend fun resolveCurrentLocation(): CheckInLocationResult {
@@ -144,7 +144,6 @@ class AndroidCheckInLocationProvider(
                 }
             }.getOrNull()
         }
-
         return resolveBestLocation(locations)
     }
 
@@ -157,7 +156,6 @@ class AndroidCheckInLocationProvider(
             context,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-
         return hasFinePermission || hasCoarsePermission
     }
 
@@ -170,7 +168,6 @@ class AndroidCheckInLocationProvider(
             activity,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
-
         return hasRequestedLocationPermission && !shouldShowFineRationale && !shouldShowCoarseRationale
     }
 

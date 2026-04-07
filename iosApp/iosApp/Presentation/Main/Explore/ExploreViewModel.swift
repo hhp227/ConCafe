@@ -53,13 +53,11 @@ class ExploreViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
                     if let approved = event as? CafeRegistrationClaimEvent.Approved {
                         let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        let shouldLoadCafePage = !approvedCafeId.isEmpty
-                            && uiState.cafes.contains(where: { $0.id == approvedCafeId }) == false
+                        let alreadyVisible = !approvedCafeId.isEmpty &&
+                            self.uiState.cafes.contains { $0.id == approvedCafeId }
 
-                        if shouldLoadCafePage {
+                        if !alreadyVisible {
                             self.loadCafePage(cursor: nil, append: false)
-                        } else {
-                            continue
                         }
                     }
                 }
@@ -241,6 +239,12 @@ class ExploreViewModel: ObservableObject {
         case .seoul:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Seoul") == .orderedSame
+        case .busan:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Busan") == .orderedSame
+        case .daegu:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Daegu") == .orderedSame
         case .tokyo:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Tokyo") == .orderedSame

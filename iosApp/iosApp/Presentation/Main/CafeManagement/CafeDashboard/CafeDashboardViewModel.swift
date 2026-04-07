@@ -26,6 +26,10 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase
 
+    private let updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase
+
+    private let updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase
+
     private let deleteCastUseCase: DeleteCastUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
@@ -53,6 +57,12 @@ final class CafeDashboardViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? CafeDashboardData {
                     uiState.cafe = data
+                    let socialMedia = (data.socialMedia as? [String: String]) ?? [:]
+                    uiState.instagramId = socialMedia["instagram"] ?? ""
+                    uiState.twitterId = socialMedia["twitter"] ?? ""
+                    uiState.tiktokId = socialMedia["tiktok"] ?? ""
+                    uiState.youtubeId = socialMedia["youtube"] ?? ""
+                    uiState.reservationUrl = data.reservationUrl ?? ""
                     uiState.isLoading = false
                     refreshCastPreviews(resetMessage: false)
                     refreshClaimData(resetMessage: false)
@@ -156,6 +166,12 @@ final class CafeDashboardViewModel: ObservableObject {
         case .externalLinks:
             uiState.isExternalLinkSheetVisible = true
             uiState.infoMessage = nil
+        case .socialMedia:
+            uiState.isSocialMediaSheetVisible = true
+            uiState.infoMessage = nil
+        case .reservation:
+            uiState.isReservationSheetVisible = true
+            uiState.infoMessage = nil
         }
     }
 
@@ -243,6 +259,103 @@ final class CafeDashboardViewModel: ObservableObject {
             )
         }
         uiState.infoMessage = "dashboard_info_external_link_deleted"
+    }
+
+    private func changeSocialMediaInstagram(_ value: String) {
+        uiState.instagramId = value
+    }
+
+    private func changeSocialMediaTwitter(_ value: String) {
+        uiState.twitterId = value
+    }
+
+    private func changeSocialMediaTiktok(_ value: String) {
+        uiState.tiktokId = value
+    }
+
+    private func changeSocialMediaYoutube(_ value: String) {
+        uiState.youtubeId = value
+    }
+
+    private func submitSocialMedia() {
+        let instagramId = uiState.instagramId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let twitterId = uiState.twitterId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tiktokId = uiState.tiktokId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let youtubeId = uiState.youtubeId.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isSavingSocialMedia = true
+        Task {
+            do {
+                let result = try await updateCafeSocialMediaUseCase.invoke(
+                    cafeId: cafeId,
+                    instagramId: instagramId.isEmpty ? nil : instagramId,
+                    twitterId: twitterId.isEmpty ? nil : twitterId,
+                    tiktokId: tiktokId.isEmpty ? nil : tiktokId,
+                    youtubeId: youtubeId.isEmpty ? nil : youtubeId
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingSocialMedia = false
+                    uiState.isSocialMediaSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_social_media_saved"
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingSocialMedia = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingSocialMedia = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func dismissSocialMediaSheet() {
+        uiState.isSocialMediaSheetVisible = false
+    }
+
+    private func dismissReservationSheet() {
+        uiState.isReservationSheetVisible = false
+        uiState.reservationUrl = uiState.cafe?.reservationUrl ?? ""
+    }
+
+    private func changeReservationUrl(_ value: String) {
+        uiState.reservationUrl = value
+    }
+
+    private func submitReservation() {
+        let url = uiState.reservationUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isSavingReservation = true
+        Task {
+            do {
+                let result = try await updateCafeReservationUrlUseCase.invoke(
+                    cafeId: cafeId,
+                    reservationUrl: url.isEmpty ? nil : url
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingReservation = false
+                    uiState.isReservationSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_reservation_saved"
+                    if let current = uiState.cafe {
+                        uiState.cafe = CafeDashboardData(
+                            id: current.id,
+                            name: current.name,
+                            city: current.city,
+                            todayCheckIns: current.todayCheckIns,
+                            todayReviews: current.todayReviews,
+                            rating: current.rating,
+                            castPreviews: current.castPreviews,
+                            homeBannerPreview: current.homeBannerPreview,
+                            socialMedia: current.socialMedia,
+                            reservationUrl: url.isEmpty ? nil : url
+                        )
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingReservation = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingReservation = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
     }
 
     private func dismissInfoMessage() {
@@ -418,7 +531,9 @@ final class CafeDashboardViewModel: ObservableObject {
                     period: "dashboard_banner_period_days:\(updatedBanner.displayDays)",
                     statusLabel: statusLabel,
                     imageUrl: updatedBanner.imageUrl
-                )
+                ),
+                socialMedia: current.socialMedia,
+                reservationUrl: current.reservationUrl
             )
         }
     }
@@ -433,7 +548,9 @@ final class CafeDashboardViewModel: ObservableObject {
             todayReviews: current.todayReviews,
             rating: cafe.ratingAvg,
             castPreviews: current.castPreviews,
-            homeBannerPreview: current.homeBannerPreview
+            homeBannerPreview: current.homeBannerPreview,
+            socialMedia: current.socialMedia,
+            reservationUrl: current.reservationUrl
         )
     }
 
@@ -560,6 +677,24 @@ final class CafeDashboardViewModel: ObservableObject {
             clickLoadMoreCasts()
         case .dismissInfoMessage:
             dismissInfoMessage()
+        case .changeSocialMediaInstagram(let value):
+            changeSocialMediaInstagram(value)
+        case .changeSocialMediaTwitter(let value):
+            changeSocialMediaTwitter(value)
+        case .changeSocialMediaTiktok(let value):
+            changeSocialMediaTiktok(value)
+        case .changeSocialMediaYoutube(let value):
+            changeSocialMediaYoutube(value)
+        case .submitSocialMedia:
+            submitSocialMedia()
+        case .dismissSocialMediaSheet:
+            dismissSocialMediaSheet()
+        case .dismissReservationSheet:
+            dismissReservationSheet()
+        case .changeReservationUrl(let value):
+            changeReservationUrl(value)
+        case .submitReservation:
+            submitReservation()
         }
     }
 
@@ -571,6 +706,8 @@ final class CafeDashboardViewModel: ObservableObject {
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
         cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase = KoinInitializerKt.resolveCafeExternalLinkLocalUseCase(),
+        updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase = KoinInitializerKt.resolveUpdateCafeSocialMediaUseCase(),
+        updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase = KoinInitializerKt.resolveUpdateCafeReservationUrlUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
@@ -584,6 +721,8 @@ final class CafeDashboardViewModel: ObservableObject {
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
         self.cafeExternalLinkLocalUseCase = cafeExternalLinkLocalUseCase
+        self.updateCafeSocialMediaUseCase = updateCafeSocialMediaUseCase
+        self.updateCafeReservationUrlUseCase = updateCafeReservationUrlUseCase
         self.deleteCastUseCase = deleteCastUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher

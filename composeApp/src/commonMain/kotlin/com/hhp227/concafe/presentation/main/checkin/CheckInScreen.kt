@@ -339,6 +339,7 @@ private fun CheckInGuestScreen(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
+                userCityKey = uiState.userCityKey,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
             )
@@ -414,6 +415,7 @@ private fun CheckInUserScreen(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
+                userCityKey = uiState.userCityKey,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
             )
@@ -496,6 +498,7 @@ private fun CafeMapSection(
     modifier: Modifier = Modifier,
     currentLocationLabel: String,
     mapCafes: List<CheckInCafeSummary>,
+    userCityKey: String?,
     onCafeClick: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
@@ -510,6 +513,19 @@ private fun CafeMapSection(
         }
     )
     val mapCameraTarget = resolveCheckInMapCameraTarget(selectedRegion)
+    val filteredMapCafes = when {
+        selectedRegion != ExploreUiState.RegionFilter.ALL -> {
+            mapCafes.filter { cafe ->
+                cafe.locationLabel.lowercase().contains(selectedRegion.key)
+            }
+        }
+        userCityKey != null -> {
+            mapCafes.filter { cafe ->
+                cafe.locationLabel.lowercase().contains(userCityKey)
+            }
+        }
+        else -> mapCafes
+    }
 
     Card(
         modifier = modifier,
@@ -601,7 +617,7 @@ private fun CafeMapSection(
                     .height(240.dp)
             ) {
                 CheckInCafeMap(
-                    cafes = mapCafes,
+                    cafes = filteredMapCafes,
                     onCafeClick = onCafeClick,
                     cameraTarget = mapCameraTarget,
                     modifier = Modifier
@@ -620,6 +636,16 @@ private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): 
             latitude = 37.5665,
             longitude = 126.9780,
             zoom = 12.5f
+        )
+        ExploreUiState.RegionFilter.BUSAN -> CheckInMapCameraTarget(
+            latitude = 35.1796,
+            longitude = 129.0756,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.DAEGU -> CheckInMapCameraTarget(
+            latitude = 35.8714,
+            longitude = 128.6014,
+            zoom = 12.0f
         )
         ExploreUiState.RegionFilter.TOKYO -> CheckInMapCameraTarget(
             latitude = 35.6762,

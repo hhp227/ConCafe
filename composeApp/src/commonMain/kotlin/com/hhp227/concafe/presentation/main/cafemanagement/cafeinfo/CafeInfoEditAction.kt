@@ -14,6 +14,7 @@ sealed interface CafeInfoEditAction {
     data class SelectRepresentativeImage(val imageUrl: String) : CafeInfoEditAction
     data object ClickAddGalleryImage : CafeInfoEditAction
     data class AddGalleryImage(val imageUrl: String) : CafeInfoEditAction
+    data class RemoveGalleryImage(val index: Int) : CafeInfoEditAction
     data object ClickPinLocation : CafeInfoEditAction
     data class SetPinnedLocation(val latitude: Double, val longitude: Double) : CafeInfoEditAction
     data object ClickManageExceptionDates : CafeInfoEditAction

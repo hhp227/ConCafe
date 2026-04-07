@@ -109,6 +109,42 @@
       ]
     },
     {
+      "collectionGroup": "cafes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "region.country",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "region.city",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ratingAvg",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "cafes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "region.country",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "region.city",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "reviewCount",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "casts",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

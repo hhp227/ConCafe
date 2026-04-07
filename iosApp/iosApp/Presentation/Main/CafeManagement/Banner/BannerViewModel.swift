@@ -10,6 +10,7 @@ import Combine
 import Shared
 import KMPNativeCoroutinesAsync
 
+@MainActor
 final class BannerViewModel: ObservableObject {
     private let cafeId: String?
 

@@ -39,7 +39,14 @@ service cloud.firestore {
         "galleryImages",
         "businessHours",
         "phoneNumber",
-        "region"
+        "region",
+        "socialMedia"
+      ]);
+    }
+
+    function isCafeSocialMediaUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "socialMedia"
       ]);
     }
 
@@ -311,7 +318,7 @@ service cloud.firestore {
     match /cafes/{cafeId} {
       allow read: if true;
       allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isCafeOwner(cafeId) && isCafeOwnerEditableUpdate());
+      allow update: if isAdmin() || (isCafeOwner(cafeId) && (isCafeOwnerEditableUpdate() || isCafeSocialMediaUpdate()));
 
       match /casts/{castId} {
         allow read: if true;

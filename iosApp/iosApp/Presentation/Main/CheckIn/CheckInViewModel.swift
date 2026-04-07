@@ -142,6 +142,20 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func detectUserCity() {
+        guard uiState.userCityKey == nil else { return }
+        tasks[.detectCity]?.cancel()
+        tasks[.detectCity] = Task {
+            let result = await currentLocationProvider.getCurrentLocation()
+            guard result.isSuccess else { return }
+            let cityKey = Self.cityKeyFromCoordinates(
+                lat: result.location.latitude,
+                lng: result.location.longitude
+            )
+            uiState.userCityKey = cityKey
+        }
+    }
+
     private func observeSession() {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
@@ -417,6 +431,8 @@ final class CheckInViewModel: ObservableObject {
             if permissionResult.isGranted {
                 uiState.isNewVisitSheetVisible = true
                 uiState.errorMessage = nil
+
+                detectUserCity()
             } else {
                 uiState.isNewVisitSheetVisible = false
                 uiState.errorMessage = permissionResult.message
@@ -495,6 +511,7 @@ final class CheckInViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
+        detectUserCity()
         loadGuestFeed()
     }
 
@@ -513,9 +530,19 @@ final class CheckInViewModel: ObservableObject {
         case visitEvent
         case reviewPromptAction
         case locationPermission
+        case detectCity
     }
 
     private static let todayVisitLimit = 4
 
     private static let recentVisitPageSize: Int32 = 12
+
+    private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
+        if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }
+        if (35.0...35.4).contains(lat) && (128.8...129.3).contains(lng) { return "busan" }
+        if (35.7...36.0).contains(lat) && (128.4...128.8).contains(lng) { return "daegu" }
+        if (35.5...35.9).contains(lat) && (139.3...139.9).contains(lng) { return "tokyo" }
+        if (34.5...34.9).contains(lat) && (135.3...135.7).contains(lng) { return "osaka" }
+        return nil
+    }
 }

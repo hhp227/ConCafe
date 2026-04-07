@@ -15,6 +15,8 @@ enum CafeDashboardShortcut: String, CaseIterable, Identifiable {
     case menuGoods
     case homeBanner
     case externalLinks
+    case socialMedia
+    case reservation
 
     var id: String { rawValue }
 
@@ -27,6 +29,8 @@ enum CafeDashboardShortcut: String, CaseIterable, Identifiable {
         case .menuGoods: return "dashboard_shortcut_menu_goods"
         case .homeBanner: return "dashboard_shortcut_home_banner"
         case .externalLinks: return "dashboard_shortcut_external_links"
+        case .socialMedia: return "dashboard_shortcut_social_media"
+        case .reservation: return "dashboard_shortcut_reservation"
         }
     }
 }

@@ -26,4 +26,13 @@ enum CafeDashboardAction {
     case clickRejectCastClaim(String)
     case clickLoadMoreCasts
     case dismissInfoMessage
+    case changeSocialMediaInstagram(String)
+    case changeSocialMediaTwitter(String)
+    case changeSocialMediaTiktok(String)
+    case changeSocialMediaYoutube(String)
+    case submitSocialMedia
+    case dismissSocialMediaSheet
+    case dismissReservationSheet
+    case changeReservationUrl(String)
+    case submitReservation
 }

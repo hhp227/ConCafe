@@ -8,7 +8,9 @@ data class CafeDashboardData(
     val todayReviews: Int,
     val rating: Double,
     val castPreviews: List<CastPreview>,
-    val homeBannerPreview: HomeBannerPreview
+    val homeBannerPreview: HomeBannerPreview,
+    val socialMedia: Map<String, String> = emptyMap(),
+    val reservationUrl: String? = null
 ) {
     data class CastPreview(
         val id: String,
