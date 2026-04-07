@@ -5310,7 +5310,8 @@ class FirestoreConCafeDataSource(
                 ?: 0.0,
             reviewCount = fields.getFirestoreLong("reviewCount")?.toInt() ?: 0,
             approved = fields.getFirestoreBoolean("approved") ?: true,
-            conceptType = fields.getFirestoreString("conceptType") ?: "MAID"
+            conceptType = fields.getFirestoreString("conceptType") ?: "MAID",
+            ownerIds = fields.getFirestoreStringList("ownerIds")
         )
     }
 

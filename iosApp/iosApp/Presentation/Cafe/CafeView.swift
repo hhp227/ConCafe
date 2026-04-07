@@ -235,8 +235,15 @@ private struct CafeContentView: View {
 
     private func summarySection(detail: CafeDetail) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(detail.cafe.name)
-            .font(.title2.bold())
+            HStack(spacing: 6) {
+                Text(detail.cafe.name)
+                    .font(.title2.bold())
+                if !detail.cafe.ownerIds.isEmpty {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(Color(hex: "2563EB"))
+                        .font(.title2)
+                }
+            }
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
