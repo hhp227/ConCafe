@@ -9,5 +9,7 @@ enum class CafeDashboardShortcut(
     CAFE_SETTINGS("dashboard_shortcut_cafe_settings"),
     MENU_GOODS("dashboard_shortcut_menu_goods"),
     HOME_BANNER("dashboard_shortcut_home_banner"),
-    EXTERNAL_LINKS("dashboard_shortcut_external_links")
+    EXTERNAL_LINKS("dashboard_shortcut_external_links"),
+    SOCIAL_MEDIA("dashboard_shortcut_social_media"),
+    RESERVATION("dashboard_shortcut_reservation")
 }

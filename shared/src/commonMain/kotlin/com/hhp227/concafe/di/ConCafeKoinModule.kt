@@ -173,6 +173,17 @@ val dataSourceModule = module {
             override suspend fun fetchNoticeCount(cafeId: String): Int {
                 return dataSource.fetchNoticeCountRemote(cafeId)
             }
+
+            override suspend fun updateCafeSocialMediaRemote(
+                cafeId: String,
+                instagramId: String?,
+                twitterId: String?,
+                tiktokId: String?,
+                youtubeId: String?
+            ) = dataSource.updateCafeSocialMediaRemote(cafeId, instagramId, twitterId, tiktokId, youtubeId)
+
+            override suspend fun updateCafeReservationUrlRemote(cafeId: String, reservationUrl: String?) =
+                dataSource.updateCafeReservationUrlRemote(cafeId, reservationUrl)
         }
     }
     single<CastRemoteDataSource> {
@@ -613,6 +624,8 @@ val useCaseModule = module {
     factory { ToggleFavoriteCafeUseCase(get(), get(), get()) }
     factory { UpdateUserProfileUseCase(get(), get(), get()) }
     factory { UpdateCafeInfoUseCase(get(), get()) }
+    factory { UpdateCafeSocialMediaUseCase(get()) }
+    factory { UpdateCafeReservationUrlUseCase(get()) }
     factory { UpdateCafeEventUseCase(get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }
     factory { UpdateHomeBannerUseCase(get(), get(), get(), get()) }

@@ -15,6 +15,7 @@ struct CafeInfoView: View {
         VStack(spacing: 14) {
             infoCard(detail: cafeDetail)
             descriptionCard(detail: cafeDetail)
+            socialMediaCard(cafe: cafeDetail.cafe)
             reservationButton()
         }
     }
@@ -70,6 +71,69 @@ struct CafeInfoView: View {
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func socialMediaCard(cafe: Cafe) -> some View {
+        let items: [(label: String, url: String, color: Color)] = {
+            var result: [(String, String, Color)] = []
+
+            if let id = cafe.instagramId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("Instagram", "https://instagram.com/\(trimmed)", Color(hex: "E1306C")))
+            }
+            if let id = cafe.twitterId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("X (Twitter)", "https://x.com/\(trimmed)", Color(hex: "1DA1F2")))
+            }
+            if let id = cafe.tiktokId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("TikTok", "https://tiktok.com/@\(trimmed)", Color(hex: "010101")))
+            }
+            if let id = cafe.youtubeId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("YouTube", "https://youtube.com/@\(trimmed)", Color(hex: "FF0000")))
+            }
+            return result
+        }()
+
+        if items.isEmpty {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(String(localized: String.LocalizationValue("cafe_info_section_social_media"), table: "Localizable"))
+                    .font(.subheadline.weight(.semibold))
+                let rows = stride(from: 0, to: items.count, by: 2).map { i in
+                    Array(items[i..<min(i + 2, items.count)])
+                }
+
+                ForEach(rows.indices, id: \.self) { rowIndex in
+                    HStack(spacing: 10) {
+                        ForEach(rows[rowIndex].indices, id: \.self) { colIndex in
+                            let item = rows[rowIndex][colIndex]
+
+                            Link(destination: URL(string: item.url) ?? URL(string: "https://")!) {
+                                Text(item.label)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(item.color)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(hex: "F5EDF4"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                        }
+                        if rows[rowIndex].count == 1 {
+                            Color.clear
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        }
     }
 
     private func reservationButton() -> some View {

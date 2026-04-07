@@ -61,4 +61,14 @@ interface CafeRemoteDataSource {
     suspend fun fetchCafeHomeBannerPreview(cafeId: String): CafeDashboardData.HomeBannerPreview?
 
     suspend fun fetchNoticeCount(cafeId: String): Int
+
+    suspend fun updateCafeSocialMediaRemote(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    )
+
+    suspend fun updateCafeReservationUrlRemote(cafeId: String, reservationUrl: String?)
 }

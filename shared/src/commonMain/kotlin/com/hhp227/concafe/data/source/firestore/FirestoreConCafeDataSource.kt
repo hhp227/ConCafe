@@ -1936,6 +1936,43 @@ class FirestoreConCafeDataSource(
         return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
+    suspend fun updateCafeSocialMediaRemote(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    ) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId" +
+            "?updateMask.fieldPaths=socialMedia"
+        val mapEntries = buildMap<String, JsonElement> {
+            if (instagramId != null) put("instagram", firestoreString(instagramId))
+            if (twitterId != null) put("twitter", firestoreString(twitterId))
+            if (tiktokId != null) put("tiktok", firestoreString(tiktokId))
+            if (youtubeId != null) put("youtube", firestoreString(youtubeId))
+        }
+        val socialMediaValue = JsonObject(
+            mapOf(
+                "mapValue" to JsonObject(
+                    mapOf("fields" to JsonObject(mapEntries))
+                )
+            )
+        )
+        val body = firestoreDocumentBody(mapOf("socialMedia" to socialMediaValue))
+        restApi.patch(path, body, idToken)
+    }
+
+    suspend fun updateCafeReservationUrlRemote(cafeId: String, reservationUrl: String?) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId" +
+            "?updateMask.fieldPaths=reservationUrl"
+        val body = firestoreDocumentBody(
+            mapOf("reservationUrl" to firestoreNullableString(reservationUrl))
+        )
+        restApi.patch(path, body, idToken)
+    }
+
     suspend fun upsertCastRemote(update: CastUpsert): CastDetail {
         require(update.name.isNotBlank()) { "cast name is required" }
         require(update.conceptRole.isNotBlank()) { "concept role is required" }
@@ -5311,7 +5348,18 @@ class FirestoreConCafeDataSource(
             reviewCount = fields.getFirestoreLong("reviewCount")?.toInt() ?: 0,
             approved = fields.getFirestoreBoolean("approved") ?: true,
             conceptType = fields.getFirestoreString("conceptType") ?: "MAID",
-            ownerIds = fields.getFirestoreStringList("ownerIds")
+            ownerIds = fields.getFirestoreStringList("ownerIds"),
+            socialMedia = run {
+                val mapFields = fields.getFirestoreMap("socialMedia")
+                if (mapFields == null) emptyMap()
+                else buildMap {
+                    mapFields.getFirestoreString("instagram")?.let { put("instagram", it) }
+                    mapFields.getFirestoreString("twitter")?.let { put("twitter", it) }
+                    mapFields.getFirestoreString("tiktok")?.let { put("tiktok", it) }
+                    mapFields.getFirestoreString("youtube")?.let { put("youtube", it) }
+                }
+            },
+            reservationUrl = fields.getFirestoreString("reservationUrl")
         )
     }
 

@@ -3,11 +3,13 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -16,9 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -26,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import concafe.composeapp.generated.resources.Res
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
@@ -34,66 +35,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import concafe.composeapp.generated.resources.cafe_accessibility_back
-import concafe.composeapp.generated.resources.common_cancel
-import concafe.composeapp.generated.resources.common_close
-import concafe.composeapp.generated.resources.common_confirm
-import concafe.composeapp.generated.resources.dashboard_accessibility_cast_add
-import concafe.composeapp.generated.resources.dashboard_accessibility_cast_delete
-import concafe.composeapp.generated.resources.dashboard_accessibility_cast_load_more
-import concafe.composeapp.generated.resources.dashboard_accessibility_external_link_delete
-import concafe.composeapp.generated.resources.dashboard_accessibility_external_link_edit
-import concafe.composeapp.generated.resources.dashboard_action_add
-import concafe.composeapp.generated.resources.dashboard_action_approve
-import concafe.composeapp.generated.resources.dashboard_action_create_banner
-import concafe.composeapp.generated.resources.dashboard_action_load_more
-import concafe.composeapp.generated.resources.dashboard_action_loading
-import concafe.composeapp.generated.resources.dashboard_action_reject
-import concafe.composeapp.generated.resources.dashboard_action_schedule_management
-import concafe.composeapp.generated.resources.dashboard_action_view_all
-import concafe.composeapp.generated.resources.dashboard_banner_period_days
-import concafe.composeapp.generated.resources.dashboard_banner_status_active
-import concafe.composeapp.generated.resources.dashboard_banner_status_hidden
-import concafe.composeapp.generated.resources.dashboard_banner_status_scheduled
-import concafe.composeapp.generated.resources.dashboard_delete_cast_message
-import concafe.composeapp.generated.resources.dashboard_delete_cast_title
-import concafe.composeapp.generated.resources.dashboard_external_link_add
-import concafe.composeapp.generated.resources.dashboard_external_link_edit
-import concafe.composeapp.generated.resources.dashboard_external_link_guide
-import concafe.composeapp.generated.resources.dashboard_external_link_label_title
-import concafe.composeapp.generated.resources.dashboard_external_link_label_url
-import concafe.composeapp.generated.resources.dashboard_external_link_placeholder_title
-import concafe.composeapp.generated.resources.dashboard_external_link_save
-import concafe.composeapp.generated.resources.dashboard_external_link_section_subtitle
-import concafe.composeapp.generated.resources.dashboard_hero_subtitle
-import concafe.composeapp.generated.resources.dashboard_info_cast_claim_approved
-import concafe.composeapp.generated.resources.dashboard_info_cast_claim_rejected
-import concafe.composeapp.generated.resources.dashboard_info_cast_deleted
-import concafe.composeapp.generated.resources.dashboard_info_cast_list_load_failed
-import concafe.composeapp.generated.resources.dashboard_info_external_link_added
-import concafe.composeapp.generated.resources.dashboard_info_external_link_deleted
-import concafe.composeapp.generated.resources.dashboard_info_external_link_input_required
-import concafe.composeapp.generated.resources.dashboard_info_external_link_updated
-import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_delete
-import concafe.composeapp.generated.resources.dashboard_info_select_cast_for_schedule
-import concafe.composeapp.generated.resources.dashboard_metric_rating
-import concafe.composeapp.generated.resources.dashboard_metric_today_checkin
-import concafe.composeapp.generated.resources.dashboard_metric_today_review
-import concafe.composeapp.generated.resources.dashboard_pending_claim_title
-import concafe.composeapp.generated.resources.dashboard_section_cast_management
-import concafe.composeapp.generated.resources.dashboard_section_home_banner
-import concafe.composeapp.generated.resources.dashboard_section_menu_subtitle
-import concafe.composeapp.generated.resources.dashboard_section_menu_title
-import concafe.composeapp.generated.resources.dashboard_section_metrics_subtitle
-import concafe.composeapp.generated.resources.dashboard_section_metrics_title
-import concafe.composeapp.generated.resources.dashboard_shortcut_cafe_settings
-import concafe.composeapp.generated.resources.dashboard_shortcut_cast_management
-import concafe.composeapp.generated.resources.dashboard_shortcut_cast_schedule
-import concafe.composeapp.generated.resources.dashboard_shortcut_event_management
-import concafe.composeapp.generated.resources.dashboard_shortcut_external_links
-import concafe.composeapp.generated.resources.dashboard_shortcut_home_banner
-import concafe.composeapp.generated.resources.dashboard_shortcut_menu_goods
-import concafe.composeapp.generated.resources.dashboard_title
+import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -112,6 +54,8 @@ fun CafeDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val externalLinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val socialMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val reservationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -176,6 +120,30 @@ fun CafeDashboardScreen(
                 uiState = uiState,
                 onAction = viewModel::onAction,
                 onSubmit = { viewModel.onAction(CafeDashboardAction.SubmitExternalLink) }
+            )
+        }
+    }
+    if (uiState.isSocialMediaSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissSocialMediaSheet) },
+            containerColor = Color(0xFFFFFBFD),
+            sheetState = socialMediaSheetState
+        ) {
+            SocialMediaSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (uiState.isReservationSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissReservationSheet) },
+            containerColor = Color(0xFFFFFBFD),
+            sheetState = reservationSheetState
+        ) {
+            ReservationSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
             )
         }
     }
@@ -253,6 +221,8 @@ private fun CafeDashboardContentScreen(
                                     "dashboard_info_cast_deleted" -> stringResource(Res.string.dashboard_info_cast_deleted)
                                     "dashboard_info_cast_claim_approved" -> stringResource(Res.string.dashboard_info_cast_claim_approved)
                                     "dashboard_info_cast_claim_rejected" -> stringResource(Res.string.dashboard_info_cast_claim_rejected)
+                                    "dashboard_info_social_media_saved" -> stringResource(Res.string.dashboard_info_social_media_saved)
+                                    "dashboard_info_reservation_saved" -> stringResource(Res.string.dashboard_info_reservation_saved)
                                     else -> message
                                 },
                                 onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
@@ -349,22 +319,14 @@ private fun ExternalLinkSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .keyboardBottomInsets(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = stringResource(if (uiState.editingExternalLinkId == null) {
-                Res.string.dashboard_external_link_add
-            } else {
-                Res.string.dashboard_external_link_edit
-            }),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
             text = stringResource(Res.string.dashboard_external_link_guide),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Color(0xFF7A707A)
         )
         ConCafeFormField(
@@ -402,6 +364,144 @@ private fun ExternalLinkSheetContent(
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun SocialMediaSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .keyboardBottomInsets(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_social_media_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_social_media_section_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7A707A)
+        )
+        ConCafeFormField(
+            label = "Instagram",
+            value = uiState.instagramId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaInstagram(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "X (Twitter)",
+            value = uiState.twitterId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaTwitter(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "TikTok",
+            value = uiState.tiktokId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaTiktok(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "YouTube",
+            value = uiState.youtubeId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaYoutube(it)) },
+            placeholder = "@channel_id"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitSocialMedia) },
+            enabled = !uiState.isSavingSocialMedia,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330),
+                disabledContainerColor = Color(0xFFF4D7DF),
+                disabledContentColor = Color(0xFF7F7078)
+            )
+        ) {
+            if (uiState.isSavingSocialMedia) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF7F7078)
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_social_media_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissSocialMediaSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun ReservationSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .keyboardBottomInsets(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_reservation_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_reservation_guide),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7A707A)
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_reservation_label_url),
+            value = uiState.reservationUrl,
+            onValueChange = { onAction(CafeDashboardAction.ChangeReservationUrl(it)) },
+            placeholder = "https://"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitReservation) },
+            enabled = !uiState.isSavingReservation,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330),
+                disabledContainerColor = Color(0xFFF4D7DF),
+                disabledContentColor = Color(0xFF7F7078)
+            )
+        ) {
+            if (uiState.isSavingReservation) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF7F7078)
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_reservation_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissReservationSheet) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(Res.string.common_close))
@@ -796,6 +896,21 @@ private fun ShortcutGrid(
                     onClick = { onShortcutClick(CafeDashboardShortcut.EXTERNAL_LINKS) }
                 )
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ShortcutCard(
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.SOCIAL_MEDIA,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.SOCIAL_MEDIA) }
+                )
+                ShortcutCard(
+                    modifier = Modifier.weight(1f),
+                    shortcut = CafeDashboardShortcut.RESERVATION,
+                    onClick = { onShortcutClick(CafeDashboardShortcut.RESERVATION) }
+                )
+            }
         }
     }
 }
@@ -815,6 +930,8 @@ private fun ShortcutCard(
         CafeDashboardShortcut.MENU_GOODS -> Icons.Default.RestaurantMenu
         CafeDashboardShortcut.HOME_BANNER -> Icons.Default.Campaign
         CafeDashboardShortcut.EXTERNAL_LINKS -> Icons.Default.Link
+        CafeDashboardShortcut.SOCIAL_MEDIA -> Icons.Default.Share
+        CafeDashboardShortcut.RESERVATION -> Icons.Default.BookmarkAdd
     }
 
     Card(
@@ -848,6 +965,8 @@ private fun ShortcutCard(
                     CafeDashboardShortcut.MENU_GOODS -> Res.string.dashboard_shortcut_menu_goods
                     CafeDashboardShortcut.HOME_BANNER -> Res.string.dashboard_shortcut_home_banner
                     CafeDashboardShortcut.EXTERNAL_LINKS -> Res.string.dashboard_shortcut_external_links
+                    CafeDashboardShortcut.SOCIAL_MEDIA -> Res.string.dashboard_shortcut_social_media
+                    CafeDashboardShortcut.RESERVATION -> Res.string.dashboard_shortcut_reservation
                 }),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,

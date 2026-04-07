@@ -8541,6 +8541,102 @@
         }
       }
     },
+    "dashboard_social_media_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social Media"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소셜 미디어"
+          }
+        }
+      }
+    },
+    "dashboard_social_media_section_subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your cafe's social media account IDs."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 상세에 표시될 소셜 미디어 계정 아이디를 입력하세요."
+          }
+        }
+      }
+    },
+    "dashboard_social_media_save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Social Media"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소셜 미디어 저장"
+          }
+        }
+      }
+    },
+    "dashboard_other_links_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기타"
+          }
+        }
+      }
+    },
+    "dashboard_info_social_media_saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social media info has been saved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소셜 미디어 정보가 저장되었습니다."
+          }
+        }
+      }
+    },
+    "cafe_info_section_social_media" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social Media"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소셜 미디어"
+          }
+        }
+      }
+    },
     "dashboard_hero_subtitle" : {
       "localizations" : {
         "en" : {

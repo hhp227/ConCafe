@@ -30,4 +30,14 @@ interface CafeRepository {
     suspend fun toggleFavorite(userId: String, cafeId: String): Boolean
 
     suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary>
+
+    suspend fun updateCafeSocialMedia(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    )
+
+    suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?)
 }

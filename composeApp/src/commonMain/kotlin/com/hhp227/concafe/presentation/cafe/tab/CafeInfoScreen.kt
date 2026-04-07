@@ -1,5 +1,7 @@
 package com.hhp227.concafe.presentation.cafe.tab
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,11 +13,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeDetail
@@ -28,13 +33,20 @@ import concafe.composeapp.generated.resources.cafe_info_label_phone
 import concafe.composeapp.generated.resources.cafe_info_placeholder_business_hours
 import concafe.composeapp.generated.resources.cafe_info_placeholder_phone
 import concafe.composeapp.generated.resources.cafe_info_section_description
+import concafe.composeapp.generated.resources.cafe_info_section_social_media
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeInfoScreen(detail: CafeDetail) {
+    val uriHandler = LocalUriHandler.current
+
     InfoCard(detail = detail)
     DescriptionCard(detail = detail)
-    ReservationButton()
+    SocialMediaCard(detail = detail)
+    ReservationButton(
+        reservationUrl = detail.cafe.reservationUrl,
+        onClick = { url -> uriHandler.openUri(url) }
+    )
 }
 
 @Composable
@@ -121,10 +133,94 @@ private fun DescriptionCard(detail: CafeDetail) {
 }
 
 @Composable
-private fun ReservationButton() {
+private fun SocialMediaCard(detail: CafeDetail) {
+    val cafe = detail.cafe
+    val uriHandler = LocalUriHandler.current
+    val socialMedia = cafe.socialMedia
+    val items = buildList {
+        socialMedia["instagram"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("Instagram", "https://instagram.com/$it", colorFromHex("E1306C")))
+        }
+        socialMedia["twitter"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("X (Twitter)", "https://x.com/$it", Color(0xFF1DA1F2)))
+        }
+        socialMedia["tiktok"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("TikTok", "https://tiktok.com/@$it", Color(0xFF010101)))
+        }
+        socialMedia["youtube"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("YouTube", "https://youtube.com/@$it", colorFromHex("FF0000")))
+        }
+    }
+
+    if (items.isEmpty()) return
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.cafe_info_section_social_media),
+                fontWeight = FontWeight.SemiBold
+            )
+            val rows = items.chunked(2)
+
+            rows.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    rowItems.forEach { item ->
+                        SocialMediaChip(
+                            item = item,
+                            modifier = Modifier.weight(1f),
+                            onClick = { uriHandler.openUri(item.url) }
+                        )
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class SocialMediaItem(val label: String, val url: String, val tint: Color)
+
+@Composable
+private fun SocialMediaChip(
+    item: SocialMediaItem,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .background(color = Color(0xFFF5EDF4), shape = RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = item.label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = item.tint
+        )
+    }
+}
+
+@Composable
+private fun ReservationButton(reservationUrl: String?, onClick: (String) -> Unit) {
+    val isEnabled = !reservationUrl.isNullOrBlank()
     Button(
-        onClick = {},
-        enabled = false,
+        onClick = { reservationUrl?.let { onClick(it) } },
+        enabled = isEnabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),

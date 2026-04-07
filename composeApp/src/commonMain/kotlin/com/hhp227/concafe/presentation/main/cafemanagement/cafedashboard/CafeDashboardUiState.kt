@@ -18,6 +18,15 @@ data class CafeDashboardUiState(
     val editingExternalLinkId: String? = null,
     val externalLinkTitle: String = "",
     val externalLinkUrl: String = "",
+    val instagramId: String = "",
+    val twitterId: String = "",
+    val tiktokId: String = "",
+    val youtubeId: String = "",
+    val isSavingSocialMedia: Boolean = false,
+    val isSocialMediaSheetVisible: Boolean = false,
+    val reservationUrl: String = "",
+    val isReservationSheetVisible: Boolean = false,
+    val isSavingReservation: Boolean = false,
     val isLoading: Boolean = true,
     val infoMessage: String? = null
 ) {
