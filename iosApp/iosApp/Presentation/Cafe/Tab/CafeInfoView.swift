@@ -15,8 +15,15 @@ struct CafeInfoView: View {
         VStack(spacing: 14) {
             infoCard(detail: cafeDetail)
             descriptionCard(detail: cafeDetail)
-            socialMediaCard(cafe: cafeDetail.cafe)
-            reservationButton()
+            socialMediaCard(detail: cafeDetail)
+            reservationButton(
+                reservationUrl: cafeDetail.cafe.reservationUrl,
+                onTapped: {
+                    if let url = URL(string: $0) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
         }
     }
 
@@ -74,23 +81,25 @@ struct CafeInfoView: View {
     }
 
     @ViewBuilder
-    private func socialMediaCard(cafe: Cafe) -> some View {
+    private func socialMediaCard(detail: CafeDetail) -> some View {
+        let cafe = detail.cafe
+        let socialMedia = cafe.socialMedia
         let items: [(label: String, url: String, color: Color)] = {
             var result: [(String, String, Color)] = []
 
-            if let id = cafe.instagramId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let id = socialMedia["instagram"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
                 result.append(("Instagram", "https://instagram.com/\(trimmed)", Color(hex: "E1306C")))
             }
-            if let id = cafe.twitterId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let id = socialMedia["twitter"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
                 result.append(("X (Twitter)", "https://x.com/\(trimmed)", Color(hex: "1DA1F2")))
             }
-            if let id = cafe.tiktokId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let id = socialMedia["tiktok"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
                 result.append(("TikTok", "https://tiktok.com/@\(trimmed)", Color(hex: "010101")))
             }
-            if let id = cafe.youtubeId, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let id = socialMedia["youtube"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
                 result.append(("YouTube", "https://youtube.com/@\(trimmed)", Color(hex: "FF0000")))
             }
@@ -136,8 +145,11 @@ struct CafeInfoView: View {
         }
     }
 
-    private func reservationButton() -> some View {
+    private func reservationButton(reservationUrl: String?, onTapped: @escaping (String) -> Void) -> some View {
         Button {
+            if let url = reservationUrl {
+                onTapped(url)
+            }
         } label: {
             HStack {
                 Spacer()
@@ -151,7 +163,7 @@ struct CafeInfoView: View {
         .tint(Color(hex: "FFD1DC"))
         .foregroundStyle(Color(hex: "2B2330"))
         .frame(maxWidth: .infinity)
-        .disabled(true)
+        .disabled(reservationUrl == nil || reservationUrl?.isEmpty == true)
     }
 }
 
