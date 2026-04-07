@@ -29,6 +29,8 @@ data class ExploreUiState(
     enum class RegionFilter(val label: String, val key: String) {
         ALL("전체", "all"),
         SEOUL("서울", "seoul"),
+        BUSAN("부산", "busan"),
+        DAEGU("대구", "daegu"),
         TOKYO("도쿄", "tokyo"),
         OSAKA("오사카", "osaka")
     }

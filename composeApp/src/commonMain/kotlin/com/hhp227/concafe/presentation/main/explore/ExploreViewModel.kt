@@ -342,6 +342,10 @@ private fun matchesCafeFilters(state: ExploreUiState, cafe: Cafe): Boolean {
         ExploreUiState.RegionFilter.ALL -> true
         ExploreUiState.RegionFilter.SEOUL -> cafe.region.country.equals("KR", ignoreCase = true) &&
             cafe.region.city.equals("Seoul", ignoreCase = true)
+        ExploreUiState.RegionFilter.BUSAN -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Busan", ignoreCase = true)
+        ExploreUiState.RegionFilter.DAEGU -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Daegu", ignoreCase = true)
         ExploreUiState.RegionFilter.TOKYO -> cafe.region.country.equals("JP", ignoreCase = true) &&
             cafe.region.city.equals("Tokyo", ignoreCase = true)
         ExploreUiState.RegionFilter.OSAKA -> cafe.region.country.equals("JP", ignoreCase = true) &&

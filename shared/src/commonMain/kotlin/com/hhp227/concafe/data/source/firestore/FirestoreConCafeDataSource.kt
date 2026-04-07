@@ -4084,17 +4084,6 @@ class FirestoreConCafeDataSource(
         }
         val filters = mutableListOf<String>()
 
-        filters.add(
-            """
-            {
-              "fieldFilter": {
-                "field": { "fieldPath": "approved" },
-                "op": "EQUAL",
-                "value": { "booleanValue": true }
-              }
-            }
-            """.trimIndent()
-        )
         if (!country.isNullOrBlank()) {
             filters.add(
                 """
@@ -4121,11 +4110,11 @@ class FirestoreConCafeDataSource(
                 """.trimIndent()
             )
         }
-        val whereSection = if (filters.size == 1) {
-            """,
+        val whereSection = when (filters.size) {
+            0 -> ""
+            1 -> """,
                 "where": ${filters.first()}"""
-        } else {
-            """,
+            else -> """,
                 "where": {
                   "compositeFilter": {
                     "op": "AND",

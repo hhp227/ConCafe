@@ -13,6 +13,7 @@ struct CheckInUiState {
     var errorMessage: String?
     var currentUser: User?
     var currentLocationLabel: String
+    var userCityKey: String?
     var mapCafes: [CheckInCafeSummary]
     var popularCafes: [CheckInCafeSummary]
     var popularCasts: [CheckInCastSummary]
@@ -30,6 +31,7 @@ struct CheckInUiState {
         errorMessage: nil,
         currentUser: nil,
         currentLocationLabel: "",
+        userCityKey: nil,
         mapCafes: [],
         popularCafes: [],
         popularCasts: [],

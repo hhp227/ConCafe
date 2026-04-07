@@ -45,7 +45,7 @@ class GetCheckInGuestFeedUseCase(
     }
 
     private companion object {
-        private const val GUEST_FEED_LIMIT = 10
+        private const val GUEST_FEED_LIMIT = 30
         private const val DEFAULT_LOCATION_LABEL = "서울 주요 메이드카페"
     }
 }
