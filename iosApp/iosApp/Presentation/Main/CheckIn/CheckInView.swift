@@ -395,6 +395,11 @@ private struct CheckInMapSection: View {
                 .onChange(of: userCityKey) { _ in
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
+                .onChange(of: mapPins.map(\.id)) { visiblePinIds in
+                    if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
+                        self.selectedPinId = nil
+                    }
+                }
             }
             .frame(height: 240)
         }
@@ -423,7 +428,9 @@ private struct CheckInMapSection: View {
                 $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
             }
         } else if let cityKey = userCityKey {
-            return cafes.filter { $0.locationLabel.contains(cityKey) }
+            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !normalizedCityKey.isEmpty else { return cafes }
+            return cafes.filter { $0.locationLabel.lowercased().contains(normalizedCityKey) }
         } else {
             return cafes
         }
