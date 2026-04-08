@@ -287,6 +287,8 @@ private struct CheckInMapSection: View {
 
     @State private var selectedPinId: String? = nil
 
+    @State private var mapViewIdentity = "checkin-map-initial"
+
     var body: some View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
@@ -382,6 +384,7 @@ private struct CheckInMapSection: View {
                         }
                     }
                 }
+                .id(mapViewIdentity)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onAppear {
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
@@ -394,9 +397,11 @@ private struct CheckInMapSection: View {
                 }
                 .onChange(of: userCityKey) { _ in
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                    refreshMapIdentityIfNeeded()
                 }
                 .onChange(of: filteredCafes.map { "\($0.id):\($0.geoPoint.latitude):\($0.geoPoint.longitude)" }) { _ in
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                    refreshMapIdentityIfNeeded()
                 }
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
                     if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
@@ -520,6 +525,11 @@ private struct CheckInMapSection: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
             )
         }
+    }
+
+    private func refreshMapIdentityIfNeeded() {
+        guard selectedRegion == .all else { return }
+        mapViewIdentity = "checkin-map-\(userCityKey ?? "all")-\(filteredCafes.map(\.id).joined(separator: ","))"
     }
 
 }
