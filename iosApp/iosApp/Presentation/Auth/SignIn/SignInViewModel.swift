@@ -65,18 +65,19 @@ class SignInViewModel: ObservableObject {
         }
     }
 
-    private func ensureVisitorAccountCompleted(user: Shared.User, fallbackEmail: String? = nil, fallbackNickname: String? = nil) async -> Bool {
-        if user.signupCompleted {
+    private func ensureVisitorAccountCompleted(
+        email: String,
+        nickname: String,
+        signupCompleted: Bool
+    ) async -> Bool {
+        if signupCompleted {
             return true
         }
 
-        let resolvedEmail = fallbackEmail?.trimmingCharacters(in: .whitespacesAndNewlines).flatMap { $0.isEmpty ? nil : $0 } ?? user.email
-        let resolvedNickname = fallbackNickname?.trimmingCharacters(in: .whitespacesAndNewlines).flatMap { $0.isEmpty ? nil : $0 } ?? user.nickname
-
         do {
             let result = try await completeSignUpForCurrentUserUseCase.invoke(
-                email: resolvedEmail,
-                nickname: resolvedNickname,
+                email: email,
+                nickname: nickname,
                 role: .visitor
             )
             return result is AppResultSuccess<AnyObject>
@@ -133,7 +134,11 @@ class SignInViewModel: ObservableObject {
 
                     if let success = result as? AppResultSuccess<AnyObject>,
                        let user = success.data as? Shared.User {
-                        let isCompleted = await ensureVisitorAccountCompleted(user: user)
+                        let isCompleted = await ensureVisitorAccountCompleted(
+                            email: user.email,
+                            nickname: user.nickname,
+                            signupCompleted: user.signupCompleted
+                        )
                         if isCompleted {
                             uiState.isLoading = false
                             event.send(.signedIn)
@@ -183,7 +188,11 @@ class SignInViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? Shared.User {
-                let isCompleted = await ensureVisitorAccountCompleted(user: user)
+                let isCompleted = await ensureVisitorAccountCompleted(
+                    email: user.email,
+                    nickname: user.nickname,
+                    signupCompleted: user.signupCompleted
+                )
                 if isCompleted {
                     uiState.isLoading = false
                     event.send(.signedIn)
@@ -214,11 +223,23 @@ class SignInViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? Shared.User {
-                await applyKakaoNicknameIfNeeded(profile.nickname)
+                let trimmedEmail = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let resolvedNickname = (trimmedNickname?.isEmpty == false ? trimmedNickname! : user.nickname)
+
+                if !resolvedNickname.isEmpty {
+                    await applyKakaoNicknameIfNeeded(resolvedNickname)
+                }
+
+                let resolvedEmail = (trimmedEmail?.isEmpty == false ? trimmedEmail! : user.email)
+                let completionNickname = resolvedNickname.isEmpty
+                    ? String(localized: String.LocalizationValue("signin_default_kakao_nickname"), table: "Localizable")
+                    : resolvedNickname
+
                 if await ensureVisitorAccountCompleted(
-                    user: user,
-                    fallbackEmail: profile.email,
-                    fallbackNickname: profile.nickname ?? String(localized: String.LocalizationValue("signin_default_kakao_nickname"), table: "Localizable")
+                    email: resolvedEmail,
+                    nickname: completionNickname,
+                    signupCompleted: user.signupCompleted
                 ) {
                     uiState.isLoading = false
                     event.send(.signedIn)
