@@ -338,7 +338,7 @@ private struct CheckInMapSection: View {
                         anchorPoint: CGPoint(x: 0.5, y: 1.0)
                     ) {
                         VStack(spacing: 0) {
-                            if selectedPinId == pin.id {
+                            if pin.isSelected {
                                 HStack(spacing: 4) {
                                     Button {
                                         selectedPinId = nil
@@ -417,9 +417,13 @@ private struct CheckInMapSection: View {
 
     private var filteredCafes: [CheckInCafeSummary] {
         if selectedRegion != .all {
-            return cafes.filter { $0.locationLabel.lowercased().contains(selectedRegion.rawValue) }
+            let label = selectedRegion.label
+            let key = selectedRegion.rawValue
+            return cafes.filter {
+                $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
+            }
         } else if let cityKey = userCityKey {
-            return cafes.filter { $0.locationLabel.lowercased().contains(cityKey) }
+            return cafes.filter { $0.locationLabel.contains(cityKey) }
         } else {
             return cafes
         }
@@ -431,7 +435,8 @@ private struct CheckInMapSection: View {
                 id: cafe.id,
                 name: cafe.name,
                 latitude: cafe.geoPoint.latitude,
-                longitude: cafe.geoPoint.longitude
+                longitude: cafe.geoPoint.longitude,
+                isSelected: selectedPinId == cafe.id
             )
         }
     }
@@ -513,6 +518,7 @@ private struct CheckInMapPin: Identifiable {
     let name: String
     let latitude: Double
     let longitude: Double
+    let isSelected: Bool
 }
 
 private struct CheckInLoginPromotionSection: View {
