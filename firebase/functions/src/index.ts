@@ -3690,7 +3690,7 @@ export const onUserDeletedCleanupOwnership =
 
     const firestore = db();
 
-    const [cafesSnapshot, castsSnapshot] = await Promise.all([
+    const [cafesSnapshot, castsSnapshot, userSnapshot] = await Promise.all([
       firestore
         .collection("cafes")
         .where("ownerIds", "array-contains", userId)
@@ -3699,25 +3699,44 @@ export const onUserDeletedCleanupOwnership =
         .collectionGroup("casts")
         .where("linkedUserId", "==", userId)
         .get(),
+      firestore
+        .collection("users")
+        .doc(userId)
+        .get(),
     ]);
 
-    if (cafesSnapshot.empty && castsSnapshot.empty) return;
+    // cafes.ownerIds 쿼리 결과와 users.ownedCafeIds 양쪽에서 대상 카페를 수집
+    const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
+    cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
+    const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+    for (const cafeId of ownedCafeIds) {
+      if (cafeId && !cafeRefMap.has(cafeId)) {
+        cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
+      }
+    }
 
-    const batch = firestore.batch();
+    if (cafeRefMap.size === 0 && castsSnapshot.empty) return;
 
-    cafesSnapshot.docs.forEach((doc) => {
-      batch.update(doc.ref, {
-        ownerIds: FieldValue.arrayRemove(userId),
+    const BATCH_SIZE = 500;
+    const cafeRefs = [...cafeRefMap.values()];
+
+    for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+        batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
       });
-    });
+      await batch.commit();
+    }
 
-    castsSnapshot.docs.forEach((doc) => {
-      batch.update(doc.ref, {
-        linkedUserId: null,
+    const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
+
+    for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+        batch.update(ref, {linkedUserId: null});
       });
-    });
-
-    await batch.commit();
+      await batch.commit();
+    }
   });
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
