@@ -2164,13 +2164,14 @@ class FirestoreConCafeDataSource(
             val takenWithDocs = filteredWithDocs.take(remaining)
 
             aggregated.addAll(takenWithDocs.map { (_, cafe) -> cafe })
-            nextCursorToken = if (takenWithDocs.size < filteredWithDocs.size) {
+            val hasMoreInBatch = takenWithDocs.size < filteredWithDocs.size
+            nextCursorToken = if (hasMoreInBatch) {
                 takenWithDocs.lastOrNull()?.first?.toCafeQueryCursor(sort)
                     ?: lastBatchDocument?.toCafeQueryCursor(sort)
             } else {
                 lastBatchDocument?.toCafeQueryCursor(sort)
             }
-            exhausted = !hasMoreBatch
+            exhausted = !hasMoreBatch && !hasMoreInBatch
         }
         return PagedResult(
             items = aggregated,
@@ -2232,22 +2233,34 @@ class FirestoreConCafeDataSource(
             val batch = documents.take(queryBatchSize)
             val hasMoreBatch = documents.size > queryBatchSize
             val lastBatchDocument = batch.lastOrNull()
-            val parsed = parseCollectionGroupCastDocuments(batch)
-            val filtered = parsed.filter { cast ->
+            val parsedWithDocs = batch.mapNotNull { document ->
+                val documentName = document["name"]?.jsonPrimitive?.contentOrNull
+                val fields = document["fields"]?.jsonObject
+                val cafeId = documentName?.toCafeIdFromCastDocumentName()
+                    ?: fields?.getFirestoreString("cafeId")
+                    ?: ""
+                parseCastDocument(cafeId = cafeId, document = document)?.let { cast -> document to cast }
+            }
+            val filteredWithDocs = parsedWithDocs.filter { (_, cast) ->
                 val matchesQuery = if (normalizedQuery == null) {
                     true
                 } else {
                     cast.name.contains(normalizedQuery, ignoreCase = true)
                 }
                 val matchesCafe = targetCafeIds?.contains(cast.cafeId) ?: true
-
                 matchesQuery && matchesCafe
             }
             val remaining = safePageSize - aggregated.size
-
-            aggregated.addAll(filtered.take(remaining))
-            nextCursorToken = lastBatchDocument?.toCastQueryCursor(sort)
-            exhausted = !hasMoreBatch
+            val takenWithDocs = filteredWithDocs.take(remaining)
+            aggregated.addAll(takenWithDocs.map { (_, cast) -> cast })
+            val hasMoreInBatch = takenWithDocs.size < filteredWithDocs.size
+            nextCursorToken = if (hasMoreInBatch) {
+                takenWithDocs.lastOrNull()?.first?.toCastQueryCursor(sort)
+                    ?: lastBatchDocument?.toCastQueryCursor(sort)
+            } else {
+                lastBatchDocument?.toCastQueryCursor(sort)
+            }
+            exhausted = !hasMoreBatch && !hasMoreInBatch
         }
         return PagedResult(
             items = aggregated,
@@ -4076,6 +4089,10 @@ class FirestoreConCafeDataSource(
                   {
                     "field": { "fieldPath": "followerCount" },
                     "direction": "DESCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
                   }
                 ]"""
         }
@@ -4175,7 +4192,11 @@ class FirestoreConCafeDataSource(
                   {
                     "field": { "fieldPath": "$orderFieldPath" },
                     "direction": "DESCENDING"
-                  }
+                  }${if (!isLatestSort) """,
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "ASCENDING"
+                  }""" else ""}
                 ]$whereSection$startAfterSection,
                 "limit": $safeLimit
               }
@@ -6478,7 +6499,8 @@ private fun JsonObject.toCastQueryCursor(sort: CastSort): String? {
         val followerScore = fields.getFirestoreLong("followerCount")?.toString()
             ?: fields.getFirestoreDouble("followerCount")?.toString()
             ?: "0"
-        followerScore
+        val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        "$followerScore|$docName"
     }
 }
 
@@ -6489,14 +6511,18 @@ private fun JsonObject.toCafeQueryCursor(sort: CafeSort): String? {
             this["name"]?.jsonPrimitive?.contentOrNull
         }
         CafeSort.POPULAR -> {
-            fields.getFirestoreLong("reviewCount")?.toString()
+            val score = fields.getFirestoreLong("reviewCount")?.toString()
                 ?: fields.getFirestoreDouble("reviewCount")?.toString()
                 ?: "0"
+            val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+            "$score|$docName"
         }
         else -> {
-            fields.getFirestoreDouble("ratingAvg")?.toString()
+            val score = fields.getFirestoreDouble("ratingAvg")?.toString()
                 ?: fields.getFirestoreLong("ratingAvg")?.toString()
                 ?: "0"
+            val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+            "$score|$docName"
         }
     }
 }
@@ -6543,7 +6569,9 @@ private fun String?.toStartAfterSection(latestSort: Boolean): String {
                   "before": false
                 }"""
     } else {
-        val scoreRaw = cursorValue.substringBefore("|")
+        val separatorIndex = cursorValue.indexOf('|')
+        val scoreRaw = if (separatorIndex >= 0) cursorValue.substring(0, separatorIndex) else cursorValue
+        val docName = if (separatorIndex >= 0) cursorValue.substring(separatorIndex + 1) else null
         val scoreValue = scoreRaw.toDoubleOrNull()
 
         if (scoreValue == null) {
@@ -6554,13 +6582,25 @@ private fun String?.toStartAfterSection(latestSort: Boolean): String {
             } else {
                 """{ "integerValue": "${scoreValue.toLong()}" }"""
             }
-            """,
+            if (!docName.isNullOrBlank()) {
+                val escapedDocName = escapeFirestoreQueryString(docName)
+                """,
+                "startAt": {
+                  "values": [
+                    $numericValue,
+                    { "referenceValue": "$escapedDocName" }
+                  ],
+                  "before": false
+                }"""
+            } else {
+                """,
                 "startAt": {
                   "values": [
                     $numericValue
                   ],
                   "before": false
                 }"""
+            }
         }
     }
 }
@@ -6580,7 +6620,9 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
                   "before": false
                 }"""
     } else {
-        val scoreRaw = cursorValue.substringBefore("|")
+        val separatorIndex = cursorValue.indexOf('|')
+        val scoreRaw = if (separatorIndex >= 0) cursorValue.substring(0, separatorIndex) else cursorValue
+        val docName = if (separatorIndex >= 0) cursorValue.substring(separatorIndex + 1) else null
         val scoreValue = scoreRaw.toDoubleOrNull()
         if (scoreValue == null) {
             ""
@@ -6590,13 +6632,25 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
             } else {
                 """{ "integerValue": "${scoreValue.toLong()}" }"""
             }
-            """,
+            if (!docName.isNullOrBlank()) {
+                val escapedDocName = escapeFirestoreQueryString(docName)
+                """,
+                "startAt": {
+                  "values": [
+                    $numericValue,
+                    { "referenceValue": "$escapedDocName" }
+                  ],
+                  "before": false
+                }"""
+            } else {
+                """,
                 "startAt": {
                   "values": [
                     $numericValue
                   ],
                   "before": false
                 }"""
+            }
         }
     }
 }
