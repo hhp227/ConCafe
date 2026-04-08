@@ -16,6 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -105,6 +110,7 @@ fun ExploreContentScreen(
     listState: LazyListState,
     onAction: (ExploreAction) -> Unit
 ) {
+    var searchFieldValue by remember { mutableStateOf(TextFieldValue(uiState.query)) }
     val cafeNameById = uiState.cafes.associate { it.id to it.name }
     val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
         uiState.cafes.chunked(2).map { pair ->
@@ -116,6 +122,14 @@ fun ExploreContentScreen(
         }
     }
 
+    LaunchedEffect(uiState.query) {
+        if (searchFieldValue.text != uiState.query && searchFieldValue.composition == null) {
+            searchFieldValue = TextFieldValue(
+                text = uiState.query,
+                selection = TextRange(uiState.query.length)
+            )
+        }
+    }
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -132,8 +146,13 @@ fun ExploreContentScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
-                    value = uiState.query,
-                    onValueChange = { onAction(ExploreAction.QueryChanged(it)) },
+                    value = searchFieldValue,
+                    onValueChange = { next ->
+                        searchFieldValue = next
+                        if (next.text != uiState.query) {
+                            onAction(ExploreAction.QueryChanged(next.text))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),

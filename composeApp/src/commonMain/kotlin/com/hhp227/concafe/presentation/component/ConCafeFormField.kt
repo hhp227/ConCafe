@@ -51,7 +51,7 @@ fun ConCafeFormField(
     }
 
     LaunchedEffect(value) {
-        if (textFieldValue.text != value) {
+        if (textFieldValue.text != value && textFieldValue.composition == null) {
             textFieldValue = TextFieldValue(
                 text = value,
                 selection = TextRange(value.length)
