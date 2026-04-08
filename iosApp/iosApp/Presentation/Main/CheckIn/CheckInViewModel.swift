@@ -69,6 +69,32 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    self.uiState.currentUser = user
+                    self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
+                    self.uiState.isNewVisitSheetVisible = false
+
+                    if user == nil {
+                        self.uiState.reviewPrompt = nil
+                        self.uiState.todayVisits = []
+                        self.uiState.recentVisits = []
+                        self.uiState.recentVisitsNextCursor = nil
+                        self.uiState.canLoadMoreRecentVisits = false
+                        self.uiState.isLoadingMoreRecentVisits = false
+                    } else {
+                        self.refreshRecentVisitPage()
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func loadRecentVisitPage(cursor: String?, append: Bool) {
         tasks[.recentVisitPage]?.cancel()
         tasks[.recentVisitPage] = Task {
@@ -156,32 +182,6 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
-    private func observeSession() {
-        tasks[.session]?.cancel()
-        tasks[.session] = Task {
-            do {
-                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    self.uiState.currentUser = user
-                    self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
-                    self.uiState.isNewVisitSheetVisible = false
-                    
-                    if user == nil {
-                        self.uiState.reviewPrompt = nil
-                        self.uiState.todayVisits = []
-                        self.uiState.recentVisits = []
-                        self.uiState.recentVisitsNextCursor = nil
-                        self.uiState.canLoadMoreRecentVisits = false
-                        self.uiState.isLoadingMoreRecentVisits = false
-                    } else {
-                        self.refreshRecentVisitPage()
-                    }
-                }
-            } catch {
-                print("Error: \(error)")
-            }
-        }
-    }
-
     private func submitNewVisit(cafeId: String, visitedAt: String, memo: String?) {
         if cafeId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             uiState.errorMessage = "카페를 선택해 주세요."
@@ -213,6 +213,7 @@ final class CheckInViewModel: ObservableObject {
 
                     if result is AppResultSuccess<AnyObject> {
                         uiState.isNewVisitSheetVisible = false
+                        uiState.preselectCafeId = nil
                         uiState.errorMessage = nil
                         refreshRecentVisitPage()
                         if let success = result as? AppResultSuccess<AnyObject>,
@@ -423,13 +424,24 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
-    private func requestCheckInPermissionAndOpenSheet() {
+    private func requestLocationPermissionOnEntry() {
+        tasks[.locationPermission]?.cancel()
+        tasks[.locationPermission] = Task {
+            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
+            if !permissionResult.isGranted && permissionResult.requiresSettings {
+                event.send(.openLocationSettings)
+            }
+        }
+    }
+
+    private func requestCheckInPermissionAndOpenSheet(preselectCafeId: String? = nil) {
         tasks[.locationPermission]?.cancel()
         tasks[.locationPermission] = Task {
             let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
 
             if permissionResult.isGranted {
                 uiState.isNewVisitSheetVisible = true
+                uiState.preselectCafeId = preselectCafeId
                 uiState.errorMessage = nil
 
                 detectUserCity()
@@ -466,6 +478,13 @@ final class CheckInViewModel: ObservableObject {
             } else {
                 requestCheckInPermissionAndOpenSheet()
             }
+        case .checkInForCafeTapped(let cafeId):
+            if uiState.currentUser == nil {
+                uiState.isLoginPromptVisible = true
+                uiState.isNewVisitSheetVisible = false
+            } else {
+                requestCheckInPermissionAndOpenSheet(preselectCafeId: cafeId)
+            }
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
             event.send(.navigateToSignIn)
@@ -475,6 +494,7 @@ final class CheckInViewModel: ObservableObject {
             uiState.errorMessage = nil
         case .dismissNewVisitSheet:
             uiState.isNewVisitSheetVisible = false
+            uiState.preselectCafeId = nil
         case .dismissReviewPrompt:
             dismissReviewPrompt()
         case .writeReviewPromptTapped:
@@ -513,6 +533,7 @@ final class CheckInViewModel: ObservableObject {
         observeVisitEvent()
         detectUserCity()
         loadGuestFeed()
+        requestLocationPermissionOnEntry()
     }
 
     deinit {

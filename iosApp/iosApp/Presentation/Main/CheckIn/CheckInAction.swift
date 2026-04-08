@@ -11,6 +11,7 @@ enum CheckInAction {
     case cafeTapped(id: String)
     case castTapped(id: String)
     case checkInTapped
+    case checkInForCafeTapped(cafeId: String)
     case signInTapped
     case signUpTapped
     case dismissLoginPrompt

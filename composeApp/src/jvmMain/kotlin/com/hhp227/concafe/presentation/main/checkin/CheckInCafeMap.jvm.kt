@@ -20,6 +20,7 @@ import netscape.javascript.JSObject
 actual fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
+    onCafeCheckIn: (String) -> Unit,
     cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
@@ -32,7 +33,8 @@ actual fun CheckInCafeMap(
             panel.bind(
                 cafes = cafes,
                 cameraTarget = cameraTarget,
-                onCafeClick = onCafeClick
+                onCafeClick = onCafeClick,
+                onCafeCheckIn = onCafeCheckIn
             )
         }
     )
@@ -49,16 +51,20 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
 
     private var onCafeClick: (String) -> Unit = {}
 
+    private var onCafeCheckIn: (String) -> Unit = {}
+
     private var isBridgeListenerAttached: Boolean = false
 
     fun bind(
         cafes: List<CheckInCafeSummary>,
         cameraTarget: CheckInMapCameraTarget?,
-        onCafeClick: (String) -> Unit
+        onCafeClick: (String) -> Unit,
+        onCafeCheckIn: (String) -> Unit
     ) {
         this.cafes = cafes
         this.cameraTarget = cameraTarget
         this.onCafeClick = onCafeClick
+        this.onCafeCheckIn = onCafeCheckIn
 
         if (webEngine != null) {
             Platform.runLater {
@@ -80,9 +86,11 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
             engine.loadWorker.stateProperty().addListener { _, _, newState ->
                 if (newState == Worker.State.SUCCEEDED) {
                     val window = engine.executeScript("window") as? JSObject ?: return@addListener
-                    window.setMember("ConCafeBridge", CafeClickBridge { cafeId ->
-                        onCafeClick(cafeId)
-                    })
+
+                    window.setMember("ConCafeBridge", CafeClickBridge(
+                        onCafeClick = { cafeId -> onCafeClick(cafeId) },
+                        onCafeCheckIn = { cafeId -> onCafeCheckIn(cafeId) }
+                    ))
                 }
             }
             isBridgeListenerAttached = true
@@ -109,11 +117,18 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
 }
 
 private class CafeClickBridge(
-    private val onCafeClick: (String) -> Unit
+    private val onCafeClick: (String) -> Unit,
+    private val onCafeCheckIn: (String) -> Unit
 ) {
     fun onCafeClicked(cafeId: String) {
         SwingUtilities.invokeLater {
             onCafeClick(cafeId)
+        }
+    }
+
+    fun onCafeCheckInClicked(cafeId: String) {
+        SwingUtilities.invokeLater {
+            onCafeCheckIn(cafeId)
         }
     }
 }
@@ -162,12 +177,30 @@ private fun buildCheckInMapHtml(
             <meta charset="utf-8" />
             <style>
               html, body, #map { margin:0; padding:0; width:100%; height:100%; background:#fff5f9; }
+              .callout {
+                display:flex; align-items:center; gap:6px;
+                background:#fff; border-radius:12px;
+                padding:6px 8px 6px 12px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.15);
+                white-space:nowrap;
+              }
+              .callout-name {
+                font-family:sans-serif; font-size:13px; font-weight:600;
+                color:#2B2330; cursor:pointer; text-decoration:none;
+              }
+              .callout-name:hover { text-decoration:underline; }
+              .callout-checkin {
+                background:none; border:none; cursor:pointer; padding:2px;
+                font-size:16px; color:#EF6797; line-height:1;
+              }
+              .callout-checkin:hover { color:#c94c7e; }
             </style>
           </head>
           <body>
             <div id="map"></div>
             <script>
               let map;
+              let currentInfoWindow = null;
               function initMap() {
                 const center = { lat: $centerLatitude, lng: $centerLongitude };
                 map = new google.maps.Map(document.getElementById("map"), {
@@ -177,6 +210,9 @@ private fun buildCheckInMapHtml(
                   mapTypeControl: false,
                   streetViewControl: false
                 });
+                map.addListener("click", function() {
+                  if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+                });
                 const cafes = $cafesJson;
                 cafes.forEach(function(cafe) {
                   const marker = new google.maps.Marker({
@@ -184,12 +220,31 @@ private fun buildCheckInMapHtml(
                     map: map,
                     title: cafe.name
                   });
+                  const infoWindow = new google.maps.InfoWindow({
+                    content: '<div class="callout">' +
+                      '<span class="callout-name" onclick="onCafeNameClick(\'' + cafe.id + '\')">' + cafe.name + '</span>' +
+                      '<button class="callout-checkin" onclick="onCheckInClick(\'' + cafe.id + '\')" title="체크인">&#10003;</button>' +
+                      '</div>',
+                    disableAutoPan: false
+                  });
                   marker.addListener("click", function() {
-                    if (window.ConCafeBridge && window.ConCafeBridge.onCafeClicked) {
-                      window.ConCafeBridge.onCafeClicked(cafe.id);
-                    }
+                    if (currentInfoWindow) { currentInfoWindow.close(); }
+                    infoWindow.open(map, marker);
+                    currentInfoWindow = infoWindow;
                   });
                 });
+              }
+              function onCafeNameClick(cafeId) {
+                if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+                if (window.ConCafeBridge && window.ConCafeBridge.onCafeClicked) {
+                  window.ConCafeBridge.onCafeClicked(cafeId);
+                }
+              }
+              function onCheckInClick(cafeId) {
+                if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+                if (window.ConCafeBridge && window.ConCafeBridge.onCafeCheckInClicked) {
+                  window.ConCafeBridge.onCafeCheckInClicked(cafeId);
+                }
               }
             </script>
             <script async defer src="https://maps.googleapis.com/maps/api/js?key=$apiKey&callback=initMap"></script>

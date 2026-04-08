@@ -62,6 +62,7 @@ struct CheckInView: View {
         ) {
             CheckInNewVisitSheet(
                 cafes: viewModel.uiState.mapCafes,
+                preselectCafeId: viewModel.uiState.preselectCafeId,
                 errorMessage: Binding(
                     get: { viewModel.uiState.errorMessage },
                     set: { value in
@@ -142,6 +143,7 @@ private struct CheckInGuestContentView: View {
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
+                    onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
                 .padding(.top, 16)
@@ -227,6 +229,7 @@ private struct CheckInUserContentView: View {
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
+                    onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
                 .padding(.top, 16)
@@ -268,6 +271,8 @@ private struct CheckInMapSection: View {
 
     let onCafeTap: (String) -> Void
 
+    let onCheckInForCafeTap: (String) -> Void
+
     let onCheckInTap: () -> Void
 
     @State private var mapRegion = MKCoordinateRegion(
@@ -276,6 +281,8 @@ private struct CheckInMapSection: View {
     )
 
     @State private var selectedRegion: ExploreUiState.RegionFilter = .all
+
+    @State private var selectedPinId: String? = nil
 
     var body: some View {
         VStack(spacing: 14) {
@@ -324,27 +331,52 @@ private struct CheckInMapSection: View {
                         coordinate: CLLocationCoordinate2D(
                             latitude: pin.latitude,
                             longitude: pin.longitude
-                        )
+                        ),
+                        anchorPoint: CGPoint(x: 0.5, y: 1.0)
                     ) {
-                        Button {
-                            onCafeTap(pin.id)
-                        } label: {
-                            HStack(spacing: 6) {
+                        VStack(spacing: 0) {
+                            if selectedPinId == pin.id {
+                                HStack(spacing: 4) {
+                                    Button {
+                                        selectedPinId = nil
+                                        onCafeTap(pin.id)
+                                    } label: {
+                                        Text(pin.name)
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color(hex: "2B2330"))
+                                            .lineLimit(1)
+                                    }
+                                    .buttonStyle(.plain)
+                                    Button {
+                                        selectedPinId = nil
+                                        onCheckInForCafeTap(pin.id)
+                                    } label: {
+                                        Image(systemName: "checkmark.circle")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color(hex: "EF6797"))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color.white.opacity(0.96))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .shadow(color: .black.opacity(0.12), radius: 6, y: 2)
+                            }
+                            Button {
+                                if selectedPinId == pin.id {
+                                    selectedPinId = nil
+                                } else {
+                                    selectedPinId = pin.id
+                                }
+                            } label: {
                                 Circle()
                                     .fill(Color(hex: "EF6797"))
-                                    .frame(width: 10, height: 10)
-                                Text(pin.name)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "4E4750"))
-                                    .lineLimit(1)
+                                    .frame(width: 12, height: 12)
+                                    .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.96))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -963,6 +995,8 @@ private struct CheckInReviewPromptSheet: View {
 private struct CheckInNewVisitSheet: View {
     let cafes: [CheckInCafeSummary]
 
+    var preselectCafeId: String? = nil
+
     @Binding var errorMessage: String?
 
     let onAction: (CheckInAction) -> Void
@@ -1162,13 +1196,16 @@ private struct CheckInNewVisitSheet: View {
 
     init(
         cafes: [CheckInCafeSummary],
+        preselectCafeId: String? = nil,
         errorMessage: Binding<String?>,
         onAction: @escaping (CheckInAction) -> Void
     ) {
         self.cafes = cafes
+        self.preselectCafeId = preselectCafeId
         self._errorMessage = errorMessage
         self.onAction = onAction
-        _selectedCafeId = State(initialValue: cafes.first?.id)
+        let initialId = preselectCafeId.flatMap { id in cafes.first(where: { $0.id == id })?.id } ?? cafes.first?.id
+        _selectedCafeId = State(initialValue: initialId)
     }
 
     private func makeVisitedAtString(date: Date, time: Date) -> String {

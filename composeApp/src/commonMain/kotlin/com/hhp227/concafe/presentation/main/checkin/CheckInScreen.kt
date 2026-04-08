@@ -149,6 +149,7 @@ fun CheckInScreen(
             ) {
                 NewVisitCheckInBottomSheet(
                     cafes = uiState.mapCafes,
+                    initialCafeId = uiState.preselectCafeId,
                     errorMessage = uiState.errorMessage,
                     onSubmit = { cafeId, visitedAt, memo ->
                         viewModel.onAction(
@@ -341,6 +342,7 @@ private fun CheckInGuestScreen(
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
+                onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
             )
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -417,6 +419,7 @@ private fun CheckInUserScreen(
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
+                onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
             )
         }
@@ -500,6 +503,7 @@ private fun CafeMapSection(
     mapCafes: List<CheckInCafeSummary>,
     userCityKey: String?,
     onCafeClick: (String) -> Unit,
+    onCafeCheckIn: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
     var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
@@ -619,6 +623,7 @@ private fun CafeMapSection(
                 CheckInCafeMap(
                     cafes = filteredMapCafes,
                     onCafeClick = onCafeClick,
+                    onCafeCheckIn = onCafeCheckIn,
                     cameraTarget = mapCameraTarget,
                     modifier = Modifier
                         .fillMaxSize()
@@ -888,13 +893,17 @@ private fun LoginRequiredBottomSheet(
 @Composable
 private fun NewVisitCheckInBottomSheet(
     cafes: List<CheckInCafeSummary>,
+    initialCafeId: String? = null,
     errorMessage: String?,
     onSubmit: (String, String, String?) -> Unit,
     onDismiss: () -> Unit
 ) {
     val cafeOptions = cafes.map { it.name to it.id }
     var selectedCafeId by remember {
-        mutableStateOf(cafeOptions.firstOrNull()?.second.orEmpty())
+        mutableStateOf(
+            if (initialCafeId != null && cafes.any { it.id == initialCafeId }) initialCafeId
+            else cafeOptions.firstOrNull()?.second.orEmpty()
+        )
     }
     var isCafeDropdownExpanded by remember { mutableStateOf(false) }
     var cafeDropdownWidth by remember { mutableStateOf(0) }
@@ -916,7 +925,12 @@ private fun NewVisitCheckInBottomSheet(
     var memo by remember { mutableStateOf("") }
 
     LaunchedEffect(cafes) {
-        val fallbackCafeId = cafes.firstOrNull()?.id.orEmpty()
+        val fallbackCafeId = if (initialCafeId != null && cafes.any { it.id == initialCafeId }) {
+            initialCafeId
+        } else {
+            cafes.firstOrNull()?.id.orEmpty()
+        }
+
         if (selectedCafeId.isBlank()) {
             selectedCafeId = fallbackCafeId
         } else if (cafes.none { it.id == selectedCafeId }) {

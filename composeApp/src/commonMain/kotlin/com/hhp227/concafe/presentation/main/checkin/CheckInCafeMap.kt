@@ -14,6 +14,7 @@ data class CheckInMapCameraTarget(
 expect fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
+    onCafeCheckIn: (String) -> Unit = {},
     cameraTarget: CheckInMapCameraTarget? = null,
     modifier: Modifier = Modifier
 )
