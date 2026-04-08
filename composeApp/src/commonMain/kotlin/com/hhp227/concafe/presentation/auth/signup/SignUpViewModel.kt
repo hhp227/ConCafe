@@ -24,6 +24,7 @@ import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
+import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
@@ -39,9 +40,11 @@ class SignUpViewModel(
     private val phoneAuthProvider: PhoneAuthProvider,
     private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
     private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
+    private val signOutUseCase: SignOutUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val googleIdTokenProvider: GoogleIdTokenProvider,
-    private val kakaoIdTokenProvider: KakaoIdTokenProvider
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider,
+    private val socialFirebaseAuthProvider: SocialFirebaseAuthProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -499,17 +502,24 @@ class SignUpViewModel(
 
     private fun cleanupIncompleteAccount() {
         val currentState = uiState.value
-        val needsCleanup = currentState.isPhoneVerified && !currentState.signupCompleted
+        val needsCleanup = !currentState.signupCompleted && (
+            currentState.isPhoneVerified || currentState.hasAuthenticatedSocialAccount
+        )
 
         if (needsCleanup) {
             viewModelScope.launch {
                 if (currentState.isSocialFlow) {
+                    signOutUseCase.invoke()
+                    socialFirebaseAuthProvider.signOut()
                     _uiState.update {
                         it.copy(
                             isPhoneVerified = false,
                             hasRequestedVerification = false,
                             phoneVerificationId = null,
                             signupCompleted = false,
+                            isSocialFlow = false,
+                            socialProvider = null,
+                            hasAuthenticatedSocialAccount = false,
                             infoMessage = null,
                             errorMessage = null
                         )
@@ -596,12 +606,25 @@ class SignUpViewModel(
                         .onSuccess { idToken ->
                             when (val result = signInWithGoogleIdTokenUseCase.invoke(idToken)) {
                                 is AppResult.Success -> {
-                                    applySocialProfile(
-                                        provider = provider,
-                                        email = result.data.email,
-                                        nickname = result.data.nickname,
-                                        autoCompleteVisitor = autoCompleteVisitor
-                                    )
+                                    when (socialFirebaseAuthProvider.signInWithGoogleIdToken(idToken, result.data.id)) {
+                                        is AppResult.Success -> {
+                                            applySocialProfile(
+                                                provider = provider,
+                                                email = result.data.email,
+                                                nickname = result.data.nickname,
+                                                autoCompleteVisitor = autoCompleteVisitor
+                                            )
+                                        }
+                                        is AppResult.Failure -> {
+                                            _uiState.update {
+                                                it.copy(
+                                                    isLoading = false,
+                                                    errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
+                                                    infoMessage = null
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                                 is AppResult.Failure -> {
                                     _uiState.update {
@@ -648,19 +671,31 @@ class SignUpViewModel(
                             ) {
                                 is AppResult.Success -> {
                                     val resolvedNickname = nickname.orEmpty().ifBlank { result.data.nickname }
-
-                                    if (resolvedNickname.isNotBlank()) {
-                                        updateUserProfileUseCase.invoke(
-                                            nickname = resolvedNickname,
-                                            profileImage = null
-                                        )
+                                    when (socialFirebaseAuthProvider.signInWithKakaoIdToken(payload.idToken, result.data.id)) {
+                                        is AppResult.Success -> {
+                                            if (resolvedNickname.isNotBlank()) {
+                                                updateUserProfileUseCase.invoke(
+                                                    nickname = resolvedNickname,
+                                                    profileImage = null
+                                                )
+                                            }
+                                            applySocialProfile(
+                                                provider = provider,
+                                                email = email.orEmpty().ifBlank { result.data.email },
+                                                nickname = resolvedNickname.ifBlank { result.data.nickname },
+                                                autoCompleteVisitor = autoCompleteVisitor
+                                            )
+                                        }
+                                        is AppResult.Failure -> {
+                                            _uiState.update {
+                                                it.copy(
+                                                    isLoading = false,
+                                                    errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
+                                                    infoMessage = null
+                                                )
+                                            }
+                                        }
                                     }
-                                    applySocialProfile(
-                                        provider = provider,
-                                        email = email.orEmpty().ifBlank { result.data.email },
-                                        nickname = resolvedNickname.ifBlank { result.data.nickname },
-                                        autoCompleteVisitor = autoCompleteVisitor
-                                    )
                                 }
                                 is AppResult.Failure -> {
                                     _uiState.update {

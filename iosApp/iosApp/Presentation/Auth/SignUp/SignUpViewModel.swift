@@ -34,6 +34,8 @@ class SignUpViewModel: ObservableObject {
 
     private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
 
+    private let signOutUseCase: SignOutUseCase
+
     private let updateUserProfileUseCase: UpdateUserProfileUseCase
 
     private var phoneVerificationID: String?
@@ -408,16 +410,21 @@ class SignUpViewModel: ObservableObject {
     }
 
     private func cleanupIncompleteAccount() {
-        let needsCleanup = uiState.isPhoneVerified && !uiState.signupCompleted
+        let needsCleanup = !uiState.signupCompleted && (uiState.isPhoneVerified || uiState.hasAuthenticatedSocialAccount)
 
         if needsCleanup {
             requestTask?.cancel()
             requestTask = Task {
                 if uiState.isSocialFlow {
+                    _ = try? await signOutUseCase.invoke()
+                    try? Auth.auth().signOut()
                     uiState.isPhoneVerified = false
                     uiState.hasRequestedVerification = false
                     uiState.phoneVerificationId = nil
                     uiState.signupCompleted = false
+                    uiState.isSocialFlow = false
+                    uiState.socialProvider = nil
+                    uiState.hasAuthenticatedSocialAccount = false
                     phoneVerificationID = nil
                     uiState.errorMessage = nil
                     uiState.infoMessage = nil
@@ -565,6 +572,11 @@ class SignUpViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let user = success.data as? User {
+                    try await bindNativeSocialSession(
+                        providerId: "apple.com",
+                        idToken: idToken,
+                        expectedUserId: user.id
+                    )
                     applySocialProfile(
                         provider: .apple,
                         email: user.email,
@@ -590,6 +602,10 @@ class SignUpViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? User {
+                try await bindNativeGoogleSession(
+                    idToken: idToken,
+                    expectedUserId: user.id
+                )
                 applySocialProfile(
                     provider: .google,
                     email: user.email,
@@ -619,6 +635,11 @@ class SignUpViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? User {
+                try await bindNativeSocialSession(
+                    providerId: "oidc.kakao",
+                    idToken: idToken,
+                    expectedUserId: user.id
+                )
                 let resolvedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
                 await applyKakaoNicknameIfNeeded(resolvedNickname)
                 applySocialProfile(
@@ -635,6 +656,31 @@ class SignUpViewModel: ObservableObject {
             if Task.isCancelled { return }
             uiState.isLoading = false
             uiState.errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func bindNativeGoogleSession(
+        idToken: String,
+        expectedUserId: String
+    ) async throws {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: nil)
+        let authResult = try await Auth.auth().signIn(with: credential)
+        if authResult.user.uid != expectedUserId {
+            try? Auth.auth().signOut()
+            throw SignUpError.socialSessionUserMismatch
+        }
+    }
+
+    private func bindNativeSocialSession(
+        providerId: String,
+        idToken: String,
+        expectedUserId: String
+    ) async throws {
+        let credential = OAuthProvider.credential(withProviderID: providerId, idToken: idToken, rawNonce: nil)
+        let authResult = try await Auth.auth().signIn(with: credential)
+        if authResult.user.uid != expectedUserId {
+            try? Auth.auth().signOut()
+            throw SignUpError.socialSessionUserMismatch
         }
     }
 
@@ -1036,6 +1082,7 @@ class SignUpViewModel: ObservableObject {
         signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
         signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
         signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase(),
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
         updateUserProfileUseCase: UpdateUserProfileUseCase = KoinInitializerKt.resolveUpdateUserProfileUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
@@ -1046,6 +1093,7 @@ class SignUpViewModel: ObservableObject {
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
         self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
+        self.signOutUseCase = signOutUseCase
         self.updateUserProfileUseCase = updateUserProfileUseCase
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         loadCafeOptions()
@@ -1074,6 +1122,7 @@ private enum SignUpError: Error {
     case authCodeNotFound
     case idTokenNotFound
     case googleTokenExchangeFailed
+    case socialSessionUserMismatch
 }
 
 private struct GoogleTokenResponse: Decodable {
