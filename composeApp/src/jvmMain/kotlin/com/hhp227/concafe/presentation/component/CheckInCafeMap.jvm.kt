@@ -156,9 +156,22 @@ private fun buildCheckInMapHtml(
             longitude = normalizedLongitude
         )
     }
-    val centerLatitude = cameraTarget?.latitude ?: normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
-    val centerLongitude = cameraTarget?.longitude ?: normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
-    val zoom = cameraTarget?.zoom ?: 13f
+    val centerLatitude = when {
+        normalizedCafes.isNotEmpty() -> normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
+        cameraTarget != null -> cameraTarget.latitude
+        else -> DEFAULT_LATITUDE
+    }
+    val centerLongitude = when {
+        normalizedCafes.isNotEmpty() -> normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
+        cameraTarget != null -> cameraTarget.longitude
+        else -> DEFAULT_LONGITUDE
+    }
+    val zoom = when {
+        normalizedCafes.size == 1 -> 14.5f
+        normalizedCafes.size > 1 -> 12.5f
+        cameraTarget != null -> cameraTarget.zoom
+        else -> 13f
+    }
     val cafesJson = normalizedCafes.joinToString(prefix = "[", postfix = "]") { cafe ->
         """
         {
