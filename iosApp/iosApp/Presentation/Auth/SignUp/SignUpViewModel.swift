@@ -571,7 +571,7 @@ class SignUpViewModel: ObservableObject {
                 let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let user = success.data as? User {
+                   let user = success.data as? Shared.User {
                     try await bindNativeSocialSession(
                         providerId: "apple.com",
                         idToken: idToken,
@@ -601,7 +601,7 @@ class SignUpViewModel: ObservableObject {
             let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
 
             if let success = result as? AppResultSuccess<AnyObject>,
-               let user = success.data as? User {
+               let user = success.data as? Shared.User {
                 try await bindNativeGoogleSession(
                     idToken: idToken,
                     expectedUserId: user.id
@@ -634,7 +634,7 @@ class SignUpViewModel: ObservableObject {
             )
 
             if let success = result as? AppResultSuccess<AnyObject>,
-               let user = success.data as? User {
+               let user = success.data as? Shared.User {
                 try await bindNativeSocialSession(
                     providerId: "oidc.kakao",
                     idToken: idToken,
