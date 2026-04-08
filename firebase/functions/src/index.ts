@@ -3719,3 +3719,112 @@ export const onUserDeletedCleanupOwnership =
 
     await batch.commit();
   });
+
+const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
+const CLAIM_REJECTED_TTL_MS = 60 * 60 * 1000; // 1시간
+
+function resolveClaimExpiresAt(status: string | null): Date | null {
+  const now = new Date();
+  if (isApprovedStatus(status)) {
+    return new Date(now.getTime() + CLAIM_APPROVED_TTL_MS);
+  } else if (isRejectedStatus(status)) {
+    return new Date(now.getTime() + CLAIM_REJECTED_TTL_MS);
+  }
+  return null;
+}
+
+export const onCastClaimWrittenSetExpiry = onDocumentWritten(
+  "castClaims/{claimId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as CastClaimLike | undefined;
+    const afterData = event.data?.after.data() as CastClaimLike | undefined;
+
+    if (!afterData) return;
+
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (beforeStatus === afterStatus) return;
+
+    const expiresAt = resolveClaimExpiresAt(afterStatus);
+
+    if (expiresAt == null) return;
+
+    await event.data!.after.ref.update({expiresAt: expiresAt});
+  }
+);
+
+export const onCafeRegistrationClaimWrittenSetExpiry = onDocumentWritten(
+  "cafeRegistrationClaims/{claimId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as CafeRegistrationClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeRegistrationClaimLike | undefined;
+
+    if (!afterData) return;
+
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (beforeStatus === afterStatus) return;
+
+    const expiresAt = resolveClaimExpiresAt(afterStatus);
+
+    if (expiresAt == null) return;
+
+    await event.data!.after.ref.update({expiresAt: expiresAt});
+  }
+);
+
+export const onCafeOwnerClaimWrittenSetExpiry = onDocumentWritten(
+  "cafeOwnerClaims/{claimId}",
+  async (event) => {
+    const beforeData = event.data?.before.data() as CafeOwnerClaimLike | undefined;
+    const afterData = event.data?.after.data() as CafeOwnerClaimLike | undefined;
+
+    if (!afterData) return;
+
+    const beforeStatus = asNonBlankString(beforeData?.status);
+    const afterStatus = asNonBlankString(afterData?.status);
+
+    if (beforeStatus === afterStatus) return;
+
+    const expiresAt = resolveClaimExpiresAt(afterStatus);
+
+    if (expiresAt == null) return;
+
+    await event.data!.after.ref.update({expiresAt: expiresAt});
+  }
+);
+
+export const onScheduleDeleteExpiredClaims = onSchedule(
+  {
+    schedule: "every 5 minutes",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const firestore = db();
+    const now = new Date();
+    const BATCH_SIZE = 500;
+    const claimCollections = ["castClaims", "cafeRegistrationClaims", "cafeOwnerClaims"];
+    let totalDeleted = 0;
+
+    for (const collectionName of claimCollections) {
+      const snapshot = await firestore
+        .collection(collectionName)
+        .where("expiresAt", "<=", now)
+        .get();
+
+      if (snapshot.empty) continue;
+
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+        chunk.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        totalDeleted += chunk.length;
+      }
+    }
+
+    logger.info("onScheduleDeleteExpiredClaims completed.", {totalDeleted});
+  }
+);
