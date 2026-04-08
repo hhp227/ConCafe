@@ -154,6 +154,15 @@ final class IosCheckInLocationProvider: NSObject, CLLocationManagerDelegate {
         continuation = nil
     }
 
+    func getLastKnownLocation() -> IosCheckInLocationResult? {
+        guard let location = locationManager.location else { return nil }
+        return IosCheckInLocationResult(
+            isSuccess: true,
+            location: location.coordinate,
+            message: ""
+        )
+    }
+
     override init() {
         super.init()
         locationManager.delegate = self

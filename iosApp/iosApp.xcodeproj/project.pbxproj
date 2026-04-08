@@ -44,6 +44,7 @@
 		0A27F1F12F5D6E84003D4763 /* CafeReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */; };
 		0A27F1F32F5D6EA5003D4763 /* CafeNoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */; };
 		0A27F1F52F5D6EEC003D4763 /* CafeGoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */; };
+		0A2BC2AD2F8693BD005B3087 /* CheckInCafeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2BC2AC2F8693BD005B3087 /* CheckInCafeMapView.swift */; };
 		0A2C5B172F6560E700D3004E /* AccountSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2C5B162F6560E600D3004E /* AccountSettingsView.swift */; };
 		0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2C5B182F6560FD00D3004E /* AccountSettingsViewModel.swift */; };
 		0A2C5B1B2F65611C00D3004E /* AccountSettingsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2C5B1A2F65611C00D3004E /* AccountSettingsUiState.swift */; };
@@ -265,6 +266,7 @@
 		0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeReviewView.swift; sourceTree = "<group>"; };
 		0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeNoticeView.swift; sourceTree = "<group>"; };
 		0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeGoodsView.swift; sourceTree = "<group>"; };
+		0A2BC2AC2F8693BD005B3087 /* CheckInCafeMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInCafeMapView.swift; sourceTree = "<group>"; };
 		0A2C5B162F6560E600D3004E /* AccountSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsView.swift; sourceTree = "<group>"; };
 		0A2C5B182F6560FD00D3004E /* AccountSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsViewModel.swift; sourceTree = "<group>"; };
 		0A2C5B1A2F65611C00D3004E /* AccountSettingsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsUiState.swift; sourceTree = "<group>"; };
@@ -961,6 +963,7 @@
 				0ABE84D32F6FC6990014281C /* CachedAsyncImage.swift */,
 				0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */,
 				0A1614002F802D5A00088B82 /* RankingNativeAd.swift */,
+				0A2BC2AC2F8693BD005B3087 /* CheckInCafeMapView.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1273,6 +1276,7 @@
 				0A27F1F52F5D6EEC003D4763 /* CafeGoodsView.swift in Sources */,
 				0A785CA52F5A7BBC004037A8 /* ExploreEvent.swift in Sources */,
 				0A6B334E2F610BAC0074940F /* MenuGoodsEvent.swift in Sources */,
+				0A2BC2AD2F8693BD005B3087 /* CheckInCafeMapView.swift in Sources */,
 				0A27C8EB2F614D2F00573900 /* ScheduleView.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */,
@@ -1502,7 +1506,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1523,7 +1527,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.01;
+				MARKETING_VERSION = 1.02;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -1545,7 +1549,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1566,7 +1570,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.01;
+				MARKETING_VERSION = 1.02;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",

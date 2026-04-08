@@ -6,9 +6,9 @@
 //
 
 import SwiftUI
-import MapKit
 import UIKit
 import Shared
+import MapKit
 
 struct CheckInView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -62,6 +62,7 @@ struct CheckInView: View {
         ) {
             CheckInNewVisitSheet(
                 cafes: viewModel.uiState.mapCafes,
+                preselectCafeId: viewModel.uiState.preselectCafeId,
                 errorMessage: Binding(
                     get: { viewModel.uiState.errorMessage },
                     set: { value in
@@ -91,6 +92,9 @@ struct CheckInView: View {
                 )
                 .compatLargeSheetDetent()
             }
+        }
+        .onAppear {
+            viewModel.requestLocationPermissionOnEntry()
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -142,6 +146,7 @@ private struct CheckInGuestContentView: View {
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
+                    onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
                 .padding(.top, 16)
@@ -227,6 +232,7 @@ private struct CheckInUserContentView: View {
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
+                    onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) }
                 )
                 .padding(.top, 16)
@@ -268,14 +274,13 @@ private struct CheckInMapSection: View {
 
     let onCafeTap: (String) -> Void
 
+    let onCheckInForCafeTap: (String) -> Void
+
     let onCheckInTap: () -> Void
 
-    @State private var mapRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
-        span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
-    )
-
     @State private var selectedRegion: ExploreUiState.RegionFilter = .all
+
+    @State private var selectedPinId: String? = nil
 
     var body: some View {
         VStack(spacing: 14) {
@@ -316,49 +321,22 @@ private struct CheckInMapSection: View {
                     .tint(Color(hex: "EF6797"))
             }
             GeometryReader { _ in
-                Map(
-                    coordinateRegion: $mapRegion,
-                    annotationItems: mapPins
-                ) { pin in
-                    MapAnnotation(
-                        coordinate: CLLocationCoordinate2D(
-                            latitude: pin.latitude,
-                            longitude: pin.longitude
-                        )
-                    ) {
-                        Button {
-                            onCafeTap(pin.id)
-                        } label: {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(Color(hex: "EF6797"))
-                                    .frame(width: 10, height: 10)
-                                Text(pin.name)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "4E4750"))
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.96))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                CheckInCafeMapView(
+                    pins: mapPins,
+                    cameraRegion: resolvedMapRegion(
+                        cafes: filteredCafes,
+                        selectedRegion: selectedRegion
+                    ),
+                    cameraToken: cameraToken,
+                    selectedPinId: $selectedPinId,
+                    onCafeTap: onCafeTap,
+                    onCheckInForCafeTap: onCheckInForCafeTap
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .onAppear {
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
-                }
-                .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
-                }
-                .onChange(of: selectedRegion) { region in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: region)
-                }
-                .onChange(of: userCityKey) { _ in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                .onChange(of: mapPins.map(\.id)) { visiblePinIds in
+                    if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
+                        self.selectedPinId = nil
+                    }
                 }
             }
             .frame(height: 240)
@@ -381,13 +359,7 @@ private struct CheckInMapSection: View {
     }
 
     private var filteredCafes: [CheckInCafeSummary] {
-        if selectedRegion != .all {
-            return cafes.filter { $0.locationLabel.lowercased().contains(selectedRegion.rawValue) }
-        } else if let cityKey = userCityKey {
-            return cafes.filter { $0.locationLabel.lowercased().contains(cityKey) }
-        } else {
-            return cafes
-        }
+        filteredCafes(selectedRegion: selectedRegion, userCityKey: userCityKey)
     }
 
     private var mapPins: [CheckInMapPin] {
@@ -396,18 +368,28 @@ private struct CheckInMapSection: View {
                 id: cafe.id,
                 name: cafe.name,
                 latitude: cafe.geoPoint.latitude,
-                longitude: cafe.geoPoint.longitude
+                longitude: cafe.geoPoint.longitude,
+                isSelected: selectedPinId == cafe.id
             )
         }
+    }
+
+    private var cameraToken: String {
+        let cityKey = userCityKey ?? "all"
+        let pinsKey = mapPins
+            .map { "\($0.id):\($0.latitude):\($0.longitude)" }
+            .joined(separator: "|")
+        return "\(selectedRegion.rawValue)#\(cityKey)#\(pinsKey)"
     }
 
     private func resolvedMapRegion(
         cafes: [CheckInCafeSummary],
         selectedRegion: ExploreUiState.RegionFilter
     ) -> MKCoordinateRegion {
-        if let regionPreset = regionPreset(for: selectedRegion) {
-            return regionPreset
-        } else if cafes.isEmpty {
+        if cafes.isEmpty {
+            if let regionPreset = regionPreset(for: selectedRegion) {
+                return regionPreset
+            }
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
                 span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
@@ -430,8 +412,8 @@ private struct CheckInMapSection: View {
             let maxLongitude = longitudes.max() ?? 127.1
             let centerLatitude = (minLatitude + maxLatitude) / 2.0
             let centerLongitude = (minLongitude + maxLongitude) / 2.0
-            let latitudeDelta = max(0.03, (maxLatitude - minLatitude) * 1.7)
-            let longitudeDelta = max(0.03, (maxLongitude - minLongitude) * 1.7)
+            let latitudeDelta = max(0.02, (maxLatitude - minLatitude) * 1.3)
+            let longitudeDelta = max(0.02, (maxLongitude - minLongitude) * 1.3)
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude),
                 span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
@@ -471,13 +453,25 @@ private struct CheckInMapSection: View {
         }
     }
 
-}
+    private func filteredCafes(
+        selectedRegion: ExploreUiState.RegionFilter,
+        userCityKey: String?
+    ) -> [CheckInCafeSummary] {
+        if selectedRegion != .all {
+            let label = selectedRegion.label
+            let key = selectedRegion.rawValue
+            return cafes.filter {
+                $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
+            }
+        } else if let cityKey = userCityKey {
+            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !normalizedCityKey.isEmpty else { return cafes }
+            return cafes.filter { $0.locationLabel.lowercased().contains(normalizedCityKey) }
+        } else {
+            return cafes
+        }
+    }
 
-private struct CheckInMapPin: Identifiable {
-    let id: String
-    let name: String
-    let latitude: Double
-    let longitude: Double
 }
 
 private struct CheckInLoginPromotionSection: View {
@@ -963,6 +957,8 @@ private struct CheckInReviewPromptSheet: View {
 private struct CheckInNewVisitSheet: View {
     let cafes: [CheckInCafeSummary]
 
+    var preselectCafeId: String? = nil
+
     @Binding var errorMessage: String?
 
     let onAction: (CheckInAction) -> Void
@@ -1162,13 +1158,16 @@ private struct CheckInNewVisitSheet: View {
 
     init(
         cafes: [CheckInCafeSummary],
+        preselectCafeId: String? = nil,
         errorMessage: Binding<String?>,
         onAction: @escaping (CheckInAction) -> Void
     ) {
         self.cafes = cafes
+        self.preselectCafeId = preselectCafeId
         self._errorMessage = errorMessage
         self.onAction = onAction
-        _selectedCafeId = State(initialValue: cafes.first?.id)
+        let initialId = preselectCafeId.flatMap { id in cafes.first(where: { $0.id == id })?.id } ?? cafes.first?.id
+        _selectedCafeId = State(initialValue: initialId)
     }
 
     private func makeVisitedAtString(date: Date, time: Date) -> String {

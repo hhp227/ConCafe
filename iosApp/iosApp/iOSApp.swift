@@ -88,6 +88,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         Auth.auth().setAPNSToken(deviceToken, type: .prod)
         #endif
         Messaging.messaging().apnsToken = deviceToken
+        
+        print("✅ APNS TOKEN:", deviceToken.map { String(format: "%02.2hhx", $0) }.joined())
     }
 
     func application(

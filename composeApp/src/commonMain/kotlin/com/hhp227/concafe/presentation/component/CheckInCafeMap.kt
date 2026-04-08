@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,6 +14,7 @@ data class CheckInMapCameraTarget(
 expect fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
+    onCafeCheckIn: (String) -> Unit = {},
     cameraTarget: CheckInMapCameraTarget? = null,
     modifier: Modifier = Modifier
 )

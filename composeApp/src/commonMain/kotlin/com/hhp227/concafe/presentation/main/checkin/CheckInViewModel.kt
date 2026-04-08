@@ -219,7 +219,13 @@ class CheckInViewModel(
                             longitude = locationResult.location.longitude
                         )) {
                             is AppResult.Success -> {
-                                _uiState.update { it.copy(isNewVisitSheetVisible = false, errorMessage = null) }
+                                _uiState.update {
+                                    it.copy(
+                                        isNewVisitSheetVisible = false,
+                                        preselectCafeId = null,
+                                        errorMessage = null
+                                    )
+                                }
                                 refreshRecentVisitPage()
                                 maybeShowReviewPrompt(result.data)
                             }
@@ -233,7 +239,7 @@ class CheckInViewModel(
         }
     }
 
-    private fun clickCheckIn() {
+    private fun clickCheckIn(preselectCafeId: String? = null) {
         val currentUser = _uiState.value.currentUser
 
         if (currentUser == null) {
@@ -251,6 +257,7 @@ class CheckInViewModel(
                         _uiState.update {
                             it.copy(
                                 isNewVisitSheetVisible = true,
+                                preselectCafeId = preselectCafeId,
                                 errorMessage = null
                             )
                         }
@@ -405,6 +412,20 @@ class CheckInViewModel(
             _event.emit(CheckInEvent.NavigateToReviewEdit(prompt.cafeId))
         }
     }
+
+    private fun requestLocationPermissionOnEntry() {
+        jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
+        jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
+            when (val result = checkInLocationProvider.requestPermissionIfNeeded()) {
+                CheckInLocationPermissionResult.Granted -> Unit
+                is CheckInLocationPermissionResult.Failure -> {
+                    if (result.requiresSettings) {
+                        _event.emit(CheckInEvent.OpenLocationSettings)
+                    }
+                }
+            }
+        }
+    }
     
     fun onAction(action: CheckInAction) {
         viewModelScope.launch {
@@ -436,6 +457,9 @@ class CheckInViewModel(
                 CheckInAction.ClickCheckIn -> {
                     clickCheckIn()
                 }
+                is CheckInAction.ClickCheckInForCafe -> {
+                    clickCheckIn(preselectCafeId = action.cafeId)
+                }
                 CheckInAction.ClickSignIn -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
                     _event.emit(CheckInEvent.NavigateToSignIn)
@@ -451,7 +475,7 @@ class CheckInViewModel(
                     _uiState.update { it.copy(errorMessage = null) }
                 }
                 CheckInAction.DismissNewVisitSheet -> {
-                    _uiState.update { it.copy(isNewVisitSheetVisible = false) }
+                    _uiState.update { it.copy(isNewVisitSheetVisible = false, preselectCafeId = null) }
                 }
                 CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
                 CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
@@ -474,6 +498,7 @@ class CheckInViewModel(
         observeVisitEvent()
         detectUserCity()
         loadGuestFeed()
+        requestLocationPermissionOnEntry()
     }
 
     override fun onCleared() {

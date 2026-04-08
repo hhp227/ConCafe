@@ -7,6 +7,8 @@ sealed interface CheckInAction {
 
     data object ClickCheckIn : CheckInAction
 
+    data class ClickCheckInForCafe(val cafeId: String) : CheckInAction
+
     data object ClickSignIn : CheckInAction
 
     data object ClickSignUp : CheckInAction

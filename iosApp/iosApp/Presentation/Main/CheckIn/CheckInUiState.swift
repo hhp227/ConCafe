@@ -24,6 +24,7 @@ struct CheckInUiState {
     var isLoadingMoreRecentVisits: Bool
     var isLoginPromptVisible: Bool
     var isNewVisitSheetVisible: Bool
+    var preselectCafeId: String?
     var reviewPrompt: ReviewPrompt?
 
     static let empty = CheckInUiState(
@@ -42,6 +43,7 @@ struct CheckInUiState {
         isLoadingMoreRecentVisits: false,
         isLoginPromptVisible: false,
         isNewVisitSheetVisible: false,
+        preselectCafeId: nil,
         reviewPrompt: nil
     )
 

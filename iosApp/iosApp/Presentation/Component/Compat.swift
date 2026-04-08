@@ -436,3 +436,107 @@ private struct PhotosUICompatImagePicker: View {
         }
     }
 }
+
+private struct RoundedCornerShape: Shape {
+    var topLeft: CGFloat = 0
+    
+    var topRight: CGFloat = 0
+    
+    var bottomLeft: CGFloat = 0
+    
+    var bottomRight: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath()
+        let tl = min(min(topLeft, rect.width / 2), rect.height / 2)
+        let tr = min(min(topRight, rect.width / 2), rect.height / 2)
+        let bl = min(min(bottomLeft, rect.width / 2), rect.height / 2)
+        let br = min(min(bottomRight, rect.width / 2), rect.height / 2)
+
+        path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+
+        // top
+        path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+        path.addArc(withCenter: CGPoint(x: rect.maxX - tr, y: rect.minY + tr),
+                    radius: tr,
+                    startAngle: -.pi / 2,
+                    endAngle: 0,
+                    clockwise: true)
+
+        // right
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+        path.addArc(withCenter: CGPoint(x: rect.maxX - br, y: rect.maxY - br),
+                    radius: br,
+                    startAngle: 0,
+                    endAngle: .pi / 2,
+                    clockwise: true)
+
+        // bottom
+        path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+        path.addArc(withCenter: CGPoint(x: rect.minX + bl, y: rect.maxY - bl),
+                    radius: bl,
+                    startAngle: .pi / 2,
+                    endAngle: .pi,
+                    clockwise: true)
+
+        // left
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+        path.addArc(withCenter: CGPoint(x: rect.minX + tl, y: rect.minY + tl),
+                    radius: tl,
+                    startAngle: .pi,
+                    endAngle: 3 * .pi / 2,
+                    clockwise: true)
+
+        path.close()
+        return Path(path.cgPath)
+    }
+}
+
+extension View {
+
+    /// iOS 15 compatible corner radius (각 코너별 지정 가능)
+    func cornerRadius(
+        topLeft: CGFloat = 0,
+        topRight: CGFloat = 0,
+        bottomLeft: CGFloat = 0,
+        bottomRight: CGFloat = 0
+    ) -> some View {
+        clipShape(
+            RoundedCornerShape(
+                topLeft: topLeft,
+                topRight: topRight,
+                bottomLeft: bottomLeft,
+                bottomRight: bottomRight
+            )
+        )
+    }
+
+    /// iOS 16 이상이면 native API 사용, 아니면 fallback
+    @ViewBuilder
+    func cornerRadiusCompat(
+        topLeft: CGFloat = 0,
+        topRight: CGFloat = 0,
+        bottomLeft: CGFloat = 0,
+        bottomRight: CGFloat = 0
+    ) -> some View {
+        if #available(iOS 16.0, *) {
+            self.clipShape(
+                .rect(
+                    topLeadingRadius: topLeft,
+                    bottomLeadingRadius: bottomLeft,
+                    bottomTrailingRadius: bottomRight,
+                    topTrailingRadius: topRight
+                )
+            )
+        } else {
+            self.clipShape(
+                RoundedCornerShape(
+                    topLeft: topLeft,
+                    topRight: topRight,
+                    bottomLeft: bottomLeft,
+                    bottomRight: bottomRight
+                )
+            )
+        }
+    }
+}
