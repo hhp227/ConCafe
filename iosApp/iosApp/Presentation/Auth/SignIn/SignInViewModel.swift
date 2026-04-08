@@ -136,9 +136,11 @@ class SignInViewModel: ObservableObject {
 
                     if let success = result as? AppResultSuccess<AnyObject>,
                        let user = success.data as? Shared.User {
+                        let userEmail = String(user.email)
+                        let userNickname = String(user.nickname)
                         let isCompleted = await ensureVisitorAccountCompleted(
-                            email: user.email,
-                            nickname: user.nickname,
+                            email: userEmail,
+                            nickname: userNickname,
                             signupCompleted: user.signupCompleted
                         )
                         if isCompleted {
@@ -190,9 +192,11 @@ class SignInViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? Shared.User {
+                let userEmail = String(user.email)
+                let userNickname = String(user.nickname)
                 let isCompleted = await ensureVisitorAccountCompleted(
-                    email: user.email,
-                    nickname: user.nickname,
+                    email: userEmail,
+                    nickname: userNickname,
                     signupCompleted: user.signupCompleted
                 )
                 if isCompleted {
@@ -225,15 +229,17 @@ class SignInViewModel: ObservableObject {
 
             if let success = result as? AppResultSuccess<AnyObject>,
                let user = success.data as? Shared.User {
+                let userEmail = String(user.email)
+                let userNickname = String(user.nickname)
                 let trimmedEmail = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
                 let trimmedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
-                let resolvedNickname = (trimmedNickname?.isEmpty == false ? trimmedNickname! : user.nickname)
+                let resolvedNickname: String = (trimmedNickname?.isEmpty == false ? trimmedNickname! : userNickname)
 
                 if !resolvedNickname.isEmpty {
                     await applyKakaoNicknameIfNeeded(resolvedNickname)
                 }
 
-                let resolvedEmail = (trimmedEmail?.isEmpty == false ? trimmedEmail! : user.email)
+                let resolvedEmail: String = (trimmedEmail?.isEmpty == false ? trimmedEmail! : userEmail)
                 let completionNickname = resolvedNickname.isEmpty
                     ? String(localized: String.LocalizationValue("signin_default_kakao_nickname"), table: "Localizable")
                     : resolvedNickname
