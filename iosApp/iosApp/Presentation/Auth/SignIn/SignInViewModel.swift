@@ -65,7 +65,7 @@ class SignInViewModel: ObservableObject {
         }
     }
 
-    private func ensureVisitorAccountCompleted(user: User, fallbackEmail: String? = nil, fallbackNickname: String? = nil) async -> Bool {
+    private func ensureVisitorAccountCompleted(user: Shared.User, fallbackEmail: String? = nil, fallbackNickname: String? = nil) async -> Bool {
         if user.signupCompleted {
             return true
         }
@@ -132,7 +132,7 @@ class SignInViewModel: ObservableObject {
                     let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
 
                     if let success = result as? AppResultSuccess<AnyObject>,
-                       let user = success.data as? User {
+                       let user = success.data as? Shared.User {
                         let isCompleted = await ensureVisitorAccountCompleted(user: user)
                         if isCompleted {
                             uiState.isLoading = false
@@ -182,7 +182,7 @@ class SignInViewModel: ObservableObject {
             let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
 
             if let success = result as? AppResultSuccess<AnyObject>,
-               let user = success.data as? User {
+               let user = success.data as? Shared.User {
                 let isCompleted = await ensureVisitorAccountCompleted(user: user)
                 if isCompleted {
                     uiState.isLoading = false
@@ -213,7 +213,7 @@ class SignInViewModel: ObservableObject {
             )
 
             if let success = result as? AppResultSuccess<AnyObject>,
-               let user = success.data as? User {
+               let user = success.data as? Shared.User {
                 await applyKakaoNicknameIfNeeded(profile.nickname)
                 if await ensureVisitorAccountCompleted(
                     user: user,
