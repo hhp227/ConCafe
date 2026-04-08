@@ -395,6 +395,9 @@ private struct CheckInMapSection: View {
                 .onChange(of: userCityKey) { _ in
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
                 }
+                .onChange(of: filteredCafes.map { "\($0.id):\($0.geoPoint.latitude):\($0.geoPoint.longitude)" }) { _ in
+                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                }
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
                     if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
                         self.selectedPinId = nil
@@ -452,9 +455,10 @@ private struct CheckInMapSection: View {
         cafes: [CheckInCafeSummary],
         selectedRegion: ExploreUiState.RegionFilter
     ) -> MKCoordinateRegion {
-        if let regionPreset = regionPreset(for: selectedRegion) {
-            return regionPreset
-        } else if cafes.isEmpty {
+        if cafes.isEmpty {
+            if let regionPreset = regionPreset(for: selectedRegion) {
+                return regionPreset
+            }
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
                 span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
@@ -477,8 +481,8 @@ private struct CheckInMapSection: View {
             let maxLongitude = longitudes.max() ?? 127.1
             let centerLatitude = (minLatitude + maxLatitude) / 2.0
             let centerLongitude = (minLongitude + maxLongitude) / 2.0
-            let latitudeDelta = max(0.03, (maxLatitude - minLatitude) * 1.7)
-            let longitudeDelta = max(0.03, (maxLongitude - minLongitude) * 1.7)
+            let latitudeDelta = max(0.02, (maxLatitude - minLatitude) * 1.3)
+            let longitudeDelta = max(0.02, (maxLongitude - minLongitude) * 1.3)
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude),
                 span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
