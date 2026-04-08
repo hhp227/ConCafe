@@ -24,6 +24,8 @@ interface FirestoreSyncDataSource {
 
     suspend fun deleteUser(userId: String)
 
+    suspend fun deleteCurrentUserCascade(idToken: String)
+
     suspend fun pushCafeRegistrationClaim(
         requesterUserId: String,
         claim: CafeRegistrationClaim

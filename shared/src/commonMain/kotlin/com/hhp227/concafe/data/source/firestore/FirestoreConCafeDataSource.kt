@@ -2829,6 +2829,11 @@ class FirestoreConCafeDataSource(
         restApi.delete(path, idToken)
     }
 
+    override suspend fun deleteCurrentUserCascade(idToken: String) {
+        val path = "${config.functionsBaseUrl()}/deleteCurrentUserCascade"
+        restApi.post(path = path, body = "{}", idToken = idToken)
+    }
+
     override suspend fun pushCafeRegistrationClaim(
         requesterUserId: String,
         claim: CafeRegistrationClaim

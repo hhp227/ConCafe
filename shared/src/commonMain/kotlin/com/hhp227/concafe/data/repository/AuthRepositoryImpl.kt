@@ -357,7 +357,10 @@ class AuthRepositoryImpl(
             }
         }
 
-        authTokenProvider.deleteCurrentUser(verifiedIdToken)
+        val resolvedVerifiedIdToken = verifiedIdToken
+            ?: throw IllegalStateException("delete account requires verified Firebase idToken")
+        firestoreSyncDataSource.deleteCurrentUserCascade(resolvedVerifiedIdToken)
+        authTokenProvider.signOut()
         authDataSource.currentUserId = null
     }
 

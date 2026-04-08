@@ -1,6 +1,6 @@
 import {setGlobalOptions} from "firebase-functions";
 import * as functionsV1 from "firebase-functions/v1";
-import {UserRecord} from "firebase-admin/auth";
+import {getAuth, UserRecord} from "firebase-admin/auth";
 import {onDocumentDeleted, onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
@@ -16,6 +16,94 @@ initializeApp();
 
 function db() {
   return getFirestore();
+}
+
+async function cleanupDeletedUserData(
+  firestore: FirebaseFirestore.Firestore,
+  userId: string
+) {
+  const [cafesSnapshot, castsSnapshot, userSnapshot] = await Promise.all([
+    firestore
+      .collection("cafes")
+      .where("ownerIds", "array-contains", userId)
+      .get(),
+    firestore
+      .collectionGroup("casts")
+      .where("linkedUserId", "==", userId)
+      .get(),
+    firestore
+      .collection("users")
+      .doc(userId)
+      .get(),
+  ]);
+
+  const claimCollections = ["castClaims", "cafeOwnerClaims", "cafeRegistrationClaims"];
+  const claimDeleteCounts = new Map<string, number>();
+  const BATCH_SIZE = 500;
+
+  for (const collectionName of claimCollections) {
+    const snapshot = await firestore
+      .collection(collectionName)
+      .where("userId", "==", userId)
+      .get();
+
+    if (snapshot.empty) {
+      claimDeleteCounts.set(collectionName, 0);
+      continue;
+    }
+
+    let deletedCount = 0;
+    for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+      chunk.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      deletedCount += chunk.length;
+    }
+    claimDeleteCounts.set(collectionName, deletedCount);
+  }
+
+  const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
+  cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
+  const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+  for (const cafeId of ownedCafeIds) {
+    if (cafeId && !cafeRefMap.has(cafeId)) {
+      cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
+    }
+  }
+
+  const cafeRefs = [...cafeRefMap.values()];
+  const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
+
+  if (cafeRefs.length > 0) {
+    for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+        batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
+      });
+      await batch.commit();
+    }
+  }
+
+  if (castRefs.length > 0) {
+    for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+        batch.update(ref, {linkedUserId: null});
+      });
+      await batch.commit();
+    }
+  }
+
+  await firestore.recursiveDelete(firestore.collection("users").doc(userId));
+
+  return {
+    removedOwnerCafeCount: cafeRefs.length,
+    unlinkedCastCount: castRefs.length,
+    deletedCastClaims: claimDeleteCounts.get("castClaims") ?? 0,
+    deletedCafeOwnerClaims: claimDeleteCounts.get("cafeOwnerClaims") ?? 0,
+    deletedCafeRegistrationClaims: claimDeleteCounts.get("cafeRegistrationClaims") ?? 0,
+  };
 }
 
 type ReviewLike = {
@@ -3689,92 +3777,56 @@ export const onUserDeletedCleanupOwnership =
     if (!userId) return;
 
     const firestore = db();
-
-    const [cafesSnapshot, castsSnapshot, userSnapshot] = await Promise.all([
-      firestore
-        .collection("cafes")
-        .where("ownerIds", "array-contains", userId)
-        .get(),
-      firestore
-        .collectionGroup("casts")
-        .where("linkedUserId", "==", userId)
-        .get(),
-      firestore
-        .collection("users")
-        .doc(userId)
-        .get(),
-    ]);
-
-    const claimCollections = ["castClaims", "cafeOwnerClaims", "cafeRegistrationClaims"];
-    const claimDeleteCounts = new Map<string, number>();
-    const BATCH_SIZE = 500;
-
-    for (const collectionName of claimCollections) {
-      const snapshot = await firestore
-        .collection(collectionName)
-        .where("userId", "==", userId)
-        .get();
-
-      if (snapshot.empty) {
-        claimDeleteCounts.set(collectionName, 0);
-        continue;
-      }
-
-      let deletedCount = 0;
-      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
-        const batch = firestore.batch();
-        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
-        chunk.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        deletedCount += chunk.length;
-      }
-      claimDeleteCounts.set(collectionName, deletedCount);
-    }
-
-    // cafes.ownerIds 쿼리 결과와 users.ownedCafeIds 양쪽에서 대상 카페를 수집
-    const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
-    cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
-    const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
-    for (const cafeId of ownedCafeIds) {
-      if (cafeId && !cafeRefMap.has(cafeId)) {
-        cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
-      }
-    }
-
-    const cafeRefs = [...cafeRefMap.values()];
-    const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
-
-    if (cafeRefs.length > 0) {
-      for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
-        const batch = firestore.batch();
-        cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-          batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
-        });
-        await batch.commit();
-      }
-    }
-
-    if (castRefs.length > 0) {
-      for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
-        const batch = firestore.batch();
-        castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-          batch.update(ref, {linkedUserId: null});
-        });
-        await batch.commit();
-      }
-    }
-
-    await firestore.recursiveDelete(firestore.collection("users").doc(userId));
-
+    const cleanupSummary = await cleanupDeletedUserData(firestore, userId);
     logger.info("onUserDeletedCleanupOwnership completed.", {
       userId: userId,
-      removedOwnerCafeCount: cafeRefs.length,
-      unlinkedCastCount: castRefs.length,
-      deletedCastClaims: claimDeleteCounts.get("castClaims") ?? 0,
-      deletedCafeOwnerClaims: claimDeleteCounts.get("cafeOwnerClaims") ?? 0,
-      deletedCafeRegistrationClaims: claimDeleteCounts.get("cafeRegistrationClaims") ?? 0,
+      ...cleanupSummary,
     });
   });
+
+export const deleteCurrentUserCascade = functionsV1.https.onRequest(async (request, response) => {
+  if (request.method !== "POST") {
+    response.status(405).json({error: "method_not_allowed"});
+    return;
+  }
+
+  const authorization = request.header("Authorization") ?? request.header("authorization") ?? "";
+  const idToken = authorization.startsWith("Bearer ") ? authorization.substring(7).trim() : "";
+
+  if (!idToken) {
+    response.status(401).json({error: "missing_auth"});
+    return;
+  }
+
+  let uid = "";
+  try {
+    const decodedToken = await getAuth().verifyIdToken(idToken);
+    uid = decodedToken.uid;
+  } catch (error) {
+    logger.warn("deleteCurrentUserCascade verifyIdToken failed.", error);
+    response.status(401).json({error: "invalid_auth"});
+    return;
+  }
+
+  try {
+    await getAuth().deleteUser(uid);
+    let cleanupSummary: Record<string, number> = {};
+    try {
+      cleanupSummary = await cleanupDeletedUserData(db(), uid);
+    } catch (cleanupError) {
+      logger.error("deleteCurrentUserCascade cleanup failed after auth deletion.", cleanupError);
+    }
+
+    logger.info("deleteCurrentUserCascade completed.", {
+      userId: uid,
+      ...cleanupSummary,
+    });
+    response.status(200).json({ok: true});
+  } catch (error) {
+    logger.error("deleteCurrentUserCascade failed.", error);
+    response.status(500).json({error: "internal"});
+  }
+});
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
 const CLAIM_REJECTED_TTL_MS = 60 * 60 * 1000; // 1시간
