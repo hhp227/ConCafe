@@ -525,10 +525,6 @@ private struct CheckInCafeMapView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        private static let cafeAccessoryTag = 1001
-
-        private static let checkInAccessoryTag = 1002
-
         private let selectedPinIdBinding: Binding<String?>
 
         var onCafeTap: (String) -> Void
@@ -597,19 +593,9 @@ private struct CheckInCafeMapView: UIViewRepresentable {
             view.canShowCallout = true
             view.markerTintColor = UIColor(Color(hex: "EF6797"))
             view.glyphImage = UIImage(systemName: "cup.and.saucer.fill")
-
-            let cafeButton = UIButton(type: .system)
-            cafeButton.setImage(UIImage(systemName: "chevron.right.circle"), for: .normal)
-            cafeButton.tintColor = UIColor(Color(hex: "2B2330"))
-            cafeButton.tag = Self.cafeAccessoryTag
-
-            let checkInButton = UIButton(type: .system)
-            checkInButton.setImage(UIImage(systemName: "checkmark.circle"), for: .normal)
-            checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
-            checkInButton.tag = Self.checkInAccessoryTag
-
-            view.leftCalloutAccessoryView = cafeButton
-            view.rightCalloutAccessoryView = checkInButton
+            view.leftCalloutAccessoryView = nil
+            view.rightCalloutAccessoryView = nil
+            view.detailCalloutAccessoryView = makeCalloutView(for: annotation)
             return view
         }
 
@@ -626,19 +612,45 @@ private struct CheckInCafeMapView: UIViewRepresentable {
             selectedPinIdBinding.wrappedValue = nil
         }
 
-        func mapView(
-            _ mapView: MKMapView,
-            annotationView view: MKAnnotationView,
-            calloutAccessoryControlTapped control: UIControl
-        ) {
-            guard let annotation = view.annotation as? CheckInCafeAnnotation else { return }
+        @objc private func handleCafeButtonTap(_ sender: CheckInCalloutButton) {
             selectedPinIdBinding.wrappedValue = nil
+            onCafeTap(sender.cafeId)
+        }
 
-            if control.tag == Self.cafeAccessoryTag {
-                onCafeTap(annotation.id)
-            } else if control.tag == Self.checkInAccessoryTag {
-                onCheckInForCafeTap(annotation.id)
-            }
+        @objc private func handleCheckInButtonTap(_ sender: CheckInCalloutButton) {
+            selectedPinIdBinding.wrappedValue = nil
+            onCheckInForCafeTap(sender.cafeId)
+        }
+
+        private func makeCalloutView(for annotation: CheckInCafeAnnotation) -> UIView {
+            let cafeButton = CheckInCalloutButton(type: .system)
+            cafeButton.cafeId = annotation.id
+            cafeButton.setTitle(annotation.title ?? "", for: .normal)
+            cafeButton.setTitleColor(UIColor(Color(hex: "2B2330")), for: .normal)
+            cafeButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            cafeButton.addTarget(self, action: #selector(handleCafeButtonTap(_:)), for: .touchUpInside)
+
+            let checkInButton = CheckInCalloutButton(type: .system)
+            checkInButton.cafeId = annotation.id
+            checkInButton.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
+            checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
+            checkInButton.addTarget(self, action: #selector(handleCheckInButtonTap(_:)), for: .touchUpInside)
+
+            let stackView = UIStackView(arrangedSubviews: [cafeButton, checkInButton])
+            stackView.axis = .horizontal
+            stackView.alignment = .center
+            stackView.spacing = 6
+
+            let container = UIView()
+            container.addSubview(stackView)
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                stackView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                stackView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                stackView.topAnchor.constraint(equalTo: container.topAnchor),
+                stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+            return container
         }
 
         init(
@@ -665,6 +677,10 @@ private final class CheckInCafeAnnotation: NSObject, MKAnnotation {
         coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
         title = pin.name
     }
+}
+
+private final class CheckInCalloutButton: UIButton {
+    var cafeId: String = ""
 }
 
 private struct CheckInLoginPromotionSection: View {
