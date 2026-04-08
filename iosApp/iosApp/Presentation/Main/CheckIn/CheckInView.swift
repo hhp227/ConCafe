@@ -278,11 +278,6 @@ private struct CheckInMapSection: View {
 
     let onCheckInTap: () -> Void
 
-    @State private var mapRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
-        span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
-    )
-
     @State private var selectedRegion: ExploreUiState.RegionFilter = .all
 
     @State private var selectedPinId: String? = nil
@@ -326,102 +321,18 @@ private struct CheckInMapSection: View {
                     .tint(Color(hex: "EF6797"))
             }
             GeometryReader { _ in
-                Map(
-                    coordinateRegion: $mapRegion,
-                    annotationItems: mapPins
-                ) { pin in
-                    MapAnnotation(
-                        coordinate: CLLocationCoordinate2D(
-                            latitude: pin.latitude,
-                            longitude: pin.longitude
-                        ),
-                        anchorPoint: CGPoint(x: 0.5, y: 1.0)
-                    ) {
-                        VStack(spacing: 0) {
-                            if pin.isSelected {
-                                HStack(spacing: 4) {
-                                    Button {
-                                        selectedPinId = nil
-                                        onCafeTap(pin.id)
-                                    } label: {
-                                        Text(pin.name)
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(Color(hex: "2B2330"))
-                                            .lineLimit(1)
-                                    }
-                                    .buttonStyle(.plain)
-                                    Button {
-                                        selectedPinId = nil
-                                        onCheckInForCafeTap(pin.id)
-                                    } label: {
-                                        Image(systemName: "checkmark.circle")
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(Color(hex: "EF6797"))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color.white.opacity(0.96))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .shadow(color: .black.opacity(0.12), radius: 6, y: 2)
-                            }
-                            Button {
-                                if selectedPinId == pin.id {
-                                    selectedPinId = nil
-                                } else {
-                                    selectedPinId = pin.id
-                                }
-                            } label: {
-                                Circle()
-                                    .fill(Color(hex: "EF6797"))
-                                    .frame(width: 12, height: 12)
-                                    .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
+                CheckInCafeMapView(
+                    pins: mapPins,
+                    cameraRegion: resolvedMapRegion(
+                        cafes: filteredCafes,
+                        selectedRegion: selectedRegion
+                    ),
+                    cameraToken: cameraToken,
+                    selectedPinId: $selectedPinId,
+                    onCafeTap: onCafeTap,
+                    onCheckInForCafeTap: onCheckInForCafeTap
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .onAppear {
-                    mapRegion = resolvedMapRegion(
-                        cafes: filteredCafes(
-                            selectedRegion: selectedRegion,
-                            userCityKey: userCityKey
-                        ),
-                        selectedRegion: selectedRegion
-                    )
-                }
-                .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(
-                        cafes: filteredCafes(
-                            selectedRegion: selectedRegion,
-                            userCityKey: userCityKey
-                        ),
-                        selectedRegion: selectedRegion
-                    )
-                }
-                .onChange(of: selectedRegion) { region in
-                    mapRegion = resolvedMapRegion(
-                        cafes: filteredCafes(
-                            selectedRegion: region,
-                            userCityKey: userCityKey
-                        ),
-                        selectedRegion: region
-                    )
-                }
-                .onChange(of: userCityKey) { cityKey in
-                    mapRegion = resolvedMapRegion(
-                        cafes: filteredCafes(
-                            selectedRegion: selectedRegion,
-                            userCityKey: cityKey
-                        ),
-                        selectedRegion: selectedRegion
-                    )
-                }
-                .onChange(of: filteredCafes.map { "\($0.id):\($0.geoPoint.latitude):\($0.geoPoint.longitude)" }) { _ in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
-                }
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
                     if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
                         self.selectedPinId = nil
@@ -461,6 +372,14 @@ private struct CheckInMapSection: View {
                 isSelected: selectedPinId == cafe.id
             )
         }
+    }
+
+    private var cameraToken: String {
+        let cityKey = userCityKey ?? "all"
+        let pinsKey = mapPins
+            .map { "\($0.id):\($0.latitude):\($0.longitude)" }
+            .joined(separator: "|")
+        return "\(selectedRegion.rawValue)#\(cityKey)#\(pinsKey)"
     }
 
     private func resolvedMapRegion(
@@ -561,6 +480,191 @@ private struct CheckInMapPin: Identifiable {
     let latitude: Double
     let longitude: Double
     let isSelected: Bool
+}
+
+private struct CheckInCafeMapView: UIViewRepresentable {
+    let pins: [CheckInMapPin]
+
+    let cameraRegion: MKCoordinateRegion
+
+    let cameraToken: String
+
+    @Binding var selectedPinId: String?
+
+    let onCafeTap: (String) -> Void
+
+    let onCheckInForCafeTap: (String) -> Void
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+        mapView.showsCompass = false
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        context.coordinator.onCafeTap = onCafeTap
+        context.coordinator.onCheckInForCafeTap = onCheckInForCafeTap
+        context.coordinator.syncAnnotations(on: mapView, pins: pins)
+        context.coordinator.applySelection(on: mapView, selectedPinId: selectedPinId)
+        context.coordinator.applyCamera(
+            on: mapView,
+            region: cameraRegion,
+            token: cameraToken
+        )
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            selectedPinId: $selectedPinId,
+            onCafeTap: onCafeTap,
+            onCheckInForCafeTap: onCheckInForCafeTap
+        )
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        private static let cafeAccessoryTag = 1001
+
+        private static let checkInAccessoryTag = 1002
+
+        private let selectedPinIdBinding: Binding<String?>
+
+        var onCafeTap: (String) -> Void
+
+        var onCheckInForCafeTap: (String) -> Void
+
+        private var annotationsById: [String: CheckInCafeAnnotation] = [:]
+
+        private var lastCameraToken: String?
+
+        private var isApplyingSelection = false
+
+        func syncAnnotations(on mapView: MKMapView, pins: [CheckInMapPin]) {
+            let incomingIds = Set(pins.map(\.id))
+            let existingIds = Set(annotationsById.keys)
+
+            let removedIds = existingIds.subtracting(incomingIds)
+            removedIds.forEach { id in
+                if let annotation = annotationsById.removeValue(forKey: id) {
+                    mapView.removeAnnotation(annotation)
+                }
+            }
+
+            pins.forEach { pin in
+                if let annotation = annotationsById[pin.id] {
+                    annotation.coordinate = CLLocationCoordinate2D(
+                        latitude: pin.latitude,
+                        longitude: pin.longitude
+                    )
+                    annotation.title = pin.name
+                } else {
+                    let annotation = CheckInCafeAnnotation(pin: pin)
+                    annotationsById[pin.id] = annotation
+                    mapView.addAnnotation(annotation)
+                }
+            }
+        }
+
+        func applySelection(on mapView: MKMapView, selectedPinId: String?) {
+            isApplyingSelection = true
+            defer { isApplyingSelection = false }
+
+            if let selectedPinId,
+               let annotation = annotationsById[selectedPinId] {
+                mapView.selectAnnotation(annotation, animated: false)
+            } else {
+                mapView.selectedAnnotations.forEach { annotation in
+                    mapView.deselectAnnotation(annotation, animated: false)
+                }
+            }
+        }
+
+        func applyCamera(on mapView: MKMapView, region: MKCoordinateRegion, token: String) {
+            guard lastCameraToken != token else { return }
+            lastCameraToken = token
+            mapView.setRegion(region, animated: true)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard let annotation = annotation as? CheckInCafeAnnotation else { return nil }
+            let identifier = "CheckInCafeAnnotationView"
+            let view = (mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView)
+                ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+
+            view.annotation = annotation
+            view.canShowCallout = true
+            view.markerTintColor = UIColor(Color(hex: "EF6797"))
+            view.glyphImage = UIImage(systemName: "cup.and.saucer.fill")
+
+            let cafeButton = UIButton(type: .system)
+            cafeButton.setImage(UIImage(systemName: "chevron.right.circle"), for: .normal)
+            cafeButton.tintColor = UIColor(Color(hex: "2B2330"))
+            cafeButton.tag = Self.cafeAccessoryTag
+
+            let checkInButton = UIButton(type: .system)
+            checkInButton.setImage(UIImage(systemName: "checkmark.circle"), for: .normal)
+            checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
+            checkInButton.tag = Self.checkInAccessoryTag
+
+            view.leftCalloutAccessoryView = cafeButton
+            view.rightCalloutAccessoryView = checkInButton
+            return view
+        }
+
+        func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
+            guard !isApplyingSelection,
+                  let annotation = annotation as? CheckInCafeAnnotation else { return }
+            selectedPinIdBinding.wrappedValue = annotation.id
+        }
+
+        func mapView(_ mapView: MKMapView, didDeselect annotation: MKAnnotation) {
+            guard !isApplyingSelection,
+                  let annotation = annotation as? CheckInCafeAnnotation,
+                  selectedPinIdBinding.wrappedValue == annotation.id else { return }
+            selectedPinIdBinding.wrappedValue = nil
+        }
+
+        func mapView(
+            _ mapView: MKMapView,
+            annotationView view: MKAnnotationView,
+            calloutAccessoryControlTapped control: UIControl
+        ) {
+            guard let annotation = view.annotation as? CheckInCafeAnnotation else { return }
+            selectedPinIdBinding.wrappedValue = nil
+
+            if control.tag == Self.cafeAccessoryTag {
+                onCafeTap(annotation.id)
+            } else if control.tag == Self.checkInAccessoryTag {
+                onCheckInForCafeTap(annotation.id)
+            }
+        }
+
+        init(
+            selectedPinId: Binding<String?>,
+            onCafeTap: @escaping (String) -> Void,
+            onCheckInForCafeTap: @escaping (String) -> Void
+        ) {
+            selectedPinIdBinding = selectedPinId
+            self.onCafeTap = onCafeTap
+            self.onCheckInForCafeTap = onCheckInForCafeTap
+        }
+    }
+}
+
+private final class CheckInCafeAnnotation: NSObject, MKAnnotation {
+    let id: String
+
+    dynamic var coordinate: CLLocationCoordinate2D
+
+    var title: String?
+
+    init(pin: CheckInMapPin) {
+        id = pin.id
+        coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+        title = pin.name
+    }
 }
 
 private struct CheckInLoginPromotionSection: View {
