@@ -644,8 +644,13 @@ class SignUpViewModel: ObservableObject {
                 let userNickname = String(user.nickname)
                 let resolvedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
                 await applyKakaoNicknameIfNeeded(resolvedNickname)
-                let resolvedEmail: String = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    .flatMap { $0.isEmpty ? nil : $0 } ?? userEmail
+                let trimmedEmail = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let resolvedEmail: String
+                if let trimmedEmail, !trimmedEmail.isEmpty {
+                    resolvedEmail = trimmedEmail
+                } else {
+                    resolvedEmail = userEmail
+                }
                 let resolvedProfileNickname: String = resolvedNickname?.isEmpty == false
                     ? resolvedNickname!
                     : userNickname
