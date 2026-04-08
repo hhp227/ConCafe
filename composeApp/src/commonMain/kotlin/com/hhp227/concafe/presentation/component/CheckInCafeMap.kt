@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

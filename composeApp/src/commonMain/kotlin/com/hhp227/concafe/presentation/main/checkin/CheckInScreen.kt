@@ -35,6 +35,8 @@ import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.CheckInCafeMap
+import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets

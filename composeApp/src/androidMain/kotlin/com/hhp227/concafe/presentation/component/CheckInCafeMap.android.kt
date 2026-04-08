@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
