@@ -424,11 +424,13 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
-    private func requestLocationPermissionOnEntry() {
+    func requestLocationPermissionOnEntry() {
         tasks[.locationPermission]?.cancel()
         tasks[.locationPermission] = Task {
             let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
-            if !permissionResult.isGranted && permissionResult.requiresSettings {
+            if permissionResult.isGranted {
+                detectUserCity()
+            } else if permissionResult.requiresSettings {
                 event.send(.openLocationSettings)
             }
         }
@@ -533,7 +535,6 @@ final class CheckInViewModel: ObservableObject {
         observeVisitEvent()
         detectUserCity()
         loadGuestFeed()
-        requestLocationPermissionOnEntry()
     }
 
     deinit {

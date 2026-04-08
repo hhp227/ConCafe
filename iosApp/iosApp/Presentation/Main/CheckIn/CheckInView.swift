@@ -93,6 +93,9 @@ struct CheckInView: View {
                 .compatLargeSheetDetent()
             }
         }
+        .onAppear {
+            viewModel.requestLocationPermissionOnEntry()
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
