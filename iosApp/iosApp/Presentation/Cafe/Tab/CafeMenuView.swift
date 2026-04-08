@@ -136,13 +136,11 @@ struct CafeMenuView: View {
                 }
             }
             .aspectRatio(1, contentMode: .fit)
-            .clipShape(
-                .rect(
-                    topLeadingRadius: 20,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: 20
-                )
+            .cornerRadiusCompat(
+                topLeft: 20,
+                topRight: 20,
+                bottomLeft: 0,
+                bottomRight: 0
             )
             VStack(alignment: .leading, spacing: 4) {
                 Text(good.name)
