@@ -287,8 +287,6 @@ private struct CheckInMapSection: View {
 
     @State private var selectedPinId: String? = nil
 
-    @State private var mapViewIdentity = "checkin-map-initial"
-
     var body: some View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
@@ -384,24 +382,45 @@ private struct CheckInMapSection: View {
                         }
                     }
                 }
-                .id(mapViewIdentity)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onAppear {
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(
+                        cafes: filteredCafes(
+                            selectedRegion: selectedRegion,
+                            userCityKey: userCityKey
+                        ),
+                        selectedRegion: selectedRegion
+                    )
                 }
                 .onChange(of: cafes.count) { _ in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
+                    mapRegion = resolvedMapRegion(
+                        cafes: filteredCafes(
+                            selectedRegion: selectedRegion,
+                            userCityKey: userCityKey
+                        ),
+                        selectedRegion: selectedRegion
+                    )
                 }
                 .onChange(of: selectedRegion) { region in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: region)
+                    mapRegion = resolvedMapRegion(
+                        cafes: filteredCafes(
+                            selectedRegion: region,
+                            userCityKey: userCityKey
+                        ),
+                        selectedRegion: region
+                    )
                 }
-                .onChange(of: userCityKey) { _ in
-                    mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
-                    refreshMapIdentityIfNeeded()
+                .onChange(of: userCityKey) { cityKey in
+                    mapRegion = resolvedMapRegion(
+                        cafes: filteredCafes(
+                            selectedRegion: selectedRegion,
+                            userCityKey: cityKey
+                        ),
+                        selectedRegion: selectedRegion
+                    )
                 }
                 .onChange(of: filteredCafes.map { "\($0.id):\($0.geoPoint.latitude):\($0.geoPoint.longitude)" }) { _ in
                     mapRegion = resolvedMapRegion(cafes: filteredCafes, selectedRegion: selectedRegion)
-                    refreshMapIdentityIfNeeded()
                 }
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
                     if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
@@ -429,19 +448,7 @@ private struct CheckInMapSection: View {
     }
 
     private var filteredCafes: [CheckInCafeSummary] {
-        if selectedRegion != .all {
-            let label = selectedRegion.label
-            let key = selectedRegion.rawValue
-            return cafes.filter {
-                $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
-            }
-        } else if let cityKey = userCityKey {
-            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard !normalizedCityKey.isEmpty else { return cafes }
-            return cafes.filter { $0.locationLabel.lowercased().contains(normalizedCityKey) }
-        } else {
-            return cafes
-        }
+        filteredCafes(selectedRegion: selectedRegion, userCityKey: userCityKey)
     }
 
     private var mapPins: [CheckInMapPin] {
@@ -527,9 +534,23 @@ private struct CheckInMapSection: View {
         }
     }
 
-    private func refreshMapIdentityIfNeeded() {
-        guard selectedRegion == .all else { return }
-        mapViewIdentity = "checkin-map-\(userCityKey ?? "all")-\(filteredCafes.map(\.id).joined(separator: ","))"
+    private func filteredCafes(
+        selectedRegion: ExploreUiState.RegionFilter,
+        userCityKey: String?
+    ) -> [CheckInCafeSummary] {
+        if selectedRegion != .all {
+            let label = selectedRegion.label
+            let key = selectedRegion.rawValue
+            return cafes.filter {
+                $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
+            }
+        } else if let cityKey = userCityKey {
+            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !normalizedCityKey.isEmpty else { return cafes }
+            return cafes.filter { $0.locationLabel.lowercased().contains(normalizedCityKey) }
+        } else {
+            return cafes
+        }
     }
 
 }
