@@ -132,10 +132,15 @@ class SignInViewModel: ObservableObject {
                     let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
 
                     if let success = result as? AppResultSuccess<AnyObject>,
-                       let user = success.data as? User,
-                       await ensureVisitorAccountCompleted(user: user) {
-                        uiState.isLoading = false
-                        event.send(.signedIn)
+                       let user = success.data as? User {
+                        let isCompleted = await ensureVisitorAccountCompleted(user: user)
+                        if isCompleted {
+                            uiState.isLoading = false
+                            event.send(.signedIn)
+                        } else {
+                            uiState.isLoading = false
+                            uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_apple_failed"), table: "Localizable")
+                        }
                     } else {
                         uiState.isLoading = false
                         uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_apple_failed"), table: "Localizable")
@@ -177,10 +182,15 @@ class SignInViewModel: ObservableObject {
             let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
 
             if let success = result as? AppResultSuccess<AnyObject>,
-               let user = success.data as? User,
-               await ensureVisitorAccountCompleted(user: user) {
-                uiState.isLoading = false
-                event.send(.signedIn)
+               let user = success.data as? User {
+                let isCompleted = await ensureVisitorAccountCompleted(user: user)
+                if isCompleted {
+                    uiState.isLoading = false
+                    event.send(.signedIn)
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_google_failed"), table: "Localizable")
+                }
             } else {
                 uiState.isLoading = false
                 uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_google_failed"), table: "Localizable")
