@@ -27,36 +27,35 @@ class SignInViewModel: ObservableObject {
 
     private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
 
+    private let completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase
+
     private let updateUserProfileUseCase: UpdateUserProfileUseCase
-    
+
     @Published private(set) var uiState = SignInUiState.empty
-    
+
     let event = PassthroughSubject<SignInEvent, Never>()
-    
+
     private var signInTask: Task<Void, Never>?
 
     private var webAuthSession: ASWebAuthenticationSession?
 
     private let webAuthPresentationContextProvider = WebAuthPresentationContextProvider()
-    
+
     private func signIn(email: String, password: String) {
         uiState.isLoading = true
         uiState.errorMessage = nil
-        
+
         signInTask?.cancel()
         signInTask = Task {
             do {
                 let result = try await signInUseCase.invoke(email: email, password: password)
-                
+
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isLoading = false
                     event.send(.signedIn)
-                } else if result is AppResultFailure {
-                    uiState.isLoading = false
-                    uiState.errorMessage = "로그인에 실패했습니다. 입력값을 확인해주세요."
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "로그인에 실패했습니다. 입력값을 확인해주세요."
+                    uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_invalid_credentials"), table: "Localizable")
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -65,7 +64,27 @@ class SignInViewModel: ObservableObject {
             }
         }
     }
-    
+
+    private func ensureVisitorAccountCompleted(user: User, fallbackEmail: String? = nil, fallbackNickname: String? = nil) async -> Bool {
+        if user.signupCompleted {
+            return true
+        }
+
+        let resolvedEmail = fallbackEmail?.trimmingCharacters(in: .whitespacesAndNewlines).flatMap { $0.isEmpty ? nil : $0 } ?? user.email
+        let resolvedNickname = fallbackNickname?.trimmingCharacters(in: .whitespacesAndNewlines).flatMap { $0.isEmpty ? nil : $0 } ?? user.nickname
+
+        do {
+            let result = try await completeSignUpForCurrentUserUseCase.invoke(
+                email: resolvedEmail,
+                nickname: resolvedNickname,
+                role: .visitor
+            )
+            return result is AppResultSuccess<AnyObject>
+        } catch {
+            return false
+        }
+    }
+
     func onAction(_ action: SignInAction) {
         switch action {
         case .emailChanged(let value):
@@ -96,7 +115,7 @@ class SignInViewModel: ObservableObject {
                         event.send(.signedIn)
                     } else {
                         uiState.isLoading = false
-                        uiState.errorMessage = "소셜 로그인에 실패했습니다. 입력값을 확인해주세요."
+                        uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_invalid_credentials"), table: "Localizable")
                     }
                 } catch {
                     if Task.isCancelled { return }
@@ -112,27 +131,30 @@ class SignInViewModel: ObservableObject {
                 do {
                     let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
 
-                    if result is AppResultSuccess<AnyObject> {
+                    if let success = result as? AppResultSuccess<AnyObject>,
+                       let user = success.data as? User,
+                       await ensureVisitorAccountCompleted(user: user) {
                         uiState.isLoading = false
                         event.send(.signedIn)
                     } else {
                         uiState.isLoading = false
-                        uiState.errorMessage = "애플 로그인에 실패했습니다. 다시 시도해주세요."
+                        uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_apple_failed"), table: "Localizable")
                     }
                 } catch {
                     if Task.isCancelled { return }
                     uiState.isLoading = false
-                    uiState.errorMessage = "애플 로그인에 실패했습니다. 다시 시도해주세요."
+                    uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_apple_failed"), table: "Localizable")
                 }
             }
         }
     }
-    
+
     init(
         signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
         signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
         signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
         signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase(),
+        completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase = KoinInitializerKt.resolveCompleteSignUpForCurrentUserUseCase(),
         updateUserProfileUseCase: UpdateUserProfileUseCase = KoinInitializerKt.resolveUpdateUserProfileUseCase()
     ) {
         self.signInUseCase = signInUseCase
@@ -140,9 +162,10 @@ class SignInViewModel: ObservableObject {
         self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
         self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
         self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
+        self.completeSignUpForCurrentUserUseCase = completeSignUpForCurrentUserUseCase
         self.updateUserProfileUseCase = updateUserProfileUseCase
     }
-    
+
     deinit {
         signInTask?.cancel()
         webAuthSession?.cancel()
@@ -153,17 +176,19 @@ class SignInViewModel: ObservableObject {
             let idToken = try await requestGoogleIdToken()
             let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
 
-            if result is AppResultSuccess<AnyObject> {
+            if let success = result as? AppResultSuccess<AnyObject>,
+               let user = success.data as? User,
+               await ensureVisitorAccountCompleted(user: user) {
                 uiState.isLoading = false
                 event.send(.signedIn)
             } else {
                 uiState.isLoading = false
-                uiState.errorMessage = "구글 로그인에 실패했습니다. 다시 시도해주세요."
+                uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_google_failed"), table: "Localizable")
             }
         } catch {
             if Task.isCancelled { return }
             uiState.isLoading = false
-            uiState.errorMessage = "구글 로그인에 실패했습니다. 다시 시도해주세요."
+            uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_google_failed"), table: "Localizable")
         }
     }
 
@@ -177,18 +202,28 @@ class SignInViewModel: ObservableObject {
                 nickname: profile.nickname
             )
 
-            if result is AppResultSuccess<AnyObject> {
+            if let success = result as? AppResultSuccess<AnyObject>,
+               let user = success.data as? User {
                 await applyKakaoNicknameIfNeeded(profile.nickname)
-                uiState.isLoading = false
-                event.send(.signedIn)
+                if await ensureVisitorAccountCompleted(
+                    user: user,
+                    fallbackEmail: profile.email,
+                    fallbackNickname: profile.nickname ?? String(localized: String.LocalizationValue("signin_default_kakao_nickname"), table: "Localizable")
+                ) {
+                    uiState.isLoading = false
+                    event.send(.signedIn)
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_kakao_failed"), table: "Localizable")
+                }
             } else {
                 uiState.isLoading = false
-                uiState.errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
+                uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_kakao_failed"), table: "Localizable")
             }
         } catch {
             if Task.isCancelled { return }
             uiState.isLoading = false
-            uiState.errorMessage = "카카오 로그인에 실패했습니다. 다시 시도해주세요."
+            uiState.errorMessage = String(localized: String.LocalizationValue("signin_error_kakao_failed"), table: "Localizable")
         }
     }
 
@@ -327,18 +362,6 @@ class SignInViewModel: ObservableObject {
         }
 
         return value
-    }
-
-    private func extractFragmentValue(fragment: String, key: String) -> String? {
-        let pairs = fragment.split(separator: "&")
-        for pair in pairs {
-            let components = pair.split(separator: "=", maxSplits: 1)
-            guard components.count == 2 else { continue }
-            if components[0] == Substring(key) {
-                return String(components[1]).removingPercentEncoding
-            }
-        }
-        return nil
     }
 
     private func extractQueryValue(url: URL, key: String) -> String? {

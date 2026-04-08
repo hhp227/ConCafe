@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.settings.account
 
+import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.MyInfoFeed
 import com.hhp227.concafe.domain.model.UserRole
 
@@ -15,6 +16,12 @@ data class AccountSettingsUiState(
 ) {
     val role: UserRole?
         get() = myInfoFeed?.user?.role
+
+    val authProvider: AuthProvider
+        get() = myInfoFeed?.user?.authProvider ?: AuthProvider.UNKNOWN
+
+    val canChangePassword: Boolean
+        get() = authProvider == AuthProvider.EMAIL || authProvider == AuthProvider.UNKNOWN
 
     companion object {
         fun empty(): AccountSettingsUiState {

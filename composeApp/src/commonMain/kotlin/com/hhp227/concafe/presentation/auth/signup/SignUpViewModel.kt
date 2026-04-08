@@ -2,6 +2,11 @@ package com.hhp227.concafe.presentation.auth.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.signup_phone_link_already_in_use
+import concafe.composeapp.generated.resources.signup_phone_link_already_linked
+import concafe.composeapp.generated.resources.signup_phone_link_failed
+import concafe.composeapp.generated.resources.signup_phone_link_no_social_session
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,6 +28,7 @@ import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
 import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
+import org.jetbrains.compose.resources.getString
 
 class SignUpViewModel(
     private val getSignUpCafeListUseCase: GetSignUpCafeListUseCase,
@@ -59,7 +65,10 @@ class SignUpViewModel(
                 verificationCode = "",
                 hasRequestedVerification = false,
                 isPhoneVerified = false,
-                signupCompleted = false
+                signupCompleted = false,
+                isSocialFlow = false,
+                socialProvider = null,
+                hasAuthenticatedSocialAccount = false
             )
         }
     }
@@ -89,7 +98,10 @@ class SignUpViewModel(
                 verificationCode = "",
                 hasRequestedVerification = false,
                 isPhoneVerified = false,
-                signupCompleted = false
+                signupCompleted = false,
+                isSocialFlow = false,
+                socialProvider = null,
+                hasAuthenticatedSocialAccount = false
             )
         }
     }
@@ -251,9 +263,12 @@ class SignUpViewModel(
             return
         }
 
+        val isSocialCafeOwnerFlow =
+            uiState.value.isSocialFlow && uiState.value.selectedUserType == SignUpUiState.UserType.CAFE_OWNER
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (val result = phoneAuthProvider.verifyCode(code)) {
+            when (val result = if (isSocialCafeOwnerFlow) phoneAuthProvider.linkPhone(code) else phoneAuthProvider.verifyCode(code)) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -271,7 +286,11 @@ class SignUpViewModel(
                         it.copy(
                             isLoading = false,
                             isPhoneVerified = false,
-                            errorMessage = resolvePhoneVerificationCodeErrorMessage(result.error),
+                            errorMessage = if (isSocialCafeOwnerFlow) {
+                                resolvePhoneLinkErrorMessage(result.error)
+                            } else {
+                                resolvePhoneVerificationCodeErrorMessage(result.error)
+                            },
                             infoMessage = null
                         )
                     }
@@ -298,7 +317,26 @@ class SignUpViewModel(
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
 
         viewModelScope.launch {
-            if (role == UserRole.CAFE_OWNER) {
+            if (currentState.isSocialFlow) {
+                when (
+                    val result = completeSignUpForCurrentUserUseCase.invoke(
+                        email = normalizedEmail,
+                        nickname = nickname,
+                        role = role,
+                        affiliatedCafeId = if (role == UserRole.CAST) selectedCafeId else null,
+                        phoneNumber = if (role == UserRole.CAFE_OWNER) normalizedPhone else null
+                    )
+                ) {
+                    is AppResult.Success -> {
+                        createOwnerCafeClaimIfNeeded(role, selectedCafeId)
+                        _uiState.update { it.copy(isLoading = false, signupCompleted = true) }
+                        _event.emit(SignUpEvent.SignedUp)
+                    }
+                    is AppResult.Failure -> {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = resolveSignUpErrorMessage(result.error)) }
+                    }
+                }
+            } else if (role == UserRole.CAFE_OWNER) {
                 when (val linkResult = phoneAuthProvider.linkEmail(normalizedEmail, currentState.password)) {
                     is AppResult.Success -> Unit
                     is AppResult.Failure -> {
@@ -435,35 +473,72 @@ class SignUpViewModel(
         }
     }
 
+    private suspend fun resolvePhoneLinkErrorMessage(error: AppError): String {
+        val reason = when (error) {
+            is AppError.ValidationFailed -> error.reason.uppercase()
+            is AppError.Unknown -> (error.cause ?: "").uppercase()
+            else -> ""
+        }
+
+        return if (reason.contains("INVALID_VERIFICATION_CODE")) {
+            "인증번호가 일치하지 않습니다."
+        } else if (reason.contains("SESSION_EXPIRED")
+            || reason.contains("INVALID_VERIFICATION_ID")) {
+            "인증 세션이 만료되었습니다. 인증번호를 다시 요청해주세요."
+        } else if (reason.contains("CREDENTIAL_ALREADY_IN_USE")
+            || reason.contains("PHONE_NUMBER_ALREADY_EXISTS")) {
+            getString(Res.string.signup_phone_link_already_in_use)
+        } else if (reason.contains("PROVIDER_ALREADY_LINKED")) {
+            getString(Res.string.signup_phone_link_already_linked)
+        } else if (reason.contains("NO_CURRENT_USER")) {
+            getString(Res.string.signup_phone_link_no_social_session)
+        } else {
+            getString(Res.string.signup_phone_link_failed)
+        }
+    }
+
     private fun cleanupIncompleteAccount() {
         val currentState = uiState.value
         val needsCleanup = currentState.isPhoneVerified && !currentState.signupCompleted
 
         if (needsCleanup) {
             viewModelScope.launch {
-                when (phoneAuthProvider.cleanupIncompleteAccount()) {
-                    is AppResult.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isPhoneVerified = false,
-                                hasRequestedVerification = false,
-                                phoneVerificationId = null,
-                                signupCompleted = false,
-                                infoMessage = null,
-                                errorMessage = null
-                            )
-                        }
+                if (currentState.isSocialFlow) {
+                    _uiState.update {
+                        it.copy(
+                            isPhoneVerified = false,
+                            hasRequestedVerification = false,
+                            phoneVerificationId = null,
+                            signupCompleted = false,
+                            infoMessage = null,
+                            errorMessage = null
+                        )
                     }
-                    is AppResult.Failure -> {
-                        _uiState.update {
-                            it.copy(
-                                isPhoneVerified = false,
-                                hasRequestedVerification = false,
-                                phoneVerificationId = null,
-                                signupCompleted = false,
-                                infoMessage = null,
-                                errorMessage = null
-                            )
+                } else {
+                    when (phoneAuthProvider.cleanupIncompleteAccount()) {
+                        is AppResult.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    isPhoneVerified = false,
+                                    hasRequestedVerification = false,
+                                    phoneVerificationId = null,
+                                    signupCompleted = false,
+                                    infoMessage = null,
+                                    errorMessage = null
+                                )
+                            }
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
+                                    isPhoneVerified = false,
+                                    hasRequestedVerification = false,
+                                    phoneVerificationId = null,
+                                    signupCompleted = false,
+                                    infoMessage = null,
+                                    errorMessage = null
+                                )
+                            }
                         }
                     }
                 }
@@ -479,9 +554,33 @@ class SignUpViewModel(
         }
     }
 
+    private fun applySocialProfile(
+        provider: SignUpProvider,
+        email: String,
+        nickname: String,
+        autoCompleteVisitor: Boolean
+    ) {
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = null,
+                infoMessage = if (autoCompleteVisitor) null else "소셜 인증이 완료되었습니다. 필요한 정보만 입력하면 가입이 완료됩니다.",
+                email = email,
+                nickname = nickname,
+                isSocialFlow = true,
+                socialProvider = provider,
+                hasAuthenticatedSocialAccount = true
+            )
+        }
+        if (autoCompleteVisitor) {
+            submit()
+        }
+    }
+
     private fun socialSignUp(provider: SignUpProvider) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
+            val autoCompleteVisitor = uiState.value.selectedUserType == SignUpUiState.UserType.VISITOR
             when (provider) {
                 SignUpProvider.GOOGLE -> {
                     runCatching { googleIdTokenProvider.getGoogleIdToken() }
@@ -495,10 +594,14 @@ class SignUpViewModel(
                             }
                         }
                         .onSuccess { idToken ->
-                            when (signInWithGoogleIdTokenUseCase.invoke(idToken)) {
+                            when (val result = signInWithGoogleIdTokenUseCase.invoke(idToken)) {
                                 is AppResult.Success -> {
-                                    _uiState.update { it.copy(isLoading = false, errorMessage = null, signupCompleted = true) }
-                                    _event.emit(SignUpEvent.SignedUp)
+                                    applySocialProfile(
+                                        provider = provider,
+                                        email = result.data.email,
+                                        nickname = result.data.nickname,
+                                        autoCompleteVisitor = autoCompleteVisitor
+                                    )
                                 }
                                 is AppResult.Failure -> {
                                     _uiState.update {
@@ -536,7 +639,7 @@ class SignUpViewModel(
                             val email = payload.email?.trim()
                             val nickname = payload.nickname?.trim()
 
-                            when (
+                            when (val result =
                                 signInWithKakaoIdTokenUseCase.invoke(
                                     idToken = payload.idToken,
                                     email = email,
@@ -544,7 +647,7 @@ class SignUpViewModel(
                                 )
                             ) {
                                 is AppResult.Success -> {
-                                    val resolvedNickname = nickname.orEmpty()
+                                    val resolvedNickname = nickname.orEmpty().ifBlank { result.data.nickname }
 
                                     if (resolvedNickname.isNotBlank()) {
                                         updateUserProfileUseCase.invoke(
@@ -552,8 +655,12 @@ class SignUpViewModel(
                                             profileImage = null
                                         )
                                     }
-                                    _uiState.update { it.copy(isLoading = false, errorMessage = null, signupCompleted = true) }
-                                    _event.emit(SignUpEvent.SignedUp)
+                                    applySocialProfile(
+                                        provider = provider,
+                                        email = email.orEmpty().ifBlank { result.data.email },
+                                        nickname = resolvedNickname.ifBlank { result.data.nickname },
+                                        autoCompleteVisitor = autoCompleteVisitor
+                                    )
                                 }
                                 is AppResult.Failure -> {
                                     _uiState.update {
@@ -601,8 +708,8 @@ class SignUpViewModel(
         if (state.email.isBlank()) return "이메일을 입력해주세요."
         if (userType == SignUpUiState.UserType.CAFE_OWNER && state.name.isBlank()) return "이름을 입력해주세요."
         if (userType != SignUpUiState.UserType.CAFE_OWNER && state.nickname.isBlank()) return "닉네임을 입력해주세요."
-        if (state.password.length < MIN_PASSWORD_LENGTH) return "비밀번호는 8자 이상 입력해주세요."
-        if (state.password != state.confirmPassword) return "비밀번호가 일치하지 않습니다."
+        if (!state.isSocialFlow && state.password.length < MIN_PASSWORD_LENGTH) return "비밀번호는 8자 이상 입력해주세요."
+        if (!state.isSocialFlow && state.password != state.confirmPassword) return "비밀번호가 일치하지 않습니다."
         if (userType == SignUpUiState.UserType.CAFE_OWNER && !state.isPhoneVerified) return "휴대폰 인증을 완료해주세요."
         if (userType == SignUpUiState.UserType.CAST && state.selectedCafe == null) return "카페를 선택해주세요."
 

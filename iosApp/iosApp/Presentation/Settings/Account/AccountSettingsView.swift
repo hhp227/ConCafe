@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 import Shared
 
 struct AccountSettingsView: View {
@@ -88,13 +89,15 @@ private struct AccountSettingsContentView: View {
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
         )) {
             AccountDeleteConfirmationSheet(
+                authProvider: uiState.authProvider,
                 passwordText: Binding(
                     get: { uiState.deletePassword },
                     set: { onAction(.deletePasswordChanged($0)) }
                 ),
                 errorMessage: uiState.deletePasswordErrorMessage,
                 onDismiss: { onAction(.dismissDeleteDialogTapped) },
-                onDelete: { onAction(.deleteAccountTapped) }
+                onDelete: { onAction(.deleteAccountTapped) },
+                onAppleTokenReceived: { onAction(.appleDeleteIdTokenReceived($0)) }
             )
         }
     }
@@ -193,13 +196,15 @@ private struct AccountSettingsContentView: View {
     private var securitySection: some View {
         settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_security"), table: "Localizable"), symbol: "lock.shield") {
             sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_security_eyebrow"), table: "Localizable"))
-            linkedDestinationCard(
-                title: String(localized: String.LocalizationValue("account_settings_link_change_password_title"), table: "Localizable"),
-                description: String(localized: String.LocalizationValue("account_settings_link_change_password_desc"), table: "Localizable"),
-                supporting: String(localized: String.LocalizationValue("account_settings_link_default_supporting"), table: "Localizable"),
-                symbol: "lock.shield",
-                onTap: { onAction(.openChangePasswordTapped) }
-            )
+            if uiState.canChangePassword {
+                linkedDestinationCard(
+                    title: String(localized: String.LocalizationValue("account_settings_link_change_password_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("account_settings_link_change_password_desc"), table: "Localizable"),
+                    supporting: String(localized: String.LocalizationValue("account_settings_link_default_supporting"), table: "Localizable"),
+                    symbol: "lock.shield",
+                    onTap: { onAction(.openChangePasswordTapped) }
+                )
+            }
             if uiState.role == .cast {
                 linkedDestinationCard(
                     title: String(localized: String.LocalizationValue("account_settings_link_cast_edit_title"), table: "Localizable"),
@@ -404,6 +409,8 @@ private extension UserRole {
 }
 
 private struct AccountDeleteConfirmationSheet: View {
+    let authProvider: AuthProvider
+
     @Binding var passwordText: String
 
     let errorMessage: String?
@@ -412,23 +419,41 @@ private struct AccountDeleteConfirmationSheet: View {
 
     let onDelete: () -> Void
 
+    let onAppleTokenReceived: (String) -> Void
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
                         .font(.title3.bold())
-                    Text(String(localized: String.LocalizationValue("account_settings_delete_dialog_desc"), table: "Localizable"))
+                    Text(deleteDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                ConCafeFormField(
-                    label: String(localized: String.LocalizationValue("account_settings_delete_password_label"), table: "Localizable"),
-                    text: $passwordText,
-                    placeholder: String(localized: String.LocalizationValue("account_settings_delete_password_placeholder"), table: "Localizable"),
-                    isSecure: true
-                )
-                .textInputAutocapitalization(.never)
+                if authProvider == .email || authProvider == .unknown {
+                    ConCafeFormField(
+                        label: String(localized: String.LocalizationValue("account_settings_delete_password_label"), table: "Localizable"),
+                        text: $passwordText,
+                        placeholder: String(localized: String.LocalizationValue("account_settings_delete_password_placeholder"), table: "Localizable"),
+                        isSecure: true
+                    )
+                    .textInputAutocapitalization(.never)
+                } else if authProvider == .apple {
+                    SignInWithAppleButton(.continue) { request in
+                        request.requestedScopes = []
+                    } onCompletion: { result in
+                        if case let .success(authorization) = result,
+                           let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                           let identityTokenData = credential.identityToken,
+                           let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                            onAppleTokenReceived(identityToken)
+                        }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
                 if let errorMessage, !errorMessage.isEmpty {
                     Text(errorMessage)
                         .font(.caption)
@@ -446,16 +471,18 @@ private struct AccountDeleteConfirmationSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    Button(action: onDelete) {
-                        Text(String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(Color(hex: "C9527E"))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    if authProvider != .apple {
+                        Button(action: onDelete) {
+                            Text(String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color(hex: "C9527E"))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 Spacer()
             }
@@ -469,6 +496,19 @@ private struct AccountDeleteConfirmationSheet: View {
                     }
                 }
             }
+        }
+    }
+
+    private var deleteDescription: String {
+        switch authProvider {
+        case .google:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_google"), table: "Localizable")
+        case .kakao:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_kakao"), table: "Localizable")
+        case .apple:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_apple"), table: "Localizable")
+        default:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc"), table: "Localizable")
         }
     }
 }

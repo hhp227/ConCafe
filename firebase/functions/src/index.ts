@@ -3705,6 +3705,32 @@ export const onUserDeletedCleanupOwnership =
         .get(),
     ]);
 
+    const claimCollections = ["castClaims", "cafeOwnerClaims", "cafeRegistrationClaims"];
+    const claimDeleteCounts = new Map<string, number>();
+    const BATCH_SIZE = 500;
+
+    for (const collectionName of claimCollections) {
+      const snapshot = await firestore
+        .collection(collectionName)
+        .where("userId", "==", userId)
+        .get();
+
+      if (snapshot.empty) {
+        claimDeleteCounts.set(collectionName, 0);
+        continue;
+      }
+
+      let deletedCount = 0;
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+        chunk.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        deletedCount += chunk.length;
+      }
+      claimDeleteCounts.set(collectionName, deletedCount);
+    }
+
     // cafes.ownerIds 쿼리 결과와 users.ownedCafeIds 양쪽에서 대상 카페를 수집
     const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
     cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
@@ -3715,28 +3741,39 @@ export const onUserDeletedCleanupOwnership =
       }
     }
 
-    if (cafeRefMap.size === 0 && castsSnapshot.empty) return;
-
-    const BATCH_SIZE = 500;
     const cafeRefs = [...cafeRefMap.values()];
-
-    for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
-      const batch = firestore.batch();
-      cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
-      });
-      await batch.commit();
-    }
-
     const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
 
-    for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
-      const batch = firestore.batch();
-      castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {linkedUserId: null});
-      });
-      await batch.commit();
+    if (cafeRefs.length > 0) {
+      for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
+        });
+        await batch.commit();
+      }
     }
+
+    if (castRefs.length > 0) {
+      for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.update(ref, {linkedUserId: null});
+        });
+        await batch.commit();
+      }
+    }
+
+    await firestore.recursiveDelete(firestore.collection("users").doc(userId));
+
+    logger.info("onUserDeletedCleanupOwnership completed.", {
+      userId: userId,
+      removedOwnerCafeCount: cafeRefs.length,
+      unlinkedCastCount: castRefs.length,
+      deletedCastClaims: claimDeleteCounts.get("castClaims") ?? 0,
+      deletedCafeOwnerClaims: claimDeleteCounts.get("cafeOwnerClaims") ?? 0,
+      deletedCafeRegistrationClaims: claimDeleteCounts.get("cafeRegistrationClaims") ?? 0,
+    });
   });
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분

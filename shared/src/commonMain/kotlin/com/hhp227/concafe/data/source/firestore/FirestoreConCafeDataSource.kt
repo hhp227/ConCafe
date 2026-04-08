@@ -48,6 +48,7 @@ import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.Stamp
+import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserNotificationSettings
 import com.hhp227.concafe.domain.model.UserRole
@@ -2810,6 +2811,7 @@ class FirestoreConCafeDataSource(
                 "email" to firestoreString(user.email),
                 "nickname" to firestoreString(user.nickname),
                 "profileImage" to firestoreNullableString(user.profileImage),
+                "authProvider" to firestoreString(user.authProvider.name),
                 "role" to firestoreString(user.role.name),
                 "banned" to firestoreBoolean(user.banned),
                 "createdAt" to firestoreString(user.createdAt),
@@ -5285,6 +5287,9 @@ class FirestoreConCafeDataSource(
         val role = fields.getFirestoreString("role")?.toUserRoleOrNull() ?: UserRole.VISITOR
         val createdAt = fields.getFirestoreString("createdAt") ?: "1970-01-01T00:00:00Z"
         val profileImage = fields.getFirestoreString("profileImage")
+        val authProvider = fields.getFirestoreString("authProvider")
+            ?.let { value -> runCatching { AuthProvider.valueOf(value) }.getOrDefault(AuthProvider.UNKNOWN) }
+            ?: AuthProvider.UNKNOWN
         val phoneNumber = fields.getFirestoreString("phoneNumber")
             ?: fields.getFirestoreString("contactNumber")
             ?: fields.getFirestoreString("phone")
@@ -5295,6 +5300,7 @@ class FirestoreConCafeDataSource(
             email = email,
             nickname = nickname,
             profileImage = profileImage,
+            authProvider = authProvider,
             role = role,
             banned = banned,
             createdAt = createdAt,

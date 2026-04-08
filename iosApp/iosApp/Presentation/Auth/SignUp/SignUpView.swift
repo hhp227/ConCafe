@@ -221,22 +221,24 @@ private struct SignUpContentView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            secureField(
-                title: String(localized: String.LocalizationValue("signup_password_label"), table: "Localizable"),
-                placeholder: String(localized: String.LocalizationValue("signup_password_placeholder"), table: "Localizable"),
-                text: Binding(
-                    get: { uiState.password },
-                    set: { onAction(.passwordChanged($0)) }
+            if !uiState.isSocialFlow {
+                secureField(
+                    title: String(localized: String.LocalizationValue("signup_password_label"), table: "Localizable"),
+                    placeholder: String(localized: String.LocalizationValue("signup_password_placeholder"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.password },
+                        set: { onAction(.passwordChanged($0)) }
+                    )
                 )
-            )
-            secureField(
-                title: String(localized: String.LocalizationValue("signup_confirm_password_label"), table: "Localizable"),
-                placeholder: String(localized: String.LocalizationValue("signup_confirm_password_placeholder"), table: "Localizable"),
-                text: Binding(
-                    get: { uiState.confirmPassword },
-                    set: { onAction(.confirmPasswordChanged($0)) }
+                secureField(
+                    title: String(localized: String.LocalizationValue("signup_confirm_password_label"), table: "Localizable"),
+                    placeholder: String(localized: String.LocalizationValue("signup_confirm_password_placeholder"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.confirmPassword },
+                        set: { onAction(.confirmPasswordChanged($0)) }
+                    )
                 )
-            )
+            }
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
@@ -267,7 +269,7 @@ private struct SignUpContentView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            if type == .visitor {
+            if !uiState.hasAuthenticatedSocialAccount {
                 SignInDivider()
                 socialButtons
             }

@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.source.firestore
 
+import com.hhp227.concafe.domain.model.AuthProvider
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -115,6 +116,11 @@ class PersistedFirebaseAuthTokenProvider(
     override fun getCurrentUserEmail(): String? {
         val currentSession = cachedSession
         return currentSession?.email ?: delegate.getCurrentUserEmail()
+    }
+
+    override fun getCurrentAuthProvider(): AuthProvider {
+        val currentSession = cachedSession
+        return currentSession?.authProvider ?: delegate.getCurrentAuthProvider()
     }
 
     override fun supportsEmailPasswordAuth(): Boolean {

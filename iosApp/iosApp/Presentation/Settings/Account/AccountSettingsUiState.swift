@@ -22,6 +22,14 @@ struct AccountSettingsUiState {
         myInfoFeed?.user?.role
     }
 
+    var authProvider: AuthProvider {
+        myInfoFeed?.user?.authProvider ?? .unknown
+    }
+
+    var canChangePassword: Bool {
+        authProvider == .email || authProvider == .unknown
+    }
+
     static let empty = AccountSettingsUiState(
         isLoading: true,
         errorMessage: nil,
