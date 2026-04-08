@@ -18,24 +18,74 @@ function db() {
   return getFirestore();
 }
 
+type DeletedUserCleanupSummary = {
+  removedOwnerCafeCount: number;
+  unlinkedCastCount: number;
+  deletedCastClaims: number;
+  deletedCafeOwnerClaims: number;
+  deletedCafeRegistrationClaims: number;
+  ownerQueryError: string | null;
+  castQueryError: string | null;
+  userQueryError: string | null;
+  ownerCleanupError: string | null;
+  castCleanupError: string | null;
+  userTreeCleanupError: string | null;
+};
+
+const USER_DELETION_REQUESTS = "_userDeletionRequests";
+
 async function cleanupDeletedUserData(
   firestore: FirebaseFirestore.Firestore,
   userId: string
-) {
-  const [cafesSnapshot, castsSnapshot, userSnapshot] = await Promise.all([
-    firestore
+): Promise<DeletedUserCleanupSummary> {
+  let ownerQueryError: string | null = null;
+  let castQueryError: string | null = null;
+  let userQueryError: string | null = null;
+  let cafesSnapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>;
+  let castRefs: FirebaseFirestore.DocumentReference[] = [];
+  let ownedCafeIds: string[] = [];
+
+  try {
+    cafesSnapshot = await firestore
       .collection("cafes")
       .where("ownerIds", "array-contains", userId)
-      .get(),
-    firestore
+      .get();
+  } catch (error) {
+    ownerQueryError = error instanceof Error ? error.message : "owner query failed";
+    logger.error("cleanupDeletedUserData owner cafe query failed.", {
+      userId: userId,
+      error: ownerQueryError,
+    });
+    cafesSnapshot = await firestore.collection("cafes").where(FieldPath.documentId(), "==", "__none__").get();
+  }
+
+  try {
+    const castsSnapshot = await firestore
       .collectionGroup("casts")
       .where("linkedUserId", "==", userId)
-      .get(),
-    firestore
+      .get();
+    castRefs = castsSnapshot.docs.map((doc) => doc.ref);
+  } catch (error) {
+    castQueryError = error instanceof Error ? error.message : "cast query failed";
+    logger.error("cleanupDeletedUserData cast query failed.", {
+      userId: userId,
+      error: castQueryError,
+    });
+  }
+
+  try {
+    const userSnapshot = await firestore
       .collection("users")
       .doc(userId)
-      .get(),
-  ]);
+      .get();
+    ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+  } catch (error) {
+    userQueryError = error instanceof Error ? error.message : "user query failed";
+    logger.error("cleanupDeletedUserData user doc query failed.", {
+      userId: userId,
+      error: userQueryError,
+    });
+  }
 
   const claimCollections = ["castClaims", "cafeOwnerClaims", "cafeRegistrationClaims"];
   const claimDeleteCounts = new Map<string, number>();
@@ -65,7 +115,6 @@ async function cleanupDeletedUserData(
 
   const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
   cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
-  const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
   for (const cafeId of ownedCafeIds) {
     if (cafeId && !cafeRefMap.has(cafeId)) {
       cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
@@ -73,29 +122,55 @@ async function cleanupDeletedUserData(
   }
 
   const cafeRefs = [...cafeRefMap.values()];
-  const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
+  let ownerCleanupError: string | null = null;
+  let castCleanupError: string | null = null;
+  let userTreeCleanupError: string | null = null;
 
   if (cafeRefs.length > 0) {
-    for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
-      const batch = firestore.batch();
-      cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
+    try {
+      for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.set(ref, {ownerIds: FieldValue.arrayRemove(userId)}, {merge: true});
+        });
+        await batch.commit();
+      }
+    } catch (error) {
+      ownerCleanupError = error instanceof Error ? error.message : "owner cleanup failed";
+      logger.error("cleanupDeletedUserData ownerIds cleanup failed.", {
+        userId: userId,
+        error: ownerCleanupError,
       });
-      await batch.commit();
     }
   }
 
   if (castRefs.length > 0) {
-    for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
-      const batch = firestore.batch();
-      castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {linkedUserId: null});
+    try {
+      for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.set(ref, {linkedUserId: null}, {merge: true});
+        });
+        await batch.commit();
+      }
+    } catch (error) {
+      castCleanupError = error instanceof Error ? error.message : "cast cleanup failed";
+      logger.error("cleanupDeletedUserData cast unlink failed.", {
+        userId: userId,
+        error: castCleanupError,
       });
-      await batch.commit();
     }
   }
 
-  await firestore.recursiveDelete(firestore.collection("users").doc(userId));
+  try {
+    await firestore.recursiveDelete(firestore.collection("users").doc(userId));
+  } catch (error) {
+    userTreeCleanupError = error instanceof Error ? error.message : "user recursive delete failed";
+    logger.error("cleanupDeletedUserData user tree delete failed.", {
+      userId: userId,
+      error: userTreeCleanupError,
+    });
+  }
 
   return {
     removedOwnerCafeCount: cafeRefs.length,
@@ -103,6 +178,12 @@ async function cleanupDeletedUserData(
     deletedCastClaims: claimDeleteCounts.get("castClaims") ?? 0,
     deletedCafeOwnerClaims: claimDeleteCounts.get("cafeOwnerClaims") ?? 0,
     deletedCafeRegistrationClaims: claimDeleteCounts.get("cafeRegistrationClaims") ?? 0,
+    ownerQueryError: ownerQueryError,
+    castQueryError: castQueryError,
+    userQueryError: userQueryError,
+    ownerCleanupError: ownerCleanupError,
+    castCleanupError: castCleanupError,
+    userTreeCleanupError: userTreeCleanupError,
   };
 }
 
@@ -3775,9 +3856,10 @@ export const onUserDeletedCleanupOwnership =
     const userId = user.uid;
 
     if (!userId) return;
-
     const firestore = db();
+    const markerRef = firestore.collection(USER_DELETION_REQUESTS).doc(userId);
     const cleanupSummary = await cleanupDeletedUserData(firestore, userId);
+    await markerRef.delete().catch(() => undefined);
     logger.info("onUserDeletedCleanupOwnership completed.", {
       userId: userId,
       ...cleanupSummary,
@@ -3809,17 +3891,14 @@ export const deleteCurrentUserCascade = functionsV1.https.onRequest(async (reque
   }
 
   try {
-    await getAuth().deleteUser(uid);
-    let cleanupSummary: Record<string, number> = {};
-    try {
-      cleanupSummary = await cleanupDeletedUserData(db(), uid);
-    } catch (cleanupError) {
-      logger.error("deleteCurrentUserCascade cleanup failed after auth deletion.", cleanupError);
-    }
-
-    logger.info("deleteCurrentUserCascade completed.", {
+    await db().collection(USER_DELETION_REQUESTS).doc(uid).set({
       userId: uid,
-      ...cleanupSummary,
+      requestedAt: new Date().toISOString(),
+      source: "deleteCurrentUserCascade",
+    });
+    await getAuth().deleteUser(uid);
+    logger.info("deleteCurrentUserCascade auth deletion requested.", {
+      userId: uid,
     });
     response.status(200).json({ok: true});
   } catch (error) {
