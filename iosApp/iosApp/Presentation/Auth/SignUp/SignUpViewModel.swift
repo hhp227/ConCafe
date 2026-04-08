@@ -640,12 +640,19 @@ class SignUpViewModel: ObservableObject {
                     idToken: idToken,
                     expectedUserId: user.id
                 )
+                let userEmail = String(user.email)
+                let userNickname = String(user.nickname)
                 let resolvedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
                 await applyKakaoNicknameIfNeeded(resolvedNickname)
+                let resolvedEmail: String = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .flatMap { $0.isEmpty ? nil : $0 } ?? userEmail
+                let resolvedProfileNickname: String = resolvedNickname?.isEmpty == false
+                    ? resolvedNickname!
+                    : userNickname
                 applySocialProfile(
                     provider: .kakao,
-                    email: profile.email?.trimmingCharacters(in: .whitespacesAndNewlines).flatMap { $0.isEmpty ? nil : $0 } ?? user.email,
-                    nickname: resolvedNickname?.isEmpty == false ? resolvedNickname! : user.nickname,
+                    email: resolvedEmail,
+                    nickname: resolvedProfileNickname,
                     autoCompleteVisitor: autoCompleteVisitor
                 )
             } else {
@@ -663,7 +670,7 @@ class SignUpViewModel: ObservableObject {
         idToken: String,
         expectedUserId: String
     ) async throws {
-        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: nil)
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: "")
         let authResult = try await Auth.auth().signIn(with: credential)
         if authResult.user.uid != expectedUserId {
             try? Auth.auth().signOut()
