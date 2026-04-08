@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "387905493709-vem2q13vhnkrsl4ojceba7b16vqqm2uv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hhp227.concafe",
+            "certificate_hash": "66cbed106251f71f6a6c09e44ae137fa2c4b8759"
+          }
+        },
+        {
           "client_id": "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com",
           "client_type": 3
         }
