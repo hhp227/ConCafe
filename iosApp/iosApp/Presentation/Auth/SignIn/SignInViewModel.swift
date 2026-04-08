@@ -78,7 +78,9 @@ class SignInViewModel: ObservableObject {
             let result = try await completeSignUpForCurrentUserUseCase.invoke(
                 email: email,
                 nickname: nickname,
-                role: .visitor
+                role: .visitor,
+                affiliatedCafeId: nil,
+                phoneNumber: nil
             )
             return result is AppResultSuccess<AnyObject>
         } catch {
