@@ -18,6 +18,9 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
     ""
 }
 
+val appVersionName = "1.02"
+val desktopPackageVersion = "1.2.0"
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
@@ -98,7 +101,10 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 4
-        versionName = "1.02"
+        versionName = appVersionName
+    }
+    buildFeatures {
+        buildConfig = true
     }
     packaging {
         resources {
@@ -132,11 +138,12 @@ compose.desktop {
         if (googleMapsJavascriptApiKey.isNotBlank()) {
             jvmArgs("-Dgoogle.maps.api.key=$googleMapsJavascriptApiKey")
         }
+        jvmArgs("-Dapp.version=$appVersionName")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.hhp227.concafe"
-            packageVersion = "1.0.0"
+            packageVersion = desktopPackageVersion
         }
     }
 }
