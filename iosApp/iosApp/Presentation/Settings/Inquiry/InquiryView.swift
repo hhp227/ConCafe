@@ -88,7 +88,7 @@ struct InquiryView: View {
     private var inquiryInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("inquiry_input_section_title"), table: "Localizable"))
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
             Text(String(localized: String.LocalizationValue("inquiry_input_section_desc"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)

@@ -246,7 +246,7 @@ private struct CastEditContentView: View {
             }
             .buttonStyle(.plain)
             Text(String(localized: String.LocalizationValue("castedit_profile_photo_title"), table: "Localizable"))
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             Text(String(localized: String.LocalizationValue("castedit_profile_photo_hint"), table: "Localizable"))
                 .font(.caption)

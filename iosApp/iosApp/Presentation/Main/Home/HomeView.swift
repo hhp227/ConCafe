@@ -148,7 +148,6 @@ private struct HomeContentView: View {
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
-                icon: "heart.fill",
                 title: String(localized: String.LocalizationValue("home_section_popular_cast"), table: "Localizable"),
                 actionTitle: uiState.canLoadMorePopularCasts ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
                 onAction: { onAction(.loadMorePopularCasts) }
@@ -185,7 +184,6 @@ private struct HomeContentView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
-                    icon: "mappin.and.ellipse",
                     title: String(localized: String.LocalizationValue("home_section_nearby_cafe"), table: "Localizable"),
                     actionTitle: uiState.canLoadMoreNearbyCafes ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
@@ -237,7 +235,7 @@ private struct HomeContentView: View {
 
     private var birthdaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: birthdaySectionIconName, title: String(localized: String.LocalizationValue("home_section_birthday_cast"), table: "Localizable"))
+            SectionTitle(title: String(localized: String.LocalizationValue("home_section_birthday_cast"), table: "Localizable"))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(uiState.birthdayCasts, id: \.id) { maid in
@@ -273,16 +271,9 @@ private struct HomeContentView: View {
         }
     }
 
-    private var birthdaySectionIconName: String {
-        if #available(iOS 16.0, *) {
-            return "birthday.cake.fill"
-        }
-        return "gift.fill"
-    }
-
     private var noticeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(icon: "megaphone.fill", title: String(localized: String.LocalizationValue("home_section_notice"), table: "Localizable"))
+            SectionTitle(title: String(localized: String.LocalizationValue("home_section_notice"), table: "Localizable"))
             VStack(spacing: 10) {
                 if !uiState.notices.isEmpty {
                     ForEach(uiState.notices, id: \.id) { notice in
@@ -430,8 +421,6 @@ private struct HomeSectionPlaceholderCard: View {
 }
 
 private struct SectionTitle: View {
-    let icon: String
-    
     let title: String
 
     var actionTitle: String? = nil
@@ -444,11 +433,9 @@ private struct SectionTitle: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
             Text(title)
-                .font(.headline)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
             Spacer()
             Group {
                 if let actionTitle, let onAction {

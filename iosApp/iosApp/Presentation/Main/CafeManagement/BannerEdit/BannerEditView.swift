@@ -215,7 +215,7 @@ private struct BannerEditContentView: View {
             }
             VStack(spacing: 4) {
                 Text(String(localized: String.LocalizationValue("banneredit_image_section_title"), table: "Localizable"))
-                    .font(.title3.weight(.bold))
+                    .font(.headline.weight(.bold))
                     .multilineTextAlignment(.center)
                 Text(String(localized: String.LocalizationValue("banneredit_image_guide"), table: "Localizable"))
                     .font(.caption)
@@ -413,7 +413,7 @@ private struct BannerEditContentView: View {
                 RoundedRectangle(cornerRadius: 999, style: .continuous)
                     .fill(Color(hex: "FFD1DC"))
                     .frame(width: 4, height: 18)
-                Text(title).font(.title3.weight(.bold))
+                Text(title).font(.headline.weight(.bold))
             }
             content()
         }

@@ -172,7 +172,7 @@ private struct CafeManagementContentView: View {
     private func sectionHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             Text(subtitle)
                 .font(.caption)

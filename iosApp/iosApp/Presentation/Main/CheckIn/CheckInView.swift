@@ -153,8 +153,7 @@ private struct CheckInGuestContentView: View {
                 CheckInLoginPromotionSection(onAction: onAction)
                 CheckInSectionTitle(
                     title: String(localized: String.LocalizationValue("checkin_section_popular_cafe_title"), table: "Localizable"),
-                    trailing: nil,
-                    leadingSystemImage: "flame.fill"
+                    trailing: nil
                 )
                 if !uiState.popularCafes.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -184,8 +183,7 @@ private struct CheckInGuestContentView: View {
                 }
                 CheckInSectionTitle(
                     title: String(localized: String.LocalizationValue("checkin_section_popular_cast_title"), table: "Localizable"),
-                    trailing: nil,
-                    leadingSystemImage: "cup.and.saucer.fill"
+                    trailing: nil
                 )
                 if !uiState.popularCasts.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -243,16 +241,14 @@ private struct CheckInUserContentView: View {
                 .padding(.vertical, 12)
                 CheckInSectionTitle(
                     title: String(localized: String.LocalizationValue("checkin_section_today_visit_title"), table: "Localizable"),
-                    trailing: TimeUtils.currentMonthDayLabelKorean(),
-                    leadingSystemImage: nil
+                    trailing: TimeUtils.currentMonthDayLabelKorean()
                 )
                 CheckInTodayVisitsRow(visits: uiState.todayVisits)
                 Spacer()
                     .frame(height: 20)
                 CheckInSectionTitle(
                     title: String(localized: String.LocalizationValue("checkin_section_timeline_title"), table: "Localizable"),
-                    trailing: nil,
-                    leadingSystemImage: "clock.fill"
+                    trailing: nil
                 )
                 CheckInTimelineList(
                     visits: uiState.recentVisits,
@@ -855,16 +851,9 @@ private struct CheckInSectionTitle: View {
 
     let trailing: String?
 
-    let leadingSystemImage: String?
-
     var body: some View {
         HStack {
             HStack(spacing: 6) {
-                if let leadingSystemImage {
-                    Image(systemName: leadingSystemImage)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "7B7480"))
-                }
                 if let trailing {
                     Text(trailing)
                         .font(.caption)
@@ -872,6 +861,7 @@ private struct CheckInSectionTitle: View {
                 }
                 Text(title)
                     .font(.headline.weight(.bold))
+                    .foregroundStyle(Color(hex: "2B2330"))
             }
             Spacer()
         }

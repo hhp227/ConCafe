@@ -116,8 +116,7 @@ private struct GuestMyInfoView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: String.LocalizationValue("myinfo_guest_features_title"), table: "Localizable"))
-                        .font(.headline)
+                    MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_guest_features_title"), table: "Localizable"))
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(Array(features.enumerated()), id: \.offset) { _, item in
                             VStack(alignment: .leading, spacing: 6) {
@@ -152,8 +151,7 @@ private struct GuestMyInfoView: View {
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(String(localized: String.LocalizationValue("myinfo_guest_popular_cafes_title"), table: "Localizable"))
-                            .font(.headline)
+                        MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_guest_popular_cafes_title"), table: "Localizable"))
                         Spacer()
                         Button {
                         } label: {
@@ -463,7 +461,7 @@ private struct ProfileMyInfoView: View {
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("활동 뱃지").font(.headline)
+                MyInfoSectionTitle(title: "활동 뱃지")
                 Spacer()
                 Text("\(uiState.badges.filter { $0.unlocked }.count) / \(uiState.badges.count)")
                     .font(.caption)
@@ -495,7 +493,7 @@ private struct ProfileMyInfoView: View {
 
     private var recentVisitsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("최근 방문").font(.headline)
+            MyInfoSectionTitle(title: "최근 방문")
             if !uiState.recentVisits.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
@@ -546,7 +544,7 @@ private struct ProfileMyInfoView: View {
 
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("즐겨찾기").font(.headline)
+            MyInfoSectionTitle(title: "즐겨찾기")
             if !uiState.favorites.isEmpty {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
@@ -579,7 +577,7 @@ private struct ProfileMyInfoView: View {
 
     private var followedMaidsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("팔로우한 캐스트").font(.headline)
+            MyInfoSectionTitle(title: "팔로우한 캐스트")
             if !uiState.followedMaids.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -632,6 +630,16 @@ private struct MyInfoMetricCard {
     let title: String
     let value: String
     let highlight: Bool
+}
+
+private struct MyInfoSectionTitle: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline.weight(.bold))
+            .foregroundStyle(Color(hex: "2B2330"))
+    }
 }
 
 private struct MyInfoSectionPlaceholderCard: View {

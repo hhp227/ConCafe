@@ -15,11 +15,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -199,7 +194,6 @@ fun HomeContentScreen(
         item {
             SectionTitle(
                 text = stringResource(Res.string.home_section_popular_cast),
-                leading = Icons.Default.Favorite,
                 actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
                 onAction = { onAction(HomeAction.LoadMorePopularCasts) }
             )
@@ -238,7 +232,6 @@ fun HomeContentScreen(
                 Column {
                     SectionTitle(
                         text = stringResource(Res.string.home_section_nearby_cafe),
-                        leading = Icons.Default.Place,
                         actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
                         onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
                     )
@@ -277,7 +270,7 @@ fun HomeContentScreen(
         }
         if (uiState.birthdayCasts.isNotEmpty()) {
             item {
-                SectionTitle(stringResource(Res.string.home_section_birthday_cast), Icons.Default.Cake)
+                SectionTitle(stringResource(Res.string.home_section_birthday_cast))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -310,7 +303,7 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle(stringResource(Res.string.home_section_notice), Icons.Default.Campaign)
+            SectionTitle(stringResource(Res.string.home_section_notice))
             Spacer(Modifier.height(10.dp))
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -512,7 +505,6 @@ private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
 @Composable
 private fun SectionTitle(
     text: String,
-    leading: androidx.compose.ui.graphics.vector.ImageVector,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
@@ -523,19 +515,15 @@ private fun SectionTitle(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .height(actionSlotHeight),
+            .heightIn(min = actionSlotHeight),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Icon(
-            imageVector = leading,
-            contentDescription = null,
-            tint = Color(0xFFEF6797)
-        )
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2B2330)
         )
         Spacer(modifier = Modifier.weight(1f))
         Box(

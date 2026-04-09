@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -355,8 +354,7 @@ private fun CheckInGuestScreen(
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 CheckInGuestSectionTitle(
-                    title = stringResource(Res.string.checkin_section_popular_cafe_title),
-                    leadingIcon = Icons.Filled.LocalFireDepartment
+                    title = stringResource(Res.string.checkin_section_popular_cafe_title)
                 )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -374,8 +372,7 @@ private fun CheckInGuestScreen(
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 CheckInGuestSectionTitle(
-                    title = stringResource(Res.string.checkin_section_popular_cast_title),
-                    leadingIcon = Icons.Filled.LocalCafe
+                    title = stringResource(Res.string.checkin_section_popular_cast_title)
                 )
             }
             Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
@@ -433,8 +430,7 @@ private fun CheckInUserScreen(
         item {
             CheckInSectionTitle(
                 title = stringResource(Res.string.checkin_section_today_visit_title),
-                trailing = TimeUtils.currentMonthDayLabelKorean(),
-                leadingIcon = null
+                trailing = TimeUtils.currentMonthDayLabelKorean()
             )
         }
         item {
@@ -448,8 +444,7 @@ private fun CheckInUserScreen(
         item {
             CheckInSectionTitle(
                 title = stringResource(Res.string.checkin_section_timeline_title),
-                trailing = null,
-                leadingIcon = Icons.Filled.AccessTime
+                trailing = null
             )
         }
         if (uiState.recentVisits.isEmpty()) {
@@ -1144,24 +1139,17 @@ private fun NewVisitCheckInBottomSheet(
 
 @Composable
 private fun CheckInGuestSectionTitle(
-    title: String,
-    leadingIcon: ImageVector
+    title: String
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = leadingIcon,
-            contentDescription = null,
-            tint = Color(0xFF7B7480),
-            modifier = Modifier.size(18.dp)
-        )
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2630)
+            color = Color(0xFF2B2330)
         )
     }
 }
@@ -1169,28 +1157,19 @@ private fun CheckInGuestSectionTitle(
 @Composable
 private fun CheckInSectionTitle(
     title: String,
-    trailing: String?,
-    leadingIcon: ImageVector?
+    trailing: String?
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .height(24.dp),
+            .heightIn(min = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (leadingIcon != null) {
-                Icon(
-                    imageVector = leadingIcon,
-                    contentDescription = null,
-                    tint = Color(0xFF7B7480),
-                    modifier = Modifier.size(16.dp)
-                )
-            }
             if (trailing != null) {
                 Text(
                     text = trailing,
@@ -1202,7 +1181,7 @@ private fun CheckInSectionTitle(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.DarkGray
+                color = Color(0xFF2B2330)
             )
         }
         Spacer(modifier = Modifier.weight(1f))

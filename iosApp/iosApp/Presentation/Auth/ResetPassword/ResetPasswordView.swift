@@ -112,7 +112,7 @@ struct ResetPasswordView: View {
                 Image(systemName: symbol)
                     .foregroundStyle(Color(hex: "EF6797"))
                 Text(title)
-                    .font(.title3)
+                    .font(.headline)
                     .bold()
             }
             content()

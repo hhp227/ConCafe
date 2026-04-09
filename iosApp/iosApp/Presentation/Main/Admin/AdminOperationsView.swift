@@ -86,7 +86,7 @@ struct AdminOperationsView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(String(localized: String.LocalizationValue("admin_pending_section_title"), table: "Localizable"))
-                    .font(.title3.weight(.bold))
+                    .font(.headline.weight(.bold))
                 Spacer()
                 Button(String(localized: String.LocalizationValue("dashboard_action_view_all"), table: "Localizable")) {
                     viewModel.onAction(.clickSeeAllPending)
@@ -233,7 +233,7 @@ struct AdminOperationsView: View {
     private var quickMenuSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("admin_quick_menu_title"), table: "Localizable"))
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
             ForEach(viewModel.uiState.quickMenus) { menu in
                 Button {
                     viewModel.onAction(.clickQuickMenu(menu.id))
@@ -270,7 +270,7 @@ struct AdminOperationsView: View {
     private var inquirySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("admin_inquiry_title"), table: "Localizable"))
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
             if viewModel.uiState.inquiries.isEmpty {
                 Text(String(localized: String.LocalizationValue("admin_inquiry_empty"), table: "Localizable"))
                     .font(.subheadline)
@@ -362,7 +362,7 @@ struct AdminOperationsView: View {
     private var bannerRegisterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("admin_banner_card_title"), table: "Localizable"))
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
             Text(String(localized: String.LocalizationValue("admin_banner_card_description"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "7A707A"))
