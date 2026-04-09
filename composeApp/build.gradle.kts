@@ -31,10 +31,14 @@ plugins {
 
 val generatedJvmAppVersionDir = layout.buildDirectory.dir("generated/concafeVersion/jvmMain/kotlin")
 val generateJvmAppVersion by tasks.registering {
+    val generatedAppVersion = appVersionName
+    val generatedOutputDir = generatedJvmAppVersionDir
+
+    inputs.property("appVersionName", generatedAppVersion)
     outputs.dir(generatedJvmAppVersionDir)
 
     doLast {
-        val outputFile = generatedJvmAppVersionDir.get()
+        val outputFile = generatedOutputDir.get()
             .file("com/hhp227/concafe/presentation/settings/GeneratedAppVersion.kt")
             .asFile
 
@@ -43,7 +47,7 @@ val generateJvmAppVersion by tasks.registering {
             """
             package com.hhp227.concafe.presentation.settings
 
-            internal const val GENERATED_APP_VERSION = "$appVersionName"
+            internal const val GENERATED_APP_VERSION = "$generatedAppVersion"
             """.trimIndent() + "\n"
         )
     }
@@ -61,9 +65,9 @@ kotlin {
             }
         }
     }
-    
+
     jvm()
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -169,8 +173,14 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.hhp227.concafe"
+            packageName = "ConCafe"
             packageVersion = desktopPackageVersion
+            windows {
+                iconFile.set(project.file("src/jvmMain/resources/desktop/concafe.ico"))
+            }
+            linux {
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/desktop_icon.png"))
+            }
         }
     }
 }
