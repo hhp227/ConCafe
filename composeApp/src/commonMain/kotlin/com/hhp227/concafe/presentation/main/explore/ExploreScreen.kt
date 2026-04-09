@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -112,15 +113,6 @@ fun ExploreContentScreen(
 ) {
     var searchFieldValue by remember { mutableStateOf(TextFieldValue(uiState.query)) }
     val cafeNameById = uiState.cafes.associate { it.id to it.name }
-    val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
-        uiState.cafes.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.CafeItem(it) }
-        }
-    } else {
-        uiState.maids.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
-        }
-    }
 
     LaunchedEffect(uiState.query) {
         if (searchFieldValue.text != uiState.query && searchFieldValue.composition == null) {
@@ -130,142 +122,157 @@ fun ExploreContentScreen(
             )
         }
     }
-    LazyColumn(
-        state = listState,
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
-        contentPadding = PaddingValues(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color(0xFFFFFBFD))
     ) {
-        item {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedTextField(
-                    value = searchFieldValue,
-                    onValueChange = { next ->
-                        searchFieldValue = next
-                        if (next.text != uiState.query) {
-                            onAction(ExploreAction.QueryChanged(next.text))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text(stringResource(Res.string.explore_search_placeholder)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CapsuleDropdown(
-                        selected = uiState.selectedRegion.label,
-                        options = ExploreUiState.RegionFilter.entries.map { it.label to it },
-                        onSelected = { onAction(ExploreAction.RegionChanged(it)) }
-                    )
-                    CapsuleDropdown(
-                        selected = uiState.selectedSort.label,
-                        options = ExploreUiState.SortFilter.entries.map { it.label to it },
-                        onSelected = { onAction(ExploreAction.SortChanged(it)) }
-                    )
-                }
-            }
-        }
-        stickyHeader {
-            Surface(
-                color = Color(0xFFFFFBFD),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .zIndex(1f)
-            ) {
-                val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
-                val labels = ExploreUiState.TabType.entries.map { it.label }
-
-                ConCafeTabBar(
-                    labels = labels,
-                    selectedIndex = selectedTabIndex,
-                    modifier = Modifier.fillMaxWidth(),
-                    onTabSelected = { index ->
-                        onAction(ExploreAction.TabChanged(ExploreUiState.TabType.entries[index]))
-                    }
-                )
-            }
-        }
-        if (uiState.isLoading) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-        } else if (uiState.errorMessage != null) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(Res.string.explore_error_load_failed),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+        val gridColumnCount = exploreGridColumnCount(maxWidth)
+        val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+            uiState.cafes.chunked(gridColumnCount).map { row ->
+                row.map { ExploreGridItem.CafeItem(it) }
             }
         } else {
-            if (rows.isNotEmpty()) {
-                items(rows) { rowItems ->
-                    Row(
+            uiState.maids.chunked(gridColumnCount).map { row ->
+                row.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
+            }
+        }
+
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchFieldValue,
+                        onValueChange = { next ->
+                            searchFieldValue = next
+                            if (next.text != uiState.query) {
+                                onAction(ExploreAction.QueryChanged(next.text))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        placeholder = { Text(stringResource(Res.string.explore_search_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CapsuleDropdown(
+                            selected = uiState.selectedRegion.label,
+                            options = ExploreUiState.RegionFilter.entries.map { it.label to it },
+                            onSelected = { onAction(ExploreAction.RegionChanged(it)) }
+                        )
+                        CapsuleDropdown(
+                            selected = uiState.selectedSort.label,
+                            options = ExploreUiState.SortFilter.entries.map { it.label to it },
+                            onSelected = { onAction(ExploreAction.SortChanged(it)) }
+                        )
+                    }
+                }
+            }
+            stickyHeader {
+                Surface(
+                    color = Color(0xFFFFFBFD),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .zIndex(1f)
+                ) {
+                    val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
+                    val labels = ExploreUiState.TabType.entries.map { it.label }
+
+                    ConCafeTabBar(
+                        labels = labels,
+                        selectedIndex = selectedTabIndex,
+                        modifier = Modifier.fillMaxWidth(),
+                        onTabSelected = { index ->
+                            onAction(ExploreAction.TabChanged(ExploreUiState.TabType.entries[index]))
+                        }
+                    )
+                }
+            }
+            if (uiState.isLoading) {
+                item {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        rowItems.forEach { item ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                when (item) {
-                                    is ExploreGridItem.CafeItem -> CafeCard(
-                                        cafe = item.cafe,
-                                        onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
-                                    )
-                                    is ExploreGridItem.MaidItem -> MaidCard(
-                                        maid = item.maid,
-                                        cafeName = item.cafeName,
-                                        onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
-                                    )
-                                }
-                            }
-                        }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (uiState.errorMessage != null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.explore_error_load_failed),
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             } else {
-                item {
-                    ExploreEmptyPlaceholder(
-                        title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) stringResource(Res.string.explore_empty_cafe_title) else stringResource(Res.string.explore_empty_cast_title),
-                        description = stringResource(Res.string.explore_empty_hint)
-                    )
+                if (rows.isNotEmpty()) {
+                    items(rows) { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowItems.forEach { item ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    when (item) {
+                                        is ExploreGridItem.CafeItem -> CafeCard(
+                                            cafe = item.cafe,
+                                            onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
+                                        )
+                                        is ExploreGridItem.MaidItem -> MaidCard(
+                                            maid = item.maid,
+                                            cafeName = item.cafeName,
+                                            onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
+                                        )
+                                    }
+                                }
+                            }
+                            repeat(gridColumnCount - rowItems.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    item {
+                        ExploreEmptyPlaceholder(
+                            title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) stringResource(Res.string.explore_empty_cafe_title) else stringResource(Res.string.explore_empty_cast_title),
+                            description = stringResource(Res.string.explore_empty_hint)
+                        )
+                    }
                 }
-            }
-            item {
-                ExplorePagingTrigger(uiState = uiState, onAction = onAction)
+                item {
+                    ExplorePagingTrigger(uiState = uiState, onAction = onAction)
+                }
             }
         }
     }
@@ -429,3 +436,18 @@ private sealed interface ExploreGridItem {
     data class CafeItem(val cafe: Cafe) : ExploreGridItem
     data class MaidItem(val maid: Cast, val cafeName: String) : ExploreGridItem
 }
+
+private fun exploreGridColumnCount(contentWidth: Dp): Int {
+    val availableWidth = contentWidth.value - EXPLORE_GRID_HORIZONTAL_PADDING_DP
+    val minimumGridWidth = (EXPLORE_GRID_MIN_CELL_WIDTH_DP * 2) + EXPLORE_GRID_ITEM_SPACING_DP
+    val normalizedWidth = maxOf(availableWidth, minimumGridWidth)
+    val rawCount = ((normalizedWidth + EXPLORE_GRID_ITEM_SPACING_DP) /
+        (EXPLORE_GRID_MIN_CELL_WIDTH_DP + EXPLORE_GRID_ITEM_SPACING_DP)).toInt()
+    return rawCount.coerceIn(EXPLORE_GRID_MIN_COLUMN_COUNT, EXPLORE_GRID_MAX_COLUMN_COUNT)
+}
+
+private const val EXPLORE_GRID_MIN_COLUMN_COUNT = 2
+private const val EXPLORE_GRID_MAX_COLUMN_COUNT = 6
+private const val EXPLORE_GRID_HORIZONTAL_PADDING_DP = 24f
+private const val EXPLORE_GRID_ITEM_SPACING_DP = 12f
+private const val EXPLORE_GRID_MIN_CELL_WIDTH_DP = 180f
