@@ -6,6 +6,8 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -109,6 +111,7 @@ fun CheckInScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val openLocationSettings = rememberCheckInLocationSettingsOpener()
+    val snackbarHostState = remember { SnackbarHostState() }
     var isLocationSettingsAlertVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
@@ -121,6 +124,9 @@ fun CheckInScreen(
                 CheckInEvent.OpenLocationSettings -> {
                     isLocationSettingsAlertVisible = true
                 }
+                is CheckInEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
@@ -132,6 +138,12 @@ fun CheckInScreen(
         CheckInContentScreen(
             uiState = uiState,
             onAction = viewModel::onAction
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
         )
         if (uiState.isLoginPromptVisible) {
             ModalBottomSheet(
@@ -494,6 +506,7 @@ private fun CheckInUserScreen(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun CafeMapSection(
     modifier: Modifier = Modifier,
     currentLocationLabel: String,
@@ -505,6 +518,7 @@ private fun CafeMapSection(
 ) {
     var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
+    val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
     val selectedRegionLabel = stringResource(
         Res.string.checkin_main_cafe_label,
         if (selectedRegion == ExploreUiState.RegionFilter.ALL) {
@@ -550,59 +564,42 @@ private fun CafeMapSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(Res.string.checkin_map_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Box {
-                        Row(
-                            modifier = Modifier.clickable { isRegionDropdownExpanded = true },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = Color(0xFFEF6797),
-                                modifier = Modifier.size(18.dp)
-                            )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(Res.string.checkin_map_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (usesInlineRegionFilter) {
                             Text(
                                 text = selectedRegionLabel,
                                 color = Color(0xFF7B7480),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                tint = Color(0xFF7B7480),
-                                modifier = Modifier.size(18.dp)
+                        } else {
+                            CheckInRegionDropdown(
+                                selectedRegionLabel = selectedRegionLabel,
+                                isExpanded = isRegionDropdownExpanded,
+                                onExpandedChange = { isRegionDropdownExpanded = it },
+                                onRegionSelected = { region ->
+                                    selectedRegion = region
+                                    isRegionDropdownExpanded = false
+                                }
                             )
                         }
-                        DropdownMenu(
-                            expanded = isRegionDropdownExpanded,
-                            onDismissRequest = { isRegionDropdownExpanded = false }
-                        ) {
-                            ExploreUiState.RegionFilter.entries.forEach { region ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (region == ExploreUiState.RegionFilter.ALL) {
-                                                stringResource(Res.string.checkin_nearby_label)
-                                            } else {
-                                                region.label
-                                            }
-                                        )
-                                    },
-                                    onClick = {
-                                        selectedRegion = region
-                                        isRegionDropdownExpanded = false
-                                    }
-                                )
-                            }
-                        }
+                    }
+                    if (usesInlineRegionFilter) {
+                        CheckInRegionChips(
+                            selectedRegion = selectedRegion,
+                            onRegionSelected = { selectedRegion = it },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
                 OutlinedButton(
@@ -628,6 +625,94 @@ private fun CafeMapSection(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CheckInRegionDropdown(
+    selectedRegionLabel: String,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit
+) {
+    Box {
+        Row(
+            modifier = Modifier.clickable { onExpandedChange(true) },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = Color(0xFFEF6797),
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = selectedRegionLabel,
+                color = Color(0xFF7B7480),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = Color(0xFF7B7480),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            ExploreUiState.RegionFilter.entries.forEach { region ->
+                DropdownMenuItem(
+                    text = { Text(region.checkInMapFilterLabel()) },
+                    onClick = { onRegionSelected(region) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CheckInRegionChips(
+    selectedRegion: ExploreUiState.RegionFilter,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp),
+        modifier = modifier
+    ) {
+        items(ExploreUiState.RegionFilter.entries) { region ->
+            FilterChip(
+                selected = selectedRegion == region,
+                onClick = { onRegionSelected(region) },
+                label = { Text(region.checkInMapFilterLabel()) },
+                leadingIcon = if (selectedRegion == region) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                } else {
+                    null
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExploreUiState.RegionFilter.checkInMapFilterLabel(): String {
+    return if (this == ExploreUiState.RegionFilter.ALL) {
+        stringResource(Res.string.checkin_nearby_label)
+    } else {
+        label
     }
 }
 

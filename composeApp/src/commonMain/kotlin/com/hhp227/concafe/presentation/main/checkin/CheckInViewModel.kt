@@ -269,6 +269,7 @@ class CheckInViewModel(
                                 errorMessage = permissionResult.message
                             )
                         }
+                        _event.emit(CheckInEvent.ShowMessage(permissionResult.message))
                         if (permissionResult.requiresSettings) {
                             _event.emit(CheckInEvent.OpenLocationSettings)
                         }

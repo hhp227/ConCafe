@@ -442,6 +442,7 @@
     <string name="checkin_location_permission_title">위치 권한 필요</string>
     <string name="checkin_location_permission_desc">체크인을 위해 위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.</string>
     <string name="checkin_location_permission_open_settings">설정으로 이동</string>
+    <string name="checkin_location_mobile_only">위치 기반 체크인은 모바일에서만 지원합니다.</string>
     <string name="checkin_new_visit_title">방문 추가</string>
     <string name="checkin_new_visit_desc">방문을 기록할 카페를 선택해주세요.</string>
     <string name="checkin_new_visit_no_cafe">현재 선택 가능한 카페가 없습니다.</string>

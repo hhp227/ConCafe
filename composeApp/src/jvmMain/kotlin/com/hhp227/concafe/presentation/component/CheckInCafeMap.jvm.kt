@@ -17,6 +17,7 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.geom.RoundRectangle2D
+import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import java.net.HttpURLConnection
 import java.net.URL
@@ -96,7 +97,7 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     }
 
     init {
-        background = Color(0xFFF9CBCF.toInt())
+        isOpaque = false
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(event: MouseEvent) {
@@ -174,11 +175,18 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     }
 
     override fun paintComponent(graphics: Graphics) {
-        super.paintComponent(graphics)
         val g = graphics.create() as Graphics2D
 
         try {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g.clip = RoundRectangle2D.Double(
+                0.0,
+                0.0,
+                width.toDouble(),
+                height.toDouble(),
+                MAP_CORNER_RADIUS.toDouble(),
+                MAP_CORNER_RADIUS.toDouble()
+            )
             markerHitAreas.clear()
             popupNameHitArea = null
             popupCheckInHitArea = null
@@ -199,13 +207,11 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         val minTileY = floor(topLeftY / TILE_SIZE).toInt()
         val maxTileY = floor((topLeftY + height) / TILE_SIZE).toInt()
         val tileCount = 2.0.pow(zoom).toInt()
-
         g.color = Color(0xFFFFF5F9.toInt())
         g.fillRect(0, 0, width, height)
 
         for (tileY in minTileY..maxTileY) {
             if (tileY < 0 || tileY >= tileCount) continue
-
             for (tileX in minTileX..maxTileX) {
                 val wrappedTileX = wrapTileX(tileX, tileCount)
                 val key = TileKey(zoom, wrappedTileX, tileY)
@@ -256,6 +262,8 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         val popupHeight = 38
         val popupX = (point.x - popupWidth / 2).coerceIn(8, max(8, width - popupWidth - 8))
         val popupY = (point.y - popupHeight - 20).coerceIn(8, max(8, height - popupHeight - 8))
+        val anchorX = point.x.coerceIn(popupX + 18, popupX + popupWidth - 18)
+        val bubbleBottom = popupY + popupHeight
         val popupShape = RoundRectangle2D.Double(
             popupX.toDouble(),
             popupY.toDouble(),
@@ -264,6 +272,12 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
             16.0,
             16.0
         )
+        val pointerShape = Path2D.Double().apply {
+            moveTo(anchorX - 8.0, bubbleBottom - 1.0)
+            lineTo(anchorX + 8.0, bubbleBottom - 1.0)
+            lineTo(point.x.toDouble(), (point.y - 10).toDouble())
+            closePath()
+        }
 
         g.color = Color(0x33000000, true)
         g.fill(
@@ -278,6 +292,7 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         )
         g.color = Color.WHITE
         g.fill(popupShape)
+        g.fill(pointerShape)
         g.color = Color(0xFFE9D5DE.toInt())
         g.stroke = BasicStroke(1f)
         g.draw(popupShape)
@@ -316,8 +331,8 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
 
     private fun handleWheel(event: MouseWheelEvent) {
         val nextZoom = (zoom - event.wheelRotation).coerceIn(MIN_ZOOM, MAX_ZOOM)
-        if (nextZoom == zoom) return
 
+        if (nextZoom == zoom) return
         zoom = nextZoom
         repaint()
     }
@@ -325,7 +340,6 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     private fun latLngToScreenPoint(latitude: Double, longitude: Double): Point {
         val centerWorld = latLngToWorldPixel(centerLatitude, centerLongitude, zoom)
         val itemWorld = latLngToWorldPixel(latitude, longitude, zoom)
-
         return Point(
             (width / 2.0 + itemWorld.x - centerWorld.x).roundToInt(),
             (height / 2.0 + itemWorld.y - centerWorld.y).roundToInt()
@@ -333,8 +347,7 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     }
 
     private fun requestTile(key: TileKey) {
-        if (loadingTiles.add(key) == false) return
-
+        if (!loadingTiles.add(key)) return
         tileExecutor.execute {
             try {
                 val tile = loadTile(key)
@@ -359,7 +372,6 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
             requestMethod = "GET"
             setRequestProperty("User-Agent", TILE_USER_AGENT)
         }
-
         return connection.inputStream.use { input ->
             ImageIO.read(input)
         }
@@ -386,7 +398,6 @@ private fun resolveCamera(
         cameraTarget != null -> cameraTarget.zoom.roundToInt()
         else -> DEFAULT_ZOOM
     }.coerceIn(MIN_ZOOM, MAX_ZOOM)
-
     return MapCamera(
         latitude = latitude,
         longitude = longitude,
@@ -399,7 +410,6 @@ private fun latLngToWorldPixel(latitude: Double, longitude: Double, zoom: Int): 
     val scale = TILE_SIZE * 2.0.pow(zoom)
     val x = (longitude + 180.0) / 360.0 * scale
     val y = (0.5 - ln((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4.0 * PI)) * scale
-
     return WorldPixel(x, y)
 }
 
@@ -407,7 +417,6 @@ private fun worldPixelToLatLng(worldX: Double, worldY: Double, zoom: Int): MapCa
     val scale = TILE_SIZE * 2.0.pow(zoom)
     val longitude = worldX / scale * 360.0 - 180.0
     val latitude = atan(sinh(PI * (1.0 - 2.0 * worldY / scale))) * 180.0 / PI
-
     return MapCamera(
         latitude = latitude.coerceIn(MIN_LATITUDE, MAX_LATITUDE),
         longitude = normalizeLongitudeValue(longitude),
@@ -435,11 +444,9 @@ private fun normalizeLatitude(value: Double): Double? {
     if (!value.isFinite()) {
         return null
     }
-
     if (value < -90.0 || value > 90.0) {
         return null
     }
-
     return value
 }
 
@@ -447,11 +454,9 @@ private fun normalizeLongitude(value: Double): Double? {
     if (!value.isFinite()) {
         return null
     }
-
     if (value < -180.0 || value > 180.0) {
         return null
     }
-
     return value
 }
 
@@ -488,7 +493,6 @@ private data class MarkerHitArea(
     fun contains(point: Point): Boolean {
         val dx = point.x - x
         val dy = point.y - y
-
         return dx * dx + dy * dy <= radius * radius
     }
 }
@@ -506,6 +510,8 @@ private data class PopupHitArea(
 }
 
 private const val TILE_SIZE = 256
+
+private const val MAP_CORNER_RADIUS = 48
 
 private const val MIN_ZOOM = 3
 

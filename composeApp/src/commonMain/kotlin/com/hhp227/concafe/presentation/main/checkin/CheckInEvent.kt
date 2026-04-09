@@ -10,4 +10,6 @@ sealed interface CheckInEvent {
     data object NavigateToSignIn : CheckInEvent
 
     data object OpenLocationSettings : CheckInEvent
+
+    data class ShowMessage(val message: String) : CheckInEvent
 }

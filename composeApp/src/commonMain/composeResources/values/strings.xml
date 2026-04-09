@@ -442,6 +442,7 @@
     <string name="checkin_location_permission_title">Location Permission Needed</string>
     <string name="checkin_location_permission_desc">Location permission is required for check-ins. Allow location permission in Settings.</string>
     <string name="checkin_location_permission_open_settings">Open Settings</string>
+    <string name="checkin_location_mobile_only">Location-based check-in is only supported on mobile.</string>
     <string name="checkin_new_visit_title">Add Visit</string>
     <string name="checkin_new_visit_desc">Select a cafe to record your visit.</string>
     <string name="checkin_new_visit_no_cafe">No selectable cafes are currently available.</string>
