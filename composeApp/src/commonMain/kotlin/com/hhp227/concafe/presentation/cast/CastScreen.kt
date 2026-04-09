@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.CastScheduleAttendanceUtils
 import com.hhp227.concafe.core.util.TimeUtils
+import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
@@ -481,25 +483,12 @@ private fun CastSummarySection(
 
 @Composable
 private fun CastTodaySection(detail: CastDetail) {
-    val currentDate = TimeUtils.currentIsoDate()
-    val todaySchedule = detail.schedule.firstOrNull { it.date == currentDate }
-    val currentMinutes = TimeUtils.currentTimeMinutes()
-    val statusText: String
-    val timeText: String
-
-    if (todaySchedule != null) {
-        val startMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.startTime)
-        val endMinutes = TimeUtils.parseTimeToMinutes(todaySchedule.endTime)
-        statusText = when {
-            currentMinutes < startMinutes -> stringResource(Res.string.cast_today_upcoming)
-            currentMinutes <= endMinutes -> stringResource(Res.string.cast_today_working)
-            else -> stringResource(Res.string.cast_today_finished)
-        }
-        timeText = "${todaySchedule.startTime} - ${todaySchedule.endTime}"
-    } else {
-        statusText = stringResource(Res.string.cast_today_off)
-        timeText = stringResource(Res.string.cast_today_check_schedule)
-    }
+    val todaySchedule = CastScheduleAttendanceUtils.todaySchedule(detail.schedule)
+    val attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(todaySchedule)
+    val statusText = castAttendanceStatusText(attendanceStatus)
+    val timeText = todaySchedule?.let { schedule ->
+        "${schedule.startTime} - ${schedule.endTime}"
+    } ?: stringResource(Res.string.cast_today_check_schedule)
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
@@ -541,6 +530,18 @@ private fun CastTodaySection(detail: CastDetail) {
             }
         }
     }
+}
+
+@Composable
+private fun castAttendanceStatusText(status: CastAttendanceStatus): String {
+    return stringResource(
+        when (status) {
+            CastAttendanceStatus.UPCOMING -> Res.string.cast_today_upcoming
+            CastAttendanceStatus.ON_SHIFT -> Res.string.cast_today_working
+            CastAttendanceStatus.COMPLETED -> Res.string.cast_today_finished
+            CastAttendanceStatus.OFF -> Res.string.cast_today_off
+        }
+    )
 }
 
 @Composable

@@ -325,28 +325,11 @@ private struct CastTodaySection: View {
     let detail: CastDetail
 
     var body: some View {
-        let currentDate = TimeUtils.currentIsoDate()
-        let todaySchedule = detail.schedule.first(where: { $0.date == currentDate })
-        let (statusText, timeText): (String, String) = {
-            guard let schedule = todaySchedule else {
-                return (
-                    String(localized: String.LocalizationValue("cast_today_off"), table: "Localizable"),
-                    String(localized: String.LocalizationValue("cast_today_check_schedule"), table: "Localizable")
-                )
-            }
-            let currentMinutes = TimeUtils.currentTimeMinutes()
-            let startMinutes = TimeUtils.parseTimeMinutes(schedule.startTime)
-            let endMinutes = TimeUtils.parseTimeMinutes(schedule.endTime)
-            let status: String
-            if currentMinutes < startMinutes {
-                status = String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
-            } else if currentMinutes <= endMinutes {
-                status = String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
-            } else {
-                status = String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
-            }
-            return (status, "\(schedule.startTime) - \(schedule.endTime)")
-        }()
+        let todaySchedule = CastScheduleAttendanceUtils.todaySchedule(from: detail.schedule)
+        let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: todaySchedule)
+        let statusText = castAttendanceStatusText(attendanceStatus)
+        let timeText = todaySchedule.map { "\($0.startTime) - \($0.endTime)" }
+            ?? String(localized: String.LocalizationValue("cast_today_check_schedule"), table: "Localizable")
 
         VStack(alignment: .leading, spacing: 6) {
             Text(String(localized: String.LocalizationValue("cast_today_status_title"), table: "Localizable"))
@@ -370,6 +353,19 @@ private struct CastTodaySection: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .padding(.horizontal, 16)
         .multilineTextAlignment(.center)
+    }
+}
+
+private func castAttendanceStatusText(_ status: CastAttendanceStatus) -> String {
+    switch status {
+    case .upcoming:
+        return String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
+    case .onShift:
+        return String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
+    case .completed:
+        return String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
+    default:
+        return String(localized: String.LocalizationValue("cast_today_off"), table: "Localizable")
     }
 }
 

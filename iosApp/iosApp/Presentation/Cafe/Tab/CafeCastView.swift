@@ -24,11 +24,14 @@ struct CafeCastView: View {
             VStack(spacing: 12) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
+                        let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: maid.todaySchedule)
+
                         ConCafeCastCard(
                             name: maid.cast.name,
                             subtitle: maid.cast.desc,
                             imageUrl: maid.cast.profileImage,
                             subtitleLineLimit: 2,
+                            attendanceStatusText: cafeCastAttendanceStatusText(attendanceStatus),
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
@@ -61,6 +64,19 @@ struct CafeCastView: View {
             .padding(.vertical, 28)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func cafeCastAttendanceStatusText(_ status: CastAttendanceStatus) -> String? {
+        switch status {
+        case .upcoming:
+            return String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
+        case .onShift:
+            return String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
+        case .completed:
+            return String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
+        default:
+            return nil
+        }
     }
 }
 

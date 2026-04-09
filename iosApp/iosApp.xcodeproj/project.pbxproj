@@ -211,6 +211,7 @@
 		0ADA5A1C2F77CBA700D253AF /* IosCheckInLocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0ADDB1E72F7CECF70017D66C /* PhoneUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADDB1E62F7CECF70017D66C /* PhoneUtils.swift */; };
+		0AFA10022FA1001000FA1001 /* CastScheduleAttendanceUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
 		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
 		0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */; };
@@ -433,6 +434,7 @@
 		0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosCheckInLocationProvider.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0ADDB1E62F7CECF70017D66C /* PhoneUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneUtils.swift; sourceTree = "<group>"; };
+		0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastScheduleAttendanceUtils.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
 		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
 		0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditViewModel.swift; sourceTree = "<group>"; };
@@ -981,6 +983,7 @@
 			children = (
 				0ADDB1E62F7CECF70017D66C /* PhoneUtils.swift */,
 				0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */,
+				0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */,
 				0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */,
 			);
 			path = Util;
@@ -1263,6 +1266,7 @@
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
 				0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */,
+				0AFA10022FA1001000FA1001 /* CastScheduleAttendanceUtils.swift in Sources */,
 				0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */,
 				0ADA5A182F77CA7D00D253AF /* ResetPasswordViewModel.swift in Sources */,
 				0A580DB42F596D7F00390F67 /* AppNavigationView.swift in Sources */,

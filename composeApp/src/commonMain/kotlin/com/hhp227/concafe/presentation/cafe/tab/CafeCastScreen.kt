@@ -12,11 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.hhp227.concafe.core.util.CastScheduleAttendanceUtils
+import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_cast_empty
+import concafe.composeapp.generated.resources.cast_today_finished
+import concafe.composeapp.generated.resources.cast_today_upcoming
+import concafe.composeapp.generated.resources.cast_today_working
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -35,10 +40,13 @@ fun CafeCastScreen(
             rows.forEach { rowItems ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     rowItems.forEach { castItem ->
+                        val attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(castItem.todaySchedule)
+
                         ConCafeCastCard(
                             name = castItem.cast.name,
                             subtitle = castItem.cast.desc,
                             imageUrl = castItem.cast.profileImage,
+                            attendanceStatusText = cafeCastAttendanceStatusText(attendanceStatus),
                             isWorking = castItem.isWorking,
                             subtitleMaxLines = 2,
                             modifier = Modifier.weight(1f),
@@ -66,6 +74,16 @@ fun CafeCastScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun cafeCastAttendanceStatusText(status: CastAttendanceStatus): String? {
+    return when (status) {
+        CastAttendanceStatus.UPCOMING -> stringResource(Res.string.cast_today_upcoming)
+        CastAttendanceStatus.ON_SHIFT -> stringResource(Res.string.cast_today_working)
+        CastAttendanceStatus.COMPLETED -> stringResource(Res.string.cast_today_finished)
+        CastAttendanceStatus.OFF -> null
     }
 }
 

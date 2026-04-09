@@ -31,11 +31,15 @@ struct ConCafeCastCard: View {
 
     var conceptRole: String? = nil
 
+    var attendanceStatusText: String? = nil
+
     var isWorking = false
 
     let onTap: () -> Void
 
     var body: some View {
+        let statusText = attendanceStatusText ?? (isWorking ? "출근중" : nil)
+
         VStack(alignment: .leading, spacing: 0) {
             GeometryReader { proxy in
                 ZStack {
@@ -59,10 +63,10 @@ struct ConCafeCastCard: View {
             }
             .frame(height: imageHeight)
             .overlay(alignment: .topTrailing) {
-                if isWorking || !(conceptRole?.isEmpty ?? true) {
+                if !(statusText?.isEmpty ?? true) || !(conceptRole?.isEmpty ?? true) {
                     HStack(spacing: 6) {
-                        if isWorking {
-                            Text("출근중")
+                        if let statusText, !statusText.isEmpty {
+                            Text(statusText)
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)

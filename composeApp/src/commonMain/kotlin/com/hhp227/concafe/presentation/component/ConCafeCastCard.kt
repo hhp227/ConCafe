@@ -31,9 +31,12 @@ fun ConCafeCastCard(
     contentPadding: Dp = 10.dp,
     metaText: String? = null,
     conceptRole: String? = null,
+    attendanceStatusText: String? = null,
     isWorking: Boolean = false,
     onClick: () -> Unit
 ) {
+    val statusText = attendanceStatusText ?: if (isWorking) "출근중" else null
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(containerCornerRadius))
@@ -63,7 +66,7 @@ fun ConCafeCastCard(
                         .matchParentSize()
                 )
             }
-            if (isWorking || !conceptRole.isNullOrBlank()) {
+            if (!statusText.isNullOrBlank() || !conceptRole.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -71,9 +74,9 @@ fun ConCafeCastCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isWorking) {
+                    if (!statusText.isNullOrBlank()) {
                         Text(
-                            text = "출근중",
+                            text = statusText,
                             color = Color.White,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
