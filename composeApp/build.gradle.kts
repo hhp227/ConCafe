@@ -18,7 +18,7 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
     ""
 }
 
-val appVersionName = "1.02"
+val appVersionName = "1.03"
 val desktopPackageVersion = "1.2.0"
 
 plugins {
@@ -27,6 +27,26 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.google.services)
+}
+
+val generatedJvmAppVersionDir = layout.buildDirectory.dir("generated/concafeVersion/jvmMain/kotlin")
+val generateJvmAppVersion by tasks.registering {
+    outputs.dir(generatedJvmAppVersionDir)
+
+    doLast {
+        val outputFile = generatedJvmAppVersionDir.get()
+            .file("com/hhp227/concafe/presentation/settings/GeneratedAppVersion.kt")
+            .asFile
+
+        outputFile.parentFile.mkdirs()
+        outputFile.writeText(
+            """
+            package com.hhp227.concafe.presentation.settings
+
+            internal const val GENERATED_APP_VERSION = "$appVersionName"
+            """.trimIndent() + "\n"
+        )
+    }
 }
 
 compose.resources {
@@ -78,18 +98,25 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(compose.materialIconsExtended)
-            implementation(libs.kotlinx.coroutinesSwing)
-            implementation("${libs.javafx.base.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-            implementation("${libs.javafx.graphics.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-            implementation("${libs.javafx.controls.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-            implementation("${libs.javafx.swing.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-            implementation("${libs.javafx.web.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-            implementation("${libs.javafx.media.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+        val jvmMain by getting {
+            kotlin.srcDir(generatedJvmAppVersionDir)
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(compose.materialIconsExtended)
+                implementation(libs.kotlinx.coroutinesSwing)
+                implementation("${libs.javafx.base.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+                implementation("${libs.javafx.graphics.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+                implementation("${libs.javafx.controls.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+                implementation("${libs.javafx.swing.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+                implementation("${libs.javafx.web.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+                implementation("${libs.javafx.media.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
+            }
         }
     }
+}
+
+tasks.named("compileKotlinJvm") {
+    dependsOn(generateJvmAppVersion)
 }
 
 android {
@@ -100,7 +127,7 @@ android {
         applicationId = "com.hhp227.concafe"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 4
+        versionCode = 5
         versionName = appVersionName
     }
     buildFeatures {
