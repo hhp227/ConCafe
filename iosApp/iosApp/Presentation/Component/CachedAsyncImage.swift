@@ -14,20 +14,38 @@ struct CachedAsyncImage<Placeholder: View>: View {
 
     let placeholder: Placeholder
 
+    let contentMode: ContentMode
+
     @StateObject private var loader = CachedImageLoader()
 
     var body: some View {
         ZStack {
             placeholder
             if let image = loader.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+                if contentMode == .fit {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                }
             }
         }
         .task(id: url) {
             await loader.load(from: url)
         }
+    }
+
+    init(
+        url: URL?,
+        placeholder: Placeholder,
+        contentMode: ContentMode = .fill
+    ) {
+        self.url = url
+        self.placeholder = placeholder
+        self.contentMode = contentMode
     }
 }
 

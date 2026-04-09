@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.presentation.cafe.CafeAction
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_accessibility_more
@@ -204,7 +206,30 @@ fun CafeReviewScreen(
                                 }
                             }
                         }
-                        Text(text = review.content)
+                        val reviewImageUrl = review.imageUrls.firstOrNull { imageUrl -> imageUrl.isNotBlank() }
+
+                        if (reviewImageUrl != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    text = review.content,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                CompatImageDisplay(
+                                    imageUrl = reviewImageUrl,
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onAction(CafeAction.ClickReviewImage(reviewImageUrl)) },
+                                    applyRoundedClip = false
+                                )
+                            }
+                        } else {
+                            Text(text = review.content)
+                        }
                     }
                 }
             }

@@ -63,6 +63,8 @@ struct AppNavigationView: View {
                 MenuGoodsEditView(cafeId: cafeId, itemId: itemId, onNavigationAction: viewModel.onAction)
             case .reviewEdit(let cafeId, let reviewId):
                 ReviewEditView(cafeId: cafeId, reviewId: reviewId, onNavigationAction: viewModel.onAction)
+            case .picture(let imageUrl):
+                PictureView(imageUrl: imageUrl, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:
@@ -137,7 +139,7 @@ struct AppNavigationView: View {
         guard let lastRoute = path.last else { return false }
 
         switch lastRoute {
-        case .cafe, .cast, .signIn, .signUp, .resetPassword:
+        case .cafe, .cast, .picture, .signIn, .signUp, .resetPassword:
             return true
         default:
             return false

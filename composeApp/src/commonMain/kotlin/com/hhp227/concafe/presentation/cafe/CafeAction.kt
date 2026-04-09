@@ -25,5 +25,7 @@ sealed interface CafeAction {
 
     data class DeleteReview(val reviewId: String) : CafeAction
 
+    data class ClickReviewImage(val imageUrl: String) : CafeAction
+
     data class ReportReview(val reviewId: String) : CafeAction
 }

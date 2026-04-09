@@ -18,6 +18,7 @@ import com.hhp227.concafe.presentation.navigation.Route.Main
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoods
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
 import com.hhp227.concafe.presentation.navigation.Route.NoticeEvent
+import com.hhp227.concafe.presentation.navigation.Route.Picture
 import com.hhp227.concafe.presentation.navigation.Route.ReviewEdit
 import com.hhp227.concafe.presentation.navigation.Route.Schedule
 
@@ -83,6 +84,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToReviewEdit -> {
                     _event.emit(NavigateTo(ReviewEdit(action.cafeId, action.reviewId)))
+                }
+                is NavigationAction.NavigateToPicture -> {
+                    _event.emit(NavigateTo(Picture(action.imageUrl)))
                 }
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))

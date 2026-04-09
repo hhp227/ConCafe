@@ -143,7 +143,8 @@ class GetCafeDetailUseCase(
                     taggedCastNames = taggedCastNames,
                     likeCount = review.likeCount,
                     createdDate = review.createdAt.take(10),
-                    verified = verified
+                    verified = verified,
+                    imageUrls = review.imageUrls
                 )
             }
 

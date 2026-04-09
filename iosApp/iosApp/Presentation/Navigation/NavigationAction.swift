@@ -22,6 +22,7 @@ enum NavigationAction {
     case navigateToMenuGoods(id: String)
     case navigateToMenuGoodsEdit(cafeId: String, itemId: String? = nil)
     case navigateToReviewEdit(cafeId: String, reviewId: String? = nil)
+    case navigateToPicture(imageUrl: String)
     case navigateToSignIn
     case navigateToSignUp
     case navigateToResetPassword

@@ -251,24 +251,26 @@ private struct NoticeEventContentView: View {
     }
 
     private func eventCard(_ item: CafeEventManagementItem) -> some View {
+        let imageUrl = item.imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
-                AsyncImage(url: URL(string: item.imageUrl)) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    LinearGradient(
-                        colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                if let url = URL(string: imageUrl), !imageUrl.isEmpty {
+                    CachedAsyncImage(
+                        url: url,
+                        placeholder: eventImagePlaceholder
                     )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    eventImagePlaceholder
                 }
-                .frame(height: 168)
-                .frame(maxWidth: .infinity)
-                .clipped()
-                .saturation(item.isDimmed ? 0 : 1)
-                .overlay(item.isDimmed ? Color.white.opacity(0.16) : Color.clear)
+            }
+            .frame(height: 168)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .saturation(item.isDimmed ? 0 : 1)
+            .overlay(item.isDimmed ? Color.white.opacity(0.16) : Color.clear)
+            .overlay(alignment: .topLeading) {
                 statusChip(
                     item.statusLabel,
                     container: item.isDimmed ? Color(hex: "6E6570") : Color(hex: "FFD1DC"),
@@ -299,6 +301,14 @@ private struct NoticeEventContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
         .opacity(item.isDimmed ? 0.74 : 1)
+    }
+
+    private var eventImagePlaceholder: some View {
+        LinearGradient(
+            colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private func statusChip(_ text: String, container: Color, content: Color) -> some View {

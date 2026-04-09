@@ -327,6 +327,9 @@ class CafeViewModel(
                 is CafeAction.DeleteReview -> {
                     deleteReview(action.reviewId)
                 }
+                is CafeAction.ClickReviewImage -> {
+                    _event.emit(CafeEvent.NavigateToPicture(action.imageUrl))
+                }
                 is CafeAction.ReportReview -> {
                     _event.emit(CafeEvent.ShowReviewReportedMessage)
                 }
