@@ -192,7 +192,11 @@ async function cleanupDeletedUserData(
       for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
         const batch = firestore.batch();
         castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-          batch.set(ref, {linkedUserId: null}, {merge: true});
+          batch.set(ref, {
+            linkedUserId: null,
+            userId: FieldValue.delete(),
+            uid: FieldValue.delete(),
+          }, {merge: true});
         });
         await batch.commit();
       }
@@ -3965,6 +3969,109 @@ export const deleteCurrentUserCascade = functionsV1.https.onRequest(async (reque
   } catch (error) {
     logger.error("deleteCurrentUserCascade failed.", error);
     response.status(500).json({error: "internal"});
+  }
+});
+
+async function requireAdminUserIdFromRequest(request: functionsV1.https.Request): Promise<string> {
+  const authorization = request.header("Authorization") ?? request.header("authorization") ?? "";
+  const idToken = authorization.startsWith("Bearer ") ? authorization.substring(7).trim() : "";
+
+  if (!idToken) {
+    throw new Error("missing_auth");
+  }
+
+  const decodedToken = await getAuth().verifyIdToken(idToken);
+  const userSnapshot = await db().collection("users").doc(decodedToken.uid).get();
+  const role = asNonBlankString(userSnapshot.data()?.role);
+
+  if (role !== "ADMIN") {
+    throw new Error("forbidden");
+  }
+
+  return decodedToken.uid;
+}
+
+export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (request, response) => {
+  if (request.method !== "POST") {
+    response.status(405).json({error: "method_not_allowed"});
+    return;
+  }
+
+  try {
+    const adminUserId = await requireAdminUserIdFromRequest(request);
+    const firestore = db();
+    const snapshot = await firestore.collectionGroup("casts").get();
+    const BATCH_SIZE = 500;
+    const batchOperations: FirebaseFirestore.DocumentReference[] = [];
+    let normalizedCount = 0;
+    const conflicts: string[] = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const linkedUserId = asNonBlankString(data?.linkedUserId);
+      const legacyUserId = asNonBlankString(data?.userId);
+      const legacyUid = asNonBlankString(data?.uid);
+      const legacyCandidates = [legacyUserId, legacyUid].filter((value): value is string => value != null);
+      const uniqueLegacyCandidates = [...new Set(legacyCandidates)];
+
+      if (linkedUserId == null && uniqueLegacyCandidates.length === 0) {
+        continue;
+      } else if (linkedUserId != null && uniqueLegacyCandidates.length === 0) {
+        continue;
+      } else if (linkedUserId == null && uniqueLegacyCandidates.length === 1) {
+        batchOperations.push(doc.ref);
+      } else if (linkedUserId != null && uniqueLegacyCandidates.every((value) => value === linkedUserId)) {
+        batchOperations.push(doc.ref);
+      } else {
+        conflicts.push(doc.ref.path);
+        logger.error("normalizeCastLinkedUserFields conflict detected.", {
+          castPath: doc.ref.path,
+          linkedUserId: linkedUserId,
+          legacyUserId: legacyUserId,
+          legacyUid: legacyUid,
+        });
+      }
+    }
+
+    for (let i = 0; i < batchOperations.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      const chunk = batchOperations.slice(i, i + BATCH_SIZE);
+      chunk.forEach((ref) => {
+        const data = snapshot.docs.find((doc) => doc.ref.path === ref.path)?.data() ?? {};
+        const linkedUserId = asNonBlankString(data.linkedUserId);
+        const legacyUserId = asNonBlankString(data.userId);
+        const legacyUid = asNonBlankString(data.uid);
+        const normalizedLinkedUserId = linkedUserId ?? legacyUserId ?? legacyUid ?? null;
+        batch.set(ref, {
+          linkedUserId: normalizedLinkedUserId,
+          userId: FieldValue.delete(),
+          uid: FieldValue.delete(),
+        }, {merge: true});
+      });
+      await batch.commit();
+      normalizedCount += chunk.length;
+    }
+
+    logger.info("normalizeCastLinkedUserFields completed.", {
+      adminUserId: adminUserId,
+      scannedCount: snapshot.docs.length,
+      normalizedCount: normalizedCount,
+      conflictCount: conflicts.length,
+    });
+    response.status(200).json({
+      ok: true,
+      scannedCount: snapshot.docs.length,
+      normalizedCount: normalizedCount,
+      conflictCount: conflicts.length,
+      conflicts: conflicts,
+    });
+  } catch (error) {
+    const errorMessage = asErrorMessage(error, "normalizeCastLinkedUserFields failed");
+    const statusCode = errorMessage === "missing_auth" ? 401 : errorMessage === "forbidden" ? 403 : 500;
+    logger.error("normalizeCastLinkedUserFields failed.", {
+      error: errorMessage,
+    });
+    response.status(statusCode).json({error: errorMessage});
   }
 });
 

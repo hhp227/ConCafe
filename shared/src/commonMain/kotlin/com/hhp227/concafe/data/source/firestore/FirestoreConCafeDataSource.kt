@@ -3931,39 +3931,6 @@ class FirestoreConCafeDataSource(
         }
     }
 
-    private suspend fun runCastByUserFieldQuery(
-        userId: String,
-        idToken: String?,
-        fieldPath: String
-    ): List<JsonObject> {
-        val path = "${config.documentBasePath()}:runQuery"
-        val body = """
-            {
-              "structuredQuery": {
-                "from": [
-                  {
-                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
-                    "allDescendants": true
-                  }
-                ],
-                "where": {
-                  "fieldFilter": {
-                    "field": { "fieldPath": "${escapeFirestoreQueryString(fieldPath)}" },
-                    "op": "EQUAL",
-                    "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
-                  }
-                },
-                "limit": 1
-              }
-            }
-        """.trimIndent()
-        val response = restApi.post(path = path, body = body, idToken = idToken)
-        val parsed = Json.parseToJsonElement(response).jsonArray
-        return parsed.mapNotNull { element ->
-            element.jsonObject["document"]?.jsonObject
-        }
-    }
-
     private suspend fun resolveCastDocumentsByUser(
         userId: String,
         idToken: String?
@@ -3975,62 +3942,7 @@ class FirestoreConCafeDataSource(
         }.getOrElse {
             emptyList()
         }
-        if (byLinkedUserId.isNotEmpty()) {
-            return byLinkedUserId
-        }
-
-        val byUserIdField = runCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "userId")
-        }.recoverCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "userId")
-        }.getOrElse {
-            emptyList()
-        }
-        if (byUserIdField.isNotEmpty()) {
-            return byUserIdField
-        }
-
-        val byUidField = runCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "uid")
-        }.recoverCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "uid")
-        }.getOrElse {
-            emptyList()
-        }
-        if (byUidField.isNotEmpty()) {
-            return byUidField
-        }
-
-        val affiliatedCafeId = runCatching {
-            fetchAffiliatedCafeIdRemote(userId)
-        }.getOrNull()
-        if (affiliatedCafeId.isNullOrBlank()) {
-            return emptyList()
-        }
-        val cafeCastDocuments = runCatching {
-            runCafeCastQuery(
-                cafeId = affiliatedCafeId,
-                cursor = null,
-                limit = 200,
-                idToken = idToken
-            )
-        }.recoverCatching {
-            runCafeCastQuery(
-                cafeId = affiliatedCafeId,
-                cursor = null,
-                limit = 200,
-                idToken = null
-            )
-        }.getOrElse {
-            emptyList()
-        }
-        return cafeCastDocuments.filter { document ->
-            val fields = document["fields"]?.jsonObject ?: return@filter false
-            val linked = fields.getFirestoreString("linkedUserId")
-            val legacyUserId = fields.getFirestoreString("userId")
-            val legacyUid = fields.getFirestoreString("uid")
-            linked == userId || legacyUserId == userId || legacyUid == userId
-        }
+        return byLinkedUserId
     }
 
     private suspend fun runCastByBirthdayKeyQuery(
@@ -5400,8 +5312,6 @@ class FirestoreConCafeDataSource(
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val castId = name.substringAfterLast("/")
         val linkedUserId = fields.getFirestoreString("linkedUserId")
-            ?: fields.getFirestoreString("userId")
-            ?: fields.getFirestoreString("uid")
         return Cast(
             id = castId,
             cafeId = cafeId,
