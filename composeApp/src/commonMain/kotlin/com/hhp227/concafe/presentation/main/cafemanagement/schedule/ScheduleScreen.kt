@@ -614,7 +614,7 @@ private fun ScheduleInfoBanner(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = message,
+                text = resolveScheduleMessageLabel(message),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF6B5320)
@@ -761,6 +761,27 @@ private fun resolveScheduleDurationLabel(value: String): String {
             stringResource(Res.string.schedule_duration_hours_minutes, hours, minutes)
         }
         else -> value
+    }
+}
+
+@Composable
+private fun resolveScheduleMessageLabel(message: String): String {
+    return when (message) {
+        "schedule_info_saved_work" -> stringResource(Res.string.schedule_info_saved_work)
+        "schedule_info_saved_off" -> stringResource(Res.string.schedule_info_saved_off)
+        "schedule_info_saved_vacation" -> stringResource(Res.string.schedule_info_saved_vacation)
+        "schedule_info_load_failed" -> stringResource(Res.string.schedule_info_load_failed)
+        "schedule_info_more_next_step" -> stringResource(Res.string.schedule_info_more_next_step)
+        "schedule_info_calendar_next_step" -> stringResource(Res.string.schedule_info_calendar_next_step)
+        "schedule_error_end_after_start" -> stringResource(Res.string.schedule_error_end_after_start)
+        "schedule_info_edit_applied" -> stringResource(Res.string.schedule_info_edit_applied)
+        "schedule_info_no_changes" -> stringResource(Res.string.schedule_info_no_changes)
+        "schedule_error_start_required" -> stringResource(Res.string.schedule_error_start_required)
+        "schedule_error_end_required" -> stringResource(Res.string.schedule_error_end_required)
+        "schedule_error_save_failed" -> stringResource(Res.string.schedule_error_save_failed)
+        "schedule_error_week_save_failed" -> stringResource(Res.string.schedule_error_week_save_failed)
+        "schedule_event_week_saved" -> stringResource(Res.string.schedule_event_week_saved)
+        else -> message
     }
 }
 
