@@ -968,6 +968,22 @@ function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number)
   return earthRadius * c;
 }
 
+async function upsertVisitStamp(visitId: string, userId: string, cafeId: string): Promise<void> {
+  if (visitId.length == 0 || userId.length == 0 || cafeId.length == 0) {
+    return;
+  }
+  await db().collection("stamps").doc(visitId).set(
+    {
+      userId: userId,
+      cafeId: cafeId,
+      visitId: visitId,
+      earnedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {merge: true}
+  );
+}
+
 async function syncCastClaimRequesterSnapshot(claimId: string, claim: CastClaimLike | undefined): Promise<void> {
   const userId = asNonBlankString(claim?.userId);
   const requesterNickname = asNonBlankString(claim?.requesterNickname);
@@ -2899,6 +2915,7 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
           {merge: true}
         );
       }
+      await db().collection("stamps").doc(visitId).delete();
       logger.info("Rejected visit outside allowed radius without deletion.", {
         visitId: visitId,
         cafeId: cafeId,
@@ -2925,6 +2942,7 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
       },
       {merge: true}
     );
+    await upsertVisitStamp(visitId, userId, cafeId);
 
     logger.info("Validated visit distance and marked as verified.", {
       visitId: visitId,
@@ -3027,16 +3045,7 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
       await stampRef.delete();
     }
     if (shouldUpsert) {
-      await stampRef.set(
-        {
-          userId: afterUserId,
-          cafeId: afterCafeId,
-          visitId: visitId,
-          earnedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {merge: true}
-      );
+      await upsertVisitStamp(visitId, afterUserId, afterCafeId);
     }
 
     logger.info("Synced stamp from visit write.", {

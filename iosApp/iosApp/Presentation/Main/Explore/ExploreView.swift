@@ -64,21 +64,23 @@ private struct ExploreContentView: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
-                searchSection
-                Section {
-                    gridContent
-                        .padding(.horizontal, 12)
-                } header: {
-                    tabHeader
+        GeometryReader { geometry in
+            ScrollView {
+                LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
+                    searchSection
+                    Section {
+                        gridContent(contentWidth: geometry.size.width)
+                            .padding(.horizontal, 12)
+                    } header: {
+                        tabHeader
+                    }
                 }
+                .padding(.vertical, 12)
             }
-            .padding(.vertical, 12)
+            .background(ScrollViewKeyboardDismissConfigurator())
+            .background(Color(hex: "FFF9FC"))
+            .modifier(ExploreKeyboardDismissModifier())
         }
-        .background(ScrollViewKeyboardDismissConfigurator())
-        .background(Color(hex: "FFF9FC"))
-        .modifier(ExploreKeyboardDismissModifier())
     }
     
     private var searchSection: some View {
@@ -141,7 +143,7 @@ private struct ExploreContentView: View {
     }
 
     @ViewBuilder
-    private var gridContent: some View {
+    private func gridContent(contentWidth: CGFloat) -> some View {
         if uiState.isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
@@ -152,7 +154,7 @@ private struct ExploreContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            LazyVGrid(columns: exploreGridColumns(for: contentWidth), spacing: 12) {
                 if uiState.selectedTab == .cafe {
                     ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { index, cafe in
                         cafeCard(cafe)
@@ -185,6 +187,22 @@ private struct ExploreContentView: View {
                 }
             pagingFooter
         }
+    }
+
+    private func exploreGridColumns(for contentWidth: CGFloat) -> [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: exploreGridItemSpacing),
+            count: exploreGridColumnCount(for: contentWidth)
+        )
+    }
+
+    private func exploreGridColumnCount(for contentWidth: CGFloat) -> Int {
+        let availableWidth = contentWidth - exploreGridHorizontalPadding
+        let minimumGridWidth = (exploreGridMinimumCellWidth * 2) + exploreGridItemSpacing
+        let normalizedWidth = max(availableWidth, minimumGridWidth)
+        let rawCount = Int((normalizedWidth + exploreGridItemSpacing) /
+            (exploreGridMinimumCellWidth + exploreGridItemSpacing))
+        return min(max(rawCount, exploreGridMinimumColumnCount), exploreGridMaximumColumnCount)
     }
 
     @ViewBuilder
@@ -295,3 +313,9 @@ struct ExploreView_Previews: PreviewProvider {
         ExploreContentView(uiState: .empty, onAction: { _ in })
     }
 }
+
+private let exploreGridMinimumColumnCount = 2
+private let exploreGridMaximumColumnCount = 6
+private let exploreGridHorizontalPadding: CGFloat = 24
+private let exploreGridItemSpacing: CGFloat = 12
+private let exploreGridMinimumCellWidth: CGFloat = 180
