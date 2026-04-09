@@ -362,6 +362,28 @@
         }
       }
     },
+    "account_settings_delete_requested" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Request Completed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退会リクエスト完了"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "회원탈퇴 요청 완료"
+          }
+        }
+      }
+    },
     "account_settings_error_apple_reauth_required" : {
       "localizations" : {
         "en" : {
@@ -490,94 +512,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "로그인이 만료되었습니다. 다시 로그인해 주세요."
-          }
-        }
-      }
-    },
-    "account_settings_message_cast_profile_missing" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No linked cast profile yet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "連携されたキャストプロフィールがまだありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연결된 캐스트 프로필이 아직 없습니다."
-          }
-        }
-      }
-    },
-    "account_settings_message_enter_nickname" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please enter a nickname."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ニックネームを入力してください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "닉네임을 입력해 주세요."
-          }
-        }
-      }
-    },
-    "account_settings_message_saved" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saved your basic account information."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アカウント基本情報を保存しました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "계정 기본 정보를 저장했어요."
-          }
-        }
-      }
-    },
-    "account_settings_delete_requested" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Request Completed"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "退会リクエスト完了"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "회원탈퇴 요청 완료"
           }
         }
       }
@@ -733,6 +667,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이 화면에서 직접 편집하지 않고 전용 화면으로 이동합니다."
+          }
+        }
+      }
+    },
+    "account_settings_message_cast_profile_missing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No linked cast profile yet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連携されたキャストプロフィールがまだありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결된 캐스트 프로필이 아직 없습니다."
+          }
+        }
+      }
+    },
+    "account_settings_message_enter_nickname" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a nickname."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネームを入力してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "닉네임을 입력해 주세요."
+          }
+        }
+      }
+    },
+    "account_settings_message_saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved your basic account information."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント基本情報を保存しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 기본 정보를 저장했어요."
           }
         }
       }
@@ -16119,6 +16119,28 @@
         }
       }
     },
+    "signin_default_kakao_nickname" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kakao User"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kakaoユーザー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카카오유저"
+          }
+        }
+      }
+    },
     "signin_divider_or" : {
       "localizations" : {
         "en" : {
@@ -16159,6 +16181,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이메일"
+          }
+        }
+      }
+    },
+    "signin_error_apple_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple sign in failed. Please try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appleログインに失敗しました。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "애플 로그인에 실패했습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "signin_error_google_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google sign in failed. Please try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Googleログインに失敗しました。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구글 로그인에 실패했습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "signin_error_invalid_credentials" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in failed. Check your credentials."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログインに失敗しました。入力内容を確認してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인에 실패했습니다. 입력값을 확인해주세요."
+          }
+        }
+      }
+    },
+    "signin_error_kakao_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kakao sign in failed. Please try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kakaoログインに失敗しました。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카카오 로그인에 실패했습니다. 다시 시도해주세요."
           }
         }
       }
@@ -16313,116 +16423,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "로그인"
-          }
-        }
-      }
-    },
-    "signin_default_kakao_nickname" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kakao User"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kakaoユーザー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카카오유저"
-          }
-        }
-      }
-    },
-    "signin_error_apple_failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple sign in failed. Please try again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appleログインに失敗しました。もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "애플 로그인에 실패했습니다. 다시 시도해주세요."
-          }
-        }
-      }
-    },
-    "signin_error_google_failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Google sign in failed. Please try again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Googleログインに失敗しました。もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "구글 로그인에 실패했습니다. 다시 시도해주세요."
-          }
-        }
-      }
-    },
-    "signin_error_invalid_credentials" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in failed. Check your credentials."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ログインに失敗しました。入力内容を確認してください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로그인에 실패했습니다. 입력값을 확인해주세요."
-          }
-        }
-      }
-    },
-    "signin_error_kakao_failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kakao sign in failed. Please try again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kakaoログインに失敗しました。もう一度お試しください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카카오 로그인에 실패했습니다. 다시 시도해주세요."
           }
         }
       }
@@ -17043,94 +17043,6 @@
         }
       }
     },
-    "signup_phone_placeholder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "010-1234-5678"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "010-1234-5678"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "010-1234-5678"
-          }
-        }
-      }
-    },
-    "signup_phone_request" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Code"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "認証要求"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인증요청"
-          }
-        }
-      }
-    },
-    "signup_phone_verified" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verified"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "認証完了"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인증완료"
-          }
-        }
-      }
-    },
-    "signup_phone_verified_message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Phone verification completed."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "携帯電話認証が完了しました"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "휴대폰 인증이 완료되었습니다"
-          }
-        }
-      }
-    },
     "signup_phone_link_already_in_use" : {
       "localizations" : {
         "en" : {
@@ -17215,6 +17127,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소셜 로그인 세션이 없습니다. 다시 로그인 후 시도해주세요."
+          }
+        }
+      }
+    },
+    "signup_phone_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "010-1234-5678"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "010-1234-5678"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "010-1234-5678"
+          }
+        }
+      }
+    },
+    "signup_phone_request" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request Code"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "認証要求"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증요청"
+          }
+        }
+      }
+    },
+    "signup_phone_verified" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verified"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "認証完了"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증완료"
+          }
+        }
+      }
+    },
+    "signup_phone_verified_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone verification completed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "携帯電話認証が完了しました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴대폰 인증이 완료되었습니다"
           }
         }
       }
@@ -17761,12 +17761,6 @@
     "이번 주 스케줄" : {
 
     },
-    "즐겨찾기" : {
-
-    },
-    "최근 방문" : {
-
-    },
     "출근" : {
 
     },
@@ -17785,9 +17779,6 @@
     "콘" : {
 
     },
-    "팔로우한 캐스트" : {
-
-    },
     "팬 공지 작성하기" : {
 
     },
@@ -17804,9 +17795,6 @@
 
     },
     "확인" : {
-
-    },
-    "활동 뱃지" : {
 
     },
     "휴무" : {
