@@ -4,17 +4,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import java.awt.BasicStroke
 import java.awt.BorderLayout
-import java.io.File
+import java.awt.Color
+import java.awt.Cursor
+import java.awt.Font
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.Point
+import java.awt.RenderingHints
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.awt.event.MouseWheelEvent
+import java.awt.geom.RoundRectangle2D
+import java.awt.image.BufferedImage
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
-import javafx.application.Platform
-import javafx.concurrent.Worker
-import javafx.embed.swing.JFXPanel
-import javafx.scene.Scene
-import javafx.scene.web.WebEngine
-import javafx.scene.web.WebView
-import netscape.javascript.JSObject
+import kotlin.math.PI
+import kotlin.math.atan
+import kotlin.math.floor
+import kotlin.math.ln
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.math.sinh
 
 @Composable
 actual fun CheckInCafeMap(
@@ -27,7 +45,7 @@ actual fun CheckInCafeMap(
     SwingPanel(
         modifier = modifier,
         factory = {
-            JvmCheckInGoogleMapPanel()
+            JvmCheckInTileMapPanel()
         },
         update = { panel ->
             panel.bind(
@@ -40,20 +58,81 @@ actual fun CheckInCafeMap(
     )
 }
 
-private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
-    private var jfxPanel: JFXPanel? = null
-
-    private var webEngine: WebEngine? = null
-
+private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     private var cafes: List<CheckInCafeSummary> = emptyList()
 
-    private var cameraTarget: CheckInMapCameraTarget? = null
+    private var normalizedCafes: List<NormalizedCafeMapItem> = emptyList()
 
     private var onCafeClick: (String) -> Unit = {}
 
     private var onCafeCheckIn: (String) -> Unit = {}
 
-    private var isBridgeListenerAttached: Boolean = false
+    private var centerLatitude: Double = DEFAULT_LATITUDE
+
+    private var centerLongitude: Double = DEFAULT_LONGITUDE
+
+    private var zoom: Int = DEFAULT_ZOOM
+
+    private var selectedCafeId: String? = null
+
+    private var currentCameraTarget: CheckInMapCameraTarget? = null
+
+    private var lastDragPoint: Point? = null
+
+    private val markerHitAreas = mutableListOf<MarkerHitArea>()
+
+    private var popupNameHitArea: PopupHitArea? = null
+
+    private var popupCheckInHitArea: PopupHitArea? = null
+
+    private val tileCache = ConcurrentHashMap<TileKey, BufferedImage>()
+
+    private val loadingTiles = ConcurrentHashMap.newKeySet<TileKey>()
+
+    private val tileExecutor = Executors.newFixedThreadPool(4) { runnable ->
+        Thread(runnable, "concafe-map-tile-loader").apply {
+            isDaemon = true
+        }
+    }
+
+    init {
+        background = Color(0xFFF9CBCF.toInt())
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mousePressed(event: MouseEvent) {
+                lastDragPoint = event.point
+            }
+
+            override fun mouseReleased(event: MouseEvent) {
+                lastDragPoint = null
+            }
+
+            override fun mouseClicked(event: MouseEvent) {
+                handleClick(event.point)
+            }
+        })
+        addMouseMotionListener(object : MouseAdapter() {
+            override fun mouseDragged(event: MouseEvent) {
+                val previous = lastDragPoint ?: return
+                val dx = event.x - previous.x
+                val dy = event.y - previous.y
+                val centerWorld = latLngToWorldPixel(centerLatitude, centerLongitude, zoom)
+                val nextCenter = worldPixelToLatLng(
+                    worldX = centerWorld.x - dx,
+                    worldY = centerWorld.y - dy,
+                    zoom = zoom
+                )
+
+                centerLatitude = nextCenter.latitude
+                centerLongitude = nextCenter.longitude
+                lastDragPoint = event.point
+                repaint()
+            }
+        })
+        addMouseWheelListener { event ->
+            handleWheel(event)
+        }
+    }
 
     fun bind(
         cafes: List<CheckInCafeSummary>,
@@ -61,257 +140,291 @@ private class JvmCheckInGoogleMapPanel : JPanel(BorderLayout()) {
         onCafeClick: (String) -> Unit,
         onCafeCheckIn: (String) -> Unit
     ) {
+        val nextNormalizedCafes = cafes.mapNotNull { cafe ->
+            val normalizedLatitude = normalizeLatitude(cafe.geoPoint.latitude) ?: return@mapNotNull null
+            val normalizedLongitude = normalizeLongitude(cafe.geoPoint.longitude) ?: return@mapNotNull null
+
+            NormalizedCafeMapItem(
+                id = cafe.id,
+                name = cafe.name,
+                latitude = normalizedLatitude,
+                longitude = normalizedLongitude
+            )
+        }
+        val shouldResetCamera = this.cafes != cafes
+            || this.currentCameraTarget != cameraTarget
+
         this.cafes = cafes
-        this.cameraTarget = cameraTarget
+        this.normalizedCafes = nextNormalizedCafes
         this.onCafeClick = onCafeClick
         this.onCafeCheckIn = onCafeCheckIn
+        this.currentCameraTarget = cameraTarget
 
-        if (webEngine != null) {
-            Platform.runLater {
-                renderMapHtml()
+        if (shouldResetCamera) {
+            val camera = resolveCamera(nextNormalizedCafes, cameraTarget)
+
+            centerLatitude = camera.latitude
+            centerLongitude = camera.longitude
+            zoom = camera.zoom
+            selectedCafeId = selectedCafeId?.takeIf { cafeId ->
+                nextNormalizedCafes.any { cafe -> cafe.id == cafeId }
             }
+        }
+        repaint()
+    }
+
+    override fun paintComponent(graphics: Graphics) {
+        super.paintComponent(graphics)
+        val g = graphics.create() as Graphics2D
+
+        try {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            markerHitAreas.clear()
+            popupNameHitArea = null
+            popupCheckInHitArea = null
+            paintTiles(g)
+            paintMarkers(g)
+            paintSelectedPopup(g)
+        } finally {
+            g.dispose()
         }
     }
 
-    private fun renderMapHtml() {
-        val engine = webEngine ?: return
-        val apiKey = resolveGoogleMapsApiKey()
-        val html = buildCheckInMapHtml(
-            apiKey = apiKey,
-            cafes = cafes,
-            cameraTarget = cameraTarget
-        )
+    private fun paintTiles(g: Graphics2D) {
+        val centerWorld = latLngToWorldPixel(centerLatitude, centerLongitude, zoom)
+        val topLeftX = centerWorld.x - width / 2.0
+        val topLeftY = centerWorld.y - height / 2.0
+        val minTileX = floor(topLeftX / TILE_SIZE).toInt()
+        val maxTileX = floor((topLeftX + width) / TILE_SIZE).toInt()
+        val minTileY = floor(topLeftY / TILE_SIZE).toInt()
+        val maxTileY = floor((topLeftY + height) / TILE_SIZE).toInt()
+        val tileCount = 2.0.pow(zoom).toInt()
 
-        if (isBridgeListenerAttached == false) {
-            engine.loadWorker.stateProperty().addListener { _, _, newState ->
-                if (newState == Worker.State.SUCCEEDED) {
-                    val window = engine.executeScript("window") as? JSObject ?: return@addListener
+        g.color = Color(0xFFFFF5F9.toInt())
+        g.fillRect(0, 0, width, height)
 
-                    window.setMember("ConCafeBridge", CafeClickBridge(
-                        onCafeClick = { cafeId -> onCafeClick(cafeId) },
-                        onCafeCheckIn = { cafeId -> onCafeCheckIn(cafeId) }
-                    ))
+        for (tileY in minTileY..maxTileY) {
+            if (tileY < 0 || tileY >= tileCount) continue
+
+            for (tileX in minTileX..maxTileX) {
+                val wrappedTileX = wrapTileX(tileX, tileCount)
+                val key = TileKey(zoom, wrappedTileX, tileY)
+                val drawX = (tileX * TILE_SIZE - topLeftX).roundToInt()
+                val drawY = (tileY * TILE_SIZE - topLeftY).roundToInt()
+                val tile = tileCache[key]
+
+                if (tile != null) {
+                    g.drawImage(tile, drawX, drawY, TILE_SIZE, TILE_SIZE, null)
+                } else {
+                    paintTilePlaceholder(g, drawX, drawY)
+                    requestTile(key)
                 }
             }
-            isBridgeListenerAttached = true
         }
-        engine.loadContent(html)
     }
 
-    init {
-        SwingUtilities.invokeLater {
-            val panel = JFXPanel()
-            jfxPanel = panel
-            add(panel, BorderLayout.CENTER)
-            revalidate()
-            repaint()
-            Platform.setImplicitExit(false)
-            Platform.runLater {
-                val webView = WebView()
-                webEngine = webView.engine
-                panel.scene = Scene(webView)
-                renderMapHtml()
+    private fun paintTilePlaceholder(g: Graphics2D, x: Int, y: Int) {
+        g.color = Color(0xFFFFF5F9.toInt())
+        g.fillRect(x, y, TILE_SIZE, TILE_SIZE)
+        g.color = Color(0xFFF5DDE7.toInt())
+        g.drawRect(x, y, TILE_SIZE, TILE_SIZE)
+    }
+
+    private fun paintMarkers(g: Graphics2D) {
+        for (cafe in normalizedCafes) {
+            val point = latLngToScreenPoint(cafe.latitude, cafe.longitude)
+            val radius = if (cafe.id == selectedCafeId) 11 else 9
+
+            g.color = Color(0x44000000, true)
+            g.fillOval(point.x - radius + 1, point.y - radius + 2, radius * 2, radius * 2)
+            g.color = Color.WHITE
+            g.fillOval(point.x - radius, point.y - radius, radius * 2, radius * 2)
+            g.color = Color(0xFFEF6797.toInt())
+            g.fillOval(point.x - radius + 3, point.y - radius + 3, (radius - 3) * 2, (radius - 3) * 2)
+            markerHitAreas += MarkerHitArea(cafe.id, point.x, point.y, radius + 8)
+        }
+    }
+
+    private fun paintSelectedPopup(g: Graphics2D) {
+        val selectedCafe = normalizedCafes.firstOrNull { cafe -> cafe.id == selectedCafeId } ?: return
+        val point = latLngToScreenPoint(selectedCafe.latitude, selectedCafe.longitude)
+        val nameFont = Font(Font.SANS_SERIF, Font.BOLD, 13)
+        val checkFont = Font(Font.SANS_SERIF, Font.BOLD, 16)
+        val metrics = g.getFontMetrics(nameFont)
+        val nameWidth = metrics.stringWidth(selectedCafe.name)
+        val popupWidth = max(96, nameWidth + 54)
+        val popupHeight = 38
+        val popupX = (point.x - popupWidth / 2).coerceIn(8, max(8, width - popupWidth - 8))
+        val popupY = (point.y - popupHeight - 20).coerceIn(8, max(8, height - popupHeight - 8))
+        val popupShape = RoundRectangle2D.Double(
+            popupX.toDouble(),
+            popupY.toDouble(),
+            popupWidth.toDouble(),
+            popupHeight.toDouble(),
+            16.0,
+            16.0
+        )
+
+        g.color = Color(0x33000000, true)
+        g.fill(
+            RoundRectangle2D.Double(
+                popupX + 1.0,
+                popupY + 2.0,
+                popupWidth.toDouble(),
+                popupHeight.toDouble(),
+                16.0,
+                16.0
+            )
+        )
+        g.color = Color.WHITE
+        g.fill(popupShape)
+        g.color = Color(0xFFE9D5DE.toInt())
+        g.stroke = BasicStroke(1f)
+        g.draw(popupShape)
+
+        val textX = popupX + 12
+        val textY = popupY + 24
+        val checkX = popupX + popupWidth - 34
+        val checkY = popupY + 7
+
+        g.font = nameFont
+        g.color = Color(0xFF2B2330.toInt())
+        g.drawString(selectedCafe.name, textX, textY)
+        g.font = checkFont
+        g.color = Color(0xFFEF6797.toInt())
+        g.drawString("✓", checkX + 8, checkY + 19)
+
+        popupNameHitArea = PopupHitArea(selectedCafe.id, textX, popupY, nameWidth, popupHeight)
+        popupCheckInHitArea = PopupHitArea(selectedCafe.id, checkX, checkY, 28, 28)
+    }
+
+    private fun handleClick(point: Point) {
+        val checkHit = popupCheckInHitArea
+        if (checkHit != null && checkHit.contains(point)) {
+            onCafeCheckIn(checkHit.cafeId)
+            return
+        }
+        val nameHit = popupNameHitArea
+        if (nameHit != null && nameHit.contains(point)) {
+            onCafeClick(nameHit.cafeId)
+            return
+        }
+        val markerHit = markerHitAreas.lastOrNull { hitArea -> hitArea.contains(point) }
+        selectedCafeId = markerHit?.cafeId
+        repaint()
+    }
+
+    private fun handleWheel(event: MouseWheelEvent) {
+        val nextZoom = (zoom - event.wheelRotation).coerceIn(MIN_ZOOM, MAX_ZOOM)
+        if (nextZoom == zoom) return
+
+        zoom = nextZoom
+        repaint()
+    }
+
+    private fun latLngToScreenPoint(latitude: Double, longitude: Double): Point {
+        val centerWorld = latLngToWorldPixel(centerLatitude, centerLongitude, zoom)
+        val itemWorld = latLngToWorldPixel(latitude, longitude, zoom)
+
+        return Point(
+            (width / 2.0 + itemWorld.x - centerWorld.x).roundToInt(),
+            (height / 2.0 + itemWorld.y - centerWorld.y).roundToInt()
+        )
+    }
+
+    private fun requestTile(key: TileKey) {
+        if (loadingTiles.add(key) == false) return
+
+        tileExecutor.execute {
+            try {
+                val tile = loadTile(key)
+
+                if (tile != null) {
+                    tileCache[key] = tile
+                }
+            } finally {
+                loadingTiles.remove(key)
+                SwingUtilities.invokeLater {
+                    repaint()
+                }
             }
         }
     }
-}
 
-private class CafeClickBridge(
-    private val onCafeClick: (String) -> Unit,
-    private val onCafeCheckIn: (String) -> Unit
-) {
-    fun onCafeClicked(cafeId: String) {
-        SwingUtilities.invokeLater {
-            onCafeClick(cafeId)
+    private fun loadTile(key: TileKey): BufferedImage? {
+        val url = URL("https://tile.openstreetmap.org/${key.zoom}/${key.x}/${key.y}.png")
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            connectTimeout = TILE_CONNECT_TIMEOUT_MS
+            readTimeout = TILE_READ_TIMEOUT_MS
+            requestMethod = "GET"
+            setRequestProperty("User-Agent", TILE_USER_AGENT)
         }
-    }
 
-    fun onCafeCheckInClicked(cafeId: String) {
-        SwingUtilities.invokeLater {
-            onCafeCheckIn(cafeId)
+        return connection.inputStream.use { input ->
+            ImageIO.read(input)
         }
     }
 }
 
-private fun buildCheckInMapHtml(
-    apiKey: String,
-    cafes: List<CheckInCafeSummary>,
+private fun resolveCamera(
+    cafes: List<NormalizedCafeMapItem>,
     cameraTarget: CheckInMapCameraTarget?
-): String {
-    if (apiKey.isBlank()) {
-        return """
-            <html><body style="font-family:sans-serif;padding:16px;">
-            Google Maps API Key가 설정되지 않았습니다.
-            </body></html>
-        """.trimIndent()
-    }
-
-    val normalizedCafes = cafes.mapNotNull { cafe ->
-        val normalizedLatitude = normalizeLatitude(cafe.geoPoint.latitude) ?: return@mapNotNull null
-        val normalizedLongitude = normalizeLongitude(cafe.geoPoint.longitude) ?: return@mapNotNull null
-        NormalizedCafeMapItem(
-            id = cafe.id,
-            name = cafe.name,
-            latitude = normalizedLatitude,
-            longitude = normalizedLongitude
-        )
-    }
-    val centerLatitude = when {
-        normalizedCafes.isNotEmpty() -> normalizedCafes.map { it.latitude }.averageOrDefault(DEFAULT_LATITUDE)
+): MapCamera {
+    val latitude = when {
+        cafes.isNotEmpty() -> cafes.map { cafe -> cafe.latitude }.averageOrDefault(DEFAULT_LATITUDE)
         cameraTarget != null -> cameraTarget.latitude
         else -> DEFAULT_LATITUDE
     }
-    val centerLongitude = when {
-        normalizedCafes.isNotEmpty() -> normalizedCafes.map { it.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
+    val longitude = when {
+        cafes.isNotEmpty() -> cafes.map { cafe -> cafe.longitude }.averageOrDefault(DEFAULT_LONGITUDE)
         cameraTarget != null -> cameraTarget.longitude
         else -> DEFAULT_LONGITUDE
     }
     val zoom = when {
-        normalizedCafes.size == 1 -> 14.5f
-        normalizedCafes.size > 1 -> 12.5f
-        cameraTarget != null -> cameraTarget.zoom
-        else -> 13f
-    }
-    val cafesJson = normalizedCafes.joinToString(prefix = "[", postfix = "]") { cafe ->
-        """
-        {
-          id: "${escapeJs(cafe.id)}",
-          name: "${escapeJs(cafe.name)}",
-          latitude: ${cafe.latitude},
-          longitude: ${cafe.longitude}
-        }
-        """.trimIndent()
-    }
+        cafes.size == 1 -> 15
+        cafes.size > 1 -> 13
+        cameraTarget != null -> cameraTarget.zoom.roundToInt()
+        else -> DEFAULT_ZOOM
+    }.coerceIn(MIN_ZOOM, MAX_ZOOM)
 
-    return """
-        <!doctype html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <style>
-              html, body, #map { margin:0; padding:0; width:100%; height:100%; background:#fff5f9; }
-              .callout {
-                display:flex; align-items:center; gap:6px;
-                background:#fff; border-radius:12px;
-                padding:6px 8px 6px 12px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.15);
-                white-space:nowrap;
-              }
-              .callout-name {
-                font-family:sans-serif; font-size:13px; font-weight:600;
-                color:#2B2330; cursor:pointer; text-decoration:none;
-              }
-              .callout-name:hover { text-decoration:underline; }
-              .callout-checkin {
-                background:none; border:none; cursor:pointer; padding:2px;
-                font-size:16px; color:#EF6797; line-height:1;
-              }
-              .callout-checkin:hover { color:#c94c7e; }
-            </style>
-          </head>
-          <body>
-            <div id="map"></div>
-            <script>
-              let map;
-              let currentInfoWindow = null;
-              function initMap() {
-                const center = { lat: $centerLatitude, lng: $centerLongitude };
-                map = new google.maps.Map(document.getElementById("map"), {
-                  center: center,
-                  zoom: $zoom,
-                  mapTypeId: "roadmap",
-                  mapTypeControl: false,
-                  streetViewControl: false
-                });
-                map.addListener("click", function() {
-                  if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
-                });
-                const cafes = $cafesJson;
-                cafes.forEach(function(cafe) {
-                  const marker = new google.maps.Marker({
-                    position: { lat: cafe.latitude, lng: cafe.longitude },
-                    map: map,
-                    title: cafe.name
-                  });
-                  const infoWindow = new google.maps.InfoWindow({
-                    content: '<div class="callout">' +
-                      '<span class="callout-name" onclick="onCafeNameClick(\'' + cafe.id + '\')">' + cafe.name + '</span>' +
-                      '<button class="callout-checkin" onclick="onCheckInClick(\'' + cafe.id + '\')" title="체크인">&#10003;</button>' +
-                      '</div>',
-                    disableAutoPan: false
-                  });
-                  marker.addListener("click", function() {
-                    if (currentInfoWindow) { currentInfoWindow.close(); }
-                    infoWindow.open(map, marker);
-                    currentInfoWindow = infoWindow;
-                  });
-                });
-              }
-              function onCafeNameClick(cafeId) {
-                if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
-                if (window.ConCafeBridge && window.ConCafeBridge.onCafeClicked) {
-                  window.ConCafeBridge.onCafeClicked(cafeId);
-                }
-              }
-              function onCheckInClick(cafeId) {
-                if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
-                if (window.ConCafeBridge && window.ConCafeBridge.onCafeCheckInClicked) {
-                  window.ConCafeBridge.onCafeCheckInClicked(cafeId);
-                }
-              }
-            </script>
-            <script async defer src="https://maps.googleapis.com/maps/api/js?key=$apiKey&callback=initMap"></script>
-          </body>
-        </html>
-    """.trimIndent()
-}
-
-private fun resolveGoogleMapsApiKey(): String {
-    val fromEnv = System.getenv("GOOGLE_MAPS_API_KEY")?.trim().orEmpty()
-    if (fromEnv.isNotBlank()) {
-        return fromEnv
-    }
-
-    val fromProperty = System.getProperty("google.maps.api.key")?.trim().orEmpty()
-    if (fromProperty.isNotBlank()) {
-        return fromProperty
-    }
-
-    val fromAndroidXml = resolveGoogleMapsApiKeyFromAndroidXml()
-    if (fromAndroidXml.isNotBlank()) {
-        return fromAndroidXml
-    }
-
-    return ""
-}
-
-private fun resolveGoogleMapsApiKeyFromAndroidXml(): String {
-    val candidatePaths = listOf(
-        "composeApp/src/androidMain/res/values/google_maps.xml",
-        "src/androidMain/res/values/google_maps.xml"
+    return MapCamera(
+        latitude = latitude,
+        longitude = longitude,
+        zoom = zoom
     )
-    val keyPattern = Regex("""<string\s+name=["']google_maps_api_key["'][^>]*>([^<]+)</string>""")
-
-    for (path in candidatePaths) {
-        val file = File(path)
-
-        if (file.exists()) {
-            val xml = file.readText()
-            val key = keyPattern.find(xml)?.groupValues?.get(1)?.trim().orEmpty()
-
-            if (key.isNotBlank()) {
-                return key
-            }
-        }
-    }
-    return ""
 }
 
-private fun escapeJs(value: String): String {
-    return value
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", " ")
+private fun latLngToWorldPixel(latitude: Double, longitude: Double, zoom: Int): WorldPixel {
+    val sinLatitude = kotlin.math.sin(latitude.coerceIn(MIN_LATITUDE, MAX_LATITUDE) * PI / 180.0)
+    val scale = TILE_SIZE * 2.0.pow(zoom)
+    val x = (longitude + 180.0) / 360.0 * scale
+    val y = (0.5 - ln((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4.0 * PI)) * scale
+
+    return WorldPixel(x, y)
+}
+
+private fun worldPixelToLatLng(worldX: Double, worldY: Double, zoom: Int): MapCamera {
+    val scale = TILE_SIZE * 2.0.pow(zoom)
+    val longitude = worldX / scale * 360.0 - 180.0
+    val latitude = atan(sinh(PI * (1.0 - 2.0 * worldY / scale))) * 180.0 / PI
+
+    return MapCamera(
+        latitude = latitude.coerceIn(MIN_LATITUDE, MAX_LATITUDE),
+        longitude = normalizeLongitudeValue(longitude),
+        zoom = zoom
+    )
+}
+
+private fun normalizeLongitudeValue(longitude: Double): Double {
+    var result = longitude
+
+    while (result < -180.0) result += 360.0
+    while (result > 180.0) result -= 360.0
+    return result
+}
+
+private fun wrapTileX(tileX: Int, tileCount: Int): Int {
+    return ((tileX % tileCount) + tileCount) % tileCount
 }
 
 private fun List<Double>.averageOrDefault(default: Double): Double {
@@ -342,6 +455,23 @@ private fun normalizeLongitude(value: Double): Double? {
     return value
 }
 
+private data class TileKey(
+    val zoom: Int,
+    val x: Int,
+    val y: Int
+)
+
+private data class WorldPixel(
+    val x: Double,
+    val y: Double
+)
+
+private data class MapCamera(
+    val latitude: Double,
+    val longitude: Double,
+    val zoom: Int
+)
+
 private data class NormalizedCafeMapItem(
     val id: String,
     val name: String,
@@ -349,6 +479,50 @@ private data class NormalizedCafeMapItem(
     val longitude: Double
 )
 
+private data class MarkerHitArea(
+    val cafeId: String,
+    val x: Int,
+    val y: Int,
+    val radius: Int
+) {
+    fun contains(point: Point): Boolean {
+        val dx = point.x - x
+        val dy = point.y - y
+
+        return dx * dx + dy * dy <= radius * radius
+    }
+}
+
+private data class PopupHitArea(
+    val cafeId: String,
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int
+) {
+    fun contains(point: Point): Boolean {
+        return point.x in x..(x + width) && point.y in y..(y + height)
+    }
+}
+
+private const val TILE_SIZE = 256
+
+private const val MIN_ZOOM = 3
+
+private const val MAX_ZOOM = 18
+
+private const val DEFAULT_ZOOM = 13
+
+private const val MIN_LATITUDE = -85.05112878
+
+private const val MAX_LATITUDE = 85.05112878
+
 private const val DEFAULT_LATITUDE = 37.5665
 
 private const val DEFAULT_LONGITUDE = 126.9780
+
+private const val TILE_CONNECT_TIMEOUT_MS = 5000
+
+private const val TILE_READ_TIMEOUT_MS = 5000
+
+private const val TILE_USER_AGENT = "ConCafeDesktop/1.0 (https://concafe.app)"
