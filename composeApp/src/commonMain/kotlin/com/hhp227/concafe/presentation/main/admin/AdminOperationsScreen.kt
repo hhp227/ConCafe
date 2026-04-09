@@ -216,7 +216,7 @@ private fun PendingSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(Res.string.admin_pending_section_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.admin_pending_section_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
                 text = stringResource(Res.string.dashboard_action_view_all),
                 color = Color(0xFFEF6797),
@@ -276,7 +276,7 @@ private fun InquirySection(
     onAction: (AdminOperationsAction) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(Res.string.admin_inquiry_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.admin_inquiry_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         if (uiState.inquiries.isEmpty()) {
             Card(
                 shape = RoundedCornerShape(20.dp),
@@ -480,7 +480,7 @@ private fun QuickMenuSection(
     onAction: (AdminOperationsAction) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(Res.string.admin_quick_menu_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.admin_quick_menu_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         uiState.quickMenus.forEach { menu ->
             Card(
                 modifier = Modifier.fillMaxWidth().clickable { onAction(AdminOperationsAction.ClickQuickMenu(menu.id)) },

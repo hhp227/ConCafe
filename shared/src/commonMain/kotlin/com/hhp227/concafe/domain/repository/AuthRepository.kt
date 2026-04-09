@@ -1,5 +1,7 @@
 package com.hhp227.concafe.domain.repository
 
+import com.hhp227.concafe.domain.model.AuthProvider
+import com.hhp227.concafe.domain.model.DeleteAccountRequest
 import kotlinx.coroutines.flow.Flow
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
@@ -40,7 +42,9 @@ interface AuthRepository {
 
     suspend fun changePassword(currentPassword: String, newPassword: String)
 
-    suspend fun deleteAccount(password: String)
+    suspend fun deleteAccount(request: DeleteAccountRequest)
+
+    suspend fun getCurrentAuthProvider(): AuthProvider
 
     suspend fun restoreSession(): User?
 

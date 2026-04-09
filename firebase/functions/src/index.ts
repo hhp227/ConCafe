@@ -1,6 +1,6 @@
 import {setGlobalOptions} from "firebase-functions";
 import * as functionsV1 from "firebase-functions/v1";
-import {UserRecord} from "firebase-admin/auth";
+import {getAuth, UserRecord} from "firebase-admin/auth";
 import {onDocumentDeleted, onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
@@ -16,6 +16,225 @@ initializeApp();
 
 function db() {
   return getFirestore();
+}
+
+type DeletedUserCleanupSummary = {
+  removedOwnerCafeCount: number;
+  unlinkedCastCount: number;
+  deletedCastClaims: number;
+  deletedCafeOwnerClaims: number;
+  deletedCafeRegistrationClaims: number;
+  ownerQueryError: string | null;
+  castQueryError: string | null;
+  userQueryError: string | null;
+  castClaimsCleanupError: string | null;
+  cafeOwnerClaimsCleanupError: string | null;
+  cafeRegistrationClaimsCleanupError: string | null;
+  ownerCleanupError: string | null;
+  castCleanupError: string | null;
+  userTreeCleanupError: string | null;
+  unexpectedError: string | null;
+};
+
+const USER_DELETION_REQUESTS = "_userDeletionRequests";
+
+function asErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function emptyDeletedUserCleanupSummary(): DeletedUserCleanupSummary {
+  return {
+    removedOwnerCafeCount: 0,
+    unlinkedCastCount: 0,
+    deletedCastClaims: 0,
+    deletedCafeOwnerClaims: 0,
+    deletedCafeRegistrationClaims: 0,
+    ownerQueryError: null,
+    castQueryError: null,
+    userQueryError: null,
+    castClaimsCleanupError: null,
+    cafeOwnerClaimsCleanupError: null,
+    cafeRegistrationClaimsCleanupError: null,
+    ownerCleanupError: null,
+    castCleanupError: null,
+    userTreeCleanupError: null,
+    unexpectedError: null,
+  };
+}
+
+async function cleanupDeletedUserData(
+  firestore: FirebaseFirestore.Firestore,
+  userId: string
+): Promise<DeletedUserCleanupSummary> {
+  const summary = emptyDeletedUserCleanupSummary();
+  let ownerQueryError: string | null = null;
+  let castQueryError: string | null = null;
+  let userQueryError: string | null = null;
+  let cafesSnapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>;
+  let castRefs: FirebaseFirestore.DocumentReference[] = [];
+  let ownedCafeIds: string[] = [];
+
+  try {
+    cafesSnapshot = await firestore
+      .collection("cafes")
+      .where("ownerIds", "array-contains", userId)
+      .get();
+  } catch (error) {
+    ownerQueryError = asErrorMessage(error, "owner query failed");
+    logger.error("cleanupDeletedUserData owner cafe query failed.", {
+      userId: userId,
+      error: ownerQueryError,
+    });
+    cafesSnapshot = await firestore.collection("cafes").where(FieldPath.documentId(), "==", "__none__").get();
+  }
+
+  try {
+    const castsSnapshot = await firestore
+      .collectionGroup("casts")
+      .where("linkedUserId", "==", userId)
+      .get();
+    castRefs = castsSnapshot.docs.map((doc) => doc.ref);
+  } catch (error) {
+    castQueryError = asErrorMessage(error, "cast query failed");
+    logger.error("cleanupDeletedUserData cast query failed.", {
+      userId: userId,
+      error: castQueryError,
+    });
+  }
+
+  try {
+    const userSnapshot = await firestore
+      .collection("users")
+      .doc(userId)
+      .get();
+    ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
+  } catch (error) {
+    userQueryError = asErrorMessage(error, "user query failed");
+    logger.error("cleanupDeletedUserData user doc query failed.", {
+      userId: userId,
+      error: userQueryError,
+    });
+  }
+
+  const claimCollections = ["castClaims", "cafeOwnerClaims", "cafeRegistrationClaims"];
+  const claimDeleteCounts = new Map<string, number>();
+  const claimCleanupErrors = new Map<string, string | null>();
+  const BATCH_SIZE = 500;
+
+  for (const collectionName of claimCollections) {
+    try {
+      const snapshot = await firestore
+        .collection(collectionName)
+        .where("userId", "==", userId)
+        .get();
+
+      if (snapshot.empty) {
+        claimDeleteCounts.set(collectionName, 0);
+        claimCleanupErrors.set(collectionName, null);
+        continue;
+      }
+
+      let deletedCount = 0;
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+        chunk.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        deletedCount += chunk.length;
+      }
+      claimDeleteCounts.set(collectionName, deletedCount);
+      claimCleanupErrors.set(collectionName, null);
+    } catch (error) {
+      const cleanupError = asErrorMessage(error, `${collectionName} cleanup failed`);
+      claimDeleteCounts.set(collectionName, 0);
+      claimCleanupErrors.set(collectionName, cleanupError);
+      logger.error("cleanupDeletedUserData claim cleanup failed.", {
+        userId: userId,
+        collectionName: collectionName,
+        error: cleanupError,
+      });
+    }
+  }
+
+  const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
+  cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
+  for (const cafeId of ownedCafeIds) {
+    if (cafeId && !cafeRefMap.has(cafeId)) {
+      cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
+    }
+  }
+
+  const cafeRefs = [...cafeRefMap.values()];
+  let ownerCleanupError: string | null = null;
+  let castCleanupError: string | null = null;
+  let userTreeCleanupError: string | null = null;
+
+  if (cafeRefs.length > 0) {
+    try {
+      for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.set(ref, {ownerIds: FieldValue.arrayRemove(userId)}, {merge: true});
+        });
+        await batch.commit();
+      }
+    } catch (error) {
+      ownerCleanupError = asErrorMessage(error, "owner cleanup failed");
+      logger.error("cleanupDeletedUserData ownerIds cleanup failed.", {
+        userId: userId,
+        error: ownerCleanupError,
+      });
+    }
+  }
+
+  if (castRefs.length > 0) {
+    try {
+      for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
+          batch.set(ref, {
+            linkedUserId: null,
+            userId: FieldValue.delete(),
+            uid: FieldValue.delete(),
+          }, {merge: true});
+        });
+        await batch.commit();
+      }
+    } catch (error) {
+      castCleanupError = asErrorMessage(error, "cast cleanup failed");
+      logger.error("cleanupDeletedUserData cast unlink failed.", {
+        userId: userId,
+        error: castCleanupError,
+      });
+    }
+  }
+
+  try {
+    await firestore.recursiveDelete(firestore.collection("users").doc(userId));
+  } catch (error) {
+    userTreeCleanupError = asErrorMessage(error, "user recursive delete failed");
+    logger.error("cleanupDeletedUserData user tree delete failed.", {
+      userId: userId,
+      error: userTreeCleanupError,
+    });
+  }
+
+  summary.removedOwnerCafeCount = cafeRefs.length;
+  summary.unlinkedCastCount = castRefs.length;
+  summary.deletedCastClaims = claimDeleteCounts.get("castClaims") ?? 0;
+  summary.deletedCafeOwnerClaims = claimDeleteCounts.get("cafeOwnerClaims") ?? 0;
+  summary.deletedCafeRegistrationClaims = claimDeleteCounts.get("cafeRegistrationClaims") ?? 0;
+  summary.ownerQueryError = ownerQueryError;
+  summary.castQueryError = castQueryError;
+  summary.userQueryError = userQueryError;
+  summary.castClaimsCleanupError = claimCleanupErrors.get("castClaims") ?? null;
+  summary.cafeOwnerClaimsCleanupError = claimCleanupErrors.get("cafeOwnerClaims") ?? null;
+  summary.cafeRegistrationClaimsCleanupError = claimCleanupErrors.get("cafeRegistrationClaims") ?? null;
+  summary.ownerCleanupError = ownerCleanupError;
+  summary.castCleanupError = castCleanupError;
+  summary.userTreeCleanupError = userTreeCleanupError;
+
+  return summary;
 }
 
 type ReviewLike = {
@@ -2388,6 +2607,7 @@ export const onCastClaimWrittenCreateRequesterRejectedNotification = onDocumentW
 export const onCastClaimWrittenCleanupSelfFollow = onDocumentWritten(
   "castClaims/{claimId}",
   async (event) => {
+    const claimId = event.params.claimId;
     const beforeData = event.data?.before.data() as CastClaimLike | undefined;
     const afterData = event.data?.after.data() as CastClaimLike | undefined;
     const beforeStatus = asNonBlankString(beforeData?.status);
@@ -2396,30 +2616,61 @@ export const onCastClaimWrittenCleanupSelfFollow = onDocumentWritten(
     const cafeId = asNonBlankString(afterData?.cafeId);
     const userId = asNonBlankString(afterData?.userId);
 
-    if (afterStatus !== "APPROVED") {
+    if (!isApprovedStatus(afterStatus)) {
       return;
-    } else if (beforeStatus === "APPROVED") {
+    } else if (isApprovedStatus(beforeStatus)) {
       return;
     } else if (castId == null || cafeId == null || userId == null) {
       return;
     }
 
     const followId = buildCastFollowDocumentId(userId, castId);
-    const followRef = db().collection("castFollows").doc(followId);
-    const followSnapshot = await followRef.get();
-    const followCastId = asNonBlankString(followSnapshot.data()?.castId);
-    const followUserId = asNonBlankString(followSnapshot.data()?.userId);
+    const firestore = db();
+    const castRef = firestore.collection("cafes").doc(cafeId).collection("casts").doc(castId);
+    const userRef = firestore.collection("users").doc(userId);
+    const followRef = firestore.collection("castFollows").doc(followId);
 
-    if (followSnapshot.exists && followCastId === castId && followUserId === userId) {
-      await followRef.delete();
-      logger.info("Removed self-follow after cast claim approval.", {
-        claimId: event.params.claimId,
-        cafeId: cafeId,
-        castId: castId,
-        userId: userId,
-        followId: followId,
-      });
-    }
+    await firestore.runTransaction(async (transaction) => {
+      const castSnapshot = await transaction.get(castRef);
+      const currentLinkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+      const followSnapshot = await transaction.get(followRef);
+      const followCastId = asNonBlankString(followSnapshot.data()?.castId);
+      const followUserId = asNonBlankString(followSnapshot.data()?.userId);
+
+      if (!castSnapshot.exists) {
+        logger.error("Cast claim approval side effects skipped: cast not found.", {
+          claimId: claimId,
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+        });
+        return;
+      } else if (currentLinkedUserId != null && currentLinkedUserId !== userId) {
+        logger.error("Cast claim approval side effects skipped: cast already linked.", {
+          claimId: claimId,
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+          currentLinkedUserId: currentLinkedUserId,
+        });
+        return;
+      }
+
+      transaction.set(castRef, {linkedUserId: userId}, {merge: true});
+      transaction.set(userRef, {affiliatedCafeId: cafeId}, {merge: true});
+
+      if (followSnapshot.exists && followCastId === castId && followUserId === userId) {
+        transaction.delete(followRef);
+      }
+    });
+
+    logger.info("Applied cast claim approval side effects.", {
+      claimId: claimId,
+      cafeId: cafeId,
+      castId: castId,
+      userId: userId,
+      followId: followId,
+    });
   }
 );
 
@@ -3687,57 +3938,260 @@ export const onUserDeletedCleanupOwnership =
     const userId = user.uid;
 
     if (!userId) return;
-
     const firestore = db();
+    const markerRef = firestore.collection(USER_DELETION_REQUESTS).doc(userId);
+    const cleanupSummary = emptyDeletedUserCleanupSummary();
+    try {
+      Object.assign(cleanupSummary, await cleanupDeletedUserData(firestore, userId));
+    } catch (error) {
+      cleanupSummary.unexpectedError = asErrorMessage(error, "cleanupDeletedUserData failed unexpectedly");
+      logger.error("onUserDeletedCleanupOwnership failed unexpectedly.", {
+        userId: userId,
+        error: cleanupSummary.unexpectedError,
+      });
+    } finally {
+      await markerRef.delete().catch((error: unknown) => {
+        logger.error("onUserDeletedCleanupOwnership marker delete failed.", {
+          userId: userId,
+          error: asErrorMessage(error, "marker delete failed"),
+        });
+      });
+    }
+    logger.info("onUserDeletedCleanupOwnership completed.", {
+      userId: userId,
+      ...cleanupSummary,
+    });
+  });
 
-    const [cafesSnapshot, castsSnapshot, userSnapshot] = await Promise.all([
-      firestore
-        .collection("cafes")
-        .where("ownerIds", "array-contains", userId)
-        .get(),
-      firestore
-        .collectionGroup("casts")
-        .where("linkedUserId", "==", userId)
-        .get(),
-      firestore
-        .collection("users")
-        .doc(userId)
-        .get(),
-    ]);
+export const deleteCurrentUserCascade = functionsV1.https.onRequest(async (request, response) => {
+  if (request.method !== "POST") {
+    response.status(405).json({error: "method_not_allowed"});
+    return;
+  }
 
-    // cafes.ownerIds 쿼리 결과와 users.ownedCafeIds 양쪽에서 대상 카페를 수집
-    const cafeRefMap = new Map<string, FirebaseFirestore.DocumentReference>();
-    cafesSnapshot.docs.forEach((doc) => cafeRefMap.set(doc.id, doc.ref));
-    const ownedCafeIds = asStringArray(userSnapshot.data()?.ownedCafeIds);
-    for (const cafeId of ownedCafeIds) {
-      if (cafeId && !cafeRefMap.has(cafeId)) {
-        cafeRefMap.set(cafeId, firestore.collection("cafes").doc(cafeId));
+  const authorization = request.header("Authorization") ?? request.header("authorization") ?? "";
+  const idToken = authorization.startsWith("Bearer ") ? authorization.substring(7).trim() : "";
+
+  if (!idToken) {
+    response.status(401).json({error: "missing_auth"});
+    return;
+  }
+
+  let uid = "";
+  try {
+    const decodedToken = await getAuth().verifyIdToken(idToken);
+    uid = decodedToken.uid;
+  } catch (error) {
+    logger.warn("deleteCurrentUserCascade verifyIdToken failed.", error);
+    response.status(401).json({error: "invalid_auth"});
+    return;
+  }
+
+  try {
+    await db().collection(USER_DELETION_REQUESTS).doc(uid).set({
+      userId: uid,
+      requestedAt: new Date().toISOString(),
+      source: "deleteCurrentUserCascade",
+    });
+    await getAuth().deleteUser(uid);
+    logger.info("deleteCurrentUserCascade auth deletion requested.", {
+      userId: uid,
+    });
+    response.status(200).json({ok: true});
+  } catch (error) {
+    logger.error("deleteCurrentUserCascade failed.", error);
+    response.status(500).json({error: "internal"});
+  }
+});
+
+async function requireAdminUserIdFromRequest(request: functionsV1.https.Request): Promise<string> {
+  const authorization = request.header("Authorization") ?? request.header("authorization") ?? "";
+  const idToken = authorization.startsWith("Bearer ") ? authorization.substring(7).trim() : "";
+
+  if (!idToken) {
+    throw new Error("missing_auth");
+  }
+
+  const decodedToken = await getAuth().verifyIdToken(idToken);
+  const userSnapshot = await db().collection("users").doc(decodedToken.uid).get();
+  const role = asNonBlankString(userSnapshot.data()?.role);
+
+  if (role !== "ADMIN") {
+    throw new Error("forbidden");
+  }
+
+  return decodedToken.uid;
+}
+
+export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (request, response) => {
+  if (request.method !== "POST") {
+    response.status(405).json({error: "method_not_allowed"});
+    return;
+  }
+
+  try {
+    const adminUserId = await requireAdminUserIdFromRequest(request);
+    const firestore = db();
+    const snapshot = await firestore.collectionGroup("casts").get();
+    const BATCH_SIZE = 250;
+    const batchOperations: Array<{
+      ref: FirebaseFirestore.DocumentReference;
+      cafeId: string;
+      linkedUserId: string;
+      shouldNormalizeCastFields: boolean;
+    }> = [];
+    let normalizedCount = 0;
+    let affiliatedUserCount = 0;
+    const conflicts: string[] = [];
+    const operationKeys = new Set<string>();
+    const addBatchOperation = (
+      ref: FirebaseFirestore.DocumentReference,
+      cafeId: string,
+      linkedUserId: string,
+      shouldNormalizeCastFields: boolean
+    ) => {
+      const operationKey = `${ref.path}::${linkedUserId}`;
+      if (operationKeys.has(operationKey)) {
+        return;
+      }
+      operationKeys.add(operationKey);
+      batchOperations.push({
+        ref: ref,
+        cafeId: cafeId,
+        linkedUserId: linkedUserId,
+        shouldNormalizeCastFields: shouldNormalizeCastFields,
+      });
+    };
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const cafeId = doc.ref.parent.parent?.id ?? "";
+      const linkedUserId = asNonBlankString(data?.linkedUserId);
+      const legacyUserId = asNonBlankString(data?.userId);
+      const legacyUid = asNonBlankString(data?.uid);
+      const legacyCandidates = [legacyUserId, legacyUid].filter((value): value is string => value != null);
+      const uniqueLegacyCandidates = [...new Set(legacyCandidates)];
+      const normalizedLinkedUserId = linkedUserId ?? uniqueLegacyCandidates[0] ?? null;
+
+      if (!cafeId || normalizedLinkedUserId == null) {
+        if (linkedUserId == null && uniqueLegacyCandidates.length === 0) {
+          continue;
+        }
+        conflicts.push(doc.ref.path);
+        logger.error("normalizeCastLinkedUserFields invalid cast path or linked user.", {
+          castPath: doc.ref.path,
+          cafeId: cafeId,
+          linkedUserId: linkedUserId,
+          legacyUserId: legacyUserId,
+          legacyUid: legacyUid,
+        });
+        continue;
+      }
+
+      if (linkedUserId == null && uniqueLegacyCandidates.length === 0) {
+        continue;
+      } else if (linkedUserId != null && uniqueLegacyCandidates.length === 0) {
+        addBatchOperation(doc.ref, cafeId, linkedUserId, false);
+      } else if (linkedUserId == null && uniqueLegacyCandidates.length === 1) {
+        addBatchOperation(doc.ref, cafeId, normalizedLinkedUserId, true);
+      } else if (linkedUserId != null && uniqueLegacyCandidates.every((value) => value === linkedUserId)) {
+        addBatchOperation(doc.ref, cafeId, linkedUserId, true);
+      } else {
+        conflicts.push(doc.ref.path);
+        logger.error("normalizeCastLinkedUserFields conflict detected.", {
+          castPath: doc.ref.path,
+          linkedUserId: linkedUserId,
+          legacyUserId: legacyUserId,
+          legacyUid: legacyUid,
+        });
       }
     }
 
-    if (cafeRefMap.size === 0 && castsSnapshot.empty) return;
+    const approvedClaimSnapshot = await firestore
+      .collection("castClaims")
+      .where("status", "in", ["APPROVED", "승인 완료"])
+      .get();
 
-    const BATCH_SIZE = 500;
-    const cafeRefs = [...cafeRefMap.values()];
+    for (const claimDoc of approvedClaimSnapshot.docs) {
+      const claimData = claimDoc.data() as CastClaimLike;
+      const claimCafeId = asNonBlankString(claimData.cafeId);
+      const claimCastId = asNonBlankString(claimData.castId);
+      const claimUserId = asNonBlankString(claimData.userId);
 
-    for (let i = 0; i < cafeRefs.length; i += BATCH_SIZE) {
+      if (claimCafeId == null || claimCastId == null || claimUserId == null) {
+        continue;
+      }
+
+      const castRef = firestore.collection("cafes").doc(claimCafeId).collection("casts").doc(claimCastId);
+      const castSnapshot = await castRef.get();
+      const currentLinkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+      if (!castSnapshot.exists) {
+        conflicts.push(castRef.path);
+        logger.error("normalizeCastLinkedUserFields approved claim cast not found.", {
+          claimId: claimDoc.id,
+          cafeId: claimCafeId,
+          castId: claimCastId,
+          userId: claimUserId,
+        });
+      } else if (currentLinkedUserId != null && currentLinkedUserId !== claimUserId) {
+        conflicts.push(castRef.path);
+        logger.error("normalizeCastLinkedUserFields approved claim conflict detected.", {
+          claimId: claimDoc.id,
+          cafeId: claimCafeId,
+          castId: claimCastId,
+          userId: claimUserId,
+          currentLinkedUserId: currentLinkedUserId,
+        });
+      } else {
+        addBatchOperation(castRef, claimCafeId, claimUserId, currentLinkedUserId == null);
+      }
+    }
+
+    for (let i = 0; i < batchOperations.length; i += BATCH_SIZE) {
       const batch = firestore.batch();
-      cafeRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {ownerIds: FieldValue.arrayRemove(userId)});
+      const chunk = batchOperations.slice(i, i + BATCH_SIZE);
+      chunk.forEach((operation) => {
+        if (operation.shouldNormalizeCastFields) {
+          batch.set(operation.ref, {
+            linkedUserId: operation.linkedUserId,
+            userId: FieldValue.delete(),
+            uid: FieldValue.delete(),
+          }, {merge: true});
+          normalizedCount += 1;
+        }
+        batch.set(firestore.collection("users").doc(operation.linkedUserId), {
+          affiliatedCafeId: operation.cafeId,
+        }, {merge: true});
+        affiliatedUserCount += 1;
       });
       await batch.commit();
     }
 
-    const castRefs = castsSnapshot.docs.map((doc) => doc.ref);
-
-    for (let i = 0; i < castRefs.length; i += BATCH_SIZE) {
-      const batch = firestore.batch();
-      castRefs.slice(i, i + BATCH_SIZE).forEach((ref) => {
-        batch.update(ref, {linkedUserId: null});
-      });
-      await batch.commit();
-    }
-  });
+    logger.info("normalizeCastLinkedUserFields completed.", {
+      adminUserId: adminUserId,
+      scannedCount: snapshot.docs.length,
+      normalizedCount: normalizedCount,
+      affiliatedUserCount: affiliatedUserCount,
+      conflictCount: conflicts.length,
+    });
+    response.status(200).json({
+      ok: true,
+      scannedCount: snapshot.docs.length,
+      normalizedCount: normalizedCount,
+      affiliatedUserCount: affiliatedUserCount,
+      conflictCount: conflicts.length,
+      conflicts: conflicts,
+    });
+  } catch (error) {
+    const errorMessage = asErrorMessage(error, "normalizeCastLinkedUserFields failed");
+    const statusCode = errorMessage === "missing_auth" ? 401 : errorMessage === "forbidden" ? 403 : 500;
+    logger.error("normalizeCastLinkedUserFields failed.", {
+      error: errorMessage,
+    });
+    response.status(statusCode).json({error: errorMessage});
+  }
+});
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
 const CLAIM_REJECTED_TTL_MS = 60 * 60 * 1000; // 1시간

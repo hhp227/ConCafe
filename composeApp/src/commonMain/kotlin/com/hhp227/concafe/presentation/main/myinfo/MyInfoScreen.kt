@@ -191,7 +191,7 @@ private fun GuestMyInfoScreen(
             }
         }
         item {
-            Text(stringResource(Res.string.myinfo_guest_features_title), fontWeight = FontWeight.Bold)
+            MyInfoSectionTitle(stringResource(Res.string.myinfo_guest_features_title))
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -242,7 +242,7 @@ private fun GuestMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(Res.string.myinfo_guest_popular_cafes_title), fontWeight = FontWeight.Bold)
+                MyInfoSectionTitle(stringResource(Res.string.myinfo_guest_popular_cafes_title))
                 Row(
                     modifier = Modifier.clickable { },
                     verticalAlignment = Alignment.CenterVertically
@@ -354,6 +354,20 @@ private data class GuestFeatureItem(
 )
 
 @Composable
+private fun MyInfoSectionTitle(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFF2B2330)
+    )
+}
+
+@Composable
 private fun MyInfoSectionPlaceholder(
     title: String,
     description: String,
@@ -418,7 +432,7 @@ private fun ProfileMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("활동 뱃지", fontWeight = FontWeight.Bold)
+                MyInfoSectionTitle("활동 뱃지")
                 Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
             }
             Row(
@@ -451,7 +465,7 @@ private fun ProfileMyInfoScreen(
             }
         }
         item {
-            Text("최근 방문", fontWeight = FontWeight.Bold)
+            MyInfoSectionTitle("최근 방문")
             if (uiState.recentVisits.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
                     items(uiState.recentVisits) { cafe ->
@@ -502,7 +516,7 @@ private fun ProfileMyInfoScreen(
             val favoriteItems = uiState.favorites.take(4)
             val favoriteRows = favoriteItems.chunked(2)
 
-            Text("즐겨찾기", fontWeight = FontWeight.Bold)
+            MyInfoSectionTitle("즐겨찾기")
             if (favoriteItems.isNotEmpty()) {
                 Column(
                     modifier = Modifier.padding(top = 8.dp),
@@ -542,7 +556,7 @@ private fun ProfileMyInfoScreen(
         }
         item {
             if (uiState.user?.role != UserRole.CAST) {
-                Text("팔로우한 캐스트", fontWeight = FontWeight.Bold)
+                MyInfoSectionTitle("팔로우한 캐스트")
                 if (uiState.followedMaids.isNotEmpty()) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
                         items(uiState.followedMaids.take(6)) { maid ->

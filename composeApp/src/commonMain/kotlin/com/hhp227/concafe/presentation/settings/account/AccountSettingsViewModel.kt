@@ -2,6 +2,20 @@ package com.hhp227.concafe.presentation.settings.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.account_settings_delete_password_required
+import concafe.composeapp.generated.resources.account_settings_error_delete_apple_ios_only
+import concafe.composeapp.generated.resources.account_settings_error_delete_failed
+import concafe.composeapp.generated.resources.account_settings_error_delete_google_reauth_failed
+import concafe.composeapp.generated.resources.account_settings_error_delete_invalid_password
+import concafe.composeapp.generated.resources.account_settings_error_delete_kakao_reauth_failed
+import concafe.composeapp.generated.resources.account_settings_error_load_failed
+import concafe.composeapp.generated.resources.account_settings_error_profile_save_failed
+import concafe.composeapp.generated.resources.account_settings_error_session_expired
+import concafe.composeapp.generated.resources.account_settings_message_cast_profile_missing
+import concafe.composeapp.generated.resources.account_settings_message_enter_nickname
+import concafe.composeapp.generated.resources.account_settings_message_saved
+import com.hhp227.concafe.domain.common.AppError
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,16 +25,24 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.AuthProvider
+import com.hhp227.concafe.domain.model.DeleteAccountRequest
 import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
+import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 
 class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -57,7 +79,7 @@ class AccountSettingsViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "계정 정보를 불러오지 못했습니다."
+                            errorMessage = getString(Res.string.account_settings_error_load_failed)
                         )
                     }
                 }
@@ -77,7 +99,7 @@ class AccountSettingsViewModel(
         val profileImage = state.myInfoFeed?.user?.profileImage
 
         if (nicknameInput.isBlank()) {
-            emitMessage("닉네임을 입력해 주세요.")
+            emitMessage(Res.string.account_settings_message_enter_nickname)
         } else {
             _uiState.update {
                 it.copy(
@@ -98,7 +120,7 @@ class AccountSettingsViewModel(
                                 myInfoFeed = it.myInfoFeed?.copy(user = result.data)
                             )
                         }
-                        emitMessage("계정 기본 정보를 원격 데이터에 저장했어요.")
+                        emitMessage(Res.string.account_settings_message_saved)
                     }
 
                     is AppResult.Failure -> {
@@ -121,7 +143,7 @@ class AccountSettingsViewModel(
         val state = _uiState.value
         val cast = state.myInfoFeed?.castDetail?.cast
         if (cast?.id.isNullOrBlank()) {
-            emitMessage("연결된 캐스트 프로필이 아직 없습니다.")
+            emitMessage(Res.string.account_settings_message_cast_profile_missing)
             return
         }
         viewModelScope.launch {
@@ -162,21 +184,71 @@ class AccountSettingsViewModel(
 
     private fun clickDeleteAccount() {
         val state = _uiState.value
-
-        if (state.deletePassword.isBlank()) {
-            _uiState.update {
-                it.copy(
-                    deletePasswordErrorMessage = "회원 비밀번호를 입력해 주세요."
-                )
-            }
-            return
-        }
-
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         jobs[TaskKey.DeleteAccount]?.cancel()
         jobs[TaskKey.DeleteAccount] = viewModelScope.launch {
-            when (val result = deleteAccountUseCase.invoke(state.deletePassword)) {
+            val result = when (state.authProvider) {
+                AuthProvider.EMAIL, AuthProvider.UNKNOWN -> {
+                    if (state.deletePassword.isBlank()) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                deletePasswordErrorMessage = getString(Res.string.account_settings_delete_password_required)
+                            )
+                        }
+                        return@launch
+                    }
+                    deleteAccountUseCase.invoke(
+                        DeleteAccountRequest(
+                            provider = AuthProvider.EMAIL,
+                            password = state.deletePassword
+                        )
+                    )
+                }
+                AuthProvider.GOOGLE -> {
+                    runCatching { googleIdTokenProvider.getGoogleIdToken() }
+                        .fold(
+                            onSuccess = { token ->
+                                deleteAccountUseCase.invoke(
+                                    DeleteAccountRequest(
+                                        provider = AuthProvider.GOOGLE,
+                                        idToken = token
+                                    )
+                                )
+                            },
+                            onFailure = {
+                                AppResult.Failure(
+                                    AppError.ValidationFailed("google reauth failed")
+                                )
+                            }
+                        )
+                }
+                AuthProvider.KAKAO -> {
+                    runCatching { kakaoIdTokenProvider.getKakaoAuthPayload().idToken }
+                        .fold(
+                            onSuccess = { token ->
+                                deleteAccountUseCase.invoke(
+                                    DeleteAccountRequest(
+                                        provider = AuthProvider.KAKAO,
+                                        idToken = token
+                                    )
+                                )
+                            },
+                            onFailure = {
+                                AppResult.Failure(
+                                    AppError.ValidationFailed("kakao reauth failed")
+                                )
+                            }
+                        )
+                }
+                AuthProvider.APPLE -> {
+                    AppResult.Failure(
+                        AppError.ValidationFailed("apple delete not supported on compose")
+                    )
+                }
+            }
+            when (result) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -211,7 +283,13 @@ class AccountSettingsViewModel(
         }
     }
 
-    private fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
+    private fun emitMessage(message: StringResource) {
+        viewModelScope.launch {
+            _event.emit(AccountSettingsEvent.ShowMessage(getString(message)))
+        }
+    }
+
+    private suspend fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
         val rawError = failure.error.toString()
         val normalized = rawError.uppercase()
 
@@ -220,21 +298,27 @@ class AccountSettingsViewModel(
             || normalized.contains("INVALID_PASSWORD")
             || normalized.contains("EMAIL_NOT_FOUND")
         ) {
-            "비밀번호가 올바르지 않습니다."
+            getString(Res.string.account_settings_error_delete_invalid_password)
+        } else if (normalized.contains("GOOGLE REAUTH FAILED")) {
+            getString(Res.string.account_settings_error_delete_google_reauth_failed)
+        } else if (normalized.contains("KAKAO REAUTH FAILED")) {
+            getString(Res.string.account_settings_error_delete_kakao_reauth_failed)
+        } else if (normalized.contains("APPLE DELETE NOT SUPPORTED")) {
+            getString(Res.string.account_settings_error_delete_apple_ios_only)
         } else {
-            "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+            getString(Res.string.account_settings_error_delete_failed)
         }
     }
 
-    private fun mapProfileUpdateFailureMessage(failure: AppResult.Failure): String {
+    private suspend fun mapProfileUpdateFailureMessage(failure: AppResult.Failure): String {
         val rawError = failure.error.toString().uppercase()
 
         return if (rawError.contains("UNAUTHORIZED")) {
-            "로그인이 만료되었습니다. 다시 로그인해 주세요."
+            getString(Res.string.account_settings_error_session_expired)
         } else if (rawError.contains("VALIDATIONFAILED")) {
-            "닉네임을 입력해 주세요."
+            getString(Res.string.account_settings_message_enter_nickname)
         } else {
-            "프로필 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+            getString(Res.string.account_settings_error_profile_save_failed)
         }
     }
 

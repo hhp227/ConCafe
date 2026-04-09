@@ -1,9 +1,12 @@
 package com.hhp227.concafe.data.source.firestore
 
+import com.hhp227.concafe.domain.model.AuthProvider
+
 data class FirebaseAuthSession(
     val userId: String,
     val email: String,
     val displayName: String?,
+    val authProvider: AuthProvider,
     val idToken: String?,
     val refreshToken: String?,
     val expiresAtEpochSeconds: Long?
@@ -40,6 +43,8 @@ interface FirestoreAuthTokenProvider {
     fun getCurrentUserId(): String?
 
     fun getCurrentUserEmail(): String?
+
+    fun getCurrentAuthProvider(): AuthProvider
 
     fun supportsEmailPasswordAuth(): Boolean
 }

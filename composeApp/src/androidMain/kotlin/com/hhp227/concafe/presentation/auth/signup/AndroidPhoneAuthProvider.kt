@@ -79,6 +79,26 @@ class AndroidPhoneAuthProvider(
         }
     }
 
+    override suspend fun linkPhone(code: String): AppResult<Unit> {
+        val id = verificationId
+            ?: return AppResult.Failure(AppError.ValidationFailed("인증번호 요청을 먼저 해주세요."))
+        val currentUser = auth.currentUser
+            ?: return AppResult.Failure(AppError.ValidationFailed("NO_CURRENT_USER"))
+        return try {
+            val credential = PhoneAuthProvider.getCredential(id, code)
+            currentUser.linkWithCredential(credential).await()
+            AppResult.Success(Unit)
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            val reason = e.errorCode.ifBlank { "invalid code" }
+            AppResult.Failure(AppError.ValidationFailed(reason))
+        } catch (e: FirebaseAuthException) {
+            val reason = e.errorCode.ifBlank { e.message ?: "phone link failed" }
+            AppResult.Failure(AppError.ValidationFailed(reason))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
+        }
+    }
+
     override suspend fun linkEmail(email: String, password: String): AppResult<Unit> {
         val currentUser = auth.currentUser
             ?: return AppResult.Failure(AppError.ValidationFailed("NO_CURRENT_USER"))

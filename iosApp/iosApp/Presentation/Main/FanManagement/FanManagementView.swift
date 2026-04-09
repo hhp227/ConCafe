@@ -391,7 +391,7 @@ private struct FanManagementContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(title)
-                    .font(.title3.weight(.bold))
+                    .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: "24161E"))
                 Spacer()
                 if let actionLabel, let action {

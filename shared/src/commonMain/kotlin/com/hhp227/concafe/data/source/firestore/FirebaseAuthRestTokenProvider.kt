@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.source.firestore
 
+import com.hhp227.concafe.domain.model.AuthProvider
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -35,7 +36,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signUpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = true)
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = true,
+            authProvider = AuthProvider.UNKNOWN
+        )
 
         currentSession = session
         return session
@@ -58,7 +63,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signInUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
 
         currentSession = session
 
@@ -86,7 +95,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signInWithIdpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.GOOGLE
+        )
 
         currentSession = session
 
@@ -114,7 +127,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signInWithIdpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.APPLE
+        )
 
         currentSession = session
 
@@ -145,7 +162,8 @@ class FirebaseAuthRestTokenProvider(
         val session = parseSessionFromResponse(
             response = response,
             allowMissingEmail = true,
-            fallbackEmailPrefix = "kakao"
+            fallbackEmailPrefix = "kakao",
+            authProvider = AuthProvider.KAKAO
         )
 
         currentSession = session
@@ -170,7 +188,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> signUpUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = false)
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
 
         currentSession = session
 
@@ -225,8 +247,11 @@ class FirebaseAuthRestTokenProvider(
             buildUrl = { key -> updatePasswordUrl(key) },
             body = body
         )
-        val session = parseSessionFromResponse(response, allowMissingEmail = false)
-
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
         currentSession = session
         return session
     }
@@ -283,6 +308,7 @@ class FirebaseAuthRestTokenProvider(
             userId = userId,
             email = email,
             displayName = session.displayName,
+            authProvider = session.authProvider,
             idToken = idToken,
             refreshToken = nextRefreshToken,
             expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }
@@ -295,6 +321,10 @@ class FirebaseAuthRestTokenProvider(
 
     override fun getCurrentUserEmail(): String? {
         return currentSession?.email
+    }
+
+    override fun getCurrentAuthProvider(): AuthProvider {
+        return currentSession?.authProvider ?: AuthProvider.UNKNOWN
     }
 
     override fun supportsEmailPasswordAuth(): Boolean {
@@ -372,7 +402,8 @@ class FirebaseAuthRestTokenProvider(
     private fun parseSessionFromResponse(
         response: String,
         allowMissingEmail: Boolean,
-        fallbackEmailPrefix: String = "anonymous"
+        fallbackEmailPrefix: String = "anonymous",
+        authProvider: AuthProvider
     ): FirebaseAuthSession {
         val root = Json.parseToJsonElement(response).jsonObject
         val userId = root["localId"]?.jsonPrimitive?.content.orEmpty()
@@ -394,6 +425,7 @@ class FirebaseAuthRestTokenProvider(
             userId = userId,
             email = email,
             displayName = displayName,
+            authProvider = authProvider,
             idToken = idToken,
             refreshToken = refreshToken,
             expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }

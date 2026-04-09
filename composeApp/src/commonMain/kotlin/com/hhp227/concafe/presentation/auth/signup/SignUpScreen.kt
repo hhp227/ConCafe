@@ -194,7 +194,7 @@ private fun SignUpContentScreen(
                             onAction = onAction
                         )
                     }
-                    if (uiState.selectedUserType == SignUpUiState.UserType.VISITOR) {
+                    if (!uiState.hasAuthenticatedSocialAccount) {
                         item { SignInDivider() }
                         item {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -429,22 +429,24 @@ private fun SignUpFormSection(
                 )
             }
         }
-        SignUpTextField(
-            value = uiState.password,
-            label = stringResource(Res.string.signup_password_label),
-            placeholder = stringResource(Res.string.signup_password_placeholder),
-            keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation(),
-            onValueChange = { onAction(SignUpAction.ChangePassword(it)) }
-        )
-        SignUpTextField(
-            value = uiState.confirmPassword,
-            label = stringResource(Res.string.signup_confirm_password_label),
-            placeholder = stringResource(Res.string.signup_confirm_password_placeholder),
-            keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation(),
-            onValueChange = { onAction(SignUpAction.ChangeConfirmPassword(it)) }
-        )
+        if (!uiState.isSocialFlow) {
+            SignUpTextField(
+                value = uiState.password,
+                label = stringResource(Res.string.signup_password_label),
+                placeholder = stringResource(Res.string.signup_password_placeholder),
+                keyboardType = KeyboardType.Password,
+                visualTransformation = PasswordVisualTransformation(),
+                onValueChange = { onAction(SignUpAction.ChangePassword(it)) }
+            )
+            SignUpTextField(
+                value = uiState.confirmPassword,
+                label = stringResource(Res.string.signup_confirm_password_label),
+                placeholder = stringResource(Res.string.signup_confirm_password_placeholder),
+                keyboardType = KeyboardType.Password,
+                visualTransformation = PasswordVisualTransformation(),
+                onValueChange = { onAction(SignUpAction.ChangeConfirmPassword(it)) }
+            )
+        }
         uiState.errorMessage?.let {
             Text(text = it, color = Color(0xFFD1436F), style = MaterialTheme.typography.bodySmall)
         }

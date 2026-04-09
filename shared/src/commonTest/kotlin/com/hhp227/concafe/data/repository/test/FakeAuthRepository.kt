@@ -1,6 +1,8 @@
 package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.model.AuthProvider
+import com.hhp227.concafe.domain.model.DeleteAccountRequest
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
@@ -30,6 +32,7 @@ class FakeAuthRepository(
                 email = email,
                 nickname = "신규유저",
                 profileImage = null,
+                authProvider = AuthProvider.EMAIL,
                 role = UserRole.VISITOR,
                 banned = false,
                 createdAt = "2026-03-05T00:00:00Z"
@@ -58,6 +61,7 @@ class FakeAuthRepository(
                 email = email,
                 nickname = "구글유저",
                 profileImage = null,
+                authProvider = AuthProvider.GOOGLE,
                 role = UserRole.VISITOR,
                 banned = false,
                 createdAt = "2026-03-05T00:00:00Z"
@@ -86,6 +90,7 @@ class FakeAuthRepository(
                 email = email,
                 nickname = "애플유저",
                 profileImage = null,
+                authProvider = AuthProvider.APPLE,
                 role = UserRole.VISITOR,
                 banned = false,
                 createdAt = "2026-03-05T00:00:00Z"
@@ -119,6 +124,7 @@ class FakeAuthRepository(
                 email = resolvedEmail,
                 nickname = resolvedNickname,
                 profileImage = null,
+                authProvider = AuthProvider.KAKAO,
                 role = UserRole.VISITOR,
                 banned = false,
                 createdAt = "2026-03-05T00:00:00Z"
@@ -152,6 +158,7 @@ class FakeAuthRepository(
             email = email,
             nickname = nickname,
             profileImage = null,
+            authProvider = AuthProvider.EMAIL,
             role = role,
             banned = false,
             createdAt = "2026-03-05T00:00:00Z"
@@ -183,6 +190,7 @@ class FakeAuthRepository(
         val updatedUser = currentUser.copy(
             email = email,
             nickname = nickname,
+            authProvider = currentUser.authProvider,
             role = role,
             phoneNumber = phoneNumber
         )
@@ -215,8 +223,8 @@ class FakeAuthRepository(
         }
     }
 
-    override suspend fun deleteAccount(password: String) {
-        if (password.isBlank()) {
+    override suspend fun deleteAccount(request: DeleteAccountRequest) {
+        if (request.provider == AuthProvider.EMAIL && request.password.isNullOrBlank()) {
             throw IllegalArgumentException("password is required")
         }
 
@@ -229,6 +237,11 @@ class FakeAuthRepository(
 
         dataSource.currentUserId = null
         currentUserFlow.value = null
+    }
+
+    override suspend fun getCurrentAuthProvider(): AuthProvider {
+        val currentUserId = dataSource.currentUserId ?: return AuthProvider.UNKNOWN
+        return dataSource.users.firstOrNull { it.id == currentUserId }?.authProvider ?: AuthProvider.UNKNOWN
     }
 
     override suspend fun restoreSession(): User? {

@@ -17,4 +17,5 @@ enum AccountSettingsAction {
     case dismissDeleteDialogTapped
     case deletePasswordChanged(String)
     case deleteAccountTapped
+    case appleDeleteIdTokenReceived(String)
 }

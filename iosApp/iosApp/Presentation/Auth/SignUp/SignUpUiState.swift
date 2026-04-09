@@ -90,6 +90,12 @@ struct SignUpUiState {
 
     var signupCompleted: Bool = false
 
+    var isSocialFlow: Bool = false
+
+    var socialProvider: SignUpProvider?
+
+    var hasAuthenticatedSocialAccount: Bool = false
+
     var selectedCafe: Cafe?
 
     var cafeSearchQuery: String = ""

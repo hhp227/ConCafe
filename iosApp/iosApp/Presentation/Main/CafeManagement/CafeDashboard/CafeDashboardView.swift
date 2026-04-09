@@ -318,7 +318,7 @@ private struct CafeDashboardContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "7A707A"))
             Text(value)
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -680,7 +680,7 @@ private struct CafeDashboardContentView: View {
     private func sectionHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
             Text(subtitle)
                 .font(.caption)

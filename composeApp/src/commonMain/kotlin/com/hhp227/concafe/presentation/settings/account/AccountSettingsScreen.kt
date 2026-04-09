@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -30,6 +31,9 @@ import concafe.composeapp.generated.resources.account_settings_cast_desc_empty
 import concafe.composeapp.generated.resources.account_settings_default_user_name
 import concafe.composeapp.generated.resources.account_settings_delete
 import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_apple
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_google
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_kakao
 import concafe.composeapp.generated.resources.account_settings_delete_dialog_title
 import concafe.composeapp.generated.resources.account_settings_delete_password_label
 import concafe.composeapp.generated.resources.account_settings_delete_password_placeholder
@@ -113,6 +117,7 @@ fun AccountSettingsScreen(
 
     if (uiState.isDeleteDialogVisible) {
         DeleteAccountDialog(
+            authProvider = uiState.authProvider,
             password = uiState.deletePassword,
             errorMessage = uiState.deletePasswordErrorMessage,
             onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeletePassword(it)) },
@@ -314,12 +319,14 @@ private fun AccountSettingsContentScreen(
                 icon = Icons.Default.Lock
             ) {
                 SectionEyebrow(stringResource(Res.string.account_settings_section_security_eyebrow))
-                LinkedDestinationRow(
-                    title = stringResource(Res.string.account_settings_link_change_password_title),
-                    description = stringResource(Res.string.account_settings_link_change_password_desc),
-                    icon = Icons.Default.Lock,
-                    onClick = { onAction(AccountSettingsAction.ClickOpenChangePassword) }
-                )
+                if (uiState.canChangePassword) {
+                    LinkedDestinationRow(
+                        title = stringResource(Res.string.account_settings_link_change_password_title),
+                        description = stringResource(Res.string.account_settings_link_change_password_desc),
+                        icon = Icons.Default.Lock,
+                        onClick = { onAction(AccountSettingsAction.ClickOpenChangePassword) }
+                    )
+                }
                 if (role == UserRole.CAST) {
                     LinkedDestinationRow(
                         title = stringResource(Res.string.account_settings_link_cast_edit_title),
@@ -515,6 +522,7 @@ private fun AccountMetaRow(
 
 @Composable
 private fun DeleteAccountDialog(
+    authProvider: AuthProvider,
     password: String,
     errorMessage: String?,
     onValueChange: (String) -> Unit,
@@ -533,14 +541,23 @@ private fun DeleteAccountDialog(
         title = { Text(stringResource(Res.string.account_settings_delete_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(Res.string.account_settings_delete_dialog_desc))
-                ConCafeFormField(
-                    label = stringResource(Res.string.account_settings_delete_password_label),
-                    value = password,
-                    onValueChange = onValueChange,
-                    placeholder = stringResource(Res.string.account_settings_delete_password_placeholder),
-                    isPassword = true
+                Text(
+                    when (authProvider) {
+                        AuthProvider.GOOGLE -> stringResource(Res.string.account_settings_delete_dialog_desc_google)
+                        AuthProvider.KAKAO -> stringResource(Res.string.account_settings_delete_dialog_desc_kakao)
+                        AuthProvider.APPLE -> stringResource(Res.string.account_settings_delete_dialog_desc_apple)
+                        else -> stringResource(Res.string.account_settings_delete_dialog_desc)
+                    }
                 )
+                if (authProvider == AuthProvider.EMAIL || authProvider == AuthProvider.UNKNOWN) {
+                    ConCafeFormField(
+                        label = stringResource(Res.string.account_settings_delete_password_label),
+                        value = password,
+                        onValueChange = onValueChange,
+                        placeholder = stringResource(Res.string.account_settings_delete_password_placeholder),
+                        isPassword = true
+                    )
+                }
                 if (!errorMessage.isNullOrBlank()) {
                     Text(
                         text = errorMessage,

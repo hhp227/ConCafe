@@ -4,6 +4,8 @@ import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
+import com.hhp227.concafe.domain.model.AuthProvider
+import com.hhp227.concafe.domain.model.DeleteAccountRequest
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
@@ -59,7 +61,12 @@ class AuthRepositoryImpl(
             val session = authTokenProvider.signInWithEmailPassword(email, password)
 
             if (session != null) {
-                val user = resolveUserFromSession(session.userId, session.email, session.displayName)
+                val user = resolveUserFromSession(
+                    userId = session.userId,
+                    email = session.email,
+                    displayName = session.displayName,
+                    authProvider = AuthProvider.EMAIL
+                )
                 authDataSource.currentUserId = user.id
                 return user
             }
@@ -71,7 +78,12 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithGoogleIdToken(idToken)
                 ?: throw IllegalArgumentException("google sign-in is not supported")
-            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
+            val user = resolveUserFromSession(
+                userId = session.userId,
+                email = session.email,
+                displayName = session.displayName,
+                authProvider = AuthProvider.GOOGLE
+            )
             authDataSource.currentUserId = user.id
             return user
         }
@@ -82,7 +94,12 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithAppleIdToken(idToken)
                 ?: throw IllegalArgumentException("apple sign-in is not supported")
-            val user = resolveUserFromSession(session.userId, session.email, session.displayName)
+            val user = resolveUserFromSession(
+                userId = session.userId,
+                email = session.email,
+                displayName = session.displayName,
+                authProvider = AuthProvider.APPLE
+            )
             authDataSource.currentUserId = user.id
             return user
         }
@@ -99,7 +116,12 @@ class AuthRepositoryImpl(
                 ?: throw IllegalArgumentException("kakao sign-in is not supported")
             val resolvedEmail = resolveKakaoEmail(session.email, email)
             val resolvedDisplayName = resolveKakaoDisplayName(session.displayName, nickname)
-            val user = resolveUserFromSession(session.userId, resolvedEmail, resolvedDisplayName)
+            val user = resolveUserFromSession(
+                userId = session.userId,
+                email = resolvedEmail,
+                displayName = resolvedDisplayName,
+                authProvider = AuthProvider.KAKAO
+            )
             authDataSource.currentUserId = user.id
             return user
         }
@@ -127,6 +149,7 @@ class AuthRepositoryImpl(
             email = email,
             nickname = nickname,
             profileImage = null,
+            authProvider = AuthProvider.EMAIL,
             role = role,
             banned = false,
             createdAt = nowIsoUtc(),
@@ -186,6 +209,8 @@ class AuthRepositoryImpl(
             email = normalizedEmail,
             nickname = normalizedNickname,
             profileImage = existingUser?.profileImage,
+            authProvider = existingUser?.authProvider?.takeIf { it != AuthProvider.UNKNOWN }
+                ?: authTokenProvider.getCurrentAuthProvider(),
             role = resolvedRole,
             banned = existingUser?.banned ?: false,
             createdAt = existingUser?.createdAt ?: nowIsoUtc(),
@@ -258,43 +283,94 @@ class AuthRepositoryImpl(
         ) ?: throw IllegalStateException("failed to update password in firebase auth")
     }
 
-    override suspend fun deleteAccount(password: String) {
-        if (password.isBlank()) {
-            throw IllegalArgumentException("password is required")
-        }
-        if (!authTokenProvider.supportsEmailPasswordAuth()) {
-            throw IllegalArgumentException("email/password auth not supported")
-        }
-
-        // Prefer provider session as source of truth, fallback to cache only when needed.
+    override suspend fun deleteAccount(request: DeleteAccountRequest) {
         val currentUserId = authTokenProvider.getCurrentUserId()
             ?: authDataSource.currentUserId
             ?: throw IllegalArgumentException("no signed in user")
-        val currentUserEmail = authTokenProvider.getCurrentUserEmail()
-            ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
-            ?: throw IllegalArgumentException("current user email not found")
-        val verifiedSession = try {
-            authTokenProvider.signInWithEmailPassword(
-                email = currentUserEmail,
-                password = password
-            ) ?: throw IllegalArgumentException("invalid password")
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            if (isInvalidPasswordError(e)) {
-                throw IllegalArgumentException("invalid password")
-            } else {
-                throw e
+        val resolvedProvider = if (request.provider == AuthProvider.UNKNOWN) {
+            getCurrentAuthProvider()
+        } else {
+            request.provider
+        }
+        val verifiedIdToken = when (resolvedProvider) {
+            AuthProvider.EMAIL, AuthProvider.UNKNOWN -> {
+                val password = request.password?.trim().orEmpty()
+                if (password.isBlank()) {
+                    throw IllegalArgumentException("password is required")
+                }
+                if (!authTokenProvider.supportsEmailPasswordAuth()) {
+                    throw IllegalArgumentException("email/password auth not supported")
+                }
+
+                val currentUserEmail = authTokenProvider.getCurrentUserEmail()
+                    ?: firestoreSyncDataSource.fetchUser(currentUserId)?.email
+                    ?: throw IllegalArgumentException("current user email not found")
+                val verifiedSession = try {
+                    authTokenProvider.signInWithEmailPassword(
+                        email = currentUserEmail,
+                        password = password
+                    ) ?: throw IllegalArgumentException("invalid password")
+                } catch (e: IllegalArgumentException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (isInvalidPasswordError(e)) {
+                        throw IllegalArgumentException("invalid password")
+                    } else {
+                        throw e
+                    }
+                }
+
+                if (verifiedSession.userId != currentUserId) {
+                    throw IllegalArgumentException("password does not match current user")
+                }
+                verifiedSession.idToken ?: authTokenProvider.getIdToken()
+            }
+            AuthProvider.GOOGLE -> {
+                val socialIdToken = request.idToken?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalArgumentException("social idToken is required")
+                val verifiedSession = authTokenProvider.signInWithGoogleIdToken(socialIdToken)
+                    ?: throw IllegalArgumentException("google re-auth failed")
+                if (verifiedSession.userId != currentUserId) {
+                    throw IllegalArgumentException("social credential does not match current user")
+                }
+                verifiedSession.idToken ?: authTokenProvider.getIdToken()
+            }
+            AuthProvider.APPLE -> {
+                val socialIdToken = request.idToken?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalArgumentException("social idToken is required")
+                val verifiedSession = authTokenProvider.signInWithAppleIdToken(socialIdToken)
+                    ?: throw IllegalArgumentException("apple re-auth failed")
+                if (verifiedSession.userId != currentUserId) {
+                    throw IllegalArgumentException("social credential does not match current user")
+                }
+                verifiedSession.idToken ?: authTokenProvider.getIdToken()
+            }
+            AuthProvider.KAKAO -> {
+                val socialIdToken = request.idToken?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalArgumentException("social idToken is required")
+                val verifiedSession = authTokenProvider.signInWithKakaoIdToken(socialIdToken)
+                    ?: throw IllegalArgumentException("kakao re-auth failed")
+                if (verifiedSession.userId != currentUserId) {
+                    throw IllegalArgumentException("social credential does not match current user")
+                }
+                verifiedSession.idToken ?: authTokenProvider.getIdToken()
             }
         }
 
-        if (verifiedSession.userId != currentUserId) {
-            throw IllegalArgumentException("password does not match current user")
-        }
-
-        firestoreSyncDataSource.deleteUser(currentUserId)
-        authTokenProvider.deleteCurrentUser(verifiedSession.idToken ?: authTokenProvider.getIdToken())
+        val resolvedVerifiedIdToken = verifiedIdToken
+            ?: throw IllegalStateException("delete account requires verified Firebase idToken")
+        firestoreSyncDataSource.deleteCurrentUserCascade(resolvedVerifiedIdToken)
+        authTokenProvider.signOut()
         authDataSource.currentUserId = null
+    }
+
+    override suspend fun getCurrentAuthProvider(): AuthProvider {
+        val currentUserId = authTokenProvider.getCurrentUserId()
+            ?: authDataSource.currentUserId
+            ?: return authTokenProvider.getCurrentAuthProvider()
+        val existingUser = firestoreSyncDataSource.fetchUser(currentUserId)
+        return existingUser?.authProvider?.takeIf { it != AuthProvider.UNKNOWN }
+            ?: authTokenProvider.getCurrentAuthProvider()
     }
 
     override suspend fun restoreSession(): User? {
@@ -313,11 +389,24 @@ class AuthRepositoryImpl(
         }
     }
 
-    private suspend fun resolveUserFromSession(userId: String, email: String, displayName: String?): User {
+    private suspend fun resolveUserFromSession(
+        userId: String,
+        email: String,
+        displayName: String?,
+        authProvider: AuthProvider
+    ): User {
         val remoteUser = firestoreSyncDataSource.fetchUser(userId)
 
         if (remoteUser != null) {
-            return normalizeRoleIfNeeded(remoteUser)
+            val normalizedProviderUser = if (remoteUser.authProvider == AuthProvider.UNKNOWN) {
+                remoteUser.copy(authProvider = authProvider)
+            } else {
+                remoteUser
+            }
+            if (normalizedProviderUser != remoteUser) {
+                runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
+            }
+            return normalizeRoleIfNeeded(normalizedProviderUser)
         }
 
         val fallbackRole = resolveEffectiveRole(
@@ -329,10 +418,11 @@ class AuthRepositoryImpl(
             email = email,
             nickname = resolveInitialNickname(email, displayName),
             profileImage = null,
+            authProvider = authProvider,
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = true
+            signupCompleted = authProvider == AuthProvider.EMAIL
         )
         return createdUser
     }
@@ -356,7 +446,15 @@ class AuthRepositoryImpl(
         val remoteUser = firestoreSyncDataSource.fetchUser(currentUserId)
 
         if (remoteUser != null) {
-            return normalizeRoleIfNeeded(remoteUser)
+            val normalizedProviderUser = if (remoteUser.authProvider == AuthProvider.UNKNOWN) {
+                remoteUser.copy(authProvider = authTokenProvider.getCurrentAuthProvider())
+            } else {
+                remoteUser
+            }
+            if (normalizedProviderUser != remoteUser) {
+                runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
+            }
+            return normalizeRoleIfNeeded(normalizedProviderUser)
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
@@ -373,10 +471,11 @@ class AuthRepositoryImpl(
             email = currentUserEmail,
             nickname = resolveInitialNickname(currentUserEmail, null),
             profileImage = null,
+            authProvider = authTokenProvider.getCurrentAuthProvider(),
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = true
+            signupCompleted = authTokenProvider.getCurrentAuthProvider() == AuthProvider.EMAIL
         )
         return fallbackUser
     }

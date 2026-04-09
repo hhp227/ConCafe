@@ -266,7 +266,7 @@ private struct NotificationSettingsContentView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title)
-                .font(.title3)
+                .font(.headline)
                 .bold()
             content()
         }

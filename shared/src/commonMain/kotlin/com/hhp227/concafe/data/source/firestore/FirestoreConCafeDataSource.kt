@@ -48,6 +48,7 @@ import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.model.Stamp
+import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserNotificationSettings
 import com.hhp227.concafe.domain.model.UserRole
@@ -1794,35 +1795,12 @@ class FirestoreConCafeDataSource(
         )
 
         restApi.patch(path, body, idToken)
-        if (status == CastClaimStatus.APPROVED) {
-            updateCastLinkedUserRemote(
-                cafeId = existing.cafeId,
-                castId = existing.castId,
-                linkedUserId = existing.userId,
-                idToken = idToken
-            )
-            removeSelfFollowForApprovedCastClaim(
-                userId = existing.userId,
-                castId = existing.castId,
-                idToken = idToken
-            )
-        }
         val updated = existing.copy(
             status = status,
             reviewedBy = reviewedBy,
             reviewedAt = reviewedAt
         )
         return updated
-    }
-
-    private suspend fun removeSelfFollowForApprovedCastClaim(
-        userId: String,
-        castId: String,
-        idToken: String?
-    ) {
-        val followId = buildCastFollowDocumentId(userId = userId, castId = castId)
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_FOLLOWS}/$followId"
-        restApi.delete(path, idToken)
     }
 
     suspend fun favoriteCafeRemote(userId: String, cafeId: String) {
@@ -2810,6 +2788,7 @@ class FirestoreConCafeDataSource(
                 "email" to firestoreString(user.email),
                 "nickname" to firestoreString(user.nickname),
                 "profileImage" to firestoreNullableString(user.profileImage),
+                "authProvider" to firestoreString(user.authProvider.name),
                 "role" to firestoreString(user.role.name),
                 "banned" to firestoreBoolean(user.banned),
                 "createdAt" to firestoreString(user.createdAt),
@@ -2825,6 +2804,11 @@ class FirestoreConCafeDataSource(
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
         restApi.delete(path, idToken)
+    }
+
+    override suspend fun deleteCurrentUserCascade(idToken: String) {
+        val path = "${config.functionsBaseUrl()}/deleteCurrentUserCascade"
+        restApi.post(path = path, body = "{}", idToken = idToken)
     }
 
     override suspend fun pushCafeRegistrationClaim(
@@ -3924,39 +3908,6 @@ class FirestoreConCafeDataSource(
         }
     }
 
-    private suspend fun runCastByUserFieldQuery(
-        userId: String,
-        idToken: String?,
-        fieldPath: String
-    ): List<JsonObject> {
-        val path = "${config.documentBasePath()}:runQuery"
-        val body = """
-            {
-              "structuredQuery": {
-                "from": [
-                  {
-                    "collectionId": "${FirestorePaths.CAFE_CASTS}",
-                    "allDescendants": true
-                  }
-                ],
-                "where": {
-                  "fieldFilter": {
-                    "field": { "fieldPath": "${escapeFirestoreQueryString(fieldPath)}" },
-                    "op": "EQUAL",
-                    "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
-                  }
-                },
-                "limit": 1
-              }
-            }
-        """.trimIndent()
-        val response = restApi.post(path = path, body = body, idToken = idToken)
-        val parsed = Json.parseToJsonElement(response).jsonArray
-        return parsed.mapNotNull { element ->
-            element.jsonObject["document"]?.jsonObject
-        }
-    }
-
     private suspend fun resolveCastDocumentsByUser(
         userId: String,
         idToken: String?
@@ -3968,62 +3919,7 @@ class FirestoreConCafeDataSource(
         }.getOrElse {
             emptyList()
         }
-        if (byLinkedUserId.isNotEmpty()) {
-            return byLinkedUserId
-        }
-
-        val byUserIdField = runCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "userId")
-        }.recoverCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "userId")
-        }.getOrElse {
-            emptyList()
-        }
-        if (byUserIdField.isNotEmpty()) {
-            return byUserIdField
-        }
-
-        val byUidField = runCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = idToken, fieldPath = "uid")
-        }.recoverCatching {
-            runCastByUserFieldQuery(userId = userId, idToken = null, fieldPath = "uid")
-        }.getOrElse {
-            emptyList()
-        }
-        if (byUidField.isNotEmpty()) {
-            return byUidField
-        }
-
-        val affiliatedCafeId = runCatching {
-            fetchAffiliatedCafeIdRemote(userId)
-        }.getOrNull()
-        if (affiliatedCafeId.isNullOrBlank()) {
-            return emptyList()
-        }
-        val cafeCastDocuments = runCatching {
-            runCafeCastQuery(
-                cafeId = affiliatedCafeId,
-                cursor = null,
-                limit = 200,
-                idToken = idToken
-            )
-        }.recoverCatching {
-            runCafeCastQuery(
-                cafeId = affiliatedCafeId,
-                cursor = null,
-                limit = 200,
-                idToken = null
-            )
-        }.getOrElse {
-            emptyList()
-        }
-        return cafeCastDocuments.filter { document ->
-            val fields = document["fields"]?.jsonObject ?: return@filter false
-            val linked = fields.getFirestoreString("linkedUserId")
-            val legacyUserId = fields.getFirestoreString("userId")
-            val legacyUid = fields.getFirestoreString("uid")
-            linked == userId || legacyUserId == userId || legacyUid == userId
-        }
+        return byLinkedUserId
     }
 
     private suspend fun runCastByBirthdayKeyQuery(
@@ -4667,23 +4563,6 @@ class FirestoreConCafeDataSource(
         return parseCastDocument(cafeId = cafeId, document = document)
     }
 
-    private suspend fun updateCastLinkedUserRemote(
-        cafeId: String,
-        castId: String,
-        linkedUserId: String,
-        idToken: String?
-    ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_CASTS}/$castId" +
-            "?updateMask.fieldPaths=linkedUserId"
-        val body = firestoreDocumentBody(
-            mapOf(
-                "linkedUserId" to firestoreString(linkedUserId)
-            )
-        )
-
-        restApi.patch(path, body, idToken)
-    }
-
     private suspend fun resolveVisitById(visitId: String, idToken: String?): Visit? {
         val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId"
         val document = runCatching {
@@ -5285,6 +5164,9 @@ class FirestoreConCafeDataSource(
         val role = fields.getFirestoreString("role")?.toUserRoleOrNull() ?: UserRole.VISITOR
         val createdAt = fields.getFirestoreString("createdAt") ?: "1970-01-01T00:00:00Z"
         val profileImage = fields.getFirestoreString("profileImage")
+        val authProvider = fields.getFirestoreString("authProvider")
+            ?.let { value -> runCatching { AuthProvider.valueOf(value) }.getOrDefault(AuthProvider.UNKNOWN) }
+            ?: AuthProvider.UNKNOWN
         val phoneNumber = fields.getFirestoreString("phoneNumber")
             ?: fields.getFirestoreString("contactNumber")
             ?: fields.getFirestoreString("phone")
@@ -5295,6 +5177,7 @@ class FirestoreConCafeDataSource(
             email = email,
             nickname = nickname,
             profileImage = profileImage,
+            authProvider = authProvider,
             role = role,
             banned = banned,
             createdAt = createdAt,
@@ -5389,8 +5272,6 @@ class FirestoreConCafeDataSource(
         val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
         val castId = name.substringAfterLast("/")
         val linkedUserId = fields.getFirestoreString("linkedUserId")
-            ?: fields.getFirestoreString("userId")
-            ?: fields.getFirestoreString("uid")
         return Cast(
             id = castId,
             cafeId = cafeId,
