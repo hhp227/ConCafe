@@ -21,7 +21,10 @@ class KtorFirebaseAuthRestClient(
         val responseBody = response.bodyAsText()
 
         if (response.status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
-            throw IllegalStateException("Firebase auth request failed(${response.status.value}): $responseBody")
+            throw FirebaseAuthRestException(
+                statusCode = response.status.value,
+                responseBody = responseBody
+            )
         }
         return responseBody
     }
@@ -35,7 +38,10 @@ class KtorFirebaseAuthRestClient(
         val responseBody = response.bodyAsText()
 
         if (response.status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
-            throw IllegalStateException("Firebase auth request failed(${response.status.value}): $responseBody")
+            throw FirebaseAuthRestException(
+                statusCode = response.status.value,
+                responseBody = responseBody
+            )
         }
         return responseBody
     }

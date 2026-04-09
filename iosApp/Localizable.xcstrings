@@ -555,7 +555,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "계정 기본 정보를 원격 데이터에 저장했어요."
+            "value" : "계정 기본 정보를 저장했어요."
           }
         }
       }

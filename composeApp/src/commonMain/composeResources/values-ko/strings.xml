@@ -259,7 +259,7 @@
     <string name="account_settings_delete_password_placeholder">비밀번호 입력</string>
     <string name="account_settings_error_load_failed">계정 정보를 불러오지 못했습니다.</string>
     <string name="account_settings_message_enter_nickname">닉네임을 입력해 주세요.</string>
-    <string name="account_settings_message_saved">계정 기본 정보를 원격 데이터에 저장했어요.</string>
+    <string name="account_settings_message_saved">계정 기본 정보를 저장했어요.</string>
     <string name="account_settings_message_cast_profile_missing">연결된 캐스트 프로필이 아직 없습니다.</string>
     <string name="account_settings_delete_password_required">회원 비밀번호를 입력해 주세요.</string>
     <string name="account_settings_error_delete_invalid_password">비밀번호가 올바르지 않습니다.</string>

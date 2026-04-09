@@ -152,12 +152,18 @@ class PersistedFirebaseAuthTokenProvider(
 
         if (!shouldRefresh) {
             return session
-        } else {
-            val refreshed = runCatching { delegate.refreshSession(session) }.getOrNull()
+        }
 
-            if (refreshed != null) {
-                return refreshed
-            }
+        val refreshResult = runCatching { delegate.refreshSession(session) }
+        val refreshed = refreshResult.getOrNull()
+
+        if (refreshed != null) {
+            return refreshed
+        }
+
+        val refreshFailure = refreshResult.exceptionOrNull()
+        if (refreshFailure != null && !refreshFailure.isPermanentRefreshFailure()) {
+            return session
         }
 
         val hasValidIdToken = !session.idToken.isNullOrBlank()
@@ -186,4 +192,15 @@ private const val TOKEN_REFRESH_BUFFER_SECONDS = 60L
 
 private fun nowEpochSeconds(): Long {
     return Clock.System.now().epochSeconds
+}
+
+private fun Throwable.isPermanentRefreshFailure(): Boolean {
+    val response = when (this) {
+        is FirebaseAuthRestException -> responseBody
+        else -> message.orEmpty()
+    }.uppercase()
+    return response.contains("INVALID_REFRESH_TOKEN") ||
+        response.contains("TOKEN_EXPIRED") ||
+        response.contains("USER_DISABLED") ||
+        response.contains("USER_NOT_FOUND")
 }

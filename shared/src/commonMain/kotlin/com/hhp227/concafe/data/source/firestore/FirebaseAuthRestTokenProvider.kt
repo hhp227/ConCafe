@@ -371,6 +371,9 @@ class FirebaseAuthRestTokenProvider(
         return runCatching {
             restClient.postJson(buildUrl(key), body)
         }.getOrElse { error ->
+            if (error is FirebaseAuthRestException) {
+                throw error
+            }
             val message = error.message ?: "unknown"
 
             throw IllegalStateException("Firebase auth request failed: $message", error)
@@ -389,6 +392,9 @@ class FirebaseAuthRestTokenProvider(
         return runCatching {
             restClient.postFormUrlEncoded(buildUrl(key), body)
         }.getOrElse { error ->
+            if (error is FirebaseAuthRestException) {
+                throw error
+            }
             val message = error.message ?: "unknown"
 
             throw IllegalStateException("Firebase auth refresh failed: $message", error)
