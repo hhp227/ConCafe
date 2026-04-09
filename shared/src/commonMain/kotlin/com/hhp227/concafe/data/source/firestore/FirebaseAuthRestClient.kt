@@ -5,3 +5,8 @@ interface FirebaseAuthRestClient {
 
     suspend fun postFormUrlEncoded(url: String, body: String): String
 }
+
+class FirebaseAuthRestException(
+    val statusCode: Int,
+    val responseBody: String
+) : IllegalStateException("Firebase auth request failed($statusCode): $responseBody")
