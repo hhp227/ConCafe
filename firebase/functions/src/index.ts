@@ -2607,6 +2607,7 @@ export const onCastClaimWrittenCreateRequesterRejectedNotification = onDocumentW
 export const onCastClaimWrittenCleanupSelfFollow = onDocumentWritten(
   "castClaims/{claimId}",
   async (event) => {
+    const claimId = event.params.claimId;
     const beforeData = event.data?.before.data() as CastClaimLike | undefined;
     const afterData = event.data?.after.data() as CastClaimLike | undefined;
     const beforeStatus = asNonBlankString(beforeData?.status);
@@ -2615,30 +2616,61 @@ export const onCastClaimWrittenCleanupSelfFollow = onDocumentWritten(
     const cafeId = asNonBlankString(afterData?.cafeId);
     const userId = asNonBlankString(afterData?.userId);
 
-    if (afterStatus !== "APPROVED") {
+    if (!isApprovedStatus(afterStatus)) {
       return;
-    } else if (beforeStatus === "APPROVED") {
+    } else if (isApprovedStatus(beforeStatus)) {
       return;
     } else if (castId == null || cafeId == null || userId == null) {
       return;
     }
 
     const followId = buildCastFollowDocumentId(userId, castId);
-    const followRef = db().collection("castFollows").doc(followId);
-    const followSnapshot = await followRef.get();
-    const followCastId = asNonBlankString(followSnapshot.data()?.castId);
-    const followUserId = asNonBlankString(followSnapshot.data()?.userId);
+    const firestore = db();
+    const castRef = firestore.collection("cafes").doc(cafeId).collection("casts").doc(castId);
+    const userRef = firestore.collection("users").doc(userId);
+    const followRef = firestore.collection("castFollows").doc(followId);
 
-    if (followSnapshot.exists && followCastId === castId && followUserId === userId) {
-      await followRef.delete();
-      logger.info("Removed self-follow after cast claim approval.", {
-        claimId: event.params.claimId,
-        cafeId: cafeId,
-        castId: castId,
-        userId: userId,
-        followId: followId,
-      });
-    }
+    await firestore.runTransaction(async (transaction) => {
+      const castSnapshot = await transaction.get(castRef);
+      const currentLinkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+      const followSnapshot = await transaction.get(followRef);
+      const followCastId = asNonBlankString(followSnapshot.data()?.castId);
+      const followUserId = asNonBlankString(followSnapshot.data()?.userId);
+
+      if (!castSnapshot.exists) {
+        logger.error("Cast claim approval side effects skipped: cast not found.", {
+          claimId: claimId,
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+        });
+        return;
+      } else if (currentLinkedUserId != null && currentLinkedUserId !== userId) {
+        logger.error("Cast claim approval side effects skipped: cast already linked.", {
+          claimId: claimId,
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+          currentLinkedUserId: currentLinkedUserId,
+        });
+        return;
+      }
+
+      transaction.set(castRef, {linkedUserId: userId}, {merge: true});
+      transaction.set(userRef, {affiliatedCafeId: cafeId}, {merge: true});
+
+      if (followSnapshot.exists && followCastId === castId && followUserId === userId) {
+        transaction.delete(followRef);
+      }
+    });
+
+    logger.info("Applied cast claim approval side effects.", {
+      claimId: claimId,
+      cafeId: cafeId,
+      castId: castId,
+      userId: userId,
+      followId: followId,
+    });
   }
 );
 
@@ -4001,27 +4033,69 @@ export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (
     const adminUserId = await requireAdminUserIdFromRequest(request);
     const firestore = db();
     const snapshot = await firestore.collectionGroup("casts").get();
-    const BATCH_SIZE = 500;
-    const batchOperations: FirebaseFirestore.DocumentReference[] = [];
+    const BATCH_SIZE = 250;
+    const batchOperations: Array<{
+      ref: FirebaseFirestore.DocumentReference;
+      cafeId: string;
+      linkedUserId: string;
+      shouldNormalizeCastFields: boolean;
+    }> = [];
     let normalizedCount = 0;
+    let affiliatedUserCount = 0;
     const conflicts: string[] = [];
+    const operationKeys = new Set<string>();
+    const addBatchOperation = (
+      ref: FirebaseFirestore.DocumentReference,
+      cafeId: string,
+      linkedUserId: string,
+      shouldNormalizeCastFields: boolean
+    ) => {
+      const operationKey = `${ref.path}::${linkedUserId}`;
+      if (operationKeys.has(operationKey)) {
+        return;
+      }
+      operationKeys.add(operationKey);
+      batchOperations.push({
+        ref: ref,
+        cafeId: cafeId,
+        linkedUserId: linkedUserId,
+        shouldNormalizeCastFields: shouldNormalizeCastFields,
+      });
+    };
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
+      const cafeId = doc.ref.parent.parent?.id ?? "";
       const linkedUserId = asNonBlankString(data?.linkedUserId);
       const legacyUserId = asNonBlankString(data?.userId);
       const legacyUid = asNonBlankString(data?.uid);
       const legacyCandidates = [legacyUserId, legacyUid].filter((value): value is string => value != null);
       const uniqueLegacyCandidates = [...new Set(legacyCandidates)];
+      const normalizedLinkedUserId = linkedUserId ?? uniqueLegacyCandidates[0] ?? null;
+
+      if (!cafeId || normalizedLinkedUserId == null) {
+        if (linkedUserId == null && uniqueLegacyCandidates.length === 0) {
+          continue;
+        }
+        conflicts.push(doc.ref.path);
+        logger.error("normalizeCastLinkedUserFields invalid cast path or linked user.", {
+          castPath: doc.ref.path,
+          cafeId: cafeId,
+          linkedUserId: linkedUserId,
+          legacyUserId: legacyUserId,
+          legacyUid: legacyUid,
+        });
+        continue;
+      }
 
       if (linkedUserId == null && uniqueLegacyCandidates.length === 0) {
         continue;
       } else if (linkedUserId != null && uniqueLegacyCandidates.length === 0) {
-        continue;
+        addBatchOperation(doc.ref, cafeId, linkedUserId, false);
       } else if (linkedUserId == null && uniqueLegacyCandidates.length === 1) {
-        batchOperations.push(doc.ref);
+        addBatchOperation(doc.ref, cafeId, normalizedLinkedUserId, true);
       } else if (linkedUserId != null && uniqueLegacyCandidates.every((value) => value === linkedUserId)) {
-        batchOperations.push(doc.ref);
+        addBatchOperation(doc.ref, cafeId, linkedUserId, true);
       } else {
         conflicts.push(doc.ref.path);
         logger.error("normalizeCastLinkedUserFields conflict detected.", {
@@ -4033,35 +4107,79 @@ export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (
       }
     }
 
+    const approvedClaimSnapshot = await firestore
+      .collection("castClaims")
+      .where("status", "in", ["APPROVED", "승인 완료"])
+      .get();
+
+    for (const claimDoc of approvedClaimSnapshot.docs) {
+      const claimData = claimDoc.data() as CastClaimLike;
+      const claimCafeId = asNonBlankString(claimData.cafeId);
+      const claimCastId = asNonBlankString(claimData.castId);
+      const claimUserId = asNonBlankString(claimData.userId);
+
+      if (claimCafeId == null || claimCastId == null || claimUserId == null) {
+        continue;
+      }
+
+      const castRef = firestore.collection("cafes").doc(claimCafeId).collection("casts").doc(claimCastId);
+      const castSnapshot = await castRef.get();
+      const currentLinkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+      if (!castSnapshot.exists) {
+        conflicts.push(castRef.path);
+        logger.error("normalizeCastLinkedUserFields approved claim cast not found.", {
+          claimId: claimDoc.id,
+          cafeId: claimCafeId,
+          castId: claimCastId,
+          userId: claimUserId,
+        });
+      } else if (currentLinkedUserId != null && currentLinkedUserId !== claimUserId) {
+        conflicts.push(castRef.path);
+        logger.error("normalizeCastLinkedUserFields approved claim conflict detected.", {
+          claimId: claimDoc.id,
+          cafeId: claimCafeId,
+          castId: claimCastId,
+          userId: claimUserId,
+          currentLinkedUserId: currentLinkedUserId,
+        });
+      } else {
+        addBatchOperation(castRef, claimCafeId, claimUserId, currentLinkedUserId == null);
+      }
+    }
+
     for (let i = 0; i < batchOperations.length; i += BATCH_SIZE) {
       const batch = firestore.batch();
       const chunk = batchOperations.slice(i, i + BATCH_SIZE);
-      chunk.forEach((ref) => {
-        const data = snapshot.docs.find((doc) => doc.ref.path === ref.path)?.data() ?? {};
-        const linkedUserId = asNonBlankString(data.linkedUserId);
-        const legacyUserId = asNonBlankString(data.userId);
-        const legacyUid = asNonBlankString(data.uid);
-        const normalizedLinkedUserId = linkedUserId ?? legacyUserId ?? legacyUid ?? null;
-        batch.set(ref, {
-          linkedUserId: normalizedLinkedUserId,
-          userId: FieldValue.delete(),
-          uid: FieldValue.delete(),
+      chunk.forEach((operation) => {
+        if (operation.shouldNormalizeCastFields) {
+          batch.set(operation.ref, {
+            linkedUserId: operation.linkedUserId,
+            userId: FieldValue.delete(),
+            uid: FieldValue.delete(),
+          }, {merge: true});
+          normalizedCount += 1;
+        }
+        batch.set(firestore.collection("users").doc(operation.linkedUserId), {
+          affiliatedCafeId: operation.cafeId,
         }, {merge: true});
+        affiliatedUserCount += 1;
       });
       await batch.commit();
-      normalizedCount += chunk.length;
     }
 
     logger.info("normalizeCastLinkedUserFields completed.", {
       adminUserId: adminUserId,
       scannedCount: snapshot.docs.length,
       normalizedCount: normalizedCount,
+      affiliatedUserCount: affiliatedUserCount,
       conflictCount: conflicts.length,
     });
     response.status(200).json({
       ok: true,
       scannedCount: snapshot.docs.length,
       normalizedCount: normalizedCount,
+      affiliatedUserCount: affiliatedUserCount,
       conflictCount: conflicts.length,
       conflicts: conflicts,
     });

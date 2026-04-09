@@ -1795,14 +1795,6 @@ class FirestoreConCafeDataSource(
         )
 
         restApi.patch(path, body, idToken)
-        if (status == CastClaimStatus.APPROVED) {
-            updateCastLinkedUserRemote(
-                cafeId = existing.cafeId,
-                castId = existing.castId,
-                linkedUserId = existing.userId,
-                idToken = idToken
-            )
-        }
         val updated = existing.copy(
             status = status,
             reviewedBy = reviewedBy,
@@ -4569,23 +4561,6 @@ class FirestoreConCafeDataSource(
             Json.parseToJsonElement(restApi.get(path, null)).jsonObject
         }.getOrNull() ?: return null
         return parseCastDocument(cafeId = cafeId, document = document)
-    }
-
-    private suspend fun updateCastLinkedUserRemote(
-        cafeId: String,
-        castId: String,
-        linkedUserId: String,
-        idToken: String?
-    ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_CASTS}/$castId" +
-            "?updateMask.fieldPaths=linkedUserId"
-        val body = firestoreDocumentBody(
-            mapOf(
-                "linkedUserId" to firestoreString(linkedUserId)
-            )
-        )
-
-        restApi.patch(path, body, idToken)
     }
 
     private suspend fun resolveVisitById(visitId: String, idToken: String?): Visit? {
