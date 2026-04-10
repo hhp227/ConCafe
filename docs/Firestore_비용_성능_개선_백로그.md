@@ -51,7 +51,7 @@
 
 ### M-01. Firestore 사용량 기준선 수집
 - 우선순위: P0
-- 상태: TODO
+- 상태: DOING
 - 체크:
   - [ ] Firebase Usage 탭에서 `reads`, `writes`, `storage` 최근 7일 스냅샷 기록
   - [ ] Cloud Functions 호출 수와 상위 비용 함수 목록 기록
@@ -62,11 +62,11 @@
 
 ### M-02. 개선 후 비교 측정 템플릿 준비
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 화면별 측정 표 템플릿 작성
-  - [ ] Function별 read/write 감소 확인 표 작성
-  - [ ] 배포 후 3일, 7일 비교 항목 정의
+  - [x] 화면별 측정 표 템플릿 작성
+  - [x] Function별 read/write 감소 확인 표 작성
+  - [x] 배포 후 3일, 7일 비교 항목 정의
 - 완료 기준:
   - 개선 전후를 같은 형식으로 비교할 수 있다.
 
@@ -200,13 +200,13 @@
 
 ### B-03. count aggregation 도입 범위 확정
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 방문 수
-  - [ ] 스탬프 수
-  - [ ] 공지 수
-  - [ ] 카페별 전체 방문 수
-  - [ ] 관리자 메트릭
+  - [x] 방문 수
+  - [x] 스탬프 수
+  - [x] 공지 수
+  - [x] 카페별 전체 방문 수
+  - [x] 관리자 메트릭
 - 완료 기준:
   - 전체 문서 읽기로 개수만 세는 경로가 줄어든다.
 
@@ -234,30 +234,30 @@
 
 ### C-02. 방문 인증 기반 캐스트 집계 최적화
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncCastVisitCertificationAggregate()` 전체 재집계 제거
-  - [ ] 캐스트별 인증 유저 집계 소스 재설계
-  - [ ] review/visit write 당 필요한 최소 read만 남기기
+  - [x] `syncCastVisitCertificationAggregate()` 전체 재집계 제거
+  - [x] 캐스트별 인증 유저 집계 소스 재설계
+  - [x] review/visit write 당 필요한 최소 read만 남기기
 - 완료 기준:
   - 리뷰 또는 방문 1건 변경 시 관련 컬렉션 전체 스캔이 발생하지 않는다.
 
 ### C-03. 유저 방문 수 재집계 최적화
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncUserVisitCountAggregate()` 전체 verified visit 재조회 제거
-  - [ ] delta 기반 또는 stamp/visit authoritative source 확정
-  - [ ] level 계산 경로와 동기화 순서 정리
+  - [x] `syncUserVisitCountAggregate()` 전체 verified visit 재조회 제거
+  - [x] delta 기반 또는 stamp/visit authoritative source 확정
+  - [x] level 계산 경로와 동기화 순서 정리
 - 완료 기준:
   - 방문 문서 변경 시 유저별 전체 방문 재조회가 없다.
 
 ### C-04. 유저 스탬프 수 재집계 최적화
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncUserStampCountAggregate()` 전체 stamp 재조회 제거
-  - [ ] stamp create/delete 기준 delta 반영 구조로 전환
+  - [x] `syncUserStampCountAggregate()` 전체 stamp 재조회 제거
+  - [x] stamp create/delete 기준 delta 반영 구조로 전환
 - 완료 기준:
   - stamp write 시 전체 stamp 스캔이 없다.
 
@@ -338,9 +338,9 @@
 
 ### 2차 묶음
 - [x] A-08 castId 역탐색 제거
-- [ ] B-03 count aggregation 도입 범위 적용
+- [x] B-03 count aggregation 도입 범위 적용
 - [x] C-01 리뷰 집계 delta 전환
-- [ ] C-02 방문인증 캐스트 집계 최적화
+- [x] C-02 방문인증 캐스트 집계 최적화
 
 ### 3차 묶음
 - [ ] A-06 카페 검색 최적화
@@ -359,22 +359,91 @@
 - [x] 카페 상세 첫 진입에서 `notices/menus/goods` 일괄 조회를 제거하고 메뉴/굿즈 탭 lazy load 도입
 - [x] `castDirectory` 역인덱스를 추가하고 `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
 - [x] 리뷰 write 트리거를 전체 재집계에서 카페 문서 기반 delta 집계로 전환
-- [ ] 기준선 수집 시작
+- [x] 방문/리뷰 write 트리거의 캐스트 방문인증 집계를 `user-cafe-cast` 단위 delta 집계로 전환
+- [x] 방문 수/스탬프 수/공지 수/카페별 전체 방문 수/관리자 메트릭의 count 경로를 aggregation 기준으로 정리
+- [x] 방문 write 트리거의 유저 방문수/레벨 집계를 전체 재조회에서 delta 집계로 전환
+- [x] stamp write 트리거의 유저 스탬프 수 집계를 전체 재조회에서 delta 집계로 전환
+- [x] 개선 전후 측정 템플릿 문서화
+- [-] 기준선 수집 시작
+
+## 측정 가이드
+
+### 수집 원칙
+- 기준선 측정은 같은 계정, 같은 기기, 같은 네트워크에서 진행한다.
+- 각 화면은 앱 재실행 후 첫 진입 3회 측정하고 중앙값을 기록한다.
+- Firebase 콘솔 수치는 스크린샷 기준 시각을 함께 남긴다.
+- 배포 후 비교는 `배포 직전 7일 평균` 대비 `배포 후 3일`, `배포 후 7일`로 본다.
+
+### Firebase 콘솔 수집 순서
+1. Firebase Console > Firestore Database > Usage에서 최근 7일 `reads`, `writes`, `storage`를 기록한다.
+2. Firebase Console > Functions > Usage 또는 GCP Metrics에서 호출 수 상위 함수를 기록한다.
+3. 동일 날짜 기준으로 `onReviewWrittenSyncCafeAggregate`, `onReviewWrittenSyncCastVisitCertificationCount`, `onVisitWrittenSyncCastVisitCertificationCount`, `syncUserVisitCountAggregate`, `syncUserStampCountAggregate`를 우선 확인한다.
+
+### 화면 수동 측정 순서
+1. 앱 완전 종료 후 실행
+2. 대상 화면 1회 진입
+3. Firestore REST 호출 수와 문서 read 추정치를 메모
+4. 동일 절차 3회 반복 후 중앙값 기록
+
+## 측정 템플릿
+
+### 화면별 측정 표
+| 화면 | 시나리오 | 측정 전 호출 수 | 측정 후 호출 수 | 전 read 추정 | 후 read 추정 | 비고 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| 카페 상세 | 첫 진입 후 정보 탭 유지 |  |  |  |  |  |
+| 카페 상세 | 메뉴 탭 최초 진입 |  |  |  |  | lazy load 확인 |
+| 카페 상세 | 공지 탭 최초 진입 |  |  |  |  |  |
+| 내 정보 | 첫 진입 |  |  |  |  |  |
+| 카페관리 | 운영자 첫 진입 |  |  |  |  |  |
+| 방문 목록 | 첫 페이지 |  |  |  |  | server paging 확인 |
+
+### Functions 비교 표
+| 함수 | 변경 전 read 패턴 | 변경 후 read 패턴 | 배포 후 3일 호출 수 | 배포 후 7일 호출 수 | 비고 |
+| --- | --- | --- | ---: | ---: | --- |
+| `onReviewWrittenSyncCafeAggregate` | 카페별 전체 리뷰 재조회 | 카페 문서 delta update |  |  |  |
+| `onReviewWrittenSyncCastVisitCertificationCount` | 리뷰/방문 연관 전체 재조회 | `user-cafe-cast` 단위 delta |  |  |  |
+| `onVisitWrittenSyncCastVisitCertificationCount` | 리뷰/방문 연관 전체 재조회 | `user-cafe-cast` 단위 delta |  |  |  |
+| `syncUserVisitCountAggregate` | 유저 verified visit 전체 재조회 | 방문 write delta 반영 |  |  |  |
+| `onStampWrittenSyncUserStampStats` | 유저 stamp 전체 재조회 | stamp write delta 반영 |  |  |  |
+
+### 배포 후 비교 항목
+| 항목 | 기준선 | 배포 후 3일 | 배포 후 7일 | 목표 |
+| --- | ---: | ---: | ---: | --- |
+| Firestore reads / day |  |  |  | 감소 |
+| Firestore writes / day |  |  |  | 유지 또는 소폭 감소 |
+| 카페 상세 첫 진입 호출 수 |  |  |  | 감소 |
+| 내 정보 첫 진입 호출 수 |  |  |  | 감소 |
+| 카페관리 첫 진입 호출 수 |  |  |  | 감소 |
+| 리뷰 집계 함수 평균 실행 시간 |  |  |  | 감소 |
+| 방문인증 집계 함수 평균 실행 시간 |  |  |  | 감소 |
 
 ## 측정 로그
 
 ### 개선 전
+- 수집 시각:
 - Firestore reads:
 - Firestore writes:
+- Firestore storage:
 - Cloud Functions 상위 비용 함수:
 - 카페 상세 진입 호출 수:
+- 카페 상세 메뉴 탭 최초 진입 호출 수:
 - 내 정보 진입 호출 수:
 - 카페관리 진입 호출 수:
 
 ### 개선 후
+- 수집 시각:
 - Firestore reads:
 - Firestore writes:
+- Firestore storage:
 - Cloud Functions 상위 비용 함수:
 - 카페 상세 진입 호출 수:
+- 카페 상세 메뉴 탭 최초 진입 호출 수:
 - 내 정보 진입 호출 수:
 - 카페관리 진입 호출 수:
+
+## 현재 기준선 수집 블로커
+- Firebase Console 실사용 수치는 로컬 코드베이스만으로 확정할 수 없다.
+- 다음 입력이 필요하다:
+  - Firestore Usage 최근 7일 스크린샷 또는 수치
+  - Functions 호출 수 상위 목록
+  - 실제 기기/에뮬레이터에서 화면 진입 3회 측정값

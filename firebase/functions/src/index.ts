@@ -392,21 +392,6 @@ function asStringArray(value: unknown): string[] {
     .filter((item) => item.length > 0);
 }
 
-function castTargetKey(cafeId: string, castId: string): string {
-  return `${cafeId}::${castId}`;
-}
-
-function parseCastTargetKey(key: string): {cafeId: string; castId: string} {
-  const splitIndex = key.indexOf("::");
-  if (splitIndex < 0) {
-    return {cafeId: "", castId: ""};
-  }
-  return {
-    cafeId: key.substring(0, splitIndex),
-    castId: key.substring(splitIndex + 2),
-  };
-}
-
 function userCafeKey(cafeId: string, userId: string): string {
   return `${cafeId}::${userId}`;
 }
@@ -422,10 +407,32 @@ function parseUserCafeKey(key: string): {cafeId: string; userId: string} {
   };
 }
 
+function castUserTargetKey(cafeId: string, castId: string, userId: string): string {
+  return `${cafeId}::${castId}::${userId}`;
+}
+
+function parseCastUserTargetKey(key: string): {cafeId: string; castId: string; userId: string} {
+  const firstSplitIndex = key.indexOf("::");
+  const secondSplitIndex = key.indexOf("::", firstSplitIndex + 2);
+
+  if (firstSplitIndex < 0 || secondSplitIndex < 0) {
+    return {cafeId: "", castId: "", userId: ""};
+  }
+  return {
+    cafeId: key.substring(0, firstSplitIndex),
+    castId: key.substring(firstSplitIndex + 2, secondSplitIndex),
+    userId: key.substring(secondSplitIndex + 2),
+  };
+}
+
 function buildCastFollowDocumentId(userId: string, castId: string): string {
   const normalizedUserId = userId.replace(/\//g, "_");
   const normalizedCastId = castId.replace(/\//g, "_");
   return `${normalizedUserId}_${normalizedCastId}`;
+}
+
+function buildCastVisitCertificationDocumentId(cafeId: string, castId: string, userId: string): string {
+  return `${cafeId.replace(/\//g, "_")}__${castId.replace(/\//g, "_")}__${userId.replace(/\//g, "_")}`;
 }
 
 function sanitizeNotificationDocumentId(value: string): string {
@@ -1013,60 +1020,112 @@ async function syncCastClaimRequesterSnapshot(claimId: string, claim: CastClaimL
   );
 }
 
-async function syncCastVisitCertificationAggregate(cafeId: string, castId: string): Promise<void> {
-  const taggedReviewSnapshot = await db()
+async function hasTaggedReviewForCastByUser(
+  cafeId: string,
+  castId: string,
+  userId: string
+): Promise<boolean> {
+  const snapshot = await db()
     .collection("reviews")
     .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
     .where("taggedCastIds", "array-contains", castId)
     .select("userId")
+    .limit(1)
     .get();
+  return !snapshot.empty;
+}
 
-  if (taggedReviewSnapshot.empty) {
-    await db()
-      .collection("cafes")
-      .doc(cafeId)
-      .collection("casts")
-      .doc(castId)
-      .set(
-        {
-          visitCertificationCount: 0,
-        },
-        {merge: true}
-      );
-    return;
-  }
-
-  const taggedReviewUserIds = taggedReviewSnapshot.docs
-    .map((doc) => asNonBlankString(doc.get("userId")))
-    .filter((userId): userId is string => userId !== null);
-  const taggedReviewUserIdSet = new Set<string>(taggedReviewUserIds);
-
-  const verifiedVisitSnapshot = await db()
+async function hasVerifiedVisitByUserAtCafe(cafeId: string, userId: string): Promise<boolean> {
+  const snapshot = await db()
     .collection("visits")
     .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
     .where("verified", "==", true)
     .select("userId")
+    .limit(1)
     .get();
-  const verifiedUserIds = new Set<string>(
-    verifiedVisitSnapshot.docs
-      .map((doc) => asNonBlankString(doc.get("userId")))
-      .filter((userId): userId is string => userId !== null)
-  );
-  const visitCertificationCount = Array.from(taggedReviewUserIdSet)
-    .filter((userId) => verifiedUserIds.has(userId))
-    .length;
+  return !snapshot.empty;
+}
 
-  await db()
+async function syncCastVisitCertificationForUser(
+  cafeId: string,
+  castId: string,
+  userId: string
+): Promise<void> {
+  if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
+    return;
+  }
+  const [hasTaggedReview, hasVerifiedVisit] = await Promise.all([
+    hasTaggedReviewForCastByUser(cafeId, castId, userId),
+    hasVerifiedVisitByUserAtCafe(cafeId, userId),
+  ]);
+  const nextQualified = hasTaggedReview && hasVerifiedVisit;
+  const firestore = db();
+  const certificationRef = firestore
+    .collection("castVisitCertifications")
+    .doc(buildCastVisitCertificationDocumentId(cafeId, castId, userId));
+  const castRef = firestore
     .collection("cafes")
     .doc(cafeId)
     .collection("casts")
-    .doc(castId)
-    .set(
+    .doc(castId);
+
+  await firestore.runTransaction(async (transaction) => {
+    const [certificationSnapshot, castSnapshot] = await Promise.all([
+      transaction.get(certificationRef),
+      transaction.get(castRef),
+    ]);
+    if (!castSnapshot.exists) {
+      transaction.delete(certificationRef);
+      return;
+    }
+    const previousQualified = certificationSnapshot.get("qualified") === true;
+    if (previousQualified === nextQualified) {
+      if (nextQualified) {
+        transaction.set(
+          certificationRef,
+          {
+            cafeId: cafeId,
+            castId: castId,
+            userId: userId,
+            qualified: true,
+            updatedAt: new Date().toISOString(),
+          },
+          {merge: true}
+        );
+      } else if (certificationSnapshot.exists) {
+        transaction.delete(certificationRef);
+      }
+      return;
+    }
+
+    const currentCount = Math.max(0, Math.round(asNumber(castSnapshot.get("visitCertificationCount")) ?? 0));
+    const nextCount = Math.max(0, currentCount + (nextQualified ? 1 : -1));
+
+    transaction.set(
+      castRef,
       {
-        visitCertificationCount: visitCertificationCount,
+        visitCertificationCount: nextCount,
       },
       {merge: true}
     );
+    if (nextQualified) {
+      transaction.set(
+        certificationRef,
+        {
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+          qualified: true,
+          updatedAt: new Date().toISOString(),
+        },
+        {merge: true}
+      );
+    } else {
+      transaction.delete(certificationRef);
+    }
+  });
 }
 
 async function hasVerifiedVisitAtCafe(cafeId: string, userId: string): Promise<boolean> {
@@ -1133,25 +1192,22 @@ async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string):
   await writeBatch.commit();
 }
 
-async function syncUserVisitCountAggregate(userId: string): Promise<void> {
-  if (userId.length == 0) {
+async function applyUserVisitCountDelta(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
     return;
   }
   const userRef = db().collection("users").doc(userId);
-  const verifiedVisitSnapshot = await db()
-    .collection("visits")
-    .where("userId", "==", userId)
-    .where("verified", "==", true)
-    .select("userId")
-    .get();
-  const nextVisitCount = verifiedVisitSnapshot.size;
-  const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
   await db().runTransaction(async (transaction) => {
     const snapshot = await transaction.get(userRef);
     const userData = snapshot.data();
     const statsRaw = asPlainObject(userData?.stats);
     const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentVisitCount = asNonNegativeInt(stats.visitCount)
+      ?? asNonNegativeInt(userData?.visitCount)
+      ?? 0;
+    const nextVisitCount = Math.max(0, currentVisitCount + delta);
+    const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
     stats.visitCount = nextVisitCount;
     stats.level = nextLevel;
@@ -1197,47 +1253,46 @@ async function syncUserFavoriteCountAggregate(userId: string, delta: number): Pr
   });
 }
 
-async function syncUserStampCountAggregate(userId: string): Promise<void> {
-  if (userId.length == 0) {
+async function applyUserStampCountDelta(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
     return;
   }
   const userRef = db().collection("users").doc(userId);
-  const stampSnapshot = await db()
-    .collection("stamps")
-    .where("userId", "==", userId)
-    .select("userId")
-    .get();
-  const stampCount = stampSnapshot.size;
 
   await db().runTransaction(async (transaction) => {
-    const userSnapshot = await transaction.get(userRef);
-    const userData = userSnapshot.data();
+    const snapshot = await transaction.get(userRef);
+    const userData = snapshot.data();
     const statsRaw = asPlainObject(userData?.stats);
     const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentStampCount = asNonNegativeInt(stats.stampCount)
+      ?? asNonNegativeInt(userData?.stampCount)
+      ?? 0;
+    const nextStampCount = Math.max(0, currentStampCount + delta);
 
-    stats.stampCount = stampCount;
+    stats.stampCount = nextStampCount;
 
     transaction.set(
       userRef,
       {
         stats: stats,
-        stampCount: stampCount,
+        stampCount: nextStampCount,
       },
       {merge: true}
     );
   });
 }
 
-function collectCastTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
+function collectCastUserTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
   const targets = new Set<string>();
   const cafeId = asNonBlankString(review?.cafeId);
+  const userId = asNonBlankString(review?.userId);
 
-  if (cafeId == null) {
+  if (cafeId == null || userId == null) {
     return targets;
   }
 
   asStringArray(review?.taggedCastIds).forEach((castId) => {
-    targets.add(castTargetKey(cafeId, castId));
+    targets.add(castUserTargetKey(cafeId, castId, userId));
   });
   return targets;
 }
@@ -2748,8 +2803,8 @@ export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
     const afterData = event.data?.after.data() as ReviewLike | undefined;
     const targetKeys = new Set<string>();
 
-    collectCastTargetsFromReviewPayload(beforeData).forEach((key) => targetKeys.add(key));
-    collectCastTargetsFromReviewPayload(afterData).forEach((key) => targetKeys.add(key));
+    collectCastUserTargetsFromReviewPayload(beforeData).forEach((key) => targetKeys.add(key));
+    collectCastUserTargetsFromReviewPayload(afterData).forEach((key) => targetKeys.add(key));
 
     if (targetKeys.size == 0) {
       return;
@@ -2757,12 +2812,12 @@ export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
 
     await Promise.all(
       Array.from(targetKeys).map(async (key) => {
-        const {cafeId, castId} = parseCastTargetKey(key);
+        const {cafeId, castId, userId} = parseCastUserTargetKey(key);
 
-        if (cafeId.length == 0 || castId.length == 0) {
+        if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
           return;
         }
-        await syncCastVisitCertificationAggregate(cafeId, castId);
+        await syncCastVisitCertificationForUser(cafeId, castId, userId);
       })
     );
 
@@ -2834,7 +2889,7 @@ export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
       const castIds = await loadTaggedCastIdsByCafeAndUser(cafeId, userId);
 
       castIds.forEach((castId) => {
-        targetPairs.add(castTargetKey(cafeId, castId));
+        targetPairs.add(castUserTargetKey(cafeId, castId, userId));
       });
     }));
 
@@ -2844,12 +2899,12 @@ export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
 
     await Promise.all(
       Array.from(targetPairs).map(async (key) => {
-        const {cafeId, castId} = parseCastTargetKey(key);
+        const {cafeId, castId, userId} = parseCastUserTargetKey(key);
 
-        if (cafeId.length == 0 || castId.length == 0) {
+        if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
           return;
         }
-        await syncCastVisitCertificationAggregate(cafeId, castId);
+        await syncCastVisitCertificationForUser(cafeId, castId, userId);
       })
     );
 
@@ -3011,26 +3066,36 @@ export const onVisitWrittenSyncUserVisitStats = onDocumentWritten(
     const beforeData = event.data?.before.data() as VisitLike | undefined;
     const afterData = event.data?.after.data() as VisitLike | undefined;
     const beforeUserId = asNonBlankString(beforeData?.userId);
+    const beforeVerified = beforeData?.verified === true;
     const afterUserId = asNonBlankString(afterData?.userId);
-    const userIds = new Set<string>();
+    const afterVerified = afterData?.verified === true;
+    const deltaByUserId = new Map<string, number>();
 
-    if (beforeUserId != null) {
-      userIds.add(beforeUserId);
+    const appendDelta = (userId: string | null, delta: number) => {
+      if (userId == null || delta == 0) {
+        return;
+      }
+      const current = deltaByUserId.get(userId) ?? 0;
+      deltaByUserId.set(userId, current + delta);
+    };
+
+    if (beforeVerified) {
+      appendDelta(beforeUserId, -1);
     }
-    if (afterUserId != null) {
-      userIds.add(afterUserId);
+    if (afterVerified) {
+      appendDelta(afterUserId, 1);
     }
-    if (userIds.size == 0) {
+    if (deltaByUserId.size == 0) {
       return;
     }
 
-    await Promise.all(Array.from(userIds).map(async (userId) => {
-      await syncUserVisitCountAggregate(userId);
+    await Promise.all(Array.from(deltaByUserId.entries()).map(async ([userId, delta]) => {
+      await applyUserVisitCountDelta(userId, delta);
     }));
 
     logger.info("Synced user visitCount aggregate from visit write.", {
       visitId: event.params.visitId,
-      targets: Array.from(userIds),
+      targets: Array.from(deltaByUserId.entries()).map(([userId, delta]) => ({userId, delta})),
     });
   }
 );
@@ -3117,29 +3182,31 @@ export const onStampWrittenSyncUserStampStats = onDocumentWritten(
   async (event) => {
     const beforeData = event.data?.before.data() as StampLike | undefined;
     const afterData = event.data?.after.data() as StampLike | undefined;
-    const userIds = new Set<string>();
     const beforeUserId = asNonBlankString(beforeData?.userId);
     const afterUserId = asNonBlankString(afterData?.userId);
+    const deltaByUserId = new Map<string, number>();
 
     if (beforeUserId != null) {
-      userIds.add(beforeUserId);
+      deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
     }
     if (afterUserId != null) {
-      userIds.add(afterUserId);
+      deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
     }
-    if (userIds.size == 0) {
+
+    const targetEntries = Array.from(deltaByUserId.entries())
+      .filter(([userId, delta]) => userId.length > 0 && delta != 0);
+
+    if (targetEntries.length == 0) {
       return;
     }
 
-    await Promise.all(
-      Array.from(userIds).map(async (userId) => {
-        await syncUserStampCountAggregate(userId);
-      })
-    );
+    await Promise.all(targetEntries.map(async ([userId, delta]) => {
+      await applyUserStampCountDelta(userId, delta);
+    }));
 
     logger.info("Synced user stampCount aggregate from stamp write.", {
       stampId: event.params.stampId,
-      targets: Array.from(userIds),
+      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
     });
   }
 );

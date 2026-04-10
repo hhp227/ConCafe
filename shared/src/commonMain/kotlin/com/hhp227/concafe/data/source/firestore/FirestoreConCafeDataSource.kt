@@ -1070,7 +1070,24 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchVisitCountByCafeRemote(cafeId: String): Int {
-        return fetchVisitsByCafeRemote(cafeId).size
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.recoverCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = null,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.getOrThrow()
     }
 
     suspend fun verifyVisitRemote(
