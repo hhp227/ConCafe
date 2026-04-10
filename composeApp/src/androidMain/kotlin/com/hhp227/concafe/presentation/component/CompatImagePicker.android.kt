@@ -81,7 +81,8 @@ private fun saveToCacheFile(context: Context, uri: Uri): String? {
 actual fun CompatImageDisplay(
     imageUrl: String?,
     modifier: Modifier,
-    applyRoundedClip: Boolean
+    applyRoundedClip: Boolean,
+    contentScale: ContentScale
 ) {
     val shape = if (applyRoundedClip) RoundedCornerShape(20.dp) else null
     val painter = rememberAsyncImagePainter(
@@ -97,7 +98,7 @@ actual fun CompatImageDisplay(
             painter = painter,
             contentDescription = null,
             modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.Crop
+            contentScale = contentScale
         )
         if (painter.state is AsyncImagePainter.State.Loading || painter.state is AsyncImagePainter.State.Error) {
             Box(

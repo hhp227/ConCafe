@@ -13,7 +13,7 @@ import KMPNativeCoroutinesAsync
 @MainActor
 final class CafeViewModel: ObservableObject {
     private let cafeId: String
-    
+
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
@@ -29,11 +29,11 @@ final class CafeViewModel: ObservableObject {
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
-    
+
     @Published private(set) var uiState = CafeUiState.empty
-    
+
     let event = PassthroughSubject<CafeEvent, Never>()
-    
+
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeCafeDetailEvent() {
@@ -64,7 +64,7 @@ final class CafeViewModel: ObservableObject {
             }
         }
     }
-    
+
     private func observeReviewEvent() {
         tasks[.reviewEvent]?.cancel()
         tasks[.reviewEvent] = Task {
@@ -336,6 +336,8 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
         case .deleteReview(let reviewId):
             deleteReview(reviewId: reviewId)
+        case .reviewImageTapped(let imageUrl):
+            event.send(.navigateToPicture(imageUrl: imageUrl))
         case .reportReview:
             event.send(.showReviewReportedMessage)
         }
@@ -366,7 +368,7 @@ final class CafeViewModel: ObservableObject {
         observeReviewEvent()
         loadCafeDetail()
     }
-    
+
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()

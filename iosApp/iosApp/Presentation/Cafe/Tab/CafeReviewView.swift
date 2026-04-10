@@ -22,7 +22,7 @@ struct CafeReviewView: View {
     let onLoadMore: () -> Void
 
     let onAction: (CafeAction) -> Void
-    
+
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -115,8 +115,30 @@ struct CafeReviewView: View {
                                     }
                                 }
                             }
-                            Text(review.content)
-                                .font(.subheadline)
+                            if let reviewImageUrl = review.imageUrls.first(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
+                               let imageUrl = URL(string: reviewImageUrl.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                                let trimmedImageUrl = reviewImageUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text(review.content)
+                                        .font(.subheadline)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    CachedAsyncImage(
+                                        url: imageUrl,
+                                        placeholder: Color(hex: "F4EFF2")
+                                    )
+                                    .frame(width: 96, height: 96)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .clipped()
+                                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .onTapGesture {
+                                        onAction(.reviewImageTapped(imageUrl: trimmedImageUrl))
+                                    }
+                                }
+                            } else {
+                                Text(review.content)
+                                    .font(.subheadline)
+                            }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
@@ -143,7 +165,7 @@ struct CafeReviewView: View {
             }
         }
     }
-    
+
     private func emptyCard(_ text: String) -> some View {
         Text(text)
             .font(.subheadline)

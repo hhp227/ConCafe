@@ -20,5 +20,6 @@ enum CafeAction {
     case consumeScrollToTopOnReturn
     case editReview(reviewId: String)
     case deleteReview(reviewId: String)
+    case reviewImageTapped(imageUrl: String)
     case reportReview(reviewId: String)
 }

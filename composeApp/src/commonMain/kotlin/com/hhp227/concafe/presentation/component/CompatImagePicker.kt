@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 expect fun CompatImagePicker(
@@ -13,5 +14,6 @@ expect fun CompatImagePicker(
 expect fun CompatImageDisplay(
     imageUrl: String?,
     modifier: Modifier,
-    applyRoundedClip: Boolean = true
+    applyRoundedClip: Boolean = true,
+    contentScale: ContentScale = ContentScale.Crop
 )

@@ -11,6 +11,7 @@ enum CafeEvent {
     case navigateBack
     case navigateToCast(id: String)
     case navigateToReviewEdit(cafeId: String, reviewId: String?)
+    case navigateToPicture(imageUrl: String)
     case navigateToSignIn
     case showReviewDeleteFailedMessage
     case showReviewReportedMessage

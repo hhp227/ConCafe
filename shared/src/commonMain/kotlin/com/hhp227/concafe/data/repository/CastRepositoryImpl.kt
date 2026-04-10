@@ -15,6 +15,8 @@ import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -94,22 +96,29 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
-        val workingCastIds = resolveWorkingCastIds(cafeId)
+        val todayDate = todayDate()
         val page = castRemoteDataSource.getCafeCastPageRemote(
             cafeId = cafeId,
             cursor = cursor,
             pageSize = pageSize
         )
         val source = page.items
+        val todayScheduleByCastId = resolveTodaySchedulesByCastId(
+            cafeId = cafeId,
+            casts = source,
+            todayDate = todayDate
+        )
         val sorted = source
             .sortedWith(
-                compareByDescending<Cast> { workingCastIds.contains(it.id) }
+                compareByDescending<Cast> { todayScheduleByCastId.containsKey(it.id) }
                     .thenBy { it.name }
             )
             .map { cast ->
+                val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
                     cast = cast,
-                    isWorking = workingCastIds.contains(cast.id)
+                    isWorking = todaySchedule?.isOnShift() == true,
+                    todaySchedule = todaySchedule
                 )
             }
         return PagedResult(
@@ -148,11 +157,28 @@ class CastRepositoryImpl(
     }
 
     private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
-        val todayDate = Clock.System.now()
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-            .date
-            .toString()
-        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate)
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate())
+    }
+
+    private suspend fun resolveTodaySchedulesByCastId(
+        cafeId: String,
+        casts: List<Cast>,
+        todayDate: String
+    ): Map<String, CastSchedule> = coroutineScope {
+        casts.associate { cast ->
+            cast.id to async {
+                castRemoteDataSource.fetchCastSchedules(
+                    castId = cast.id,
+                    fromDate = todayDate,
+                    toDate = todayDate
+                ).firstOrNull { schedule ->
+                    schedule.cafeId == cafeId && schedule.date == todayDate
+                }
+            }
+        }.mapNotNull { (castId, scheduleDeferred) ->
+            val schedule = scheduleDeferred.await()
+            if (schedule == null) null else castId to schedule
+        }.toMap()
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
@@ -230,4 +256,25 @@ class CastRepositoryImpl(
         }
     }
 
+}
+
+private fun todayDate(): String {
+    return Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .date
+        .toString()
+}
+
+private fun CastSchedule.isOnShift(): Boolean {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val currentMinutes = now.hour * 60 + now.minute
+    val startMinutes = startTime.toMinutes()
+    val endMinutes = endTime.toMinutes()
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes
+}
+
+private fun String.toMinutes(): Int {
+    val hour = substringBefore(':').toIntOrNull() ?: 0
+    val minute = substringAfter(':').toIntOrNull() ?: 0
+    return hour * 60 + minute
 }

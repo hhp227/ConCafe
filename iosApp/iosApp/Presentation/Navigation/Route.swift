@@ -23,6 +23,7 @@ enum Route: Hashable {
     case menuGoods(param: String)
     case menuGoodsEdit(cafeId: String, itemId: String?)
     case reviewEdit(cafeId: String, reviewId: String?)
+    case picture(imageUrl: String)
     case signIn
     case signUp
     case resetPassword

@@ -26,6 +26,8 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoo
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
+import com.hhp227.concafe.presentation.picture.PictureAction
+import com.hhp227.concafe.presentation.picture.PictureScreen
 import com.hhp227.concafe.presentation.review.ReviewEditScreen
 import com.hhp227.concafe.presentation.settings.SettingsScreen
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsScreen
@@ -240,6 +242,16 @@ private fun DetailRoutePane(
                 cafeId = route.cafeId,
                 reviewId = route.reviewId,
                 onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.Picture -> {
+            PictureScreen(
+                imageUrl = route.imageUrl,
+                onAction = { action ->
+                    when (action) {
+                        PictureAction.ClickBack -> onNavigationAction(NavigationAction.NavigateBack)
+                    }
+                }
             )
         }
         Route.SignIn -> {

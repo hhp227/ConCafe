@@ -757,6 +757,8 @@ private fun EventCard(
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+                val eventImageUrl = item.imageUrl.trim().takeIf { it.isNotEmpty() }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -766,6 +768,20 @@ private fun EventCard(
                             )
                         )
                 )
+                if (eventImageUrl != null) {
+                    CompatImageDisplay(
+                        imageUrl = eventImageUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        applyRoundedClip = false
+                    )
+                    if (item.isDimmed) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White.copy(alpha = 0.16f))
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .padding(12.dp)

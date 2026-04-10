@@ -9,5 +9,6 @@ data class CafeDetailReview(
     val taggedCastNames: List<String>,
     val likeCount: Int,
     val createdDate: String,
-    val verified: Boolean
+    val verified: Boolean,
+    val imageUrls: List<String> = emptyList()
 )

@@ -45,7 +45,8 @@ actual fun CompatImagePicker(
 actual fun CompatImageDisplay(
     imageUrl: String?,
     modifier: Modifier,
-    applyRoundedClip: Boolean
+    applyRoundedClip: Boolean,
+    contentScale: ContentScale
 ) {
     val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
     val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = normalizedImageUrl) {
@@ -84,7 +85,7 @@ actual fun CompatImageDisplay(
                 bitmap = resolvedImageBitmap,
                 contentDescription = null,
                 modifier = imageModifier,
-                contentScale = ContentScale.Crop
+                contentScale = contentScale
             )
         }
     }

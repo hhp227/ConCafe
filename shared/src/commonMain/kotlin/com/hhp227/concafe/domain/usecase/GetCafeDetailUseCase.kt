@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.CafeDetailFeed
 import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
@@ -85,10 +86,28 @@ class GetCafeDetailUseCase(
                 )
             }
             val workingCastIds = secondary.first
+            val todayScheduleByCastId = coroutineScope {
+                detail.casts.associate { cast ->
+                    cast.id to async {
+                        castRepository.getCastSchedules(
+                            castId = cast.id,
+                            fromDate = currentDate,
+                            toDate = currentDate
+                        ).firstOrNull { schedule ->
+                            schedule.cafeId == cafeId && schedule.date == currentDate
+                        }
+                    }
+                }.mapNotNull { (castId, scheduleDeferred) ->
+                    val schedule = scheduleDeferred.await()
+                    if (schedule == null) null else castId to schedule
+                }.toMap()
+            }
             val castItems = detail.casts.map { cast ->
+                val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
                     cast = cast,
-                    isWorking = workingCastIds.contains(cast.id)
+                    isWorking = todaySchedule?.isOnShift() ?: workingCastIds.contains(cast.id),
+                    todaySchedule = todaySchedule
                 )
             }
             val isFavorite = secondary.second
@@ -124,7 +143,8 @@ class GetCafeDetailUseCase(
                     taggedCastNames = taggedCastNames,
                     likeCount = review.likeCount,
                     createdDate = review.createdAt.take(10),
-                    verified = verified
+                    verified = verified,
+                    imageUrls = review.imageUrls
                 )
             }
 
@@ -166,4 +186,14 @@ class GetCafeDetailUseCase(
         private const val INITIAL_REVIEW_PAGE_SIZE = 15
         private const val UNKNOWN_USER_NICKNAME = "알 수 없음"
     }
+}
+
+private fun CastSchedule.isOnShift(): Boolean {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val currentTotal = now.hour * 60 + now.minute
+    val startTotal = (startTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (startTime.substringAfter(':').toIntOrNull() ?: 0)
+    val endTotal = (endTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (endTime.substringAfter(':').toIntOrNull() ?: 0)
+    return currentTotal >= startTotal && currentTotal <= endTotal
 }

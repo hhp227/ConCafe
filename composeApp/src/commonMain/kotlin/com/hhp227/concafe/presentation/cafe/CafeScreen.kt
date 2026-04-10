@@ -78,6 +78,7 @@ fun CafeScreen(
                 is CafeEvent.NavigateToReviewEdit -> {
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId, event.reviewId))
                 }
+                is CafeEvent.NavigateToPicture -> onNavigationAction(NavigationAction.NavigateToPicture(event.imageUrl))
                 CafeEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
                 CafeEvent.ShowReviewDeleteFailedMessage -> snackbarHostState.showSnackbar(
                     getString(Res.string.cafe_message_review_delete_failed)

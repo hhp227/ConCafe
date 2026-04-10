@@ -21,6 +21,7 @@ sealed interface NavigationAction {
     data class NavigateToMenuGoods(val id: String) : NavigationAction
     data class NavigateToMenuGoodsEdit(val cafeId: String, val itemId: String? = null) : NavigationAction
     data class NavigateToReviewEdit(val cafeId: String, val reviewId: String? = null) : NavigationAction
+    data class NavigateToPicture(val imageUrl: String) : NavigationAction
     data object NavigateToSignIn : NavigationAction
     data object NavigateToSignUp : NavigationAction
     data object NavigateToResetPassword : NavigationAction
