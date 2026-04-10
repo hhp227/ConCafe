@@ -263,21 +263,21 @@
 
 ### C-05. 알림 대상 fan-out 비용 관리
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] followers/favorites 대상 조회량이 큰 함수 목록 정리
-  - [ ] notificationSettings 조회 캐시 또는 배치 전략 검토
-  - [ ] 고비용 fan-out 함수에 상한/큐/배치 적용 여부 검토
+  - [x] followers/favorites 대상 조회량이 큰 함수 목록 정리
+  - [x] notificationSettings 조회 캐시 또는 배치 전략 검토
+  - [x] 고비용 fan-out 함수에 상한/큐/배치 적용 여부 검토
 - 완료 기준:
   - 인기 캐스트/카페의 fan-out 쓰기 비용이 통제된다.
 
 ### C-06. 랭킹 동기화 전체 스캔 최적화
 - 우선순위: P2
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 현재 전체 카페/전체 캐스트 스캔 주기 기록
-  - [ ] 증분 갱신 가능 범위 검토
-  - [ ] 랭킹 원천 데이터를 별도 경량 문서로 유지할지 결정
+  - [x] 현재 전체 카페/전체 캐스트 스캔 주기 기록
+  - [x] 증분 갱신 가능 범위 검토
+  - [x] 랭킹 원천 데이터를 별도 경량 문서로 유지할지 결정
 - 완료 기준:
   - 데이터가 증가해도 랭킹 작업 비용이 급증하지 않는다.
 
@@ -345,8 +345,8 @@
 ### 3차 묶음
 - [ ] A-06 카페 검색 최적화
 - [ ] A-07 캐스트 검색 최적화
-- [ ] C-05 알림 fan-out 비용 관리
-- [ ] C-06 랭킹 동기화 최적화
+- [x] C-05 알림 fan-out 비용 관리
+- [x] C-06 랭킹 동기화 최적화
 
 ## 작업 로그
 
@@ -363,6 +363,8 @@
 - [x] 방문 수/스탬프 수/공지 수/카페별 전체 방문 수/관리자 메트릭의 count 경로를 aggregation 기준으로 정리
 - [x] 방문 write 트리거의 유저 방문수/레벨 집계를 전체 재조회에서 delta 집계로 전환
 - [x] stamp write 트리거의 유저 스탬프 수 집계를 전체 재조회에서 delta 집계로 전환
+- [x] fan-out 알림 경로에 수신자 상한/배치 처리 적용 및 팬공지 중복 트리거 제거
+- [x] 랭킹 동기화 dirty state를 cafe/cast로 분리하고 cafe 랭킹 소스 조회를 scope별 top-N 쿼리로 전환
 - [x] 개선 전후 측정 템플릿 문서화
 - [-] 기준선 수집 시작
 
@@ -405,6 +407,8 @@
 | `onVisitWrittenSyncCastVisitCertificationCount` | 리뷰/방문 연관 전체 재조회 | `user-cafe-cast` 단위 delta |  |  |  |
 | `syncUserVisitCountAggregate` | 유저 verified visit 전체 재조회 | 방문 write delta 반영 |  |  |  |
 | `onStampWrittenSyncUserStampStats` | 유저 stamp 전체 재조회 | stamp write delta 반영 |  |  |  |
+| `onFanAnnouncementRequestWrittenSendPush` | 팔로워 대상 대량 동시 fan-out | 수신자 상한 + 배치 fan-out |  |  |  |
+| `onScheduleSyncRankingSnapshots` | dirty 발생 시 카페/캐스트 전체 스캔 동시 실행 | dirty state별 분리 실행 + 카페 scope별 top-N 쿼리 |  |  |  |
 
 ### 배포 후 비교 항목
 | 항목 | 기준선 | 배포 후 3일 | 배포 후 7일 | 목표 |

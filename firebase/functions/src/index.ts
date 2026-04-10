@@ -439,6 +439,45 @@ function sanitizeNotificationDocumentId(value: string): string {
   return value.replace(/\//g, "_").trim();
 }
 
+const NOTIFICATION_FANOUT_CHUNK_SIZE = 100;
+const NOTIFICATION_FANOUT_MAX_RECIPIENTS = 1000;
+
+function toNotificationRecipientUserIds(
+  userIds: Array<string | null | undefined>,
+  excludedUserIds: string[] = []
+): {targets: string[]; droppedByCap: number} {
+  const excluded = new Set(excludedUserIds.filter((userId) => userId.trim().length > 0));
+  const unique = new Set<string>();
+
+  userIds.forEach((rawUserId) => {
+    const userId = rawUserId == null ? "" : rawUserId.trim();
+
+    if (userId.length == 0 || excluded.has(userId)) {
+      return;
+    }
+    unique.add(userId);
+  });
+
+  const allTargets = Array.from(unique);
+  const targets = allTargets.slice(0, NOTIFICATION_FANOUT_MAX_RECIPIENTS);
+
+  return {
+    targets: targets,
+    droppedByCap: Math.max(0, allTargets.length - targets.length),
+  };
+}
+
+async function processInBatches<T>(
+  items: T[],
+  worker: (item: T) => Promise<void>,
+  chunkSize: number = NOTIFICATION_FANOUT_CHUNK_SIZE
+): Promise<void> {
+  for (let index = 0; index < items.length; index += chunkSize) {
+    const chunk = items.slice(index, index + chunkSize);
+    await Promise.all(chunk.map(async (item) => worker(item)));
+  }
+}
+
 function kstNow(): Date {
   const now = new Date();
   const utcMillis = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
@@ -691,26 +730,28 @@ async function createUserNotification(
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
   const notificationRef = userRef.collection("notifications").doc(sanitizedId);
-  const existing = await notificationRef.get();
+  try {
+    await notificationRef.create(
+      {
+        userId: userId,
+        type: type,
+        title: title,
+        body: body,
+        targetId: targetId,
+        createdAt: createdAt,
+        relativeTime: "방금 전",
+        isRead: false,
+        updatedAt: createdAt,
+      }
+    );
+  } catch (error) {
+    const code = (error as {code?: unknown})?.code;
 
-  if (existing.exists) {
-    return;
+    if (code === 6 || code === "already-exists" || code === "ALREADY_EXISTS") {
+      return;
+    }
+    throw error;
   }
-
-  await notificationRef.set(
-    {
-      userId: userId,
-      type: type,
-      title: title,
-      body: body,
-      targetId: targetId,
-      createdAt: createdAt,
-      relativeTime: "방금 전",
-      isRead: false,
-      updatedAt: createdAt,
-    },
-    {merge: false}
-  );
   await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings);
 }
 
@@ -1460,21 +1501,27 @@ async function syncCastScheduleNotifications(
   if (followers.empty) {
     return;
   }
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId")))
+  );
+
+  if (recipientUserIds.length == 0) {
+    return;
+  }
   const startTime = asNonBlankString(afterData?.startTime) ?? "";
   const endTime = asNonBlankString(afterData?.endTime) ?? "";
   const timeLabel = startTime.length > 0 && endTime.length > 0
     ? `${startTime} - ${endTime}`
     : "오늘";
   const createdAt = new Date().toISOString();
-  const tasks = followers.docs.map(async (followerDoc) => {
-    const userId = asNonBlankString(followerDoc.get("userId"));
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
 
-    if (userId == null) {
-      return;
-    }
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isPushNotificationsEnabled || !settings.isShiftNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1487,9 +1534,16 @@ async function syncCastScheduleNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cast schedule notification fanout.", {
+    scheduleId: scheduleId,
+    castId: castId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncFavoriteCafeNoticeNotifications(
@@ -1514,16 +1568,22 @@ async function syncFavoriteCafeNoticeNotifications(
   if (favorites.empty) {
     return;
   }
-  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-  const tasks = favorites.docs.map(async (favoriteDoc) => {
-    const userId = asNonBlankString(favoriteDoc.get("userId"));
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    favorites.docs.map((favoriteDoc) => asNonBlankString(favoriteDoc.get("userId")))
+  );
 
-    if (userId == null) {
-      return;
-    }
+  if (recipientUserIds.length == 0) {
+    return;
+  }
+  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
+
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isPushNotificationsEnabled || !settings.isNoticeNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1536,9 +1596,16 @@ async function syncFavoriteCafeNoticeNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cafe notice notification fanout.", {
+    cafeId: cafeId,
+    noticeId: noticeId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncCafeEventNotifications(
@@ -1560,13 +1627,13 @@ async function syncCafeEventNotifications(
     .where("cafeId", "==", cafeId)
     .select("userId")
     .get();
-  const recipientUserIds = new Set<string>();
+  const rawRecipientUserIds: Array<string | null> = [];
 
   favorites.docs.forEach((favoriteDoc) => {
     const userId = asNonBlankString(favoriteDoc.get("userId"));
 
     if (userId != null) {
-      recipientUserIds.add(userId);
+      rawRecipientUserIds.push(userId);
     }
   });
   if (relatedCastId != null) {
@@ -1580,18 +1647,24 @@ async function syncCafeEventNotifications(
       const userId = asNonBlankString(followerDoc.get("userId"));
 
       if (userId != null) {
-        recipientUserIds.add(userId);
+        rawRecipientUserIds.push(userId);
       }
     });
   }
-  if (recipientUserIds.size == 0) {
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(rawRecipientUserIds);
+
+  if (recipientUserIds.length == 0) {
     return;
   }
   const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-  const tasks = Array.from(recipientUserIds).map(async (userId) => {
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
+
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isEventNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1604,9 +1677,16 @@ async function syncCafeEventNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cafe event notification fanout.", {
+    cafeId: cafeId,
+    eventId: eventId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncBirthdayNotifications(): Promise<void> {
@@ -1622,7 +1702,7 @@ async function syncBirthdayNotifications(): Promise<void> {
     return;
   }
   const createdAt = new Date().toISOString();
-  const tasks = castSnapshot.docs.map(async (castDoc) => {
+  await processInBatches(castSnapshot.docs, async (castDoc) => {
     const castId = castDoc.id;
     const castName = asNonBlankString(castDoc.get("name")) ?? "팔로우한 캐스트";
     const followers = await db()
@@ -1634,15 +1714,21 @@ async function syncBirthdayNotifications(): Promise<void> {
     if (followers.empty) {
       return;
     }
-    const followerTasks = followers.docs.map(async (followerDoc) => {
-      const userId = asNonBlankString(followerDoc.get("userId"));
+    const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+      followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId")))
+    );
 
-      if (userId == null) {
-        return;
-      }
+    if (recipientUserIds.length == 0) {
+      return;
+    }
+    let sentCount = 0;
+    let skippedBySettingsCount = 0;
+
+    await processInBatches(recipientUserIds, async (userId) => {
       const settings = await loadUserNotificationSettings(userId);
 
       if (!settings.isPushNotificationsEnabled || !settings.isBirthdayNotificationsEnabled) {
+        skippedBySettingsCount += 1;
         return;
       }
       await createUserNotification(
@@ -1655,12 +1741,17 @@ async function syncBirthdayNotifications(): Promise<void> {
         createdAt,
         settings
       );
+      sentCount += 1;
     });
-
-    await Promise.all(followerTasks);
+    logger.info("Processed birthday notification fanout.", {
+      castId: castId,
+      birthdayKey: birthdayKey,
+      targetCount: recipientUserIds.length,
+      sentCount: sentCount,
+      skippedBySettingsCount: skippedBySettingsCount,
+      droppedByCap: droppedByCap,
+    });
   });
-
-  await Promise.all(tasks);
 }
 
 type RankingScope = {
@@ -1702,6 +1793,7 @@ type RankingSnapshotEntry = {
 
 const RANKING_SYNC_DOC_PATH = "rankingSync/state";
 const RANKING_MAX_COUNT = 50;
+const RANKING_SOURCE_QUERY_LIMIT = RANKING_MAX_COUNT * 3;
 const RANKING_PERIODS = ["WEEKLY", "MONTHLY"] as const;
 const RANKING_SCOPES: RankingScope[] = [
   {country: null, city: null, token: "all_all"},
@@ -1866,38 +1958,56 @@ function areRankingEntriesEqual(left: RankingSnapshotEntry[], right: RankingSnap
   return true;
 }
 
-async function loadCafeRankingSources(): Promise<CafeRankingSource[]> {
-  const snapshot = await db()
+function parseCafeRankingSourceFromDoc(
+  doc: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
+): CafeRankingSource | null {
+  const data = doc.data();
+  const approved = data.approved !== false;
+
+  if (!approved) {
+    return null;
+  }
+  const region = asPlainObject(data.region);
+  const country = normalizeCountry(region?.country);
+  const city = normalizeCity(region?.city);
+  const address = asNonBlankString(region?.address) ?? asNonBlankString(data.address) ?? city;
+  const subtitle = resolveCafeSubtitle(address, city);
+  const score = Math.max(0, Math.floor((asNumber(data.ratingAvg) ?? 0) * 100));
+
+  return {
+    id: doc.id,
+    name: asNonBlankString(data.name) ?? "",
+    subtitle: subtitle,
+    country: country,
+    city: city,
+    score: score,
+    imageUrl: asNonBlankString(data.thumbnailImage),
+  } as CafeRankingSource;
+}
+
+async function loadCafeRankingSourcesByScope(scope: RankingScope): Promise<CafeRankingSource[]> {
+  let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db()
     .collection("cafes")
+    .where("approved", "==", true)
+    .orderBy("ratingAvg", "desc")
     .select("name", "region", "address", "ratingAvg", "thumbnailImage", "approved")
-    .get();
+    .limit(RANKING_SOURCE_QUERY_LIMIT);
+
+  if (scope.country != null && scope.city != null) {
+    query = db()
+      .collection("cafes")
+      .where("approved", "==", true)
+      .where("region.country", "==", scope.country)
+      .where("region.city", "==", scope.city)
+      .orderBy("ratingAvg", "desc")
+      .select("name", "region", "address", "ratingAvg", "thumbnailImage", "approved")
+      .limit(RANKING_SOURCE_QUERY_LIMIT);
+  }
+  const snapshot = await query.get();
 
   return snapshot.docs
-    .map((doc) => {
-      const data = doc.data();
-      const approved = data.approved !== false;
-
-      if (!approved) {
-        return null;
-      }
-      const region = asPlainObject(data.region);
-      const country = normalizeCountry(region?.country);
-      const city = normalizeCity(region?.city);
-      const address = asNonBlankString(region?.address) ?? asNonBlankString(data.address) ?? city;
-      const subtitle = resolveCafeSubtitle(address, city);
-      const score = Math.max(0, Math.floor((asNumber(data.ratingAvg) ?? 0) * 100));
-
-      return {
-        id: doc.id,
-        name: asNonBlankString(data.name) ?? "",
-        subtitle: subtitle,
-        country: country,
-        city: city,
-        score: score,
-        imageUrl: asNonBlankString(data.thumbnailImage),
-      } as CafeRankingSource;
-    })
-    .filter((item): item is CafeRankingSource => item !== null)
+    .map((doc) => parseCafeRankingSourceFromDoc(doc))
+    .filter((item): item is CafeRankingSource => item != null)
     .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
 }
 
@@ -1963,32 +2073,78 @@ async function syncRankingSnapshotDocument(
   );
 }
 
-async function syncAllRankingSnapshots(): Promise<void> {
-  const cafeSources = await loadCafeRankingSources();
-  const cafeById = new Map<string, CafeRankingSource>();
+type RankingDirtyState = {
+  shouldSyncCafe: boolean;
+  shouldSyncCast: boolean;
+};
 
-  cafeSources.forEach((cafe) => {
-    cafeById.set(cafe.id, cafe);
-  });
-  const castSources = await loadCastRankingSources(cafeById);
+async function syncAllRankingSnapshots(dirtyState: RankingDirtyState): Promise<void> {
+  const scopedCafeSourcesByToken = new Map<string, CafeRankingSource[]>();
+  let castSources: CastRankingSource[] = [];
+
+  if (dirtyState.shouldSyncCafe) {
+    const scopedCafeResults = await Promise.all(RANKING_SCOPES.map(async (scope) => {
+      const sources = await loadCafeRankingSourcesByScope(scope);
+
+      return {
+        token: scope.token,
+        sources: sources,
+      };
+    }));
+
+    scopedCafeResults.forEach((result) => {
+      scopedCafeSourcesByToken.set(result.token, result.sources);
+    });
+  }
+  if (dirtyState.shouldSyncCast) {
+    const globalCafeSources = await loadCafeRankingSourcesByScope({
+      country: null,
+      city: null,
+      token: "all_all",
+    });
+    const cafeById = new Map<string, CafeRankingSource>();
+
+    globalCafeSources.forEach((cafe) => {
+      cafeById.set(cafe.id, cafe);
+    });
+    castSources = await loadCastRankingSources(cafeById);
+  }
   const tasks: Promise<void>[] = [];
 
   RANKING_PERIODS.forEach((period) => {
     RANKING_SCOPES.forEach((scope) => {
-      const scopedCafes = cafeSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
-      const scopedCasts = castSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+      if (dirtyState.shouldSyncCafe) {
+        const scopedCafes = scopedCafeSourcesByToken.get(scope.token) ?? [];
 
-      tasks.push(syncRankingSnapshotDocument("cafe", period, scope, scopedCafes));
-      tasks.push(syncRankingSnapshotDocument("cast", period, scope, scopedCasts));
+        tasks.push(syncRankingSnapshotDocument("cafe", period, scope, scopedCafes));
+      }
+      if (dirtyState.shouldSyncCast) {
+        const scopedCasts = castSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+
+        tasks.push(syncRankingSnapshotDocument("cast", period, scope, scopedCasts));
+      }
     });
   });
   await Promise.all(tasks);
 }
 
-async function markRankingSyncDirty(reason: string, payload: Record<string, unknown>): Promise<void> {
+async function markRankingSyncDirty(
+  reason: string,
+  payload: Record<string, unknown>,
+  targets: {cafe?: boolean; cast?: boolean} = {cafe: true, cast: true}
+): Promise<void> {
+  const nextCafeDirty = targets.cafe === true;
+  const nextCastDirty = targets.cast === true;
+
+  if (!nextCafeDirty && !nextCastDirty) {
+    return;
+  }
+
   await db().doc(RANKING_SYNC_DOC_PATH).set(
     {
       dirty: true,
+      dirtyCafe: nextCafeDirty,
+      dirtyCast: nextCastDirty,
       updatedAt: new Date().toISOString(),
       reason: reason,
       payload: payload,
@@ -1997,19 +2153,40 @@ async function markRankingSyncDirty(reason: string, payload: Record<string, unkn
   );
 }
 
-async function shouldSyncRankingSnapshots(): Promise<boolean> {
+async function resolveRankingDirtyState(): Promise<RankingDirtyState | null> {
   const snapshot = await db().doc(RANKING_SYNC_DOC_PATH).get();
 
   if (!snapshot.exists) {
-    return true;
+    return {
+      shouldSyncCafe: true,
+      shouldSyncCast: true,
+    };
   }
-  return snapshot.get("dirty") === true;
+  const dirty = snapshot.get("dirty") === true;
+
+  if (!dirty) {
+    return null;
+  }
+  const dirtyCafe = snapshot.get("dirtyCafe");
+  const dirtyCast = snapshot.get("dirtyCast");
+  const shouldSyncCafe = dirtyCafe === true || (dirtyCafe !== false && dirtyCast !== true);
+  const shouldSyncCast = dirtyCast === true || (dirtyCast !== false && dirtyCafe !== true);
+
+  if (!shouldSyncCafe && !shouldSyncCast) {
+    return null;
+  }
+  return {
+    shouldSyncCafe: shouldSyncCafe,
+    shouldSyncCast: shouldSyncCast,
+  };
 }
 
 async function completeRankingSync(): Promise<void> {
   await db().doc(RANKING_SYNC_DOC_PATH).set(
     {
       dirty: false,
+      dirtyCafe: false,
+      dirtyCast: false,
       syncedAt: new Date().toISOString(),
     },
     {merge: true}
@@ -2068,7 +2245,7 @@ export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
     await markRankingSyncDirty("review_written", {
       reviewId: event.params.reviewId,
       cafeIds: Array.from(deltas.keys()),
-    });
+    }, {cafe: true, cast: false});
     logger.info("Synced cafe review aggregate.", {
       cafeIds: Array.from(deltas.keys()),
       reviewId: event.params.reviewId,
@@ -2138,7 +2315,7 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         castId,
         cafeId,
         delta,
-      });
+      }, {cafe: false, cast: true});
 
     } catch (error) {
       logger.error("Failed to update follower count", {
@@ -2230,38 +2407,36 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
         return;
       }
       const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-      const followerTasks = followers.docs.map(async (followerDoc) => {
-        const userId = asNonBlankString(followerDoc.get("userId"));
+      const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+        followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId"))),
+        [requesterUserId]
+      );
 
-        if (userId == null || userId === requesterUserId) {
-          return;
-        }
+      if (recipientUserIds.length == 0) {
+        logger.info("Fan announcement target is empty after filtering.", {
+          requestId: requestId,
+          castId: castId,
+        });
+        return;
+      }
+      let sentCount = 0;
+      let skippedBySettingsCount = 0;
+      let failedCount = 0;
+
+      await processInBatches(recipientUserIds, async (userId) => {
         try {
           const settings = await loadUserNotificationSettings(userId);
 
           if (!settings.isPushNotificationsEnabled) {
-            logger.info("Skipped fan announcement push because push is disabled.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           if (!settings.isFollowNotificationsEnabled) {
-            logger.info("Skipped fan announcement push because follow notification is disabled.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           if (isQuietHoursPushSuppressed(settings)) {
-            logger.info("Skipped fan announcement push due to quiet hours.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-              quietHoursMode: settings.quietHoursMode,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           await createUserNotification(
@@ -2274,23 +2449,20 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
             createdAt,
             settings
           );
-          logger.info("Sent fan announcement push.", {
-            requestId: requestId,
-            targetUserId: userId,
-            castId: castId,
-            createdAt: createdAt,
-          });
+          sentCount += 1;
         } catch (error) {
-          logger.error("Failed to send fan announcement push.", {
-            requestId: requestId,
-            targetUserId: userId,
-            castId: castId,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          failedCount += 1;
         }
       });
-
-      await Promise.all(followerTasks);
+      logger.info("Processed fan announcement notification fanout.", {
+        requestId: requestId,
+        castId: castId,
+        targetCount: recipientUserIds.length,
+        sentCount: sentCount,
+        skippedBySettingsCount: skippedBySettingsCount,
+        failedCount: failedCount,
+        droppedByCap: droppedByCap,
+      });
     } finally {
       await event.data?.after.ref.delete();
     }
@@ -3211,65 +3383,67 @@ export const onStampWrittenSyncUserStampStats = onDocumentWritten(
   }
 );
 
-export const onFanAnnouncementRequestCreatedSendPushNotifications = onDocumentWritten(
-  "fanAnnouncementRequests/{requestId}",
-  async (event) => {
-    const requestId = asNonBlankString(event.params.requestId);
-    const beforeData = event.data?.before.data();
-    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
-
-    if (requestId == null || beforeData != null || afterData == null) {
-      return;
-    }
-    const castId = asNonBlankString(afterData.castId);
-    const cafeId = asNonBlankString(afterData.cafeId);
-    const senderUserId = asNonBlankString(afterData.userId);
-    const title = asNonBlankString(afterData.title);
-    const body = asNonBlankString(afterData.body);
-    const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-
-    if (castId == null || cafeId == null || title == null || body == null) {
-      return;
-    }
-    const followSnapshot = await db()
-      .collection("castFollows")
-      .where("castId", "==", castId)
-      .get();
-    const followerUserIds = followSnapshot.docs
-      .map((doc) => asNonBlankString(doc.data()?.userId))
-      .filter((id): id is string => id != null && id !== senderUserId);
-
-    if (followerUserIds.length === 0) {
-      logger.info("No followers to notify for fan announcement.", {requestId, castId});
-      return;
-    }
-    const tasks = followerUserIds.map(async (userId) => {
-      await createUserNotification(
-        userId,
-        `fan_announcement_${requestId}_${userId}`,
-        "FAN_ANNOUNCEMENT",
-        title,
-        body,
-        castId,
-        createdAt
-      );
-    });
-
-    await Promise.all(tasks);
-    logger.info("Sent fan announcement notifications.", {
-      requestId: requestId,
-      castId: castId,
-      recipientCount: followerUserIds.length,
-    });
+function hasCafeRankingRelevantChange(
+  beforeData: Record<string, unknown> | undefined,
+  afterData: Record<string, unknown> | undefined
+): {cafe: boolean; cast: boolean} {
+  if (beforeData == null && afterData == null) {
+    return {cafe: false, cast: false};
   }
-);
+  if (beforeData == null || afterData == null) {
+    return {cafe: true, cast: true};
+  }
+  const beforeRegion = asPlainObject(beforeData.region);
+  const afterRegion = asPlainObject(afterData.region);
+  const beforeCountry = normalizeCountry(beforeRegion?.country);
+  const afterCountry = normalizeCountry(afterRegion?.country);
+  const beforeCity = normalizeCity(beforeRegion?.city);
+  const afterCity = normalizeCity(afterRegion?.city);
+  const beforeAddress = asNonBlankString(beforeRegion?.address) ?? asNonBlankString(beforeData.address) ?? "";
+  const afterAddress = asNonBlankString(afterRegion?.address) ?? asNonBlankString(afterData.address) ?? "";
+  const beforeName = asNonBlankString(beforeData.name) ?? "";
+  const afterName = asNonBlankString(afterData.name) ?? "";
+  const beforeRating = asNumber(beforeData.ratingAvg) ?? 0;
+  const afterRating = asNumber(afterData.ratingAvg) ?? 0;
+  const beforeApproved = beforeData.approved !== false;
+  const afterApproved = afterData.approved !== false;
+  const beforeImageUrl = asNonBlankString(beforeData.thumbnailImage) ?? "";
+  const afterImageUrl = asNonBlankString(afterData.thumbnailImage) ?? "";
+
+  const cafeRankingChanged =
+    beforeName !== afterName ||
+    beforeCountry !== afterCountry ||
+    beforeCity !== afterCity ||
+    beforeAddress !== afterAddress ||
+    beforeRating !== afterRating ||
+    beforeApproved !== afterApproved ||
+    beforeImageUrl !== afterImageUrl;
+  const castRankingDependencyChanged =
+    beforeName !== afterName ||
+    beforeCountry !== afterCountry ||
+    beforeCity !== afterCity ||
+    beforeApproved !== afterApproved;
+
+  return {
+    cafe: cafeRankingChanged,
+    cast: castRankingDependencyChanged,
+  };
+}
 
 export const onCafeWrittenMarkRankingDirty = onDocumentWritten(
   "cafes/{cafeId}",
   async (event) => {
+    const beforeData = event.data?.before.data() as Record<string, unknown> | undefined;
+    const afterData = event.data?.after.data() as Record<string, unknown> | undefined;
+    const targets = hasCafeRankingRelevantChange(beforeData, afterData);
+
+    if (!targets.cafe && !targets.cast) {
+      return;
+    }
     await markRankingSyncDirty("cafe_written", {
       cafeId: event.params.cafeId,
-    });
+      targets: targets,
+    }, targets);
   }
 );
 
@@ -3279,7 +3453,7 @@ export const onCastWrittenMarkRankingDirty = onDocumentWritten(
     await markRankingSyncDirty("cast_written", {
       cafeId: event.params.cafeId,
       castId: event.params.castId,
-    });
+    }, {cafe: false, cast: true});
   }
 );
 
@@ -3330,16 +3504,18 @@ export const onScheduleSyncRankingSnapshots = onSchedule(
     timeZone: "Asia/Seoul",
   },
   async () => {
-    const shouldSync = await shouldSyncRankingSnapshots();
+    const dirtyState = await resolveRankingDirtyState();
 
-    if (!shouldSync) {
+    if (dirtyState == null) {
       return;
     }
-    await syncAllRankingSnapshots();
+    await syncAllRankingSnapshots(dirtyState);
     await completeRankingSync();
     logger.info("Synced ranking snapshots.", {
       periods: RANKING_PERIODS,
       scopeCount: RANKING_SCOPES.length,
+      syncedCafe: dirtyState.shouldSyncCafe,
+      syncedCast: dirtyState.shouldSyncCast,
     });
   }
 );
