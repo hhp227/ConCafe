@@ -2045,7 +2045,11 @@ class FirestoreConCafeDataSource(
         }.onFailure { error ->
             println("TEST, upsertCastRemote refreshCafeDetail failed: ${error.message}")
         }
-        val refreshedDetail = fetchCastDetailRemoteById(castId)
+        val refreshedDetail = fetchCastDetailRemoteByCafeAndCastId(
+            cafeId = targetCafeId,
+            castId = castId,
+            idToken = idToken
+        )
 
         if (refreshedDetail == null) {
             throw NoSuchElementException("cast detail not found")
@@ -6055,6 +6059,18 @@ class FirestoreConCafeDataSource(
     private suspend fun fetchCastDetailRemoteById(castId: String): CastDetail? {
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val cafeId = resolveCafeIdByCastId(castId = castId, idToken = idToken) ?: return null
+        return fetchCastDetailRemoteByCafeAndCastId(
+            cafeId = cafeId,
+            castId = castId,
+            idToken = idToken
+        )
+    }
+
+    private suspend fun fetchCastDetailRemoteByCafeAndCastId(
+        cafeId: String,
+        castId: String,
+        idToken: String?
+    ): CastDetail? {
         val cafeDocument = runCatching {
             loadCafeDocument(cafeId = cafeId, idToken = idToken)
         }.recoverCatching {
