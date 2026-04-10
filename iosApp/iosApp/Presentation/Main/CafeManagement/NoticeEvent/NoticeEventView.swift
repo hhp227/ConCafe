@@ -252,8 +252,7 @@ private struct NoticeEventContentView: View {
 
     private func eventCard(_ item: CafeEventManagementItem) -> some View {
         let imageUrl = item.imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
                 if let url = URL(string: imageUrl), !imageUrl.isEmpty {
                     CachedAsyncImage(
