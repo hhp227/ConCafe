@@ -974,20 +974,18 @@ class FirestoreConCafeDataSource(
         }.getOrNull()
         val tokenUserId = tokenProvider.getCurrentUserId()
         val primaryVisitDocuments = runCatching {
-            runUserScopedQuery(
-                collectionId = FirestorePaths.VISITS,
+            runUserVisitPageQuery(
                 userId = userId,
+                cursor = cursor,
+                limit = pageSize.coerceAtLeast(1) + 1,
                 idToken = idToken,
-                orderByFieldPath = "visitedAt",
-                orderByDescending = true
             )
         }.recoverCatching {
-            runUserScopedQuery(
-                collectionId = FirestorePaths.VISITS,
+            runUserVisitPageQuery(
                 userId = userId,
+                cursor = cursor,
+                limit = pageSize.coerceAtLeast(1) + 1,
                 idToken = null,
-                orderByFieldPath = "visitedAt",
-                orderByDescending = true
             )
         }.getOrElse { error ->
             println(
@@ -997,53 +995,32 @@ class FirestoreConCafeDataSource(
             )
             emptyList()
         }
-        val legacyVisitDocuments = if (primaryVisitDocuments.isEmpty()) {
-            runLegacyUserFieldQuery(
-                collectionId = FirestorePaths.VISITS,
-                userId = userId,
-                idToken = idToken,
-                legacyFieldPath = "uid"
-            )
-        } else {
-            emptyList()
-        }
-        val visitDocuments = (primaryVisitDocuments + legacyVisitDocuments)
-            .distinctBy { document ->
-                document["name"]?.jsonPrimitive?.contentOrNull ?: document.toString()
-            }
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val visitDocuments = primaryVisitDocuments
         val mappedVisits = visitDocuments
             .mapNotNull { document -> parseVisitDocument(document) }
             .sortedByDescending { visit -> visit.visitedAt }
-        val legacyRecentVisitCafeIds = if (mappedVisits.isEmpty()) {
-            loadUserIdListFromProfileDocument(
-                userId = userId,
-                idToken = idToken,
-                candidates = RECENT_VISIT_CAFE_ID_FIELD_CANDIDATES
-            )
+        val pageItems = mappedVisits.take(safePageSize)
+        val hasNext = visitDocuments.size > safePageSize
+        val nextCursor = if (hasNext) {
+            visitDocuments
+                .take(safePageSize)
+                .lastOrNull()
+                ?.toVisitQueryCursor()
         } else {
-            emptyList()
-        }
-        val items = mappedVisits.ifEmpty {
-            legacyRecentVisitCafeIds.mapIndexed { index, cafeId ->
-                Visit(
-                    id = "legacy_recent_visit_${sanitizeDocumentIdPart(userId)}_$index",
-                    userId = userId,
-                    cafeId = cafeId,
-                    visitedAt = "",
-                    memo = null,
-                    verified = false
-                )
-            }
+            null
         }
         println(
             "TEST, fetchVisitsByUserPageRemote result: " +
                 "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
                 "sameUser=${tokenUserId == userId} " +
-                "documents=${visitDocuments.size} visits=${items.size} " +
-                "legacyDocuments=${legacyVisitDocuments.size} " +
-                "legacyRecentVisitCafeIds=${legacyRecentVisitCafeIds.size}"
+                "documents=${visitDocuments.size} visits=${mappedVisits.size}"
         )
-        return toPaged(items, cursor, pageSize)
+        return PagedResult(
+            items = pageItems,
+            nextCursor = nextCursor,
+            hasNext = hasNext
+        )
     }
 
     suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
@@ -3908,6 +3885,49 @@ class FirestoreConCafeDataSource(
         }
     }
 
+    private suspend fun runUserVisitPageQuery(
+        userId: String,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = limit.coerceAtLeast(1)
+        val startAfterSection = cursor.toVisitStartAfterSection()
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [
+                  { "collectionId": "${FirestorePaths.VISITS}" }
+                ],
+                "where": {
+                  "fieldFilter": {
+                    "field": { "fieldPath": "userId" },
+                    "op": "EQUAL",
+                    "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
+                  }
+                },
+                "orderBy": [
+                  {
+                    "field": { "fieldPath": "visitedAt" },
+                    "direction": "DESCENDING"
+                  },
+                  {
+                    "field": { "fieldPath": "__name__" },
+                    "direction": "DESCENDING"
+                  }
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element ->
+            element.jsonObject["document"]?.jsonObject
+        }
+    }
+
     private suspend fun runCastByUserFieldQuery(
         userId: String,
         idToken: String?,
@@ -6507,6 +6527,13 @@ private fun JsonObject.toReviewQueryCursor(): String? {
     return fields.getFirestoreString("createdAt")
 }
 
+private fun JsonObject.toVisitQueryCursor(): String? {
+    val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+    val fields = this["fields"]?.jsonObject ?: return null
+    val visitedAt = fields.getFirestoreString("visitedAt") ?: return null
+    return "$visitedAt|$documentName"
+}
+
 private fun JsonObject.toNoticeQueryCursor(): String? {
     val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
     val fields = this["fields"]?.jsonObject ?: return null
@@ -6652,6 +6679,28 @@ private fun String?.toReviewStartAfterSection(): String {
                 "startAt": {
                   "values": [
                     { "stringValue": "$escapedCreatedAt" }
+                  ],
+                  "before": false
+                }"""
+}
+
+private fun String?.toVisitStartAfterSection(): String {
+    val cursorValue = this
+    if (cursorValue.isNullOrBlank()) {
+        return ""
+    }
+    val visitedAt = cursorValue.substringBefore("|")
+    val documentName = cursorValue.substringAfter("|", missingDelimiterValue = "")
+    if (visitedAt.isBlank() || documentName.isBlank()) {
+        return ""
+    }
+    val escapedVisitedAt = escapeFirestoreQueryString(visitedAt)
+    val escapedDocumentName = escapeFirestoreQueryString(documentName)
+    return """,
+                "startAt": {
+                  "values": [
+                    { "stringValue": "$escapedVisitedAt" },
+                    { "referenceValue": "$escapedDocumentName" }
                   ],
                   "before": false
                 }"""

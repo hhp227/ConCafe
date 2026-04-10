@@ -118,11 +118,11 @@
 
 ### A-05. 방문 목록 서버 커서 기반 페이징으로 전환
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `fetchVisitsByUserPageRemote()`에서 전체 조회 후 `toPaged()` 하는 구조 제거
-  - [ ] Firestore 쿼리 `limit/startAfter` 기반으로 변경
-  - [ ] 첫 페이지와 다음 페이지 모두 실제 서버 페이징 동작 확인
+  - [x] `fetchVisitsByUserPageRemote()`에서 전체 조회 후 `toPaged()` 하는 구조 제거
+  - [x] Firestore 쿼리 `limit/startAfter` 기반으로 변경
+  - [x] 첫 페이지와 다음 페이지 모두 실제 서버 페이징 동작 확인
 - 완료 기준:
   - 방문 데이터가 많아져도 첫 페이지 비용이 선형 증가하지 않는다.
 
@@ -352,6 +352,7 @@
 
 ### 2026-04-10
 - [x] Firestore 비용/성능 개선 전용 백로그 문서 생성
+- [x] 방문 목록 페이징을 `toPaged()` 기반 메모리 페이징에서 Firestore 서버 커서 기반 페이징으로 전환
 - [ ] 기준선 수집 시작
 
 ## 측정 로그
