@@ -13,13 +13,19 @@ struct CafeMenuView: View {
 
     let goods: [Goods]
 
+    let isLoading: Bool
+
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         let hasMenu = !menus.isEmpty
         let hasGoods = !goods.isEmpty
 
-        if !hasMenu && !hasGoods {
+        if isLoading && !hasMenu && !hasGoods {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+        } else if !hasMenu && !hasGoods {
             emptyCard(String(localized: String.LocalizationValue("cafe_menu_empty"), table: "Localizable"))
         } else {
             VStack(alignment: .leading, spacing: 28) {
@@ -194,6 +200,6 @@ struct CafeMenuView: View {
 
 struct CafeMenuView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeMenuView(menus: [], goods: [])
+        CafeMenuView(menus: [], goods: [], isLoading: false)
     }
 }

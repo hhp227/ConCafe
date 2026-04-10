@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.CafeSort
@@ -23,6 +24,8 @@ interface CafeRemoteDataSource {
     suspend fun refreshCafeDetail(cafeId: String)
 
     suspend fun fetchCafeDetail(cafeId: String): CafeDetail
+
+    suspend fun fetchCafeMenuGoods(cafeId: String): CafeMenuGoodsSection
 
     suspend fun fetchCafeById(cafeId: String): Cafe?
 

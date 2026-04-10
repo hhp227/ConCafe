@@ -17,6 +17,8 @@ struct CafeUiState {
     var casts: [CafeDetailCast]
     var castsNextCursor: String?
     var canLoadMoreCasts: Bool
+    var isLoadingMenuGoods: Bool
+    var hasLoadedMenuGoods: Bool
     var isLoadingMoreNotices: Bool
     var noticesNextCursor: String?
     var canLoadMoreNotices: Bool
@@ -40,6 +42,8 @@ struct CafeUiState {
         casts: [],
         castsNextCursor: nil,
         canLoadMoreCasts: false,
+        isLoadingMenuGoods: false,
+        hasLoadedMenuGoods: false,
         isLoadingMoreNotices: false,
         noticesNextCursor: nil,
         canLoadMoreNotices: false,

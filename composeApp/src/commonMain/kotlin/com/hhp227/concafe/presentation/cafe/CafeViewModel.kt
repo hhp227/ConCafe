@@ -17,6 +17,7 @@ import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.event.ReviewEvent
@@ -27,6 +28,7 @@ import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 class CafeViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
+    private val getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase,
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
@@ -110,11 +112,13 @@ class CafeViewModel(
                 _uiState.value = CafeUiState(
                     isLoading = false,
                     isLoadingMoreCasts = _uiState.value.isLoadingMoreCasts,
+                    isLoadingMenuGoods = _uiState.value.isLoadingMenuGoods,
+                    hasLoadedMenuGoods = _uiState.value.hasLoadedMenuGoods,
                     isLoadingMoreNotices = _uiState.value.isLoadingMoreNotices,
                     isLoadingMoreReviews = _uiState.value.isLoadingMoreReviews,
                     errorMessage = null,
                     selectedTab = _uiState.value.selectedTab,
-                    detail = result.data.detail,
+                    detail = mergeLoadedMenuGoods(result.data.detail),
                     casts = _uiState.value.casts,
                     castsNextCursor = _uiState.value.castsNextCursor,
                     canLoadMoreCasts = _uiState.value.canLoadMoreCasts,
@@ -133,6 +137,9 @@ class CafeViewModel(
                 refreshCastPage()
                 if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                     refreshNoticePage()
+                }
+                if (_uiState.value.selectedTab == CafeUiState.TabType.MENU && !_uiState.value.hasLoadedMenuGoods) {
+                    loadMenuGoods()
                 }
                 if (refreshReviews && _uiState.value.selectedTab == CafeUiState.TabType.REVIEWS) {
                     refreshReviewPage()
@@ -171,6 +178,35 @@ class CafeViewModel(
 
     private fun refreshCastPage() {
         loadCastPage(cursor = null, append = false)
+    }
+
+    private fun loadMenuGoods() {
+        val currentDetail = _uiState.value.detail ?: return
+        if (_uiState.value.isLoadingMenuGoods || _uiState.value.hasLoadedMenuGoods) {
+            return
+        }
+        jobs[JobKey.MENU_GOODS]?.cancel()
+        jobs[JobKey.MENU_GOODS] = viewModelScope.launch {
+            _uiState.update { state -> state.copy(isLoadingMenuGoods = true) }
+
+            when (val result = getCafeMenuGoodsUseCase.invoke(currentDetail.cafe.id)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoadingMenuGoods = false,
+                            hasLoadedMenuGoods = true,
+                            detail = state.detail?.copy(
+                                menus = result.data.menus,
+                                goods = result.data.goods
+                            )
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state -> state.copy(isLoadingMenuGoods = false) }
+                }
+            }
+        }
     }
 
     private fun loadMoreCasts() {
@@ -290,6 +326,9 @@ class CafeViewModel(
                 }
                 is CafeAction.ChangeTab -> {
                     _uiState.update { it.copy(selectedTab = action.tab) }
+                    if (action.tab == CafeUiState.TabType.MENU && !_uiState.value.hasLoadedMenuGoods) {
+                        loadMenuGoods()
+                    }
                     if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                         refreshNoticePage()
                     }
@@ -354,7 +393,19 @@ class CafeViewModel(
         CAST_PAGE,
         NOTICE_PAGE,
         REVIEW_PAGE,
+        MENU_GOODS,
         OBSERVE_DETAIL_EVENT,
         OBSERVE_REVIEW_EVENT
+    }
+
+    private fun mergeLoadedMenuGoods(detail: com.hhp227.concafe.domain.model.CafeDetail): com.hhp227.concafe.domain.model.CafeDetail {
+        val currentDetail = _uiState.value.detail ?: return detail
+        if (!_uiState.value.hasLoadedMenuGoods) {
+            return detail
+        }
+        return detail.copy(
+            menus = currentDetail.menus,
+            goods = currentDetail.goods
+        )
     }
 }

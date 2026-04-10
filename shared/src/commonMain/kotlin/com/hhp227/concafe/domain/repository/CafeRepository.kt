@@ -15,6 +15,8 @@ interface CafeRepository {
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
 
+    suspend fun getCafeMenuGoods(cafeId: String): CafeMenuGoodsSection
+
     suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail

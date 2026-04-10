@@ -240,6 +240,7 @@ async function cleanupDeletedUserData(
 type ReviewLike = {
   id?: unknown;
   cafeId?: unknown;
+  rating?: unknown;
   userId?: unknown;
   taggedCastIds?: unknown;
   visitVerified?: unknown;
@@ -1259,33 +1260,57 @@ async function loadTaggedCastIdsByCafeAndUser(cafeId: string, userId: string): P
   return castIds;
 }
 
-async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
-  const snapshot = await db()
-    .collection("reviews")
-    .where("cafeId", "==", cafeId)
-    .select("rating")
-    .get();
-  let reviewCount = 0;
-  let ratingTotal = 0;
+async function applyCafeReviewAggregateDelta(
+  cafeId: string,
+  reviewCountDelta: number,
+  ratingTotalDelta: number
+): Promise<void> {
+  if (reviewCountDelta == 0 && ratingTotalDelta == 0) {
+    return;
+  }
 
-  snapshot.forEach((doc) => {
-    const rating = doc.get("rating");
+  const cafeRef = db().collection("cafes").doc(cafeId);
+  await db().runTransaction(async (transaction) => {
+    const cafeSnapshot = await transaction.get(cafeRef);
+    const currentData = cafeSnapshot.data() ?? {};
+    const currentReviewCount = Math.max(0, Math.round(asNumber(currentData.reviewCount) ?? 0));
+    const currentRatingAvg = asNumber(currentData.ratingAvg) ?? 0;
+    const currentRatingTotal = currentReviewCount == 0 ? 0 : currentRatingAvg * currentReviewCount;
+    const nextReviewCount = Math.max(0, currentReviewCount + reviewCountDelta);
+    const nextRatingTotal = nextReviewCount == 0 ?
+      0 :
+      Math.max(0, currentRatingTotal + ratingTotalDelta);
+    const nextRatingAvg = nextReviewCount == 0 ?
+      0 :
+      Number((nextRatingTotal / nextReviewCount).toFixed(2));
 
-    if (typeof rating === "number") {
-      reviewCount += 1;
-      ratingTotal += rating;
-    }
+    transaction.set(
+      cafeRef,
+      {
+        reviewCount: nextReviewCount,
+        ratingAvg: nextRatingAvg,
+      },
+      {merge: true}
+    );
   });
+}
 
-  const ratingAvg = reviewCount == 0 ? 0 : ratingTotal / reviewCount;
+function buildReviewAggregateContribution(review: ReviewLike | undefined): {
+  cafeId: string;
+  reviewCount: number;
+  ratingTotal: number;
+} | null {
+  const cafeId = asNonBlankString(review?.cafeId);
+  const rating = asNumber(review?.rating);
 
-  await db().collection("cafes").doc(cafeId).set(
-    {
-      reviewCount: reviewCount,
-      ratingAvg: ratingAvg,
-    },
-    {merge: true}
-  );
+  if (cafeId == null || rating == null) {
+    return null;
+  }
+  return {
+    cafeId: cafeId,
+    reviewCount: 1,
+    ratingTotal: rating,
+  };
 }
 
 async function syncCastFollowNotifications(
@@ -1940,31 +1965,57 @@ async function completeRankingSync(): Promise<void> {
 export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
   "reviews/{reviewId}",
   async (event) => {
-    const beforeData = event.data?.before.data();
-    const afterData = event.data?.after.data();
-    const targetCafeIds = new Set<string>();
+    const beforeData = event.data?.before.data() as ReviewLike | undefined;
+    const afterData = event.data?.after.data() as ReviewLike | undefined;
+    const beforeContribution = buildReviewAggregateContribution(beforeData);
+    const afterContribution = buildReviewAggregateContribution(afterData);
+    const deltas = new Map<string, {reviewCountDelta: number; ratingTotalDelta: number}>();
 
-    if (typeof beforeData?.cafeId === "string" && beforeData.cafeId.length > 0) {
-      targetCafeIds.add(beforeData.cafeId);
+    const appendDelta = (
+      cafeId: string,
+      reviewCountDelta: number,
+      ratingTotalDelta: number
+    ) => {
+      const current = deltas.get(cafeId) ?? {reviewCountDelta: 0, ratingTotalDelta: 0};
+      deltas.set(cafeId, {
+        reviewCountDelta: current.reviewCountDelta + reviewCountDelta,
+        ratingTotalDelta: current.ratingTotalDelta + ratingTotalDelta,
+      });
+    };
+
+    if (beforeContribution != null) {
+      appendDelta(
+        beforeContribution.cafeId,
+        -beforeContribution.reviewCount,
+        -beforeContribution.ratingTotal
+      );
     }
-    if (typeof afterData?.cafeId === "string" && afterData.cafeId.length > 0) {
-      targetCafeIds.add(afterData.cafeId);
+    if (afterContribution != null) {
+      appendDelta(
+        afterContribution.cafeId,
+        afterContribution.reviewCount,
+        afterContribution.ratingTotal
+      );
     }
-    if (targetCafeIds.size == 0) {
+    if (deltas.size == 0) {
       return;
     }
 
     await Promise.all(
-      Array.from(targetCafeIds).map(async (cafeId) => {
-        await syncCafeReviewAggregate(cafeId);
+      Array.from(deltas.entries()).map(async ([cafeId, delta]) => {
+        await applyCafeReviewAggregateDelta(
+          cafeId,
+          delta.reviewCountDelta,
+          delta.ratingTotalDelta
+        );
       })
     );
     await markRankingSyncDirty("review_written", {
       reviewId: event.params.reviewId,
-      cafeIds: Array.from(targetCafeIds),
+      cafeIds: Array.from(deltas.keys()),
     });
     logger.info("Synced cafe review aggregate.", {
-      cafeIds: Array.from(targetCafeIds),
+      cafeIds: Array.from(deltas.keys()),
       reviewId: event.params.reviewId,
     });
   }

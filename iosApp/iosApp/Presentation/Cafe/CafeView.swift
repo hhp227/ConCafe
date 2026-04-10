@@ -308,7 +308,11 @@ private struct CafeContentView: View {
                 onAction: onAction
             )
         case .menu:
-            CafeMenuView(menus: detail.menus, goods: detail.goods)
+            CafeMenuView(
+                menus: detail.menus,
+                goods: detail.goods,
+                isLoading: uiState.isLoadingMenuGoods
+            )
         case .reviews:
             CafeReviewView(
                 detail: detail,

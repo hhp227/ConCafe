@@ -74,12 +74,12 @@
 
 ### A-01. 카페 상세 조회를 요약/상세 2단계로 분리
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 카페 상세 진입 시 반드시 필요한 데이터와 탭 진입 후 필요한 데이터를 분리
-  - [ ] 첫 진입에서 `notices`, `menus`, `goods` 전체 조회 제거
-  - [ ] 탭별 lazy load 구조로 변경
-  - [ ] 상세 DTO와 탭 DTO를 분리
+  - [x] 카페 상세 진입 시 반드시 필요한 데이터와 탭 진입 후 필요한 데이터를 분리
+  - [x] 첫 진입에서 `notices`, `menus`, `goods` 전체 조회 제거
+  - [x] 탭별 lazy load 구조로 변경
+  - [x] 상세 DTO와 탭 DTO를 분리
 - 완료 기준:
   - 카페 상세 첫 진입이 전체 서브컬렉션 일괄 조회를 하지 않는다.
 - 참고:
@@ -148,11 +148,11 @@
 
 ### A-08. castId -> cafeId 역탐색 제거
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `castDirectory` 같은 역인덱스 문서 설계
-  - [ ] 캐스트 생성/수정/삭제 시 역인덱스 동기화 경로 설계
-  - [ ] `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
+  - [x] `castDirectory` 같은 역인덱스 문서 설계
+  - [x] 캐스트 생성/수정/삭제 시 역인덱스 동기화 경로 설계
+  - [x] `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
 - 완료 기준:
   - 캐스트 상세/팔로우/Claim 경로에서 전체 카페 순회가 사라진다.
 
@@ -224,11 +224,11 @@
 
 ### C-01. 카페 리뷰 집계를 전체 재집계에서 delta 방식으로 전환
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `onReviewWrittenSyncCafeAggregate`에서 전체 리뷰 재조회 제거
-  - [ ] create/update/delete별 delta 계산 설계
-  - [ ] 평균 평점 갱신 방식 결정
+  - [x] `onReviewWrittenSyncCafeAggregate`에서 전체 리뷰 재조회 제거
+  - [x] create/update/delete별 delta 계산 설계
+  - [x] 평균 평점 갱신 방식 결정
 - 완료 기준:
   - 리뷰 1건 변경 시 해당 카페 리뷰 전체를 다시 읽지 않는다.
 
@@ -330,16 +330,16 @@
 ## F. 실행 순서 제안
 
 ### 1차 묶음
-- [ ] A-01 카페 상세 조회 분리
+- [x] A-01 카페 상세 조회 분리
 - [x] A-02 카페 상세 스케줄 N+1 제거
 - [x] A-04 내 정보 카페 상세 재조회 제거
 - [x] A-05 방문 목록 서버 페이징
 - [x] A-09 카페관리 전체 카페 선조회 제거
 
 ### 2차 묶음
-- [ ] A-08 castId 역탐색 제거
+- [x] A-08 castId 역탐색 제거
 - [ ] B-03 count aggregation 도입 범위 적용
-- [ ] C-01 리뷰 집계 delta 전환
+- [x] C-01 리뷰 집계 delta 전환
 - [ ] C-02 방문인증 캐스트 집계 최적화
 
 ### 3차 묶음
@@ -356,6 +356,9 @@
 - [x] 카페 상세/카페 캐스트 목록의 오늘 스케줄 조회를 `cafeId + date` 단건 쿼리로 통합
 - [x] 내 정보의 최근 방문/즐겨찾기 카페 조회에서 카페 상세 재호출 제거
 - [x] 카페관리에서 비관리자 대상 카페를 `ownedCafeIds` 직접 조회로 전환하고 `cast/notice/visit` 카운트를 aggregation query로 전환
+- [x] 카페 상세 첫 진입에서 `notices/menus/goods` 일괄 조회를 제거하고 메뉴/굿즈 탭 lazy load 도입
+- [x] `castDirectory` 역인덱스를 추가하고 `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
+- [x] 리뷰 write 트리거를 전체 재집계에서 카페 문서 기반 delta 집계로 전환
 - [ ] 기준선 수집 시작
 
 ## 측정 로그

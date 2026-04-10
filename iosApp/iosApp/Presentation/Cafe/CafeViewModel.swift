@@ -16,6 +16,8 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
+    private let getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase
+
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
 
     private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
@@ -112,10 +114,12 @@ final class CafeViewModel: ObservableObject {
                         isLoadingMoreCasts: uiState.isLoadingMoreCasts,
                         errorMessage: nil,
                         selectedTab: uiState.selectedTab,
-                        detail: feed.detail,
+                        detail: mergeLoadedMenuGoods(feed.detail),
                         casts: uiState.casts,
                         castsNextCursor: uiState.castsNextCursor,
                         canLoadMoreCasts: uiState.canLoadMoreCasts,
+                        isLoadingMenuGoods: uiState.isLoadingMenuGoods,
+                        hasLoadedMenuGoods: uiState.hasLoadedMenuGoods,
                         isLoadingMoreNotices: uiState.isLoadingMoreNotices,
                         noticesNextCursor: uiState.noticesNextCursor,
                         canLoadMoreNotices: uiState.canLoadMoreNotices,
@@ -133,6 +137,9 @@ final class CafeViewModel: ObservableObject {
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
                         refreshNoticePage()
+                    }
+                    if uiState.selectedTab == .menu, !uiState.hasLoadedMenuGoods {
+                        loadMenuGoods()
                     }
                     if refreshReviews, uiState.selectedTab == .reviews {
                         refreshReviewPage()
@@ -178,6 +185,43 @@ final class CafeViewModel: ObservableObject {
 
     private func refreshCastPage() {
         loadCastPage(cursor: nil, append: false)
+    }
+
+    private func loadMenuGoods() {
+        guard let detail = uiState.detail else { return }
+        guard !uiState.isLoadingMenuGoods, !uiState.hasLoadedMenuGoods else { return }
+
+        tasks[.menuGoods]?.cancel()
+        tasks[.menuGoods] = Task {
+            uiState.isLoadingMenuGoods = true
+
+            do {
+                let result = try await getCafeMenuGoodsUseCase.invoke(cafeId: detail.cafe.id)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let section = success.data as? CafeMenuGoodsSection {
+                    uiState.isLoadingMenuGoods = false
+                    uiState.hasLoadedMenuGoods = true
+                    if let currentDetail = uiState.detail {
+                        uiState.detail = CafeDetail(
+                            cafe: currentDetail.cafe,
+                            images: currentDetail.images,
+                            casts: currentDetail.casts,
+                            menus: section.menus,
+                            goods: section.goods,
+                            notices: currentDetail.notices,
+                            businessHours: currentDetail.businessHours,
+                            phoneNumber: currentDetail.phoneNumber
+                        )
+                    }
+                } else {
+                    uiState.isLoadingMenuGoods = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMenuGoods = false
+            }
+        }
     }
 
     private func loadMoreCasts() {
@@ -310,6 +354,9 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateBack)
         case .changeTab(let tab):
             uiState.selectedTab = tab
+            if tab == .menu, !uiState.hasLoadedMenuGoods {
+                loadMenuGoods()
+            }
             if tab == .notices, uiState.notices.isEmpty {
                 refreshNoticePage()
             }
@@ -346,6 +393,7 @@ final class CafeViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase = KoinInitializerKt.resolveGetCafeMenuGoodsUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
@@ -356,6 +404,7 @@ final class CafeViewModel: ObservableObject {
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.getCafeMenuGoodsUseCase = getCafeMenuGoodsUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
@@ -376,10 +425,28 @@ final class CafeViewModel: ObservableObject {
 
     private enum TaskKey {
         case detail
+        case menuGoods
         case castPage
         case noticePage
         case reviewPage
         case cafeDetail
         case reviewEvent
+    }
+
+    private func mergeLoadedMenuGoods(_ detail: CafeDetail?) -> CafeDetail? {
+        guard let detail else { return nil }
+        guard uiState.hasLoadedMenuGoods, let currentDetail = uiState.detail else {
+            return detail
+        }
+        return CafeDetail(
+            cafe: detail.cafe,
+            images: detail.images,
+            casts: detail.casts,
+            menus: currentDetail.menus,
+            goods: currentDetail.goods,
+            notices: detail.notices,
+            businessHours: detail.businessHours,
+            phoneNumber: detail.phoneNumber
+        )
     }
 }
