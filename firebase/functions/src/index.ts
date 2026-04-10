@@ -3457,6 +3457,41 @@ export const onCastWrittenMarkRankingDirty = onDocumentWritten(
   }
 );
 
+export const onCafeCastWrittenSyncCastDirectory = onDocumentWritten(
+  "cafes/{cafeId}/casts/{castId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+    const castId = asNonBlankString(event.params.castId);
+
+    if (cafeId == null || castId == null) {
+      return;
+    }
+    const castDirectoryRef = db().collection("castDirectory").doc(castId);
+    const afterData = event.data?.after.data();
+
+    if (afterData == null) {
+      await castDirectoryRef.delete();
+      logger.info("Deleted castDirectory entry from cast delete.", {
+        cafeId: cafeId,
+        castId: castId,
+      });
+      return;
+    }
+    await castDirectoryRef.set(
+      {
+        castId: castId,
+        cafeId: cafeId,
+        updatedAt: new Date().toISOString(),
+      },
+      {merge: true}
+    );
+    logger.info("Upserted castDirectory entry from cast write.", {
+      cafeId: cafeId,
+      castId: castId,
+    });
+  }
+);
+
 export const onCastDeletedCleanupImages = onDocumentDeleted(
   "cafes/{cafeId}/casts/{castId}",
   async (event) => {
@@ -4495,6 +4530,72 @@ export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (
     response.status(statusCode).json({error: errorMessage});
   }
 });
+
+export const rebuildCastDirectoryIndex = functionsV1
+  .runWith({
+    timeoutSeconds: 540,
+    memory: "1GB",
+  })
+  .https
+  .onRequest(async (request, response) => {
+    if (request.method !== "POST") {
+      response.status(405).json({error: "method_not_allowed"});
+      return;
+    }
+    try {
+      const adminUserId = await requireAdminUserIdFromRequest(request);
+      const firestore = db();
+      const snapshot = await firestore.collectionGroup("casts").get();
+      const BATCH_SIZE = 400;
+      let syncedCount = 0;
+      let skippedCount = 0;
+
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+
+        chunk.forEach((castDoc) => {
+          const castId = castDoc.id;
+          const cafeId = castDoc.ref.parent.parent?.id ?? "";
+
+          if (castId.length == 0 || cafeId.length == 0) {
+            skippedCount += 1;
+            return;
+          }
+          const directoryRef = firestore.collection("castDirectory").doc(castId);
+
+          batch.set(directoryRef, {
+            castId: castId,
+            cafeId: cafeId,
+            updatedAt: new Date().toISOString(),
+          }, {merge: true});
+          syncedCount += 1;
+        });
+        await batch.commit();
+      }
+
+      logger.info("rebuildCastDirectoryIndex completed.", {
+        adminUserId: adminUserId,
+        scannedCount: snapshot.docs.length,
+        syncedCount: syncedCount,
+        skippedCount: skippedCount,
+      });
+      response.status(200).json({
+        ok: true,
+        scannedCount: snapshot.docs.length,
+        syncedCount: syncedCount,
+        skippedCount: skippedCount,
+      });
+    } catch (error) {
+      const errorMessage = asErrorMessage(error, "rebuildCastDirectoryIndex failed");
+      const statusCode = errorMessage === "missing_auth" ? 401 : errorMessage === "forbidden" ? 403 : 500;
+
+      logger.error("rebuildCastDirectoryIndex failed.", {
+        error: errorMessage,
+      });
+      response.status(statusCode).json({error: errorMessage});
+    }
+  });
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
 const CLAIM_REJECTED_TTL_MS = 60 * 60 * 1000; // 1시간

@@ -75,7 +75,6 @@ class CastViewModel(
                 errorMessage = null
             )
         }
-
         viewModelScope.launch {
             when (val result = getCastDetailUseCase.invoke(castId)) {
                 is AppResult.Success -> {

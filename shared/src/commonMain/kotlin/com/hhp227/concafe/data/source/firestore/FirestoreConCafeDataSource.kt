@@ -2040,11 +2040,6 @@ class FirestoreConCafeDataSource(
         }.onFailure { error ->
             println("TEST, upsertCastRemote patch failed: ${error.message}")
         }.getOrThrow()
-        syncCastDirectoryEntry(
-            castId = castId,
-            cafeId = targetCafeId,
-            idToken = idToken
-        )
         runCatching {
             refreshCafeDetail(targetCafeId)
         }.onFailure { error ->
@@ -2413,9 +2408,6 @@ class FirestoreConCafeDataSource(
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${existingCast.cafeId}/${FirestorePaths.CAFE_CASTS}/$castId"
 
         restApi.delete(path, idToken)
-        runCatching {
-            deleteCastDirectoryEntry(castId = castId, idToken = idToken)
-        }
         runCatching {
             refreshCafeDetail(existingCast.cafeId)
         }
@@ -4901,30 +4893,6 @@ class FirestoreConCafeDataSource(
             ?.jsonObject
             ?.getFirestoreString("cafeId")
             ?.takeIf { cafeId -> cafeId.isNotBlank() }
-    }
-
-    private suspend fun syncCastDirectoryEntry(
-        castId: String,
-        cafeId: String,
-        idToken: String?
-    ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_DIRECTORY}/$castId"
-        val body = firestoreDocumentBody(
-            mapOf(
-                "castId" to firestoreString(castId),
-                "cafeId" to firestoreString(cafeId),
-                "updatedAt" to firestoreString(Clock.System.now().toString())
-            )
-        )
-        restApi.patch(path, body, idToken)
-    }
-
-    private suspend fun deleteCastDirectoryEntry(
-        castId: String,
-        idToken: String?
-    ) {
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_DIRECTORY}/$castId"
-        restApi.delete(path, idToken)
     }
 
     private suspend fun loadCafeRegistrationClaimDocument(claimId: String, idToken: String?): JsonObject {

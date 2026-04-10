@@ -561,6 +561,7 @@ val eventModule = module {
 }
 
 val useCaseModule = module {
+    single { CafeReviewUserNicknameCache() }
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
@@ -598,10 +599,10 @@ val useCaseModule = module {
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }
     factory { GetExploreCastPageUseCase(get()) }
-    factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get(), get()) }
     factory { GetCafeMenuGoodsUseCase(get()) }
     factory { GetCafeNoticePageUseCase(get()) }
-    factory { GetCafeReviewPageUseCase(get(), get(), get()) }
+    factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }

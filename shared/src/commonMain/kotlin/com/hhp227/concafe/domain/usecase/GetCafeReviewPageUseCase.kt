@@ -4,6 +4,7 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
@@ -13,7 +14,8 @@ import kotlinx.coroutines.coroutineScope
 class GetCafeReviewPageUseCase(
     private val cafeRepository: CafeRepository,
     private val reviewRepository: ReviewRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val reviewUserNicknameCache: CafeReviewUserNicknameCache
 ) {
     suspend operator fun invoke(
         cafeId: String,
@@ -38,19 +40,10 @@ class GetCafeReviewPageUseCase(
             val detail = loaded.first
             val castNameById = detail.casts.associate { cast -> cast.id to cast.name }
             val reviews = loaded.second
-            val reviewUserIds = reviews.items
-                .map { review -> review.userId }
-                .distinct()
-            val userNicknameById = coroutineScope {
-                reviewUserIds.associateWith { userId ->
-                    async {
-                        runCatching { userRepository.getUser(userId).nickname }
-                            .getOrNull()
-                    }
-                }.mapValues { (_, deferredNickname) ->
-                    deferredNickname.await()
-                }
-            }
+            val userNicknameById = resolveReviewNicknameByUserId(
+                cafeId = cafeId,
+                reviews = reviews.items
+            )
 
             AppResult.Success(
                 PagedResult(
@@ -86,6 +79,56 @@ class GetCafeReviewPageUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+
+    private suspend fun resolveReviewNicknameByUserId(
+        cafeId: String,
+        reviews: List<Review>
+    ): Map<String, String> {
+        val reviewUserIds = reviews
+            .map { review -> review.userId }
+            .distinct()
+            .filter { userId -> userId.isNotBlank() }
+        val reviewNicknameByUserId = reviews
+            .mapNotNull { review ->
+                val nickname = review.userNickname.trim().takeIf { value -> value.isNotEmpty() }
+                    ?: return@mapNotNull null
+
+                review.userId to nickname
+            }
+            .toMap()
+
+        reviewUserNicknameCache.putAll(cafeId, reviewNicknameByUserId)
+        val cachedNicknameByUserId = reviewUserNicknameCache.getNicknames(cafeId, reviewUserIds)
+        val resolvedNicknameByUserId = mutableMapOf<String, String>()
+
+        resolvedNicknameByUserId.putAll(cachedNicknameByUserId)
+        resolvedNicknameByUserId.putAll(reviewNicknameByUserId)
+
+        val unresolvedUserIds = reviewUserIds.filter { userId ->
+            resolvedNicknameByUserId[userId].isNullOrBlank()
+        }
+
+        if (unresolvedUserIds.isNotEmpty()) {
+            val loadedNicknameByUserId = coroutineScope {
+                unresolvedUserIds.associateWith { userId ->
+                    async {
+                        runCatching {
+                            userRepository.getUser(userId).nickname.trim()
+                                .takeIf { nickname -> nickname.isNotEmpty() }
+                        }.getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }.mapNotNull { (userId, nickname) ->
+                    nickname?.let { value -> userId to value }
+                }.toMap()
+            }
+
+            reviewUserNicknameCache.putAll(cafeId, loadedNicknameByUserId)
+            resolvedNicknameByUserId.putAll(loadedNicknameByUserId)
+        }
+        return resolvedNicknameByUserId
     }
 
     companion object {

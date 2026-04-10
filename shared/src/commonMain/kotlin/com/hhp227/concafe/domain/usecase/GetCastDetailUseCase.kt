@@ -119,6 +119,7 @@ class GetCastDetailUseCase(
                 )
             )
         } catch (e: NoSuchElementException) {
+            println("--ConCafe--, loadCastDetail, Failure ${e.message}")
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
