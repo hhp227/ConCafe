@@ -4,8 +4,12 @@ import com.hhp227.concafe.data.source.CafeRemoteDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.CafeManagementRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class CafeManagementRepositoryImpl(
     private val cafeRemoteDataSource: CafeRemoteDataSource,
@@ -13,66 +17,14 @@ class CafeManagementRepositoryImpl(
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : CafeManagementRepository {
     override suspend fun getOwnedCafes(userId: String): List<CafeManagementData.OwnedCafeSummary> {
-        val currentUser = firestoreSyncDataSource.fetchUser(userId)
-        val allCafes = cafeRemoteDataSource.fetchAllCafes()
-        val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
-        val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
-            allCafes
-        } else {
-            allCafes.filter { ownedCafeIds.contains(it.id) }
-        }
-        return manageableCafes.map { cafe ->
-            val cafeCasts = castRemoteDataSource.fetchCafeCasts(cafe.id)
-            val noticeCount = cafeRemoteDataSource.fetchNoticeCount(cafe.id)
-            val cafeCheckInCount = cafeRemoteDataSource.fetchCafeCheckInCount(cafe.id)
-
-            CafeManagementData.OwnedCafeSummary(
-                id = cafe.id,
-                name = cafe.name,
-                city = cafe.region.city,
-                isApproved = cafe.approved,
-                todayVisitors = cafeCheckInCount,
-                todayCheckIns = cafeCheckInCount / 4,
-                todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
-                rating = cafe.ratingAvg,
-                castCount = cafeCasts.size,
-                noticeCount = noticeCount,
-                externalLinkCount = 3,
-                thumbnailImage = cafe.thumbnailImage
-            )
-        }
+        val manageableCafes = loadManageableCafes(userId)
+        return buildOwnedCafeSummaries(manageableCafes)
     }
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
-        val currentUser = firestoreSyncDataSource.fetchUser(userId)
-        val allCafes = cafeRemoteDataSource.fetchAllCafes()
-        val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
-        val manageableCafes = if (currentUser?.role == UserRole.ADMIN) {
-            allCafes
-        } else {
-            allCafes.filter { ownedCafeIds.contains(it.id) }
-        }
-        val ownedCafes = manageableCafes.map { cafe ->
-            val cafeCasts = castRemoteDataSource.fetchCafeCasts(cafe.id)
-            val noticeCount = cafeRemoteDataSource.fetchNoticeCount(cafe.id)
-            val cafeCheckInCount = cafeRemoteDataSource.fetchCafeCheckInCount(cafe.id)
-
-            CafeManagementData.OwnedCafeSummary(
-                id = cafe.id,
-                name = cafe.name,
-                city = cafe.region.city,
-                isApproved = cafe.approved,
-                todayVisitors = cafeCheckInCount,
-                todayCheckIns = cafeCheckInCount / 4,
-                todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
-                rating = cafe.ratingAvg,
-                castCount = cafeCasts.size,
-                noticeCount = noticeCount,
-                externalLinkCount = 3,
-                thumbnailImage = cafe.thumbnailImage
-            )
-        }
-        val searchableCafes = allCafes.map { cafe ->
+        val manageableCafes = loadManageableCafes(userId)
+        val ownedCafes = buildOwnedCafeSummaries(manageableCafes)
+        val searchableCafes = manageableCafes.map { cafe ->
             CafeManagementData.SearchableCafeSummary(
                 id = cafe.id,
                 name = cafe.name,
@@ -98,5 +50,51 @@ class CafeManagementRepositoryImpl(
             searchableCafes = searchableCafes,
             pendingClaims = pendingClaims
         )
+    }
+
+    private suspend fun loadManageableCafes(userId: String): List<Cafe> {
+        val currentUser = firestoreSyncDataSource.fetchUser(userId)
+        return if (currentUser?.role == UserRole.ADMIN) {
+            cafeRemoteDataSource.fetchAllCafes()
+        } else {
+            val ownedCafeIds = cafeRemoteDataSource.fetchOwnedCafeIds(userId)
+            ownedCafeIds.mapNotNull { cafeId ->
+                cafeRemoteDataSource.fetchCafeById(cafeId)
+            }.sortedBy { cafe -> cafe.name }
+        }
+    }
+
+    private suspend fun buildOwnedCafeSummaries(
+        cafes: List<Cafe>
+    ): List<CafeManagementData.OwnedCafeSummary> = coroutineScope {
+        cafes.map { cafe ->
+            async {
+                val castCountDeferred = async {
+                    castRemoteDataSource.fetchCafeCastCount(cafe.id)
+                }
+                val noticeCountDeferred = async {
+                    cafeRemoteDataSource.fetchNoticeCount(cafe.id)
+                }
+                val cafeCheckInCountDeferred = async {
+                    cafeRemoteDataSource.fetchCafeCheckInCount(cafe.id)
+                }
+                val cafeCheckInCount = cafeCheckInCountDeferred.await()
+
+                CafeManagementData.OwnedCafeSummary(
+                    id = cafe.id,
+                    name = cafe.name,
+                    city = cafe.region.city,
+                    isApproved = cafe.approved,
+                    todayVisitors = cafeCheckInCount,
+                    todayCheckIns = cafeCheckInCount / 4,
+                    todayReviews = (cafe.reviewCount / 50).coerceAtLeast(0),
+                    rating = cafe.ratingAvg,
+                    castCount = castCountDeferred.await(),
+                    noticeCount = noticeCountDeferred.await(),
+                    externalLinkCount = 3,
+                    thumbnailImage = cafe.thumbnailImage
+                )
+            }
+        }.awaitAll()
     }
 }

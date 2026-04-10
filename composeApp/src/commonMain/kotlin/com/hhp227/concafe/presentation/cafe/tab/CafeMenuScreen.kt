@@ -30,10 +30,26 @@ import concafe.composeapp.generated.resources.menugoods_tab_menu
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun CafeMenuScreen(menus: List<CafeMenu>, goods: List<Goods>) {
+fun CafeMenuScreen(
+    menus: List<CafeMenu>,
+    goods: List<Goods>,
+    isLoading: Boolean
+) {
     val hasMenu = menus.isNotEmpty()
     val hasGoods = goods.isNotEmpty()
 
+    if (isLoading && !hasMenu && !hasGoods) {
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = colorFromHex("EF6797"),
+                strokeWidth = 2.dp
+            )
+        }
+        return
+    }
     if (!hasMenu && !hasGoods) {
         EmptyContent(text = stringResource(Res.string.cafe_menu_empty))
         return

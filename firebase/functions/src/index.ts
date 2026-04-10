@@ -240,6 +240,7 @@ async function cleanupDeletedUserData(
 type ReviewLike = {
   id?: unknown;
   cafeId?: unknown;
+  rating?: unknown;
   userId?: unknown;
   taggedCastIds?: unknown;
   visitVerified?: unknown;
@@ -391,21 +392,6 @@ function asStringArray(value: unknown): string[] {
     .filter((item) => item.length > 0);
 }
 
-function castTargetKey(cafeId: string, castId: string): string {
-  return `${cafeId}::${castId}`;
-}
-
-function parseCastTargetKey(key: string): {cafeId: string; castId: string} {
-  const splitIndex = key.indexOf("::");
-  if (splitIndex < 0) {
-    return {cafeId: "", castId: ""};
-  }
-  return {
-    cafeId: key.substring(0, splitIndex),
-    castId: key.substring(splitIndex + 2),
-  };
-}
-
 function userCafeKey(cafeId: string, userId: string): string {
   return `${cafeId}::${userId}`;
 }
@@ -421,14 +407,75 @@ function parseUserCafeKey(key: string): {cafeId: string; userId: string} {
   };
 }
 
+function castUserTargetKey(cafeId: string, castId: string, userId: string): string {
+  return `${cafeId}::${castId}::${userId}`;
+}
+
+function parseCastUserTargetKey(key: string): {cafeId: string; castId: string; userId: string} {
+  const firstSplitIndex = key.indexOf("::");
+  const secondSplitIndex = key.indexOf("::", firstSplitIndex + 2);
+
+  if (firstSplitIndex < 0 || secondSplitIndex < 0) {
+    return {cafeId: "", castId: "", userId: ""};
+  }
+  return {
+    cafeId: key.substring(0, firstSplitIndex),
+    castId: key.substring(firstSplitIndex + 2, secondSplitIndex),
+    userId: key.substring(secondSplitIndex + 2),
+  };
+}
+
 function buildCastFollowDocumentId(userId: string, castId: string): string {
   const normalizedUserId = userId.replace(/\//g, "_");
   const normalizedCastId = castId.replace(/\//g, "_");
   return `${normalizedUserId}_${normalizedCastId}`;
 }
 
+function buildCastVisitCertificationDocumentId(cafeId: string, castId: string, userId: string): string {
+  return `${cafeId.replace(/\//g, "_")}__${castId.replace(/\//g, "_")}__${userId.replace(/\//g, "_")}`;
+}
+
 function sanitizeNotificationDocumentId(value: string): string {
   return value.replace(/\//g, "_").trim();
+}
+
+const NOTIFICATION_FANOUT_CHUNK_SIZE = 100;
+const NOTIFICATION_FANOUT_MAX_RECIPIENTS = 1000;
+
+function toNotificationRecipientUserIds(
+  userIds: Array<string | null | undefined>,
+  excludedUserIds: string[] = []
+): {targets: string[]; droppedByCap: number} {
+  const excluded = new Set(excludedUserIds.filter((userId) => userId.trim().length > 0));
+  const unique = new Set<string>();
+
+  userIds.forEach((rawUserId) => {
+    const userId = rawUserId == null ? "" : rawUserId.trim();
+
+    if (userId.length == 0 || excluded.has(userId)) {
+      return;
+    }
+    unique.add(userId);
+  });
+
+  const allTargets = Array.from(unique);
+  const targets = allTargets.slice(0, NOTIFICATION_FANOUT_MAX_RECIPIENTS);
+
+  return {
+    targets: targets,
+    droppedByCap: Math.max(0, allTargets.length - targets.length),
+  };
+}
+
+async function processInBatches<T>(
+  items: T[],
+  worker: (item: T) => Promise<void>,
+  chunkSize: number = NOTIFICATION_FANOUT_CHUNK_SIZE
+): Promise<void> {
+  for (let index = 0; index < items.length; index += chunkSize) {
+    const chunk = items.slice(index, index + chunkSize);
+    await Promise.all(chunk.map(async (item) => worker(item)));
+  }
 }
 
 function kstNow(): Date {
@@ -683,26 +730,28 @@ async function createUserNotification(
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
   const notificationRef = userRef.collection("notifications").doc(sanitizedId);
-  const existing = await notificationRef.get();
+  try {
+    await notificationRef.create(
+      {
+        userId: userId,
+        type: type,
+        title: title,
+        body: body,
+        targetId: targetId,
+        createdAt: createdAt,
+        relativeTime: "방금 전",
+        isRead: false,
+        updatedAt: createdAt,
+      }
+    );
+  } catch (error) {
+    const code = (error as {code?: unknown})?.code;
 
-  if (existing.exists) {
-    return;
+    if (code === 6 || code === "already-exists" || code === "ALREADY_EXISTS") {
+      return;
+    }
+    throw error;
   }
-
-  await notificationRef.set(
-    {
-      userId: userId,
-      type: type,
-      title: title,
-      body: body,
-      targetId: targetId,
-      createdAt: createdAt,
-      relativeTime: "방금 전",
-      isRead: false,
-      updatedAt: createdAt,
-    },
-    {merge: false}
-  );
   await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings);
 }
 
@@ -1012,60 +1061,112 @@ async function syncCastClaimRequesterSnapshot(claimId: string, claim: CastClaimL
   );
 }
 
-async function syncCastVisitCertificationAggregate(cafeId: string, castId: string): Promise<void> {
-  const taggedReviewSnapshot = await db()
+async function hasTaggedReviewForCastByUser(
+  cafeId: string,
+  castId: string,
+  userId: string
+): Promise<boolean> {
+  const snapshot = await db()
     .collection("reviews")
     .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
     .where("taggedCastIds", "array-contains", castId)
     .select("userId")
+    .limit(1)
     .get();
+  return !snapshot.empty;
+}
 
-  if (taggedReviewSnapshot.empty) {
-    await db()
-      .collection("cafes")
-      .doc(cafeId)
-      .collection("casts")
-      .doc(castId)
-      .set(
-        {
-          visitCertificationCount: 0,
-        },
-        {merge: true}
-      );
-    return;
-  }
-
-  const taggedReviewUserIds = taggedReviewSnapshot.docs
-    .map((doc) => asNonBlankString(doc.get("userId")))
-    .filter((userId): userId is string => userId !== null);
-  const taggedReviewUserIdSet = new Set<string>(taggedReviewUserIds);
-
-  const verifiedVisitSnapshot = await db()
+async function hasVerifiedVisitByUserAtCafe(cafeId: string, userId: string): Promise<boolean> {
+  const snapshot = await db()
     .collection("visits")
     .where("cafeId", "==", cafeId)
+    .where("userId", "==", userId)
     .where("verified", "==", true)
     .select("userId")
+    .limit(1)
     .get();
-  const verifiedUserIds = new Set<string>(
-    verifiedVisitSnapshot.docs
-      .map((doc) => asNonBlankString(doc.get("userId")))
-      .filter((userId): userId is string => userId !== null)
-  );
-  const visitCertificationCount = Array.from(taggedReviewUserIdSet)
-    .filter((userId) => verifiedUserIds.has(userId))
-    .length;
+  return !snapshot.empty;
+}
 
-  await db()
+async function syncCastVisitCertificationForUser(
+  cafeId: string,
+  castId: string,
+  userId: string
+): Promise<void> {
+  if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
+    return;
+  }
+  const [hasTaggedReview, hasVerifiedVisit] = await Promise.all([
+    hasTaggedReviewForCastByUser(cafeId, castId, userId),
+    hasVerifiedVisitByUserAtCafe(cafeId, userId),
+  ]);
+  const nextQualified = hasTaggedReview && hasVerifiedVisit;
+  const firestore = db();
+  const certificationRef = firestore
+    .collection("castVisitCertifications")
+    .doc(buildCastVisitCertificationDocumentId(cafeId, castId, userId));
+  const castRef = firestore
     .collection("cafes")
     .doc(cafeId)
     .collection("casts")
-    .doc(castId)
-    .set(
+    .doc(castId);
+
+  await firestore.runTransaction(async (transaction) => {
+    const [certificationSnapshot, castSnapshot] = await Promise.all([
+      transaction.get(certificationRef),
+      transaction.get(castRef),
+    ]);
+    if (!castSnapshot.exists) {
+      transaction.delete(certificationRef);
+      return;
+    }
+    const previousQualified = certificationSnapshot.get("qualified") === true;
+    if (previousQualified === nextQualified) {
+      if (nextQualified) {
+        transaction.set(
+          certificationRef,
+          {
+            cafeId: cafeId,
+            castId: castId,
+            userId: userId,
+            qualified: true,
+            updatedAt: new Date().toISOString(),
+          },
+          {merge: true}
+        );
+      } else if (certificationSnapshot.exists) {
+        transaction.delete(certificationRef);
+      }
+      return;
+    }
+
+    const currentCount = Math.max(0, Math.round(asNumber(castSnapshot.get("visitCertificationCount")) ?? 0));
+    const nextCount = Math.max(0, currentCount + (nextQualified ? 1 : -1));
+
+    transaction.set(
+      castRef,
       {
-        visitCertificationCount: visitCertificationCount,
+        visitCertificationCount: nextCount,
       },
       {merge: true}
     );
+    if (nextQualified) {
+      transaction.set(
+        certificationRef,
+        {
+          cafeId: cafeId,
+          castId: castId,
+          userId: userId,
+          qualified: true,
+          updatedAt: new Date().toISOString(),
+        },
+        {merge: true}
+      );
+    } else {
+      transaction.delete(certificationRef);
+    }
+  });
 }
 
 async function hasVerifiedVisitAtCafe(cafeId: string, userId: string): Promise<boolean> {
@@ -1132,25 +1233,22 @@ async function syncUserCafeReviewsVisitVerified(cafeId: string, userId: string):
   await writeBatch.commit();
 }
 
-async function syncUserVisitCountAggregate(userId: string): Promise<void> {
-  if (userId.length == 0) {
+async function applyUserVisitCountDelta(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
     return;
   }
   const userRef = db().collection("users").doc(userId);
-  const verifiedVisitSnapshot = await db()
-    .collection("visits")
-    .where("userId", "==", userId)
-    .where("verified", "==", true)
-    .select("userId")
-    .get();
-  const nextVisitCount = verifiedVisitSnapshot.size;
-  const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
   await db().runTransaction(async (transaction) => {
     const snapshot = await transaction.get(userRef);
     const userData = snapshot.data();
     const statsRaw = asPlainObject(userData?.stats);
     const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentVisitCount = asNonNegativeInt(stats.visitCount)
+      ?? asNonNegativeInt(userData?.visitCount)
+      ?? 0;
+    const nextVisitCount = Math.max(0, currentVisitCount + delta);
+    const nextLevel = Math.max(1, 1 + Math.floor(nextVisitCount / 5));
 
     stats.visitCount = nextVisitCount;
     stats.level = nextLevel;
@@ -1196,47 +1294,46 @@ async function syncUserFavoriteCountAggregate(userId: string, delta: number): Pr
   });
 }
 
-async function syncUserStampCountAggregate(userId: string): Promise<void> {
-  if (userId.length == 0) {
+async function applyUserStampCountDelta(userId: string, delta: number): Promise<void> {
+  if (userId.length == 0 || delta == 0) {
     return;
   }
   const userRef = db().collection("users").doc(userId);
-  const stampSnapshot = await db()
-    .collection("stamps")
-    .where("userId", "==", userId)
-    .select("userId")
-    .get();
-  const stampCount = stampSnapshot.size;
 
   await db().runTransaction(async (transaction) => {
-    const userSnapshot = await transaction.get(userRef);
-    const userData = userSnapshot.data();
+    const snapshot = await transaction.get(userRef);
+    const userData = snapshot.data();
     const statsRaw = asPlainObject(userData?.stats);
     const stats = statsRaw == null ? {} : {...statsRaw};
+    const currentStampCount = asNonNegativeInt(stats.stampCount)
+      ?? asNonNegativeInt(userData?.stampCount)
+      ?? 0;
+    const nextStampCount = Math.max(0, currentStampCount + delta);
 
-    stats.stampCount = stampCount;
+    stats.stampCount = nextStampCount;
 
     transaction.set(
       userRef,
       {
         stats: stats,
-        stampCount: stampCount,
+        stampCount: nextStampCount,
       },
       {merge: true}
     );
   });
 }
 
-function collectCastTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
+function collectCastUserTargetsFromReviewPayload(review: ReviewLike | undefined): Set<string> {
   const targets = new Set<string>();
   const cafeId = asNonBlankString(review?.cafeId);
+  const userId = asNonBlankString(review?.userId);
 
-  if (cafeId == null) {
+  if (cafeId == null || userId == null) {
     return targets;
   }
 
   asStringArray(review?.taggedCastIds).forEach((castId) => {
-    targets.add(castTargetKey(cafeId, castId));
+    targets.add(castUserTargetKey(cafeId, castId, userId));
   });
   return targets;
 }
@@ -1259,33 +1356,57 @@ async function loadTaggedCastIdsByCafeAndUser(cafeId: string, userId: string): P
   return castIds;
 }
 
-async function syncCafeReviewAggregate(cafeId: string): Promise<void> {
-  const snapshot = await db()
-    .collection("reviews")
-    .where("cafeId", "==", cafeId)
-    .select("rating")
-    .get();
-  let reviewCount = 0;
-  let ratingTotal = 0;
+async function applyCafeReviewAggregateDelta(
+  cafeId: string,
+  reviewCountDelta: number,
+  ratingTotalDelta: number
+): Promise<void> {
+  if (reviewCountDelta == 0 && ratingTotalDelta == 0) {
+    return;
+  }
 
-  snapshot.forEach((doc) => {
-    const rating = doc.get("rating");
+  const cafeRef = db().collection("cafes").doc(cafeId);
+  await db().runTransaction(async (transaction) => {
+    const cafeSnapshot = await transaction.get(cafeRef);
+    const currentData = cafeSnapshot.data() ?? {};
+    const currentReviewCount = Math.max(0, Math.round(asNumber(currentData.reviewCount) ?? 0));
+    const currentRatingAvg = asNumber(currentData.ratingAvg) ?? 0;
+    const currentRatingTotal = currentReviewCount == 0 ? 0 : currentRatingAvg * currentReviewCount;
+    const nextReviewCount = Math.max(0, currentReviewCount + reviewCountDelta);
+    const nextRatingTotal = nextReviewCount == 0 ?
+      0 :
+      Math.max(0, currentRatingTotal + ratingTotalDelta);
+    const nextRatingAvg = nextReviewCount == 0 ?
+      0 :
+      Number((nextRatingTotal / nextReviewCount).toFixed(2));
 
-    if (typeof rating === "number") {
-      reviewCount += 1;
-      ratingTotal += rating;
-    }
+    transaction.set(
+      cafeRef,
+      {
+        reviewCount: nextReviewCount,
+        ratingAvg: nextRatingAvg,
+      },
+      {merge: true}
+    );
   });
+}
 
-  const ratingAvg = reviewCount == 0 ? 0 : ratingTotal / reviewCount;
+function buildReviewAggregateContribution(review: ReviewLike | undefined): {
+  cafeId: string;
+  reviewCount: number;
+  ratingTotal: number;
+} | null {
+  const cafeId = asNonBlankString(review?.cafeId);
+  const rating = asNumber(review?.rating);
 
-  await db().collection("cafes").doc(cafeId).set(
-    {
-      reviewCount: reviewCount,
-      ratingAvg: ratingAvg,
-    },
-    {merge: true}
-  );
+  if (cafeId == null || rating == null) {
+    return null;
+  }
+  return {
+    cafeId: cafeId,
+    reviewCount: 1,
+    ratingTotal: rating,
+  };
 }
 
 async function syncCastFollowNotifications(
@@ -1380,21 +1501,27 @@ async function syncCastScheduleNotifications(
   if (followers.empty) {
     return;
   }
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId")))
+  );
+
+  if (recipientUserIds.length == 0) {
+    return;
+  }
   const startTime = asNonBlankString(afterData?.startTime) ?? "";
   const endTime = asNonBlankString(afterData?.endTime) ?? "";
   const timeLabel = startTime.length > 0 && endTime.length > 0
     ? `${startTime} - ${endTime}`
     : "오늘";
   const createdAt = new Date().toISOString();
-  const tasks = followers.docs.map(async (followerDoc) => {
-    const userId = asNonBlankString(followerDoc.get("userId"));
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
 
-    if (userId == null) {
-      return;
-    }
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isPushNotificationsEnabled || !settings.isShiftNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1407,9 +1534,16 @@ async function syncCastScheduleNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cast schedule notification fanout.", {
+    scheduleId: scheduleId,
+    castId: castId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncFavoriteCafeNoticeNotifications(
@@ -1434,16 +1568,22 @@ async function syncFavoriteCafeNoticeNotifications(
   if (favorites.empty) {
     return;
   }
-  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-  const tasks = favorites.docs.map(async (favoriteDoc) => {
-    const userId = asNonBlankString(favoriteDoc.get("userId"));
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    favorites.docs.map((favoriteDoc) => asNonBlankString(favoriteDoc.get("userId")))
+  );
 
-    if (userId == null) {
-      return;
-    }
+  if (recipientUserIds.length == 0) {
+    return;
+  }
+  const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
+
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isPushNotificationsEnabled || !settings.isNoticeNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1456,9 +1596,16 @@ async function syncFavoriteCafeNoticeNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cafe notice notification fanout.", {
+    cafeId: cafeId,
+    noticeId: noticeId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncCafeEventNotifications(
@@ -1480,13 +1627,13 @@ async function syncCafeEventNotifications(
     .where("cafeId", "==", cafeId)
     .select("userId")
     .get();
-  const recipientUserIds = new Set<string>();
+  const rawRecipientUserIds: Array<string | null> = [];
 
   favorites.docs.forEach((favoriteDoc) => {
     const userId = asNonBlankString(favoriteDoc.get("userId"));
 
     if (userId != null) {
-      recipientUserIds.add(userId);
+      rawRecipientUserIds.push(userId);
     }
   });
   if (relatedCastId != null) {
@@ -1500,18 +1647,24 @@ async function syncCafeEventNotifications(
       const userId = asNonBlankString(followerDoc.get("userId"));
 
       if (userId != null) {
-        recipientUserIds.add(userId);
+        rawRecipientUserIds.push(userId);
       }
     });
   }
-  if (recipientUserIds.size == 0) {
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(rawRecipientUserIds);
+
+  if (recipientUserIds.length == 0) {
     return;
   }
   const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-  const tasks = Array.from(recipientUserIds).map(async (userId) => {
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
+
+  await processInBatches(recipientUserIds, async (userId) => {
     const settings = await loadUserNotificationSettings(userId);
 
     if (!settings.isEventNotificationsEnabled) {
+      skippedBySettingsCount += 1;
       return;
     }
     await createUserNotification(
@@ -1524,9 +1677,16 @@ async function syncCafeEventNotifications(
       createdAt,
       settings
     );
+    sentCount += 1;
   });
-
-  await Promise.all(tasks);
+  logger.info("Processed cafe event notification fanout.", {
+    cafeId: cafeId,
+    eventId: eventId,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
 }
 
 async function syncBirthdayNotifications(): Promise<void> {
@@ -1542,7 +1702,7 @@ async function syncBirthdayNotifications(): Promise<void> {
     return;
   }
   const createdAt = new Date().toISOString();
-  const tasks = castSnapshot.docs.map(async (castDoc) => {
+  await processInBatches(castSnapshot.docs, async (castDoc) => {
     const castId = castDoc.id;
     const castName = asNonBlankString(castDoc.get("name")) ?? "팔로우한 캐스트";
     const followers = await db()
@@ -1554,15 +1714,21 @@ async function syncBirthdayNotifications(): Promise<void> {
     if (followers.empty) {
       return;
     }
-    const followerTasks = followers.docs.map(async (followerDoc) => {
-      const userId = asNonBlankString(followerDoc.get("userId"));
+    const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+      followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId")))
+    );
 
-      if (userId == null) {
-        return;
-      }
+    if (recipientUserIds.length == 0) {
+      return;
+    }
+    let sentCount = 0;
+    let skippedBySettingsCount = 0;
+
+    await processInBatches(recipientUserIds, async (userId) => {
       const settings = await loadUserNotificationSettings(userId);
 
       if (!settings.isPushNotificationsEnabled || !settings.isBirthdayNotificationsEnabled) {
+        skippedBySettingsCount += 1;
         return;
       }
       await createUserNotification(
@@ -1575,12 +1741,17 @@ async function syncBirthdayNotifications(): Promise<void> {
         createdAt,
         settings
       );
+      sentCount += 1;
     });
-
-    await Promise.all(followerTasks);
+    logger.info("Processed birthday notification fanout.", {
+      castId: castId,
+      birthdayKey: birthdayKey,
+      targetCount: recipientUserIds.length,
+      sentCount: sentCount,
+      skippedBySettingsCount: skippedBySettingsCount,
+      droppedByCap: droppedByCap,
+    });
   });
-
-  await Promise.all(tasks);
 }
 
 type RankingScope = {
@@ -1622,6 +1793,7 @@ type RankingSnapshotEntry = {
 
 const RANKING_SYNC_DOC_PATH = "rankingSync/state";
 const RANKING_MAX_COUNT = 50;
+const RANKING_SOURCE_QUERY_LIMIT = RANKING_MAX_COUNT * 3;
 const RANKING_PERIODS = ["WEEKLY", "MONTHLY"] as const;
 const RANKING_SCOPES: RankingScope[] = [
   {country: null, city: null, token: "all_all"},
@@ -1786,38 +1958,56 @@ function areRankingEntriesEqual(left: RankingSnapshotEntry[], right: RankingSnap
   return true;
 }
 
-async function loadCafeRankingSources(): Promise<CafeRankingSource[]> {
-  const snapshot = await db()
+function parseCafeRankingSourceFromDoc(
+  doc: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
+): CafeRankingSource | null {
+  const data = doc.data();
+  const approved = data.approved !== false;
+
+  if (!approved) {
+    return null;
+  }
+  const region = asPlainObject(data.region);
+  const country = normalizeCountry(region?.country);
+  const city = normalizeCity(region?.city);
+  const address = asNonBlankString(region?.address) ?? asNonBlankString(data.address) ?? city;
+  const subtitle = resolveCafeSubtitle(address, city);
+  const score = Math.max(0, Math.floor((asNumber(data.ratingAvg) ?? 0) * 100));
+
+  return {
+    id: doc.id,
+    name: asNonBlankString(data.name) ?? "",
+    subtitle: subtitle,
+    country: country,
+    city: city,
+    score: score,
+    imageUrl: asNonBlankString(data.thumbnailImage),
+  } as CafeRankingSource;
+}
+
+async function loadCafeRankingSourcesByScope(scope: RankingScope): Promise<CafeRankingSource[]> {
+  let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db()
     .collection("cafes")
+    .where("approved", "==", true)
+    .orderBy("ratingAvg", "desc")
     .select("name", "region", "address", "ratingAvg", "thumbnailImage", "approved")
-    .get();
+    .limit(RANKING_SOURCE_QUERY_LIMIT);
+
+  if (scope.country != null && scope.city != null) {
+    query = db()
+      .collection("cafes")
+      .where("approved", "==", true)
+      .where("region.country", "==", scope.country)
+      .where("region.city", "==", scope.city)
+      .orderBy("ratingAvg", "desc")
+      .select("name", "region", "address", "ratingAvg", "thumbnailImage", "approved")
+      .limit(RANKING_SOURCE_QUERY_LIMIT);
+  }
+  const snapshot = await query.get();
 
   return snapshot.docs
-    .map((doc) => {
-      const data = doc.data();
-      const approved = data.approved !== false;
-
-      if (!approved) {
-        return null;
-      }
-      const region = asPlainObject(data.region);
-      const country = normalizeCountry(region?.country);
-      const city = normalizeCity(region?.city);
-      const address = asNonBlankString(region?.address) ?? asNonBlankString(data.address) ?? city;
-      const subtitle = resolveCafeSubtitle(address, city);
-      const score = Math.max(0, Math.floor((asNumber(data.ratingAvg) ?? 0) * 100));
-
-      return {
-        id: doc.id,
-        name: asNonBlankString(data.name) ?? "",
-        subtitle: subtitle,
-        country: country,
-        city: city,
-        score: score,
-        imageUrl: asNonBlankString(data.thumbnailImage),
-      } as CafeRankingSource;
-    })
-    .filter((item): item is CafeRankingSource => item !== null)
+    .map((doc) => parseCafeRankingSourceFromDoc(doc))
+    .filter((item): item is CafeRankingSource => item != null)
     .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
 }
 
@@ -1883,32 +2073,78 @@ async function syncRankingSnapshotDocument(
   );
 }
 
-async function syncAllRankingSnapshots(): Promise<void> {
-  const cafeSources = await loadCafeRankingSources();
-  const cafeById = new Map<string, CafeRankingSource>();
+type RankingDirtyState = {
+  shouldSyncCafe: boolean;
+  shouldSyncCast: boolean;
+};
 
-  cafeSources.forEach((cafe) => {
-    cafeById.set(cafe.id, cafe);
-  });
-  const castSources = await loadCastRankingSources(cafeById);
+async function syncAllRankingSnapshots(dirtyState: RankingDirtyState): Promise<void> {
+  const scopedCafeSourcesByToken = new Map<string, CafeRankingSource[]>();
+  let castSources: CastRankingSource[] = [];
+
+  if (dirtyState.shouldSyncCafe) {
+    const scopedCafeResults = await Promise.all(RANKING_SCOPES.map(async (scope) => {
+      const sources = await loadCafeRankingSourcesByScope(scope);
+
+      return {
+        token: scope.token,
+        sources: sources,
+      };
+    }));
+
+    scopedCafeResults.forEach((result) => {
+      scopedCafeSourcesByToken.set(result.token, result.sources);
+    });
+  }
+  if (dirtyState.shouldSyncCast) {
+    const globalCafeSources = await loadCafeRankingSourcesByScope({
+      country: null,
+      city: null,
+      token: "all_all",
+    });
+    const cafeById = new Map<string, CafeRankingSource>();
+
+    globalCafeSources.forEach((cafe) => {
+      cafeById.set(cafe.id, cafe);
+    });
+    castSources = await loadCastRankingSources(cafeById);
+  }
   const tasks: Promise<void>[] = [];
 
   RANKING_PERIODS.forEach((period) => {
     RANKING_SCOPES.forEach((scope) => {
-      const scopedCafes = cafeSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
-      const scopedCasts = castSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+      if (dirtyState.shouldSyncCafe) {
+        const scopedCafes = scopedCafeSourcesByToken.get(scope.token) ?? [];
 
-      tasks.push(syncRankingSnapshotDocument("cafe", period, scope, scopedCafes));
-      tasks.push(syncRankingSnapshotDocument("cast", period, scope, scopedCasts));
+        tasks.push(syncRankingSnapshotDocument("cafe", period, scope, scopedCafes));
+      }
+      if (dirtyState.shouldSyncCast) {
+        const scopedCasts = castSources.filter((entry) => matchesScope(entry.country, entry.city, scope));
+
+        tasks.push(syncRankingSnapshotDocument("cast", period, scope, scopedCasts));
+      }
     });
   });
   await Promise.all(tasks);
 }
 
-async function markRankingSyncDirty(reason: string, payload: Record<string, unknown>): Promise<void> {
+async function markRankingSyncDirty(
+  reason: string,
+  payload: Record<string, unknown>,
+  targets: {cafe?: boolean; cast?: boolean} = {cafe: true, cast: true}
+): Promise<void> {
+  const nextCafeDirty = targets.cafe === true;
+  const nextCastDirty = targets.cast === true;
+
+  if (!nextCafeDirty && !nextCastDirty) {
+    return;
+  }
+
   await db().doc(RANKING_SYNC_DOC_PATH).set(
     {
       dirty: true,
+      dirtyCafe: nextCafeDirty,
+      dirtyCast: nextCastDirty,
       updatedAt: new Date().toISOString(),
       reason: reason,
       payload: payload,
@@ -1917,19 +2153,40 @@ async function markRankingSyncDirty(reason: string, payload: Record<string, unkn
   );
 }
 
-async function shouldSyncRankingSnapshots(): Promise<boolean> {
+async function resolveRankingDirtyState(): Promise<RankingDirtyState | null> {
   const snapshot = await db().doc(RANKING_SYNC_DOC_PATH).get();
 
   if (!snapshot.exists) {
-    return true;
+    return {
+      shouldSyncCafe: true,
+      shouldSyncCast: true,
+    };
   }
-  return snapshot.get("dirty") === true;
+  const dirty = snapshot.get("dirty") === true;
+
+  if (!dirty) {
+    return null;
+  }
+  const dirtyCafe = snapshot.get("dirtyCafe");
+  const dirtyCast = snapshot.get("dirtyCast");
+  const shouldSyncCafe = dirtyCafe === true || (dirtyCafe !== false && dirtyCast !== true);
+  const shouldSyncCast = dirtyCast === true || (dirtyCast !== false && dirtyCafe !== true);
+
+  if (!shouldSyncCafe && !shouldSyncCast) {
+    return null;
+  }
+  return {
+    shouldSyncCafe: shouldSyncCafe,
+    shouldSyncCast: shouldSyncCast,
+  };
 }
 
 async function completeRankingSync(): Promise<void> {
   await db().doc(RANKING_SYNC_DOC_PATH).set(
     {
       dirty: false,
+      dirtyCafe: false,
+      dirtyCast: false,
       syncedAt: new Date().toISOString(),
     },
     {merge: true}
@@ -1940,31 +2197,57 @@ async function completeRankingSync(): Promise<void> {
 export const onReviewWrittenSyncCafeAggregate = onDocumentWritten(
   "reviews/{reviewId}",
   async (event) => {
-    const beforeData = event.data?.before.data();
-    const afterData = event.data?.after.data();
-    const targetCafeIds = new Set<string>();
+    const beforeData = event.data?.before.data() as ReviewLike | undefined;
+    const afterData = event.data?.after.data() as ReviewLike | undefined;
+    const beforeContribution = buildReviewAggregateContribution(beforeData);
+    const afterContribution = buildReviewAggregateContribution(afterData);
+    const deltas = new Map<string, {reviewCountDelta: number; ratingTotalDelta: number}>();
 
-    if (typeof beforeData?.cafeId === "string" && beforeData.cafeId.length > 0) {
-      targetCafeIds.add(beforeData.cafeId);
+    const appendDelta = (
+      cafeId: string,
+      reviewCountDelta: number,
+      ratingTotalDelta: number
+    ) => {
+      const current = deltas.get(cafeId) ?? {reviewCountDelta: 0, ratingTotalDelta: 0};
+      deltas.set(cafeId, {
+        reviewCountDelta: current.reviewCountDelta + reviewCountDelta,
+        ratingTotalDelta: current.ratingTotalDelta + ratingTotalDelta,
+      });
+    };
+
+    if (beforeContribution != null) {
+      appendDelta(
+        beforeContribution.cafeId,
+        -beforeContribution.reviewCount,
+        -beforeContribution.ratingTotal
+      );
     }
-    if (typeof afterData?.cafeId === "string" && afterData.cafeId.length > 0) {
-      targetCafeIds.add(afterData.cafeId);
+    if (afterContribution != null) {
+      appendDelta(
+        afterContribution.cafeId,
+        afterContribution.reviewCount,
+        afterContribution.ratingTotal
+      );
     }
-    if (targetCafeIds.size == 0) {
+    if (deltas.size == 0) {
       return;
     }
 
     await Promise.all(
-      Array.from(targetCafeIds).map(async (cafeId) => {
-        await syncCafeReviewAggregate(cafeId);
+      Array.from(deltas.entries()).map(async ([cafeId, delta]) => {
+        await applyCafeReviewAggregateDelta(
+          cafeId,
+          delta.reviewCountDelta,
+          delta.ratingTotalDelta
+        );
       })
     );
     await markRankingSyncDirty("review_written", {
       reviewId: event.params.reviewId,
-      cafeIds: Array.from(targetCafeIds),
-    });
+      cafeIds: Array.from(deltas.keys()),
+    }, {cafe: true, cast: false});
     logger.info("Synced cafe review aggregate.", {
-      cafeIds: Array.from(targetCafeIds),
+      cafeIds: Array.from(deltas.keys()),
       reviewId: event.params.reviewId,
     });
   }
@@ -2032,7 +2315,7 @@ export const onCastFollowWrittenSyncFollowerCount = onDocumentWritten(
         castId,
         cafeId,
         delta,
-      });
+      }, {cafe: false, cast: true});
 
     } catch (error) {
       logger.error("Failed to update follower count", {
@@ -2124,38 +2407,36 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
         return;
       }
       const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-      const followerTasks = followers.docs.map(async (followerDoc) => {
-        const userId = asNonBlankString(followerDoc.get("userId"));
+      const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+        followers.docs.map((followerDoc) => asNonBlankString(followerDoc.get("userId"))),
+        [requesterUserId]
+      );
 
-        if (userId == null || userId === requesterUserId) {
-          return;
-        }
+      if (recipientUserIds.length == 0) {
+        logger.info("Fan announcement target is empty after filtering.", {
+          requestId: requestId,
+          castId: castId,
+        });
+        return;
+      }
+      let sentCount = 0;
+      let skippedBySettingsCount = 0;
+      let failedCount = 0;
+
+      await processInBatches(recipientUserIds, async (userId) => {
         try {
           const settings = await loadUserNotificationSettings(userId);
 
           if (!settings.isPushNotificationsEnabled) {
-            logger.info("Skipped fan announcement push because push is disabled.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           if (!settings.isFollowNotificationsEnabled) {
-            logger.info("Skipped fan announcement push because follow notification is disabled.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           if (isQuietHoursPushSuppressed(settings)) {
-            logger.info("Skipped fan announcement push due to quiet hours.", {
-              requestId: requestId,
-              targetUserId: userId,
-              castId: castId,
-              quietHoursMode: settings.quietHoursMode,
-            });
+            skippedBySettingsCount += 1;
             return;
           }
           await createUserNotification(
@@ -2168,23 +2449,20 @@ export const onFanAnnouncementRequestWrittenSendPush = onDocumentWritten(
             createdAt,
             settings
           );
-          logger.info("Sent fan announcement push.", {
-            requestId: requestId,
-            targetUserId: userId,
-            castId: castId,
-            createdAt: createdAt,
-          });
+          sentCount += 1;
         } catch (error) {
-          logger.error("Failed to send fan announcement push.", {
-            requestId: requestId,
-            targetUserId: userId,
-            castId: castId,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          failedCount += 1;
         }
       });
-
-      await Promise.all(followerTasks);
+      logger.info("Processed fan announcement notification fanout.", {
+        requestId: requestId,
+        castId: castId,
+        targetCount: recipientUserIds.length,
+        sentCount: sentCount,
+        skippedBySettingsCount: skippedBySettingsCount,
+        failedCount: failedCount,
+        droppedByCap: droppedByCap,
+      });
     } finally {
       await event.data?.after.ref.delete();
     }
@@ -2697,8 +2975,8 @@ export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
     const afterData = event.data?.after.data() as ReviewLike | undefined;
     const targetKeys = new Set<string>();
 
-    collectCastTargetsFromReviewPayload(beforeData).forEach((key) => targetKeys.add(key));
-    collectCastTargetsFromReviewPayload(afterData).forEach((key) => targetKeys.add(key));
+    collectCastUserTargetsFromReviewPayload(beforeData).forEach((key) => targetKeys.add(key));
+    collectCastUserTargetsFromReviewPayload(afterData).forEach((key) => targetKeys.add(key));
 
     if (targetKeys.size == 0) {
       return;
@@ -2706,12 +2984,12 @@ export const onReviewWrittenSyncCastVisitCertificationCount = onDocumentWritten(
 
     await Promise.all(
       Array.from(targetKeys).map(async (key) => {
-        const {cafeId, castId} = parseCastTargetKey(key);
+        const {cafeId, castId, userId} = parseCastUserTargetKey(key);
 
-        if (cafeId.length == 0 || castId.length == 0) {
+        if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
           return;
         }
-        await syncCastVisitCertificationAggregate(cafeId, castId);
+        await syncCastVisitCertificationForUser(cafeId, castId, userId);
       })
     );
 
@@ -2783,7 +3061,7 @@ export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
       const castIds = await loadTaggedCastIdsByCafeAndUser(cafeId, userId);
 
       castIds.forEach((castId) => {
-        targetPairs.add(castTargetKey(cafeId, castId));
+        targetPairs.add(castUserTargetKey(cafeId, castId, userId));
       });
     }));
 
@@ -2793,12 +3071,12 @@ export const onVisitWrittenSyncCastVisitCertificationCount = onDocumentWritten(
 
     await Promise.all(
       Array.from(targetPairs).map(async (key) => {
-        const {cafeId, castId} = parseCastTargetKey(key);
+        const {cafeId, castId, userId} = parseCastUserTargetKey(key);
 
-        if (cafeId.length == 0 || castId.length == 0) {
+        if (cafeId.length == 0 || castId.length == 0 || userId.length == 0) {
           return;
         }
-        await syncCastVisitCertificationAggregate(cafeId, castId);
+        await syncCastVisitCertificationForUser(cafeId, castId, userId);
       })
     );
 
@@ -2960,26 +3238,36 @@ export const onVisitWrittenSyncUserVisitStats = onDocumentWritten(
     const beforeData = event.data?.before.data() as VisitLike | undefined;
     const afterData = event.data?.after.data() as VisitLike | undefined;
     const beforeUserId = asNonBlankString(beforeData?.userId);
+    const beforeVerified = beforeData?.verified === true;
     const afterUserId = asNonBlankString(afterData?.userId);
-    const userIds = new Set<string>();
+    const afterVerified = afterData?.verified === true;
+    const deltaByUserId = new Map<string, number>();
 
-    if (beforeUserId != null) {
-      userIds.add(beforeUserId);
+    const appendDelta = (userId: string | null, delta: number) => {
+      if (userId == null || delta == 0) {
+        return;
+      }
+      const current = deltaByUserId.get(userId) ?? 0;
+      deltaByUserId.set(userId, current + delta);
+    };
+
+    if (beforeVerified) {
+      appendDelta(beforeUserId, -1);
     }
-    if (afterUserId != null) {
-      userIds.add(afterUserId);
+    if (afterVerified) {
+      appendDelta(afterUserId, 1);
     }
-    if (userIds.size == 0) {
+    if (deltaByUserId.size == 0) {
       return;
     }
 
-    await Promise.all(Array.from(userIds).map(async (userId) => {
-      await syncUserVisitCountAggregate(userId);
+    await Promise.all(Array.from(deltaByUserId.entries()).map(async ([userId, delta]) => {
+      await applyUserVisitCountDelta(userId, delta);
     }));
 
     logger.info("Synced user visitCount aggregate from visit write.", {
       visitId: event.params.visitId,
-      targets: Array.from(userIds),
+      targets: Array.from(deltaByUserId.entries()).map(([userId, delta]) => ({userId, delta})),
     });
   }
 );
@@ -3066,92 +3354,96 @@ export const onStampWrittenSyncUserStampStats = onDocumentWritten(
   async (event) => {
     const beforeData = event.data?.before.data() as StampLike | undefined;
     const afterData = event.data?.after.data() as StampLike | undefined;
-    const userIds = new Set<string>();
     const beforeUserId = asNonBlankString(beforeData?.userId);
     const afterUserId = asNonBlankString(afterData?.userId);
+    const deltaByUserId = new Map<string, number>();
 
     if (beforeUserId != null) {
-      userIds.add(beforeUserId);
+      deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
     }
     if (afterUserId != null) {
-      userIds.add(afterUserId);
+      deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
     }
-    if (userIds.size == 0) {
+
+    const targetEntries = Array.from(deltaByUserId.entries())
+      .filter(([userId, delta]) => userId.length > 0 && delta != 0);
+
+    if (targetEntries.length == 0) {
       return;
     }
 
-    await Promise.all(
-      Array.from(userIds).map(async (userId) => {
-        await syncUserStampCountAggregate(userId);
-      })
-    );
+    await Promise.all(targetEntries.map(async ([userId, delta]) => {
+      await applyUserStampCountDelta(userId, delta);
+    }));
 
     logger.info("Synced user stampCount aggregate from stamp write.", {
       stampId: event.params.stampId,
-      targets: Array.from(userIds),
+      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
     });
   }
 );
 
-export const onFanAnnouncementRequestCreatedSendPushNotifications = onDocumentWritten(
-  "fanAnnouncementRequests/{requestId}",
-  async (event) => {
-    const requestId = asNonBlankString(event.params.requestId);
-    const beforeData = event.data?.before.data();
-    const afterData = event.data?.after.data() as FanAnnouncementRequestLike | undefined;
-
-    if (requestId == null || beforeData != null || afterData == null) {
-      return;
-    }
-    const castId = asNonBlankString(afterData.castId);
-    const cafeId = asNonBlankString(afterData.cafeId);
-    const senderUserId = asNonBlankString(afterData.userId);
-    const title = asNonBlankString(afterData.title);
-    const body = asNonBlankString(afterData.body);
-    const createdAt = asNonBlankString(afterData.createdAt) ?? new Date().toISOString();
-
-    if (castId == null || cafeId == null || title == null || body == null) {
-      return;
-    }
-    const followSnapshot = await db()
-      .collection("castFollows")
-      .where("castId", "==", castId)
-      .get();
-    const followerUserIds = followSnapshot.docs
-      .map((doc) => asNonBlankString(doc.data()?.userId))
-      .filter((id): id is string => id != null && id !== senderUserId);
-
-    if (followerUserIds.length === 0) {
-      logger.info("No followers to notify for fan announcement.", {requestId, castId});
-      return;
-    }
-    const tasks = followerUserIds.map(async (userId) => {
-      await createUserNotification(
-        userId,
-        `fan_announcement_${requestId}_${userId}`,
-        "FAN_ANNOUNCEMENT",
-        title,
-        body,
-        castId,
-        createdAt
-      );
-    });
-
-    await Promise.all(tasks);
-    logger.info("Sent fan announcement notifications.", {
-      requestId: requestId,
-      castId: castId,
-      recipientCount: followerUserIds.length,
-    });
+function hasCafeRankingRelevantChange(
+  beforeData: Record<string, unknown> | undefined,
+  afterData: Record<string, unknown> | undefined
+): {cafe: boolean; cast: boolean} {
+  if (beforeData == null && afterData == null) {
+    return {cafe: false, cast: false};
   }
-);
+  if (beforeData == null || afterData == null) {
+    return {cafe: true, cast: true};
+  }
+  const beforeRegion = asPlainObject(beforeData.region);
+  const afterRegion = asPlainObject(afterData.region);
+  const beforeCountry = normalizeCountry(beforeRegion?.country);
+  const afterCountry = normalizeCountry(afterRegion?.country);
+  const beforeCity = normalizeCity(beforeRegion?.city);
+  const afterCity = normalizeCity(afterRegion?.city);
+  const beforeAddress = asNonBlankString(beforeRegion?.address) ?? asNonBlankString(beforeData.address) ?? "";
+  const afterAddress = asNonBlankString(afterRegion?.address) ?? asNonBlankString(afterData.address) ?? "";
+  const beforeName = asNonBlankString(beforeData.name) ?? "";
+  const afterName = asNonBlankString(afterData.name) ?? "";
+  const beforeRating = asNumber(beforeData.ratingAvg) ?? 0;
+  const afterRating = asNumber(afterData.ratingAvg) ?? 0;
+  const beforeApproved = beforeData.approved !== false;
+  const afterApproved = afterData.approved !== false;
+  const beforeImageUrl = asNonBlankString(beforeData.thumbnailImage) ?? "";
+  const afterImageUrl = asNonBlankString(afterData.thumbnailImage) ?? "";
+
+  const cafeRankingChanged =
+    beforeName !== afterName ||
+    beforeCountry !== afterCountry ||
+    beforeCity !== afterCity ||
+    beforeAddress !== afterAddress ||
+    beforeRating !== afterRating ||
+    beforeApproved !== afterApproved ||
+    beforeImageUrl !== afterImageUrl;
+  const castRankingDependencyChanged =
+    beforeName !== afterName ||
+    beforeCountry !== afterCountry ||
+    beforeCity !== afterCity ||
+    beforeApproved !== afterApproved;
+
+  return {
+    cafe: cafeRankingChanged,
+    cast: castRankingDependencyChanged,
+  };
+}
 
 export const onCafeWrittenMarkRankingDirty = onDocumentWritten(
   "cafes/{cafeId}",
   async (event) => {
+    const beforeData = event.data?.before.data() as Record<string, unknown> | undefined;
+    const afterData = event.data?.after.data() as Record<string, unknown> | undefined;
+    const targets = hasCafeRankingRelevantChange(beforeData, afterData);
+
+    if (!targets.cafe && !targets.cast) {
+      return;
+    }
     await markRankingSyncDirty("cafe_written", {
       cafeId: event.params.cafeId,
-    });
+      targets: targets,
+    }, targets);
   }
 );
 
@@ -3161,6 +3453,41 @@ export const onCastWrittenMarkRankingDirty = onDocumentWritten(
     await markRankingSyncDirty("cast_written", {
       cafeId: event.params.cafeId,
       castId: event.params.castId,
+    }, {cafe: false, cast: true});
+  }
+);
+
+export const onCafeCastWrittenSyncCastDirectory = onDocumentWritten(
+  "cafes/{cafeId}/casts/{castId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+    const castId = asNonBlankString(event.params.castId);
+
+    if (cafeId == null || castId == null) {
+      return;
+    }
+    const castDirectoryRef = db().collection("castDirectory").doc(castId);
+    const afterData = event.data?.after.data();
+
+    if (afterData == null) {
+      await castDirectoryRef.delete();
+      logger.info("Deleted castDirectory entry from cast delete.", {
+        cafeId: cafeId,
+        castId: castId,
+      });
+      return;
+    }
+    await castDirectoryRef.set(
+      {
+        castId: castId,
+        cafeId: cafeId,
+        updatedAt: new Date().toISOString(),
+      },
+      {merge: true}
+    );
+    logger.info("Upserted castDirectory entry from cast write.", {
+      cafeId: cafeId,
+      castId: castId,
     });
   }
 );
@@ -3212,16 +3539,18 @@ export const onScheduleSyncRankingSnapshots = onSchedule(
     timeZone: "Asia/Seoul",
   },
   async () => {
-    const shouldSync = await shouldSyncRankingSnapshots();
+    const dirtyState = await resolveRankingDirtyState();
 
-    if (!shouldSync) {
+    if (dirtyState == null) {
       return;
     }
-    await syncAllRankingSnapshots();
+    await syncAllRankingSnapshots(dirtyState);
     await completeRankingSync();
     logger.info("Synced ranking snapshots.", {
       periods: RANKING_PERIODS,
       scopeCount: RANKING_SCOPES.length,
+      syncedCafe: dirtyState.shouldSyncCafe,
+      syncedCast: dirtyState.shouldSyncCast,
     });
   }
 );
@@ -4201,6 +4530,72 @@ export const normalizeCastLinkedUserFields = functionsV1.https.onRequest(async (
     response.status(statusCode).json({error: errorMessage});
   }
 });
+
+export const rebuildCastDirectoryIndex = functionsV1
+  .runWith({
+    timeoutSeconds: 540,
+    memory: "1GB",
+  })
+  .https
+  .onRequest(async (request, response) => {
+    if (request.method !== "POST") {
+      response.status(405).json({error: "method_not_allowed"});
+      return;
+    }
+    try {
+      const adminUserId = await requireAdminUserIdFromRequest(request);
+      const firestore = db();
+      const snapshot = await firestore.collectionGroup("casts").get();
+      const BATCH_SIZE = 400;
+      let syncedCount = 0;
+      let skippedCount = 0;
+
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+        const batch = firestore.batch();
+        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+
+        chunk.forEach((castDoc) => {
+          const castId = castDoc.id;
+          const cafeId = castDoc.ref.parent.parent?.id ?? "";
+
+          if (castId.length == 0 || cafeId.length == 0) {
+            skippedCount += 1;
+            return;
+          }
+          const directoryRef = firestore.collection("castDirectory").doc(castId);
+
+          batch.set(directoryRef, {
+            castId: castId,
+            cafeId: cafeId,
+            updatedAt: new Date().toISOString(),
+          }, {merge: true});
+          syncedCount += 1;
+        });
+        await batch.commit();
+      }
+
+      logger.info("rebuildCastDirectoryIndex completed.", {
+        adminUserId: adminUserId,
+        scannedCount: snapshot.docs.length,
+        syncedCount: syncedCount,
+        skippedCount: skippedCount,
+      });
+      response.status(200).json({
+        ok: true,
+        scannedCount: snapshot.docs.length,
+        syncedCount: syncedCount,
+        skippedCount: skippedCount,
+      });
+    } catch (error) {
+      const errorMessage = asErrorMessage(error, "rebuildCastDirectoryIndex failed");
+      const statusCode = errorMessage === "missing_auth" ? 401 : errorMessage === "forbidden" ? 403 : 500;
+
+      logger.error("rebuildCastDirectoryIndex failed.", {
+        error: errorMessage,
+      });
+      response.status(statusCode).json({error: errorMessage});
+    }
+  });
 
 const CLAIM_APPROVED_TTL_MS = 10 * 60 * 1000; // 10분
 const CLAIM_REJECTED_TTL_MS = 60 * 60 * 1000; // 1시간

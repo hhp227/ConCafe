@@ -51,7 +51,7 @@
 
 ### M-01. Firestore 사용량 기준선 수집
 - 우선순위: P0
-- 상태: TODO
+- 상태: DOING
 - 체크:
   - [ ] Firebase Usage 탭에서 `reads`, `writes`, `storage` 최근 7일 스냅샷 기록
   - [ ] Cloud Functions 호출 수와 상위 비용 함수 목록 기록
@@ -62,11 +62,11 @@
 
 ### M-02. 개선 후 비교 측정 템플릿 준비
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 화면별 측정 표 템플릿 작성
-  - [ ] Function별 read/write 감소 확인 표 작성
-  - [ ] 배포 후 3일, 7일 비교 항목 정의
+  - [x] 화면별 측정 표 템플릿 작성
+  - [x] Function별 read/write 감소 확인 표 작성
+  - [x] 배포 후 3일, 7일 비교 항목 정의
 - 완료 기준:
   - 개선 전후를 같은 형식으로 비교할 수 있다.
 
@@ -74,12 +74,12 @@
 
 ### A-01. 카페 상세 조회를 요약/상세 2단계로 분리
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 카페 상세 진입 시 반드시 필요한 데이터와 탭 진입 후 필요한 데이터를 분리
-  - [ ] 첫 진입에서 `notices`, `menus`, `goods` 전체 조회 제거
-  - [ ] 탭별 lazy load 구조로 변경
-  - [ ] 상세 DTO와 탭 DTO를 분리
+  - [x] 카페 상세 진입 시 반드시 필요한 데이터와 탭 진입 후 필요한 데이터를 분리
+  - [x] 첫 진입에서 `notices`, `menus`, `goods` 전체 조회 제거
+  - [x] 탭별 lazy load 구조로 변경
+  - [x] 상세 DTO와 탭 DTO를 분리
 - 완료 기준:
   - 카페 상세 첫 진입이 전체 서브컬렉션 일괄 조회를 하지 않는다.
 - 참고:
@@ -87,32 +87,32 @@
 
 ### A-02. 카페 상세의 캐스트 오늘 스케줄 N+1 제거
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 카페 상세에서 캐스트별 `getCastSchedules()` 반복 호출 제거
-  - [ ] `cafeId + date` 기준 1회 조회 결과를 캐스트별로 매핑
-  - [ ] 이미 있는 `getWorkingCastIdsByCafeAndDate()`와 중복 조회 정리
+  - [x] 카페 상세에서 캐스트별 `getCastSchedules()` 반복 호출 제거
+  - [x] `cafeId + date` 기준 1회 조회 결과를 캐스트별로 매핑
+  - [x] 이미 있는 `getWorkingCastIdsByCafeAndDate()`와 중복 조회 정리
 - 완료 기준:
   - 캐스트 수에 비례한 스케줄 추가 read가 발생하지 않는다.
 
 ### A-03. 카페 상세 리뷰 작성자 닉네임 조회 최적화
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 리뷰 문서의 `userNickname`을 우선 사용하고 미존재 시에만 fallback
-  - [ ] fallback user 조회 결과를 화면 단위 캐시로 재사용
-  - [ ] 같은 사용자 중복 조회 제거
+  - [x] 리뷰 문서의 `userNickname`을 우선 사용하고 미존재 시에만 fallback
+  - [x] fallback user 조회 결과를 화면 단위 캐시로 재사용
+  - [x] 같은 사용자 중복 조회 제거
 - 완료 기준:
   - 리뷰 수에 비례한 사용자 문서 중복 조회가 줄어든다.
 
 ### A-04. 내 정보 화면의 카페 상세 재조회 제거
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 최근 방문 카페 조회를 카페 상세가 아닌 카페 요약 조회로 변경
-  - [ ] 즐겨찾기 카페 조회를 카페 상세가 아닌 카페 요약 조회로 변경
-  - [ ] `getCafesByIds()` 내부에서 `fetchCafeDetail()` 의존 제거
-  - [ ] 카페 요약 조회용 API 또는 역인덱스 경로 설계
+  - [x] 최근 방문 카페 조회를 카페 상세가 아닌 카페 요약 조회로 변경
+  - [x] 즐겨찾기 카페 조회를 카페 상세가 아닌 카페 요약 조회로 변경
+  - [x] `getCafesByIds()` 내부에서 `fetchCafeDetail()` 의존 제거
+  - [x] 카페 요약 조회용 API 또는 역인덱스 경로 설계
 - 완료 기준:
   - 내 정보 화면이 카페 ID 목록 때문에 카페 상세를 반복 호출하지 않는다.
 
@@ -148,31 +148,31 @@
 
 ### A-08. castId -> cafeId 역탐색 제거
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `castDirectory` 같은 역인덱스 문서 설계
-  - [ ] 캐스트 생성/수정/삭제 시 역인덱스 동기화 경로 설계
-  - [ ] `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
+  - [x] `castDirectory` 같은 역인덱스 문서 설계
+  - [x] 캐스트 생성/수정/삭제 시 역인덱스 동기화 경로 설계
+  - [x] `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
 - 완료 기준:
   - 캐스트 상세/팔로우/Claim 경로에서 전체 카페 순회가 사라진다.
 
 ### A-09. 카페관리 화면의 전체 카페 선조회 제거
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 운영자 기준 `ownedCafeIds`만으로 대상 카페를 직접 조회
-  - [ ] 관리자 화면은 별도 경량 리스트 쿼리 사용
-  - [ ] 카페별 `castCount`, `noticeCount`, `visitCount`를 전체 읽기 대신 집계 필드 또는 count query로 대체
+  - [x] 운영자 기준 `ownedCafeIds`만으로 대상 카페를 직접 조회
+  - [x] 관리자 화면은 별도 경량 리스트 쿼리 사용
+  - [x] 카페별 `castCount`, `noticeCount`, `visitCount`를 전체 읽기 대신 집계 필드 또는 count query로 대체
 - 완료 기준:
   - 운영 카페 수가 많아져도 진입 비용이 급증하지 않는다.
 
 ### A-10. 홈 화면 중복 조회 축소
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 인기 캐스트의 카페명 해결 시 카페 상세 재조회 제거
-  - [ ] nearby local/global fallback 쿼리 횟수 상한 재검토
-  - [ ] 홈에 필요한 카페/캐스트 요약 필드만 사용하도록 정리
+  - [x] 인기 캐스트의 카페명 해결 시 카페 상세 재조회 제거
+  - [x] nearby local/global fallback 쿼리 횟수 상한 재검토
+  - [x] 홈에 필요한 카페/캐스트 요약 필드만 사용하도록 정리
 - 완료 기준:
   - 홈 화면 1회 진입 시 중복 상세 조회가 없다.
 
@@ -200,13 +200,13 @@
 
 ### B-03. count aggregation 도입 범위 확정
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 방문 수
-  - [ ] 스탬프 수
-  - [ ] 공지 수
-  - [ ] 카페별 전체 방문 수
-  - [ ] 관리자 메트릭
+  - [x] 방문 수
+  - [x] 스탬프 수
+  - [x] 공지 수
+  - [x] 카페별 전체 방문 수
+  - [x] 관리자 메트릭
 - 완료 기준:
   - 전체 문서 읽기로 개수만 세는 경로가 줄어든다.
 
@@ -224,60 +224,60 @@
 
 ### C-01. 카페 리뷰 집계를 전체 재집계에서 delta 방식으로 전환
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `onReviewWrittenSyncCafeAggregate`에서 전체 리뷰 재조회 제거
-  - [ ] create/update/delete별 delta 계산 설계
-  - [ ] 평균 평점 갱신 방식 결정
+  - [x] `onReviewWrittenSyncCafeAggregate`에서 전체 리뷰 재조회 제거
+  - [x] create/update/delete별 delta 계산 설계
+  - [x] 평균 평점 갱신 방식 결정
 - 완료 기준:
   - 리뷰 1건 변경 시 해당 카페 리뷰 전체를 다시 읽지 않는다.
 
 ### C-02. 방문 인증 기반 캐스트 집계 최적화
 - 우선순위: P0
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncCastVisitCertificationAggregate()` 전체 재집계 제거
-  - [ ] 캐스트별 인증 유저 집계 소스 재설계
-  - [ ] review/visit write 당 필요한 최소 read만 남기기
+  - [x] `syncCastVisitCertificationAggregate()` 전체 재집계 제거
+  - [x] 캐스트별 인증 유저 집계 소스 재설계
+  - [x] review/visit write 당 필요한 최소 read만 남기기
 - 완료 기준:
   - 리뷰 또는 방문 1건 변경 시 관련 컬렉션 전체 스캔이 발생하지 않는다.
 
 ### C-03. 유저 방문 수 재집계 최적화
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncUserVisitCountAggregate()` 전체 verified visit 재조회 제거
-  - [ ] delta 기반 또는 stamp/visit authoritative source 확정
-  - [ ] level 계산 경로와 동기화 순서 정리
+  - [x] `syncUserVisitCountAggregate()` 전체 verified visit 재조회 제거
+  - [x] delta 기반 또는 stamp/visit authoritative source 확정
+  - [x] level 계산 경로와 동기화 순서 정리
 - 완료 기준:
   - 방문 문서 변경 시 유저별 전체 방문 재조회가 없다.
 
 ### C-04. 유저 스탬프 수 재집계 최적화
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] `syncUserStampCountAggregate()` 전체 stamp 재조회 제거
-  - [ ] stamp create/delete 기준 delta 반영 구조로 전환
+  - [x] `syncUserStampCountAggregate()` 전체 stamp 재조회 제거
+  - [x] stamp create/delete 기준 delta 반영 구조로 전환
 - 완료 기준:
   - stamp write 시 전체 stamp 스캔이 없다.
 
 ### C-05. 알림 대상 fan-out 비용 관리
 - 우선순위: P1
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] followers/favorites 대상 조회량이 큰 함수 목록 정리
-  - [ ] notificationSettings 조회 캐시 또는 배치 전략 검토
-  - [ ] 고비용 fan-out 함수에 상한/큐/배치 적용 여부 검토
+  - [x] followers/favorites 대상 조회량이 큰 함수 목록 정리
+  - [x] notificationSettings 조회 캐시 또는 배치 전략 검토
+  - [x] 고비용 fan-out 함수에 상한/큐/배치 적용 여부 검토
 - 완료 기준:
   - 인기 캐스트/카페의 fan-out 쓰기 비용이 통제된다.
 
 ### C-06. 랭킹 동기화 전체 스캔 최적화
 - 우선순위: P2
-- 상태: TODO
+- 상태: DONE
 - 체크:
-  - [ ] 현재 전체 카페/전체 캐스트 스캔 주기 기록
-  - [ ] 증분 갱신 가능 범위 검토
-  - [ ] 랭킹 원천 데이터를 별도 경량 문서로 유지할지 결정
+  - [x] 현재 전체 카페/전체 캐스트 스캔 주기 기록
+  - [x] 증분 갱신 가능 범위 검토
+  - [x] 랭킹 원천 데이터를 별도 경량 문서로 유지할지 결정
 - 완료 기준:
   - 데이터가 증가해도 랭킹 작업 비용이 급증하지 않는다.
 
@@ -330,45 +330,126 @@
 ## F. 실행 순서 제안
 
 ### 1차 묶음
-- [ ] A-01 카페 상세 조회 분리
-- [ ] A-02 카페 상세 스케줄 N+1 제거
-- [ ] A-04 내 정보 카페 상세 재조회 제거
-- [ ] A-05 방문 목록 서버 페이징
-- [ ] A-09 카페관리 전체 카페 선조회 제거
+- [x] A-01 카페 상세 조회 분리
+- [x] A-02 카페 상세 스케줄 N+1 제거
+- [x] A-04 내 정보 카페 상세 재조회 제거
+- [x] A-05 방문 목록 서버 페이징
+- [x] A-09 카페관리 전체 카페 선조회 제거
 
 ### 2차 묶음
-- [ ] A-08 castId 역탐색 제거
-- [ ] B-03 count aggregation 도입 범위 적용
-- [ ] C-01 리뷰 집계 delta 전환
-- [ ] C-02 방문인증 캐스트 집계 최적화
+- [x] A-08 castId 역탐색 제거
+- [x] B-03 count aggregation 도입 범위 적용
+- [x] C-01 리뷰 집계 delta 전환
+- [x] C-02 방문인증 캐스트 집계 최적화
 
 ### 3차 묶음
 - [ ] A-06 카페 검색 최적화
 - [ ] A-07 캐스트 검색 최적화
-- [ ] C-05 알림 fan-out 비용 관리
-- [ ] C-06 랭킹 동기화 최적화
+- [x] C-05 알림 fan-out 비용 관리
+- [x] C-06 랭킹 동기화 최적화
 
 ## 작업 로그
 
 ### 2026-04-10
 - [x] Firestore 비용/성능 개선 전용 백로그 문서 생성
 - [x] 방문 목록 페이징을 `toPaged()` 기반 메모리 페이징에서 Firestore 서버 커서 기반 페이징으로 전환
-- [ ] 기준선 수집 시작
+- [x] 카페 상세/카페 캐스트 목록의 오늘 스케줄 조회를 `cafeId + date` 단건 쿼리로 통합
+- [x] 내 정보의 최근 방문/즐겨찾기 카페 조회에서 카페 상세 재호출 제거
+- [x] 카페관리에서 비관리자 대상 카페를 `ownedCafeIds` 직접 조회로 전환하고 `cast/notice/visit` 카운트를 aggregation query로 전환
+- [x] 카페 상세 첫 진입에서 `notices/menus/goods` 일괄 조회를 제거하고 메뉴/굿즈 탭 lazy load 도입
+- [x] `castDirectory` 역인덱스를 추가하고 `resolveCafeIdByCastId()`의 전체 카페 순회 fallback 제거
+- [x] 리뷰 write 트리거를 전체 재집계에서 카페 문서 기반 delta 집계로 전환
+- [x] 방문/리뷰 write 트리거의 캐스트 방문인증 집계를 `user-cafe-cast` 단위 delta 집계로 전환
+- [x] 방문 수/스탬프 수/공지 수/카페별 전체 방문 수/관리자 메트릭의 count 경로를 aggregation 기준으로 정리
+- [x] 방문 write 트리거의 유저 방문수/레벨 집계를 전체 재조회에서 delta 집계로 전환
+- [x] stamp write 트리거의 유저 스탬프 수 집계를 전체 재조회에서 delta 집계로 전환
+- [x] fan-out 알림 경로에 수신자 상한/배치 처리 적용 및 팬공지 중복 트리거 제거
+- [x] 랭킹 동기화 dirty state를 cafe/cast로 분리하고 cafe 랭킹 소스 조회를 scope별 top-N 쿼리로 전환
+- [x] 카페 상세 리뷰 닉네임 fallback을 카페 화면 단위 캐시로 통합
+- [x] 홈 인기 캐스트 카페명 해결 시 카페 상세 재조회를 제거하고 nearby fallback 반복 상한을 조정
+- [x] 개선 전후 측정 템플릿 문서화
+- [-] 기준선 수집 시작
+
+## 측정 가이드
+
+### 수집 원칙
+- 기준선 측정은 같은 계정, 같은 기기, 같은 네트워크에서 진행한다.
+- 각 화면은 앱 재실행 후 첫 진입 3회 측정하고 중앙값을 기록한다.
+- Firebase 콘솔 수치는 스크린샷 기준 시각을 함께 남긴다.
+- 배포 후 비교는 `배포 직전 7일 평균` 대비 `배포 후 3일`, `배포 후 7일`로 본다.
+
+### Firebase 콘솔 수집 순서
+1. Firebase Console > Firestore Database > Usage에서 최근 7일 `reads`, `writes`, `storage`를 기록한다.
+2. Firebase Console > Functions > Usage 또는 GCP Metrics에서 호출 수 상위 함수를 기록한다.
+3. 동일 날짜 기준으로 `onReviewWrittenSyncCafeAggregate`, `onReviewWrittenSyncCastVisitCertificationCount`, `onVisitWrittenSyncCastVisitCertificationCount`, `syncUserVisitCountAggregate`, `syncUserStampCountAggregate`를 우선 확인한다.
+
+### 화면 수동 측정 순서
+1. 앱 완전 종료 후 실행
+2. 대상 화면 1회 진입
+3. Firestore REST 호출 수와 문서 read 추정치를 메모
+4. 동일 절차 3회 반복 후 중앙값 기록
+
+## 측정 템플릿
+
+### 화면별 측정 표
+| 화면 | 시나리오 | 측정 전 호출 수 | 측정 후 호출 수 | 전 read 추정 | 후 read 추정 | 비고 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| 카페 상세 | 첫 진입 후 정보 탭 유지 |  |  |  |  |  |
+| 카페 상세 | 메뉴 탭 최초 진입 |  |  |  |  | lazy load 확인 |
+| 카페 상세 | 공지 탭 최초 진입 |  |  |  |  |  |
+| 내 정보 | 첫 진입 |  |  |  |  |  |
+| 카페관리 | 운영자 첫 진입 |  |  |  |  |  |
+| 방문 목록 | 첫 페이지 |  |  |  |  | server paging 확인 |
+
+### Functions 비교 표
+| 함수 | 변경 전 read 패턴 | 변경 후 read 패턴 | 배포 후 3일 호출 수 | 배포 후 7일 호출 수 | 비고 |
+| --- | --- | --- | ---: | ---: | --- |
+| `onReviewWrittenSyncCafeAggregate` | 카페별 전체 리뷰 재조회 | 카페 문서 delta update |  |  |  |
+| `onReviewWrittenSyncCastVisitCertificationCount` | 리뷰/방문 연관 전체 재조회 | `user-cafe-cast` 단위 delta |  |  |  |
+| `onVisitWrittenSyncCastVisitCertificationCount` | 리뷰/방문 연관 전체 재조회 | `user-cafe-cast` 단위 delta |  |  |  |
+| `syncUserVisitCountAggregate` | 유저 verified visit 전체 재조회 | 방문 write delta 반영 |  |  |  |
+| `onStampWrittenSyncUserStampStats` | 유저 stamp 전체 재조회 | stamp write delta 반영 |  |  |  |
+| `onFanAnnouncementRequestWrittenSendPush` | 팔로워 대상 대량 동시 fan-out | 수신자 상한 + 배치 fan-out |  |  |  |
+| `onScheduleSyncRankingSnapshots` | dirty 발생 시 카페/캐스트 전체 스캔 동시 실행 | dirty state별 분리 실행 + 카페 scope별 top-N 쿼리 |  |  |  |
+
+### 배포 후 비교 항목
+| 항목 | 기준선 | 배포 후 3일 | 배포 후 7일 | 목표 |
+| --- | ---: | ---: | ---: | --- |
+| Firestore reads / day |  |  |  | 감소 |
+| Firestore writes / day |  |  |  | 유지 또는 소폭 감소 |
+| 카페 상세 첫 진입 호출 수 |  |  |  | 감소 |
+| 내 정보 첫 진입 호출 수 |  |  |  | 감소 |
+| 카페관리 첫 진입 호출 수 |  |  |  | 감소 |
+| 리뷰 집계 함수 평균 실행 시간 |  |  |  | 감소 |
+| 방문인증 집계 함수 평균 실행 시간 |  |  |  | 감소 |
 
 ## 측정 로그
 
 ### 개선 전
+- 수집 시각:
 - Firestore reads:
 - Firestore writes:
+- Firestore storage:
 - Cloud Functions 상위 비용 함수:
 - 카페 상세 진입 호출 수:
+- 카페 상세 메뉴 탭 최초 진입 호출 수:
 - 내 정보 진입 호출 수:
 - 카페관리 진입 호출 수:
 
 ### 개선 후
+- 수집 시각:
 - Firestore reads:
 - Firestore writes:
+- Firestore storage:
 - Cloud Functions 상위 비용 함수:
 - 카페 상세 진입 호출 수:
+- 카페 상세 메뉴 탭 최초 진입 호출 수:
 - 내 정보 진입 호출 수:
 - 카페관리 진입 호출 수:
+
+## 현재 기준선 수집 블로커
+- Firebase Console 실사용 수치는 로컬 코드베이스만으로 확정할 수 없다.
+- 다음 입력이 필요하다:
+  - Firestore Usage 최근 7일 스크린샷 또는 수치
+  - Functions 호출 수 상위 목록
+  - 실제 기기/에뮬레이터에서 화면 진입 3회 측정값

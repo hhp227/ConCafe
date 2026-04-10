@@ -15,8 +15,6 @@ import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.repository.CastRepository
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -103,11 +101,7 @@ class CastRepositoryImpl(
             pageSize = pageSize
         )
         val source = page.items
-        val todayScheduleByCastId = resolveTodaySchedulesByCastId(
-            cafeId = cafeId,
-            casts = source,
-            todayDate = todayDate
-        )
+        val todayScheduleByCastId = castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId, todayDate)
         val sorted = source
             .sortedWith(
                 compareByDescending<Cast> { todayScheduleByCastId.containsKey(it.id) }
@@ -152,33 +146,19 @@ class CastRepositoryImpl(
         return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = date)
     }
 
+    override suspend fun getWorkingCastSchedulesByCafeAndDate(
+        cafeId: String,
+        date: String
+    ): Map<String, CastSchedule> {
+        return castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId = cafeId, date = date)
+    }
+
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
         return castRemoteDataSource.updateCastScheduleRemote(update)
     }
 
     private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
         return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate())
-    }
-
-    private suspend fun resolveTodaySchedulesByCastId(
-        cafeId: String,
-        casts: List<Cast>,
-        todayDate: String
-    ): Map<String, CastSchedule> = coroutineScope {
-        casts.associate { cast ->
-            cast.id to async {
-                castRemoteDataSource.fetchCastSchedules(
-                    castId = cast.id,
-                    fromDate = todayDate,
-                    toDate = todayDate
-                ).firstOrNull { schedule ->
-                    schedule.cafeId == cafeId && schedule.date == todayDate
-                }
-            }
-        }.mapNotNull { (castId, scheduleDeferred) ->
-            val schedule = scheduleDeferred.await()
-            if (schedule == null) null else castId to schedule
-        }.toMap()
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {

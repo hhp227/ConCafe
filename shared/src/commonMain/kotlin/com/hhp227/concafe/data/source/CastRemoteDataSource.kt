@@ -50,6 +50,8 @@ interface CastRemoteDataSource {
 
     suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String>
 
+    suspend fun getWorkingCastSchedulesByCafeAndDate(cafeId: String, date: String): Map<String, CastSchedule>
+
     suspend fun updateCastScheduleRemote(update: CastScheduleUpdate): CastSchedule?
 
     suspend fun refreshFollowedCastIds(userId: String)
@@ -65,6 +67,8 @@ interface CastRemoteDataSource {
     suspend fun refreshCafeCastsRemote(cafeId: String)
 
     suspend fun fetchCafeCasts(cafeId: String): List<Cast>
+
+    suspend fun fetchCafeCastCount(cafeId: String): Int
 
     suspend fun fetchCastsByIds(castIds: List<String>): List<Cast>
 

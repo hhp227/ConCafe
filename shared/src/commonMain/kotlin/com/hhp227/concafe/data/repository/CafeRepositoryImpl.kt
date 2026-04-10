@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
@@ -37,6 +38,10 @@ class CafeRepositoryImpl(
         return cafeRemoteDataSource.fetchCafeDetail(cafeId)
     }
 
+    override suspend fun getCafeMenuGoods(cafeId: String): CafeMenuGoodsSection {
+        return cafeRemoteDataSource.fetchCafeMenuGoods(cafeId)
+    }
+
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
         return cafeRemoteDataSource.updateCafeInfoRemote(update)
     }
@@ -63,7 +68,7 @@ class CafeRepositoryImpl(
             val distinctCafeIds = cafeIds.distinct()
             val cafesById = distinctCafeIds.associateWith { cafeId ->
                 runCatching {
-                    cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe
+                    cafeRemoteDataSource.fetchCafeById(cafeId)
                 }.getOrNull()
             }
             return distinctCafeIds

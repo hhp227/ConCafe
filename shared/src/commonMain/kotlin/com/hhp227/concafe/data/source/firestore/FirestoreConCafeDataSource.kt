@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
@@ -391,12 +392,21 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchCafeDetailRemote(cafeId: String): CafeDetail? {
-        return fetchCafeDetailRemoteInternal(cafeId)
+        return fetchCafeDetailSummaryRemoteInternal(cafeId)
+    }
+
+    suspend fun fetchCafeMenuGoodsRemote(cafeId: String): CafeMenuGoodsSection? {
+        return fetchCafeMenuGoodsRemoteInternal(cafeId)
     }
 
     suspend fun fetchCafeByIdRemote(cafeId: String): Cafe? {
-        val detail = fetchCafeDetailRemoteInternal(cafeId)
-        return detail?.cafe
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val cafeDocument = runCatching {
+            loadCafeDocument(cafeId = cafeId, idToken = idToken)
+        }.recoverCatching {
+            loadCafeDocument(cafeId = cafeId, idToken = null)
+        }.getOrNull() ?: return null
+        return parseCafeDocument(cafeDocument)
     }
 
     suspend fun refreshCafeNoticeEventManagement(cafeId: String) {
@@ -1060,7 +1070,24 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchVisitCountByCafeRemote(cafeId: String): Int {
-        return fetchVisitsByCafeRemote(cafeId).size
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.recoverCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = null,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.getOrThrow()
     }
 
     suspend fun verifyVisitRemote(
@@ -1133,6 +1160,23 @@ class FirestoreConCafeDataSource(
             .asSequence()
             .map { entry -> entry.castId }
             .toSet()
+    }
+
+    suspend fun getWorkingCastSchedulesByCafeAndDateRemote(
+        cafeId: String,
+        date: String
+    ): Map<String, CastSchedule> {
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val scheduleDocuments = runCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = idToken)
+        }.recoverCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = null)
+        }.getOrElse { emptyList() }
+        return scheduleDocuments.mapNotNull { document ->
+            parseWorkingCastScheduleDocument(document)
+        }.associateBy { schedule -> schedule.castId }
     }
 
     suspend fun createVisitRemote(
@@ -1840,7 +1884,7 @@ class FirestoreConCafeDataSource(
             parseCafeDocument(loadCafeDocument(cafeId = update.cafeId, idToken = null))
         }.getOrNull()
             ?: throw NoSuchElementException("cafe not found")
-        val currentDetail = fetchCafeDetailRemote(update.cafeId)
+        val currentDetail = fetchCafeDetailFullRemoteInternal(update.cafeId)
         val representativeImage = update.representativeImageUrl
             ?.trim()
             ?.takeIf { value -> value.isNotEmpty() }
@@ -1886,7 +1930,7 @@ class FirestoreConCafeDataSource(
             )
         )
         restApi.patch(path, body, idToken)
-        val updated = fetchCafeDetailRemote(update.cafeId)
+        val updated = fetchCafeDetailFullRemoteInternal(update.cafeId)
 
         return updated ?: throw NoSuchElementException("cafe detail not found")
     }
@@ -2001,7 +2045,11 @@ class FirestoreConCafeDataSource(
         }.onFailure { error ->
             println("TEST, upsertCastRemote refreshCafeDetail failed: ${error.message}")
         }
-        val refreshedDetail = fetchCastDetailRemoteById(castId)
+        val refreshedDetail = fetchCastDetailRemoteByCafeAndCastId(
+            cafeId = targetCafeId,
+            castId = castId,
+            idToken = idToken
+        )
 
         if (refreshedDetail == null) {
             throw NoSuchElementException("cast detail not found")
@@ -2309,6 +2357,25 @@ class FirestoreConCafeDataSource(
         return loaded.distinctBy { cast -> cast.id }
     }
 
+    suspend fun fetchCafeCastCountRemote(cafeId: String): Int {
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_CASTS,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_CASTS,
+                idToken = null
+            )
+        }.getOrThrow()
+    }
+
     suspend fun fetchCastsByIdsRemote(castIds: List<String>): List<Cast> {
         val targetIds = castIds
             .asSequence()
@@ -2322,29 +2389,15 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val remaining = targetIds.toMutableSet()
         val resolved = mutableListOf<Cast>()
-        val cafes = runCatching {
-            fetchAllCafesRemote()
-        }.getOrElse {
-            emptyList()
-        }
-
-        cafes.forEach { cafe ->
-            if (remaining.isEmpty()) {
-                return@forEach
-            }
-            val currentIds = remaining.toList()
-
-            currentIds.forEach { castId ->
-                val cast = resolveCafeCastById(
-                    cafeId = cafe.id,
-                    castId = castId,
-                    idToken = idToken
-                ) ?: return@forEach
-                resolved.add(cast)
-                remaining.remove(castId)
-            }
+        targetIds.forEach { castId ->
+            val cafeId = resolveCafeIdByCastId(castId = castId, idToken = idToken) ?: return@forEach
+            val cast = resolveCafeCastById(
+                cafeId = cafeId,
+                castId = castId,
+                idToken = idToken
+            ) ?: return@forEach
+            resolved.add(cast)
         }
         return resolved.distinctBy { cast -> cast.id }
     }
@@ -2624,7 +2677,7 @@ class FirestoreConCafeDataSource(
                 runCatching { restApi.delete(goodsPath, idToken) }
             }
         }
-        val updated = fetchCafeDetailRemote(update.cafeId)
+        val updated = fetchCafeDetailFullRemoteInternal(update.cafeId)
         return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
@@ -2646,7 +2699,7 @@ class FirestoreConCafeDataSource(
         if (!deleted) {
             throw NoSuchElementException("menu goods item not found")
         }
-        val updated = fetchCafeDetailRemote(cafeId)
+        val updated = fetchCafeDetailFullRemoteInternal(cafeId)
         return updated ?: throw NoSuchElementException("cafe detail not found")
     }
 
@@ -3117,8 +3170,24 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchCafeCheckInCountRemote(cafeId: String): Int {
-        val visits = fetchVisitsByCafeRemote(cafeId)
-        return visits.size
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.recoverCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = null,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.getOrThrow()
     }
 
     suspend fun fetchCafeTodayReviewCountRemote(cafeId: String): Int {
@@ -3162,15 +3231,19 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_NOTICES}"
-        val response = runCatching {
-            restApi.get(path, idToken)
+        return runCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_NOTICES,
+                idToken = idToken
+            )
         }.recoverCatching {
-            restApi.get(path, null)
-        }.getOrNull()
-        val parsed = response?.let { payload -> Json.parseToJsonElement(payload).jsonObject }
-        val documents = parsed?.get("documents")?.jsonArray.orEmpty()
-        return documents.size
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_NOTICES,
+                idToken = null
+            )
+        }.getOrThrow()
     }
 
     override suspend fun refreshCafeManagementData(userId: String) {
@@ -4723,10 +4796,35 @@ class FirestoreConCafeDataSource(
         return parseCountAggregationResponse(response)
     }
 
+    private suspend fun loadSubCollectionDocumentCount(
+        parentPath: String,
+        collectionId: String,
+        idToken: String?
+    ): Int {
+        val requestBody = buildCountAggregationQueryBody(
+            collectionId = collectionId,
+            equalsFilterFieldPath = null,
+            equalsFilterValue = null
+        )
+        val response = restApi.post(
+            path = "$parentPath:runAggregationQuery",
+            body = requestBody,
+            idToken = idToken
+        )
+        return parseCountAggregationResponse(response)
+    }
+
     private suspend fun resolveCafeIdByCastId(
         castId: String,
         idToken: String?
     ): String? {
+        val indexedCafeId = loadCastDirectoryCafeId(
+            castId = castId,
+            idToken = idToken
+        )
+        if (!indexedCafeId.isNullOrBlank()) {
+            return indexedCafeId
+        }
         val tokenUserId = tokenProvider.getCurrentUserId()
         val selfCastDocuments = if (tokenUserId.isNullOrBlank()) {
             emptyList()
@@ -4779,21 +4877,26 @@ class FirestoreConCafeDataSource(
             )
             return affiliatedCafeId
         }
-
-        val cafes = fetchAllCafesRemote()
-
-        cafes.forEach { cafe ->
-            val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${cafe.id}/${FirestorePaths.CAFE_CASTS}/$castId"
-            val response = runCatching { restApi.get(path, idToken) }
-                .recoverCatching { restApi.get(path, null) }
-                .getOrNull()
-                ?: return@forEach
-            val parsed = runCatching {
-                parseCastDocument(cafe.id, Json.parseToJsonElement(response).jsonObject)
-            }.getOrNull()
-            if (parsed != null) return cafe.id
-        }
         return null
+    }
+
+    private suspend fun loadCastDirectoryCafeId(
+        castId: String,
+        idToken: String?
+    ): String? {
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAST_DIRECTORY}/$castId"
+        val response = runCatching {
+            restApi.get(path, idToken)
+        }.recoverCatching {
+            restApi.get(path, null)
+        }.getOrNull() ?: return null
+        val document = runCatching {
+            Json.parseToJsonElement(response).jsonObject
+        }.getOrNull() ?: return null
+        return document["fields"]
+            ?.jsonObject
+            ?.getFirestoreString("cafeId")
+            ?.takeIf { cafeId -> cafeId.isNotBlank() }
     }
 
     private suspend fun loadCafeRegistrationClaimDocument(claimId: String, idToken: String?): JsonObject {
@@ -5635,6 +5738,31 @@ class FirestoreConCafeDataSource(
         )
     }
 
+    private fun parseWorkingCastScheduleDocument(document: JsonObject): CastSchedule? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val entry = parseCastScheduleDocument(document) ?: return null
+        if (entry.status != CastScheduleStatus.WORK) {
+            return null
+        }
+        val startTime = entry.startTime?.trim().orEmpty()
+        val endTime = entry.endTime?.trim().orEmpty()
+        if (startTime.isEmpty() || endTime.isEmpty()) {
+            return null
+        }
+        val cafeId = fields.getFirestoreString("cafeId").orEmpty()
+        if (cafeId.isBlank()) {
+            return null
+        }
+        return CastSchedule(
+            id = entry.id,
+            castId = entry.castId,
+            cafeId = cafeId,
+            date = entry.date,
+            startTime = startTime,
+            endTime = endTime
+        )
+    }
+
     private fun parseCastFollowDocument(document: JsonObject): CastFollowerSnapshot? {
         val fields = document["fields"]?.jsonObject ?: return null
         val userId = fields.getFirestoreString("userId") ?: return null
@@ -5849,7 +5977,7 @@ class FirestoreConCafeDataSource(
         }.sortedBy { schedule -> schedule.date }
     }
 
-    private suspend fun fetchCafeDetailRemoteInternal(cafeId: String): CafeDetail? {
+    private suspend fun fetchCafeDetailSummaryRemoteInternal(cafeId: String): CafeDetail? {
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val cafeDocument = runCatching {
             loadCafeDocument(cafeId = cafeId, idToken = idToken)
@@ -5863,11 +5991,49 @@ class FirestoreConCafeDataSource(
         }.recoverCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_CASTS, null)
         }.getOrElse { emptyList() }
+        val parsedCasts = castsDocuments
+            .mapNotNull { document -> parseCastDocument(cafeId = cafeId, document = document) }
+            .sortedBy { cast -> cast.name }
+        return CafeDetail(
+            cafe = cafe,
+            images = detailMetadata.images ?: listOfNotNull(cafe.thumbnailImage),
+            casts = parsedCasts,
+            menus = emptyList(),
+            goods = emptyList(),
+            notices = emptyList(),
+            businessHours = detailMetadata.businessHours ?: "운영시간 정보 준비중",
+            phoneNumber = detailMetadata.phoneNumber ?: "연락처 정보 준비중"
+        )
+    }
+
+    private suspend fun fetchCafeDetailFullRemoteInternal(cafeId: String): CafeDetail? {
+        val summary = fetchCafeDetailSummaryRemoteInternal(cafeId) ?: return null
+        val menuGoods = fetchCafeMenuGoodsRemoteInternal(cafeId)
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val noticesDocuments = runCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_NOTICES, idToken)
         }.recoverCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_NOTICES, null)
         }.getOrElse { emptyList() }
+        val parsedNotices = noticesDocuments
+            .mapNotNull { document ->
+                parseNoticeDocument(
+                    cafeId = cafeId,
+                    cafeName = summary.cafe.name,
+                    document = document
+                )
+            }
+            .sortedByDescending { notice -> notice.createdAt }
+        return summary.copy(
+            menus = menuGoods?.menus.orEmpty(),
+            goods = menuGoods?.goods.orEmpty(),
+            notices = parsedNotices
+        )
+    }
+
+    private suspend fun fetchCafeMenuGoodsRemoteInternal(cafeId: String): CafeMenuGoodsSection? {
+        fetchCafeByIdRemote(cafeId) ?: return null
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val menusDocuments = runCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_MENUS, idToken)
         }.recoverCatching {
@@ -5878,39 +6044,33 @@ class FirestoreConCafeDataSource(
         }.recoverCatching {
             loadCafeSubCollectionDocuments(cafeId, FirestorePaths.CAFE_GOODS, null)
         }.getOrElse { emptyList() }
-        val parsedCasts = castsDocuments
-            .mapNotNull { document -> parseCastDocument(cafeId = cafeId, document = document) }
-            .sortedBy { cast -> cast.name }
-        val parsedNotices = noticesDocuments
-            .mapNotNull { document ->
-                parseNoticeDocument(
-                    cafeId = cafeId,
-                    cafeName = cafe.name,
-                    document = document
-                )
-            }
-            .sortedByDescending { notice -> notice.createdAt }
         val parsedMenus = menusDocuments
             .mapNotNull { document -> parseMenuDocument(document) }
             .sortedBy { menu -> menu.name.lowercase() }
         val parsedGoods = goodsDocuments
             .mapNotNull { document -> parseGoodsDocument(document) }
             .sortedBy { goods -> goods.name.lowercase() }
-        return CafeDetail(
-            cafe = cafe,
-            images = detailMetadata.images ?: listOfNotNull(cafe.thumbnailImage),
-            casts = parsedCasts,
+        return CafeMenuGoodsSection(
             menus = parsedMenus,
-            goods = parsedGoods,
-            notices = parsedNotices,
-            businessHours = detailMetadata.businessHours ?: "운영시간 정보 준비중",
-            phoneNumber = detailMetadata.phoneNumber ?: "연락처 정보 준비중"
+            goods = parsedGoods
         )
     }
 
     private suspend fun fetchCastDetailRemoteById(castId: String): CastDetail? {
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val cafeId = resolveCafeIdByCastId(castId = castId, idToken = idToken) ?: return null
+        return fetchCastDetailRemoteByCafeAndCastId(
+            cafeId = cafeId,
+            castId = castId,
+            idToken = idToken
+        )
+    }
+
+    private suspend fun fetchCastDetailRemoteByCafeAndCastId(
+        cafeId: String,
+        castId: String,
+        idToken: String?
+    ): CastDetail? {
         val cafeDocument = runCatching {
             loadCafeDocument(cafeId = cafeId, idToken = idToken)
         }.recoverCatching {

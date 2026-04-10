@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.CafeDetailFeed
 import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
@@ -25,7 +26,8 @@ class GetCafeDetailUseCase(
     private val castRepository: CastRepository,
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
-    private val visitRepository: VisitRepository
+    private val visitRepository: VisitRepository,
+    private val reviewUserNicknameCache: CafeReviewUserNicknameCache
 ) {
     suspend operator fun invoke(cafeId: String): AppResult<CafeDetailFeed> {
         return try {
@@ -86,22 +88,10 @@ class GetCafeDetailUseCase(
                 )
             }
             val workingCastIds = secondary.first
-            val todayScheduleByCastId = coroutineScope {
-                detail.casts.associate { cast ->
-                    cast.id to async {
-                        castRepository.getCastSchedules(
-                            castId = cast.id,
-                            fromDate = currentDate,
-                            toDate = currentDate
-                        ).firstOrNull { schedule ->
-                            schedule.cafeId == cafeId && schedule.date == currentDate
-                        }
-                    }
-                }.mapNotNull { (castId, scheduleDeferred) ->
-                    val schedule = scheduleDeferred.await()
-                    if (schedule == null) null else castId to schedule
-                }.toMap()
-            }
+            val todayScheduleByCastId = castRepository.getWorkingCastSchedulesByCafeAndDate(
+                cafeId = cafeId,
+                date = currentDate
+            )
             val castItems = detail.casts.map { cast ->
                 val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
@@ -113,19 +103,10 @@ class GetCafeDetailUseCase(
             val isFavorite = secondary.second
             val isVisitVerified = secondary.third
             val castNameById = detail.casts.associateBy({ cast -> cast.id }, { cast -> cast.name })
-            val reviewUserIds = reviewPage.items
-                .map { review -> review.userId }
-                .distinct()
-            val userNicknameById = coroutineScope {
-                reviewUserIds.associateWith { userId ->
-                    async {
-                        runCatching { userRepository.getUser(userId).nickname }
-                            .getOrNull()
-                    }
-                }.mapValues { (_, deferredNickname) ->
-                    deferredNickname.await()
-                }
-            }
+            val userNicknameById = resolveReviewNicknameByUserId(
+                cafeId = cafeId,
+                reviews = reviewPage.items
+            )
             val reviewItems = reviewPage.items.map { review ->
                 val userNickname = review.userNickname
                     .takeIf { nickname -> nickname.isNotBlank() }
@@ -168,6 +149,56 @@ class GetCafeDetailUseCase(
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
         }
+    }
+
+    private suspend fun resolveReviewNicknameByUserId(
+        cafeId: String,
+        reviews: List<Review>
+    ): Map<String, String> {
+        val reviewUserIds = reviews
+            .map { review -> review.userId }
+            .distinct()
+            .filter { userId -> userId.isNotBlank() }
+        val reviewNicknameByUserId = reviews
+            .mapNotNull { review ->
+                val nickname = review.userNickname.trim().takeIf { value -> value.isNotEmpty() }
+                    ?: return@mapNotNull null
+
+                review.userId to nickname
+            }
+            .toMap()
+
+        reviewUserNicknameCache.putAll(cafeId, reviewNicknameByUserId)
+        val cachedNicknameByUserId = reviewUserNicknameCache.getNicknames(cafeId, reviewUserIds)
+        val resolvedNicknameByUserId = mutableMapOf<String, String>()
+
+        resolvedNicknameByUserId.putAll(cachedNicknameByUserId)
+        resolvedNicknameByUserId.putAll(reviewNicknameByUserId)
+
+        val unresolvedUserIds = reviewUserIds.filter { userId ->
+            resolvedNicknameByUserId[userId].isNullOrBlank()
+        }
+
+        if (unresolvedUserIds.isNotEmpty()) {
+            val loadedNicknameByUserId = coroutineScope {
+                unresolvedUserIds.associateWith { userId ->
+                    async {
+                        runCatching {
+                            userRepository.getUser(userId).nickname.trim()
+                                .takeIf { nickname -> nickname.isNotEmpty() }
+                        }.getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }.mapNotNull { (userId, nickname) ->
+                    nickname?.let { value -> userId to value }
+                }.toMap()
+            }
+
+            reviewUserNicknameCache.putAll(cafeId, loadedNicknameByUserId)
+            resolvedNicknameByUserId.putAll(loadedNicknameByUserId)
+        }
+        return resolvedNicknameByUserId
     }
 
     private fun normalizeDetail(detail: CafeDetail): CafeDetail {

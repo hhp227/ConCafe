@@ -173,7 +173,8 @@ class GetHomeFeedUseCase(
             var globalLoopCount = 0
 
             if (remainingCount > 0 && phase == NearbyCafePagingPhase.GLOBAL) {
-                while (remainingCount > 0 && globalLoopCount < 5) {
+                while (remainingCount > 0 && globalLoopCount < NEARBY_GLOBAL_QUERY_MAX_ATTEMPTS) {
+                    val previousGlobalCursor = globalCursor
                     val globalPage = cafeRepository.searchCafes(
                         query = null,
                         country = null,
@@ -197,6 +198,9 @@ class GetHomeFeedUseCase(
                     if (!globalPage.hasNext) {
                         break
                     }
+                    if (globalCursor == previousGlobalCursor) {
+                        break
+                    }
                 }
             }
 
@@ -213,7 +217,6 @@ class GetHomeFeedUseCase(
             } else {
                 null
             }
-            println("--ConCafe--, loadNearbyCafePage3, $nearbyCafeCursor, $nearbyRegionFilter")
             return NearbyCafePage(
                 items = collectedItems,
                 nextCursor = nextCursor,
@@ -319,16 +322,16 @@ class GetHomeFeedUseCase(
             .orEmpty()
         val unresolvedCafeIds = popularCastCafeIds
             .filterNot { cafeId -> nearbyCafeNameById.containsKey(cafeId) }
-        val resolvedFromDetail = unresolvedCafeIds
-            .associateWith { cafeId ->
-                async {
-                    runCatching { cafeRepository.getCafeDetail(cafeId).cafe.name }
-                        .getOrElse { cafeId }
-                }
-            }
-            .mapValues { entry -> entry.value.await() }
+        val resolvedFromSummary = if (unresolvedCafeIds.isEmpty()) {
+            emptyMap()
+        } else {
+            runCatching {
+                cafeRepository.getCafesByIds(unresolvedCafeIds)
+                    .associate { cafe -> cafe.id to cafe.name }
+            }.getOrElse { emptyMap() }
+        }
         val popularCastCafeNames = popularCastCafeIds.associateWith { cafeId ->
-            nearbyCafeNameById[cafeId] ?: resolvedFromDetail[cafeId] ?: cafeId
+            nearbyCafeNameById[cafeId] ?: resolvedFromSummary[cafeId] ?: cafeId
         }
         return@coroutineScope AppResult.Success(
             HomeFeed(
@@ -350,5 +353,6 @@ class GetHomeFeedUseCase(
         private const val HOME_FEED_LIMIT = 6
         private const val POPULAR_CAST_PAGE_SIZE = 10
         private const val NEARBY_CAFE_PAGE_SIZE = 6
+        private const val NEARBY_GLOBAL_QUERY_MAX_ATTEMPTS = 3
     }
 }

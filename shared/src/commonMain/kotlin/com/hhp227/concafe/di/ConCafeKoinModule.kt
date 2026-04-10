@@ -48,6 +48,7 @@ import com.hhp227.concafe.domain.model.CafeEventCreate
 import com.hhp227.concafe.domain.model.CafeEventUpdate
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeNoticeCreate
 import com.hhp227.concafe.domain.model.CafeNoticeUpdate
@@ -106,6 +107,10 @@ val dataSourceModule = module {
 
             override suspend fun fetchCafeDetail(cafeId: String): CafeDetail {
                 return dataSource.fetchCafeDetailRemote(cafeId) ?: throw NoSuchElementException("cafe detail not found")
+            }
+
+            override suspend fun fetchCafeMenuGoods(cafeId: String): CafeMenuGoodsSection {
+                return dataSource.fetchCafeMenuGoodsRemote(cafeId) ?: throw NoSuchElementException("cafe menu goods not found")
             }
 
             override suspend fun fetchCafeById(cafeId: String): Cafe? {
@@ -241,6 +246,11 @@ val dataSourceModule = module {
             override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String) =
                 dataSource.getWorkingCastIdsByCafeAndDate(cafeId, date)
 
+            override suspend fun getWorkingCastSchedulesByCafeAndDate(
+                cafeId: String,
+                date: String
+            ) = dataSource.getWorkingCastSchedulesByCafeAndDateRemote(cafeId, date)
+
             override suspend fun updateCastScheduleRemote(update: CastScheduleUpdate) =
                 dataSource.updateCastScheduleRemote(update)
 
@@ -262,6 +272,10 @@ val dataSourceModule = module {
 
             override suspend fun fetchCafeCasts(cafeId: String): List<Cast> {
                 return dataSource.fetchCafeCastsByCafeIdRemote(cafeId)
+            }
+
+            override suspend fun fetchCafeCastCount(cafeId: String): Int {
+                return dataSource.fetchCafeCastCountRemote(cafeId)
             }
 
             override suspend fun fetchCastsByIds(castIds: List<String>): List<Cast> {
@@ -547,6 +561,7 @@ val eventModule = module {
 }
 
 val useCaseModule = module {
+    single { CafeReviewUserNicknameCache() }
     factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
@@ -584,9 +599,10 @@ val useCaseModule = module {
     factory { GetExploreFeedUseCase(get(), get()) }
     factory { GetExploreCafePageUseCase(get()) }
     factory { GetExploreCastPageUseCase(get()) }
-    factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { GetCafeDetailUseCase(get(), get(), get(), get(), get(), get(), get()) }
+    factory { GetCafeMenuGoodsUseCase(get()) }
     factory { GetCafeNoticePageUseCase(get()) }
-    factory { GetCafeReviewPageUseCase(get(), get(), get()) }
+    factory { GetCafeReviewPageUseCase(get(), get(), get(), get()) }
     factory { GetCastDetailUseCase(get(), get(), get(), get()) }
     factory { GetFanManagementDataUseCase(get(), get(), get()) }
     factory { GetMainNavigationUseCase(get()) }

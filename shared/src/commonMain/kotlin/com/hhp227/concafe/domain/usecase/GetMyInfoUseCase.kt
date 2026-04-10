@@ -272,18 +272,10 @@ class GetMyInfoUseCase(
         if (cafeIds.isEmpty()) {
             return emptyList()
         }
-        val uniqueCafeIds = cafeIds.distinct()
-        val cafeById = coroutineScope {
-            uniqueCafeIds.associateWith { cafeId ->
-                async {
-                    runCatching {
-                        cafeRepository.getCafeDetail(cafeId).cafe
-                    }.getOrNull()
-                }
-            }.mapValues { (_, deferredCafe) ->
-                deferredCafe.await()
-            }
-        }
+        val resolved = runCatching {
+            cafeRepository.getCafesByIds(cafeIds)
+        }.getOrElse { emptyList() }
+        val cafeById = resolved.associateBy { cafe -> cafe.id }
         return cafeIds.mapNotNull { cafeId -> cafeById[cafeId] }
     }
 }
