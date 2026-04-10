@@ -395,8 +395,13 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchCafeByIdRemote(cafeId: String): Cafe? {
-        val detail = fetchCafeDetailRemoteInternal(cafeId)
-        return detail?.cafe
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val cafeDocument = runCatching {
+            loadCafeDocument(cafeId = cafeId, idToken = idToken)
+        }.recoverCatching {
+            loadCafeDocument(cafeId = cafeId, idToken = null)
+        }.getOrNull() ?: return null
+        return parseCafeDocument(cafeDocument)
     }
 
     suspend fun refreshCafeNoticeEventManagement(cafeId: String) {
@@ -1133,6 +1138,23 @@ class FirestoreConCafeDataSource(
             .asSequence()
             .map { entry -> entry.castId }
             .toSet()
+    }
+
+    suspend fun getWorkingCastSchedulesByCafeAndDateRemote(
+        cafeId: String,
+        date: String
+    ): Map<String, CastSchedule> {
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        val scheduleDocuments = runCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = idToken)
+        }.recoverCatching {
+            runWorkingCastScheduleQuery(cafeId = cafeId, date = date, idToken = null)
+        }.getOrElse { emptyList() }
+        return scheduleDocuments.mapNotNull { document ->
+            parseWorkingCastScheduleDocument(document)
+        }.associateBy { schedule -> schedule.castId }
     }
 
     suspend fun createVisitRemote(
@@ -2309,6 +2331,25 @@ class FirestoreConCafeDataSource(
         return loaded.distinctBy { cast -> cast.id }
     }
 
+    suspend fun fetchCafeCastCountRemote(cafeId: String): Int {
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_CASTS,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_CASTS,
+                idToken = null
+            )
+        }.getOrThrow()
+    }
+
     suspend fun fetchCastsByIdsRemote(castIds: List<String>): List<Cast> {
         val targetIds = castIds
             .asSequence()
@@ -3117,8 +3158,24 @@ class FirestoreConCafeDataSource(
     }
 
     suspend fun fetchCafeCheckInCountRemote(cafeId: String): Int {
-        val visits = fetchVisitsByCafeRemote(cafeId)
-        return visits.size
+        val idToken = runCatching {
+            tokenProvider.getIdToken()
+        }.getOrNull()
+        return runCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = idToken,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.recoverCatching {
+            loadCollectionDocumentCount(
+                collectionId = FirestorePaths.VISITS,
+                idToken = null,
+                equalsFilterFieldPath = "cafeId",
+                equalsFilterValue = firestoreString(cafeId)
+            )
+        }.getOrThrow()
     }
 
     suspend fun fetchCafeTodayReviewCountRemote(cafeId: String): Int {
@@ -3162,15 +3219,19 @@ class FirestoreConCafeDataSource(
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
-        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_NOTICES}"
-        val response = runCatching {
-            restApi.get(path, idToken)
+        return runCatching {
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_NOTICES,
+                idToken = idToken
+            )
         }.recoverCatching {
-            restApi.get(path, null)
-        }.getOrNull()
-        val parsed = response?.let { payload -> Json.parseToJsonElement(payload).jsonObject }
-        val documents = parsed?.get("documents")?.jsonArray.orEmpty()
-        return documents.size
+            loadSubCollectionDocumentCount(
+                parentPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId",
+                collectionId = FirestorePaths.CAFE_NOTICES,
+                idToken = null
+            )
+        }.getOrThrow()
     }
 
     override suspend fun refreshCafeManagementData(userId: String) {
@@ -4723,6 +4784,24 @@ class FirestoreConCafeDataSource(
         return parseCountAggregationResponse(response)
     }
 
+    private suspend fun loadSubCollectionDocumentCount(
+        parentPath: String,
+        collectionId: String,
+        idToken: String?
+    ): Int {
+        val requestBody = buildCountAggregationQueryBody(
+            collectionId = collectionId,
+            equalsFilterFieldPath = null,
+            equalsFilterValue = null
+        )
+        val response = restApi.post(
+            path = "$parentPath:runAggregationQuery",
+            body = requestBody,
+            idToken = idToken
+        )
+        return parseCountAggregationResponse(response)
+    }
+
     private suspend fun resolveCafeIdByCastId(
         castId: String,
         idToken: String?
@@ -5630,6 +5709,31 @@ class FirestoreConCafeDataSource(
             castId = castId,
             date = date,
             status = status,
+            startTime = startTime,
+            endTime = endTime
+        )
+    }
+
+    private fun parseWorkingCastScheduleDocument(document: JsonObject): CastSchedule? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val entry = parseCastScheduleDocument(document) ?: return null
+        if (entry.status != CastScheduleStatus.WORK) {
+            return null
+        }
+        val startTime = entry.startTime?.trim().orEmpty()
+        val endTime = entry.endTime?.trim().orEmpty()
+        if (startTime.isEmpty() || endTime.isEmpty()) {
+            return null
+        }
+        val cafeId = fields.getFirestoreString("cafeId").orEmpty()
+        if (cafeId.isBlank()) {
+            return null
+        }
+        return CastSchedule(
+            id = entry.id,
+            castId = entry.castId,
+            cafeId = cafeId,
+            date = entry.date,
             startTime = startTime,
             endTime = endTime
         )

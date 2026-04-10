@@ -86,22 +86,10 @@ class GetCafeDetailUseCase(
                 )
             }
             val workingCastIds = secondary.first
-            val todayScheduleByCastId = coroutineScope {
-                detail.casts.associate { cast ->
-                    cast.id to async {
-                        castRepository.getCastSchedules(
-                            castId = cast.id,
-                            fromDate = currentDate,
-                            toDate = currentDate
-                        ).firstOrNull { schedule ->
-                            schedule.cafeId == cafeId && schedule.date == currentDate
-                        }
-                    }
-                }.mapNotNull { (castId, scheduleDeferred) ->
-                    val schedule = scheduleDeferred.await()
-                    if (schedule == null) null else castId to schedule
-                }.toMap()
-            }
+            val todayScheduleByCastId = castRepository.getWorkingCastSchedulesByCafeAndDate(
+                cafeId = cafeId,
+                date = currentDate
+            )
             val castItems = detail.casts.map { cast ->
                 val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(

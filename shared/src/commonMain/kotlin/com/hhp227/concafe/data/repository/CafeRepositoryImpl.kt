@@ -63,7 +63,7 @@ class CafeRepositoryImpl(
             val distinctCafeIds = cafeIds.distinct()
             val cafesById = distinctCafeIds.associateWith { cafeId ->
                 runCatching {
-                    cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe
+                    cafeRemoteDataSource.fetchCafeById(cafeId)
                 }.getOrNull()
             }
             return distinctCafeIds

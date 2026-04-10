@@ -241,6 +241,11 @@ val dataSourceModule = module {
             override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String) =
                 dataSource.getWorkingCastIdsByCafeAndDate(cafeId, date)
 
+            override suspend fun getWorkingCastSchedulesByCafeAndDate(
+                cafeId: String,
+                date: String
+            ) = dataSource.getWorkingCastSchedulesByCafeAndDateRemote(cafeId, date)
+
             override suspend fun updateCastScheduleRemote(update: CastScheduleUpdate) =
                 dataSource.updateCastScheduleRemote(update)
 
@@ -262,6 +267,10 @@ val dataSourceModule = module {
 
             override suspend fun fetchCafeCasts(cafeId: String): List<Cast> {
                 return dataSource.fetchCafeCastsByCafeIdRemote(cafeId)
+            }
+
+            override suspend fun fetchCafeCastCount(cafeId: String): Int {
+                return dataSource.fetchCafeCastCountRemote(cafeId)
             }
 
             override suspend fun fetchCastsByIds(castIds: List<String>): List<Cast> {

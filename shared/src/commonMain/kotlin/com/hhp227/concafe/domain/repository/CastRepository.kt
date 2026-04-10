@@ -41,6 +41,8 @@ interface CastRepository {
 
     suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String>
 
+    suspend fun getWorkingCastSchedulesByCafeAndDate(cafeId: String, date: String): Map<String, CastSchedule>
+
     suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule?
 
     suspend fun isFollowing(userId: String, castId: String): Boolean
