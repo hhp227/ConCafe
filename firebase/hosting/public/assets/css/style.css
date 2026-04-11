@@ -273,6 +273,13 @@ a {
   width: 100%;
 }
 
+#home-banner .banner-carousel {
+  --home-banner-max-height: 360px;
+  --home-banner-max-width: calc(var(--home-banner-max-height) * 16 / 10);
+  max-width: min(100%, var(--home-banner-max-width));
+  margin: 0 auto;
+}
+
 .banner-loading {
   position: absolute;
   top: 0;
@@ -336,6 +343,11 @@ a {
   gap: 8px;
   background:
     linear-gradient(130deg, rgba(255, 233, 242, 0.95) 0%, rgba(248, 197, 215, 0.9) 52%, rgba(239, 103, 151, 0.82) 100%);
+}
+
+#home-banner .banner-card {
+  height: auto;
+  aspect-ratio: 16 / 10;
 }
 
 .banner-card::after {
