@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.home
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.model.Notice
 
 data class HomeUiState(
@@ -21,7 +22,8 @@ data class HomeUiState(
     val canLoadMoreNearbyCafes: Boolean,
     val isLoadingMoreNearbyCafes: Boolean = false,
     val birthdayCasts: List<Cast>,
-    val notices: List<Notice>
+    val notices: List<Notice>,
+    val cafeEvents: List<HomeCafeEvent>
 ) {
     companion object {
         fun empty() = HomeUiState(
@@ -38,7 +40,8 @@ data class HomeUiState(
             canLoadMoreNearbyCafes = false,
             isLoadingMoreNearbyCafes = false,
             birthdayCasts = emptyList(),
-            notices = emptyList()
+            notices = emptyList(),
+            cafeEvents = emptyList()
         )
     }
 }

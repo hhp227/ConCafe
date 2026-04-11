@@ -124,6 +124,9 @@
     <string name="home_nearby_cafe_empty_desc">지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요.</string>
     <string name="home_notice_empty_title">최근 공지가 없어요</string>
     <string name="home_notice_empty_desc">새 공지가 등록되면 이 영역에 표시됩니다.</string>
+    <string name="home_section_ongoing_cafe_event">진행중인 카페 이벤트</string>
+    <string name="home_ongoing_cafe_event_empty_title">진행중인 이벤트가 없습니다</string>
+    <string name="home_ongoing_cafe_event_empty_desc">카페 이벤트가 등록되면 여기에 표시됩니다.</string>
     <string name="home_banner_placeholder_title">홈 배너 준비 중</string>
     <string name="home_banner_placeholder_desc">곧 새로운 소식을 보여드릴게요.</string>
     <string name="ranking_title">랭킹</string>

@@ -3,8 +3,10 @@ package com.hhp227.concafe.domain.usecase
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.ExploreRegionFilter
 import com.hhp227.concafe.domain.model.HomeFeed
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.repository.BannerRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
@@ -333,6 +335,28 @@ class GetHomeFeedUseCase(
         val popularCastCafeNames = popularCastCafeIds.associateWith { cafeId ->
             nearbyCafeNameById[cafeId] ?: resolvedFromSummary[cafeId] ?: cafeId
         }
+        val ongoingCafeEvents = runCatching {
+            val candidateCafeIds = (
+                (nearbyCafePage?.items?.map { cafe -> cafe.id } ?: emptyList()) + popularCastCafeIds
+            ).distinct().take(HOME_EVENT_SOURCE_CAFE_LIMIT)
+            val cafeNameById = nearbyCafeNameById + resolvedFromSummary + popularCastCafeNames
+
+            candidateCafeIds.flatMap { cafeId ->
+                noticeRepository.getCafeEventPage(
+                    cafeId = cafeId,
+                    query = "",
+                    cursor = null,
+                    pageSize = HOME_EVENT_PAGE_SIZE
+                ).items
+                    .filter { item -> item.isOngoingEvent() }
+                    .map { item ->
+                    item.toHomeCafeEvent(cafeNameById[cafeId] ?: cafeId)
+                }
+            }
+                .sortedByDescending { event -> event.periodText }
+                .distinctBy { event -> event.id }
+                .take(HOME_EVENT_LIMIT)
+        }.getOrElse { emptyList() }
         return@coroutineScope AppResult.Success(
             HomeFeed(
                 banners = bannersResult.getOrElse { emptyList() },
@@ -344,7 +368,8 @@ class GetHomeFeedUseCase(
                 nearbyCafesNextCursor = nearbyCafePage?.nextCursor,
                 hasMoreNearbyCafes = nearbyCafePage?.hasNext == true,
                 birthdayCasts = birthdayCastsResult.getOrElse { emptyList() },
-                notices = noticesResult.getOrElse { emptyList() }
+                notices = noticesResult.getOrElse { emptyList() },
+                cafeEvents = ongoingCafeEvents
             )
         )
     }
@@ -354,5 +379,27 @@ class GetHomeFeedUseCase(
         private const val POPULAR_CAST_PAGE_SIZE = 10
         private const val NEARBY_CAFE_PAGE_SIZE = 6
         private const val NEARBY_GLOBAL_QUERY_MAX_ATTEMPTS = 3
+        private const val HOME_EVENT_LIMIT = 3
+        private const val HOME_EVENT_SOURCE_CAFE_LIMIT = 8
+        private const val HOME_EVENT_PAGE_SIZE = 5
     }
+}
+
+private fun CafeEventManagementItem.toHomeCafeEvent(cafeName: String): HomeCafeEvent {
+    return HomeCafeEvent(
+        id = id,
+        cafeId = cafeId,
+        cafeName = cafeName,
+        title = title,
+        content = content,
+        imageUrl = imageUrl,
+        periodText = periodText,
+        statusLabel = statusLabel
+    )
+}
+
+private fun CafeEventManagementItem.isOngoingEvent(): Boolean {
+    val normalized = statusLabel.trim().lowercase()
+    val isOngoingLabel = normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing")
+    return isOngoingLabel && !isDimmed
 }

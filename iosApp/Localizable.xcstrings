@@ -10115,6 +10115,50 @@
         }
       }
     },
+    "home_ongoing_cafe_event_empty_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe events will appear here once they are registered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェイベントが登録されるとここに表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 이벤트가 등록되면 여기에 표시됩니다."
+          }
+        }
+      }
+    },
+    "home_ongoing_cafe_event_empty_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ongoing events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中のイベントはありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행중인 이벤트가 없습니다"
+          }
+        }
+      }
+    },
     "home_popular_cast_empty_desc" : {
       "localizations" : {
         "en" : {
@@ -10221,6 +10265,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "최근 카페 공지"
+          }
+        }
+      }
+    },
+    "home_section_ongoing_cafe_event" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongoing Cafe Events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中のカフェイベント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행중인 카페 이벤트"
           }
         }
       }

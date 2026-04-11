@@ -15,6 +15,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +36,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -47,13 +50,13 @@ import concafe.composeapp.generated.resources.home_banner_placeholder_title
 import concafe.composeapp.generated.resources.home_cast_followers
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
-import concafe.composeapp.generated.resources.home_notice_empty_desc
-import concafe.composeapp.generated.resources.home_notice_empty_title
+import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
+import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.home_popular_cast_empty_title
 import concafe.composeapp.generated.resources.home_section_birthday_cast
 import concafe.composeapp.generated.resources.home_section_nearby_cafe
-import concafe.composeapp.generated.resources.home_section_notice
+import concafe.composeapp.generated.resources.home_section_ongoing_cafe_event
 import concafe.composeapp.generated.resources.home_section_popular_cast
 import concafe.composeapp.generated.resources.home_show_more
 import concafe.composeapp.generated.resources.signin_submit
@@ -259,40 +262,10 @@ fun HomeContentScreen(
             }
         }
         item {
-            SectionTitle(stringResource(Res.string.home_section_notice))
-            Spacer(Modifier.height(10.dp))
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (uiState.notices.isNotEmpty()) {
-                    uiState.notices.forEach { notice ->
-                        Card(
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                verticalAlignment = Alignment.Top,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(notice.cafeName, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
-                                    Text(notice.content, style = MaterialTheme.typography.bodyMedium)
-                                }
-                                Text(notice.relativeTime, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
-                            }
-                        }
-                    }
-                } else {
-                    HomeSectionPlaceholderCard(
-                        title = stringResource(Res.string.home_notice_empty_title),
-                        description = stringResource(Res.string.home_notice_empty_desc)
-                    )
-                }
-            }
+            HomeCafeEventSection(
+                events = uiState.cafeEvents,
+                onAction = onAction
+            )
         }
         }
     } else {
@@ -303,6 +276,108 @@ fun HomeContentScreen(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color(0xFFEF6797))
+        }
+    }
+}
+
+@Composable
+private fun HomeCafeEventSection(
+    events: List<HomeCafeEvent>,
+    onAction: (HomeAction) -> Unit
+) {
+    val visibleEvents = events.take(3)
+
+    SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
+    Spacer(Modifier.height(10.dp))
+    if (visibleEvents.isNotEmpty()) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) {
+            items(visibleEvents) { event ->
+                HomeCafeEventCard(
+                    event = event,
+                    modifier = Modifier.width(276.dp),
+                    onClick = { onAction(HomeAction.ClickCafe(event.cafeId)) }
+                )
+            }
+        }
+    } else {
+        HomeSectionPlaceholderCard(
+            title = stringResource(Res.string.home_ongoing_cafe_event_empty_title),
+            description = stringResource(Res.string.home_ongoing_cafe_event_empty_desc),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun HomeCafeEventCard(
+    event: HomeCafeEvent,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(172.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            if (event.imageUrl.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = event.imageUrl,
+                    modifier = Modifier.matchParentSize(),
+                    applyRoundedClip = false
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = event.cafeName,
+                color = Color(0xFFEF6797),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = event.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = Color(0xFF8A7F8B),
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = event.periodText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF8A7F8B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

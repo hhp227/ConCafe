@@ -34,6 +34,7 @@ import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_confirm
 import concafe.composeapp.generated.resources.common_close
 import concafe.composeapp.generated.resources.menugoods_delete_content_description
 import concafe.composeapp.generated.resources.menugoods_edit_content_description
@@ -100,6 +101,14 @@ import concafe.composeapp.generated.resources.noticeevent_validation_event_requi
 import concafe.composeapp.generated.resources.noticeevent_validation_notice_required
 import concafe.composeapp.generated.resources.noticeevent_validation_title_required
 import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.schedule_label_end_time
+import concafe.composeapp.generated.resources.schedule_label_start_time
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -367,11 +376,90 @@ private fun NoticeEventContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NoticeEventFormSheetContent(
     uiState: NoticeEventUiState,
     onAction: (NoticeEventAction) -> Unit
 ) {
+    var isEventPeriodEditorVisible by rememberSaveable { mutableStateOf(false) }
+    var isStartDatePickerVisible by rememberSaveable { mutableStateOf(false) }
+    var isEndDatePickerVisible by rememberSaveable { mutableStateOf(false) }
+    var selectedStartDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedEndDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(uiState.selectedTab, uiState.formReservedAt, uiState.formEditingId) {
+        if (uiState.selectedTab == NoticeEventTab.EVENT) {
+            val parsed = parseEventPeriodText(uiState.formReservedAt)
+            selectedStartDateMillis = parsed?.first
+            selectedEndDateMillis = parsed?.second
+        } else {
+            isEventPeriodEditorVisible = false
+            isStartDatePickerVisible = false
+            isEndDatePickerVisible = false
+            selectedStartDateMillis = null
+            selectedEndDateMillis = null
+        }
+    }
+
+    if (isStartDatePickerVisible) {
+        val startState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedStartDateMillis ?: Clock.System.now().toEpochMilliseconds()
+        )
+        DatePickerDialog(
+            onDismissRequest = { isStartDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val picked = startState.selectedDateMillis ?: return@TextButton
+                        selectedStartDateMillis = picked
+                        if (selectedEndDateMillis != null && selectedEndDateMillis!! < picked) {
+                            selectedEndDateMillis = picked
+                        }
+                        isStartDatePickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isStartDatePickerVisible = false }) {
+                    Text(stringResource(Res.string.common_close))
+                }
+            }
+        ) {
+            DatePicker(state = startState)
+        }
+    }
+
+    if (isEndDatePickerVisible) {
+        val endState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedEndDateMillis ?: selectedStartDateMillis ?: Clock.System.now().toEpochMilliseconds()
+        )
+        DatePickerDialog(
+            onDismissRequest = { isEndDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val picked = endState.selectedDateMillis ?: return@TextButton
+                        val start = selectedStartDateMillis
+                        selectedEndDateMillis = if (start != null && picked < start) start else picked
+                        isEndDatePickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isEndDatePickerVisible = false }) {
+                    Text(stringResource(Res.string.common_close))
+                }
+            }
+        ) {
+            DatePicker(state = endState)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -486,7 +574,13 @@ private fun NoticeEventFormSheetContent(
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                 )
                 Button(
-                    onClick = { onAction(NoticeEventAction.ClickReserveSchedule) },
+                    onClick = {
+                        if (uiState.selectedTab == NoticeEventTab.EVENT) {
+                            isEventPeriodEditorVisible = !isEventPeriodEditorVisible
+                        } else {
+                            onAction(NoticeEventAction.ClickReserveSchedule)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
@@ -511,6 +605,94 @@ private fun NoticeEventFormSheetContent(
                             }
                         )
                         Icon(Icons.Default.CalendarToday, contentDescription = null)
+                    }
+                }
+                if (uiState.selectedTab == NoticeEventTab.EVENT && isEventPeriodEditorVisible) {
+                    Spacer(Modifier.height(12.dp))
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { isStartDatePickerVisible = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(stringResource(Res.string.schedule_label_start_time))
+                                    Text(
+                                        text = selectedStartDateMillis?.let(::formatDateMillis) ?: "-",
+                                        color = Color(0xFF665A63)
+                                    )
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = { isEndDatePickerVisible = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(stringResource(Res.string.schedule_label_end_time))
+                                    Text(
+                                        text = selectedEndDateMillis?.let(::formatDateMillis) ?: "-",
+                                        color = Color(0xFF665A63)
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedStartDateMillis = null
+                                        selectedEndDateMillis = null
+                                        onAction(NoticeEventAction.ChangeFormReservedAt(""))
+                                        isEventPeriodEditorVisible = false
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(stringResource(Res.string.noticeevent_remove))
+                                }
+                                Button(
+                                    onClick = {
+                                        val start = selectedStartDateMillis ?: return@Button
+                                        val end = selectedEndDateMillis ?: return@Button
+                                        val normalized = if (start <= end) start to end else end to start
+                                        onAction(
+                                            NoticeEventAction.ChangeFormReservedAt(
+                                                formatEventPeriodText(normalized.first, normalized.second)
+                                            )
+                                        )
+                                        isEventPeriodEditorVisible = false
+                                    },
+                                    enabled = selectedStartDateMillis != null && selectedEndDateMillis != null,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFFD1DC),
+                                        contentColor = Color(0xFF2B2330)
+                                    )
+                                ) {
+                                    Text(stringResource(Res.string.common_confirm))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -885,5 +1067,28 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
             modifier = Modifier.clickable(onClick = onDismiss).padding(start = 12.dp)
         )
     }
+}
+
+private fun parseEventPeriodText(periodText: String): Pair<Long, Long>? {
+    val regex = Regex("""(\d{4})\.(\d{2})\.(\d{2})\s*(?:~|-)\s*(\d{4})\.(\d{2})\.(\d{2})""")
+    val match = regex.find(periodText.trim()) ?: return null
+    val values = match.groupValues
+    val start = LocalDate(values[1].toInt(), values[2].toInt(), values[3].toInt())
+    val end = LocalDate(values[4].toInt(), values[5].toInt(), values[6].toInt())
+    return localDateToEpochMillis(start) to localDateToEpochMillis(end)
+}
+
+private fun formatDateMillis(millis: Long): String {
+    val date = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return "%04d.%02d.%02d".format(date.year, date.monthNumber, date.dayOfMonth)
+}
+
+private fun formatEventPeriodText(startMillis: Long, endMillis: Long): String {
+    return "${formatDateMillis(startMillis)} - ${formatDateMillis(endMillis)}"
+}
+
+private fun localDateToEpochMillis(date: LocalDate): Long {
+    val instant = date.atStartOfDayIn(TimeZone.currentSystemDefault())
+    return instant.toEpochMilliseconds()
 }
 

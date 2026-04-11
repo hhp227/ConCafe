@@ -234,7 +234,6 @@ class FirebaseAuthRestTokenProvider(
         if (idToken.isBlank() || newPassword.isBlank()) {
             throw IllegalArgumentException("idToken/newPassword is required")
         }
-
         val body = """
             {
               "idToken": "${escapeJson(idToken)}",
@@ -242,7 +241,6 @@ class FirebaseAuthRestTokenProvider(
               "returnSecureToken": true
             }
         """.trimIndent()
-
         val response = postJsonWithApiKeyFallback(
             buildUrl = { key -> updatePasswordUrl(key) },
             body = body

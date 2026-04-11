@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe
 
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeDetailReview
 
@@ -19,6 +20,7 @@ data class CafeUiState(
     val isLoadingMoreNotices: Boolean = false,
     val noticesNextCursor: String? = null,
     val canLoadMoreNotices: Boolean = false,
+    val events: List<CafeEventManagementItem> = emptyList(),
     val notices: List<CafeNoticeManagementItem> = emptyList(),
     val isLoadingMoreReviews: Boolean = false,
     val reviewsNextCursor: String? = null,

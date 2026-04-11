@@ -124,6 +124,9 @@
     <string name="home_nearby_cafe_empty_desc">Try changing the regional filter or check again soon.</string>
     <string name="home_notice_empty_title">No recent notices</string>
     <string name="home_notice_empty_desc">This area will display once a new notice is posted.</string>
+    <string name="home_section_ongoing_cafe_event">Ongoing Cafe Events</string>
+    <string name="home_ongoing_cafe_event_empty_title">No ongoing events</string>
+    <string name="home_ongoing_cafe_event_empty_desc">Cafe events will appear here once they are registered.</string>
     <string name="home_banner_placeholder_title">Home banner in preparation</string>
     <string name="home_banner_placeholder_desc">We will show you new updates soon.</string>
     <string name="ranking_title">Ranking</string>

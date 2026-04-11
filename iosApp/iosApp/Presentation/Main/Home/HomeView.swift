@@ -91,7 +91,7 @@ private struct HomeContentView: View {
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
-                    noticeSection
+                    cafeEventSection
                 }
                 .padding(.vertical, 16)
             }
@@ -233,38 +233,86 @@ private struct HomeContentView: View {
         }
     }
 
-    private var noticeSection: some View {
+    private var cafeEventSection: some View {
+        let visibleEvents = Array(uiState.cafeEvents.prefix(3))
+
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(title: String(localized: String.LocalizationValue("home_section_notice"), table: "Localizable"))
-            VStack(spacing: 10) {
-                if !uiState.notices.isEmpty {
-                    ForEach(uiState.notices, id: \.id) { notice in
-                        HStack(alignment: .top, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(notice.cafeName)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "EF6797"))
-                                Text(notice.content)
-                                    .font(.subheadline)
-                            }
-                            Spacer()
-                            Text(notice.relativeTime)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+            SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
+            if !visibleEvents.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(visibleEvents, id: \.id) { event in
+                            HomeCafeEventCard(event: event)
+                                .frame(width: 276)
+                                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .onTapGesture {
+                                    onAction(.cafeTapped(id: event.cafeId))
+                                }
                         }
-                        .padding(12)
-                        .background(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
+                    .padding(.horizontal, 16)
+                }
+            } else {
+                HomeSectionPlaceholderCard(
+                    title: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_desc"), table: "Localizable")
+                )
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+private struct HomeCafeEventCard: View {
+    let event: Shared.HomeCafeEvent
+
+    private let cardCornerRadius: CGFloat = 16
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack {
+                if let imageUrl = resolvedRemoteImageUrl(event.imageUrl) {
+                    CachedAsyncImage(
+                        url: imageUrl,
+                        placeholder: Color.clear
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
                 } else {
-                    HomeSectionPlaceholderCard(
-                        title: String(localized: String.LocalizationValue("home_notice_empty_title"), table: "Localizable"),
-                        description: String(localized: String.LocalizationValue("home_notice_empty_desc"), table: "Localizable")
+                    LinearGradient(
+                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
                 }
             }
-            .padding(.horizontal, 16)
+            .frame(height: 172)
+            .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.cafeName)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                Text(event.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.caption2)
+                        .foregroundStyle(Color(hex: "8A7F8B"))
+                    Text(event.periodText)
+                        .font(.caption2)
+                        .foregroundStyle(Color(hex: "8A7F8B"))
+                        .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 4)
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : URL(string: trimmed)
     }
 }
 

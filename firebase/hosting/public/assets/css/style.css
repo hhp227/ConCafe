@@ -274,10 +274,7 @@ a {
 }
 
 #home-banner .banner-carousel {
-  --home-banner-max-height: 360px;
-  --home-banner-max-width: calc(var(--home-banner-max-height) * 16 / 10);
-  max-width: min(100%, var(--home-banner-max-width));
-  margin: 0 auto;
+  --home-banner-max-height: calc(var(--maxw) * 9 / 16);
 }
 
 .banner-loading {
@@ -347,7 +344,8 @@ a {
 
 #home-banner .banner-card {
   height: auto;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
+  max-height: var(--home-banner-max-height);
 }
 
 .banner-card::after {

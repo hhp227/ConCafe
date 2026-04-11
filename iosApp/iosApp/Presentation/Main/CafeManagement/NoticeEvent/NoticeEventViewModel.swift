@@ -448,6 +448,9 @@ final class NoticeEventViewModel: ObservableObject {
             uiState.infoMessage = nil
         case .changeFormPinned(let value):
             uiState.formPinned = value
+        case .changeFormReservedAt(let value):
+            uiState.formReservedAt = value
+            uiState.infoMessage = nil
         case .clickReserveSchedule:
             uiState.infoMessage = MessageKey.reserveScheduleNextStep
         case .clickSubmitForm:
