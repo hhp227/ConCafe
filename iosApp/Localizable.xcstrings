@@ -2299,19 +2299,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recommended ratio 16:9 (1080x600px)"
+            "value" : "Recommended ratio 16:10 (1080x675px)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "推奨比率 16:9 (1080x600px)"
+            "value" : "推奨比率 16:10 (1080x675px)"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "권장 비율 16:9 (1080x600px)"
+            "value" : "권장 비율 16:10 (1080x675px)"
           }
         }
       }

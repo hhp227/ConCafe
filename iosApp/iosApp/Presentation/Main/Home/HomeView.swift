@@ -138,7 +138,10 @@ private struct HomeContentView: View {
     }
 
     private var bannerHeight: CGFloat {
-        min(max(UIScreen.main.bounds.width * 0.3, 180), 360)
+        let horizontalPadding: CGFloat = 32
+        let contentWidth = max(UIScreen.main.bounds.width - horizontalPadding, 0)
+        let calculatedHeight = contentWidth * (10.0 / 16.0)
+        return min(calculatedHeight, 360)
     }
 
     private var bannerTabViewHeight: CGFloat {

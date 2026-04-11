@@ -487,7 +487,7 @@
     <string name="banneredit_action_save">保存</string>
     <string name="banneredit_action_close">閉じる</string>
     <string name="banneredit_image_section_title">バナー画像アップロード</string>
-    <string name="banneredit_image_guide">推奨比率 16:9 (1080x600px)</string>
+    <string name="banneredit_image_guide">推奨比率 16:10 (1080x675px)</string>
     <string name="banneredit_image_button">画像を選択</string>
     <string name="banneredit_image_placeholder_pick">バナー画像を選択</string>
     <string name="banneredit_section_basic">バナー基本情報</string>

@@ -535,7 +535,7 @@ private fun BannerImageCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .aspectRatio(16f / 10f)
                     .background(
                         Brush.linearGradient(listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))),
                         RoundedCornerShape(20.dp)

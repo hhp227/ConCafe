@@ -207,7 +207,7 @@ private struct BannerEditContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 200)
+            .aspectRatio(16.0 / 10.0, contentMode: .fit)
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .onTapGesture {
                 onAction(.clickImagePicker)

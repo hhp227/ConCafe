@@ -142,7 +142,7 @@ fun HomeContentScreen(
         ) {
             item {
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    val dynamicHeight = (maxWidth * 0.3f).coerceIn(180.dp, 360.dp)
+                    val bannerHeight = homeBannerHeight(maxWidth)
 
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         if (uiState.banners.isNotEmpty()) {
@@ -150,7 +150,7 @@ fun HomeContentScreen(
                                 state = pagerState,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(dynamicHeight),
+                                    .height(bannerHeight),
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 pageSpacing = 12.dp
                             ) { page ->
@@ -164,7 +164,7 @@ fun HomeContentScreen(
                             }
                         } else {
                             // 플레이스홀더에도 동일한 높이 적용
-                            HomeBannerPlaceholderCard(dynamicHeight)
+                            HomeBannerPlaceholderCard(bannerHeight)
                         }
                         if (uiState.banners.size > 1) {
                             Row(
@@ -489,6 +489,12 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
             }
         }
     }
+}
+
+private fun homeBannerHeight(contentWidth: Dp): Dp {
+    val horizontalPadding = 32.dp
+    val bannerWidth = (contentWidth - horizontalPadding).coerceAtLeast(0.dp)
+    return (bannerWidth * (10f / 16f)).coerceAtMost(360.dp)
 }
 
 private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {

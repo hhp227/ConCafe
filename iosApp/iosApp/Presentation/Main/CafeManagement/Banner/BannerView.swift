@@ -269,7 +269,7 @@ private struct BannerCardView: View {
                 }
             }
         }
-        .frame(width: 96, height: 96)
+        .frame(width: 96, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .clipped()
     }
