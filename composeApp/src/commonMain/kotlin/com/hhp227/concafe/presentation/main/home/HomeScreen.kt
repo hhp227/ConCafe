@@ -141,55 +141,11 @@ fun HomeContentScreen(
             contentPadding = PaddingValues(vertical = 20.dp)
         ) {
             item {
-                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    val bannerHeight = homeBannerHeight(maxWidth)
-
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (uiState.banners.isNotEmpty()) {
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(bannerHeight),
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                pageSpacing = 12.dp
-                            ) { page ->
-                                val banner = uiState.banners[page]
-
-                                HomeBannerItem(
-                                    banner = banner,
-                                    modifier = Modifier.fillMaxSize(),
-                                    onClick = { onAction(HomeAction.ClickBanner(banner)) }
-                                )
-                            }
-                        } else {
-                            // 플레이스홀더에도 동일한 높이 적용
-                            HomeBannerPlaceholderCard(bannerHeight)
-                        }
-                        if (uiState.banners.size > 1) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                repeat(uiState.banners.size) { page ->
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(horizontal = 3.dp)
-                                            .size(
-                                                width = if (pagerState.currentPage == page) 18.dp else 8.dp,
-                                                height = 8.dp
-                                            )
-                                            .clip(RoundedCornerShape(999.dp))
-                                            .background(
-                                                if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                                else Color(0xFFD8D8D8)
-                                            )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                HomeBannerSection(
+                    uiState = uiState,
+                    pagerState = pagerState,
+                    onAction = onAction
+                )
             }
         item {
             SectionTitle(
@@ -347,6 +303,74 @@ fun HomeContentScreen(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color(0xFFEF6797))
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HomeBannerSection(
+    uiState: HomeUiState,
+    pagerState: PagerState,
+    onAction: (HomeAction) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val bannerHeight = homeBannerHeight(maxWidth)
+        val bannerCount = uiState.banners.size
+
+        LaunchedEffect(bannerCount) {
+            if (bannerCount > 0) {
+                val settledPage = pagerState.settledPage.coerceIn(0, bannerCount - 1)
+
+                if (pagerState.currentPageOffsetFraction != 0f || pagerState.currentPage != settledPage) {
+                    pagerState.scrollToPage(settledPage)
+                }
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (uiState.banners.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(bannerHeight),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    pageSpacing = 12.dp
+                ) { page ->
+                    val banner = uiState.banners[page]
+
+                    HomeBannerItem(
+                        banner = banner,
+                        modifier = Modifier.fillMaxSize(),
+                        onClick = { onAction(HomeAction.ClickBanner(banner)) }
+                    )
+                }
+            } else {
+                // 플레이스홀더에도 동일한 높이 적용
+                HomeBannerPlaceholderCard(bannerHeight)
+            }
+            if (uiState.banners.size > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(uiState.banners.size) { page ->
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(
+                                    width = if (pagerState.currentPage == page) 18.dp else 8.dp,
+                                    height = 8.dp
+                                )
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(
+                                    if (pagerState.currentPage == page) Color(0xFFEF6797)
+                                    else Color(0xFFD8D8D8)
+                                )
+                        )
+                    }
+                }
+            }
         }
     }
 }

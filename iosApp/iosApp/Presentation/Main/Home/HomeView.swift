@@ -81,7 +81,11 @@ private struct HomeContentView: View {
         if !uiState.isLoading {
             ScrollView {
                 VStack(spacing: 24) {
-                    bannerSection
+                    HomeBannerSection(
+                        uiState: uiState,
+                        currentBannerPage: $currentBannerPage,
+                        onAction: onAction
+                    )
                     popularCastSection
                     nearbyCafeSection
                     if !uiState.birthdayCasts.isEmpty {
@@ -103,51 +107,6 @@ private struct HomeContentView: View {
         }
     }
     
-    private var bannerSection: some View {
-        VStack(spacing: 10) {
-            if !uiState.banners.isEmpty {
-                TabView(selection: $currentBannerPage) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        HomeBannerItem(
-                            banner: banner,
-                            height: bannerHeight
-                        )
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 16)
-                            .onTapGesture {
-                                onAction(.bannerTapped(banner))
-                            }
-                            .tag(index)
-                    }
-                }
-                .frame(height: bannerTabViewHeight)
-                .tabViewStyle(.page(indexDisplayMode: .never))
-            } else {
-                HomeBannerPlaceholderCard(height: bannerHeight)
-            }
-            if uiState.banners.count > 1 {
-                HStack(spacing: 6) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
-                        RoundedRectangle(cornerRadius: 999)
-                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
-                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
-                    }
-                }
-            }
-        }
-    }
-
-    private var bannerHeight: CGFloat {
-        let horizontalPadding: CGFloat = 32
-        let contentWidth = max(UIScreen.main.bounds.width - horizontalPadding, 0)
-        let calculatedHeight = contentWidth * (10.0 / 16.0)
-        return min(calculatedHeight, 360)
-    }
-
-    private var bannerTabViewHeight: CGFloat {
-        bannerHeight + 10
-    }
-
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
@@ -306,6 +265,59 @@ private struct HomeContentView: View {
             }
             .padding(.horizontal, 16)
         }
+    }
+}
+
+private struct HomeBannerSection: View {
+    let uiState: HomeUiState
+
+    @Binding var currentBannerPage: Int
+
+    let onAction: (HomeAction) -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            if !uiState.banners.isEmpty {
+                TabView(selection: $currentBannerPage) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                        HomeBannerItem(
+                            banner: banner,
+                            height: bannerHeight
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 16)
+                        .onTapGesture {
+                            onAction(.bannerTapped(banner))
+                        }
+                        .tag(index)
+                    }
+                }
+                .frame(height: bannerTabViewHeight)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+            } else {
+                HomeBannerPlaceholderCard(height: bannerHeight)
+            }
+            if uiState.banners.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                        RoundedRectangle(cornerRadius: 999)
+                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
+                    }
+                }
+            }
+        }
+    }
+
+    private var bannerHeight: CGFloat {
+        let horizontalPadding: CGFloat = 32
+        let contentWidth = max(UIScreen.main.bounds.width - horizontalPadding, 0)
+        let calculatedHeight = contentWidth * (10.0 / 16.0)
+        return min(calculatedHeight, 360)
+    }
+
+    private var bannerTabViewHeight: CGFloat {
+        bannerHeight + 10
     }
 }
 
