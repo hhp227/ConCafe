@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Foundation
-import CoreImage.CIFilterBuiltins
 import Photos
 import Shared
 
@@ -907,73 +906,6 @@ private struct DashboardQrSheetView: View {
             saveResultMessage = String(localized: String.LocalizationValue(
                 isSaved ? "dashboard_qr_sheet_save_success" : "dashboard_qr_sheet_save_failed"
             ), table: "Localizable")
-        }
-    }
-}
-
-private struct DashboardQrCodeImageView: View {
-    let payload: String
-
-    var body: some View {
-        if let image = generateDashboardQrImage(from: payload) {
-            Image(uiImage: image)
-                .interpolation(.none)
-                .resizable()
-                .scaledToFit()
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-    }
-}
-
-private let dashboardQrCiContext = CIContext()
-
-private func generateDashboardQrImage(from payload: String) -> UIImage? {
-    let filter = CIFilter.qrCodeGenerator()
-    filter.message = Data(payload.utf8)
-    filter.correctionLevel = "M"
-
-    guard let outputImage = filter.outputImage else {
-        return nil
-    }
-    let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: 10, y: 10))
-    guard let cgImage = dashboardQrCiContext.createCGImage(transformedImage, from: transformedImage.extent) else {
-        return nil
-    }
-    return UIImage(cgImage: cgImage)
-}
-
-private func saveDashboardQrImageToPhotoLibrary(
-    _ image: UIImage,
-    completion: @escaping (Bool) -> Void
-) {
-    let saveBlock = {
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
-        }) { success, _ in
-            DispatchQueue.main.async {
-                completion(success)
-            }
-        }
-    }
-
-    switch PHPhotoLibrary.authorizationStatus(for: .addOnly) {
-    case .authorized, .limited:
-        saveBlock()
-    case .notDetermined:
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            switch status {
-            case .authorized, .limited:
-                saveBlock()
-            default:
-                DispatchQueue.main.async {
-                    completion(false)
-                }
-            }
-        }
-    default:
-        DispatchQueue.main.async {
-            completion(false)
         }
     }
 }

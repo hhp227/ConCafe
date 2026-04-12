@@ -197,6 +197,9 @@
 		0A9B96162F62645300F6D8FE /* ConCafeCastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */; };
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
 		0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */; };
+		0AA7620D2F8BB08C00092934 /* CheckInQrScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA7620C2F8BB08C00092934 /* CheckInQrScannerView.swift */; };
+		0AA7620F2F8BB37E00092934 /* CafeManagementQrCodeSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA7620E2F8BB37E00092934 /* CafeManagementQrCodeSaver.swift */; };
+		0AA762112F8BB4A000092934 /* CafeManagementQrCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA762102F8BB4A000092934 /* CafeManagementQrCode.swift */; };
 		0AAE7AAC2F5AD0130045E0B8 /* ExploreAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */; };
 		0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB6092D2F69011000591FEE /* ConCafeLogo.swift */; };
 		0AB609342F69031C00591FEE /* goyangdeogyang_extrabold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */; };
@@ -420,6 +423,9 @@
 		0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConCafeCastCard.swift; sourceTree = "<group>"; };
 		0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUiState.swift; sourceTree = "<group>"; };
+		0AA7620C2F8BB08C00092934 /* CheckInQrScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInQrScannerView.swift; sourceTree = "<group>"; };
+		0AA7620E2F8BB37E00092934 /* CafeManagementQrCodeSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementQrCodeSaver.swift; sourceTree = "<group>"; };
+		0AA762102F8BB4A000092934 /* CafeManagementQrCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementQrCode.swift; sourceTree = "<group>"; };
 		0AAE7AAB2F5AD0130045E0B8 /* ExploreAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreAction.swift; sourceTree = "<group>"; };
 		0AB6092D2F69011000591FEE /* ConCafeLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConCafeLogo.swift; sourceTree = "<group>"; };
 		0AB609322F69031C00591FEE /* goyangdeogyang_extrabold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = goyangdeogyang_extrabold.ttf; sourceTree = "<group>"; };
@@ -499,6 +505,8 @@
 				0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */,
 				0A8ABA642F5C1C4D00265D4F /* CafeManagementAction.swift */,
 				0A8ABA662F5C1C6700265D4F /* CafeManagementEvent.swift */,
+				0AA7620E2F8BB37E00092934 /* CafeManagementQrCodeSaver.swift */,
+				0AA762102F8BB4A000092934 /* CafeManagementQrCode.swift */,
 			);
 			path = CafeManagement;
 			sourceTree = "<group>";
@@ -834,6 +842,7 @@
 				0A50FE922F5EB83400613093 /* CheckInUiState.swift */,
 				0A50FE942F5EB86000613093 /* CheckInAction.swift */,
 				0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */,
+				0AA7620C2F8BB08C00092934 /* CheckInQrScannerView.swift */,
 			);
 			path = CheckIn;
 			sourceTree = "<group>";
@@ -1301,6 +1310,7 @@
 				0A0C66A42F5C0E8300B0CDE4 /* SignInEvent.swift in Sources */,
 				0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */,
 				0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */,
+				0AA762112F8BB4A000092934 /* CafeManagementQrCode.swift in Sources */,
 				0A6B33592F610CDF0074940F /* NoticeEventView.swift in Sources */,
 				0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */,
 				0A785CC92F5A7EDB004037A8 /* CastEvent.swift in Sources */,
@@ -1311,6 +1321,7 @@
 				0A2C5B242F65619600D3004E /* NotificationSettingsAction.swift in Sources */,
 				0A3470822F611D46005F9A8C /* MenuGoodsEditAction.swift in Sources */,
 				0A2C5B172F6560E700D3004E /* AccountSettingsView.swift in Sources */,
+				0AA7620F2F8BB37E00092934 /* CafeManagementQrCodeSaver.swift in Sources */,
 				0A6B6AC02F60702C00E395C2 /* CafeInfoEditView.swift in Sources */,
 				0AFECA4F2F62CDEF00C2C099 /* ReviewEditUiState.swift in Sources */,
 				0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */,
@@ -1360,6 +1371,7 @@
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
+				0AA7620D2F8BB08C00092934 /* CheckInQrScannerView.swift in Sources */,
 				0A3470732F611AD6005F9A8C /* ExternalLinkView.swift in Sources */,
 				0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */,
 				0A341CB02F6035FA00CC07CF /* CafeDashboardViewModel.swift in Sources */,
