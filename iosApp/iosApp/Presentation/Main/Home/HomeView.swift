@@ -235,8 +235,7 @@ private struct HomeContentView: View {
 
     private var cafeEventSection: some View {
         let visibleEvents = Array(uiState.cafeEvents.prefix(6))
-
-        VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
             if !visibleEvents.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {

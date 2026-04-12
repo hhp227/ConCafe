@@ -547,8 +547,7 @@ private struct ProfileMyInfoView: View {
     private func favoritesSection(contentWidth: CGFloat) -> some View {
         let favoriteItems = Array(uiState.favorites.prefix(12))
         let columnCount = myInfoGridColumnCount(for: contentWidth)
-
-        VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 8) {
             MyInfoSectionTitle(title: "즐겨찾기")
             if !favoriteItems.isEmpty {
                 LazyVGrid(columns: myInfoGridColumns(count: columnCount), spacing: myInfoGridItemSpacing) {
