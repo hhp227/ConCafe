@@ -19,6 +19,8 @@ sealed interface CheckInAction {
 
     data object DismissNewVisitSheet : CheckInAction
 
+    data object DismissQrCheckInSheet : CheckInAction
+
     data object DismissReviewPrompt : CheckInAction
 
     data object ClickWriteReviewPrompt : CheckInAction
@@ -26,6 +28,10 @@ sealed interface CheckInAction {
     data object LoadMoreRecentVisits : CheckInAction
 
     data object ClickQrCheckIn : CheckInAction
+
+    data class QrScanFailed(val message: String) : CheckInAction
+
+    data class SubmitQrCheckIn(val rawValue: String) : CheckInAction
 
     data class SubmitNewVisit(
         val cafeId: String,

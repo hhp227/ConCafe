@@ -74,6 +74,8 @@ import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_desc
 import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_title
 import concafe.composeapp.generated.resources.checkin_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.checkin_popular_cast_empty_title
+import concafe.composeapp.generated.resources.checkin_qr_sheet_desc
+import concafe.composeapp.generated.resources.checkin_qr_sheet_title
 import concafe.composeapp.generated.resources.checkin_review_prompt_desc
 import concafe.composeapp.generated.resources.checkin_review_prompt_later
 import concafe.composeapp.generated.resources.checkin_review_prompt_primary
@@ -173,6 +175,22 @@ fun CheckInScreen(
                     },
                     onQrCheckIn = { viewModel.onAction(CheckInAction.ClickQrCheckIn) },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
+                )
+            }
+        }
+        if (uiState.isQrCheckInSheetVisible) {
+            CheckInNewVisitDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) }
+            ) {
+                QrCheckInBottomSheet(
+                    errorMessage = uiState.errorMessage,
+                    onDismiss = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) },
+                    onScanSuccess = { rawValue ->
+                        viewModel.onAction(CheckInAction.SubmitQrCheckIn(rawValue))
+                    },
+                    onScanFailed = { message ->
+                        viewModel.onAction(CheckInAction.QrScanFailed(message))
+                    }
                 )
             }
         }
@@ -1156,7 +1174,6 @@ private fun NewVisitCheckInBottomSheet(
             Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
         }
         Button(
-            enabled = selectedCafeId.isNotBlank(),
             onClick = onQrCheckIn,
             modifier = Modifier
                 .fillMaxWidth()
@@ -1260,6 +1277,72 @@ private fun TodayVisitsRow(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QrCheckInBottomSheet(
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onScanSuccess: (String) -> Unit,
+    onScanFailed: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 520.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.checkin_qr_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.common_close),
+                    tint = Color(0xFF7C7480)
+                )
+            }
+        }
+        Text(
+            text = stringResource(Res.string.checkin_qr_sheet_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7C7480)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CheckInQrScanner(
+                onScanSuccess = onScanSuccess,
+                onScanCanceled = onDismiss,
+                onScanFailed = onScanFailed
+            )
+        }
+        if (!errorMessage.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFFFF1F3),
+                border = BorderStroke(1.dp, Color(0xFFFFCDD5))
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFB03854),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                )
             }
         }
     }

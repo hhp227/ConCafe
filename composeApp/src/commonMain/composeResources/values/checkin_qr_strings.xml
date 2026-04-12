@@ -1,0 +1,4 @@
+<resources>
+    <string name="checkin_qr_sheet_title">QR Check-In</string>
+    <string name="checkin_qr_sheet_desc">Scan the cafe QR code to check in instantly.</string>
+</resources>

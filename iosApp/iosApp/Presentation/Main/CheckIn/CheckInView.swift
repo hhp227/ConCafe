@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 import Shared
 import MapKit
+import AVFoundation
 
 struct CheckInView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -63,6 +64,29 @@ struct CheckInView: View {
             CheckInNewVisitSheet(
                 cafes: viewModel.uiState.mapCafes,
                 preselectCafeId: viewModel.uiState.preselectCafeId,
+                errorMessage: Binding(
+                    get: { viewModel.uiState.errorMessage },
+                    set: { value in
+                        if value == nil {
+                            viewModel.onAction(.dismissError)
+                        }
+                    }
+                ),
+                onAction: viewModel.onAction
+            )
+            .compatLargeSheetDetent()
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.uiState.isQrCheckInSheetVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissQrCheckInSheet)
+                    }
+                }
+            )
+        ) {
+            CheckInQrScanSheet(
                 errorMessage: Binding(
                     get: { viewModel.uiState.errorMessage },
                     set: { value in
@@ -1124,6 +1148,206 @@ private struct CheckInNewVisitSheet: View {
 
     private func currentVisitedAtString() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+}
+
+private struct CheckInQrScanSheet: View {
+    @Binding var errorMessage: String?
+
+    let onAction: (CheckInAction) -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(Color(hex: "E1D7DE"))
+                .frame(width: 42, height: 5)
+            HStack {
+                Spacer()
+                Text(String(localized: String.LocalizationValue("checkin_qr_sheet_title"), table: "Localizable"))
+                    .font(.title3.weight(.bold))
+                Spacer()
+                Button {
+                    onAction(.dismissQrCheckInSheet)
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(Color(hex: "7C7480"))
+                        .padding(4)
+                }
+            }
+            Text(String(localized: String.LocalizationValue("checkin_qr_sheet_desc"), table: "Localizable"))
+                .font(.footnote)
+                .foregroundStyle(Color(hex: "7C7480"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            CheckInQrScannerView(
+                onScanned: { rawValue in
+                    onAction(.submitQrCheckIn(rawValue: rawValue))
+                },
+                onScanFailed: { message in
+                    onAction(.qrScanFailed(message: message))
+                },
+                onCanceled: {
+                    onAction(.dismissQrCheckInSheet)
+                }
+            )
+            .frame(height: 280)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            if let errorMessage, !errorMessage.isEmpty {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "E25575"))
+                        .padding(.top, 2)
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(Color(hex: "B03854"))
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color(hex: "FFF1F3"))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
+                )
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 16)
+        .background(Color(hex: "F8F5F6"))
+    }
+}
+
+private struct CheckInQrScannerView: UIViewControllerRepresentable {
+    let onScanned: (String) -> Void
+    let onScanFailed: (String) -> Void
+    let onCanceled: () -> Void
+
+    func makeUIViewController(context: Context) -> CheckInQrScannerViewController {
+        let controller = CheckInQrScannerViewController()
+        controller.onScanned = onScanned
+        controller.onScanFailed = onScanFailed
+        controller.onCanceled = onCanceled
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: CheckInQrScannerViewController, context: Context) {
+        uiViewController.onScanned = onScanned
+        uiViewController.onScanFailed = onScanFailed
+        uiViewController.onCanceled = onCanceled
+    }
+}
+
+private final class CheckInQrScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+    var onScanned: ((String) -> Void)?
+    var onScanFailed: ((String) -> Void)?
+    var onCanceled: (() -> Void)?
+
+    private let captureSession = AVCaptureSession()
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var isHandlingResult = false
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        configureSession()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = view.bounds
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if !isHandlingResult {
+            onCanceled?()
+        }
+    }
+
+    deinit {
+        captureSession.stopRunning()
+    }
+
+    private func configureSession() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            startScanner()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    if granted {
+                        self.startScanner()
+                    } else {
+                        self.isHandlingResult = true
+                        self.onScanFailed?("카메라 접근 권한이 필요합니다.")
+                    }
+                }
+            }
+        default:
+            isHandlingResult = true
+            onScanFailed?("카메라 접근 권한이 필요합니다.")
+        }
+    }
+
+    private func startScanner() {
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+            isHandlingResult = true
+            onScanFailed?("카메라를 찾을 수 없습니다.")
+            return
+        }
+        guard let videoInput = try? AVCaptureDeviceInput(device: videoCaptureDevice) else {
+            isHandlingResult = true
+            onScanFailed?("카메라 입력을 초기화할 수 없습니다.")
+            return
+        }
+
+        if captureSession.canAddInput(videoInput) {
+            captureSession.addInput(videoInput)
+        } else {
+            isHandlingResult = true
+            onScanFailed?("카메라 입력을 사용할 수 없습니다.")
+            return
+        }
+
+        let metadataOutput = AVCaptureMetadataOutput()
+        if captureSession.canAddOutput(metadataOutput) {
+            captureSession.addOutput(metadataOutput)
+            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+            metadataOutput.metadataObjectTypes = [.qr]
+        } else {
+            isHandlingResult = true
+            onScanFailed?("QR 스캐너를 시작할 수 없습니다.")
+            return
+        }
+
+        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.frame = view.bounds
+        self.previewLayer = previewLayer
+        view.layer.addSublayer(previewLayer)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.captureSession.startRunning()
+        }
+    }
+
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+        guard !isHandlingResult else { return }
+        guard let readableObject = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+              readableObject.type == .qr,
+              let rawValue = readableObject.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawValue.isEmpty else { return }
+
+        isHandlingResult = true
+        captureSession.stopRunning()
+        onScanned?(rawValue)
     }
 }
 

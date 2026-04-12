@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.checkin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.core.util.TimeUtils
+import kotlinx.datetime.Clock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -86,6 +87,7 @@ class CheckInViewModel(
                         currentUser = user,
                         isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false,
                         isNewVisitSheetVisible = if (user == null) it.isNewVisitSheetVisible else false,
+                        isQrCheckInSheetVisible = if (user == null) false else it.isQrCheckInSheetVisible,
                         reviewPrompt = if (user == null) null else it.reviewPrompt
                     )
                 }
@@ -222,6 +224,7 @@ class CheckInViewModel(
                                 _uiState.update {
                                     it.copy(
                                         isNewVisitSheetVisible = false,
+                                        isQrCheckInSheetVisible = false,
                                         preselectCafeId = null,
                                         errorMessage = null
                                     )
@@ -429,6 +432,96 @@ class CheckInViewModel(
     }
 
     private fun clickQrCheckIn() {
+        val currentUser = _uiState.value.currentUser
+        if (currentUser == null) {
+            _uiState.update {
+                it.copy(
+                    isLoginPromptVisible = true,
+                    isNewVisitSheetVisible = false,
+                    isQrCheckInSheetVisible = false
+                )
+            }
+            return
+        }
+        jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
+        jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
+            when (val permissionResult = checkInLocationProvider.requestPermissionIfNeeded()) {
+                CheckInLocationPermissionResult.Granted -> {
+                    _uiState.update {
+                        it.copy(
+                            isNewVisitSheetVisible = false,
+                            isQrCheckInSheetVisible = true,
+                            errorMessage = null
+                        )
+                    }
+                }
+                is CheckInLocationPermissionResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isQrCheckInSheetVisible = false,
+                            errorMessage = permissionResult.message
+                        )
+                    }
+                    _event.emit(CheckInEvent.ShowMessage(permissionResult.message))
+                    if (permissionResult.requiresSettings) {
+                        _event.emit(CheckInEvent.OpenLocationSettings)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun dismissQrCheckInSheet() {
+        _uiState.update { it.copy(isQrCheckInSheetVisible = false, errorMessage = null) }
+    }
+
+    private fun submitQrCheckIn(rawValue: String) {
+        val cafeId = resolveCafeIdFromQr(rawValue)
+        if (cafeId == null) {
+            _uiState.update { it.copy(errorMessage = "QR 코드에서 카페 정보를 찾을 수 없습니다.") }
+            return
+        }
+        submitNewVisit(
+            cafeId = cafeId,
+            visitedAt = Clock.System.now().toString(),
+            memo = null
+        )
+    }
+
+    private fun resolveCafeIdFromQr(rawValue: String): String? {
+        val payload = rawValue.trim()
+        if (payload.isEmpty()) return null
+
+        val knownCafeIds = (_uiState.value.mapCafes + _uiState.value.popularCafes)
+            .map { it.id }
+            .toSet()
+
+        if (knownCafeIds.contains(payload)) return payload
+
+        val candidates = buildList {
+            Regex("""(?:^|[?&])cafeId=([^&#]+)""", RegexOption.IGNORE_CASE)
+                .find(payload)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.let(::add)
+
+            Regex("""["']cafeId["']\s*:\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)
+                .find(payload)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.let(::add)
+
+            Regex("""(?:^|[^A-Za-z0-9_])cafeId[:=]([A-Za-z0-9_-]+)""", RegexOption.IGNORE_CASE)
+                .find(payload)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.let(::add)
+
+            payload.substringAfterLast("/").substringBefore("?").takeIf { it.isNotBlank() }?.let(::add)
+        }
+        return candidates
+            .map { it.trim() }
+            .firstOrNull { candidate -> knownCafeIds.contains(candidate) }
     }
     
     fun onAction(action: CheckInAction) {
@@ -481,10 +574,13 @@ class CheckInViewModel(
                 CheckInAction.DismissNewVisitSheet -> {
                     _uiState.update { it.copy(isNewVisitSheetVisible = false, preselectCafeId = null) }
                 }
+                CheckInAction.DismissQrCheckInSheet -> dismissQrCheckInSheet()
+                is CheckInAction.QrScanFailed -> _uiState.update { it.copy(errorMessage = action.message) }
                 CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
                 CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
                 CheckInAction.LoadMoreRecentVisits -> loadMoreRecentVisitPage()
                 CheckInAction.ClickQrCheckIn -> clickQrCheckIn()
+                is CheckInAction.SubmitQrCheckIn -> submitQrCheckIn(action.rawValue)
                 is CheckInAction.SubmitNewVisit -> {
                     submitNewVisit(
                         cafeId = action.cafeId,

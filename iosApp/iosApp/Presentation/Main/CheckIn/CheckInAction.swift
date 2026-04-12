@@ -17,9 +17,12 @@ enum CheckInAction {
     case dismissLoginPrompt
     case dismissError
     case dismissNewVisitSheet
+    case dismissQrCheckInSheet
     case dismissReviewPrompt
     case writeReviewPromptTapped
     case loadMoreRecentVisits
     case qrCheckInTapped
+    case qrScanFailed(message: String)
+    case submitQrCheckIn(rawValue: String)
     case submitNewVisit(cafeId: String, visitedAt: String, memo: String?)
 }

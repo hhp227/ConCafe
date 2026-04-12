@@ -7696,6 +7696,50 @@
         }
       }
     },
+    "checkin_qr_sheet_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan the cafe QR code to check in instantly."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェのQRコードを読み取るとすぐにチェックインできます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 QR 코드를 스캔하면 즉시 체크인됩니다."
+          }
+        }
+      }
+    },
+    "checkin_qr_sheet_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR Check-In"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QRチェックイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR 체크인"
+          }
+        }
+      }
+    },
     "checkin_new_visit_memo_label" : {
       "localizations" : {
         "en" : {

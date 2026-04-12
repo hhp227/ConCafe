@@ -21,6 +21,7 @@ data class CheckInUiState(
     val isLoadingMoreRecentVisits: Boolean = false,
     val isLoginPromptVisible: Boolean = false,
     val isNewVisitSheetVisible: Boolean = false,
+    val isQrCheckInSheetVisible: Boolean = false,
     val preselectCafeId: String? = null,
     val reviewPrompt: ReviewPrompt? = null
 ) {

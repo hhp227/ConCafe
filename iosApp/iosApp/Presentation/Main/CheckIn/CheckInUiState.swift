@@ -24,6 +24,7 @@ struct CheckInUiState {
     var isLoadingMoreRecentVisits: Bool
     var isLoginPromptVisible: Bool
     var isNewVisitSheetVisible: Bool
+    var isQrCheckInSheetVisible: Bool
     var preselectCafeId: String?
     var reviewPrompt: ReviewPrompt?
 
@@ -43,6 +44,7 @@ struct CheckInUiState {
         isLoadingMoreRecentVisits: false,
         isLoginPromptVisible: false,
         isNewVisitSheetVisible: false,
+        isQrCheckInSheetVisible: false,
         preselectCafeId: nil,
         reviewPrompt: nil
     )
