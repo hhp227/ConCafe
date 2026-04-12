@@ -274,7 +274,7 @@ a {
 }
 
 #home-banner .banner-carousel {
-  --home-banner-max-height: calc(var(--maxw) * 9 / 16);
+  --home-banner-max-height: calc(var(--maxw) * 7 / 16);
 }
 
 .banner-loading {
@@ -344,7 +344,7 @@ a {
 
 #home-banner .banner-card {
   height: auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 7;
   max-height: var(--home-banner-max-height);
 }
 

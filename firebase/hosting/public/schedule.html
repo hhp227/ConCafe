@@ -429,7 +429,8 @@
       .week-schedule-table th {
         width: 210px;
         text-align: left;
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 800;
         color: #5f4b55;
         background: #fff8fb;
       }
@@ -485,7 +486,8 @@
         border: 1px solid var(--line);
         border-radius: 999px;
         padding: 4px 10px;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 700;
         color: #5d4b55;
         background: #fff;
       }
@@ -533,8 +535,8 @@
       }
 
       .month-day {
-        font-size: 13px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 800;
         color: #4a3645;
       }
 
@@ -544,7 +546,8 @@
       }
 
       .month-cast-line {
-        font-size: 11px;
+        font-size: 12px;
+        font-weight: 700;
         line-height: 1.35;
         color: #5d4b55;
         white-space: nowrap;
@@ -639,7 +642,7 @@
           <div class="eyebrow">스케줄 조회</div>
           <h1>카페를 선택하고 실제 캐스트 스케줄을 확인</h1>
           <p>
-            카페를 고르면 실제 서비스에 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
+            카페를 선택하면 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
           </p>
           <div class="status-banner" id="pageStatus">카페 목록을 불러오는 중입니다.</div>
         </div>
@@ -663,7 +666,6 @@
               <strong class="stat-value" id="scheduleCount">0</strong>
             </div>
           </div>
-          <p>팬 유저는 로그인 없이 실제 서비스 스케줄을 조회할 수 있습니다.</p>
         </aside>
       </section>
 
@@ -988,7 +990,7 @@
           });
 
           const header =
-            "<thead><tr><th>캐스트</th>" +
+            "<thead><tr><th>요일</th>" +
             labels.map(function (label, index) {
               return "<th>" + label + "<br><span class=\"small\">" + headerDates[index] + "</span></th>";
             }).join("") +
