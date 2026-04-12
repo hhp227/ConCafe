@@ -323,44 +323,43 @@ private struct HomeBannerSection: View {
     let onAction: (HomeAction) -> Void
 
     var body: some View {
-        GeometryReader { geometry in
-            let bannerHeight = homeBannerHeight(containerWidth: geometry.size.width)
-            let sectionHeight = bannerSectionHeight(containerWidth: geometry.size.width)
+        let containerWidth = UIScreen.main.bounds.width
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+        let sectionHeight = bannerSectionHeight(containerWidth: containerWidth)
 
-            VStack(spacing: 10) {
-                if !uiState.banners.isEmpty {
-                    TabView(selection: $currentBannerPage) {
-                        ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                            HomeBannerItem(
-                                banner: banner,
-                                height: bannerHeight
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 16)
-                            .onTapGesture {
-                                onAction(.bannerTapped(banner))
-                            }
-                            .tag(index)
+        VStack(spacing: 10) {
+            if !uiState.banners.isEmpty {
+                TabView(selection: $currentBannerPage) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                        HomeBannerItem(
+                            banner: banner,
+                            height: bannerHeight
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 16)
+                        .onTapGesture {
+                            onAction(.bannerTapped(banner))
                         }
+                        .tag(index)
                     }
-                    .frame(height: bannerHeight)
-                    .tabViewStyle(.page(indexDisplayMode: .never))
-                } else {
-                    HomeBannerPlaceholderCard(height: bannerHeight)
                 }
-                if uiState.banners.count > 1 {
-                    HStack(spacing: 6) {
-                        ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
-                            RoundedRectangle(cornerRadius: 999)
-                                .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
-                                .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
-                        }
+                .frame(height: bannerHeight)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+            } else {
+                HomeBannerPlaceholderCard(height: bannerHeight)
+            }
+            if uiState.banners.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                        RoundedRectangle(cornerRadius: 999)
+                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .frame(height: sectionHeight)
         }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .frame(height: sectionHeight)
     }
 
     private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
@@ -609,6 +608,18 @@ private struct NearByCafeItem: View {
             case "home_nearby_cafe_type_devil":
                 return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
             default:
+                if lower.contains("maid") {
+                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+                }
+                if lower.contains("butler") {
+                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+                }
+                if lower.contains("idol") {
+                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+                }
+                if lower.contains("devil") {
+                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+                }
                 return normalized
             }
         }
