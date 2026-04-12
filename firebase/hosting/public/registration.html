@@ -6,7 +6,7 @@
     <title>콘카 임시 캐스트 등록</title>
     <meta
       name="description"
-      content="공용 운영 세션으로 카페를 선택하고 실제 서비스의 캐스트와 스케줄을 등록하는 페이지입니다."
+      content="카페를 선택하고 실제 서비스의 캐스트와 스케줄을 등록하는 페이지입니다."
     />
     <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
     <link rel="stylesheet" href="/assets/css/style.css" />
@@ -570,7 +570,6 @@
             </div>
           </div>
 
-          <p class="small mono" id="sessionLabel">세션 준비 중</p>
         </aside>
       </section>
 
@@ -758,7 +757,6 @@
 
         const el = {
           authStatus: document.getElementById("authStatus"),
-          sessionLabel: document.getElementById("sessionLabel"),
           cafeCount: document.getElementById("cafeCount"),
           selectedCafeLabel: document.getElementById("selectedCafeLabel"),
           castCount: document.getElementById("castCount"),
@@ -1059,7 +1057,6 @@
           }
           state.user = user;
           state.userRole = role;
-          el.sessionLabel.textContent = "세션 " + user.uid.slice(0, 10) + " · " + role;
         }
 
         async function ensureOperatorSession() {
