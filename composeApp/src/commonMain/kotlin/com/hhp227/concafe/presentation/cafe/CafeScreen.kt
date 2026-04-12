@@ -535,8 +535,7 @@ private fun CafeTabContent(
             events = uiState.events,
             notices = uiState.notices,
             canLoadMore = uiState.canLoadMoreNotices,
-            isLoadingMore = uiState.isLoadingMoreNotices,
-            onLoadMore = { onAction(CafeAction.LoadMoreNotices) }
+            isLoadingMore = uiState.isLoadingMoreNotices
         )
     }
 }
