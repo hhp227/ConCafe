@@ -24,6 +24,7 @@ struct HomeUiState {
     let isLoadingMoreNearbyCafes: Bool
     let birthdayCasts: [Cast]
     let notices: [Notice]
+    let cafeEvents: [HomeCafeEvent]
 
     static let empty = HomeUiState(
         isLoading: false,
@@ -40,6 +41,7 @@ struct HomeUiState {
         canLoadMoreNearbyCafes: false,
         isLoadingMoreNearbyCafes: false,
         birthdayCasts: [],
-        notices: []
+        notices: [],
+        cafeEvents: []
     )
 }

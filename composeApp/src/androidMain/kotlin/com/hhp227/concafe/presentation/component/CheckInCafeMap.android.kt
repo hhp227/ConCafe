@@ -172,10 +172,10 @@ private fun resolveCheckInMapCameraPosition(
         if (cameraTarget != null) {
             return CameraPosition.fromLatLngZoom(
                 LatLng(cameraTarget.latitude, cameraTarget.longitude),
-                cameraTarget.zoom
+                cameraTarget.zoom + CHECK_IN_MAP_ZOOM_IN_STEP
             )
         }
-        return CameraPosition.fromLatLngZoom(defaultSeoul, 11.5f)
+        return CameraPosition.fromLatLngZoom(defaultSeoul, 11.5f + CHECK_IN_MAP_ZOOM_IN_STEP)
     }
 
     if (cafes.size == 1) {
@@ -183,7 +183,7 @@ private fun resolveCheckInMapCameraPosition(
 
         return CameraPosition.fromLatLngZoom(
             LatLng(first.geoPoint.latitude, first.geoPoint.longitude),
-            14.5f
+            14.5f + CHECK_IN_MAP_ZOOM_IN_STEP
         )
     }
 
@@ -194,5 +194,7 @@ private fun resolveCheckInMapCameraPosition(
 
     val center = boundsBuilder.build().center
 
-    return CameraPosition.fromLatLngZoom(center, 12.5f)
+    return CameraPosition.fromLatLngZoom(center, 12.5f + CHECK_IN_MAP_ZOOM_IN_STEP)
 }
+
+private const val CHECK_IN_MAP_ZOOM_IN_STEP = 1.0f

@@ -122,8 +122,15 @@
     <string name="home_popular_cast_empty_desc">フォローと訪問が蓄積されるとこの領域に表示されます。</string>
     <string name="home_nearby_cafe_empty_title">近くのカフェはまだありません</string>
     <string name="home_nearby_cafe_empty_desc">地域フィルターを変更するか、しばらくしてから再確認してください。</string>
+    <string name="home_nearby_cafe_type_maid">メイド</string>
+    <string name="home_nearby_cafe_type_butler">バトラー</string>
+    <string name="home_nearby_cafe_type_idol">アイドル</string>
+    <string name="home_nearby_cafe_type_devil">デビル</string>
     <string name="home_notice_empty_title">最近のお知らせはありません</string>
     <string name="home_notice_empty_desc">新しいお知らせが登録されるとこの領域に表示されます。</string>
+    <string name="home_section_ongoing_cafe_event">開催中のカフェイベント</string>
+    <string name="home_ongoing_cafe_event_empty_title">開催中のイベントはありません</string>
+    <string name="home_ongoing_cafe_event_empty_desc">カフェイベントが登録されるとここに表示されます。</string>
     <string name="home_banner_placeholder_title">ホームバナー準備中</string>
     <string name="home_banner_placeholder_desc">まもなく新しいお知らせをお届けします。</string>
     <string name="ranking_title">ランキング</string>
@@ -487,7 +494,7 @@
     <string name="banneredit_action_save">保存</string>
     <string name="banneredit_action_close">閉じる</string>
     <string name="banneredit_image_section_title">バナー画像アップロード</string>
-    <string name="banneredit_image_guide">推奨比率 16:9 (1080x600px)</string>
+    <string name="banneredit_image_guide">推奨比率 16:10 (1080x675px)</string>
     <string name="banneredit_image_button">画像を選択</string>
     <string name="banneredit_image_placeholder_pick">バナー画像を選択</string>
     <string name="banneredit_section_basic">バナー基本情報</string>

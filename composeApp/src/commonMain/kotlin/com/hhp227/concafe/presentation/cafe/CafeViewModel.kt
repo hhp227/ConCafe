@@ -18,6 +18,7 @@ import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.event.ReviewEvent
@@ -30,6 +31,7 @@ class CafeViewModel(
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase,
     private val getCafeCastListPageUseCase: GetCafeCastListPageUseCase,
+    private val getCafeEventPageUseCase: GetCafeEventPageUseCase,
     private val getCafeNoticePageUseCase: GetCafeNoticePageUseCase,
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase,
@@ -123,6 +125,7 @@ class CafeViewModel(
                     castsNextCursor = _uiState.value.castsNextCursor,
                     canLoadMoreCasts = _uiState.value.canLoadMoreCasts,
                     notices = _uiState.value.notices,
+                    events = _uiState.value.events,
                     noticesNextCursor = _uiState.value.noticesNextCursor,
                     canLoadMoreNotices = _uiState.value.canLoadMoreNotices,
                     reviews = result.data.reviews,
@@ -137,6 +140,9 @@ class CafeViewModel(
                 refreshCastPage()
                 if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                     refreshNoticePage()
+                }
+                if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.events.isEmpty()) {
+                    refreshEventPage()
                 }
                 if (_uiState.value.selectedTab == CafeUiState.TabType.MENU && !_uiState.value.hasLoadedMenuGoods) {
                     loadMenuGoods()
@@ -243,6 +249,24 @@ class CafeViewModel(
         loadNoticePage(cursor = null, append = false)
     }
 
+    private fun loadEventPage() {
+        jobs[JobKey.EVENT_PAGE]?.cancel()
+        jobs[JobKey.EVENT_PAGE] = viewModelScope.launch {
+            when (val result = getCafeEventPageUseCase.invoke(cafeId = cafeId, query = "", cursor = null, pageSize = 30)) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(events = result.data.items.sortedBy { event -> event.statusPriority() })
+                    }
+                }
+                is AppResult.Failure -> Unit
+            }
+        }
+    }
+
+    private fun refreshEventPage() {
+        loadEventPage()
+    }
+
     private fun loadMoreNotices() {
         val currentState = _uiState.value
         val cursor = currentState.noticesNextCursor
@@ -332,6 +356,9 @@ class CafeViewModel(
                     if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
                         refreshNoticePage()
                     }
+                    if (action.tab == CafeUiState.TabType.NOTICES && _uiState.value.events.isEmpty()) {
+                        refreshEventPage()
+                    }
                     if (action.tab == CafeUiState.TabType.REVIEWS && _uiState.value.reviews.isEmpty()) {
                         refreshReviewPage()
                     }
@@ -392,6 +419,7 @@ class CafeViewModel(
         DETAIL,
         CAST_PAGE,
         NOTICE_PAGE,
+        EVENT_PAGE,
         REVIEW_PAGE,
         MENU_GOODS,
         OBSERVE_DETAIL_EVENT,
@@ -407,5 +435,15 @@ class CafeViewModel(
             menus = currentDetail.menus,
             goods = currentDetail.goods
         )
+    }
+}
+
+private fun com.hhp227.concafe.domain.model.CafeEventManagementItem.statusPriority(): Int {
+    val normalized = statusLabel.trim().lowercase()
+    return when {
+        normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing") -> 0
+        normalized.contains("예정") || normalized.contains("upcoming") || normalized.contains("scheduled") -> 1
+        normalized.contains("종료") || normalized.contains("ended") || normalized.contains("end") -> 2
+        else -> 3
     }
 }

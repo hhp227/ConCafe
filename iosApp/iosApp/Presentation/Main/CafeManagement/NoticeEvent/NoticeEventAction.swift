@@ -26,6 +26,7 @@ enum NoticeEventAction {
     case clickFormImage
     case clickRemoveFormImage
     case changeFormPinned(Bool)
+    case changeFormReservedAt(String)
     case clickReserveSchedule
     case clickSubmitForm
     case dismissInfoMessage

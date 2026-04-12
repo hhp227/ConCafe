@@ -122,8 +122,15 @@
     <string name="home_popular_cast_empty_desc">팔로우와 방문이 쌓이면 이 영역에 표시됩니다.</string>
     <string name="home_nearby_cafe_empty_title">근처 카페가 아직 없어요</string>
     <string name="home_nearby_cafe_empty_desc">지역 필터를 바꾸거나 잠시 후 다시 확인해 주세요.</string>
+    <string name="home_nearby_cafe_type_maid">메이드</string>
+    <string name="home_nearby_cafe_type_butler">집사</string>
+    <string name="home_nearby_cafe_type_idol">아이돌</string>
+    <string name="home_nearby_cafe_type_devil">데빌</string>
     <string name="home_notice_empty_title">최근 공지가 없어요</string>
     <string name="home_notice_empty_desc">새 공지가 등록되면 이 영역에 표시됩니다.</string>
+    <string name="home_section_ongoing_cafe_event">진행중인 카페 이벤트</string>
+    <string name="home_ongoing_cafe_event_empty_title">진행중인 이벤트가 없습니다</string>
+    <string name="home_ongoing_cafe_event_empty_desc">카페 이벤트가 등록되면 여기에 표시됩니다.</string>
     <string name="home_banner_placeholder_title">홈 배너 준비 중</string>
     <string name="home_banner_placeholder_desc">곧 새로운 소식을 보여드릴게요.</string>
     <string name="ranking_title">랭킹</string>
@@ -487,7 +494,7 @@
     <string name="banneredit_action_save">저장</string>
     <string name="banneredit_action_close">닫기</string>
     <string name="banneredit_image_section_title">배너 이미지 업로드</string>
-    <string name="banneredit_image_guide">권장 비율 16:9 (1080x600px)</string>
+    <string name="banneredit_image_guide">권장 비율 16:10 (1080x675px)</string>
     <string name="banneredit_image_button">이미지 선택</string>
     <string name="banneredit_image_placeholder_pick">배너 이미지 선택</string>
     <string name="banneredit_section_basic">배너 기본 정보</string>

@@ -66,11 +66,16 @@ class FakeCafeRepository(
         return set?.contains(cafeId) ?: false
     }
 
-    override suspend fun getFavoriteCafeIds(userId: String): List<String> {
-        return dataSource.favoriteCafeIdsByUser[userId]
+    override suspend fun getFavoriteCafeIds(userId: String, limit: Int?): List<String> {
+        val sortedFavoriteCafeIds = dataSource.favoriteCafeIdsByUser[userId]
             ?.toList()
             .orEmpty()
             .sorted()
+        return if (limit != null && limit > 0) {
+            sortedFavoriteCafeIds.take(limit)
+        } else {
+            sortedFavoriteCafeIds
+        }
     }
 
     override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {

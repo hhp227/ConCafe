@@ -2974,7 +2974,8 @@ class FirestoreConCafeDataSource(
         return loaded.distinctBy { cafe -> cafe.id }
     }
 
-    suspend fun fetchFavoriteCafeIdsRemote(userId: String): List<String> {
+    suspend fun fetchFavoriteCafeIdsRemote(userId: String, limit: Int? = null): List<String> {
+        val queryLimit = if (limit != null && limit > 0) limit else null
         val idToken = runCatching {
             tokenProvider.getIdToken()
         }.getOrNull()
@@ -2983,13 +2984,15 @@ class FirestoreConCafeDataSource(
             runUserScopedQuery(
                 collectionId = FirestorePaths.CAFE_FAVORITES,
                 userId = userId,
-                idToken = idToken
+                idToken = idToken,
+                limit = queryLimit
             )
         }.recoverCatching {
             runUserScopedQuery(
                 collectionId = FirestorePaths.CAFE_FAVORITES,
                 userId = userId,
-                idToken = null
+                idToken = null,
+                limit = queryLimit
             )
         }.getOrElse { error ->
             println(
@@ -3041,6 +3044,9 @@ class FirestoreConCafeDataSource(
             .filter { value -> value.isNotBlank() }
             .distinct()
             .sorted()
+            .let { ids ->
+                if (queryLimit != null) ids.take(queryLimit) else ids
+            }
         println(
             "TEST, fetchFavoriteCafeIdsRemote result: " +
                 "userId=$userId tokenUserId=$tokenUserId tokenPresent=${!idToken.isNullOrBlank()} " +
@@ -3519,7 +3525,8 @@ class FirestoreConCafeDataSource(
         userId: String,
         idToken: String?,
         orderByFieldPath: String? = null,
-        orderByDescending: Boolean = false
+        orderByDescending: Boolean = false,
+        limit: Int? = null
     ): List<JsonObject> {
         val path = "${config.documentBasePath()}:runQuery"
         val orderBySection = if (orderByFieldPath != null) {
@@ -3541,6 +3548,14 @@ class FirestoreConCafeDataSource(
         } else {
             ""
         }
+        val limitSection = if (limit != null && limit > 0) {
+            """
+            ,
+                "limit": ${limit}
+            """.trimIndent()
+        } else {
+            ""
+        }
         val body = """
             {
               "structuredQuery": {
@@ -3553,7 +3568,7 @@ class FirestoreConCafeDataSource(
                       "op": "EQUAL",
                       "value": { "stringValue": "${escapeFirestoreQueryString(userId)}" }
                     }
-                  }$orderBySection
+                  }$orderBySection$limitSection
                 }
             }
         """.trimIndent()

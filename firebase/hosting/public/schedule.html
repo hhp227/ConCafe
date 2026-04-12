@@ -376,6 +376,185 @@
         color: #946200;
       }
 
+      .cafe-schedule-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .cafe-schedule-title {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .schedule-view-field {
+        min-width: 150px;
+      }
+
+      .schedule-controls {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .schedule-block {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 14px;
+      }
+
+      .schedule-period-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+        color: #4a3645;
+      }
+
+      .week-schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .week-schedule-table th,
+      .week-schedule-table td {
+        border: 1px solid var(--line);
+        padding: 10px;
+        vertical-align: top;
+      }
+
+      .week-schedule-table th {
+        width: 210px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 800;
+        color: #5f4b55;
+        background: #fff8fb;
+      }
+
+      .week-schedule-table td {
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .week-cast-col {
+        text-align: left !important;
+        font-weight: 700;
+        color: #4a3645;
+        min-width: 150px;
+        background: #fffdfd;
+      }
+
+      .week-status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6b5a63;
+        background: #fff;
+      }
+
+      .week-status-chip.work {
+        border-color: #c8efd9;
+        background: #ecfff5;
+        color: #1f8b5f;
+      }
+
+      .week-status-chip.vacation {
+        border-color: #f2d4c4;
+        background: #fff3eb;
+        color: #99624a;
+      }
+
+      .cast-name-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .cast-name-chip {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #5d4b55;
+        background: #fff;
+      }
+
+      .cast-name-chip.work {
+        border-color: #c8efd9;
+        background: #ecfff5;
+        color: #1f8b5f;
+      }
+
+      .cast-name-chip.vacation {
+        border-color: #f2d4c4;
+        background: #fff3eb;
+        color: #99624a;
+      }
+
+      .month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .month-weekday {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        padding: 6px 0;
+      }
+
+      .month-cell {
+        min-height: 116px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .month-cell.empty {
+        background: transparent;
+        border-style: dashed;
+      }
+
+      .month-day {
+        font-size: 14px;
+        font-weight: 800;
+        color: #4a3645;
+      }
+
+      .month-casts {
+        display: grid;
+        gap: 4px;
+      }
+
+      .month-cast-line {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #5d4b55;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       .empty {
         padding-top: 18px;
       }
@@ -416,10 +595,26 @@
         .download-strip-head {
           display: grid;
         }
+
+        .week-schedule-table th,
+        .week-schedule-table td {
+          display: block;
+          width: 100%;
+        }
+
+        .month-grid {
+          gap: 6px;
+        }
+
+        .month-cell {
+          min-height: 102px;
+          padding: 7px;
+        }
       }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   </head>
   <body>
     <div class="page-shell">
@@ -432,10 +627,10 @@
             </span>
           </a>
           <nav class="nav-links" aria-label="조회 페이지 메뉴">
-            <a class="nav-link" href="/registration">등록</a>
-            <a class="nav-link" href="/schedule">스케줄 조회</a>
-            <a class="nav-link" href="/downloads">데스크톱 다운로드</a>
-            <a class="nav-link" href="/privacy">개인정보처리방침</a>
+            <a class="nav-link" href="/#features">핵심 기능</a>
+            <a class="nav-link" href="/manual">이용 가이드</a>
+            <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+            <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
           </nav>
         </div>
       </header>
@@ -447,7 +642,7 @@
           <div class="eyebrow">스케줄 조회</div>
           <h1>카페를 선택하고 실제 캐스트 스케줄을 확인</h1>
           <p>
-            카페를 고르면 실제 서비스에 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
+            카페를 선택하면 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
           </p>
           <div class="status-banner" id="pageStatus">카페 목록을 불러오는 중입니다.</div>
         </div>
@@ -471,7 +666,6 @@
               <strong class="stat-value" id="scheduleCount">0</strong>
             </div>
           </div>
-          <p>팬 유저는 로그인 없이 실제 서비스 스케줄을 조회할 수 있습니다.</p>
         </aside>
       </section>
 
@@ -504,6 +698,33 @@
           <div class="button-row">
             <button class="button button-secondary" id="refreshButton" type="button">목록 새로고침</button>
           </div>
+
+          <section style="margin-top: 24px;">
+            <div class="cafe-schedule-head">
+              <div>
+                <h2 class="cafe-schedule-title">카페 스케줄</h2>
+                <p>선택한 카페의 캐스트 스케줄을 1주/1달 기준으로 확인할 수 있습니다.</p>
+              </div>
+              <div class="schedule-controls">
+                <div class="field schedule-view-field">
+                  <label for="cafeScheduleView">조회 기간</label>
+                  <select id="cafeScheduleView">
+                    <option value="week">1주</option>
+                    <option value="month">1달</option>
+                  </select>
+                </div>
+                <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
+                  스케줄 이미지 다운로드
+                </button>
+              </div>
+            </div>
+            <div class="schedule-block" id="cafeScheduleCapture">
+              <h3 class="schedule-period-title" id="cafeScheduleTitle">카페를 먼저 선택해주세요.</h3>
+              <div id="cafeScheduleContent">
+                <p class="empty">카페 선택 후 스케줄을 확인할 수 있습니다.</p>
+              </div>
+            </div>
+          </section>
 
           <section style="margin-top: 24px;">
             <h2>캐스트 목록</h2>
@@ -563,9 +784,14 @@
           cafeSearch: document.getElementById("cafeSearch"),
           cafeSelect: document.getElementById("cafeSelect"),
           castFilter: document.getElementById("castFilter"),
+          cafeScheduleView: document.getElementById("cafeScheduleView"),
+          downloadScheduleImageButton: document.getElementById("downloadScheduleImageButton"),
           refreshButton: document.getElementById("refreshButton"),
           castList: document.getElementById("castList"),
           castEmptyState: document.getElementById("castEmptyState"),
+          cafeScheduleTitle: document.getElementById("cafeScheduleTitle"),
+          cafeScheduleContent: document.getElementById("cafeScheduleContent"),
+          cafeScheduleCapture: document.getElementById("cafeScheduleCapture"),
         };
 
         const app = firebase.initializeApp(firebaseConfig);
@@ -610,8 +836,8 @@
           }) || null;
         }
 
-        function startOfCurrentWeek() {
-          const now = new Date();
+        function startOfCurrentWeek(baseDate) {
+          const now = baseDate || new Date();
           const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           const day = start.getDay();
           const diff = day === 0 ? -6 : 1 - day;
@@ -620,11 +846,303 @@
           return start;
         }
 
-        function endOfCurrentWeek() {
-          const end = startOfCurrentWeek();
+        function endOfCurrentWeek(baseDate) {
+          const end = startOfCurrentWeek(baseDate);
           end.setDate(end.getDate() + 6);
           end.setHours(23, 59, 59, 999);
           return end;
+        }
+
+        function parseDateKey(value) {
+          if (!value || typeof value !== "string") {
+            return null;
+          }
+          const parsed = new Date(value + "T00:00:00");
+          return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function pad2(value) {
+          return String(value).padStart(2, "0");
+        }
+
+        function formatDateKey(date) {
+          return date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate());
+        }
+
+        function weekOrdinalLabel(date) {
+          const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+          const weekIndex = Math.floor((firstDay + date.getDate() - 1) / 7) + 1;
+          const labels = ["첫째", "둘째", "셋째", "넷째", "다섯째", "여섯째"];
+          return labels[Math.max(0, Math.min(labels.length - 1, weekIndex - 1))];
+        }
+
+        function getSchedulesByDateMap() {
+          const map = {};
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date) {
+              return;
+            }
+            if (!map[schedule.date]) {
+              map[schedule.date] = [];
+            }
+            map[schedule.date].push(schedule);
+          });
+          Object.keys(map).forEach(function (dateKey) {
+            map[dateKey].sort(function (a, b) {
+              return String(a.castName || "").localeCompare(String(b.castName || ""), "ko");
+            });
+          });
+          return map;
+        }
+
+        function renderCastNameChips(schedules) {
+          if (!schedules.length) {
+            return '<span class="cast-name-chip">등록된 캐스트 없음</span>';
+          }
+          return schedules.map(function (schedule) {
+            const statusClass = schedule.status === "WORK"
+              ? " work"
+              : schedule.status === "VACATION"
+                ? " vacation"
+                : "";
+            return '<span class="cast-name-chip' + statusClass + '">' + escapeHtml(schedule.castName || "이름 없음") + "</span>";
+          }).join("");
+        }
+
+        function renderWeeklyCafeSchedule() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            el.cafeScheduleTitle.textContent = "카페를 먼저 선택해주세요.";
+            el.cafeScheduleContent.innerHTML = '<p class="empty">카페 선택 후 1주 스케줄을 확인할 수 있습니다.</p>';
+            return;
+          }
+
+          const now = new Date();
+          const weekStart = startOfCurrentWeek(now);
+          const labels = ["월", "화", "수", "목", "금", "토", "일"];
+          const targetCasts = state.casts.filter(function (cast) {
+            return !el.castFilter.value || cast.id === el.castFilter.value;
+          });
+
+          el.cafeScheduleTitle.textContent =
+            (now.getMonth() + 1) + "월 " + weekOrdinalLabel(now) + "주 " + selectedCafe.name + " 스케줄";
+
+          if (!targetCasts.length) {
+            el.cafeScheduleContent.innerHTML = '<p class="empty">표시할 캐스트가 없습니다.</p>';
+            return;
+          }
+
+          const targetCastIdSet = {};
+          targetCasts.forEach(function (cast) {
+            targetCastIdSet[cast.id] = true;
+          });
+
+          const castNamesByDay = {
+            0: [],
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
+          };
+          const addedByDay = {
+            0: {},
+            1: {},
+            2: {},
+            3: {},
+            4: {},
+            5: {},
+            6: {},
+          };
+          const weekEnd = endOfCurrentWeek(now);
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.castId || !schedule.date) {
+              return;
+            }
+            if (!targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return;
+            }
+            if (parsed < weekStart || parsed > weekEnd) {
+              return;
+            }
+            if (schedule.status !== "WORK") {
+              return;
+            }
+            const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+            const castName = schedule.castName || "이름 없음";
+            if (addedByDay[dayIndex][castName]) {
+              return;
+            }
+            addedByDay[dayIndex][castName] = true;
+            castNamesByDay[dayIndex].push(castName);
+          });
+
+          const headerDates = labels.map(function (_, index) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + index);
+            return (date.getMonth() + 1) + "/" + date.getDate();
+          });
+
+          const header =
+            "<thead><tr><th>요일</th>" +
+            labels.map(function (label, index) {
+              return "<th>" + label + "<br><span class=\"small\">" + headerDates[index] + "</span></th>";
+            }).join("") +
+            "</tr></thead>";
+
+          const dayCells = labels.map(function (_, dayIndex) {
+            const castNames = castNamesByDay[dayIndex] || [];
+            if (!castNames.length) {
+              return '<td><span class="cast-name-chip">-</span></td>';
+            }
+            const chips = castNames
+              .sort(function (a, b) { return a.localeCompare(b, "ko"); })
+              .map(function (name) {
+                return '<span class="cast-name-chip work">' + escapeHtml(name) + "</span>";
+              })
+              .join("");
+            return '<td><div class="cast-name-row">' + chips + "</div></td>";
+          }).join("");
+
+          const body = "<tbody><tr><th class=\"week-cast-col\" scope=\"row\">근무 캐스트</th>" + dayCells + "</tr></tbody>";
+
+          el.cafeScheduleContent.innerHTML =
+            '<table class="week-schedule-table">' + header + body + "</table>";
+        }
+
+        function renderMonthlyCafeSchedule() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            el.cafeScheduleTitle.textContent = "카페를 먼저 선택해주세요.";
+            el.cafeScheduleContent.innerHTML = '<p class="empty">카페 선택 후 1달 스케줄을 확인할 수 있습니다.</p>';
+            return;
+          }
+
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDate = new Date(year, month, 1);
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const offset = (firstDate.getDay() + 6) % 7;
+          const targetCastIdSet = {};
+          state.casts
+            .filter(function (cast) {
+              return !el.castFilter.value || cast.id === el.castFilter.value;
+            })
+            .forEach(function (cast) {
+              targetCastIdSet[cast.id] = true;
+            });
+
+          const workCastNamesByDate = {};
+          const addedNamesByDate = {};
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date || !schedule.castId || schedule.status !== "WORK") {
+              return;
+            }
+            if (!targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+              return;
+            }
+            if (!workCastNamesByDate[schedule.date]) {
+              workCastNamesByDate[schedule.date] = [];
+              addedNamesByDate[schedule.date] = {};
+            }
+            const castName = schedule.castName || "이름 없음";
+            if (addedNamesByDate[schedule.date][castName]) {
+              return;
+            }
+            addedNamesByDate[schedule.date][castName] = true;
+            workCastNamesByDate[schedule.date].push(castName);
+          });
+          el.cafeScheduleTitle.textContent = (month + 1) + "월 " + selectedCafe.name + " 스케줄";
+
+          let cells = "";
+          for (let i = 0; i < offset; i += 1) {
+            cells += '<div class="month-cell empty"></div>';
+          }
+
+          for (let day = 1; day <= daysInMonth; day += 1) {
+            const current = new Date(year, month, day);
+            const key = formatDateKey(current);
+            const castNames = (workCastNamesByDate[key] || []).slice().sort(function (a, b) {
+              return a.localeCompare(b, "ko");
+            });
+            const lines = castNames.length
+              ? castNames.map(function (name) {
+                  return '<div class="month-cast-line">' + escapeHtml(name) + "</div>";
+                }).join("")
+              : '<div class="month-cast-line">-</div>';
+
+            cells +=
+              '<div class="month-cell">' +
+              '<div class="month-day">' + day + "</div>" +
+              '<div class="month-casts">' + lines + "</div>" +
+              "</div>";
+          }
+
+          el.cafeScheduleContent.innerHTML =
+            '<div class="month-grid">' +
+            '<div class="month-weekday">월</div><div class="month-weekday">화</div><div class="month-weekday">수</div><div class="month-weekday">목</div><div class="month-weekday">금</div><div class="month-weekday">토</div><div class="month-weekday">일</div>' +
+            cells +
+            "</div>";
+        }
+
+        function renderCafeScheduleSection() {
+          if (el.cafeScheduleView.value === "month") {
+            renderMonthlyCafeSchedule();
+            return;
+          }
+          renderWeeklyCafeSchedule();
+        }
+
+        function buildScheduleImageFileName() {
+          const selectedCafe = getSelectedCafe();
+          const cafeName = selectedCafe ? selectedCafe.name : "카페";
+          const viewLabel = el.cafeScheduleView.value === "month" ? "1달" : "1주";
+          const now = new Date();
+          const stamp = String(now.getFullYear()) + pad2(now.getMonth() + 1) + pad2(now.getDate());
+          const raw = cafeName + "_" + viewLabel + "_스케줄_" + stamp + ".png";
+          return raw.replace(/[\\/:*?"<>|]/g, "_");
+        }
+
+        async function downloadScheduleImage() {
+          if (!state.selectedCafeId) {
+            setStatus("카페를 먼저 선택해주세요.");
+            return;
+          }
+          if (!window.html2canvas) {
+            setStatus("이미지 캡처 도구를 불러오지 못했습니다.");
+            return;
+          }
+          try {
+            const canvas = await window.html2canvas(el.cafeScheduleCapture, {
+              scale: 2,
+              backgroundColor: "#ffffff",
+              useCORS: true,
+            });
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = buildScheduleImageFileName();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setStatus("스케줄 이미지를 다운로드했습니다.");
+            setTimeout(function () {
+              setStatus("");
+            }, 1500);
+          } catch (error) {
+            setStatus("스케줄 이미지를 생성하지 못했습니다.");
+            console.error(error);
+          }
         }
 
         function getVisibleScheduleCount() {
@@ -637,8 +1155,8 @@
             if (!schedule.date) {
               return false;
             }
-            const parsed = new Date(schedule.date + "T00:00:00");
-            if (Number.isNaN(parsed.getTime())) {
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
               return false;
             }
             return parsed >= weekStart && parsed <= weekEnd;
@@ -720,8 +1238,8 @@
             if (schedule.castId !== castId || !schedule.date) {
               return;
             }
-            const parsed = new Date(schedule.date + "T00:00:00");
-            if (Number.isNaN(parsed.getTime())) {
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
               return;
             }
             if (parsed < weekStart || parsed > weekEnd) {
@@ -778,6 +1296,7 @@
             state.casts = [];
             state.schedules = [];
             renderCastFilter();
+            renderCafeScheduleSection();
             renderCastList();
             updateSummary();
             return;
@@ -825,6 +1344,7 @@
             });
 
             renderCastFilter();
+            renderCafeScheduleSection();
             renderCastList();
             setStatus("");
           } catch (error) {
@@ -841,9 +1361,12 @@
             loadSelectedCafeData();
           });
           el.castFilter.addEventListener("change", renderCastList);
+          el.cafeScheduleView.addEventListener("change", renderCafeScheduleSection);
+          el.downloadScheduleImageButton.addEventListener("click", downloadScheduleImage);
           el.refreshButton.addEventListener("click", loadSelectedCafeData);
 
           await loadCafes();
+          renderCafeScheduleSection();
         }
 
         boot();

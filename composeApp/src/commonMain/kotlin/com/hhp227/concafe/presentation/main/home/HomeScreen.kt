@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -15,6 +16,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +37,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -47,13 +51,17 @@ import concafe.composeapp.generated.resources.home_banner_placeholder_title
 import concafe.composeapp.generated.resources.home_cast_followers
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
-import concafe.composeapp.generated.resources.home_notice_empty_desc
-import concafe.composeapp.generated.resources.home_notice_empty_title
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
+import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.home_popular_cast_empty_title
 import concafe.composeapp.generated.resources.home_section_birthday_cast
 import concafe.composeapp.generated.resources.home_section_nearby_cafe
-import concafe.composeapp.generated.resources.home_section_notice
+import concafe.composeapp.generated.resources.home_section_ongoing_cafe_event
 import concafe.composeapp.generated.resources.home_section_popular_cast
 import concafe.composeapp.generated.resources.home_show_more
 import concafe.composeapp.generated.resources.signin_submit
@@ -141,49 +149,88 @@ fun HomeContentScreen(
             contentPadding = PaddingValues(vertical = 20.dp)
         ) {
             item {
-                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    val dynamicHeight = (maxWidth * 0.3f).coerceIn(180.dp, 360.dp)
-
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (uiState.banners.isNotEmpty()) {
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(dynamicHeight),
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                pageSpacing = 12.dp
-                            ) { page ->
-                                val banner = uiState.banners[page]
-
-                                HomeBannerItem(
-                                    banner = banner,
-                                    modifier = Modifier.fillMaxSize(),
-                                    onClick = { onAction(HomeAction.ClickBanner(banner)) }
-                                )
-                            }
-                        } else {
-                            // 플레이스홀더에도 동일한 높이 적용
-                            HomeBannerPlaceholderCard(dynamicHeight)
+                HomeBannerSection(
+                    uiState = uiState,
+                    pagerState = pagerState,
+                    onAction = onAction
+                )
+            }
+            item {
+                HomeCafeEventSection(
+                    events = uiState.cafeEvents,
+                    onAction = onAction
+                )
+            }
+            item {
+                SectionTitle(
+                    text = stringResource(Res.string.home_section_popular_cast),
+                    actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
+                    onAction = { onAction(HomeAction.LoadMorePopularCasts) }
+                )
+                Spacer(Modifier.height(10.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    if (uiState.popularCasts.isNotEmpty()) {
+                        items(uiState.popularCasts) { maid ->
+                            ConCafeCastCard(
+                                name = maid.name,
+                                subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
+                                imageUrl = maid.profileImage,
+                                modifier = Modifier.width(132.dp),
+                                metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
+                                onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
+                            )
                         }
-                        if (uiState.banners.size > 1) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                repeat(uiState.banners.size) { page ->
-                                    Box(
+                    } else {
+                        item {
+                            HomeSectionPlaceholderCard(
+                                title = stringResource(Res.string.home_popular_cast_empty_title),
+                                description = stringResource(Res.string.home_popular_cast_empty_desc),
+                                modifier = Modifier.fillParentMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val contentWidth = maxWidth
+                    val itemWidth = nearbyCafeItemWidth(contentWidth)
+
+                    Column {
+                        SectionTitle(
+                            text = stringResource(Res.string.home_section_nearby_cafe),
+                            actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
+                            onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        LazyHorizontalGrid(
+                            rows = GridCells.Fixed(3),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            if (uiState.nearbyCafes.isNotEmpty()) {
+                                items(uiState.nearbyCafes) { cafe ->
+                                    NearByCafeItem(
+                                        cafe = cafe,
                                         modifier = Modifier
-                                            .padding(horizontal = 3.dp)
-                                            .size(
-                                                width = if (pagerState.currentPage == page) 18.dp else 8.dp,
-                                                height = 8.dp
-                                            )
-                                            .clip(RoundedCornerShape(999.dp))
-                                            .background(
-                                                if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                                else Color(0xFFD8D8D8)
-                                            )
+                                            .width(itemWidth)
+                                            .height(92.dp)
+                                            .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
+                                    )
+                                }
+                            } else {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    HomeSectionPlaceholderCard(
+                                        title = stringResource(Res.string.home_nearby_cafe_empty_title),
+                                        description = stringResource(Res.string.home_nearby_cafe_empty_desc),
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -191,83 +238,6 @@ fun HomeContentScreen(
                     }
                 }
             }
-        item {
-            SectionTitle(
-                text = stringResource(Res.string.home_section_popular_cast),
-                actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
-                onAction = { onAction(HomeAction.LoadMorePopularCasts) }
-            )
-            Spacer(Modifier.height(10.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                if (uiState.popularCasts.isNotEmpty()) {
-                    items(uiState.popularCasts) { maid ->
-                        ConCafeCastCard(
-                            name = maid.name,
-                            subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
-                            imageUrl = maid.profileImage,
-                            modifier = Modifier.width(132.dp),
-                            metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
-                            onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
-                        )
-                    }
-                } else {
-                    item {
-                        HomeSectionPlaceholderCard(
-                            title = stringResource(Res.string.home_popular_cast_empty_title),
-                            description = stringResource(Res.string.home_popular_cast_empty_desc),
-                            modifier = Modifier.fillParentMaxWidth()
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val contentWidth = maxWidth
-                val itemWidth = nearbyCafeItemWidth(contentWidth)
-
-                Column {
-                    SectionTitle(
-                        text = stringResource(Res.string.home_section_nearby_cafe),
-                        actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
-                        onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    LazyHorizontalGrid(
-                        rows = GridCells.Fixed(3),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        if (uiState.nearbyCafes.isNotEmpty()) {
-                            items(uiState.nearbyCafes) { cafe ->
-                                NearByCafeItem(
-                                    cafe = cafe,
-                                    modifier = Modifier
-                                        .width(itemWidth)
-                                        .height(92.dp)
-                                        .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
-                                )
-                            }
-                        } else {
-                            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                                HomeSectionPlaceholderCard(
-                                    title = stringResource(Res.string.home_nearby_cafe_empty_title),
-                                    description = stringResource(Res.string.home_nearby_cafe_empty_desc),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
         if (uiState.birthdayCasts.isNotEmpty()) {
             item {
                 SectionTitle(stringResource(Res.string.home_section_birthday_cast))
@@ -292,49 +262,14 @@ fun HomeContentScreen(
                                         imageUrl = maid.profileImage,
                                         modifier = Modifier
                                             .matchParentSize()
-                                            .clip(CircleShape)
+                                            .clip(CircleShape),
+                                        applyRoundedClip = false
                                     )
                                 }
                             }
                             Text(maid.name, modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                }
-            }
-        }
-        item {
-            SectionTitle(stringResource(Res.string.home_section_notice))
-            Spacer(Modifier.height(10.dp))
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (uiState.notices.isNotEmpty()) {
-                    uiState.notices.forEach { notice ->
-                        Card(
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                verticalAlignment = Alignment.Top,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(notice.cafeName, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
-                                    Text(notice.content, style = MaterialTheme.typography.bodyMedium)
-                                }
-                                Text(notice.relativeTime, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A8A8A))
-                            }
-                        }
-                    }
-                } else {
-                    HomeSectionPlaceholderCard(
-                        title = stringResource(Res.string.home_notice_empty_title),
-                        description = stringResource(Res.string.home_notice_empty_desc)
-                    )
                 }
             }
         }
@@ -347,6 +282,178 @@ fun HomeContentScreen(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color(0xFFEF6797))
+        }
+    }
+}
+
+@Composable
+private fun HomeCafeEventSection(
+    events: List<HomeCafeEvent>,
+    onAction: (HomeAction) -> Unit
+) {
+    val visibleEvents = events.take(6)
+
+    SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
+    Spacer(Modifier.height(10.dp))
+    if (visibleEvents.isNotEmpty()) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) {
+            items(visibleEvents) { event ->
+                HomeCafeEventCard(
+                    event = event,
+                    modifier = Modifier.width(276.dp),
+                    onClick = { onAction(HomeAction.ClickCafe(event.cafeId)) }
+                )
+            }
+        }
+    } else {
+        HomeSectionPlaceholderCard(
+            title = stringResource(Res.string.home_ongoing_cafe_event_empty_title),
+            description = stringResource(Res.string.home_ongoing_cafe_event_empty_desc),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun HomeCafeEventCard(
+    event: HomeCafeEvent,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(172.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            if (event.imageUrl.isNotBlank()) {
+                BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+                    CompatImageDisplay(
+                        imageUrl = event.imageUrl,
+                        modifier = Modifier.size(maxWidth, maxHeight),
+                        applyRoundedClip = false
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = event.cafeName,
+                color = Color(0xFFEF6797),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = event.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = Color(0xFF8A7F8B),
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = event.periodText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF8A7F8B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HomeBannerSection(
+    uiState: HomeUiState,
+    pagerState: PagerState,
+    onAction: (HomeAction) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val bannerHeight = homeBannerHeight(maxWidth)
+        val bannerCount = uiState.banners.size
+
+        LaunchedEffect(bannerCount) {
+            if (bannerCount > 0) {
+                val settledPage = pagerState.settledPage.coerceIn(0, bannerCount - 1)
+
+                if (pagerState.currentPageOffsetFraction != 0f || pagerState.currentPage != settledPage) {
+                    pagerState.scrollToPage(settledPage)
+                }
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (uiState.banners.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(bannerHeight),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    pageSpacing = 12.dp
+                ) { page ->
+                    val banner = uiState.banners[page]
+
+                    HomeBannerItem(
+                        banner = banner,
+                        modifier = Modifier.fillMaxSize(),
+                        onClick = { onAction(HomeAction.ClickBanner(banner)) }
+                    )
+                }
+            } else {
+                // 플레이스홀더에도 동일한 높이 적용
+                HomeBannerPlaceholderCard(bannerHeight)
+            }
+            if (uiState.banners.size > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(uiState.banners.size) { page ->
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(
+                                    width = if (pagerState.currentPage == page) 18.dp else 8.dp,
+                                    height = 8.dp
+                                )
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(
+                                    if (pagerState.currentPage == page) Color(0xFFEF6797)
+                                    else Color(0xFFD8D8D8)
+                                )
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -491,6 +598,12 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
     }
 }
 
+private fun homeBannerHeight(contentWidth: Dp): Dp {
+    val horizontalPadding = 32.dp
+    val bannerWidth = (contentWidth - horizontalPadding).coerceAtLeast(0.dp)
+    return (bannerWidth * (10f / 16f)).coerceAtMost(360.dp)
+}
+
 private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
     val horizontalPadding = 16.dp
     val itemSpacing = 12.dp
@@ -566,15 +679,17 @@ private fun NearByCafeItem(
             if (resolvedThumbnailImage.isNotBlank()) {
                 CompatImageDisplay(
                     imageUrl = resolvedThumbnailImage,
-                    modifier = Modifier.size(92.dp)
+                    modifier = Modifier.size(92.dp),
+                    applyRoundedClip = false
                 )
             }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (cafe.conceptType.isNotBlank()) {
+            val conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
+            if (conceptLabel.isNotEmpty()) {
                 Text(
-                    text = cafe.conceptType,
+                    text = conceptLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFEF6797),
                     fontWeight = FontWeight.SemiBold,
@@ -583,7 +698,21 @@ private fun NearByCafeItem(
                 )
             }
             Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(cafe.region.address, color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+    }
+}
+
+@Composable
+private fun nearbyCafeConceptLabel(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        else -> normalized
     }
 }

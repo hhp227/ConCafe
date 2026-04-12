@@ -116,8 +116,12 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
                     if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                         self.patchCafe(updated.cafe)
-                    } else if event is CafeDetailEvent.FavoriteToggled {
-                        self.loadMyInfo()
+                    } else if let toggled = event as? CafeDetailEvent.FavoriteToggled {
+                        if toggled.isFavorite {
+                            self.refreshFavoritesSection()
+                        } else {
+                            self.removeFavoriteCafe(toggled.cafeId)
+                        }
                     }
                 }
             } catch {
@@ -161,6 +165,28 @@ final class MyInfoViewModel: ObservableObject {
                         maxCount: feed.recentVisits.count
                     )
                     uiState.recentVisits = normalizedRecentVisits
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    private func refreshFavoritesSection() {
+        tasks[.refreshFavorites]?.cancel()
+        tasks[.refreshFavorites] = Task {
+            do {
+                let result = try await getMyInfoUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedFavorites = normalizeCafes(
+                        feed.favorites,
+                        maxCount: feed.favorites.count
+                    )
+                    uiState.summary = feed.summary
+                    uiState.badges = feed.badges
+                    uiState.favorites = normalizedFavorites
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -281,6 +307,63 @@ final class MyInfoViewModel: ObservableObject {
                 schedule: detail.schedule,
                 visitCertificationCount: detail.visitCertificationCount
             )
+        }
+    }
+
+    private func removeFavoriteCafe(_ cafeId: String) {
+        guard uiState.favorites.contains(where: { $0.id == cafeId }) else { return }
+
+        uiState.favorites.removeAll { $0.id == cafeId }
+
+        if let summary = uiState.summary {
+            let nextFavoritesCount = max(Int(summary.favoritesCount) - 1, 0)
+            uiState.summary = MyPageSummary(
+                userId: summary.userId,
+                totalVisits: summary.totalVisits,
+                favoritesCount: Int32(nextFavoritesCount),
+                followedCastsCount: summary.followedCastsCount,
+                badgesCount: summary.badgesCount,
+                level: summary.level
+            )
+
+            let totalVisits = Int(summary.totalVisits)
+            let followedCount = Int(summary.followedCastsCount)
+            let badgesCount = Int(summary.badgesCount)
+            let level = Int(summary.level)
+            uiState.badges = uiState.badges.map { badge in
+                let unlocked: Bool
+
+                switch badge.id {
+                case "badge-checkin-starter":
+                    unlocked = badgesCount >= 1
+                case "badge-stamp-collector":
+                    unlocked = badgesCount >= 3
+                case "badge-regular-visitor":
+                    unlocked = totalVisits >= 5
+                case "badge-checkin-veteran":
+                    unlocked = totalVisits >= 10
+                case "badge-favorite-curator":
+                    unlocked = nextFavoritesCount >= 3
+                case "badge-favorite-master":
+                    unlocked = nextFavoritesCount >= 10
+                case "badge-cast-supporter":
+                    unlocked = followedCount >= 3
+                case "badge-cast-ambassador":
+                    unlocked = followedCount >= 10
+                case "badge-level-up":
+                    unlocked = level >= 3
+                case "badge-concafe-master":
+                    unlocked = badgesCount >= 10
+                default:
+                    unlocked = badge.unlocked
+                }
+                return ProfileBadge(
+                    id: badge.id,
+                    name: badge.name,
+                    icon: badge.icon,
+                    unlocked: unlocked
+                )
+            }
         }
     }
 
@@ -459,6 +542,7 @@ final class MyInfoViewModel: ObservableObject {
     private enum TaskKey {
         case loadMyInfo
         case refreshRecentVisits
+        case refreshFavorites
         case session
         case cafeDetailEvent
         case castEvent

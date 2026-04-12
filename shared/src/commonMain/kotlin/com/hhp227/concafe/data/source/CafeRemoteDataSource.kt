@@ -39,7 +39,7 @@ interface CafeRemoteDataSource {
 
     suspend fun refreshFavoriteCafeIds(userId: String)
 
-    suspend fun fetchFavoriteCafeIds(userId: String): List<String>
+    suspend fun fetchFavoriteCafeIds(userId: String, limit: Int? = null): List<String>
 
     suspend fun favoriteCafeRemote(userId: String, cafeId: String)
 

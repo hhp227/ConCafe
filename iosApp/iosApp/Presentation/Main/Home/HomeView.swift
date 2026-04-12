@@ -81,13 +81,17 @@ private struct HomeContentView: View {
         if !uiState.isLoading {
             ScrollView {
                 VStack(spacing: 24) {
-                    bannerSection
+                    HomeBannerSection(
+                        uiState: uiState,
+                        currentBannerPage: $currentBannerPage,
+                        onAction: onAction
+                    )
+                    cafeEventSection
                     popularCastSection
                     nearbyCafeSection
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
-                    noticeSection
                 }
                 .padding(.vertical, 16)
             }
@@ -103,48 +107,6 @@ private struct HomeContentView: View {
         }
     }
     
-    private var bannerSection: some View {
-        VStack(spacing: 10) {
-            if !uiState.banners.isEmpty {
-                TabView(selection: $currentBannerPage) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        HomeBannerItem(
-                            banner: banner,
-                            height: bannerHeight
-                        )
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 16)
-                            .onTapGesture {
-                                onAction(.bannerTapped(banner))
-                            }
-                            .tag(index)
-                    }
-                }
-                .frame(height: bannerTabViewHeight)
-                .tabViewStyle(.page(indexDisplayMode: .never))
-            } else {
-                HomeBannerPlaceholderCard(height: bannerHeight)
-            }
-            if uiState.banners.count > 1 {
-                HStack(spacing: 6) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
-                        RoundedRectangle(cornerRadius: 999)
-                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
-                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
-                    }
-                }
-            }
-        }
-    }
-
-    private var bannerHeight: CGFloat {
-        min(max(UIScreen.main.bounds.width * 0.3, 180), 360)
-    }
-
-    private var bannerTabViewHeight: CGFloat {
-        bannerHeight + 10
-    }
-
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
@@ -271,38 +233,147 @@ private struct HomeContentView: View {
         }
     }
 
-    private var noticeSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(title: String(localized: String.LocalizationValue("home_section_notice"), table: "Localizable"))
-            VStack(spacing: 10) {
-                if !uiState.notices.isEmpty {
-                    ForEach(uiState.notices, id: \.id) { notice in
-                        HStack(alignment: .top, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(notice.cafeName)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "EF6797"))
-                                Text(notice.content)
-                                    .font(.subheadline)
-                            }
-                            Spacer()
-                            Text(notice.relativeTime)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+    private var cafeEventSection: some View {
+        let visibleEvents = Array(uiState.cafeEvents.prefix(6))
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
+            if !visibleEvents.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(visibleEvents, id: \.id) { event in
+                            HomeCafeEventCard(event: event)
+                                .frame(width: 276)
+                                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .onTapGesture {
+                                    onAction(.cafeTapped(id: event.cafeId))
+                                }
                         }
-                        .padding(12)
-                        .background(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .padding(.horizontal, 16)
+                }
+            } else {
+                HomeSectionPlaceholderCard(
+                    title: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_desc"), table: "Localizable")
+                )
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+}
+
+private struct HomeCafeEventCard: View {
+    let event: Shared.HomeCafeEvent
+
+    private let cardCornerRadius: CGFloat = 16
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack {
+                if let imageUrl = resolvedRemoteImageUrl(event.imageUrl) {
+                    GeometryReader { proxy in
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear
+                        )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
                     }
                 } else {
-                    HomeSectionPlaceholderCard(
-                        title: String(localized: String.LocalizationValue("home_notice_empty_title"), table: "Localizable"),
-                        description: String(localized: String.LocalizationValue("home_notice_empty_desc"), table: "Localizable")
+                    LinearGradient(
+                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
                 }
             }
-            .padding(.horizontal, 16)
+            .frame(height: 172)
+            .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.cafeName)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                Text(event.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.caption2)
+                        .foregroundStyle(Color(hex: "8A7F8B"))
+                    Text(event.periodText)
+                        .font(.caption2)
+                        .foregroundStyle(Color(hex: "8A7F8B"))
+                        .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 4)
         }
+    }
+
+    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : URL(string: trimmed)
+    }
+}
+
+private struct HomeBannerSection: View {
+    let uiState: HomeUiState
+
+    @Binding var currentBannerPage: Int
+
+    let onAction: (HomeAction) -> Void
+
+    var body: some View {
+        let containerWidth = UIScreen.main.bounds.width
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+        let sectionHeight = bannerSectionHeight(containerWidth: containerWidth)
+
+        VStack(spacing: 10) {
+            if !uiState.banners.isEmpty {
+                TabView(selection: $currentBannerPage) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                        HomeBannerItem(
+                            banner: banner,
+                            height: bannerHeight
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 16)
+                        .onTapGesture {
+                            onAction(.bannerTapped(banner))
+                        }
+                        .tag(index)
+                    }
+                }
+                .frame(height: bannerHeight)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+            } else {
+                HomeBannerPlaceholderCard(height: bannerHeight)
+            }
+            if uiState.banners.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                        RoundedRectangle(cornerRadius: 999)
+                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .frame(height: sectionHeight)
+    }
+
+    private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
+        let horizontalPadding: CGFloat = 32
+        let contentWidth = max(containerWidth - horizontalPadding, 0)
+        return min(contentWidth * (10.0 / 16.0), 360)
+    }
+
+    private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+        let indicatorHeight: CGFloat = uiState.banners.count > 1 ? 18 : 0
+        return bannerHeight + indicatorHeight
     }
 }
 
@@ -321,21 +392,25 @@ private struct HomeBannerItem: View {
                 endPoint: .bottomTrailing
             )
             if let imageUrl = resolvedRemoteImageUrl(banner.imageUrl) {
-                CachedAsyncImage(
-                    url: imageUrl,
-                    placeholder: Color.clear
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                LinearGradient(
-                    colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                GeometryReader { proxy in
+                    CachedAsyncImage(
+                        url: imageUrl,
+                        placeholder: Color.clear
+                    )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                }
             }
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
+        .clipShape(cardShape)
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(banner.title)
@@ -352,9 +427,7 @@ private struct HomeBannerItem: View {
             }
             .padding(18)
         }
-        .clipShape(cardShape)
         .contentShape(cardShape)
-        .clipped()
     }
 
     private var trimmedSubtitle: String? {
@@ -486,8 +559,9 @@ private struct NearByCafeItem: View {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                if !cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(cafe.conceptType)
+                let conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
+                if !conceptLabel.isEmpty {
+                    Text(conceptLabel)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "EF6797"))
                         .lineLimit(1)
@@ -495,10 +569,6 @@ private struct NearByCafeItem: View {
                 Text(cafe.region.city)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
-                Text(cafe.region.address)
-                .font(.caption)
-                .foregroundStyle(Color(hex: "EF6797"))
                 .lineLimit(1)
             }
             Spacer(minLength: 0)
@@ -511,6 +581,27 @@ private struct NearByCafeItem: View {
             return nil
         }
         return URL(string: trimmed)
+    }
+
+    private func nearbyCafeConceptLabel(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        let lower = normalized.lowercased()
+        let key: String
+        if lower == "maid" || lower == "home_nearby_cafe_type_maid" || lower.contains("maid") {
+            key = "home_nearby_cafe_type_maid"
+        } else if lower == "butler" || lower == "home_nearby_cafe_type_butler" || lower.contains("butler") {
+            key = "home_nearby_cafe_type_butler"
+        } else if lower == "idol" || lower == "home_nearby_cafe_type_idol" || lower.contains("idol") {
+            key = "home_nearby_cafe_type_idol"
+        } else if lower == "devil" || lower == "home_nearby_cafe_type_devil" || lower.contains("devil") {
+            key = "home_nearby_cafe_type_devil"
+        } else {
+            return ""
+        }
+        return String(localized: String.LocalizationValue(key), table: "Localizable")
     }
 }
 

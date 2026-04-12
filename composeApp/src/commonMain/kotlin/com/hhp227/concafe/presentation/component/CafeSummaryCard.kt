@@ -62,7 +62,8 @@ fun CafeSummaryCard(
                 if (resolvedThumbnailImage.isNotBlank()) {
                     CompatImageDisplay(
                         imageUrl = resolvedThumbnailImage,
-                        modifier = Modifier.fillMaxWidth().height(120.dp)
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        applyRoundedClip = false
                     )
                 }
                 RatingBox(

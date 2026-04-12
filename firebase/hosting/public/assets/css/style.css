@@ -273,6 +273,10 @@ a {
   width: 100%;
 }
 
+#home-banner .banner-carousel {
+  --home-banner-max-height: calc(var(--maxw) * 7 / 16);
+}
+
 .banner-loading {
   position: absolute;
   top: 0;
@@ -336,6 +340,12 @@ a {
   gap: 8px;
   background:
     linear-gradient(130deg, rgba(255, 233, 242, 0.95) 0%, rgba(248, 197, 215, 0.9) 52%, rgba(239, 103, 151, 0.82) 100%);
+}
+
+#home-banner .banner-card {
+  height: auto;
+  aspect-ratio: 16 / 7;
+  max-height: var(--home-banner-max-height);
 }
 
 .banner-card::after {

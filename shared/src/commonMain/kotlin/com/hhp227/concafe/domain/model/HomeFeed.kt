@@ -10,5 +10,17 @@ data class HomeFeed(
     val nearbyCafesNextCursor: String?,
     val hasMoreNearbyCafes: Boolean,
     val birthdayCasts: List<Cast>,
-    val notices: List<Notice>
+    val notices: List<Notice>,
+    val cafeEvents: List<HomeCafeEvent>
+)
+
+data class HomeCafeEvent(
+    val id: String,
+    val cafeId: String,
+    val cafeName: String,
+    val title: String,
+    val content: String,
+    val imageUrl: String,
+    val periodText: String,
+    val statusLabel: String
 )

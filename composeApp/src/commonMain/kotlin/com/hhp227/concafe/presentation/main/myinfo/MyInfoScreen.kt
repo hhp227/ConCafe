@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -45,6 +46,10 @@ import concafe.composeapp.generated.resources.auth_login_required_message
 import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.home_show_more
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_desc
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_title
 import concafe.composeapp.generated.resources.myinfo_guest_feature_bookmark_desc
@@ -291,9 +296,11 @@ private fun GuestMyInfoScreen(
                                 ) {
                                     Text(cafe.name, fontWeight = FontWeight.SemiBold)
                                     RatingBox(rating = ratingText)
-                                    if (cafe.conceptType.isNotBlank()) {
+                                    val conceptType = localizedCafeConceptType(cafe.conceptType)
+
+                                    if (conceptType.isNotBlank()) {
                                         Text(
-                                            text = cafe.conceptType,
+                                            text = conceptType,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = Color(0xFFEF6797),
                                             fontWeight = FontWeight.SemiBold,
@@ -513,35 +520,42 @@ private fun ProfileMyInfoScreen(
             }
         }
         item {
-            val favoriteItems = uiState.favorites.take(4)
-            val favoriteRows = favoriteItems.chunked(2)
+            val favoriteItems = uiState.favorites.take(12)
 
             MyInfoSectionTitle("즐겨찾기")
             if (favoriteItems.isNotEmpty()) {
-                Column(
-                    modifier = Modifier.padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 ) {
-                    favoriteRows.forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            rowItems.forEach { cafe ->
-                                Box(modifier = Modifier.weight(1f)) {
-                                    CafeSummaryCard(
-                                        name = cafe.name,
-                                        rating = formatCafeRating(cafe.ratingAvg),
-                                        conceptType = cafe.conceptType,
-                                        location = cafe.region.city,
-                                        thumbnailImage = cafe.thumbnailImage,
-                                        showLocationIcon = false,
-                                        onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
-                                    )
+                    val columnCount = myInfoFavoriteGridColumnCount(maxWidth)
+                    val favoriteRows = favoriteItems.chunked(columnCount)
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        favoriteRows.forEach { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                rowItems.forEach { cafe ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        CafeSummaryCard(
+                                            name = cafe.name,
+                                            rating = formatCafeRating(cafe.ratingAvg),
+                                            conceptType = localizedCafeConceptType(cafe.conceptType),
+                                            location = cafe.region.city,
+                                            thumbnailImage = cafe.thumbnailImage,
+                                            showLocationIcon = false,
+                                            onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
+                                        )
+                                    }
                                 }
-                            }
-                            if (rowItems.size == 1) {
-                                Box(modifier = Modifier.weight(1f))
+                                repeat(columnCount - rowItems.size) {
+                                    Box(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -576,7 +590,8 @@ private fun ProfileMyInfoScreen(
                                     } else {
                                         CompatImageDisplay(
                                             imageUrl = maid.profileImage,
-                                            modifier = Modifier.matchParentSize()
+                                            modifier = Modifier.matchParentSize(),
+                                            applyRoundedClip = false
                                         )
                                     }
                                 }
@@ -762,6 +777,36 @@ private fun formatCafeRating(rating: Double): String {
         roundedRating.toString()
     }
 }
+
+@Composable
+private fun localizedCafeConceptType(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        else -> normalized
+    }
+}
+
+private fun myInfoFavoriteGridColumnCount(contentWidth: Dp): Int {
+    val availableWidth = contentWidth.value - MYINFO_GRID_HORIZONTAL_PADDING_DP
+    val minimumGridWidth = (MYINFO_GRID_MIN_CELL_WIDTH_DP * 2) + MYINFO_GRID_ITEM_SPACING_DP
+    val normalizedWidth = maxOf(availableWidth, minimumGridWidth)
+    val rawCount = ((normalizedWidth + MYINFO_GRID_ITEM_SPACING_DP) /
+        (MYINFO_GRID_MIN_CELL_WIDTH_DP + MYINFO_GRID_ITEM_SPACING_DP)).toInt()
+    return rawCount.coerceIn(MYINFO_GRID_MIN_COLUMN_COUNT, MYINFO_GRID_MAX_COLUMN_COUNT)
+}
+
+private const val MYINFO_GRID_MIN_COLUMN_COUNT = 2
+private const val MYINFO_GRID_MAX_COLUMN_COUNT = 6
+private const val MYINFO_GRID_HORIZONTAL_PADDING_DP = 24f
+private const val MYINFO_GRID_ITEM_SPACING_DP = 12f
+private const val MYINFO_GRID_MIN_CELL_WIDTH_DP = 180f
 
 @Composable
 private fun RowScope.MyInfoMetricCard(

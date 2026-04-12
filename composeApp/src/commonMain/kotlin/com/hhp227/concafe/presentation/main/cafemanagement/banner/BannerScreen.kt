@@ -328,7 +328,7 @@ private fun BannerThumbnail(banner: BannerItem) {
     val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
     Box(
         modifier = Modifier
-            .size(96.dp)
+            .size(width = 96.dp, height = 60.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.linearGradient(

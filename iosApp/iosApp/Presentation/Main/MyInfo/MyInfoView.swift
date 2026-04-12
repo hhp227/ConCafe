@@ -172,7 +172,7 @@ private struct GuestMyInfoView: View {
                                 locale: Locale(identifier: "en_US_POSIX"),
                                 cafe.ratingAvg
                             )
-                            let conceptType = cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let conceptType = localizedCafeConceptType(cafe.conceptType)
                             let imageCornerRadius: CGFloat = 12
 
                             HStack(spacing: 10) {
@@ -266,6 +266,25 @@ private struct GuestMyInfoView: View {
         }
         return URL(string: trimmed)
     }
+
+    private func localizedCafeConceptType(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        default:
+            return normalized
+        }
+    }
 }
 
 @MainActor
@@ -275,18 +294,20 @@ private struct ProfileMyInfoView: View {
     let onAction: @MainActor (MyInfoAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                profileCard
-                statsCard
-                badgesSection
-                recentVisitsSection
-                favoritesSection
-                if uiState.user?.role != .cast {
-                    followedMaidsSection
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 16) {
+                    profileCard
+                    statsCard
+                    badgesSection
+                    recentVisitsSection
+                    favoritesSection(contentWidth: geometry.size.width)
+                    if uiState.user?.role != .cast {
+                        followedMaidsSection
+                    }
                 }
+                .padding(16)
             }
-            .padding(16)
         }
     }
 
@@ -542,16 +563,18 @@ private struct ProfileMyInfoView: View {
         }
     }
 
-    private var favoritesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func favoritesSection(contentWidth: CGFloat) -> some View {
+        let favoriteItems = Array(uiState.favorites.prefix(12))
+        let columnCount = myInfoGridColumnCount(for: contentWidth)
+        return VStack(alignment: .leading, spacing: 8) {
             MyInfoSectionTitle(title: "즐겨찾기")
-            if !uiState.favorites.isEmpty {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
+            if !favoriteItems.isEmpty {
+                LazyVGrid(columns: myInfoGridColumns(count: columnCount), spacing: myInfoGridItemSpacing) {
+                    ForEach(favoriteItems, id: \.id) { cafe in
                         CafeSummaryCard(
                             name: cafe.name,
                             rating: favoriteCafeRating(cafe.ratingAvg),
-                            conceptType: cafe.conceptType,
+                            conceptType: localizedCafeConceptType(cafe.conceptType),
                             location: cafe.region.city,
                             thumbnailImage: cafe.thumbnailImage,
                             showLocationIcon: false,
@@ -571,8 +594,43 @@ private struct ProfileMyInfoView: View {
         }
     }
 
+    private func myInfoGridColumns(count: Int) -> [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: myInfoGridItemSpacing),
+            count: max(count, 1)
+        )
+    }
+
+    private func myInfoGridColumnCount(for contentWidth: CGFloat) -> Int {
+        let availableWidth = contentWidth - myInfoGridHorizontalPadding
+        let minimumGridWidth = (myInfoGridMinimumCellWidth * 2) + myInfoGridItemSpacing
+        let normalizedWidth = max(availableWidth, minimumGridWidth)
+        let rawCount = Int((normalizedWidth + myInfoGridItemSpacing) /
+            (myInfoGridMinimumCellWidth + myInfoGridItemSpacing))
+        return min(max(rawCount, myInfoGridMinimumColumnCount), myInfoGridMaximumColumnCount)
+    }
+
     private func favoriteCafeRating(_ rating: Double) -> String {
         String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), rating)
+    }
+
+    private func localizedCafeConceptType(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        default:
+            return normalized
+        }
     }
 
     private var followedMaidsSection: some View {
@@ -669,3 +727,9 @@ struct MyInfoView_Previews: PreviewProvider {
         MyInfoView(onNavigationAction: { _ in })
     }
 }
+
+private let myInfoGridMinimumColumnCount = 2
+private let myInfoGridMaximumColumnCount = 6
+private let myInfoGridHorizontalPadding: CGFloat = 24
+private let myInfoGridItemSpacing: CGFloat = 12
+private let myInfoGridMinimumCellWidth: CGFloat = 180

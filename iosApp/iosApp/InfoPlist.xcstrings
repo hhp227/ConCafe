@@ -2192,19 +2192,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recommended ratio 16:9 (1080x600px)"
+            "value" : "Recommended ratio 16:10 (1080x675px)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "推奨比率 16:9 (1080x600px)"
+            "value" : "推奨比率 16:10 (1080x675px)"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "권장 비율 16:9 (1080x600px)"
+            "value" : "권장 비율 16:10 (1080x675px)"
           }
         }
       }
@@ -8175,6 +8175,98 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "근처 카페가 아직 없어요"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_butler" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butler"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バトラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "집사"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_devil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devil"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デビル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "데빌"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_idol" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idol"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイドル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이돌"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_maid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maid"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メイド"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메이드"
           }
         }
       }

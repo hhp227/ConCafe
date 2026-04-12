@@ -2,13 +2,16 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CafeEventEvent
 import com.hhp227.concafe.domain.event.NoticeManagementEvent
+import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
 import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.repository.NoticeRepository
 
 class DeleteCafeEventUseCase(
     private val noticeRepository: NoticeRepository,
-    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher,
+    private val cafeEventEventPublisher: CafeEventEventPublisher
 ) {
     suspend operator fun invoke(cafeId: String, eventId: String): AppResult<String> {
         return try {
@@ -16,6 +19,9 @@ class DeleteCafeEventUseCase(
 
             noticeManagementEventPublisher.publish(
                 NoticeManagementEvent.EventDeleted(cafeId, eventId)
+            )
+            cafeEventEventPublisher.publish(
+                CafeEventEvent.Deleted(cafeId = cafeId, eventId = eventId)
             )
             AppResult.Success(eventId)
         } catch (e: NoSuchElementException) {

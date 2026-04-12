@@ -21,7 +21,7 @@ class AndroidCheckInLocationProvider(
     private var hasRequestedLocationPermission = false
 
     override suspend fun requestPermissionIfNeeded(): CheckInLocationPermissionResult {
-        val hasPermission = hasLocationPermission()
+        val hasPermission = hasFineLocationPermission()
 
         if (hasPermission) {
             return CheckInLocationPermissionResult.Granted
@@ -33,7 +33,7 @@ class AndroidCheckInLocationProvider(
 
                 if (shouldOpenSettings) {
                     return CheckInLocationPermissionResult.Failure(
-                        message = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.",
+                        message = MSG_PRECISE_LOCATION_REQUIRED,
                         requiresSettings = true
                     )
                 }
@@ -52,7 +52,7 @@ class AndroidCheckInLocationProvider(
                 )
             } else {
                 return CheckInLocationPermissionResult.Failure(
-                    message = "위치 권한이 필요합니다. 설정에서 위치 권한을 허용해 주세요.",
+                    message = MSG_PRECISE_LOCATION_REQUIRED,
                     requiresSettings = true
                 )
             }
@@ -60,8 +60,8 @@ class AndroidCheckInLocationProvider(
     }
 
     override suspend fun getCurrentLocation(): CheckInLocationResult {
-        if (!hasLocationPermission()) {
-            return CheckInLocationResult.Failure("위치 권한이 없습니다.")
+        if (!hasFineLocationPermission()) {
+            return CheckInLocationResult.Failure(MSG_PRECISE_LOCATION_REQUIRED)
         }
         return resolveCurrentLocation()
     }
@@ -86,7 +86,7 @@ class AndroidCheckInLocationProvider(
                 )
             )
         } else {
-            CheckInLocationResult.Failure("현재 위치를 확인할 수 없습니다. 위치 서비스를 켠 뒤 다시 시도해 주세요.")
+            CheckInLocationResult.Failure(MSG_PRECISE_LOCATION_LOW_ACCURACY)
         }
     }
 
@@ -147,16 +147,11 @@ class AndroidCheckInLocationProvider(
         return resolveBestLocation(locations)
     }
 
-    private fun hasLocationPermission(): Boolean {
-        val hasFinePermission = ContextCompat.checkSelfPermission(
+    private fun hasFineLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarsePermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        return hasFinePermission || hasCoarsePermission
     }
 
     private fun shouldOpenSettings(activity: Activity): Boolean {
@@ -175,10 +170,25 @@ class AndroidCheckInLocationProvider(
         if (locations.isEmpty()) {
             return null
         }
-        return locations.minByOrNull { location -> location.accuracy }
+        val now = System.currentTimeMillis()
+        val candidates = locations.filter { location ->
+            val ageMillis = now - location.time
+            val isRecent = ageMillis in 0..MAX_LOCATION_AGE_MILLIS
+            val isAccurate = location.hasAccuracy() && location.accuracy in 0f..MAX_ALLOWED_ACCURACY_METERS
+
+            isRecent && isAccurate
+        }
+        return candidates.minWithOrNull(
+            compareBy<Location> { it.accuracy }
+                .thenByDescending { it.time }
+        )
     }
 
     private companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 7001
+        const val MAX_LOCATION_AGE_MILLIS = 30_000L
+        const val MAX_ALLOWED_ACCURACY_METERS = 80f
+        const val MSG_PRECISE_LOCATION_REQUIRED = "정확한 위치 권한이 필요합니다. 설정에서 정확한 위치를 허용해 주세요."
+        const val MSG_PRECISE_LOCATION_LOW_ACCURACY = "위치 정확도가 낮습니다. 정확한 위치를 켜고 잠시 후 다시 시도해 주세요."
     }
 }

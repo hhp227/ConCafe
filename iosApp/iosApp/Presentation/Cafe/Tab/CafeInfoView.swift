@@ -84,24 +84,24 @@ struct CafeInfoView: View {
     private func socialMediaCard(detail: CafeDetail) -> some View {
         let cafe = detail.cafe
         let socialMedia = cafe.socialMedia
-        let items: [(label: String, url: String, color: Color)] = {
-            var result: [(String, String, Color)] = []
+        let items: [(label: String, url: String, color: Color, platform: SocialPlatform)] = {
+            var result: [(String, String, Color, SocialPlatform)] = []
 
             if let id = socialMedia["instagram"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
-                result.append(("Instagram", "https://instagram.com/\(trimmed)", Color(hex: "E1306C")))
-            }
-            if let id = socialMedia["twitter"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
-                result.append(("X (Twitter)", "https://x.com/\(trimmed)", Color(hex: "1DA1F2")))
-            }
-            if let id = socialMedia["tiktok"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
-                result.append(("TikTok", "https://tiktok.com/@\(trimmed)", Color(hex: "010101")))
+                result.append(("Instagram", "https://instagram.com/\(trimmed)", Color(hex: "E1306C"), .instagram))
             }
             if let id = socialMedia["youtube"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
-                result.append(("YouTube", "https://youtube.com/@\(trimmed)", Color(hex: "FF0000")))
+                result.append(("YouTube", "https://youtube.com/@\(trimmed)", Color(hex: "FF0000"), .youtube))
+            }
+            if let id = socialMedia["twitter"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("X", "https://x.com/\(trimmed)", Color(hex: "111111"), .x))
+            }
+            if let id = socialMedia["tiktok"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                result.append(("TikTok", "https://tiktok.com/@\(trimmed)", Color(hex: "010101"), .tiktok))
             }
             return result
         }()
@@ -122,13 +122,16 @@ struct CafeInfoView: View {
                             let item = rows[rowIndex][colIndex]
 
                             Link(destination: URL(string: item.url) ?? URL(string: "https://")!) {
-                                Text(item.label)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(item.color)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Color(hex: "F5EDF4"))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                HStack(spacing: 6) {
+                                    socialMediaIcon(platform: item.platform)
+                                    Text(item.label)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(item.color)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color(hex: "F5EDF4"))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                         }
                         if rows[rowIndex].count == 1 {
@@ -142,6 +145,32 @@ struct CafeInfoView: View {
             .padding(16)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        }
+    }
+
+    @ViewBuilder
+    private func socialMediaIcon(platform: SocialPlatform) -> some View {
+        switch platform {
+        case .instagram:
+            Image("social_instagram_icon")
+                .resizable()
+                .renderingMode(.original)
+                .frame(width: 16, height: 16)
+        case .youtube:
+            Image("social_youtube_icon")
+                .resizable()
+                .renderingMode(.original)
+                .frame(width: 16, height: 16)
+        case .x:
+            Image("social_x_icon")
+                .resizable()
+                .renderingMode(.original)
+                .frame(width: 16, height: 16)
+        case .tiktok:
+            Image("social_tiktok_icon")
+                .resizable()
+                .renderingMode(.original)
+                .frame(width: 16, height: 16)
         }
     }
 
@@ -165,6 +194,13 @@ struct CafeInfoView: View {
         .frame(maxWidth: .infinity)
         .disabled(reservationUrl == nil || reservationUrl?.isEmpty == true)
     }
+}
+
+private enum SocialPlatform {
+    case instagram
+    case youtube
+    case x
+    case tiktok
 }
 
 /*struct CafeInfoView_Previews: PreviewProvider {

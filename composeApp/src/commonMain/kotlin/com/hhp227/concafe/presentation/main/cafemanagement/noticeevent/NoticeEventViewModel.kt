@@ -426,6 +426,7 @@ class NoticeEventViewModel(
             }
             NoticeEventAction.ClickRemoveFormImage -> _uiState.update { it.copy(formImageUrl = "", infoMessage = null) }
             is NoticeEventAction.ChangeFormPinned -> _uiState.update { it.copy(formPinned = action.value) }
+            is NoticeEventAction.ChangeFormReservedAt -> _uiState.update { it.copy(formReservedAt = action.value, infoMessage = null) }
             NoticeEventAction.ClickReserveSchedule -> setInfoMessage(MSG_RESERVE_SCHEDULE_NEXT_STEP)
             NoticeEventAction.ClickSubmitForm -> submitForm()
             NoticeEventAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }

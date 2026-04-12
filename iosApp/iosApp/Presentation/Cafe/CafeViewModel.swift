@@ -20,6 +20,8 @@ final class CafeViewModel: ObservableObject {
 
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
 
+    private let getCafeEventPageUseCase: GetCafeEventPageUseCase
+
     private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
 
     private let getCafeReviewPageUseCase: GetCafeReviewPageUseCase
@@ -123,6 +125,7 @@ final class CafeViewModel: ObservableObject {
                         isLoadingMoreNotices: uiState.isLoadingMoreNotices,
                         noticesNextCursor: uiState.noticesNextCursor,
                         canLoadMoreNotices: uiState.canLoadMoreNotices,
+                        events: uiState.events,
                         notices: uiState.notices,
                         isLoadingMoreReviews: uiState.isLoadingMoreReviews,
                         reviewsNextCursor: feed.reviewsNextCursor,
@@ -137,6 +140,9 @@ final class CafeViewModel: ObservableObject {
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
                         refreshNoticePage()
+                    }
+                    if uiState.selectedTab == .notices, uiState.events.isEmpty {
+                        refreshEventPage()
                     }
                     if uiState.selectedTab == .menu, !uiState.hasLoadedMenuGoods {
                         loadMenuGoods()
@@ -260,6 +266,27 @@ final class CafeViewModel: ObservableObject {
         loadNoticePage(cursor: nil, append: false)
     }
 
+    private func loadEventPage() {
+        tasks[.eventPage]?.cancel()
+        tasks[.eventPage] = Task {
+            do {
+                let result = try await getCafeEventPageUseCase.invoke(cafeId: self.cafeId, query: "", cursor: nil, pageSize: 30)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeEventManagementItem> {
+                    let items = page.items as! [CafeEventManagementItem]
+                    uiState.events = items.sorted { $0.statusPriority < $1.statusPriority }
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    private func refreshEventPage() {
+        loadEventPage()
+    }
+
     private func loadMoreNotices() {
         guard uiState.canLoadMoreNotices,
               !uiState.isLoadingMoreNotices,
@@ -360,6 +387,9 @@ final class CafeViewModel: ObservableObject {
             if tab == .notices, uiState.notices.isEmpty {
                 refreshNoticePage()
             }
+            if tab == .notices, uiState.events.isEmpty {
+                refreshEventPage()
+            }
             if tab == .reviews, uiState.reviews.isEmpty {
                 refreshReviewPage()
             }
@@ -395,6 +425,7 @@ final class CafeViewModel: ObservableObject {
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
         getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase = KoinInitializerKt.resolveGetCafeMenuGoodsUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
@@ -406,6 +437,7 @@ final class CafeViewModel: ObservableObject {
         self.getCafeDetailUseCase = getCafeDetailUseCase
         self.getCafeMenuGoodsUseCase = getCafeMenuGoodsUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.getCafeEventPageUseCase = getCafeEventPageUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
@@ -427,6 +459,7 @@ final class CafeViewModel: ObservableObject {
         case detail
         case menuGoods
         case castPage
+        case eventPage
         case noticePage
         case reviewPage
         case cafeDetail
@@ -448,5 +481,21 @@ final class CafeViewModel: ObservableObject {
             businessHours: detail.businessHours,
             phoneNumber: detail.phoneNumber
         )
+    }
+}
+
+private extension CafeEventManagementItem {
+    var statusPriority: Int {
+        let normalized = statusLabel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing") {
+            return 0
+        }
+        if normalized.contains("예정") || normalized.contains("upcoming") || normalized.contains("scheduled") {
+            return 1
+        }
+        if normalized.contains("종료") || normalized.contains("ended") || normalized.contains("end") {
+            return 2
+        }
+        return 3
     }
 }

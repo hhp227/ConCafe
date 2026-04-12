@@ -281,7 +281,9 @@ private struct CafeContentView: View {
                 } else if tab == .reviews {
                     return String(localized: String.LocalizationValue("cafe_tab_reviews"), table: "Localizable")
                 } else {
-                    return String(localized: String.LocalizationValue("cafe_tab_notices"), table: "Localizable")
+                    let noticeLabel = String(localized: String.LocalizationValue("cafe_tab_notices"), table: "Localizable")
+                    let eventLabel = String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable")
+                    return "\(noticeLabel)/\(eventLabel)"
                 }
             },
             selectedIndex: CafeUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
@@ -325,6 +327,7 @@ private struct CafeContentView: View {
             )
         case .notices:
             CafeNoticeView(
+                events: uiState.events,
                 notices: uiState.notices,
                 canLoadMore: uiState.canLoadMoreNotices,
                 isLoadingMore: uiState.isLoadingMoreNotices,

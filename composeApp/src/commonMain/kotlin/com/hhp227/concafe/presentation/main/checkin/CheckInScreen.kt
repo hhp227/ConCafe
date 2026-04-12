@@ -855,7 +855,8 @@ private fun PopularCastCard(
                             imageUrl = cast.profileImage,
                             modifier = Modifier
                                 .matchParentSize()
-                                .clip(CircleShape)
+                                .clip(CircleShape),
+                            applyRoundedClip = false
                         )
                     }
                 }

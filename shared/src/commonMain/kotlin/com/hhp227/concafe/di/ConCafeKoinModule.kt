@@ -132,8 +132,8 @@ val dataSourceModule = module {
 
             override suspend fun refreshFavoriteCafeIds(userId: String) = dataSource.refreshFavoriteCafeIds(userId)
 
-            override suspend fun fetchFavoriteCafeIds(userId: String): List<String> {
-                return dataSource.fetchFavoriteCafeIdsRemote(userId)
+            override suspend fun fetchFavoriteCafeIds(userId: String, limit: Int?): List<String> {
+                return dataSource.fetchFavoriteCafeIdsRemote(userId, limit)
             }
 
             override suspend fun favoriteCafeRemote(userId: String, cafeId: String) =
@@ -548,6 +548,7 @@ val repositoryModule = module {
 
 val eventModule = module {
     single<BannerEventPublisher> { BannerEventPublisher() }
+    single<CafeEventEventPublisher> { CafeEventEventPublisher() }
     single<CafeDetailEventPublisher> { CafeDetailEventPublisher() }
     single<CafeOwnerClaimEventPublisher> { CafeOwnerClaimEventPublisher() }
     single<CafeRegistrationClaimEventPublisher> { CafeRegistrationClaimEventPublisher() }
@@ -576,7 +577,7 @@ val useCaseModule = module {
     factory { CreateVisitUseCase(get(), get(), get()) }
     factory { CreateReviewUseCase(get(), get(), get(), get()) }
     factory { CreateCastClaimUseCase(get(), get(), get()) }
-    factory { CreateCafeEventUseCase(get(), get()) }
+    factory { CreateCafeEventUseCase(get(), get(), get()) }
     factory { CafeExternalLinkLocalUseCase(get<CafeExternalLinkLocalStore>()) }
     factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
@@ -585,7 +586,7 @@ val useCaseModule = module {
     factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeRegistrationClaimUseCase(get(), get(), get()) }
-    factory { DeleteCafeEventUseCase(get(), get()) }
+    factory { DeleteCafeEventUseCase(get(), get(), get()) }
     factory { DeleteCafeNoticeUseCase(get(), get()) }
     factory { DeleteCafeMenuGoodsUseCase(get(), get()) }
     factory { DeleteHomeBannerUseCase(get(), get(), get(), get()) }
@@ -642,7 +643,7 @@ val useCaseModule = module {
     factory { UpdateCafeInfoUseCase(get(), get()) }
     factory { UpdateCafeSocialMediaUseCase(get()) }
     factory { UpdateCafeReservationUrlUseCase(get()) }
-    factory { UpdateCafeEventUseCase(get(), get()) }
+    factory { UpdateCafeEventUseCase(get(), get(), get()) }
     factory { UpdateCafeNoticeUseCase(get(), get()) }
     factory { UpdateHomeBannerUseCase(get(), get(), get(), get()) }
     factory { UpdateCastScheduleUseCase(get(), get(), get()) }

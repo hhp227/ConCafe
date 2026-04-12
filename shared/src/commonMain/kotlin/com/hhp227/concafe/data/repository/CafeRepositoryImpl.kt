@@ -59,8 +59,8 @@ class CafeRepositoryImpl(
         return favoriteCafeIds.contains(cafeId)
     }
 
-    override suspend fun getFavoriteCafeIds(userId: String): List<String> {
-        return cafeRemoteDataSource.fetchFavoriteCafeIds(userId)
+    override suspend fun getFavoriteCafeIds(userId: String, limit: Int?): List<String> {
+        return cafeRemoteDataSource.fetchFavoriteCafeIds(userId, limit)
     }
 
     override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {

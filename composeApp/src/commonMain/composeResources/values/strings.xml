@@ -122,8 +122,15 @@
     <string name="home_popular_cast_empty_desc">This area appears as follows and visits accumulate.</string>
     <string name="home_nearby_cafe_empty_title">No nearby cafes yet</string>
     <string name="home_nearby_cafe_empty_desc">Try changing the regional filter or check again soon.</string>
+    <string name="home_nearby_cafe_type_maid">Maid</string>
+    <string name="home_nearby_cafe_type_butler">Butler</string>
+    <string name="home_nearby_cafe_type_idol">Idol</string>
+    <string name="home_nearby_cafe_type_devil">Devil</string>
     <string name="home_notice_empty_title">No recent notices</string>
     <string name="home_notice_empty_desc">This area will display once a new notice is posted.</string>
+    <string name="home_section_ongoing_cafe_event">Ongoing Cafe Events</string>
+    <string name="home_ongoing_cafe_event_empty_title">No ongoing events</string>
+    <string name="home_ongoing_cafe_event_empty_desc">Cafe events will appear here once they are registered.</string>
     <string name="home_banner_placeholder_title">Home banner in preparation</string>
     <string name="home_banner_placeholder_desc">We will show you new updates soon.</string>
     <string name="ranking_title">Ranking</string>
@@ -487,7 +494,7 @@
     <string name="banneredit_action_save">Save</string>
     <string name="banneredit_action_close">Close</string>
     <string name="banneredit_image_section_title">Banner Image Upload</string>
-    <string name="banneredit_image_guide">Recommended ratio 16:9 (1080x600px)</string>
+    <string name="banneredit_image_guide">Recommended ratio 16:10 (1080x675px)</string>
     <string name="banneredit_image_button">Select Image</string>
     <string name="banneredit_image_placeholder_pick">Select Banner Image</string>
     <string name="banneredit_section_basic">Banner Basics</string>

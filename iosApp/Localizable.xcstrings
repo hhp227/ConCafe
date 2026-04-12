@@ -2299,19 +2299,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recommended ratio 16:9 (1080x600px)"
+            "value" : "Recommended ratio 16:10 (1080x675px)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "推奨比率 16:9 (1080x600px)"
+            "value" : "推奨比率 16:10 (1080x675px)"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "권장 비율 16:9 (1080x600px)"
+            "value" : "권장 비율 16:10 (1080x675px)"
           }
         }
       }
@@ -10071,7 +10071,100 @@
         }
       }
     },
+    "home_nearby_cafe_type_butler" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butler"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バトラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "집사"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_devil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devil"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デビル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "데빌"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_idol" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idol"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイドル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이돌"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_maid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maid"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メイド"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메이드"
+          }
+        }
+      }
+    },
     "home_notice_empty_desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10094,6 +10187,7 @@
       }
     },
     "home_notice_empty_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10111,6 +10205,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "최근 공지가 없어요"
+          }
+        }
+      }
+    },
+    "home_ongoing_cafe_event_empty_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe events will appear here once they are registered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェイベントが登録されるとここに表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 이벤트가 등록되면 여기에 표시됩니다."
+          }
+        }
+      }
+    },
+    "home_ongoing_cafe_event_empty_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ongoing events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中のイベントはありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행중인 이벤트가 없습니다"
           }
         }
       }
@@ -10204,6 +10342,7 @@
       }
     },
     "home_section_notice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10221,6 +10360,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "최근 카페 공지"
+          }
+        }
+      }
+    },
+    "home_section_ongoing_cafe_event" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongoing Cafe Events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中のカフェイベント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행중인 카페 이벤트"
           }
         }
       }
@@ -13596,7 +13757,6 @@
       }
     },
     "noticeevent_tab_event" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -13619,7 +13779,6 @@
       }
     },
     "noticeevent_tab_notice" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

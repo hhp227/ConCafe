@@ -391,6 +391,9 @@ private struct NoticeEventFormSheet: View {
     let onAction: (NoticeEventAction) -> Void
 
     @State private var isImagePickerPresented = false
+    @State private var isEventPeriodEditorVisible = false
+    @State private var eventStartDate = Date()
+    @State private var eventEndDate = Date()
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -487,7 +490,21 @@ private struct NoticeEventFormSheet: View {
                                     .foregroundStyle(Color(hex: "665A63"))
                                     .padding(.leading, 4)
                                 Button {
-                                    onAction(.clickReserveSchedule)
+                                    if uiState.selectedTab == .event {
+                                        if let parsed = parseEventPeriod(uiState.formReservedAt) {
+                                            eventStartDate = parsed.start
+                                            eventEndDate = parsed.end
+                                        } else {
+                                            let now = Date()
+                                            eventStartDate = now
+                                            eventEndDate = now
+                                        }
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            isEventPeriodEditorVisible.toggle()
+                                        }
+                                    } else {
+                                        onAction(.clickReserveSchedule)
+                                    }
                                 } label: {
                                     HStack {
                                         Text(uiState.formReservedAt.isEmpty ? uiState.formSchedulePlaceholder : uiState.formReservedAt)
@@ -506,6 +523,66 @@ private struct NoticeEventFormSheet: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+
+                                if uiState.selectedTab == .event && isEventPeriodEditorVisible {
+                                    VStack(spacing: 10) {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(String(localized: String.LocalizationValue("schedule_label_start_time"), table: "Localizable"))
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(Color(hex: "665A63"))
+                                            DatePicker(
+                                                "",
+                                                selection: $eventStartDate,
+                                                displayedComponents: .date
+                                            )
+                                            .labelsHidden()
+                                            .datePickerStyle(.compact)
+                                        }
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(String(localized: String.LocalizationValue("schedule_label_end_time"), table: "Localizable"))
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(Color(hex: "665A63"))
+                                            DatePicker(
+                                                "",
+                                                selection: $eventEndDate,
+                                                in: eventStartDate...Date.distantFuture,
+                                                displayedComponents: .date
+                                            )
+                                            .labelsHidden()
+                                            .datePickerStyle(.compact)
+                                        }
+                                        HStack(spacing: 8) {
+                                            Button {
+                                                onAction(.changeFormReservedAt(""))
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    isEventPeriodEditorVisible = false
+                                                }
+                                            } label: {
+                                                Text(String(localized: String.LocalizationValue("noticeevent_remove"), table: "Localizable"))
+                                                    .frame(maxWidth: .infinity)
+                                            }
+                                            .buttonStyle(.bordered)
+
+                                            Button {
+                                                let start = min(eventStartDate, eventEndDate)
+                                                let end = max(eventStartDate, eventEndDate)
+                                                onAction(.changeFormReservedAt(formatEventPeriod(start: start, end: end)))
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    isEventPeriodEditorVisible = false
+                                                }
+                                            } label: {
+                                                Text(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"))
+                                                    .frame(maxWidth: .infinity)
+                                            }
+                                            .buttonStyle(.borderedProminent)
+                                            .tint(Color(hex: "FFD1DC"))
+                                            .foregroundStyle(Color(hex: "2B2330"))
+                                        }
+                                    }
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                }
                             }
                         }
                         .padding(.horizontal, 24)
@@ -622,6 +699,35 @@ private struct NoticeEventFormSheet: View {
                 .foregroundStyle(Color(hex: "8A8088"))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func formatEventPeriod(start: Date, end: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy.MM.dd"
+        return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+    }
+
+    private func parseEventPeriod(_ value: String) -> (start: Date, end: Date)? {
+        let pattern = #"(\d{4})\.(\d{2})\.(\d{2})\s*(?:~|-)\s*(\d{4})\.(\d{2})\.(\d{2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(value.startIndex..<value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, options: [], range: range), match.numberOfRanges == 7 else {
+            return nil
+        }
+        let parts = (1...6).compactMap { index -> Int? in
+            guard let range = Range(match.range(at: index), in: value) else { return nil }
+            return Int(value[range])
+        }
+        guard parts.count == 6 else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let start = DateComponents(year: parts[0], month: parts[1], day: parts[2])
+        let end = DateComponents(year: parts[3], month: parts[4], day: parts[5])
+        guard let startDate = calendar.date(from: start), let endDate = calendar.date(from: end) else {
+            return nil
+        }
+        return (start: startDate, end: endDate)
     }
 }
 

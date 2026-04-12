@@ -14,16 +14,20 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.event.BannerEvent
+import com.hhp227.concafe.domain.event.CafeEventEvent
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
@@ -32,6 +36,7 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
+    private val cafeEventEventPublisher: CafeEventEventPublisher,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
@@ -68,7 +73,10 @@ class HomeViewModel(
                     nearbyCafeCursor = result.data.nearbyCafesNextCursor,
                     canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
                     birthdayCasts = result.data.birthdayCasts,
-                    notices = result.data.notices
+                    notices = result.data.notices,
+                    cafeEvents = result.data.cafeEvents
+                        .filter { isOngoingCafeEvent(it.statusLabel) }
+                        .take(MAX_HOME_CAFE_EVENTS)
                 )
             } else if (result is AppResult.Failure) {
                 _uiState.update { state ->
@@ -221,6 +229,19 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCafeEventEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_EVENT_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_EVENT_EVENT] = viewModelScope.launch {
+            cafeEventEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is CafeEventEvent.Created -> upsertCafeEvent(event.event)
+                    is CafeEventEvent.Updated -> upsertCafeEvent(event.event)
+                    is CafeEventEvent.Deleted -> removeCafeEvent(event.eventId)
+                }
+            }
+        }
+    }
+
     private fun patchBanner(updatedBanner: HomeBanner) {
         _uiState.update { state ->
             state.copy(
@@ -270,6 +291,49 @@ class HomeViewModel(
                 birthdayCasts = state.birthdayCasts.filterNot { it.id == castId }
             )
         }
+    }
+
+    private fun upsertCafeEvent(event: CafeEventManagementItem) {
+        val homeEvent = toHomeCafeEvent(event, _uiState.value) ?: run {
+            removeCafeEvent(event.id)
+            return
+        }
+        _uiState.update { state ->
+            val merged = (state.cafeEvents.filterNot { it.id == homeEvent.id } + homeEvent)
+                .sortedByDescending { it.periodText }
+                .take(MAX_HOME_CAFE_EVENTS)
+            state.copy(cafeEvents = merged)
+        }
+    }
+
+    private fun removeCafeEvent(eventId: String) {
+        _uiState.update { state ->
+            state.copy(cafeEvents = state.cafeEvents.filterNot { it.id == eventId })
+        }
+    }
+
+    private fun toHomeCafeEvent(event: CafeEventManagementItem, currentState: HomeUiState): HomeCafeEvent? {
+        if (!isOngoingCafeEvent(event.statusLabel) || event.isDimmed) {
+            return null
+        }
+        val cafeName = currentState.nearbyCafes.firstOrNull { it.id == event.cafeId }?.name
+            ?: currentState.popularCastCafeNames[event.cafeId]
+            ?: event.cafeId
+        return HomeCafeEvent(
+            id = event.id,
+            cafeId = event.cafeId,
+            cafeName = cafeName,
+            title = event.title,
+            content = event.content,
+            imageUrl = event.imageUrl,
+            periodText = event.periodText,
+            statusLabel = event.statusLabel
+        )
+    }
+
+    private fun isOngoingCafeEvent(statusLabel: String): Boolean {
+        val normalized = statusLabel.trim().lowercase()
+        return normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing")
     }
 
     private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
@@ -340,6 +404,7 @@ class HomeViewModel(
     init {
         observeSession()
         observeBannerEvent()
+        observeCafeEventEvent()
         observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
@@ -348,11 +413,16 @@ class HomeViewModel(
 
     private enum class TaskKey {
         OBSERVE_BANNER_EVENT,
+        OBSERVE_CAFE_EVENT_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,
         POPULAR_CAST_PAGE,
         NEARBY_CAFE_PAGE
+    }
+
+    private companion object {
+        private const val MAX_HOME_CAFE_EVENTS = 3
     }
 }
