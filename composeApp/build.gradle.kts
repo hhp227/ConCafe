@@ -19,7 +19,7 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
 }
 
 val appVersionName = "1.04"
-val desktopPackageVersion = "1.2.1"
+val desktopPackageVersion = "1.2.2"
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -177,6 +177,7 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ConCafe"
             packageVersion = desktopPackageVersion
+            modules("java.net.http", "jdk.httpserver")
             windows {
                 iconFile.set(project.file("src/jvmMain/resources/desktop/concafe.ico"))
             }
