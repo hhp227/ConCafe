@@ -323,48 +323,56 @@ private struct HomeBannerSection: View {
     let onAction: (HomeAction) -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
-            if !uiState.banners.isEmpty {
-                TabView(selection: $currentBannerPage) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
-                        HomeBannerItem(
-                            banner: banner,
-                            height: bannerHeight
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 16)
-                        .onTapGesture {
-                            onAction(.bannerTapped(banner))
+        GeometryReader { geometry in
+            let bannerHeight = homeBannerHeight(containerWidth: geometry.size.width)
+            let sectionHeight = bannerSectionHeight(containerWidth: geometry.size.width)
+
+            VStack(spacing: 10) {
+                if !uiState.banners.isEmpty {
+                    TabView(selection: $currentBannerPage) {
+                        ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
+                            HomeBannerItem(
+                                banner: banner,
+                                height: bannerHeight
+                            )
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 16)
+                            .onTapGesture {
+                                onAction(.bannerTapped(banner))
+                            }
+                            .tag(index)
                         }
-                        .tag(index)
+                    }
+                    .frame(height: bannerHeight)
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                } else {
+                    HomeBannerPlaceholderCard(height: bannerHeight)
+                }
+                if uiState.banners.count > 1 {
+                    HStack(spacing: 6) {
+                        ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
+                            RoundedRectangle(cornerRadius: 999)
+                                .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                                .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
+                        }
                     }
                 }
-                .frame(height: bannerTabViewHeight)
-                .tabViewStyle(.page(indexDisplayMode: .never))
-            } else {
-                HomeBannerPlaceholderCard(height: bannerHeight)
             }
-            if uiState.banners.count > 1 {
-                HStack(spacing: 6) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
-                        RoundedRectangle(cornerRadius: 999)
-                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
-                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
-                    }
-                }
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(height: sectionHeight)
         }
     }
 
-    private var bannerHeight: CGFloat {
+    private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
         let horizontalPadding: CGFloat = 32
-        let contentWidth = max(UIScreen.main.bounds.width - horizontalPadding, 0)
-        let calculatedHeight = contentWidth * (10.0 / 16.0)
-        return min(calculatedHeight, 360)
+        let contentWidth = max(containerWidth - horizontalPadding, 0)
+        return min(contentWidth * (10.0 / 16.0), 360)
     }
 
-    private var bannerTabViewHeight: CGFloat {
-        bannerHeight + 10
+    private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+        let indicatorHeight: CGFloat = uiState.banners.count > 1 ? 18 : 0
+        return bannerHeight + indicatorHeight
     }
 }
 
@@ -383,21 +391,25 @@ private struct HomeBannerItem: View {
                 endPoint: .bottomTrailing
             )
             if let imageUrl = resolvedRemoteImageUrl(banner.imageUrl) {
-                CachedAsyncImage(
-                    url: imageUrl,
-                    placeholder: Color.clear
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                LinearGradient(
-                    colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                GeometryReader { proxy in
+                    CachedAsyncImage(
+                        url: imageUrl,
+                        placeholder: Color.clear
+                    )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.04), Color.black.opacity(0.34)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                }
             }
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
+        .clipShape(cardShape)
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(banner.title)
@@ -414,9 +426,7 @@ private struct HomeBannerItem: View {
             }
             .padding(18)
         }
-        .clipShape(cardShape)
         .contentShape(cardShape)
-        .clipped()
     }
 
     private var trimmedSubtitle: String? {
@@ -577,7 +587,9 @@ private struct NearByCafeItem: View {
         guard !normalized.isEmpty else {
             return ""
         }
-        switch normalized.uppercased() {
+        let upper = normalized.uppercased()
+        let lower = normalized.lowercased()
+        switch upper {
         case "MAID":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
         case "BUTLER":
@@ -587,7 +599,18 @@ private struct NearByCafeItem: View {
         case "DEVIL":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
         default:
-            return normalized
+            switch lower {
+            case "home_nearby_cafe_type_maid":
+                return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+            case "home_nearby_cafe_type_butler":
+                return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+            case "home_nearby_cafe_type_idol":
+                return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+            case "home_nearby_cafe_type_devil":
+                return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+            default:
+                return normalized
+            }
         }
     }
 }
