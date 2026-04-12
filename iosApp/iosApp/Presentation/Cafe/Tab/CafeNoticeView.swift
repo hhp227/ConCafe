@@ -21,31 +21,40 @@ struct CafeNoticeView: View {
 
     @State private var expandedNoticeIds: Set<String> = []
 
+    private let contentPadding: CGFloat = 16
+
     var body: some View {
         if events.isEmpty && notices.isEmpty {
-            emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
+            emptyCard(
+                String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable")
+            )
+            .padding(.horizontal, contentPadding)
         } else {
             LazyVStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, contentPadding)
                 if !events.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(events, id: \.id) { event in
                                 eventCard(event)
-                                    .frame(width: 248)
+                                    .frame(width: 276)
                             }
                         }
+                        .padding(.horizontal, contentPadding)
                     }
                 } else {
                     emptyCard(String(localized: String.LocalizationValue("noticeevent_empty_event"), table: "Localizable"))
+                        .padding(.horizontal, contentPadding)
                 }
                 Spacer()
                     .frame(height: 6)
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_notice"), table: "Localizable"))
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, contentPadding)
                 ForEach(notices, id: \.id) { notice in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
@@ -67,6 +76,7 @@ struct CafeNoticeView: View {
                     .background(Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .padding(.horizontal, contentPadding)
                     .onTapGesture {
                         if expandedNoticeIds.contains(notice.id) {
                             expandedNoticeIds.remove(notice.id)
@@ -77,6 +87,7 @@ struct CafeNoticeView: View {
                 }
                 if notices.isEmpty {
                     emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
+                        .padding(.horizontal, contentPadding)
                 } else if isLoadingMore {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -89,24 +100,28 @@ struct CafeNoticeView: View {
                         }
                 }
             }
+            .padding(.horizontal, -contentPadding)
         }
     }
 
     private func eventCard(_ event: CafeEventManagementItem) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
             ZStack {
-                LinearGradient(
-                    colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
                 if let imageUrl = resolvedImageUrl(event.imageUrl) {
-                    CachedAsyncImage(url: imageUrl, placeholder: Color.clear)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .clipped()
+                    GeometryReader { proxy in
+                        CachedAsyncImage(url: imageUrl, placeholder: Color.clear)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                    }
+                } else {
+                    LinearGradient(
+                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 }
             }
-            .frame(height: 148)
+            .frame(height: 172)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             VStack(alignment: .leading, spacing: 4) {
@@ -122,12 +137,8 @@ struct CafeNoticeView: View {
                         .foregroundStyle(Color(hex: "8A7F8B"))
                         .lineLimit(1)
                 }
-                Text(event.statusLabel)
-                    .font(.caption2)
-                    .foregroundStyle(Color(hex: "7A707A"))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 4)
         }
     }
 
