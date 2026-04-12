@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -154,83 +155,89 @@ fun HomeContentScreen(
                     onAction = onAction
                 )
             }
-        item {
-            SectionTitle(
-                text = stringResource(Res.string.home_section_popular_cast),
-                actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
-                onAction = { onAction(HomeAction.LoadMorePopularCasts) }
-            )
-            Spacer(Modifier.height(10.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                if (uiState.popularCasts.isNotEmpty()) {
-                    items(uiState.popularCasts) { maid ->
-                        ConCafeCastCard(
-                            name = maid.name,
-                            subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
-                            imageUrl = maid.profileImage,
-                            modifier = Modifier.width(132.dp),
-                            metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
-                            onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
-                        )
-                    }
-                } else {
-                    item {
-                        HomeSectionPlaceholderCard(
-                            title = stringResource(Res.string.home_popular_cast_empty_title),
-                            description = stringResource(Res.string.home_popular_cast_empty_desc),
-                            modifier = Modifier.fillParentMaxWidth()
-                        )
+            item {
+                HomeCafeEventSection(
+                    events = uiState.cafeEvents,
+                    onAction = onAction
+                )
+            }
+            item {
+                SectionTitle(
+                    text = stringResource(Res.string.home_section_popular_cast),
+                    actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
+                    onAction = { onAction(HomeAction.LoadMorePopularCasts) }
+                )
+                Spacer(Modifier.height(10.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    if (uiState.popularCasts.isNotEmpty()) {
+                        items(uiState.popularCasts) { maid ->
+                            ConCafeCastCard(
+                                name = maid.name,
+                                subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
+                                imageUrl = maid.profileImage,
+                                modifier = Modifier.width(132.dp),
+                                metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
+                                onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
+                            )
+                        }
+                    } else {
+                        item {
+                            HomeSectionPlaceholderCard(
+                                title = stringResource(Res.string.home_popular_cast_empty_title),
+                                description = stringResource(Res.string.home_popular_cast_empty_desc),
+                                modifier = Modifier.fillParentMaxWidth()
+                            )
+                        }
                     }
                 }
             }
-        }
-        item {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val contentWidth = maxWidth
-                val itemWidth = nearbyCafeItemWidth(contentWidth)
+            item {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val contentWidth = maxWidth
+                    val itemWidth = nearbyCafeItemWidth(contentWidth)
 
-                Column {
-                    SectionTitle(
-                        text = stringResource(Res.string.home_section_nearby_cafe),
-                        actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
-                        onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    LazyHorizontalGrid(
-                        rows = GridCells.Fixed(3),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        if (uiState.nearbyCafes.isNotEmpty()) {
-                            items(uiState.nearbyCafes) { cafe ->
-                                NearByCafeItem(
-                                    cafe = cafe,
-                                    modifier = Modifier
-                                        .width(itemWidth)
-                                        .height(92.dp)
-                                        .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
-                                )
-                            }
-                        } else {
-                            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                                HomeSectionPlaceholderCard(
-                                    title = stringResource(Res.string.home_nearby_cafe_empty_title),
-                                    description = stringResource(Res.string.home_nearby_cafe_empty_desc),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                    Column {
+                        SectionTitle(
+                            text = stringResource(Res.string.home_section_nearby_cafe),
+                            actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
+                            onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        LazyHorizontalGrid(
+                            rows = GridCells.Fixed(3),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            if (uiState.nearbyCafes.isNotEmpty()) {
+                                items(uiState.nearbyCafes) { cafe ->
+                                    NearByCafeItem(
+                                        cafe = cafe,
+                                        modifier = Modifier
+                                            .width(itemWidth)
+                                            .height(92.dp)
+                                            .clickable { onAction(HomeAction.ClickCafe(cafe.id)) }
+                                    )
+                                }
+                            } else {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    HomeSectionPlaceholderCard(
+                                        title = stringResource(Res.string.home_nearby_cafe_empty_title),
+                                        description = stringResource(Res.string.home_nearby_cafe_empty_desc),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
         if (uiState.birthdayCasts.isNotEmpty()) {
             item {
                 SectionTitle(stringResource(Res.string.home_section_birthday_cast))
@@ -265,12 +272,6 @@ fun HomeContentScreen(
                     }
                 }
             }
-        }
-        item {
-            HomeCafeEventSection(
-                events = uiState.cafeEvents,
-                onAction = onAction
-            )
         }
         }
     } else {

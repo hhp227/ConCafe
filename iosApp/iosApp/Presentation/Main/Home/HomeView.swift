@@ -86,12 +86,12 @@ private struct HomeContentView: View {
                         currentBannerPage: $currentBannerPage,
                         onAction: onAction
                     )
+                    cafeEventSection
                     popularCastSection
                     nearbyCafeSection
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
-                    cafeEventSection
                 }
                 .padding(.vertical, 16)
             }
