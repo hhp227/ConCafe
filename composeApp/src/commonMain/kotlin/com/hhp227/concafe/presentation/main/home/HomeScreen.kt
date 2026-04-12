@@ -335,11 +335,13 @@ private fun HomeCafeEventCard(
             contentAlignment = Alignment.TopEnd
         ) {
             if (event.imageUrl.isNotBlank()) {
-                CompatImageDisplay(
-                    imageUrl = event.imageUrl,
-                    modifier = Modifier.matchParentSize(),
-                    applyRoundedClip = false
-                )
+                BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+                    CompatImageDisplay(
+                        imageUrl = event.imageUrl,
+                        modifier = Modifier.size(maxWidth, maxHeight),
+                        applyRoundedClip = false
+                    )
+                }
             } else {
                 Box(
                     modifier = Modifier

@@ -271,12 +271,14 @@ private struct HomeCafeEventCard: View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack {
                 if let imageUrl = resolvedRemoteImageUrl(event.imageUrl) {
-                    CachedAsyncImage(
-                        url: imageUrl,
-                        placeholder: Color.clear
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
+                    GeometryReader { proxy in
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear
+                        )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    }
                 } else {
                     LinearGradient(
                         colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
@@ -599,7 +601,8 @@ private struct NearByCafeItem: View {
         } else {
             return ""
         }
-        return String(localized: String.LocalizationValue(key), table: "InfoPlist")
+        let localized = NSLocalizedString(key, tableName: "InfoPlist", bundle: .main, value: key, comment: "")
+        return localized == key ? "" : localized
     }
 }
 
