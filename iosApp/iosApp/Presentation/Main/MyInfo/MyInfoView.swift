@@ -172,7 +172,7 @@ private struct GuestMyInfoView: View {
                                 locale: Locale(identifier: "en_US_POSIX"),
                                 cafe.ratingAvg
                             )
-                            let conceptType = cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let conceptType = localizedCafeConceptType(cafe.conceptType)
                             let imageCornerRadius: CGFloat = 12
 
                             HStack(spacing: 10) {

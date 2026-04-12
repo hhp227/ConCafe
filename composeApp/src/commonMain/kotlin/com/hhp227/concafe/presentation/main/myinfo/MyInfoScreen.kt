@@ -296,9 +296,11 @@ private fun GuestMyInfoScreen(
                                 ) {
                                     Text(cafe.name, fontWeight = FontWeight.SemiBold)
                                     RatingBox(rating = ratingText)
-                                    if (cafe.conceptType.isNotBlank()) {
+                                    val conceptType = localizedCafeConceptType(cafe.conceptType)
+
+                                    if (conceptType.isNotBlank()) {
                                         Text(
-                                            text = cafe.conceptType,
+                                            text = conceptType,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = Color(0xFFEF6797),
                                             fontWeight = FontWeight.SemiBold,
