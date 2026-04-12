@@ -461,7 +461,7 @@
     <string name="checkin_new_visit_time_placeholder">Select visit time.</string>
     <string name="checkin_new_visit_memo_label">Memo (Optional)</string>
     <string name="checkin_new_visit_memo_placeholder">Leave your visit note.</string>
-    <string name="checkin_new_visit_submit">Complete Check-In</string>
+    <string name="checkin_new_visit_submit">Location-Based Check-In</string>
     <string name="banner_screen_title">Banner Management</string>
     <string name="banner_location_home_top">Home Top Area</string>
     <string name="banner_section_active">Currently Visible Banners</string>

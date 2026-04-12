@@ -68,8 +68,6 @@ import concafe.composeapp.generated.resources.checkin_new_visit_memo_label
 import concafe.composeapp.generated.resources.checkin_new_visit_memo_placeholder
 import concafe.composeapp.generated.resources.checkin_new_visit_no_cafe
 import concafe.composeapp.generated.resources.checkin_new_visit_submit
-import concafe.composeapp.generated.resources.checkin_new_visit_time_label
-import concafe.composeapp.generated.resources.checkin_new_visit_time_picker_title
 import concafe.composeapp.generated.resources.checkin_new_visit_title
 import concafe.composeapp.generated.resources.checkin_partial_load_error
 import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_desc
@@ -92,8 +90,8 @@ import concafe.composeapp.generated.resources.checkin_today_visit_empty_title
 import concafe.composeapp.generated.resources.checkin_visit_memo_empty
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.common_close
-import concafe.composeapp.generated.resources.common_confirm
 import concafe.composeapp.generated.resources.signin_submit
+import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -173,6 +171,7 @@ fun CheckInScreen(
                             )
                         )
                     },
+                    onQrCheckIn = { viewModel.onAction(CheckInAction.ClickQrCheckIn) },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
                 )
             }
@@ -979,6 +978,7 @@ private fun NewVisitCheckInBottomSheet(
     initialCafeId: String? = null,
     errorMessage: String?,
     onSubmit: (String, String, String?) -> Unit,
+    onQrCheckIn: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val cafeOptions = cafes.map { it.name to it.id }
@@ -996,15 +996,6 @@ private fun NewVisitCheckInBottomSheet(
         ?: cafeOptions.firstOrNull()?.first.orEmpty()
     val dropdownInteractionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
-    val now = remember { System.currentTimeMillis() }
-    var visitDateMillis by remember { mutableLongStateOf(now) }
-    var visitHour by remember {
-        mutableIntStateOf(TimeUtils.extractHourFromEpochMillis(now))
-    }
-    var visitMinute by remember {
-        mutableIntStateOf(TimeUtils.extractMinuteFromEpochMillis(now))
-    }
-    var isTimePickerVisible by remember { mutableStateOf(false) }
     var memo by remember { mutableStateOf("") }
 
     LaunchedEffect(cafes) {
@@ -1107,58 +1098,6 @@ private fun NewVisitCheckInBottomSheet(
                 }
             }
         }
-        Box(modifier = Modifier.fillMaxWidth()) {
-            ConCafeFormField(
-                label = stringResource(Res.string.checkin_new_visit_time_label),
-                value = TimeUtils.formatHourMinute(visitHour, visitMinute),
-                onValueChange = {},
-                readOnly = true,
-                trailingContent = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = stringResource(Res.string.checkin_new_visit_time_picker_title),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { isTimePickerVisible = true }
-            )
-        }
-        if (isTimePickerVisible) {
-            val timePickerState = rememberTimePickerState(
-                initialHour = visitHour,
-                initialMinute = visitMinute,
-                is24Hour = true
-            )
-
-            AlertDialog(
-                onDismissRequest = { isTimePickerVisible = false },
-                title = { Text(stringResource(Res.string.checkin_new_visit_time_picker_title)) },
-                text = { TimePicker(timePickerState) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            visitHour = timePickerState.hour
-                            visitMinute = timePickerState.minute
-                            isTimePickerVisible = false
-                        }
-                    ) {
-                        Text(stringResource(Res.string.common_confirm))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { isTimePickerVisible = false }) {
-                        Text(stringResource(Res.string.common_cancel))
-                    }
-                }
-            )
-        }
         ConCafeFormField(
             label = stringResource(Res.string.checkin_new_visit_memo_label),
             value = memo,
@@ -1201,11 +1140,7 @@ private fun NewVisitCheckInBottomSheet(
             onClick = {
                 val normalizedCafeId = selectedCafeId.trim()
                 val normalizedMemo = memo.trim().ifEmpty { null }
-                val normalizedVisitedAt = TimeUtils.buildVisitedAtUtcString(
-                    dateMillis = visitDateMillis,
-                    hour = visitHour,
-                    minute = visitMinute
-                )
+                val normalizedVisitedAt = Clock.System.now().toString()
 
                 onSubmit(normalizedCafeId, normalizedVisitedAt, normalizedMemo)
             },
@@ -1219,6 +1154,20 @@ private fun NewVisitCheckInBottomSheet(
             )
         ) {
             Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
+        }
+        Button(
+            enabled = selectedCafeId.isNotBlank(),
+            onClick = onQrCheckIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330)
+            )
+        ) {
+            Text("QR ${stringResource(Res.string.checkin_button)}", fontWeight = FontWeight.Bold)
         }
     }
 }

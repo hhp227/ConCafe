@@ -427,6 +427,9 @@ class CheckInViewModel(
             }
         }
     }
+
+    private fun clickQrCheckIn() {
+    }
     
     fun onAction(action: CheckInAction) {
         viewModelScope.launch {
@@ -481,6 +484,7 @@ class CheckInViewModel(
                 CheckInAction.DismissReviewPrompt -> dismissReviewPrompt()
                 CheckInAction.ClickWriteReviewPrompt -> clickWriteReviewPrompt()
                 CheckInAction.LoadMoreRecentVisits -> loadMoreRecentVisitPage()
+                CheckInAction.ClickQrCheckIn -> clickQrCheckIn()
                 is CheckInAction.SubmitNewVisit -> {
                     submitNewVisit(
                         cafeId = action.cafeId,

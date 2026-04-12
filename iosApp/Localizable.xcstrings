@@ -7767,19 +7767,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Complete Check-In"
+            "value" : "Location-Based Check-In"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "チェックイン完了"
+            "value" : "位置情報チェックイン"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "체크인 완료"
+            "value" : "위치 기반 체크인"
           }
         }
       }

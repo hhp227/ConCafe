@@ -955,12 +955,6 @@ private struct CheckInNewVisitSheet: View {
 
     @State private var selectedCafeId: String?
 
-    @State private var visitDate = Date()
-
-    @State private var visitTime = Date()
-
-    @State private var isTimePickerPresented = false
-
     @State private var memo = ""
 
     private var selectedCafeName: String {
@@ -1029,24 +1023,6 @@ private struct CheckInNewVisitSheet: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        ZStack {
-                            ConCafeFormField(
-                                label: String(localized: String.LocalizationValue("checkin_new_visit_time_label"), table: "Localizable"),
-                                text: .constant(TimeUtils.formatHourMinute(visitTime)),
-                                placeholder: String(localized: String.LocalizationValue("checkin_new_visit_time_placeholder"), table: "Localizable"),
-                                isEditable: false,
-                                trailingContent: {
-                                    Image(systemName: "clock")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(Color(hex: "7C7480"))
-                                }
-                            )
-                            Button(action: { isTimePickerPresented = true }) {
-                                Color.clear
-                            }
-                            .buttonStyle(.plain)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }
                         ConCafeFormEditor(
                             label: String(localized: String.LocalizationValue("checkin_new_visit_memo_label"), table: "Localizable"),
                             text: $memo,
@@ -1087,7 +1063,7 @@ private struct CheckInNewVisitSheet: View {
                     onAction(
                         .submitNewVisit(
                             cafeId: cafeId,
-                            visitedAt: makeVisitedAtString(date: visitDate, time: visitTime),
+                            visitedAt: currentVisitedAtString(),
                             memo: normalizedMemo.isEmpty ? nil : normalizedMemo
                         )
                     )
@@ -1099,6 +1075,15 @@ private struct CheckInNewVisitSheet: View {
                 .font(.headline.weight(.bold))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .disabled(selectedCafeId == nil)
+                Button("QR \(String(localized: String.LocalizationValue("checkin_button"), table: "Localizable"))") {
+                    onAction(.qrCheckInTapped)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(hex: "FFD1DC"))
+                .foregroundStyle(Color(hex: "2B2330"))
+                .font(.headline.weight(.bold))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .padding(.bottom, 8)
             }
             .padding(.horizontal, 20)
@@ -1121,29 +1106,6 @@ private struct CheckInNewVisitSheet: View {
             )
         )
         .background(Color(hex: "F8F5F6"))
-        .sheet(isPresented: $isTimePickerPresented) {
-            CompatNavigationContainer(title: String(localized: String.LocalizationValue("checkin_new_visit_time_picker_title"), table: "Localizable")) {
-                VStack {
-                    DatePicker(
-                        String(localized: String.LocalizationValue("checkin_new_visit_time_label"), table: "Localizable"),
-                        selection: $visitTime,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .datePickerStyle(.wheel)
-                    .labelsHidden()
-                    .padding()
-                    Spacer()
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
-                        isTimePickerPresented = false
-                    }
-                }
-            }
-            .compatFractionSheetDetent(0.35)
-        }
     }
 
     init(
@@ -1160,8 +1122,8 @@ private struct CheckInNewVisitSheet: View {
         _selectedCafeId = State(initialValue: initialId)
     }
 
-    private func makeVisitedAtString(date: Date, time: Date) -> String {
-        return TimeUtils.makeVisitedAtString(date: date, time: time)
+    private func currentVisitedAtString() -> String {
+        ISO8601DateFormatter().string(from: Date())
     }
 }
 

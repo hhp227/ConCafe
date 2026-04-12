@@ -466,6 +466,9 @@ final class CheckInViewModel: ObservableObject {
             }
         }
     }
+
+    private func clickQrCheckIn() {
+    }
     
     func onAction(_ action: CheckInAction) {
         switch action {
@@ -513,6 +516,8 @@ final class CheckInViewModel: ObservableObject {
             writeReviewPrompt()
         case .loadMoreRecentVisits:
             loadMoreRecentVisitPage()
+        case .qrCheckInTapped:
+            clickQrCheckIn()
         case .submitNewVisit(let cafeId, let visitedAt, let memo):
             submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
         }

@@ -25,6 +25,8 @@ sealed interface CheckInAction {
 
     data object LoadMoreRecentVisits : CheckInAction
 
+    data object ClickQrCheckIn : CheckInAction
+
     data class SubmitNewVisit(
         val cafeId: String,
         val visitedAt: String,

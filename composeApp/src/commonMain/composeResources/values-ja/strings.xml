@@ -461,7 +461,7 @@
     <string name="checkin_new_visit_time_placeholder">訪問時間を選択してください。</string>
     <string name="checkin_new_visit_memo_label">メモ（任意）</string>
     <string name="checkin_new_visit_memo_placeholder">訪問レビューを残してください。</string>
-    <string name="checkin_new_visit_submit">チェックイン完了</string>
+    <string name="checkin_new_visit_submit">位置情報チェックイン</string>
     <string name="banner_screen_title">バナー管理</string>
     <string name="banner_location_home_top">ホーム画面上部</string>
     <string name="banner_section_active">現在表示中のバナー</string>

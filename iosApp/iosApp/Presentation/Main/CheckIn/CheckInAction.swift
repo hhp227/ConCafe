@@ -20,5 +20,6 @@ enum CheckInAction {
     case dismissReviewPrompt
     case writeReviewPromptTapped
     case loadMoreRecentVisits
+    case qrCheckInTapped
     case submitNewVisit(cafeId: String, visitedAt: String, memo: String?)
 }

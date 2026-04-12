@@ -461,7 +461,7 @@
     <string name="checkin_new_visit_time_placeholder">방문 시간을 선택하세요.</string>
     <string name="checkin_new_visit_memo_label">메모 (선택)</string>
     <string name="checkin_new_visit_memo_placeholder">방문 후기를 남겨보세요.</string>
-    <string name="checkin_new_visit_submit">체크인 완료</string>
+    <string name="checkin_new_visit_submit">위치 기반 체크인</string>
     <string name="banner_screen_title">배너 관리</string>
     <string name="banner_location_home_top">홈 화면 상단</string>
     <string name="banner_section_active">현재 노출 중인 배너</string>
