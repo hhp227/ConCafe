@@ -98,6 +98,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
+            implementation(libs.zxing.core)
             implementation(projects.shared)
         }
         commonTest.dependencies {

@@ -31,6 +31,7 @@ google-maps-compose = "4.4.1"
 google-play-services-maps = "18.2.0"
 google-play-services-ads = "23.6.0"
 google-play-services-code-scanner = "16.1.0"
+zxing-core = "3.5.3"
 firebase-auth = "23.1.0"
 firebase-messaging = "24.1.0"
 kakao-user = "2.21.5"
@@ -67,6 +68,7 @@ google-maps-compose = { module = "com.google.maps.android:maps-compose", version
 google-play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "google-play-services-maps" }
 google-play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "google-play-services-ads" }
 google-play-services-code-scanner = { module = "com.google.android.gms:play-services-code-scanner", version.ref = "google-play-services-code-scanner" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebase-auth" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "firebase-messaging" }
 kakao-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao-user" }
