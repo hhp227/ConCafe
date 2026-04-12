@@ -40,8 +40,8 @@ import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
-import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeManagementQrCode
-import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.rememberCafeManagementQrCodeSaver
+import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
+import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.launch

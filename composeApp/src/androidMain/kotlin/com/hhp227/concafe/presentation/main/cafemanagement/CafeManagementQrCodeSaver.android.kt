@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement
 
 import android.content.ContentValues
 import android.content.Context

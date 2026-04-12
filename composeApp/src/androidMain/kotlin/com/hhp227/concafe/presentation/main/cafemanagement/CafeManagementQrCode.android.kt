@@ -1,30 +1,28 @@
-package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
+package com.hhp227.concafe.presentation.main.cafemanagement
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
-import org.jetbrains.skia.Image
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 
 @Composable
 actual fun CafeManagementQrCode(
     payload: String,
     modifier: Modifier
 ) {
-    val qrImage = remember(payload) {
-        runCatching { createQrImageBitmap(payload) }.getOrNull()
+    val qrBitmap = remember(payload) {
+        runCatching { createQrBitmap(payload) }.getOrNull()
     }
-    qrImage?.let { image ->
+    qrBitmap?.let { bitmap ->
         Image(
-            bitmap = image,
+            bitmap = bitmap.asImageBitmap(),
             contentDescription = null,
             modifier = modifier,
             contentScale = ContentScale.Fit
@@ -32,25 +30,21 @@ actual fun CafeManagementQrCode(
     }
 }
 
-private fun createQrImageBitmap(payload: String): ImageBitmap {
+private fun createQrBitmap(payload: String): Bitmap {
     val bitMatrix = MultiFormatWriter().encode(
         payload,
         BarcodeFormat.QR_CODE,
         QR_SIZE_PX,
         QR_SIZE_PX
     )
-    val bufferedImage = BufferedImage(QR_SIZE_PX, QR_SIZE_PX, BufferedImage.TYPE_INT_ARGB)
+    val bitmap = createBitmap(QR_SIZE_PX, QR_SIZE_PX)
 
     for (x in 0 until QR_SIZE_PX) {
         for (y in 0 until QR_SIZE_PX) {
-            bufferedImage.setRGB(x, y, if (bitMatrix[x, y]) BLACK else WHITE)
+            bitmap[x, y] = if (bitMatrix[x, y]) BLACK else WHITE
         }
     }
-    val bytes = ByteArrayOutputStream().use { output ->
-        ImageIO.write(bufferedImage, "png", output)
-        output.toByteArray()
-    }
-    return Image.makeFromEncoded(bytes).asImageBitmap()
+    return bitmap
 }
 
 private const val QR_SIZE_PX = 1024
