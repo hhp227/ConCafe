@@ -19,7 +19,7 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
 }
 
 val appVersionName = "1.04"
-val desktopPackageVersion = "1.2.2"
+val desktopPackageVersion = "1.2.3"
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
