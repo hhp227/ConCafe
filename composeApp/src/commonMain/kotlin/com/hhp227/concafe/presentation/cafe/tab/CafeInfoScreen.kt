@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.LocationOn
@@ -34,6 +35,11 @@ import concafe.composeapp.generated.resources.cafe_info_placeholder_business_hou
 import concafe.composeapp.generated.resources.cafe_info_placeholder_phone
 import concafe.composeapp.generated.resources.cafe_info_section_description
 import concafe.composeapp.generated.resources.cafe_info_section_social_media
+import concafe.composeapp.generated.resources.social_instagram_icon
+import concafe.composeapp.generated.resources.social_tiktok_icon
+import concafe.composeapp.generated.resources.social_x_icon
+import concafe.composeapp.generated.resources.social_youtube_icon
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -139,16 +145,16 @@ private fun SocialMediaCard(detail: CafeDetail) {
     val socialMedia = cafe.socialMedia
     val items = buildList {
         socialMedia["instagram"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("Instagram", "https://instagram.com/$it", colorFromHex("E1306C")))
-        }
-        socialMedia["twitter"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("X (Twitter)", "https://x.com/$it", Color(0xFF1DA1F2)))
-        }
-        socialMedia["tiktok"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("TikTok", "https://tiktok.com/@$it", Color(0xFF010101)))
+            add(SocialMediaItem("Instagram", "https://instagram.com/$it", colorFromHex("E1306C"), SocialPlatform.Instagram))
         }
         socialMedia["youtube"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("YouTube", "https://youtube.com/@$it", colorFromHex("FF0000")))
+            add(SocialMediaItem("YouTube", "https://youtube.com/@$it", colorFromHex("FF0000"), SocialPlatform.YouTube))
+        }
+        socialMedia["twitter"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("X", "https://x.com/$it", Color(0xFF111111), SocialPlatform.X))
+        }
+        socialMedia["tiktok"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            add(SocialMediaItem("TikTok", "https://tiktok.com/@$it", Color(0xFF010101), SocialPlatform.TikTok))
         }
     }
 
@@ -191,7 +197,19 @@ private fun SocialMediaCard(detail: CafeDetail) {
     }
 }
 
-private data class SocialMediaItem(val label: String, val url: String, val tint: Color)
+private data class SocialMediaItem(
+    val label: String,
+    val url: String,
+    val tint: Color,
+    val platform: SocialPlatform
+)
+
+private enum class SocialPlatform {
+    Instagram,
+    YouTube,
+    X,
+    TikTok
+}
 
 @Composable
 private fun SocialMediaChip(
@@ -206,11 +224,43 @@ private fun SocialMediaChip(
             .padding(vertical = 12.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = item.label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = item.tint
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            SocialMediaPlatformIcon(platform = item.platform)
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = item.tint
+            )
+        }
+    }
+}
+
+@Composable
+private fun SocialMediaPlatformIcon(platform: SocialPlatform) {
+    when (platform) {
+        SocialPlatform.Instagram -> Image(
+            painter = painterResource(Res.drawable.social_instagram_icon),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        SocialPlatform.YouTube -> Image(
+            painter = painterResource(Res.drawable.social_youtube_icon),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        SocialPlatform.X -> Image(
+            painter = painterResource(Res.drawable.social_x_icon),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        SocialPlatform.TikTok -> Image(
+            painter = painterResource(Res.drawable.social_tiktok_icon),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
         )
     }
 }
