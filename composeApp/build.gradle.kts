@@ -78,6 +78,7 @@ kotlin {
             implementation(libs.googleid)
             implementation(libs.google.play.services.maps)
             implementation(libs.google.play.services.ads)
+            implementation(libs.google.play.services.code.scanner)
             implementation(libs.google.maps.compose)
             implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.messaging.ktx)
@@ -97,6 +98,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
+            implementation(libs.zxing.core)
             implementation(projects.shared)
         }
         commonTest.dependencies {

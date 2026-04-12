@@ -8,6 +8,10 @@
 	<string>ca-app-pub-6216021268300256~7779228372</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>QR 체크인을 위해 카메라 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleURLTypes</key>

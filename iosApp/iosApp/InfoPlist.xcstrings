@@ -12802,6 +12802,18 @@
         }
       }
     },
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QR 체크인을 위해 카메라 권한이 필요합니다."
+          }
+        }
+      }
+    },
     "NSLocationWhenInUseUsageDescription" : {
       "comment" : "Privacy - Location When In Use Usage Description",
       "extractionState" : "extracted_with_value",
@@ -12810,6 +12822,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Privacy - Photo Library Additions Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다."
           }
         }
       }

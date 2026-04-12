@@ -68,14 +68,14 @@ import concafe.composeapp.generated.resources.checkin_new_visit_memo_label
 import concafe.composeapp.generated.resources.checkin_new_visit_memo_placeholder
 import concafe.composeapp.generated.resources.checkin_new_visit_no_cafe
 import concafe.composeapp.generated.resources.checkin_new_visit_submit
-import concafe.composeapp.generated.resources.checkin_new_visit_time_label
-import concafe.composeapp.generated.resources.checkin_new_visit_time_picker_title
 import concafe.composeapp.generated.resources.checkin_new_visit_title
 import concafe.composeapp.generated.resources.checkin_partial_load_error
 import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_desc
 import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_title
 import concafe.composeapp.generated.resources.checkin_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.checkin_popular_cast_empty_title
+import concafe.composeapp.generated.resources.checkin_qr_sheet_desc
+import concafe.composeapp.generated.resources.checkin_qr_sheet_title
 import concafe.composeapp.generated.resources.checkin_review_prompt_desc
 import concafe.composeapp.generated.resources.checkin_review_prompt_later
 import concafe.composeapp.generated.resources.checkin_review_prompt_primary
@@ -92,8 +92,8 @@ import concafe.composeapp.generated.resources.checkin_today_visit_empty_title
 import concafe.composeapp.generated.resources.checkin_visit_memo_empty
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.common_close
-import concafe.composeapp.generated.resources.common_confirm
 import concafe.composeapp.generated.resources.signin_submit
+import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -173,7 +173,24 @@ fun CheckInScreen(
                             )
                         )
                     },
+                    onQrCheckIn = { viewModel.onAction(CheckInAction.ClickQrCheckIn) },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
+                )
+            }
+        }
+        if (uiState.isQrCheckInSheetVisible) {
+            CheckInNewVisitDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) }
+            ) {
+                QrCheckInBottomSheet(
+                    errorMessage = uiState.errorMessage,
+                    onDismiss = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) },
+                    onScanSuccess = { rawValue ->
+                        viewModel.onAction(CheckInAction.SubmitQrCheckIn(rawValue))
+                    },
+                    onScanFailed = { message ->
+                        viewModel.onAction(CheckInAction.QrScanFailed(message))
+                    }
                 )
             }
         }
@@ -979,6 +996,7 @@ private fun NewVisitCheckInBottomSheet(
     initialCafeId: String? = null,
     errorMessage: String?,
     onSubmit: (String, String, String?) -> Unit,
+    onQrCheckIn: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val cafeOptions = cafes.map { it.name to it.id }
@@ -996,15 +1014,6 @@ private fun NewVisitCheckInBottomSheet(
         ?: cafeOptions.firstOrNull()?.first.orEmpty()
     val dropdownInteractionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
-    val now = remember { System.currentTimeMillis() }
-    var visitDateMillis by remember { mutableLongStateOf(now) }
-    var visitHour by remember {
-        mutableIntStateOf(TimeUtils.extractHourFromEpochMillis(now))
-    }
-    var visitMinute by remember {
-        mutableIntStateOf(TimeUtils.extractMinuteFromEpochMillis(now))
-    }
-    var isTimePickerVisible by remember { mutableStateOf(false) }
     var memo by remember { mutableStateOf("") }
 
     LaunchedEffect(cafes) {
@@ -1107,58 +1116,6 @@ private fun NewVisitCheckInBottomSheet(
                 }
             }
         }
-        Box(modifier = Modifier.fillMaxWidth()) {
-            ConCafeFormField(
-                label = stringResource(Res.string.checkin_new_visit_time_label),
-                value = TimeUtils.formatHourMinute(visitHour, visitMinute),
-                onValueChange = {},
-                readOnly = true,
-                trailingContent = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = stringResource(Res.string.checkin_new_visit_time_picker_title),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { isTimePickerVisible = true }
-            )
-        }
-        if (isTimePickerVisible) {
-            val timePickerState = rememberTimePickerState(
-                initialHour = visitHour,
-                initialMinute = visitMinute,
-                is24Hour = true
-            )
-
-            AlertDialog(
-                onDismissRequest = { isTimePickerVisible = false },
-                title = { Text(stringResource(Res.string.checkin_new_visit_time_picker_title)) },
-                text = { TimePicker(timePickerState) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            visitHour = timePickerState.hour
-                            visitMinute = timePickerState.minute
-                            isTimePickerVisible = false
-                        }
-                    ) {
-                        Text(stringResource(Res.string.common_confirm))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { isTimePickerVisible = false }) {
-                        Text(stringResource(Res.string.common_cancel))
-                    }
-                }
-            )
-        }
         ConCafeFormField(
             label = stringResource(Res.string.checkin_new_visit_memo_label),
             value = memo,
@@ -1201,11 +1158,7 @@ private fun NewVisitCheckInBottomSheet(
             onClick = {
                 val normalizedCafeId = selectedCafeId.trim()
                 val normalizedMemo = memo.trim().ifEmpty { null }
-                val normalizedVisitedAt = TimeUtils.buildVisitedAtUtcString(
-                    dateMillis = visitDateMillis,
-                    hour = visitHour,
-                    minute = visitMinute
-                )
+                val normalizedVisitedAt = Clock.System.now().toString()
 
                 onSubmit(normalizedCafeId, normalizedVisitedAt, normalizedMemo)
             },
@@ -1219,6 +1172,19 @@ private fun NewVisitCheckInBottomSheet(
             )
         ) {
             Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
+        }
+        Button(
+            onClick = onQrCheckIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330)
+            )
+        ) {
+            Text("QR ${stringResource(Res.string.checkin_button)}", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1311,6 +1277,72 @@ private fun TodayVisitsRow(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QrCheckInBottomSheet(
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onScanSuccess: (String) -> Unit,
+    onScanFailed: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 520.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.checkin_qr_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.common_close),
+                    tint = Color(0xFF7C7480)
+                )
+            }
+        }
+        Text(
+            text = stringResource(Res.string.checkin_qr_sheet_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7C7480)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CheckInQrScanner(
+                onScanSuccess = onScanSuccess,
+                onScanCanceled = onDismiss,
+                onScanFailed = onScanFailed
+            )
+        }
+        if (!errorMessage.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFFFF1F3),
+                border = BorderStroke(1.dp, Color(0xFFFFCDD5))
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFB03854),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                )
             }
         }
     }

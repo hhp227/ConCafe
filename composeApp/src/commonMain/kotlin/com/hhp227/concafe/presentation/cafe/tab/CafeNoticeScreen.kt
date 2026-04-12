@@ -39,39 +39,57 @@ fun CafeNoticeScreen(
     onLoadMore: () -> Unit
 ) {
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val contentPadding = 16.dp
 
     if (events.isEmpty() && notices.isEmpty()) {
-        EmptyContent(text = stringResource(Res.string.cafe_notice_empty))
+        EmptyContent(
+            text = stringResource(Res.string.cafe_notice_empty),
+            modifier = Modifier.padding(horizontal = contentPadding)
+        )
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = -contentPadding),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Text(
                 text = stringResource(Res.string.noticeevent_tab_event),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = contentPadding)
             )
             if (events.isNotEmpty()) {
                 LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 2.dp)
+                    contentPadding = PaddingValues(horizontal = contentPadding)
                 ) {
                     items(events) { event ->
                         CafeEventCard(
                             event = event,
-                            modifier = Modifier.width(248.dp)
+                            modifier = Modifier.width(276.dp)
                         )
                     }
                 }
             } else {
-                EmptyContent(text = stringResource(Res.string.noticeevent_empty_event))
+                EmptyContent(
+                    text = stringResource(Res.string.noticeevent_empty_event),
+                    modifier = Modifier.padding(horizontal = contentPadding)
+                )
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = stringResource(Res.string.noticeevent_tab_notice),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = contentPadding)
             )
             if (notices.isEmpty()) {
-                EmptyContent(text = stringResource(Res.string.cafe_notice_empty))
+                EmptyContent(
+                    text = stringResource(Res.string.cafe_notice_empty),
+                    modifier = Modifier.padding(horizontal = contentPadding)
+                )
             } else {
                 notices.forEach { notice ->
                     NoticeCard(
@@ -83,7 +101,8 @@ fun CafeNoticeScreen(
                             } else {
                                 expandedNoticeIds + notice.id
                             }
-                        }
+                        },
+                        modifier = Modifier.padding(horizontal = contentPadding)
                     )
                 }
                 if (canLoadMore || isLoadingMore) {
@@ -113,28 +132,36 @@ private fun CafeEventCard(
     event: CafeEventManagementItem,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(148.dp)
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
+                .height(172.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.TopEnd
         ) {
             if (event.imageUrl.isNotBlank()) {
-                CompatImageDisplay(
-                    imageUrl = event.imageUrl,
-                    modifier = Modifier.fillMaxSize(),
-                    applyRoundedClip = false
+                BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+                    CompatImageDisplay(
+                        imageUrl = event.imageUrl,
+                        modifier = Modifier.size(maxWidth, maxHeight),
+                        applyRoundedClip = false
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
                 )
             }
         }
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
@@ -162,11 +189,6 @@ private fun CafeEventCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Text(
-                text = event.statusLabel,
-                color = Color(0xFF7A707A),
-                style = MaterialTheme.typography.labelSmall
-            )
         }
     }
 }
@@ -241,9 +263,12 @@ fun NoticeLoadMoreFooter(
 }
 
 @Composable
-private fun EmptyContent(text: String) {
+private fun EmptyContent(
+    text: String,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(Color.White)

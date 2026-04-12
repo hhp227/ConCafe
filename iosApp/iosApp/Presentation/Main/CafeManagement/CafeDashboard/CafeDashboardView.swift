@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import Photos
 import Shared
 
 struct CafeDashboardView: View {
@@ -16,10 +17,13 @@ struct CafeDashboardView: View {
 
     @StateObject private var viewModel: CafeDashboardViewModel
 
+    @State private var isQrSheetPresented = false
+
     var body: some View {
         CafeDashboardContentView(
             uiState: viewModel.uiState,
-            onAction: viewModel.onAction
+            onAction: viewModel.onAction,
+            onQrMetricTap: { isQrSheetPresented = true }
         )
         .navigationTitle(viewModel.uiState.cafe?.name ?? String(localized: String.LocalizationValue("dashboard_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
@@ -79,6 +83,12 @@ struct CafeDashboardView: View {
                 onAction: viewModel.onAction
             )
         }
+        .sheet(isPresented: $isQrSheetPresented) {
+            DashboardQrSheetView(
+                payload: buildCafeCheckInQrPayload(cafeId: viewModel.uiState.cafe?.id ?? cafeId)
+            )
+            .compatFractionSheetDetent(0.58)
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -117,6 +127,7 @@ private struct CafeDashboardContentView: View {
     let uiState: CafeDashboardUiState
 
     let onAction: (CafeDashboardAction) -> Void
+    let onQrMetricTap: () -> Void
 
     var body: some View {
         Group {
@@ -337,6 +348,7 @@ private struct CafeDashboardContentView: View {
                 title: String(localized: String.LocalizationValue("dashboard_section_menu_title"), table: "Localizable"),
                 subtitle: String(localized: String.LocalizationValue("dashboard_section_menu_subtitle"), table: "Localizable")
             )
+            dashboardQrMetricCard
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                 spacing: 12
@@ -355,6 +367,45 @@ private struct CafeDashboardContentView: View {
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var dashboardQrMetricCard: some View {
+        Button {
+            onQrMetricTap()
+        } label: {
+            HStack {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color(hex: "FCE6EF"))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "qrcode")
+                            .foregroundStyle(Color(hex: "EF6797"))
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(String(localized: String.LocalizationValue("dashboard_metric_checkin_qr"), table: "Localizable"))
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color(hex: "2B2330"))
+                        Text(String(localized: String.LocalizationValue("dashboard_metric_checkin_qr_hint"), table: "Localizable"))
+                            .font(.caption)
+                            .foregroundStyle(Color(hex: "7A707A"))
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color(hex: "B8ACB4"))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func shortcutCard(shortcut: CafeDashboardShortcut) -> some View {
@@ -793,6 +844,74 @@ private struct CafeDashboardContentView: View {
                 .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
         )
     }
+}
+
+private struct DashboardQrSheetView: View {
+    let payload: String
+
+    @State private var saveResultMessage: String?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_title"), table: "Localizable"))
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color(hex: "2B2330"))
+            Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_description"), table: "Localizable"))
+                .font(.caption)
+                .foregroundStyle(Color(hex: "7A707A"))
+                .multilineTextAlignment(.center)
+            ZStack {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(hex: "F8F5F6"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color(hex: "FFD1DC").opacity(0.1), lineWidth: 1)
+                    )
+                DashboardQrCodeImageView(payload: payload)
+                    .frame(width: 240, height: 240)
+                    .padding(14)
+            }
+            Button {
+                saveQrImageToPhotos()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.circle.fill")
+                    Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_save_button"), table: "Localizable"))
+                        .fontWeight(.bold)
+                }
+                .foregroundStyle(Color(hex: "2B2330"))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color(hex: "FFD1DC"))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            if let saveResultMessage {
+                Text(saveResultMessage)
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "7A707A"))
+            }
+            Spacer(minLength: 12)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+    }
+
+    private func saveQrImageToPhotos() {
+        guard let image = generateDashboardQrImage(from: payload) else {
+            saveResultMessage = String(localized: String.LocalizationValue("dashboard_qr_sheet_save_failed"), table: "Localizable")
+            return
+        }
+        saveDashboardQrImageToPhotoLibrary(image) { isSaved in
+            saveResultMessage = String(localized: String.LocalizationValue(
+                isSaved ? "dashboard_qr_sheet_save_success" : "dashboard_qr_sheet_save_failed"
+            ), table: "Localizable")
+        }
+    }
+}
+
+private func buildCafeCheckInQrPayload(cafeId: String) -> String {
+    "concafe://checkin?cafeId=\(cafeId)"
 }
 
 private struct ExternalLinkInputSheet: View {

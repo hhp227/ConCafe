@@ -77,6 +77,7 @@ final class CheckInViewModel: ObservableObject {
                     self.uiState.currentUser = user
                     self.uiState.isLoginPromptVisible = user == nil ? self.uiState.isLoginPromptVisible : false
                     self.uiState.isNewVisitSheetVisible = false
+                    self.uiState.isQrCheckInSheetVisible = user == nil ? false : self.uiState.isQrCheckInSheetVisible
 
                     if user == nil {
                         self.uiState.reviewPrompt = nil
@@ -223,6 +224,7 @@ final class CheckInViewModel: ObservableObject {
 
                     if result is AppResultSuccess<AnyObject> {
                         uiState.isNewVisitSheetVisible = false
+                        uiState.isQrCheckInSheetVisible = false
                         uiState.preselectCafeId = nil
                         uiState.errorMessage = nil
                         refreshRecentVisitPage()
@@ -466,6 +468,84 @@ final class CheckInViewModel: ObservableObject {
             }
         }
     }
+
+    private func clickQrCheckIn() {
+        if uiState.currentUser == nil {
+            uiState.isLoginPromptVisible = true
+            uiState.isNewVisitSheetVisible = false
+            uiState.isQrCheckInSheetVisible = false
+            return
+        }
+        tasks[.locationPermission]?.cancel()
+        tasks[.locationPermission] = Task {
+            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
+            if permissionResult.isGranted {
+                uiState.isNewVisitSheetVisible = false
+                uiState.isQrCheckInSheetVisible = true
+                uiState.errorMessage = nil
+            } else {
+                uiState.isQrCheckInSheetVisible = false
+                uiState.errorMessage = permissionResult.message
+                if permissionResult.requiresSettings {
+                    event.send(.openLocationSettings)
+                }
+            }
+        }
+    }
+
+    private func dismissQrCheckInSheet() {
+        uiState.isQrCheckInSheetVisible = false
+        uiState.errorMessage = nil
+    }
+
+    private func submitQrCheckIn(rawValue: String) {
+        guard let cafeId = resolveCafeIdFromQr(rawValue) else {
+            uiState.errorMessage = "QR 코드에서 카페 정보를 찾을 수 없습니다."
+            return
+        }
+        submitNewVisit(
+            cafeId: cafeId,
+            visitedAt: ISO8601DateFormatter().string(from: Date()),
+            memo: nil
+        )
+    }
+
+    private func resolveCafeIdFromQr(_ rawValue: String) -> String? {
+        let payload = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if payload.isEmpty { return nil }
+
+        let knownCafeIds = Set((uiState.mapCafes + uiState.popularCafes).map { $0.id })
+        if knownCafeIds.contains(payload) { return payload }
+
+        var candidates: [String] = []
+
+        if let components = URLComponents(string: payload) {
+            if let cafeId = components.queryItems?.first(where: { $0.name.lowercased() == "cafeid" })?.value {
+                candidates.append(cafeId)
+            }
+        }
+
+        if let jsonMatch = payload.firstMatch(pattern: #"["']cafeId["']\s*:\s*["']([^"']+)["']"#, options: [.caseInsensitive]) {
+            candidates.append(jsonMatch)
+        }
+        if let keyValueMatch = payload.firstMatch(pattern: #"(?:^|[^A-Za-z0-9_])cafeId[:=]([A-Za-z0-9_-]+)"#, options: [.caseInsensitive]) {
+            candidates.append(keyValueMatch)
+        }
+
+        let pathCandidate = payload
+            .split(separator: "?")
+            .first?
+            .split(separator: "/")
+            .last
+            .map(String.init)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let pathCandidate, !pathCandidate.isEmpty {
+            candidates.append(pathCandidate)
+        }
+        return candidates
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { knownCafeIds.contains($0) })
+    }
     
     func onAction(_ action: CheckInAction) {
         switch action {
@@ -507,12 +587,20 @@ final class CheckInViewModel: ObservableObject {
         case .dismissNewVisitSheet:
             uiState.isNewVisitSheetVisible = false
             uiState.preselectCafeId = nil
+        case .dismissQrCheckInSheet:
+            dismissQrCheckInSheet()
         case .dismissReviewPrompt:
             dismissReviewPrompt()
         case .writeReviewPromptTapped:
             writeReviewPrompt()
         case .loadMoreRecentVisits:
             loadMoreRecentVisitPage()
+        case .qrCheckInTapped:
+            clickQrCheckIn()
+        case .qrScanFailed(let message):
+            uiState.errorMessage = message
+        case .submitQrCheckIn(let rawValue):
+            submitQrCheckIn(rawValue: rawValue)
         case .submitNewVisit(let cafeId, let visitedAt, let memo):
             submitNewVisit(cafeId: cafeId, visitedAt: visitedAt, memo: memo)
         }
@@ -576,5 +664,16 @@ final class CheckInViewModel: ObservableObject {
         if (35.5...35.9).contains(lat) && (139.3...139.9).contains(lng) { return "tokyo" }
         if (34.5...34.9).contains(lat) && (135.3...135.7).contains(lng) { return "osaka" }
         return nil
+    }
+}
+
+private extension String {
+    func firstMatch(pattern: String, options: NSRegularExpression.Options = []) -> String? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return nil }
+        let range = NSRange(startIndex..<endIndex, in: self)
+        guard let match = regex.firstMatch(in: self, options: [], range: range),
+              match.numberOfRanges > 1,
+              let resultRange = Range(match.range(at: 1), in: self) else { return nil }
+        return String(self[resultRange])
     }
 }

@@ -4418,6 +4418,52 @@
         }
       }
     },
+    "cafeinfo_checkin_qr_description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display this QR at the cafe and let visitors scan it to complete check-in."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェでこのQRを表示し、来店者がスキャンしてチェックインを完了できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페에서 이 QR을 노출하고, 방문자가 스캔해 체크인을 완료할 수 있습니다."
+          }
+        }
+      }
+    },
+    "cafeinfo_checkin_qr_empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR is available after the cafe is created."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェ作成後にQRを確認できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 생성 완료 후 QR을 확인할 수 있습니다."
+          }
+        }
+      }
+    },
     "cafeinfo_content_add_image" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5132,6 +5178,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "영업시간"
+          }
+        }
+      }
+    },
+    "cafeinfo_section_checkin_qr" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-In QR"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェックインQR"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체크인 QR"
           }
         }
       }
@@ -7767,24 +7836,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Complete Check-In"
+            "value" : "Location-Based Check-In"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "チェックイン完了"
+            "value" : "位置情報チェックイン"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "체크인 완료"
+            "value" : "위치 기반 체크인"
           }
         }
       }
     },
     "checkin_new_visit_time_label" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7807,6 +7877,7 @@
       }
     },
     "checkin_new_visit_time_picker_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7829,6 +7900,7 @@
       }
     },
     "checkin_new_visit_time_placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7979,6 +8051,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아직 인기 캐스트가 없어요"
+          }
+        }
+      }
+    },
+    "checkin_qr_sheet_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan the cafe QR code to check in instantly."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェのQRコードを読み取るとすぐにチェックインできます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 QR 코드를 스캔하면 즉시 체크인됩니다."
+          }
+        }
+      }
+    },
+    "checkin_qr_sheet_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR Check-In"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QRチェックイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR 체크인"
           }
         }
       }
@@ -9181,6 +9297,50 @@
         }
       }
     },
+    "dashboard_metric_checkin_qr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-In QR"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェックインQR"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체크인 QR"
+          }
+        }
+      }
+    },
+    "dashboard_metric_checkin_qr_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open and display in-store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "店舗表示用QRを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "매장 노출용 QR 열기"
+          }
+        }
+      }
+    },
     "dashboard_metric_rating" : {
       "localizations" : {
         "en" : {
@@ -9282,6 +9442,117 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프로필 연결 요청"
+          }
+        }
+      }
+    },
+    "dashboard_qr_sheet_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display this QR at the cafe so visitors can scan and complete check-in."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェでこのQRを表示し、来店者がスキャンしてチェックインを完了できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페에서 이 QR을 노출하고 방문자가 스캔해 체크인을 완료할 수 있습니다."
+          }
+        }
+      }
+    },
+    "dashboard_qr_sheet_save_button" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save To Gallery"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ギャラリーに保存"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갤러리에 저장"
+          }
+        }
+      }
+    },
+    "dashboard_qr_sheet_save_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to save QR image."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR画像の保存に失敗しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR 이미지 저장에 실패했습니다."
+          }
+        }
+      }
+    },
+    "dashboard_qr_sheet_save_success" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved to your gallery."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ギャラリーに保存しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갤러리에 저장되었습니다."
+          }
+        }
+      }
+    },
+    "dashboard_qr_sheet_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe Check-In QR"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェチェックインQR"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 체크인 QR"
           }
         }
       }
@@ -14591,6 +14862,9 @@
           }
         }
       }
+    },
+    "QR %@" : {
+
     },
     "ranking_detail" : {
       "localizations" : {

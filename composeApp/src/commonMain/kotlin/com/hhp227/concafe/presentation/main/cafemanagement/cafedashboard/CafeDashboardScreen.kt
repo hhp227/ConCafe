@@ -16,13 +16,19 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,8 +40,11 @@ import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
+import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -56,6 +65,8 @@ fun CafeDashboardScreen(
     val externalLinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val socialMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val reservationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val qrSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isQrSheetVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -147,9 +158,21 @@ fun CafeDashboardScreen(
             )
         }
     }
+    if (isQrSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { isQrSheetVisible = false },
+            containerColor = Color(0xFFFFFBFD),
+            sheetState = qrSheetState
+        ) {
+            DashboardQrSheetContent(
+                payload = buildCafeCheckInQrPayload(uiState.cafe?.id ?: cafeId)
+            )
+        }
+    }
     CafeDashboardContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction
+        onAction = viewModel::onAction,
+        onQrMetricClick = { isQrSheetVisible = true }
     )
 }
 
@@ -157,7 +180,8 @@ fun CafeDashboardScreen(
 @Composable
 private fun CafeDashboardContentScreen(
     uiState: CafeDashboardUiState,
-    onAction: (CafeDashboardAction) -> Unit
+    onAction: (CafeDashboardAction) -> Unit,
+    onQrMetricClick: () -> Unit
 ) {
     val cafe = uiState.cafe
 
@@ -244,6 +268,7 @@ private fun CafeDashboardContentScreen(
                         }
                         item {
                             ShortcutGrid(
+                                onQrMetricClick = onQrMetricClick,
                                 onShortcutClick = { shortcut ->
                                     onAction(CafeDashboardAction.ClickShortcut(shortcut))
                                 }
@@ -855,12 +880,16 @@ private fun DashboardMetricCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ShortcutGrid(
+    onQrMetricClick: () -> Unit,
     onShortcutClick: (CafeDashboardShortcut) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionHeader(
             title = stringResource(Res.string.dashboard_section_menu_title),
             subtitle = stringResource(Res.string.dashboard_section_menu_subtitle)
+        )
+        DashboardQrMetricCard(
+            onClick = onQrMetricClick
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -913,6 +942,140 @@ private fun ShortcutGrid(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardQrMetricCard(
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE8DFE7)),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFFFCE6EF)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCode2,
+                        contentDescription = null,
+                        tint = Color(0xFFEF6797),
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(Res.string.dashboard_metric_checkin_qr),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2B2330)
+                    )
+                    Text(
+                        text = stringResource(Res.string.dashboard_metric_checkin_qr_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7A707A)
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                tint = Color(0xFFB8ACB4),
+                modifier = Modifier
+                    .size(20.dp)
+                    .graphicsLayer { rotationZ = 180f }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardQrSheetContent(
+    payload: String
+) {
+    val saveQrToGallery = rememberCafeManagementQrCodeSaver()
+    val coroutineScope = rememberCoroutineScope()
+    var saveMessage by remember { mutableStateOf<String?>(null) }
+    val saveSuccessText = stringResource(Res.string.dashboard_qr_sheet_save_success)
+    val saveFailedText = stringResource(Res.string.dashboard_qr_sheet_save_failed)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_qr_sheet_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2B2330)
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_qr_sheet_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF7A707A)
+        )
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = Color(0xFFF8F5F6),
+            border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+        ) {
+            CafeManagementQrCode(
+                payload = payload,
+                modifier = Modifier
+                    .size(240.dp)
+                    .padding(14.dp)
+            )
+        }
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    val isSaved = saveQrToGallery(payload)
+                    saveMessage = if (isSaved) saveSuccessText else saveFailedText
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD1DC),
+                contentColor = Color(0xFF2B2330)
+            )
+        ) {
+            Icon(Icons.Default.Download, contentDescription = null)
+            Text(
+                text = stringResource(Res.string.dashboard_qr_sheet_save_button),
+                modifier = Modifier.padding(start = 8.dp),
+                fontWeight = FontWeight.Bold
+            )
+        }
+        saveMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF7A707A)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+private fun buildCafeCheckInQrPayload(cafeId: String): String {
+    return "concafe://checkin?cafeId=$cafeId"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
