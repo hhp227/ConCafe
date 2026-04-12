@@ -601,8 +601,7 @@ private struct NearByCafeItem: View {
         } else {
             return ""
         }
-        let localized = NSLocalizedString(key, tableName: "InfoPlist", bundle: .main, value: key, comment: "")
-        return localized == key ? "" : localized
+        return String(localized: String.LocalizationValue(key), table: "Localizable")
     }
 }
 
