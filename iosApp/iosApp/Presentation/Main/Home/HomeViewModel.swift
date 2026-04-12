@@ -57,7 +57,7 @@ final class HomeViewModel: ObservableObject {
                             isLoadingMoreNearbyCafes: false,
                             birthdayCasts: feed.birthdayCasts,
                             notices: feed.notices,
-                            cafeEvents: Array(feed.cafeEvents.filter { isOngoingCafeEvent($0.statusLabel) }.prefix(3))
+                            cafeEvents: Array(feed.cafeEvents.filter { isOngoingCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents))
                         )
                     } else {
                         uiState = .empty
@@ -502,7 +502,7 @@ final class HomeViewModel: ObservableObject {
         }
         let merged = (uiState.cafeEvents.filter { $0.id != homeEvent.id } + [homeEvent])
             .sorted { $0.periodText > $1.periodText }
-        let limited = Array(merged.prefix(3))
+        let limited = Array(merged.prefix(maxHomeCafeEvents))
         uiState = HomeUiState(
             isLoading: uiState.isLoading,
             isLoggedIn: uiState.isLoggedIn,
@@ -701,6 +701,8 @@ final class HomeViewModel: ObservableObject {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
+
+    private let maxHomeCafeEvents = 8
 
     private static func dictionary(from source: [AnyHashable: Any]) -> [String: String] {
         source.reduce(into: [:]) { partialResult, entry in

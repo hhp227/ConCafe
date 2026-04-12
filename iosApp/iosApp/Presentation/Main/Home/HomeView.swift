@@ -234,13 +234,12 @@ private struct HomeContentView: View {
     }
 
     private var cafeEventSection: some View {
-        let visibleEvents = Array(uiState.cafeEvents.prefix(6))
         return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
-            if !visibleEvents.isEmpty {
+            if !uiState.cafeEvents.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        ForEach(visibleEvents, id: \.id) { event in
+                        ForEach(uiState.cafeEvents, id: \.id) { event in
                             HomeCafeEventCard(event: event)
                                 .frame(width: 276)
                                 .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

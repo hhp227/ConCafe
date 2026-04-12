@@ -291,16 +291,14 @@ private fun HomeCafeEventSection(
     events: List<HomeCafeEvent>,
     onAction: (HomeAction) -> Unit
 ) {
-    val visibleEvents = events.take(6)
-
     SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
     Spacer(Modifier.height(10.dp))
-    if (visibleEvents.isNotEmpty()) {
+    if (events.isNotEmpty()) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
-            items(visibleEvents) { event ->
+            items(events) { event ->
                 HomeCafeEventCard(
                     event = event,
                     modifier = Modifier.width(276.dp),
