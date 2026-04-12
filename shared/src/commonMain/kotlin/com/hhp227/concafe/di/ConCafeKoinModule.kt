@@ -132,8 +132,8 @@ val dataSourceModule = module {
 
             override suspend fun refreshFavoriteCafeIds(userId: String) = dataSource.refreshFavoriteCafeIds(userId)
 
-            override suspend fun fetchFavoriteCafeIds(userId: String): List<String> {
-                return dataSource.fetchFavoriteCafeIdsRemote(userId)
+            override suspend fun fetchFavoriteCafeIds(userId: String, limit: Int?): List<String> {
+                return dataSource.fetchFavoriteCafeIdsRemote(userId, limit)
             }
 
             override suspend fun favoriteCafeRemote(userId: String, cafeId: String) =

@@ -21,6 +21,8 @@ import com.hhp227.concafe.domain.repository.UserRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
+private const val MY_INFO_FAVORITES_PREVIEW_LIMIT = 10
+
 class GetMyInfoUseCase(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
@@ -92,7 +94,10 @@ class GetMyInfoUseCase(
                     }
                     val favoriteCafeIdsDeferred = async {
                         runCatching {
-                            cafeRepository.getFavoriteCafeIds(currentUser.id)
+                            cafeRepository.getFavoriteCafeIds(
+                                userId = currentUser.id,
+                                limit = MY_INFO_FAVORITES_PREVIEW_LIMIT
+                            )
                         }.getOrElse { error ->
                             println("TEST, GetMyInfoUseCase getFavoriteCafeIds failed: ${error.message}")
                             emptyList()

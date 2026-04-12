@@ -518,7 +518,7 @@ private fun ProfileMyInfoScreen(
             }
         }
         item {
-            val favoriteItems = uiState.favorites.take(4)
+            val favoriteItems = uiState.favorites.take(12)
 
             MyInfoSectionTitle("즐겨찾기")
             if (favoriteItems.isNotEmpty()) {

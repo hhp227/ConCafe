@@ -112,7 +112,13 @@ class MyInfoViewModel(
             cafeDetailEventPublisher.events.collectLatest { event ->
                 when (event) {
                     is CafeDetailEvent.CafeInfoUpdated -> patchCafe(event.cafe)
-                    is CafeDetailEvent.FavoriteToggled -> loadMyInfo()
+                    is CafeDetailEvent.FavoriteToggled -> {
+                        if (event.isFavorite) {
+                            refreshFavoritesSection()
+                        } else {
+                            removeFavoriteCafe(event.cafeId)
+                        }
+                    }
                     is CafeDetailEvent.MenuCreated,
                     is CafeDetailEvent.MenuUpdated,
                     is CafeDetailEvent.MenuDeleted,
@@ -244,6 +250,68 @@ class MyInfoViewModel(
                 recentVisits = state.recentVisits.map { item -> if (item.id == cafe.id) cafe else item },
                 favorites = state.favorites.map { item -> if (item.id == cafe.id) cafe else item }
             )
+        }
+    }
+
+    private fun removeFavoriteCafe(cafeId: String) {
+        _uiState.update { state ->
+            val hadFavorite = state.favorites.any { item -> item.id == cafeId }
+            if (!hadFavorite) {
+                state
+            } else {
+                val nextFavorites = state.favorites.filterNot { item -> item.id == cafeId }
+                val nextSummary = state.summary?.let { summary ->
+                    summary.copy(favoritesCount = max(summary.favoritesCount - 1, 0))
+                }
+                val totalVisits = nextSummary?.totalVisits ?: state.summary?.totalVisits ?: 0
+                val favoritesCount = nextSummary?.favoritesCount ?: state.summary?.favoritesCount ?: 0
+                val followedCount = nextSummary?.followedCastsCount ?: state.summary?.followedCastsCount ?: 0
+                val badgesCount = nextSummary?.badgesCount ?: state.summary?.badgesCount ?: 0
+                val level = nextSummary?.level ?: state.summary?.level ?: 1
+
+                state.copy(
+                    summary = nextSummary,
+                    favorites = nextFavorites,
+                    badges = state.badges.map { badge ->
+                        val isUnlocked = when (badge.id) {
+                            "badge-checkin-starter" -> badgesCount >= 1
+                            "badge-stamp-collector" -> badgesCount >= 3
+                            "badge-regular-visitor" -> totalVisits >= 5
+                            "badge-checkin-veteran" -> totalVisits >= 10
+                            "badge-favorite-curator" -> favoritesCount >= 3
+                            "badge-favorite-master" -> favoritesCount >= 10
+                            "badge-cast-supporter" -> followedCount >= 3
+                            "badge-cast-ambassador" -> followedCount >= 10
+                            "badge-level-up" -> level >= 3
+                            "badge-concafe-master" -> badgesCount >= 10
+                            else -> badge.unlocked
+                        }
+                        badge.copy(unlocked = isUnlocked)
+                    }
+                )
+            }
+        }
+    }
+
+    private fun refreshFavoritesSection() {
+        jobs[TaskKey.REFRESH_FAVORITES]?.cancel()
+        jobs[TaskKey.REFRESH_FAVORITES] = viewModelScope.launch {
+            when (val result = getMyInfoUseCase.invoke()) {
+                is AppResult.Success -> {
+                    val normalizedFavorites = normalizeCafes(
+                        items = result.data.favorites,
+                        maxCount = result.data.favorites.size
+                    )
+                    _uiState.update { state ->
+                        state.copy(
+                            summary = result.data.summary,
+                            badges = result.data.badges,
+                            favorites = normalizedFavorites
+                        )
+                    }
+                }
+                is AppResult.Failure -> Unit
+            }
         }
     }
 
@@ -400,6 +468,7 @@ class MyInfoViewModel(
     private enum class TaskKey {
         LOAD_MY_INFO,
         REFRESH_RECENT_VISITS,
+        REFRESH_FAVORITES,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,

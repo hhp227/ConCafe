@@ -545,7 +545,7 @@ private struct ProfileMyInfoView: View {
     }
 
     private func favoritesSection(contentWidth: CGFloat) -> some View {
-        let favoriteItems = Array(uiState.favorites.prefix(4))
+        let favoriteItems = Array(uiState.favorites.prefix(12))
         let columnCount = myInfoGridColumnCount(for: contentWidth)
 
         VStack(alignment: .leading, spacing: 8) {

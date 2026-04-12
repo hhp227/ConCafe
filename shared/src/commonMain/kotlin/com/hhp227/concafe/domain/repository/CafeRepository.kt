@@ -25,7 +25,7 @@ interface CafeRepository {
 
     suspend fun isFavorite(userId: String, cafeId: String): Boolean
 
-    suspend fun getFavoriteCafeIds(userId: String): List<String>
+    suspend fun getFavoriteCafeIds(userId: String, limit: Int? = null): List<String>
 
     suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe>
 
