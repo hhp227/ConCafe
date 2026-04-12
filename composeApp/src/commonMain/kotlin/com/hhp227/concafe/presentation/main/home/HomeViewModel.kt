@@ -423,6 +423,6 @@ class HomeViewModel(
     }
 
     private companion object {
-        private const val MAX_HOME_CAFE_EVENTS = 3
+        private const val MAX_HOME_CAFE_EVENTS = 8
     }
 }
