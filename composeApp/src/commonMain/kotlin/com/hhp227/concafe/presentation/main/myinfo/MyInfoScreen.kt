@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -518,34 +519,41 @@ private fun ProfileMyInfoScreen(
         }
         item {
             val favoriteItems = uiState.favorites.take(4)
-            val favoriteRows = favoriteItems.chunked(2)
 
             MyInfoSectionTitle("즐겨찾기")
             if (favoriteItems.isNotEmpty()) {
-                Column(
-                    modifier = Modifier.padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 ) {
-                    favoriteRows.forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            rowItems.forEach { cafe ->
-                                Box(modifier = Modifier.weight(1f)) {
-                                    CafeSummaryCard(
-                                        name = cafe.name,
-                                        rating = formatCafeRating(cafe.ratingAvg),
-                                        conceptType = localizedCafeConceptType(cafe.conceptType),
-                                        location = cafe.region.city,
-                                        thumbnailImage = cafe.thumbnailImage,
-                                        showLocationIcon = false,
-                                        onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
-                                    )
+                    val columnCount = myInfoFavoriteGridColumnCount(maxWidth)
+                    val favoriteRows = favoriteItems.chunked(columnCount)
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        favoriteRows.forEach { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                rowItems.forEach { cafe ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        CafeSummaryCard(
+                                            name = cafe.name,
+                                            rating = formatCafeRating(cafe.ratingAvg),
+                                            conceptType = localizedCafeConceptType(cafe.conceptType),
+                                            location = cafe.region.city,
+                                            thumbnailImage = cafe.thumbnailImage,
+                                            showLocationIcon = false,
+                                            onClick = { onAction(MyInfoAction.ClickCafe(cafe.id)) }
+                                        )
+                                    }
                                 }
-                            }
-                            if (rowItems.size == 1) {
-                                Box(modifier = Modifier.weight(1f))
+                                repeat(columnCount - rowItems.size) {
+                                    Box(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -782,6 +790,21 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
         else -> normalized
     }
 }
+
+private fun myInfoFavoriteGridColumnCount(contentWidth: Dp): Int {
+    val availableWidth = contentWidth.value - MYINFO_GRID_HORIZONTAL_PADDING_DP
+    val minimumGridWidth = (MYINFO_GRID_MIN_CELL_WIDTH_DP * 2) + MYINFO_GRID_ITEM_SPACING_DP
+    val normalizedWidth = maxOf(availableWidth, minimumGridWidth)
+    val rawCount = ((normalizedWidth + MYINFO_GRID_ITEM_SPACING_DP) /
+        (MYINFO_GRID_MIN_CELL_WIDTH_DP + MYINFO_GRID_ITEM_SPACING_DP)).toInt()
+    return rawCount.coerceIn(MYINFO_GRID_MIN_COLUMN_COUNT, MYINFO_GRID_MAX_COLUMN_COUNT)
+}
+
+private const val MYINFO_GRID_MIN_COLUMN_COUNT = 2
+private const val MYINFO_GRID_MAX_COLUMN_COUNT = 6
+private const val MYINFO_GRID_HORIZONTAL_PADDING_DP = 24f
+private const val MYINFO_GRID_ITEM_SPACING_DP = 12f
+private const val MYINFO_GRID_MIN_CELL_WIDTH_DP = 180f
 
 @Composable
 private fun RowScope.MyInfoMetricCard(

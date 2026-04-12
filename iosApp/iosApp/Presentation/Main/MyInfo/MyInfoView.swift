@@ -275,18 +275,20 @@ private struct ProfileMyInfoView: View {
     let onAction: @MainActor (MyInfoAction) -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                profileCard
-                statsCard
-                badgesSection
-                recentVisitsSection
-                favoritesSection
-                if uiState.user?.role != .cast {
-                    followedMaidsSection
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 16) {
+                    profileCard
+                    statsCard
+                    badgesSection
+                    recentVisitsSection
+                    favoritesSection(contentWidth: geometry.size.width)
+                    if uiState.user?.role != .cast {
+                        followedMaidsSection
+                    }
                 }
+                .padding(16)
             }
-            .padding(16)
         }
     }
 
@@ -542,12 +544,15 @@ private struct ProfileMyInfoView: View {
         }
     }
 
-    private var favoritesSection: some View {
+    private func favoritesSection(contentWidth: CGFloat) -> some View {
+        let favoriteItems = Array(uiState.favorites.prefix(4))
+        let columnCount = myInfoGridColumnCount(for: contentWidth)
+
         VStack(alignment: .leading, spacing: 8) {
             MyInfoSectionTitle(title: "즐겨찾기")
-            if !uiState.favorites.isEmpty {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(uiState.favorites.prefix(4), id: \.id) { cafe in
+            if !favoriteItems.isEmpty {
+                LazyVGrid(columns: myInfoGridColumns(count: columnCount), spacing: myInfoGridItemSpacing) {
+                    ForEach(favoriteItems, id: \.id) { cafe in
                         CafeSummaryCard(
                             name: cafe.name,
                             rating: favoriteCafeRating(cafe.ratingAvg),
@@ -569,6 +574,22 @@ private struct ProfileMyInfoView: View {
                 )
             }
         }
+    }
+
+    private func myInfoGridColumns(count: Int) -> [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: myInfoGridItemSpacing),
+            count: max(count, 1)
+        )
+    }
+
+    private func myInfoGridColumnCount(for contentWidth: CGFloat) -> Int {
+        let availableWidth = contentWidth - myInfoGridHorizontalPadding
+        let minimumGridWidth = (myInfoGridMinimumCellWidth * 2) + myInfoGridItemSpacing
+        let normalizedWidth = max(availableWidth, minimumGridWidth)
+        let rawCount = Int((normalizedWidth + myInfoGridItemSpacing) /
+            (myInfoGridMinimumCellWidth + myInfoGridItemSpacing))
+        return min(max(rawCount, myInfoGridMinimumColumnCount), myInfoGridMaximumColumnCount)
     }
 
     private func favoriteCafeRating(_ rating: Double) -> String {
@@ -688,3 +709,9 @@ struct MyInfoView_Previews: PreviewProvider {
         MyInfoView(onNavigationAction: { _ in })
     }
 }
+
+private let myInfoGridMinimumColumnCount = 2
+private let myInfoGridMaximumColumnCount = 6
+private let myInfoGridHorizontalPadding: CGFloat = 24
+private let myInfoGridItemSpacing: CGFloat = 12
+private let myInfoGridMinimumCellWidth: CGFloat = 180
