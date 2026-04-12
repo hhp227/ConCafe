@@ -586,43 +586,20 @@ private struct NearByCafeItem: View {
         guard !normalized.isEmpty else {
             return ""
         }
-        let upper = normalized.uppercased()
         let lower = normalized.lowercased()
-        switch upper {
-        case "MAID":
-            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
-        case "BUTLER":
-            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
-        case "IDOL":
-            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
-        case "DEVIL":
-            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
-        default:
-            switch lower {
-            case "home_nearby_cafe_type_maid":
-                return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
-            case "home_nearby_cafe_type_butler":
-                return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
-            case "home_nearby_cafe_type_idol":
-                return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
-            case "home_nearby_cafe_type_devil":
-                return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
-            default:
-                if lower.contains("maid") {
-                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
-                }
-                if lower.contains("butler") {
-                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
-                }
-                if lower.contains("idol") {
-                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
-                }
-                if lower.contains("devil") {
-                    return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
-                }
-                return normalized
-            }
+        let key: String
+        if lower == "maid" || lower == "home_nearby_cafe_type_maid" || lower.contains("maid") {
+            key = "home_nearby_cafe_type_maid"
+        } else if lower == "butler" || lower == "home_nearby_cafe_type_butler" || lower.contains("butler") {
+            key = "home_nearby_cafe_type_butler"
+        } else if lower == "idol" || lower == "home_nearby_cafe_type_idol" || lower.contains("idol") {
+            key = "home_nearby_cafe_type_idol"
+        } else if lower == "devil" || lower == "home_nearby_cafe_type_devil" || lower.contains("devil") {
+            key = "home_nearby_cafe_type_devil"
+        } else {
+            return ""
         }
+        return String(localized: String.LocalizationValue(key), table: "InfoPlist")
     }
 }
 
