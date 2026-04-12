@@ -50,6 +50,10 @@ import concafe.composeapp.generated.resources.home_banner_placeholder_title
 import concafe.composeapp.generated.resources.home_cast_followers
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
@@ -251,7 +255,8 @@ fun HomeContentScreen(
                                         imageUrl = maid.profileImage,
                                         modifier = Modifier
                                             .matchParentSize()
-                                            .clip(CircleShape)
+                                            .clip(CircleShape),
+                                        applyRoundedClip = false
                                     )
                                 }
                             }
@@ -285,7 +290,7 @@ private fun HomeCafeEventSection(
     events: List<HomeCafeEvent>,
     onAction: (HomeAction) -> Unit
 ) {
-    val visibleEvents = events.take(3)
+    val visibleEvents = events.take(6)
 
     SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
     Spacer(Modifier.height(10.dp))
@@ -671,15 +676,17 @@ private fun NearByCafeItem(
             if (resolvedThumbnailImage.isNotBlank()) {
                 CompatImageDisplay(
                     imageUrl = resolvedThumbnailImage,
-                    modifier = Modifier.size(92.dp)
+                    modifier = Modifier.size(92.dp),
+                    applyRoundedClip = false
                 )
             }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (cafe.conceptType.isNotBlank()) {
+            val conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
+            if (conceptLabel.isNotEmpty()) {
                 Text(
-                    text = cafe.conceptType,
+                    text = conceptLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFEF6797),
                     fontWeight = FontWeight.SemiBold,
@@ -688,7 +695,21 @@ private fun NearByCafeItem(
                 )
             }
             Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(cafe.region.address, color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+    }
+}
+
+@Composable
+private fun nearbyCafeConceptLabel(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        else -> normalized
     }
 }

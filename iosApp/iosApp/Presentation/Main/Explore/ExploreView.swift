@@ -227,7 +227,7 @@ private struct ExploreContentView: View {
         CafeSummaryCard(
             name: cafe.name,
             rating: String(format: "%.1f", cafe.ratingAvg),
-            conceptType: cafe.conceptType,
+            conceptType: localizedCafeConceptType(cafe.conceptType),
             location: cafe.region.city,
             thumbnailImage: cafe.thumbnailImage,
             showLocationIcon: false,
@@ -236,6 +236,25 @@ private struct ExploreContentView: View {
                 onAction(.cafeTapped(id: cafe.id))
             }
         )
+    }
+
+    private func localizedCafeConceptType(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        default:
+            return normalized
+        }
     }
 
     private func maidCard(_ maid: Cast) -> some View {

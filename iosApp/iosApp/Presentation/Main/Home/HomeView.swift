@@ -234,7 +234,7 @@ private struct HomeContentView: View {
     }
 
     private var cafeEventSection: some View {
-        let visibleEvents = Array(uiState.cafeEvents.prefix(3))
+        let visibleEvents = Array(uiState.cafeEvents.prefix(6))
 
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
@@ -549,8 +549,9 @@ private struct NearByCafeItem: View {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                if !cafe.conceptType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(cafe.conceptType)
+                let conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
+                if !conceptLabel.isEmpty {
+                    Text(conceptLabel)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color(hex: "EF6797"))
                         .lineLimit(1)
@@ -558,10 +559,6 @@ private struct NearByCafeItem: View {
                 Text(cafe.region.city)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
-                Text(cafe.region.address)
-                .font(.caption)
-                .foregroundStyle(Color(hex: "EF6797"))
                 .lineLimit(1)
             }
             Spacer(minLength: 0)
@@ -574,6 +571,25 @@ private struct NearByCafeItem: View {
             return nil
         }
         return URL(string: trimmed)
+    }
+
+    private func nearbyCafeConceptLabel(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        default:
+            return normalized
+        }
     }
 }
 

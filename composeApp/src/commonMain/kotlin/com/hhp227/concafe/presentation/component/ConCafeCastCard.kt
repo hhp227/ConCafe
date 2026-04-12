@@ -63,7 +63,8 @@ fun ConCafeCastCard(
                 CompatImageDisplay(
                     imageUrl = imageUrl,
                     modifier = Modifier
-                        .matchParentSize()
+                        .matchParentSize(),
+                    applyRoundedClip = false
                 )
             }
             if (!statusText.isNullOrBlank() || !conceptRole.isNullOrBlank()) {

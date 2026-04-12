@@ -122,6 +122,10 @@
     <string name="home_popular_cast_empty_desc">フォローと訪問が蓄積されるとこの領域に表示されます。</string>
     <string name="home_nearby_cafe_empty_title">近くのカフェはまだありません</string>
     <string name="home_nearby_cafe_empty_desc">地域フィルターを変更するか、しばらくしてから再確認してください。</string>
+    <string name="home_nearby_cafe_type_maid">メイド</string>
+    <string name="home_nearby_cafe_type_butler">バトラー</string>
+    <string name="home_nearby_cafe_type_idol">アイドル</string>
+    <string name="home_nearby_cafe_type_devil">デビル</string>
     <string name="home_notice_empty_title">最近のお知らせはありません</string>
     <string name="home_notice_empty_desc">新しいお知らせが登録されるとこの領域に表示されます。</string>
     <string name="home_section_ongoing_cafe_event">開催中のカフェイベント</string>

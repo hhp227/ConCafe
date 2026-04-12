@@ -45,6 +45,10 @@ import concafe.composeapp.generated.resources.auth_login_required_message
 import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.home_show_more
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_desc
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_title
 import concafe.composeapp.generated.resources.myinfo_guest_feature_bookmark_desc
@@ -532,7 +536,7 @@ private fun ProfileMyInfoScreen(
                                     CafeSummaryCard(
                                         name = cafe.name,
                                         rating = formatCafeRating(cafe.ratingAvg),
-                                        conceptType = cafe.conceptType,
+                                        conceptType = localizedCafeConceptType(cafe.conceptType),
                                         location = cafe.region.city,
                                         thumbnailImage = cafe.thumbnailImage,
                                         showLocationIcon = false,
@@ -576,7 +580,8 @@ private fun ProfileMyInfoScreen(
                                     } else {
                                         CompatImageDisplay(
                                             imageUrl = maid.profileImage,
-                                            modifier = Modifier.matchParentSize()
+                                            modifier = Modifier.matchParentSize(),
+                                            applyRoundedClip = false
                                         )
                                     }
                                 }
@@ -760,6 +765,21 @@ private fun formatCafeRating(rating: Double): String {
         "${roundedRating.toInt()}.0"
     } else {
         roundedRating.toString()
+    }
+}
+
+@Composable
+private fun localizedCafeConceptType(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        else -> normalized
     }
 }
 

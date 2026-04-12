@@ -52,6 +52,10 @@ import concafe.composeapp.generated.resources.explore_empty_hint
 import concafe.composeapp.generated.resources.explore_error_load_failed
 import concafe.composeapp.generated.resources.explore_search_placeholder
 import concafe.composeapp.generated.resources.explore_cast_followers
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
 import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -369,12 +373,27 @@ private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
     CafeSummaryCard(
         name = cafe.name,
         rating = ratingText,
-        conceptType = cafe.conceptType,
+        conceptType = localizedCafeConceptType(cafe.conceptType),
         location = cafe.region.city,
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
         onClick = onClick
     )
+}
+
+@Composable
+private fun localizedCafeConceptType(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        else -> normalized
+    }
 }
 
 @Composable
@@ -400,7 +419,8 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                         imageUrl = maid.profileImage,
                         modifier = Modifier
                             .matchParentSize()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp)),
+                        applyRoundedClip = false
                     )
                 } else {
                     Box(

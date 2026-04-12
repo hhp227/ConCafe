@@ -122,6 +122,10 @@
     <string name="home_popular_cast_empty_desc">This area appears as follows and visits accumulate.</string>
     <string name="home_nearby_cafe_empty_title">No nearby cafes yet</string>
     <string name="home_nearby_cafe_empty_desc">Try changing the regional filter or check again soon.</string>
+    <string name="home_nearby_cafe_type_maid">Maid</string>
+    <string name="home_nearby_cafe_type_butler">Butler</string>
+    <string name="home_nearby_cafe_type_idol">Idol</string>
+    <string name="home_nearby_cafe_type_devil">Devil</string>
     <string name="home_notice_empty_title">No recent notices</string>
     <string name="home_notice_empty_desc">This area will display once a new notice is posted.</string>
     <string name="home_section_ongoing_cafe_event">Ongoing Cafe Events</string>
