@@ -4470,6 +4470,7 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
           const castDescJa = asNonBlankString(castDetail.comment) ?? "";
           const translatedCastName = await translateJaToKo(castNameJa, translationCache, summary);
           const translatedCastDesc = await translateJaToKo(castDescJa, translationCache, summary);
+          const resolvedCastDesc = asNonBlankString(translatedCastDesc.text) ?? "캐스트 소개가 비어있습니다.";
           const birthday = toBirthdayIso(castDetail.birth_month, castDetail.birth_day);
           const castSourcePayload = {
             castId: castIdNumber,
@@ -4489,7 +4490,7 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
             name: translatedCastName.text,
             linkedUserId: null,
             profileImage: normalizeImageUrl(castDetail.profile_filename),
-            desc: translatedCastDesc.text,
+            desc: resolvedCastDesc,
             birthday: birthday,
             birthdayKey: toBirthdayKey(birthday),
             conceptRole: "maid",
