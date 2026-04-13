@@ -4933,6 +4933,12 @@
             "value" : "ConCafe"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンカ"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4949,6 +4955,12 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "ConCafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンカ"
           }
         },
         "ko" : {
