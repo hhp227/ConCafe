@@ -296,15 +296,6 @@ private struct HomeCafeEventCard: View {
                 Text(event.title)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                        .font(.caption2)
-                        .foregroundStyle(Color(hex: "8A7F8B"))
-                    Text(event.periodText)
-                        .font(.caption2)
-                        .foregroundStyle(Color(hex: "8A7F8B"))
-                        .lineLimit(1)
-                }
             }
             .padding(.horizontal, 4)
         }

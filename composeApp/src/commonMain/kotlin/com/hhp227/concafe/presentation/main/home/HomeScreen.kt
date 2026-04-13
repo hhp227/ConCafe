@@ -16,8 +16,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -366,24 +364,6 @@ private fun HomeCafeEventCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarToday,
-                    contentDescription = null,
-                    tint = Color(0xFF8A7F8B),
-                    modifier = Modifier.size(12.dp)
-                )
-                Text(
-                    text = event.periodText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8A7F8B),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
     }
 }

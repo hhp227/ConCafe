@@ -55,16 +55,18 @@ fun CafeNoticeScreen(
                 fontWeight = FontWeight.Bold
             )
             if (events.isNotEmpty()) {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 0.dp)
-                ) {
-                    items(events) { event ->
-                        CafeEventCard(
-                            event = event,
-                            modifier = Modifier.width(276.dp)
-                        )
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    LazyRow(
+                        modifier = Modifier.requiredWidth(maxWidth + 32.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
+                        items(events) { event ->
+                            CafeEventCard(
+                                event = event,
+                                modifier = Modifier.width(276.dp)
+                            )
+                        }
                     }
                 }
             } else {
