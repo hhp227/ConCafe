@@ -1522,7 +1522,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1543,7 +1543,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.04;
+				MARKETING_VERSION = 1.05;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -1565,7 +1565,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1586,7 +1586,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.04;
+				MARKETING_VERSION = 1.05;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
