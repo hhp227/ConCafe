@@ -117,7 +117,7 @@ private struct HomeContentView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     if !uiState.popularCasts.isEmpty {
-                        ForEach(uiState.popularCasts, id: \.id) { maid in
+                        ForEach(Array(uiState.popularCasts.enumerated()), id: \.offset) { _, maid in
                             ConCafeCastCard(
                                 name: maid.name,
                                 subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
