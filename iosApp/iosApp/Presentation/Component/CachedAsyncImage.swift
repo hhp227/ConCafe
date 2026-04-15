@@ -94,22 +94,27 @@ private final class CachedImageLoader: ObservableObject {
         }
         let nsKey = cacheKey as NSString
 
+        // 1. 메모리 캐시 히트 — 메인 스레드에서 즉시 반환
         if let cached = Self.memoryCache.object(forKey: nsKey) {
             image = cached
             return
         }
 
+        // 2. 네트워크/디스크 I/O 및 디코딩 — 백그라운드 스레드에서 실행
+        //    Task.detached: @MainActor 컨텍스트를 상속하지 않으므로 메인 스레드를 블로킹하지 않음
         let loaded = await Task.detached(priority: .userInitiated) {
-            return await Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
+            await Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
         }.value
 
+        // 3. 결과 반영 — @MainActor이므로 자동으로 메인 스레드에서 실행
         image = loaded
     }
 
-    /// Runs off the main thread. Fetches data (network or file), decodes at target size.
-    private static func fetchAndDecode(url: URL, maxPixels: Int?, nsKey: NSString) -> UIImage? {
-        // Disk/URLCache hit — avoids a network round-trip.
+    /// 백그라운드 스레드에서 실행. async URLSession API 사용으로 스레드를 블로킹하지 않음.
+    private static func fetchAndDecode(url: URL, maxPixels: Int?, nsKey: NSString) async -> UIImage? {
         let request = URLRequest(url: url)
+
+        // URLCache 디스크 히트 — 네트워크 왕복 없이 즉시 디코딩
         if let cachedResponse = URLCache.shared.cachedResponse(for: request),
            let img = decode(data: cachedResponse.data, maxPixels: maxPixels) {
             memoryCache.setObject(img, forKey: nsKey)
@@ -120,19 +125,8 @@ private final class CachedImageLoader: ObservableObject {
         if url.isFileURL {
             data = try? Data(contentsOf: url)
         } else {
-            // Synchronous fetch on background thread.
-            var fetchedData: Data?
-            let semaphore = DispatchSemaphore(value: 0)
-            URLSession.shared.dataTask(with: request) { d, response, _ in
-                if let d, let response {
-                    fetchedData = d
-                    let cached = CachedURLResponse(response: response, data: d)
-                    URLCache.shared.storeCachedResponse(cached, for: request)
-                }
-                semaphore.signal()
-            }.resume()
-            semaphore.wait()
-            data = fetchedData
+            // async/await — 스레드를 블로킹하지 않고 대기
+            data = await fetchRemoteData(request: request)
         }
 
         guard let data, let img = decode(data: data, maxPixels: maxPixels) else { return nil }
@@ -140,8 +134,19 @@ private final class CachedImageLoader: ObservableObject {
         return img
     }
 
-    /// Decodes image data using ImageIO — downsamples to `maxPixels` without loading full
-    /// resolution into memory first (matches WWDC best-practice for image loading perf).
+    /// URLSession async API: DispatchSemaphore 없이 협력 스레드 풀을 블로킹하지 않음
+    private static func fetchRemoteData(request: URLRequest) async -> Data? {
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let cached = CachedURLResponse(response: response, data: data)
+            URLCache.shared.storeCachedResponse(cached, for: request)
+            return data
+        } catch {
+            return nil
+        }
+    }
+
+    /// ImageIO 기반 디코딩 — `maxPixels` 지정 시 풀 해상도를 메모리에 올리지 않고 바로 목표 크기로 디코딩
     private static func decode(data: Data, maxPixels: Int?) -> UIImage? {
         let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
@@ -160,7 +165,7 @@ private final class CachedImageLoader: ObservableObject {
             }
         }
 
-        // FULL or thumbnail fallback: decode at native size.
+        // FULL: 네이티브 크기로 디코딩
         let fullOptions = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
         if let cgImage = CGImageSourceCreateImageAtIndex(source, 0, fullOptions) {
             return UIImage(cgImage: cgImage)
