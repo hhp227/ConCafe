@@ -158,9 +158,9 @@ private struct CastHeroSection: View {
 
         TabView {
             ForEach(Array(heroImages.enumerated()), id: \.offset) { index, image in
-                ZStack {
-                    let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
 
+                ZStack {
                     if let url = URL(string: trimmed), !trimmed.isEmpty {
                         GeometryReader { geometry in
                             CachedAsyncImage(
