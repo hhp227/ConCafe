@@ -18,7 +18,7 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
     ""
 }
 
-val appVersionName = "1.05"
+val appVersionName = "1.06"
 val desktopPackageVersion = "1.2.5"
 
 plugins {
