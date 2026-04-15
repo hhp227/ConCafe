@@ -29,6 +29,8 @@ struct CastView: View {
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
+            case .navigateToPicture(let imageUrl):
+                onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
             }
         }
     }
@@ -73,7 +75,7 @@ private struct CastContentView: View {
                 LazyVStack(spacing: 18) {
                     CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
                         .onHeroImageTap { imageUrl in
-                            onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
+                            onAction(.imageTapped(imageUrl: imageUrl))
                         }
                     CastSummarySection(
                         detail: detail,

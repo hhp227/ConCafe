@@ -43,6 +43,7 @@ import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -102,15 +103,13 @@ fun CastScreen(
                 CastEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CastEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
                 CastEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                is CastEvent.NavigateToPicture -> onNavigationAction(NavigationAction.NavigateToPicture(event.imageUrl))
             }
         }
     }
     CastContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction,
-        onNavigateToPicture = { imageUrl ->
-            onNavigationAction(NavigationAction.NavigateToPicture(imageUrl))
-        }
+        onAction = viewModel::onAction
     )
 }
 
@@ -118,8 +117,7 @@ fun CastScreen(
 @Composable
 private fun CastContentScreen(
     uiState: CastUiState,
-    onAction: (CastAction) -> Unit,
-    onNavigateToPicture: (String) -> Unit
+    onAction: (CastAction) -> Unit
 ) {
     val listState = rememberLazyListState()
     val scrollOffset = if (listState.firstVisibleItemIndex == 0) {
@@ -180,7 +178,7 @@ private fun CastContentScreen(
                         CastHeroSection(
                             detail = uiState.detail,
                             scrollOffset = scrollOffset,
-                            onImageClick = onNavigateToPicture
+                            onAction = onAction
                         )
                     }
                     item {
@@ -249,7 +247,7 @@ private fun CastContentScreen(
 private fun CastHeroSection(
     detail: CastDetail,
     scrollOffset: Int,
-    onImageClick: (String) -> Unit
+    onAction: (CastAction) -> Unit
 ) {
     val heroHeight = 330.dp
     val heroImages = resolveHeroImages(
@@ -278,7 +276,7 @@ private fun CastHeroSection(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { translationY = parallaxOffset }
-                    .clickable(enabled = imageUrl.isNotBlank()) { onImageClick(imageUrl) }
+                    .clickable(enabled = imageUrl.isNotBlank()) { onAction(CastAction.ClickImage(imageUrl)) }
                     .background(
                         if (imageUrl.isBlank()) {
                             heroBrush(page)
@@ -293,7 +291,8 @@ private fun CastHeroSection(
                     CompatImageDisplay(
                         imageUrl = imageUrl,
                         modifier = Modifier.fillMaxSize(),
-                        applyRoundedClip = false
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.MEDIUM
                     )
                 }
                 Box(

@@ -143,6 +143,8 @@ final class CastViewModel: ObservableObject {
         case .cafeTapped:
             guard let cafeId = uiState.detail?.cafe.id else { return }
             event.send(.navigateToCafe(id: cafeId))
+        case .imageTapped(let imageUrl):
+            event.send(.navigateToPicture(imageUrl: imageUrl))
         }
     }
 

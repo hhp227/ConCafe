@@ -12,4 +12,5 @@ enum CastAction {
     case followTapped
     case cafeTapped
     case refresh
+    case imageTapped(imageUrl: String)
 }

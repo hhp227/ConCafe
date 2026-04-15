@@ -8,4 +8,6 @@ sealed interface CastAction {
     data object ClickCafe : CastAction
 
     data object Refresh : CastAction
+
+    data class ClickImage(val imageUrl: String) : CastAction
 }
