@@ -257,7 +257,8 @@ private struct NoticeEventContentView: View {
                 if let url = URL(string: imageUrl), !imageUrl.isEmpty {
                     CachedAsyncImage(
                         url: url,
-                        placeholder: eventImagePlaceholder
+                        placeholder: eventImagePlaceholder,
+                        displaySize: .medium
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {

@@ -38,6 +38,7 @@ import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -336,7 +337,8 @@ private fun HomeCafeEventCard(
                     CompatImageDisplay(
                         imageUrl = event.imageUrl,
                         modifier = Modifier.size(maxWidth, maxHeight),
-                        applyRoundedClip = false
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.MEDIUM
                     )
                 }
             } else {
@@ -465,7 +467,8 @@ private fun HomeBannerItem(
             if (imageUrl != null) {
                 CompatImageDisplay(
                     imageUrl = imageUrl,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
+                    displaySize = ImageDisplaySize.MEDIUM
                 )
                 Box(
                     modifier = Modifier

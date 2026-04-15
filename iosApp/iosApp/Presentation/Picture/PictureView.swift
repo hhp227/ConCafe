@@ -20,7 +20,8 @@ struct PictureView: View {
                 CachedAsyncImage(
                     url: url,
                     placeholder: Color.black,
-                    contentMode: .fit
+                    contentMode: .fit,
+                    displaySize: .full
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

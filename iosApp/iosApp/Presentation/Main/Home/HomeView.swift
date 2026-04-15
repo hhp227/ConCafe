@@ -211,7 +211,8 @@ private struct HomeContentView: View {
                                        let imageUrl = URL(string: rawImageUrl) {
                                         CachedAsyncImage(
                                             url: imageUrl,
-                                            placeholder: Color.clear
+                                            placeholder: Color.clear,
+                                            displaySize: .thumbnail
                                         )
                                     }
                                 }
@@ -273,7 +274,8 @@ private struct HomeCafeEventCard: View {
                     GeometryReader { proxy in
                         CachedAsyncImage(
                             url: imageUrl,
-                            placeholder: Color.clear
+                            placeholder: Color.clear,
+                            displaySize: .medium
                         )
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .clipped()
@@ -385,7 +387,8 @@ private struct HomeBannerItem: View {
                 GeometryReader { proxy in
                     CachedAsyncImage(
                         url: imageUrl,
-                        placeholder: Color.clear
+                        placeholder: Color.clear,
+                        displaySize: .medium
                     )
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .clipped()
@@ -536,7 +539,8 @@ private struct NearByCafeItem: View {
                     if let resolvedImageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
                         CachedAsyncImage(
                             url: resolvedImageUrl,
-                            placeholder: EmptyView()
+                            placeholder: EmptyView(),
+                            displaySize: .thumbnail
                         )
                         .frame(width: imageSize.width, height: imageSize.height)
                         .clipped()

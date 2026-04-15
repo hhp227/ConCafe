@@ -16,18 +16,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jetbrains.skia.Image
 import java.awt.GraphicsEnvironment
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URL
+import javax.imageio.ImageIO
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.math.roundToInt
 
 @Composable
 actual fun CompatImagePicker(
@@ -46,11 +49,15 @@ actual fun CompatImageDisplay(
     imageUrl: String?,
     modifier: Modifier,
     applyRoundedClip: Boolean,
-    contentScale: ContentScale
+    contentScale: ContentScale,
+    displaySize: ImageDisplaySize
 ) {
     val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
-    val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = normalizedImageUrl) {
-        value = if (normalizedImageUrl == null) null else decodeImageBitmap(normalizedImageUrl)
+    // Cache key includes displaySize so the same URL can be cached at different resolutions.
+    val cacheKey = if (normalizedImageUrl == null) null else "$normalizedImageUrl|$displaySize"
+    val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = cacheKey) {
+        value = if (cacheKey == null || normalizedImageUrl == null) null
+        else decodeImageBitmap(normalizedImageUrl, cacheKey, displaySize)
     }
     val resolvedImageBitmap = imageBitmap
 
@@ -115,27 +122,61 @@ private fun chooseImageFile(): String? {
     }
 }
 
-private suspend fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
-    JvmImageBitmapMemoryCache.get(imageUrl)?.let { cached ->
-        return cached
-    }
+private suspend fun decodeImageBitmap(
+    imageUrl: String,
+    cacheKey: String,
+    displaySize: ImageDisplaySize
+): ImageBitmap? {
+    JvmImageBitmapMemoryCache.get(cacheKey)?.let { return it }
     return withContext(Dispatchers.IO) {
         runCatching {
-            val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                URL(imageUrl).readBytes()
+            val original: BufferedImage? = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                val connection = URL(imageUrl).openConnection().apply {
+                    connectTimeout = 10_000
+                    readTimeout = 15_000
+                }
+                connection.getInputStream().use { ImageIO.read(it) }
             } else {
-                File(imageUrl).readBytes()
+                File(imageUrl).inputStream().use { ImageIO.read(it) }
             }
-            val decoded = Image.makeFromEncoded(bytes).asImageBitmap()
+            val source = original ?: return@runCatching null
+            val maxPx = displaySize.maxPx()
+            val scaled = if (maxPx != null) scaleDown(source, maxPx) else source
+            val bitmap = scaled.toComposeImageBitmap()
 
-            JvmImageBitmapMemoryCache.put(imageUrl, decoded)
-            decoded
+            JvmImageBitmapMemoryCache.put(cacheKey, bitmap)
+            bitmap
         }.getOrNull()
     }
 }
 
+/** Returns null for FULL (no downscaling). */
+private fun ImageDisplaySize.maxPx(): Int? = when (this) {
+    ImageDisplaySize.THUMBNAIL -> 512
+    ImageDisplaySize.MEDIUM -> 1200
+    ImageDisplaySize.FULL -> null
+}
+
+private fun scaleDown(source: BufferedImage, maxPx: Int): BufferedImage {
+    val srcW = source.width
+    val srcH = source.height
+    if (srcW <= maxPx && srcH <= maxPx) return source
+    val ratio = maxPx.toFloat() / maxOf(srcW, srcH)
+    val dstW = (srcW * ratio).roundToInt().coerceAtLeast(1)
+    val dstH = (srcH * ratio).roundToInt().coerceAtLeast(1)
+    val type = if (source.type != BufferedImage.TYPE_CUSTOM) source.type else BufferedImage.TYPE_INT_ARGB
+    val result = BufferedImage(dstW, dstH, type)
+    val g = result.createGraphics()
+
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+    g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+    g.drawImage(source, 0, 0, dstW, dstH, null)
+    g.dispose()
+    return result
+}
+
 private object JvmImageBitmapMemoryCache {
-    private const val MAX_ENTRIES = 120
+    private const val MAX_ENTRIES = 200
     private val cache = object : LinkedHashMap<String, ImageBitmap>(MAX_ENTRIES, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?): Boolean {
             return size > MAX_ENTRIES

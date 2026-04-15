@@ -1,47 +1,30 @@
 package com.hhp227.concafe.presentation.component
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.LruCache
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import coil.size.Size
 import java.io.File
-import java.io.FileInputStream
-import java.net.URL
 
 @Composable
 actual fun CompatImagePicker(
@@ -82,13 +65,19 @@ actual fun CompatImageDisplay(
     imageUrl: String?,
     modifier: Modifier,
     applyRoundedClip: Boolean,
-    contentScale: ContentScale
+    contentScale: ContentScale,
+    displaySize: ImageDisplaySize
 ) {
     val shape = if (applyRoundedClip) RoundedCornerShape(20.dp) else null
+    val coilSize = when (displaySize) {
+        ImageDisplaySize.THUMBNAIL -> Size(640, 640)
+        ImageDisplaySize.MEDIUM -> Size(1200, 1200)
+        ImageDisplaySize.FULL -> Size.ORIGINAL
+    }
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
             .data(imageUrl)
-            .size(960, 720)
+            .size(coilSize)
             .crossfade(true)
             .build()
     )

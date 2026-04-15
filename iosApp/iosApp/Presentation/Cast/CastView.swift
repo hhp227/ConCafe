@@ -163,7 +163,8 @@ private struct CastHeroSection: View {
                         GeometryReader { geometry in
                             CachedAsyncImage(
                                 url: url,
-                                placeholder: heroPlaceholder(index: index)
+                                placeholder: heroPlaceholder(index: index),
+                                displaySize: .medium
                             )
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .clipped()

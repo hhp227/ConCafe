@@ -116,7 +116,7 @@ fun ExploreContentScreen(
     onAction: (ExploreAction) -> Unit
 ) {
     var searchFieldValue by remember { mutableStateOf(TextFieldValue(uiState.query)) }
-    val cafeNameById = uiState.cafes.associate { it.id to it.name }
+    val cafeNameById = remember(uiState.cafes) { uiState.cafes.associate { it.id to it.name } }
 
     LaunchedEffect(uiState.query) {
         if (searchFieldValue.text != uiState.query && searchFieldValue.composition == null) {
@@ -132,13 +132,15 @@ fun ExploreContentScreen(
             .background(Color(0xFFFFFBFD))
     ) {
         val gridColumnCount = exploreGridColumnCount(maxWidth)
-        val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
-            uiState.cafes.chunked(gridColumnCount).map { row ->
-                row.map { ExploreGridItem.CafeItem(it) }
-            }
-        } else {
-            uiState.maids.chunked(gridColumnCount).map { row ->
-                row.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
+        val rows = remember(uiState.selectedTab, uiState.cafes, uiState.maids, gridColumnCount) {
+            if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+                uiState.cafes.chunked(gridColumnCount).map { row ->
+                    row.map { ExploreGridItem.CafeItem(it) }
+                }
+            } else {
+                uiState.maids.chunked(gridColumnCount).map { row ->
+                    row.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
+                }
             }
         }
 
