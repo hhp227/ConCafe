@@ -100,7 +100,7 @@ private final class CachedImageLoader: ObservableObject {
         }
 
         let loaded = await Task.detached(priority: .userInitiated) {
-            return Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
+            return await Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
         }.value
 
         image = loaded
