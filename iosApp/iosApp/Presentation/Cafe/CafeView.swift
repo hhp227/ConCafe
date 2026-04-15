@@ -202,7 +202,8 @@ private struct CafeContentView: View {
                         GeometryReader { geometry in
                             CachedAsyncImage(
                                 url: url,
-                                placeholder: heroPlaceholder
+                                placeholder: heroPlaceholder,
+                                displaySize: .medium
                             )
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .clipped()

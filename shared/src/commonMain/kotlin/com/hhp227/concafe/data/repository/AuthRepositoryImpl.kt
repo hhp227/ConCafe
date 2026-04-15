@@ -179,6 +179,7 @@ class AuthRepositoryImpl(
         }
 
         authDataSource.currentUserId = user.id
+        authTokenProvider.setCachedSignupCompleted(true)
         return user
     }
 
@@ -223,6 +224,7 @@ class AuthRepositoryImpl(
         }
         firestoreSyncDataSource.pushUser(user)
         authDataSource.currentUserId = user.id
+        authTokenProvider.setCachedSignupCompleted(true)
         return user
     }
 
@@ -406,6 +408,7 @@ class AuthRepositoryImpl(
             if (normalizedProviderUser != remoteUser) {
                 runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
             }
+            authTokenProvider.setCachedSignupCompleted(normalizedProviderUser.signupCompleted)
             return normalizeRoleIfNeeded(normalizedProviderUser)
         }
 
@@ -413,6 +416,10 @@ class AuthRepositoryImpl(
             userId = userId,
             baseRole = UserRole.VISITOR
         )
+        // Use cached signupCompleted if available (protects against transient Firestore errors
+        // during sign-in for users who have previously completed signup).
+        val signupCompleted = authTokenProvider.getCachedSignupCompleted()
+            ?: (authProvider == AuthProvider.EMAIL)
         val createdUser = User(
             id = userId,
             email = email,
@@ -422,7 +429,7 @@ class AuthRepositoryImpl(
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = authProvider == AuthProvider.EMAIL
+            signupCompleted = signupCompleted
         )
         return createdUser
     }
@@ -454,6 +461,7 @@ class AuthRepositoryImpl(
             if (normalizedProviderUser != remoteUser) {
                 runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
             }
+            authTokenProvider.setCachedSignupCompleted(normalizedProviderUser.signupCompleted)
             return normalizeRoleIfNeeded(normalizedProviderUser)
         }
 
@@ -466,6 +474,11 @@ class AuthRepositoryImpl(
             userId = currentUserId,
             baseRole = UserRole.VISITOR
         )
+        // Use cached signupCompleted to avoid false redirect to sign-up when Firestore is
+        // unreachable (e.g. offline). Falls back to auth-provider heuristic only when no
+        // cached value exists (first-time social auth user who hasn't completed signup).
+        val signupCompleted = authTokenProvider.getCachedSignupCompleted()
+            ?: (authTokenProvider.getCurrentAuthProvider() == AuthProvider.EMAIL)
         val fallbackUser = User(
             id = currentUserId,
             email = currentUserEmail,
@@ -475,7 +488,7 @@ class AuthRepositoryImpl(
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = authTokenProvider.getCurrentAuthProvider() == AuthProvider.EMAIL
+            signupCompleted = signupCompleted
         )
         return fallbackUser
     }

@@ -43,6 +43,7 @@ import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -102,6 +103,7 @@ fun CastScreen(
                 CastEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CastEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
                 CastEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                is CastEvent.NavigateToPicture -> onNavigationAction(NavigationAction.NavigateToPicture(event.imageUrl))
             }
         }
     }
@@ -175,7 +177,8 @@ private fun CastContentScreen(
                     item {
                         CastHeroSection(
                             detail = uiState.detail,
-                            scrollOffset = scrollOffset
+                            scrollOffset = scrollOffset,
+                            onAction = onAction
                         )
                     }
                     item {
@@ -243,7 +246,8 @@ private fun CastContentScreen(
 @Composable
 private fun CastHeroSection(
     detail: CastDetail,
-    scrollOffset: Int
+    scrollOffset: Int,
+    onAction: (CastAction) -> Unit
 ) {
     val heroHeight = 330.dp
     val heroImages = resolveHeroImages(
@@ -272,6 +276,7 @@ private fun CastHeroSection(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { translationY = parallaxOffset }
+                    .clickable(enabled = imageUrl.isNotBlank()) { onAction(CastAction.ClickImage(imageUrl)) }
                     .background(
                         if (imageUrl.isBlank()) {
                             heroBrush(page)
@@ -286,7 +291,8 @@ private fun CastHeroSection(
                     CompatImageDisplay(
                         imageUrl = imageUrl,
                         modifier = Modifier.fillMaxSize(),
-                        applyRoundedClip = false
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.MEDIUM
                     )
                 }
                 Box(

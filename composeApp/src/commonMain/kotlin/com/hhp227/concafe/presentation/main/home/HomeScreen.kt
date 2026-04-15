@@ -38,6 +38,7 @@ import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -336,7 +337,8 @@ private fun HomeCafeEventCard(
                     CompatImageDisplay(
                         imageUrl = event.imageUrl,
                         modifier = Modifier.size(maxWidth, maxHeight),
-                        applyRoundedClip = false
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.MEDIUM
                     )
                 }
             } else {
@@ -465,7 +467,8 @@ private fun HomeBannerItem(
             if (imageUrl != null) {
                 CompatImageDisplay(
                     imageUrl = imageUrl,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
+                    displaySize = ImageDisplaySize.MEDIUM
                 )
                 Box(
                     modifier = Modifier
@@ -586,7 +589,7 @@ private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
     val horizontalPadding = 16.dp
     val itemSpacing = 12.dp
     val nextItemPeekWidth = 16.dp
-    return if (contentWidth >= 840.dp) {
+    return if (contentWidth >= 768.dp) {
         (contentWidth - horizontalPadding - (itemSpacing * 2) - nextItemPeekWidth) / 2
     } else {
         contentWidth - horizontalPadding - itemSpacing - nextItemPeekWidth

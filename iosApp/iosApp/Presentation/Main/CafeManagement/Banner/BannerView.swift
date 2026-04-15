@@ -258,7 +258,8 @@ private struct BannerCardView: View {
                 if let resolvedImageUrl {
                     CachedAsyncImage(
                         url: resolvedImageUrl,
-                        placeholder: Color.clear
+                        placeholder: Color.clear,
+                        displaySize: .medium
                     )
                     .frame(width: imageSize.width, height: imageSize.height)
                     .clipped()

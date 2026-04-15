@@ -47,7 +47,8 @@ struct ConCafeCastCard: View {
                        let url = URL(string: raw) {
                         CachedAsyncImage(
                             url: url,
-                            placeholder: Color.clear
+                            placeholder: Color.clear,
+                            displaySize: .thumbnail
                         )
                     } else {
                         LinearGradient(

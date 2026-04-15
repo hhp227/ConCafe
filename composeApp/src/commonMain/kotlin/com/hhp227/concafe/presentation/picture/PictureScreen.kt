@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 
 @Composable
 fun PictureScreen(
@@ -31,7 +32,8 @@ fun PictureScreen(
             imageUrl = imageUrl,
             modifier = Modifier.fillMaxSize(),
             applyRoundedClip = false,
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Fit,
+            displaySize = ImageDisplaySize.FULL
         )
         IconButton(
             onClick = { onAction(PictureAction.ClickBack) },

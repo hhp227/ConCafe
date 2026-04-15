@@ -29,6 +29,8 @@ struct CastView: View {
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
+            case .navigateToPicture(let imageUrl):
+                onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
             }
         }
     }
@@ -72,6 +74,9 @@ private struct CastContentView: View {
                 offsetReader
                 LazyVStack(spacing: 18) {
                     CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
+                        .onHeroImageTap { imageUrl in
+                            onAction(.imageTapped(imageUrl: imageUrl))
+                        }
                     CastSummarySection(
                         detail: detail,
                         isFollowing: uiState.isFollowing,
@@ -140,6 +145,8 @@ private struct CastHeroSection: View {
 
     let topSafeArea: CGFloat
 
+    var onImageTap: ((String) -> Void)? = nil
+
     var body: some View {
         let heroHeight = 230 + topSafeArea
         let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
@@ -151,14 +158,15 @@ private struct CastHeroSection: View {
 
         TabView {
             ForEach(Array(heroImages.enumerated()), id: \.offset) { index, image in
-                ZStack {
-                    let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
 
+                ZStack {
                     if let url = URL(string: trimmed), !trimmed.isEmpty {
                         GeometryReader { geometry in
                             CachedAsyncImage(
                                 url: url,
-                                placeholder: heroPlaceholder(index: index)
+                                placeholder: heroPlaceholder(index: index),
+                                displaySize: .medium
                             )
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .clipped()
@@ -191,6 +199,12 @@ private struct CastHeroSection: View {
                 }
                 .frame(height: dynamicHeroHeight)
                 .clipped()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !trimmed.isEmpty {
+                        onImageTap?(trimmed)
+                    }
+                }
             }
         }
         .frame(height: dynamicHeroHeight)
@@ -198,6 +212,12 @@ private struct CastHeroSection: View {
         .frame(height: dynamicHeroHeight, alignment: .top)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
+    }
+
+    func onHeroImageTap(_ action: @escaping (String) -> Void) -> CastHeroSection {
+        var copy = self
+        copy.onImageTap = action
+        return copy
     }
 
     @ViewBuilder

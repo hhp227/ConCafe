@@ -131,6 +131,7 @@ class CastViewModel(
                     val cafeId = _uiState.value.detail?.cafe?.id ?: return@launch
                     _event.emit(CastEvent.NavigateToCafe(cafeId))
                 }
+                is CastAction.ClickImage -> _event.emit(CastEvent.NavigateToPicture(action.imageUrl))
             }
         }
     }

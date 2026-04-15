@@ -109,7 +109,7 @@ struct CafeNoticeView: View {
             ZStack {
                 if let imageUrl = resolvedImageUrl(event.imageUrl) {
                     GeometryReader { proxy in
-                        CachedAsyncImage(url: imageUrl, placeholder: Color.clear)
+                        CachedAsyncImage(url: imageUrl, placeholder: Color.clear, displaySize: .medium)
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .clipped()
                     }

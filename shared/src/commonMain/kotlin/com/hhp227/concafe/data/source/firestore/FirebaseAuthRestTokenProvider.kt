@@ -329,6 +329,14 @@ class FirebaseAuthRestTokenProvider(
         return apiKey.isNotBlank()
     }
 
+    override fun getCachedSignupCompleted(): Boolean? {
+        return currentSession?.signupCompleted
+    }
+
+    override fun setCachedSignupCompleted(value: Boolean) {
+        currentSession = currentSession?.copy(signupCompleted = value)
+    }
+
     private fun signInUrl(apiKey: String): String {
         return "$FIREBASE_AUTH_BASE_URL/accounts:signInWithPassword?key=$apiKey"
     }

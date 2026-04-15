@@ -22,6 +22,11 @@ class AndroidFirebaseAuthSessionStore(
         } else {
             null
         }
+        val signupCompleted = if (sharedPreferences.contains(KEY_SIGNUP_COMPLETED)) {
+            sharedPreferences.getBoolean(KEY_SIGNUP_COMPLETED, false)
+        } else {
+            null
+        }
         return if (userId.isNullOrBlank() || email.isNullOrBlank()) {
             null
         } else {
@@ -32,7 +37,8 @@ class AndroidFirebaseAuthSessionStore(
                 authProvider = authProvider,
                 idToken = idToken,
                 refreshToken = refreshToken,
-                expiresAtEpochSeconds = expiresAtEpochSeconds
+                expiresAtEpochSeconds = expiresAtEpochSeconds,
+                signupCompleted = signupCompleted
             )
         }
     }
@@ -51,6 +57,11 @@ class AndroidFirebaseAuthSessionStore(
                 } else {
                     putLong(KEY_EXPIRES_AT_EPOCH_SECONDS, session.expiresAtEpochSeconds)
                 }
+                if (session.signupCompleted == null) {
+                    remove(KEY_SIGNUP_COMPLETED)
+                } else {
+                    putBoolean(KEY_SIGNUP_COMPLETED, session.signupCompleted)
+                }
             }
             .apply()
     }
@@ -64,6 +75,7 @@ class AndroidFirebaseAuthSessionStore(
             .remove(KEY_ID_TOKEN)
             .remove(KEY_REFRESH_TOKEN)
             .remove(KEY_EXPIRES_AT_EPOCH_SECONDS)
+            .remove(KEY_SIGNUP_COMPLETED)
             .apply()
     }
 }
@@ -76,3 +88,4 @@ private const val KEY_AUTH_PROVIDER = "concafe.firebase.auth_provider"
 private const val KEY_ID_TOKEN = "concafe.firebase.id_token"
 private const val KEY_REFRESH_TOKEN = "concafe.firebase.refresh_token"
 private const val KEY_EXPIRES_AT_EPOCH_SECONDS = "concafe.firebase.expires_at_epoch_seconds"
+private const val KEY_SIGNUP_COMPLETED = "concafe.firebase.signup_completed"

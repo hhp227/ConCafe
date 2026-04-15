@@ -376,7 +376,7 @@ class GetHomeFeedUseCase(
 
     companion object {
         private const val HOME_FEED_LIMIT = 6
-        private const val POPULAR_CAST_PAGE_SIZE = 10
+        private const val POPULAR_CAST_PAGE_SIZE = 15
         private const val NEARBY_CAFE_PAGE_SIZE = 6
         private const val NEARBY_GLOBAL_QUERY_MAX_ATTEMPTS = 3
         private const val HOME_EVENT_LIMIT = 3

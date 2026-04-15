@@ -4352,6 +4352,21 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
         if (shopDetail == null) {
           continue;
         }
+        const casts = Array.isArray(shopDetail.casts) ? shopDetail.casts : [];
+        const validCastItems = casts
+          .map((castRaw) => asPlainObject(castRaw))
+          .filter((castItem) => {
+            const castIdNumber = toInt(castItem?.id);
+            return castIdNumber != null && castIdNumber > 0;
+          });
+        if (validCastItems.length === 0) {
+          summary.cafesSkipped += 1;
+          logger.info("runJpCrawledDataSync skipped cafe without casts.", {
+            source: source.key,
+            shopId: shopId,
+          });
+          continue;
+        }
 
         const cafeId = `jp_shop_${shopId}`;
         const shopNameJa = asNonBlankString(shopDetail.name) ?? `JP Shop ${shopId}`;
@@ -4438,9 +4453,7 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
           summary.cafesUpserted += 1;
         }
 
-        const casts = Array.isArray(shopDetail.casts) ? shopDetail.casts : [];
-        for (const castRaw of casts) {
-          const castItem = asPlainObject(castRaw);
+        for (const castItem of validCastItems) {
           const castIdNumber = toInt(castItem?.id);
           if (castIdNumber == null || castIdNumber <= 0) {
             continue;
