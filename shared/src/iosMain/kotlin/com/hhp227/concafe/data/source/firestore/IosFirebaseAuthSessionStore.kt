@@ -16,6 +16,7 @@ class IosFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         val idToken = defaults.stringForKey(KEY_ID_TOKEN)
         val refreshToken = defaults.stringForKey(KEY_REFRESH_TOKEN)
         val expiresAtEpochSeconds = (defaults.objectForKey(KEY_EXPIRES_AT_EPOCH_SECONDS) as? NSNumber)?.longLongValue
+        val signupCompleted = (defaults.objectForKey(KEY_SIGNUP_COMPLETED) as? NSNumber)?.boolValue
         return if (userId.isNullOrBlank() || email.isNullOrBlank()) {
             null
         } else {
@@ -26,7 +27,8 @@ class IosFirebaseAuthSessionStore : FirebaseAuthSessionStore {
                 authProvider = authProvider,
                 idToken = idToken,
                 refreshToken = refreshToken,
-                expiresAtEpochSeconds = expiresAtEpochSeconds
+                expiresAtEpochSeconds = expiresAtEpochSeconds,
+                signupCompleted = signupCompleted
             )
         }
     }
@@ -45,6 +47,11 @@ class IosFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         } else {
             defaults.setObject(session.expiresAtEpochSeconds, forKey = KEY_EXPIRES_AT_EPOCH_SECONDS)
         }
+        if (session.signupCompleted == null) {
+            defaults.removeObjectForKey(KEY_SIGNUP_COMPLETED)
+        } else {
+            defaults.setBool(session.signupCompleted, forKey = KEY_SIGNUP_COMPLETED)
+        }
         defaults.synchronize()
     }
 
@@ -58,6 +65,7 @@ class IosFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         defaults.removeObjectForKey(KEY_ID_TOKEN)
         defaults.removeObjectForKey(KEY_REFRESH_TOKEN)
         defaults.removeObjectForKey(KEY_EXPIRES_AT_EPOCH_SECONDS)
+        defaults.removeObjectForKey(KEY_SIGNUP_COMPLETED)
         defaults.synchronize()
     }
 }
@@ -69,3 +77,4 @@ private const val KEY_AUTH_PROVIDER = "concafe.firebase.auth_provider"
 private const val KEY_ID_TOKEN = "concafe.firebase.id_token"
 private const val KEY_REFRESH_TOKEN = "concafe.firebase.refresh_token"
 private const val KEY_EXPIRES_AT_EPOCH_SECONDS = "concafe.firebase.expires_at_epoch_seconds"
+private const val KEY_SIGNUP_COMPLETED = "concafe.firebase.signup_completed"

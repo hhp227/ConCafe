@@ -20,6 +20,7 @@ class JvmFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         } else {
             preferences.getLong(KEY_EXPIRES_AT_EPOCH_SECONDS, 0L)
         }
+        val signupCompleted = preferences.get(KEY_SIGNUP_COMPLETED, null)?.toBooleanStrictOrNull()
         return if (userId.isNullOrBlank() || email.isNullOrBlank()) {
             null
         } else {
@@ -30,7 +31,8 @@ class JvmFirebaseAuthSessionStore : FirebaseAuthSessionStore {
                 authProvider = authProvider,
                 idToken = idToken,
                 refreshToken = refreshToken,
-                expiresAtEpochSeconds = expiresAtEpochSeconds
+                expiresAtEpochSeconds = expiresAtEpochSeconds,
+                signupCompleted = signupCompleted
             )
         }
     }
@@ -44,7 +46,6 @@ class JvmFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         } else {
             preferences.put(KEY_DISPLAY_NAME, session.displayName)
         }
-
         if (session.idToken == null) {
             preferences.remove(KEY_ID_TOKEN)
         } else {
@@ -60,6 +61,11 @@ class JvmFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         } else {
             preferences.putLong(KEY_EXPIRES_AT_EPOCH_SECONDS, session.expiresAtEpochSeconds)
         }
+        if (session.signupCompleted == null) {
+            preferences.remove(KEY_SIGNUP_COMPLETED)
+        } else {
+            preferences.put(KEY_SIGNUP_COMPLETED, session.signupCompleted.toString())
+        }
     }
 
     override fun clear() {
@@ -70,6 +76,7 @@ class JvmFirebaseAuthSessionStore : FirebaseAuthSessionStore {
         preferences.remove(KEY_ID_TOKEN)
         preferences.remove(KEY_REFRESH_TOKEN)
         preferences.remove(KEY_EXPIRES_AT_EPOCH_SECONDS)
+        preferences.remove(KEY_SIGNUP_COMPLETED)
     }
 }
 
@@ -81,3 +88,4 @@ private const val KEY_AUTH_PROVIDER = "concafe.firebase.auth_provider"
 private const val KEY_ID_TOKEN = "concafe.firebase.id_token"
 private const val KEY_REFRESH_TOKEN = "concafe.firebase.refresh_token"
 private const val KEY_EXPIRES_AT_EPOCH_SECONDS = "concafe.firebase.expires_at_epoch_seconds"
+private const val KEY_SIGNUP_COMPLETED = "concafe.firebase.signup_completed"

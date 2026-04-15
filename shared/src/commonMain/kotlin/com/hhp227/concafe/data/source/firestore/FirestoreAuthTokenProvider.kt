@@ -9,7 +9,8 @@ data class FirebaseAuthSession(
     val authProvider: AuthProvider,
     val idToken: String?,
     val refreshToken: String?,
-    val expiresAtEpochSeconds: Long?
+    val expiresAtEpochSeconds: Long?,
+    val signupCompleted: Boolean? = null
 )
 
 interface FirestoreAuthTokenProvider {
@@ -47,4 +48,8 @@ interface FirestoreAuthTokenProvider {
     fun getCurrentAuthProvider(): AuthProvider
 
     fun supportsEmailPasswordAuth(): Boolean
+
+    fun getCachedSignupCompleted(): Boolean?
+
+    fun setCachedSignupCompleted(value: Boolean)
 }

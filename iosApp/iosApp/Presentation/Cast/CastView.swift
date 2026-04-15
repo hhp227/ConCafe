@@ -72,6 +72,9 @@ private struct CastContentView: View {
                 offsetReader
                 LazyVStack(spacing: 18) {
                     CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
+                        .onHeroImageTap { imageUrl in
+                            onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
+                        }
                     CastSummarySection(
                         detail: detail,
                         isFollowing: uiState.isFollowing,
@@ -140,6 +143,8 @@ private struct CastHeroSection: View {
 
     let topSafeArea: CGFloat
 
+    var onImageTap: ((String) -> Void)? = nil
+
     var body: some View {
         let heroHeight = 230 + topSafeArea
         let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
@@ -191,6 +196,12 @@ private struct CastHeroSection: View {
                 }
                 .frame(height: dynamicHeroHeight)
                 .clipped()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !trimmed.isEmpty {
+                        onImageTap?(trimmed)
+                    }
+                }
             }
         }
         .frame(height: dynamicHeroHeight)
@@ -198,6 +209,12 @@ private struct CastHeroSection: View {
         .frame(height: dynamicHeroHeight, alignment: .top)
         .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
+    }
+
+    func onHeroImageTap(_ action: @escaping (String) -> Void) -> CastHeroSection {
+        var copy = self
+        copy.onImageTap = action
+        return copy
     }
 
     @ViewBuilder

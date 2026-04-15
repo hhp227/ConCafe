@@ -107,7 +107,10 @@ fun CastScreen(
     }
     CastContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction
+        onAction = viewModel::onAction,
+        onNavigateToPicture = { imageUrl ->
+            onNavigationAction(NavigationAction.NavigateToPicture(imageUrl))
+        }
     )
 }
 
@@ -115,7 +118,8 @@ fun CastScreen(
 @Composable
 private fun CastContentScreen(
     uiState: CastUiState,
-    onAction: (CastAction) -> Unit
+    onAction: (CastAction) -> Unit,
+    onNavigateToPicture: (String) -> Unit
 ) {
     val listState = rememberLazyListState()
     val scrollOffset = if (listState.firstVisibleItemIndex == 0) {
@@ -175,7 +179,8 @@ private fun CastContentScreen(
                     item {
                         CastHeroSection(
                             detail = uiState.detail,
-                            scrollOffset = scrollOffset
+                            scrollOffset = scrollOffset,
+                            onImageClick = onNavigateToPicture
                         )
                     }
                     item {
@@ -243,7 +248,8 @@ private fun CastContentScreen(
 @Composable
 private fun CastHeroSection(
     detail: CastDetail,
-    scrollOffset: Int
+    scrollOffset: Int,
+    onImageClick: (String) -> Unit
 ) {
     val heroHeight = 330.dp
     val heroImages = resolveHeroImages(
@@ -272,6 +278,7 @@ private fun CastHeroSection(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { translationY = parallaxOffset }
+                    .clickable(enabled = imageUrl.isNotBlank()) { onImageClick(imageUrl) }
                     .background(
                         if (imageUrl.isBlank()) {
                             heroBrush(page)

@@ -127,6 +127,17 @@ class PersistedFirebaseAuthTokenProvider(
         return delegate.supportsEmailPasswordAuth()
     }
 
+    override fun getCachedSignupCompleted(): Boolean? {
+        return cachedSession?.signupCompleted
+    }
+
+    override fun setCachedSignupCompleted(value: Boolean) {
+        val current = cachedSession ?: return
+        val updated = current.copy(signupCompleted = value)
+
+        persistSession(updated)
+    }
+
     private fun persistSession(session: FirebaseAuthSession?) {
         cachedSession = session
 

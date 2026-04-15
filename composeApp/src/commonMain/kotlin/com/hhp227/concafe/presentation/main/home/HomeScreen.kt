@@ -586,7 +586,7 @@ private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
     val horizontalPadding = 16.dp
     val itemSpacing = 12.dp
     val nextItemPeekWidth = 16.dp
-    return if (contentWidth >= 840.dp) {
+    return if (contentWidth >= 768.dp) {
         (contentWidth - horizontalPadding - (itemSpacing * 2) - nextItemPeekWidth) / 2
     } else {
         contentWidth - horizontalPadding - itemSpacing - nextItemPeekWidth

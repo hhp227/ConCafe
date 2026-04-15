@@ -189,7 +189,7 @@ private struct HomeContentView: View {
         let itemSpacing: CGFloat = 12
         let nextItemPeekWidth: CGFloat = 16
 
-        if availableWidth >= 840 {
+        if availableWidth >= 768 {
             return (availableWidth - horizontalPadding - (itemSpacing * 2) - nextItemPeekWidth) / 2
         }
         return availableWidth - horizontalPadding - itemSpacing - nextItemPeekWidth

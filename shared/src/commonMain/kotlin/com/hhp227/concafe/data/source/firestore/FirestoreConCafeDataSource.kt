@@ -2098,7 +2098,7 @@ class FirestoreConCafeDataSource(
             query = null,
             country = null,
             city = null,
-            sort = CastSort.POPULAR,
+            sort = CastSort.HOME_LINKED_FIRST,
             cursor = cursor,
             pageSize = pageSize
         )
@@ -4165,28 +4165,47 @@ class FirestoreConCafeDataSource(
         idToken: String?
     ): List<JsonObject> {
         val safeLimit = if (limit > 0) limit else 1
-        val isLatestSort = sort == CastSort.LATEST
         val startAfterSection = cursor.toCastStartAfterSection(sort)
-        val orderBySection = if (isLatestSort) {
-            """
-                "orderBy": [
-                  {
-                    "field": { "fieldPath": "__name__" },
-                    "direction": "DESCENDING"
-                  }
-                ]"""
-        } else {
-            """
-                "orderBy": [
-                  {
-                    "field": { "fieldPath": "followerCount" },
-                    "direction": "DESCENDING"
-                  },
-                  {
-                    "field": { "fieldPath": "__name__" },
-                    "direction": "ASCENDING"
-                  }
-                ]"""
+        val orderBySection = when (sort) {
+            CastSort.LATEST -> {
+                """
+                    "orderBy": [
+                      {
+                        "field": { "fieldPath": "__name__" },
+                        "direction": "DESCENDING"
+                      }
+                    ]"""
+            }
+            CastSort.HOME_LINKED_FIRST -> {
+                """
+                    "orderBy": [
+                      {
+                        "field": { "fieldPath": "linkedUserId" },
+                        "direction": "DESCENDING"
+                      },
+                      {
+                        "field": { "fieldPath": "followerCount" },
+                        "direction": "DESCENDING"
+                      },
+                      {
+                        "field": { "fieldPath": "__name__" },
+                        "direction": "ASCENDING"
+                      }
+                    ]"""
+            }
+            else -> {
+                """
+                    "orderBy": [
+                      {
+                        "field": { "fieldPath": "followerCount" },
+                        "direction": "DESCENDING"
+                      },
+                      {
+                        "field": { "fieldPath": "__name__" },
+                        "direction": "ASCENDING"
+                      }
+                    ]"""
+            }
         }
         val path = "${config.documentBasePath()}:runQuery"
         val body = """
@@ -6659,14 +6678,25 @@ private fun escapeFirestoreQueryString(value: String): String {
 
 private fun JsonObject.toCastQueryCursor(sort: CastSort): String? {
     val fields = this["fields"]?.jsonObject ?: return null
-    return if (sort == CastSort.LATEST) {
-        this["name"]?.jsonPrimitive?.contentOrNull
-    } else {
-        val followerScore = fields.getFirestoreLong("followerCount")?.toString()
-            ?: fields.getFirestoreDouble("followerCount")?.toString()
-            ?: "0"
-        val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
-        "$followerScore|$docName"
+    return when (sort) {
+        CastSort.LATEST -> {
+            this["name"]?.jsonPrimitive?.contentOrNull
+        }
+        CastSort.HOME_LINKED_FIRST -> {
+            val linkedUserId = fields.getFirestoreString("linkedUserId") ?: CAST_CURSOR_NULL_MARKER
+            val followerScore = fields.getFirestoreLong("followerCount")?.toString()
+                ?: fields.getFirestoreDouble("followerCount")?.toString()
+                ?: "0"
+            val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+            "$linkedUserId|$followerScore|$docName"
+        }
+        else -> {
+            val followerScore = fields.getFirestoreLong("followerCount")?.toString()
+                ?: fields.getFirestoreDouble("followerCount")?.toString()
+                ?: "0"
+            val docName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+            "$followerScore|$docName"
+        }
     }
 }
 
@@ -6783,31 +6813,70 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
     if (cursorValue.isNullOrBlank()) {
         return ""
     }
-    return if (sort == CastSort.LATEST) {
-        val escapedDocumentName = escapeFirestoreQueryString(cursorValue)
-        """,
+    return when (sort) {
+        CastSort.LATEST -> {
+            val escapedDocumentName = escapeFirestoreQueryString(cursorValue)
+            """,
                 "startAt": {
                   "values": [
                     { "referenceValue": "$escapedDocumentName" }
                   ],
                   "before": false
                 }"""
-    } else {
-        val separatorIndex = cursorValue.indexOf('|')
-        val scoreRaw = if (separatorIndex >= 0) cursorValue.substring(0, separatorIndex) else cursorValue
-        val docName = if (separatorIndex >= 0) cursorValue.substring(separatorIndex + 1) else null
-        val scoreValue = scoreRaw.toDoubleOrNull()
-        if (scoreValue == null) {
-            ""
-        } else {
-            val numericValue = if (scoreRaw.contains(".")) {
-                """{ "doubleValue": $scoreValue }"""
+        }
+        CastSort.HOME_LINKED_FIRST -> {
+            val firstSeparatorIndex = cursorValue.indexOf('|')
+            val secondSeparatorIndex = cursorValue.indexOf('|', startIndex = firstSeparatorIndex + 1)
+            val linkedUserRaw = if (firstSeparatorIndex >= 0) cursorValue.substring(0, firstSeparatorIndex) else cursorValue
+            val scoreRaw = if (firstSeparatorIndex >= 0 && secondSeparatorIndex > firstSeparatorIndex) {
+                cursorValue.substring(firstSeparatorIndex + 1, secondSeparatorIndex)
             } else {
-                """{ "integerValue": "${scoreValue.toLong()}" }"""
+                ""
             }
-            if (!docName.isNullOrBlank()) {
+            val docName = if (secondSeparatorIndex >= 0) cursorValue.substring(secondSeparatorIndex + 1) else null
+            val scoreValue = scoreRaw.toDoubleOrNull()
+            if (scoreValue == null || docName.isNullOrBlank()) {
+                ""
+            } else {
+                val linkedUserValue = if (linkedUserRaw == CAST_CURSOR_NULL_MARKER) {
+                    """{ "nullValue": null }"""
+                } else {
+                    val escapedLinkedUser = escapeFirestoreQueryString(linkedUserRaw)
+                    """{ "stringValue": "$escapedLinkedUser" }"""
+                }
+                val numericValue = if (scoreRaw.contains(".")) {
+                    """{ "doubleValue": $scoreValue }"""
+                } else {
+                    """{ "integerValue": "${scoreValue.toLong()}" }"""
+                }
                 val escapedDocName = escapeFirestoreQueryString(docName)
                 """,
+                "startAt": {
+                  "values": [
+                    $linkedUserValue,
+                    $numericValue,
+                    { "referenceValue": "$escapedDocName" }
+                  ],
+                  "before": false
+                }"""
+            }
+        }
+        else -> {
+            val separatorIndex = cursorValue.indexOf('|')
+            val scoreRaw = if (separatorIndex >= 0) cursorValue.substring(0, separatorIndex) else cursorValue
+            val docName = if (separatorIndex >= 0) cursorValue.substring(separatorIndex + 1) else null
+            val scoreValue = scoreRaw.toDoubleOrNull()
+            if (scoreValue == null) {
+                ""
+            } else {
+                val numericValue = if (scoreRaw.contains(".")) {
+                    """{ "doubleValue": $scoreValue }"""
+                } else {
+                    """{ "integerValue": "${scoreValue.toLong()}" }"""
+                }
+                if (!docName.isNullOrBlank()) {
+                    val escapedDocName = escapeFirestoreQueryString(docName)
+                    """,
                 "startAt": {
                   "values": [
                     $numericValue,
@@ -6815,18 +6884,21 @@ private fun String?.toCastStartAfterSection(sort: CastSort): String {
                   ],
                   "before": false
                 }"""
-            } else {
-                """,
+                } else {
+                    """,
                 "startAt": {
                   "values": [
                     $numericValue
                   ],
                   "before": false
                 }"""
+                }
             }
         }
     }
 }
+
+private const val CAST_CURSOR_NULL_MARKER = "__NULL__"
 
 private fun String?.toCafeCastStartAfterSection(): String {
     val cursorValue = this

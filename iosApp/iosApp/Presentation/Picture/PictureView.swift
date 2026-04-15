@@ -16,7 +16,6 @@ struct PictureView: View {
         ZStack(alignment: .topLeading) {
             Color.black
                 .ignoresSafeArea()
-
             if let url = URL(string: imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)) {
                 CachedAsyncImage(
                     url: url,
@@ -25,21 +24,7 @@ struct PictureView: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            Button {
-                onNavigationAction(.navigateBack)
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color.black.opacity(0.35))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 12)
-            .padding(.top, 12)
         }
-        .navigationBarBackButtonHidden(true)
     }
 }
 
