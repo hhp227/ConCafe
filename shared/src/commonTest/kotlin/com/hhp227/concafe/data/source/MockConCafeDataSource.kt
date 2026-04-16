@@ -877,7 +877,6 @@ class MockConCafeDataSource : ConCafeDataSource {
     private fun formatBusinessHours(update: CafeInfoUpdate): String {
         val weekday = listOf(update.weekdayOpen, update.weekdayClose).all { it.isNotBlank() }
         val weekend = listOf(update.weekendOpen, update.weekendClose).all { it.isNotBlank() }
-
         return when {
             weekday && weekend && update.weekdayOpen == update.weekendOpen && update.weekdayClose == update.weekendClose ->
                 "매일 ${update.weekdayOpen} - ${update.weekdayClose}"
@@ -901,7 +900,6 @@ class MockConCafeDataSource : ConCafeDataSource {
     override fun castDetail(castId: String): CastDetail? {
         val cast = casts.firstOrNull { it.id == castId } ?: return null
         val cafe = cafes.firstOrNull { it.id == cast.cafeId } ?: return null
-
         return CastDetail(
             cast = cast,
             cafe = cafe,
@@ -939,7 +937,6 @@ class MockConCafeDataSource : ConCafeDataSource {
         val nextSchedules = existingSchedules.filterNot { it.date == date }.toMutableList()
         val nextStatuses = castScheduleStatusByCastId
             .getOrPut(update.castId) { mutableMapOf() }
-
         val updatedSchedule = when (update.status) {
             CastScheduleStatus.WORK -> {
                 val startTime = update.startTime?.takeIf { it.isNotBlank() }
@@ -1000,7 +997,6 @@ class MockConCafeDataSource : ConCafeDataSource {
             followerCount = existingCast?.followerCount ?: 0,
             rating = existingCast?.rating ?: 0.0
         )
-
         val existingIndex = casts.indexOfFirst { it.id == castId }
         if (existingIndex >= 0) {
             casts[existingIndex] = nextCast
@@ -1064,7 +1060,6 @@ class MockConCafeDataSource : ConCafeDataSource {
                 casts = currentDetail.casts.filterNot { it.id == castId }
             )
         }
-
         return deletedCast
     }
 
