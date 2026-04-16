@@ -1,0 +1,5 @@
+<resources>
+    <string name="signup_social_kakao">Continue with Kakao</string>
+    <string name="signup_social_google">Continue with Google</string>
+    <string name="signup_social_apple">Continue with Apple</string>
+</resources>
