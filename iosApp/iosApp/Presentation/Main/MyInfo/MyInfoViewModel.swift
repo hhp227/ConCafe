@@ -357,11 +357,29 @@ final class MyInfoViewModel: ObservableObject {
                 default:
                     unlocked = badge.unlocked
                 }
+                let currentCount: Int32 = {
+                    switch badge.id {
+                    case "badge-checkin-starter", "badge-stamp-collector", "badge-concafe-master":
+                        return Int32(badgesCount)
+                    case "badge-regular-visitor", "badge-checkin-veteran":
+                        return Int32(totalVisits)
+                    case "badge-favorite-curator", "badge-favorite-master":
+                        return Int32(nextFavoritesCount)
+                    case "badge-cast-supporter", "badge-cast-ambassador":
+                        return Int32(followedCount)
+                    case "badge-level-up":
+                        return Int32(level)
+                    default:
+                        return badge.currentCount
+                    }
+                }()
                 return ProfileBadge(
                     id: badge.id,
                     name: badge.name,
                     icon: badge.icon,
-                    unlocked: unlocked
+                    unlocked: unlocked,
+                    currentCount: currentCount,
+                    goalCount: badge.goalCount
                 )
             }
         }
@@ -473,11 +491,29 @@ final class MyInfoViewModel: ObservableObject {
             default:
                 unlocked = badge.unlocked
             }
+            let currentCount: Int32 = {
+                switch badge.id {
+                case "badge-checkin-starter", "badge-stamp-collector", "badge-concafe-master":
+                    return Int32(nextStampCount)
+                case "badge-regular-visitor", "badge-checkin-veteran":
+                    return Int32(nextVisitCount)
+                case "badge-favorite-curator", "badge-favorite-master":
+                    return Int32(favoritesCount)
+                case "badge-cast-supporter", "badge-cast-ambassador":
+                    return Int32(followedCount)
+                case "badge-level-up":
+                    return Int32(nextLevel)
+                default:
+                    return badge.currentCount
+                }
+            }()
             return ProfileBadge(
                 id: badge.id,
                 name: badge.name,
                 icon: badge.icon,
-                unlocked: unlocked
+                unlocked: unlocked,
+                currentCount: currentCount,
+                goalCount: badge.goalCount
             )
         }
     }
