@@ -558,7 +558,14 @@ private struct ProfileMyInfoView: View {
             )
         }
         hideBadgeTooltipTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            do {
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else {
+                return
+            }
             withAnimation(.easeInOut(duration: 0.15)) {
                 activeBadgeTooltip = nil
             }
