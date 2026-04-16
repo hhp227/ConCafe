@@ -404,7 +404,8 @@ final class CheckInViewModel: ObservableObject {
                     visitedAt: item.visitedAt,
                     visitedLabel: item.visitedLabel,
                     memo: item.memo,
-                    verified: item.verified
+                    verified: item.verified,
+                    checkInMethod: item.checkInMethod
                 )
             } else {
                 return item
@@ -420,7 +421,8 @@ final class CheckInViewModel: ObservableObject {
                     visitedAt: item.visitedAt,
                     visitedLabel: item.visitedLabel,
                     memo: item.memo,
-                    verified: item.verified
+                    verified: item.verified,
+                    checkInMethod: item.checkInMethod
                 )
             } else {
                 return item
