@@ -695,6 +695,7 @@
     <string name="checkin_more_visit_label">방문 더보기</string>
     <string name="checkin_new_visit_cta">새 방문 체크인</string>
     <string name="checkin_visit_memo_empty">메모 없음</string>
+    <string name="checkin_visit_qr_label">QR 체크인</string>
     <string name="cafe_tab_info">정보</string>
     <string name="cafe_tab_casts">캐스트</string>
     <string name="cafe_tab_menu">메뉴</string>

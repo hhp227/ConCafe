@@ -823,7 +823,14 @@ private struct CheckInTimelineItem: View {
                     .background(Color(hex: "F5F5F5"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                Text(visit.memo ?? String(localized: String.LocalizationValue("checkin_visit_memo_empty"), table: "Localizable"))
+                Text(
+                    visit.memo ?? {
+                        if visit.checkInMethod?.uppercased() == "QR" {
+                            return String(localized: String.LocalizationValue("checkin_visit_qr_label"), table: "Localizable")
+                        }
+                        return String(localized: String.LocalizationValue("checkin_visit_memo_empty"), table: "Localizable")
+                    }()
+                )
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }

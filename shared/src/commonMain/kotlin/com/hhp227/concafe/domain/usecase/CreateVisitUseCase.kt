@@ -53,7 +53,7 @@ class CreateVisitUseCase(
                     longitude = longitude
                 )
 
-                visitEventPublisher.publish(VisitEvent.Created(visited.id))
+                visitEventPublisher.publish(VisitEvent.Created(visited.id, cafeId))
                 AppResult.Success(visited)
             }
         } catch (e: NoSuchElementException) {
@@ -87,7 +87,7 @@ class CreateVisitUseCase(
                     memo = memo
                 )
 
-                visitEventPublisher.publish(VisitEvent.Created(visited.id))
+                visitEventPublisher.publish(VisitEvent.Created(visited.id, cafeId))
                 AppResult.Success(visited)
             }
         } catch (e: NoSuchElementException) {

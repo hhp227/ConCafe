@@ -46,7 +46,8 @@ class FakeVisitRepository(
             cafeId = cafeId,
             visitedAt = visitedAt,
             memo = memo,
-            verified = true
+            verified = true,
+            checkInMethod = "QR"
         )
         dataSource.visits.add(visit)
         return visit

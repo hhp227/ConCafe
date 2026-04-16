@@ -47,7 +47,8 @@ class GetCheckInUserFeedUseCase(
                         visitedAt = visit.visitedAt,
                         visitedLabel = formatVisitedLabel(visit.visitedAt),
                         memo = visit.memo,
-                        verified = visit.verified
+                        verified = visit.verified,
+                        checkInMethod = visit.checkInMethod
                     )
                 }
 

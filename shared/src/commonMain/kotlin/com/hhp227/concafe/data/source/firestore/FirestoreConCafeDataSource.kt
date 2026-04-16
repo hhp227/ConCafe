@@ -1213,7 +1213,8 @@ class FirestoreConCafeDataSource(
             cafeId = cafeId,
             visitedAt = visitedAt,
             memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() },
-            verified = false
+            verified = false,
+            checkInMethod = "LOCATION"
         )
         val refreshedVisit = resolveVisitById(visitId = visitId, idToken = idToken)
         return refreshedVisit ?: createdVisit
@@ -1250,7 +1251,8 @@ class FirestoreConCafeDataSource(
             cafeId = cafeId,
             visitedAt = visitedAt,
             memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() },
-            verified = false
+            verified = false,
+            checkInMethod = "QR"
         )
         val refreshedVisit = resolveVisitById(visitId = visitId, idToken = idToken)
         return refreshedVisit ?: createdVisit
@@ -5724,7 +5726,8 @@ class FirestoreConCafeDataSource(
             cafeId = cafeId,
             visitedAt = fields.getFirestoreString("visitedAt").orEmpty(),
             memo = fields.getFirestoreString("memo"),
-            verified = fields.getFirestoreBoolean("verified") ?: false
+            verified = fields.getFirestoreBoolean("verified") ?: false,
+            checkInMethod = fields.getFirestoreString("checkInMethod")
         )
     }
 

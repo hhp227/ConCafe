@@ -722,7 +722,8 @@ async function createUserNotification(
     | "CAST_CLAIM_APPROVED"
     | "CAFE_REJECTED"
     | "CAFE_OWNER_REJECTED"
-    | "CAST_CLAIM_REJECTED",
+    | "CAST_CLAIM_REJECTED"
+    | "CAFE_CHECK_IN",
   title: string,
   body: string,
   targetId: string,
@@ -3376,6 +3377,69 @@ export const onVisitWrittenIssueStamp = onDocumentWritten(
       afterVerified: afterVerified,
       deleted: shouldDelete || isSourceChanged,
       upserted: shouldUpsert,
+    });
+  }
+);
+
+export const onVisitWrittenNotifyCafeOwner = onDocumentWritten(
+  "visits/{visitId}",
+  async (event) => {
+    const visitId = asNonBlankString(event.params.visitId) ?? "";
+    const beforeData = event.data?.before.data() as VisitLike | undefined;
+    const afterData = event.data?.after.data() as VisitLike | undefined;
+
+    const beforeVerified = beforeData?.verified === true;
+    const afterVerified = afterData?.verified === true;
+
+    // verified 상태가 false→true 로 전환될 때만 처리 (중복 알림 방지)
+    if (!(!beforeVerified && afterVerified)) {
+      return;
+    }
+
+    const cafeId = asNonBlankString(afterData?.cafeId);
+    const userId = asNonBlankString(afterData?.userId);
+
+    if (cafeId == null || userId == null || visitId.length == 0) {
+      return;
+    }
+
+    const [cafeSnapshot, userSnapshot] = await Promise.all([
+      db().collection("cafes").doc(cafeId).get(),
+      db().collection("users").doc(userId).get(),
+    ]);
+
+    const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "카페";
+    const ownerIds = asStringArray(cafeSnapshot.data()?.ownerIds);
+    const visitorNickname = asNonBlankString(userSnapshot.data()?.nickname) ?? "방문자";
+    const checkInMethod = asNonBlankString((afterData as Record<string, unknown>)?.checkInMethod)?.toUpperCase() ?? "LOCATION";
+    const methodLabel = checkInMethod === "QR" ? "QR 체크인" : "위치 체크인";
+    const now = new Date().toISOString();
+    const notificationIdPrefix = `visit_checkin_${visitId}`;
+
+    if (ownerIds.length == 0) {
+      return;
+    }
+
+    const tasks = ownerIds.map(async (ownerId) => {
+      if (ownerId === userId) return; // 본인 체크인은 알림 제외
+      await createUserNotification(
+        ownerId,
+        `${notificationIdPrefix}_${ownerId}`,
+        "CAFE_CHECK_IN",
+        `${cafeName} 새 체크인`,
+        `${visitorNickname}님이 ${methodLabel}으로 체크인했어요.`,
+        cafeId,
+        now
+      );
+    });
+
+    await Promise.all(tasks);
+
+    logger.info("Sent check-in notification to cafe owners.", {
+      visitId,
+      cafeId,
+      userId,
+      ownerCount: ownerIds.length,
     });
   }
 );

@@ -15,5 +15,6 @@ data class CheckInVisitEntry(
     val visitedAt: String,
     val visitedLabel: String,
     val memo: String?,
-    val verified: Boolean
+    val verified: Boolean,
+    val checkInMethod: String? = null
 )

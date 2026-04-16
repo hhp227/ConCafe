@@ -695,6 +695,7 @@
     <string name="checkin_more_visit_label">More Visits</string>
     <string name="checkin_new_visit_cta">Add New Visit</string>
     <string name="checkin_visit_memo_empty">No memo</string>
+    <string name="checkin_visit_qr_label">QR Check-in</string>
     <string name="cafe_tab_info">Info</string>
     <string name="cafe_tab_casts">Casts</string>
     <string name="cafe_tab_menu">Menu</string>
