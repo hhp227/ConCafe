@@ -34,6 +34,24 @@ class FakeVisitRepository(
         return visit
     }
 
+    override suspend fun createQrVisit(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        val visit = Visit(
+            id = "visit-${dataSource.visits.size + 1}",
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = visitedAt,
+            memo = memo,
+            verified = true
+        )
+        dataSource.visits.add(visit)
+        return visit
+    }
+
     override suspend fun updateVisit(visitId: String, userId: String, visitedAt: String, memo: String?): Visit {
         val visitIndex = dataSource.visits.indexOfFirst { visit -> visit.id == visitId && visit.userId == userId }
 

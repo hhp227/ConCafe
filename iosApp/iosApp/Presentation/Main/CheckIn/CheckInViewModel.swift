@@ -245,6 +245,38 @@ final class CheckInViewModel: ObservableObject {
         }
     }
 
+    private func submitQrVisit(cafeId: String, visitedAt: String) {
+        tasks[.submitVisit]?.cancel()
+        tasks[.submitVisit] = Task {
+            do {
+                let result = try await createVisitUseCase.invokeQr(
+                    cafeId: cafeId,
+                    visitedAt: visitedAt,
+                    memo: nil
+                )
+
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isNewVisitSheetVisible = false
+                    uiState.isQrCheckInSheetVisible = false
+                    uiState.preselectCafeId = nil
+                    uiState.errorMessage = nil
+                    refreshRecentVisitPage()
+                    if let success = result as? AppResultSuccess<AnyObject>,
+                       let visit = success.data as? Visit {
+                        await maybeShowReviewPrompt(visit: visit)
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    uiState.errorMessage = "\(failure.error)"
+                } else {
+                    uiState.errorMessage = "체크인 저장에 실패했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func maybeShowReviewPrompt(visit: Visit) async {
         guard visit.verified else { return }
 
@@ -476,21 +508,9 @@ final class CheckInViewModel: ObservableObject {
             uiState.isQrCheckInSheetVisible = false
             return
         }
-        tasks[.locationPermission]?.cancel()
-        tasks[.locationPermission] = Task {
-            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
-            if permissionResult.isGranted {
-                uiState.isNewVisitSheetVisible = false
-                uiState.isQrCheckInSheetVisible = true
-                uiState.errorMessage = nil
-            } else {
-                uiState.isQrCheckInSheetVisible = false
-                uiState.errorMessage = permissionResult.message
-                if permissionResult.requiresSettings {
-                    event.send(.openLocationSettings)
-                }
-            }
-        }
+        uiState.isNewVisitSheetVisible = false
+        uiState.isQrCheckInSheetVisible = true
+        uiState.errorMessage = nil
     }
 
     private func dismissQrCheckInSheet() {
@@ -503,10 +523,9 @@ final class CheckInViewModel: ObservableObject {
             uiState.errorMessage = "QR 코드에서 카페 정보를 찾을 수 없습니다."
             return
         }
-        submitNewVisit(
+        submitQrVisit(
             cafeId: cafeId,
-            visitedAt: ISO8601DateFormatter().string(from: Date()),
-            memo: nil
+            visitedAt: ISO8601DateFormatter().string(from: Date())
         )
     }
 

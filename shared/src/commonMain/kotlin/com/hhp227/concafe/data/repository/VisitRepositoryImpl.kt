@@ -43,6 +43,20 @@ class VisitRepositoryImpl(
         }
     }
 
+    override suspend fun createQrVisit(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        return visitRemoteDataSource.createQrVisit(
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = visitedAt,
+            memo = memo?.trim().takeIf { !it.isNullOrBlank() }
+        )
+    }
+
     override suspend fun updateVisit(
         visitId: String,
         userId: String,

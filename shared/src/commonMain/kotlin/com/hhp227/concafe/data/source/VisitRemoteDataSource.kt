@@ -21,6 +21,13 @@ interface VisitRemoteDataSource {
         longitude: Double
     ): Visit
 
+    suspend fun createQrVisit(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit
+
     suspend fun updateVisit(
         visitId: String,
         userId: String,

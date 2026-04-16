@@ -3139,18 +3139,47 @@ export const onVisitWrittenValidateDistance = onDocumentWritten(
     const cafeId = asNonBlankString(afterData.cafeId);
     const userId = asNonBlankString(afterData.userId);
     const userLocation = asGeoPoint(afterData.location);
-    const allowedRadiusMeters = 100;
+    const checkInMethod = asNonBlankString((afterData as Record<string, unknown>).checkInMethod)?.toUpperCase() ?? "LOCATION";
+    const isQrCheckIn = checkInMethod === "QR";
+    const allowedRadiusMeters = 200;
     const currentVerified = afterData.verified === true;
     const currentDistance = asFiniteNumber(afterData.verificationDistanceMeters);
     const currentFailureReason = asNonBlankString(afterData.verificationFailureReason);
 
-    if (cafeId == null || userId == null || userLocation == null) {
+    if (cafeId == null || userId == null) {
       await visitRef.delete();
-      logger.warn("Deleted invalid visit payload.", {
+      logger.warn("Deleted invalid visit payload (missing cafeId or userId).", {
         visitId: visitId,
         hasCafeId: cafeId != null,
         hasUserId: userId != null,
-        hasLocation: userLocation != null,
+      });
+      return;
+    }
+
+    if (isQrCheckIn) {
+      if (currentVerified && currentFailureReason == null) {
+        return;
+      }
+      await visitRef.set(
+        {
+          verified: true,
+          verificationFailureReason: FieldValue.delete(),
+          verifiedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {merge: true}
+      );
+      await upsertVisitStamp(visitId, userId, cafeId);
+      logger.info("Auto-verified QR check-in visit.", {visitId, cafeId, userId});
+      return;
+    }
+
+    if (userLocation == null) {
+      await visitRef.delete();
+      logger.warn("Deleted location-based visit with missing location.", {
+        visitId: visitId,
+        hasCafeId: cafeId != null,
+        hasUserId: userId != null,
       });
       return;
     }

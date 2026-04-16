@@ -1104,7 +1104,7 @@ class FirestoreConCafeDataSource(
             latitude2 = latitude,
             longitude2 = longitude
         )
-        val allowedDistanceMeters = 100.0
+        val allowedDistanceMeters = 200.0
         return if (distanceMeters <= allowedDistanceMeters) {
             VisitVerificationResult(
                 verified = true,
@@ -1117,7 +1117,7 @@ class FirestoreConCafeDataSource(
                 verified = false,
                 distanceMeters = distanceMeters,
                 allowedRadiusMeters = allowedDistanceMeters,
-                message = "카페 반경 100m 밖입니다"
+                message = "카페 반경 200m 밖입니다"
             )
         }
     }
@@ -1200,6 +1200,44 @@ class FirestoreConCafeDataSource(
                 "visitedAt" to firestoreString(visitedAt),
                 "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
                 "verified" to firestoreBoolean(false),
+                "checkInMethod" to firestoreString("LOCATION"),
+                "createdAt" to firestoreString(now),
+                "updatedAt" to firestoreString(now)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        val createdVisit = Visit(
+            id = visitId,
+            userId = userId,
+            cafeId = cafeId,
+            visitedAt = visitedAt,
+            memo = memo?.trim()?.takeIf { value -> value.isNotEmpty() },
+            verified = false
+        )
+        val refreshedVisit = resolveVisitById(visitId = visitId, idToken = idToken)
+        return refreshedVisit ?: createdVisit
+    }
+
+    suspend fun createQrVisitRemote(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        ensureAuthenticatedUserMatch(requestedUserId = userId, action = "createQrVisitRemote")
+        val idToken = tokenProvider.getIdToken()
+        val visitId = nextFirestoreEntityId("visit")
+        val now = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.VISITS}/$visitId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "cafeId" to firestoreString(cafeId),
+                "visitedAt" to firestoreString(visitedAt),
+                "memo" to firestoreNullableString(memo?.trim()?.takeIf { value -> value.isNotEmpty() }),
+                "verified" to firestoreBoolean(false),
+                "checkInMethod" to firestoreString("QR"),
                 "createdAt" to firestoreString(now),
                 "updatedAt" to firestoreString(now)
             )
