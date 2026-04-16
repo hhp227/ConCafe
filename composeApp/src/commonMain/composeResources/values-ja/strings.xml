@@ -71,9 +71,6 @@
     <string name="signup_search_cafe_placeholder">カフェ名で検索...</string>
     <string name="signup_search_no_results">検索結果がありません</string>
     <string name="signup_cafe_verified_badge">認証済み</string>
-    <string name="signup_social_kakao">Kakaoで開始</string>
-    <string name="signup_social_google">Googleで開始</string>
-    <string name="signup_social_apple">Appleで開始</string>
     <string name="signup_user_type_visitor_title">一般会員</string>
     <string name="signup_user_type_visitor_subtitle">コンセプトカフェを訪れて楽しむファン</string>
     <string name="signup_user_type_visitor_badge">簡単登録 · ソーシャルログイン</string>
