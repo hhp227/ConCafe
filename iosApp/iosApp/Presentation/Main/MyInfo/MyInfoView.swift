@@ -492,14 +492,7 @@ private struct ProfileMyInfoView: View {
                 HStack(spacing: 10) {
                     if !uiState.badges.isEmpty {
                         ForEach(uiState.badges, id: \.id) { badge in
-                            VStack {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
-                                    .frame(width: 70, height: 70)
-                                    .overlay(Text(badge.icon))
-                                Text(badge.name)
-                                    .font(.caption2)
-                            }
+                            BadgeItemView(badge: badge)
                         }
                     } else {
                         MyInfoSectionPlaceholderCard(
@@ -681,6 +674,63 @@ private struct ProfileMyInfoView: View {
             return nil
         }
         return URL(string: trimmed)
+    }
+}
+
+private struct BadgeItemView: View {
+    let badge: ProfileBadge
+
+    @State private var showTooltip = false
+
+    var body: some View {
+        VStack(spacing: 4) {
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
+                    .frame(width: 70, height: 70)
+                    .overlay(Text(badge.icon))
+                if showTooltip {
+                    BadgeTooltipCard(badge: badge)
+                        .offset(y: -56)
+                        .zIndex(10)
+                        .transition(.opacity.animation(.easeInOut(duration: 0.15)))
+                }
+            }
+            .onTapGesture {
+                showTooltip = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    showTooltip = false
+                }
+            }
+            Text(badge.name)
+                .font(.caption2)
+                .lineLimit(1)
+        }
+    }
+}
+
+private struct BadgeTooltipCard: View {
+    let badge: ProfileBadge
+
+    var body: some View {
+        let current = min(Int(badge.currentCount), Int(badge.goalCount))
+        let goal = Int(badge.goalCount)
+        return VStack(spacing: 2) {
+            Text(badge.name)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.white)
+            Text("\(current) / \(goal)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(badge.unlocked ? Color(hex: "EF6797") : Color.white.opacity(0.7))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color(hex: "2B2330").opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+        .allowsHitTesting(false)
+        .fixedSize()
     }
 }
 

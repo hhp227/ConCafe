@@ -23,6 +23,8 @@ import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.CastClaimEvent as CastClaimDomainEvent
 import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.VisitEvent
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -47,7 +49,8 @@ class CafeDashboardViewModel(
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castClaimEventPublisher: CastClaimEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val visitEventPublisher: VisitEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -644,6 +647,22 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun observeVisitEvent() {
+        jobs[TaskKey.OBSERVE_VISIT_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
+            visitEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is VisitEvent.Created -> if (event.cafeId == cafeId) {
+                        _uiState.update { state ->
+                            state.copy(cafe = state.cafe?.copy(todayCheckIns = state.cafe.todayCheckIns + 1))
+                        }
+                    }
+                    is VisitEvent.Deleted -> Unit
+                }
+            }
+        }
+    }
+
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
@@ -710,6 +729,7 @@ class CafeDashboardViewModel(
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        observeVisitEvent()
         startCastClaimPolling()
         loadExternalLinks()
         loadCafeDashboard()
@@ -726,6 +746,7 @@ class CafeDashboardViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_CAST_CLAIM_EVENT,
+        OBSERVE_VISIT_EVENT,
         POLL_CAST_CLAIM
     }
 }

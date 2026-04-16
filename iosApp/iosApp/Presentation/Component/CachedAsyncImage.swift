@@ -46,15 +46,9 @@ struct CachedAsyncImage<Placeholder: View>: View {
         ZStack {
             placeholder
             if let image = loader.image {
-                if contentMode == .fit {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                } else {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                }
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
             }
         }
         .task(id: cacheKey) {
@@ -85,13 +79,29 @@ struct CachedAsyncImage<Placeholder: View>: View {
 private final class CachedImageLoader: ObservableObject {
     @Published var image: UIImage?
 
-    private static let memoryCache = NSCache<NSString, UIImage>()
+    /// 현재 표시 중인 캐시 키. 오래된(stale) Task 결과를 걸러내는 데 사용.
+    private var loadedKey = ""
+
+    private static let memoryCache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.countLimit = 200
+        cache.totalCostLimit = 100 * 1024 * 1024 // 100 MB
+        return cache
+    }()
 
     func load(from url: URL?, maxPixels: Int?, cacheKey: String) async {
         guard let url, !cacheKey.isEmpty else {
+            loadedKey = ""
             image = nil
             return
         }
+
+        // 키가 바뀌면 이전 이미지를 즉시 제거 (잘못된 이미지가 잠깐 보이는 현상 방지)
+        if loadedKey != cacheKey {
+            image = nil
+            loadedKey = cacheKey
+        }
+
         let nsKey = cacheKey as NSString
 
         // 1. 메모리 캐시 히트 — 메인 스레드에서 즉시 반환
@@ -102,16 +112,28 @@ private final class CachedImageLoader: ObservableObject {
 
         // 2. 네트워크/디스크 I/O 및 디코딩 — 백그라운드 스레드에서 실행
         //    Task.detached: @MainActor 컨텍스트를 상속하지 않으므로 메인 스레드를 블로킹하지 않음
-        let loaded = await Task.detached(priority: .userInitiated) {
-            await Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
-        }.value
+        let fetchTask = Task.detached(priority: .userInitiated) {
+            try await Self.fetchAndDecode(url: url, maxPixels: maxPixels, nsKey: nsKey)
+        }
 
-        // 3. 결과 반영 — @MainActor이므로 자동으로 메인 스레드에서 실행
-        image = loaded
+        do {
+            // withTaskCancellationHandler: .task(id:) 취소가 inner Task.detached에도 전파됨
+            let loaded = try await withTaskCancellationHandler {
+                try await fetchTask.value
+            } onCancel: {
+                fetchTask.cancel()
+            }
+
+            // 3. 취소되지 않았고 여전히 같은 키인 경우에만 반영
+            guard !Task.isCancelled, loadedKey == cacheKey else { return }
+            image = loaded
+        } catch {
+            // CancellationError 포함 모든 에러는 무시 (image = nil 유지)
+        }
     }
 
-    /// 백그라운드 스레드에서 실행. async URLSession API 사용으로 스레드를 블로킹하지 않음.
-    private static func fetchAndDecode(url: URL, maxPixels: Int?, nsKey: NSString) async -> UIImage? {
+    /// 백그라운드 스레드에서 실행. CancellationError를 throws로 전파하여 stale 업데이트를 방지.
+    private static func fetchAndDecode(url: URL, maxPixels: Int?, nsKey: NSString) async throws -> UIImage? {
         let request = URLRequest(url: url)
 
         // URLCache 디스크 히트 — 네트워크 왕복 없이 즉시 디코딩
@@ -121,29 +143,28 @@ private final class CachedImageLoader: ObservableObject {
             return img
         }
 
-        let data: Data?
+        let data: Data
         if url.isFileURL {
-            data = try? Data(contentsOf: url)
+            data = try Data(contentsOf: url)
         } else {
-            // async/await — 스레드를 블로킹하지 않고 대기
-            data = await fetchRemoteData(request: request)
+            // async/await — 스레드를 블로킹하지 않고 대기. 취소 시 CancellationError throws.
+            data = try await fetchRemoteData(request: request)
         }
 
-        guard let data, let img = decode(data: data, maxPixels: maxPixels) else { return nil }
+        // 디코딩 전 취소 여부 확인
+        try Task.checkCancellation()
+
+        guard let img = decode(data: data, maxPixels: maxPixels) else { return nil }
         memoryCache.setObject(img, forKey: nsKey)
         return img
     }
 
-    /// URLSession async API: DispatchSemaphore 없이 협력 스레드 풀을 블로킹하지 않음
-    private static func fetchRemoteData(request: URLRequest) async -> Data? {
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            let cached = CachedURLResponse(response: response, data: data)
-            URLCache.shared.storeCachedResponse(cached, for: request)
-            return data
-        } catch {
-            return nil
-        }
+    /// URLSession async API: throws로 CancellationError를 상위로 전파
+    private static func fetchRemoteData(request: URLRequest) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let cached = CachedURLResponse(response: response, data: data)
+        URLCache.shared.storeCachedResponse(cached, for: request)
+        return data
     }
 
     /// ImageIO 기반 디코딩 — `maxPixels` 지정 시 풀 해상도를 메모리에 올리지 않고 바로 목표 크기로 디코딩

@@ -242,6 +242,33 @@ class CheckInViewModel(
         }
     }
 
+    private fun submitQrVisit(cafeId: String, visitedAt: String) {
+        jobs[TaskKey.SUBMIT_VISIT]?.cancel()
+        jobs[TaskKey.SUBMIT_VISIT] = viewModelScope.launch {
+            when (val result = createVisitUseCase.invokeQr(
+                cafeId = cafeId,
+                visitedAt = visitedAt,
+                memo = null
+            )) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isNewVisitSheetVisible = false,
+                            isQrCheckInSheetVisible = false,
+                            preselectCafeId = null,
+                            errorMessage = null
+                        )
+                    }
+                    refreshRecentVisitPage()
+                    maybeShowReviewPrompt(result.data)
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(errorMessage = result.error.toString()) }
+                }
+            }
+        }
+    }
+
     private fun clickCheckIn(preselectCafeId: String? = null) {
         val currentUser = _uiState.value.currentUser
 
@@ -443,31 +470,12 @@ class CheckInViewModel(
             }
             return
         }
-        jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
-        jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
-            when (val permissionResult = checkInLocationProvider.requestPermissionIfNeeded()) {
-                CheckInLocationPermissionResult.Granted -> {
-                    _uiState.update {
-                        it.copy(
-                            isNewVisitSheetVisible = false,
-                            isQrCheckInSheetVisible = true,
-                            errorMessage = null
-                        )
-                    }
-                }
-                is CheckInLocationPermissionResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isQrCheckInSheetVisible = false,
-                            errorMessage = permissionResult.message
-                        )
-                    }
-                    _event.emit(CheckInEvent.ShowMessage(permissionResult.message))
-                    if (permissionResult.requiresSettings) {
-                        _event.emit(CheckInEvent.OpenLocationSettings)
-                    }
-                }
-            }
+        _uiState.update {
+            it.copy(
+                isNewVisitSheetVisible = false,
+                isQrCheckInSheetVisible = true,
+                errorMessage = null
+            )
         }
     }
 
@@ -481,10 +489,9 @@ class CheckInViewModel(
             _uiState.update { it.copy(errorMessage = "QR 코드에서 카페 정보를 찾을 수 없습니다.") }
             return
         }
-        submitNewVisit(
+        submitQrVisit(
             cafeId = cafeId,
-            visitedAt = Clock.System.now().toString(),
-            memo = null
+            visitedAt = Clock.System.now().toString()
         )
     }
 

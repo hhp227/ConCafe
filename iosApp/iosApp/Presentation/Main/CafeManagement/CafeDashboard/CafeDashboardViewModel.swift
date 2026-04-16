@@ -40,6 +40,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let castEventPublisher: CastEventPublisher
 
+    private let visitEventPublisher: VisitEventPublisher
+
     @Published private(set) var uiState = CafeDashboardUiState()
 
     let event = PassthroughSubject<CafeDashboardEvent, Never>()
@@ -595,6 +597,34 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func observeVisitEvent() {
+        tasks[.visitEvent]?.cancel()
+        tasks[.visitEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: visitEventPublisher.events) {
+                    if let created = event as? Shared.VisitEvent.Created, created.cafeId == self.cafeId {
+                        if let current = self.uiState.cafe {
+                            self.uiState.cafe = CafeDashboardData(
+                                id: current.id,
+                                name: current.name,
+                                city: current.city,
+                                todayCheckIns: current.todayCheckIns + 1,
+                                todayReviews: current.todayReviews,
+                                rating: current.rating,
+                                castPreviews: current.castPreviews,
+                                homeBannerPreview: current.homeBannerPreview,
+                                socialMedia: current.socialMedia,
+                                reservationUrl: current.reservationUrl
+                            )
+                        }
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func observeCastClaimEvent() {
         tasks[.castClaimEvent]?.cancel()
         tasks[.castClaimEvent] = Task {
@@ -712,7 +742,8 @@ final class CafeDashboardViewModel: ObservableObject {
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castClaimEventPublisher: CastClaimEventPublisher = KoinInitializerKt.resolveCastClaimEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeCastPageUseCase = getCafeCastPageUseCase
@@ -728,11 +759,13 @@ final class CafeDashboardViewModel: ObservableObject {
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castClaimEventPublisher = castClaimEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.visitEventPublisher = visitEventPublisher
 
         observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        observeVisitEvent()
         startCastClaimPolling()
         loadExternalLinks()
         loadCafeDashboard()
@@ -748,6 +781,7 @@ final class CafeDashboardViewModel: ObservableObject {
         case cafeDetailEvent
         case castClaimEvent
         case castEvent
+        case visitEvent
         case castClaimPolling
     }
 

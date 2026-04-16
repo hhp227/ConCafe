@@ -8407,6 +8407,28 @@
         }
       }
     },
+    "checkin_visit_qr_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR Check-in"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QRチェックイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR 체크인"
+          }
+        }
+      }
+    },
     "common_cancel" : {
       "localizations" : {
         "en" : {

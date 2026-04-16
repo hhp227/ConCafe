@@ -343,7 +343,6 @@ service cloud.firestore {
     function isValidVisitWriteData() {
       return request.resource.data.userId is string
         && request.resource.data.cafeId is string
-        && request.resource.data.location is latlng
         && request.resource.data.visitedAt is string
         && (
           !("memo" in request.resource.data)
@@ -351,7 +350,24 @@ service cloud.firestore {
           || request.resource.data.memo == null
         )
         && request.resource.data.verified is bool
-        && request.resource.data.verified == false;
+        && request.resource.data.verified == false
+        && (
+          // QR 체크인: location 불필요, checkInMethod == "QR" 명시
+          (
+            request.resource.data.checkInMethod is string
+            && request.resource.data.checkInMethod == "QR"
+            && !("location" in request.resource.data)
+          )
+          ||
+          // 위치 기반 체크인: location latlng 필수
+          (
+            (
+              !("checkInMethod" in request.resource.data)
+              || request.resource.data.checkInMethod == "LOCATION"
+            )
+            && request.resource.data.location is latlng
+          )
+        );
     }
 
     function isValidInquiryCreateData() {

@@ -469,6 +469,20 @@ val dataSourceModule = module {
                 )
             }
 
+            override suspend fun createQrVisit(
+                userId: String,
+                cafeId: String,
+                visitedAt: String,
+                memo: String?
+            ): Visit {
+                return dataSource.createQrVisitRemote(
+                    userId = userId,
+                    cafeId = cafeId,
+                    visitedAt = visitedAt,
+                    memo = memo
+                )
+            }
+
             override suspend fun updateVisit(
                 visitId: String,
                 userId: String,

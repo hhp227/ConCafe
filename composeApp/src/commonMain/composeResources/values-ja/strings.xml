@@ -683,6 +683,7 @@
     <string name="checkin_more_visit_label">訪問をもっと見る</string>
     <string name="checkin_new_visit_cta">新しい訪問を追加</string>
     <string name="checkin_visit_memo_empty">メモなし</string>
+    <string name="checkin_visit_qr_label">QRチェックイン</string>
     <string name="cafe_tab_info">情報</string>
     <string name="cafe_tab_casts">キャスト</string>
     <string name="cafe_tab_menu">メニュー</string>

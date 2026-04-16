@@ -42,20 +42,52 @@ class CreateVisitUseCase(
                 )
 
                 if (!verification.verified) {
-                    return AppResult.Failure(
-                        AppError.ValidationFailed(verification.message)
-                    )
+                    return AppResult.Failure(AppError.ValidationFailed(verification.message))
                 }
                 val visited = visitRepository.createVisit(
                     userId = currentUser.id,
                     cafeId = cafeId,
                     visitedAt = visitedAt,
-                    memo = memo?.trim().takeIf { !it.isNullOrBlank() },
+                    memo = memo,
                     latitude = latitude,
                     longitude = longitude
                 )
 
-                visitEventPublisher.publish(VisitEvent.Created(visited.id))
+                visitEventPublisher.publish(VisitEvent.Created(visited.id, cafeId))
+                AppResult.Success(visited)
+            }
+        } catch (e: NoSuchElementException) {
+            AppResult.Failure(AppError.NotFound)
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
+        }
+    }
+
+    suspend fun invokeQr(
+        cafeId: String,
+        visitedAt: String,
+        memo: String?
+    ): AppResult<Visit> {
+        return try {
+            val currentUser = authRepository.getCurrentUser()
+
+            if (currentUser == null) {
+                AppResult.Failure(AppError.Unauthorized)
+            } else if (cafeId.isBlank()) {
+                AppResult.Failure(AppError.ValidationFailed("cafeId is required"))
+            } else if (visitedAt.isBlank()) {
+                AppResult.Failure(AppError.ValidationFailed("visitedAt is required"))
+            } else {
+                val visited = visitRepository.createQrVisit(
+                    userId = currentUser.id,
+                    cafeId = cafeId,
+                    visitedAt = visitedAt,
+                    memo = memo
+                )
+
+                visitEventPublisher.publish(VisitEvent.Created(visited.id, cafeId))
                 AppResult.Success(visited)
             }
         } catch (e: NoSuchElementException) {

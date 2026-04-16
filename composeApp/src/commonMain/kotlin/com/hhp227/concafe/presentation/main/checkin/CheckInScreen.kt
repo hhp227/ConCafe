@@ -90,6 +90,7 @@ import concafe.composeapp.generated.resources.checkin_today_visit_count
 import concafe.composeapp.generated.resources.checkin_today_visit_empty_desc
 import concafe.composeapp.generated.resources.checkin_today_visit_empty_title
 import concafe.composeapp.generated.resources.checkin_visit_memo_empty
+import concafe.composeapp.generated.resources.checkin_visit_qr_label
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.common_close
 import concafe.composeapp.generated.resources.signin_submit
@@ -1519,7 +1520,15 @@ fun TimelineItem(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(visit.memo ?: stringResource(Res.string.checkin_visit_memo_empty), color = Color.Gray, fontSize = 14.sp)
+                Text(
+                    text = visit.memo ?: if (visit.checkInMethod?.uppercase() == "QR") {
+                        stringResource(Res.string.checkin_visit_qr_label)
+                    } else {
+                        stringResource(Res.string.checkin_visit_memo_empty)
+                    },
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
