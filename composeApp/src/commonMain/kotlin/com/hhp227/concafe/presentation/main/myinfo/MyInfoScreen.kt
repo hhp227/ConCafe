@@ -21,8 +21,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.ProfileBadge
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -69,6 +81,7 @@ import concafe.composeapp.generated.resources.myinfo_guest_welcome_subtitle
 import concafe.composeapp.generated.resources.myinfo_guest_welcome_title
 import concafe.composeapp.generated.resources.signin_sign_up
 import concafe.composeapp.generated.resources.signin_submit
+import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -450,18 +463,7 @@ private fun ProfileMyInfoScreen(
             ) {
                 if (uiState.badges.isNotEmpty()) {
                     uiState.badges.forEach { badge ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(
-                                modifier = Modifier
-                                    .size(70.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(if (badge.unlocked) Color(0xFFEF6797) else Color(0xFFDADADA)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(badge.icon)
-                            }
-                            Text(badge.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
-                        }
+                        BadgeItem(badge)
                     }
                 } else {
                     MyInfoSectionPlaceholder(
@@ -800,6 +802,75 @@ private fun myInfoFavoriteGridColumnCount(contentWidth: Dp): Int {
     val rawCount = ((normalizedWidth + MYINFO_GRID_ITEM_SPACING_DP) /
         (MYINFO_GRID_MIN_CELL_WIDTH_DP + MYINFO_GRID_ITEM_SPACING_DP)).toInt()
     return rawCount.coerceIn(MYINFO_GRID_MIN_COLUMN_COUNT, MYINFO_GRID_MAX_COLUMN_COUNT)
+}
+
+@Composable
+private fun BadgeItem(badge: ProfileBadge) {
+    var showTooltip by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+
+    LaunchedEffect(showTooltip) {
+        if (showTooltip) {
+            delay(2000)
+            showTooltip = false
+        }
+    }
+    Box {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (badge.unlocked) Color(0xFFEF6797) else Color(0xFFDADADA))
+                    .clickable { showTooltip = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(badge.icon)
+            }
+            Text(badge.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+        }
+        if (showTooltip) {
+            Popup(
+                popupPositionProvider = object : PopupPositionProvider {
+                    override fun calculatePosition(
+                        anchorBounds: IntRect,
+                        windowSize: IntSize,
+                        layoutDirection: LayoutDirection,
+                        popupContentSize: IntSize
+                    ): IntOffset = IntOffset(
+                        x = anchorBounds.left + (anchorBounds.width - popupContentSize.width) / 2,
+                        y = anchorBounds.top - popupContentSize.height - with(density) { 8.dp.roundToPx() }
+                    )
+                },
+                properties = PopupProperties(focusable = false),
+                onDismissRequest = { showTooltip = false }
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF2B2330).copy(alpha = 0.92f),
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            badge.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "${minOf(badge.currentCount, badge.goalCount)} / ${badge.goalCount}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (badge.unlocked) Color(0xFFEF6797) else Color.White.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 private const val MYINFO_GRID_MIN_COLUMN_COUNT = 2

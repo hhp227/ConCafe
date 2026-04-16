@@ -248,16 +248,16 @@ class GetMyInfoUseCase(
         val normalizedFollowedCount = followedCastsCount.coerceAtLeast(0)
         val normalizedLevel = level.coerceAtLeast(1)
         return listOf(
-            ProfileBadge("badge-checkin-starter", "첫 체크인", "🎉", normalizedStampCount >= 1),
-            ProfileBadge("badge-stamp-collector", "스탬프 수집가", "🧷", normalizedStampCount >= 3),
-            ProfileBadge("badge-regular-visitor", "단골 방문자", "🏡", normalizedVisitCount >= 5),
-            ProfileBadge("badge-checkin-veteran", "체크인 베테랑", "🗺️", normalizedVisitCount >= 10),
-            ProfileBadge("badge-favorite-curator", "취향 큐레이터", "❤️", normalizedFavoritesCount >= 3),
-            ProfileBadge("badge-favorite-master", "취향 마스터", "💘", normalizedFavoritesCount >= 10),
-            ProfileBadge("badge-cast-supporter", "캐스트 서포터", "📣", normalizedFollowedCount >= 3),
-            ProfileBadge("badge-cast-ambassador", "캐스트 앰버서더", "🫶", normalizedFollowedCount >= 10),
-            ProfileBadge("badge-level-up", "레벨 성장", "🌱", normalizedLevel >= 3),
-            ProfileBadge("badge-concafe-master", "ConCafe 마스터", "👑", normalizedStampCount >= 10)
+            ProfileBadge("badge-checkin-starter", "첫 체크인", "🎉", normalizedStampCount >= 1, normalizedStampCount, 1),
+            ProfileBadge("badge-stamp-collector", "스탬프 수집가", "🧷", normalizedStampCount >= 3, normalizedStampCount, 3),
+            ProfileBadge("badge-regular-visitor", "단골 방문자", "🏡", normalizedVisitCount >= 5, normalizedVisitCount, 5),
+            ProfileBadge("badge-checkin-veteran", "체크인 베테랑", "🗺️", normalizedVisitCount >= 10, normalizedVisitCount, 10),
+            ProfileBadge("badge-favorite-curator", "취향 큐레이터", "❤️", normalizedFavoritesCount >= 3, normalizedFavoritesCount, 3),
+            ProfileBadge("badge-favorite-master", "취향 마스터", "💘", normalizedFavoritesCount >= 10, normalizedFavoritesCount, 10),
+            ProfileBadge("badge-cast-supporter", "캐스트 서포터", "📣", normalizedFollowedCount >= 3, normalizedFollowedCount, 3),
+            ProfileBadge("badge-cast-ambassador", "캐스트 앰버서더", "🫶", normalizedFollowedCount >= 10, normalizedFollowedCount, 10),
+            ProfileBadge("badge-level-up", "레벨 성장", "🌱", normalizedLevel >= 3, normalizedLevel, 3),
+            ProfileBadge("badge-concafe-master", "ConCafe 마스터", "👑", normalizedStampCount >= 10, normalizedStampCount, 10)
         )
     }
 
