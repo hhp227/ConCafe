@@ -293,6 +293,16 @@ private struct ProfileMyInfoView: View {
 
     let onAction: @MainActor (MyInfoAction) -> Void
 
+    @State private var activeBadgeTooltip: BadgeTooltipOverlay?
+
+    @State private var badgeTooltipSize: CGSize = .zero
+
+    @State private var hideBadgeTooltipTask: Task<Void, Never>?
+
+    private let badgeTooltipCoordinateSpace = "MyInfoBadgeSection"
+
+    private let badgeTooltipVerticalSpacing: CGFloat = 8
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -308,6 +318,11 @@ private struct ProfileMyInfoView: View {
                 }
                 .padding(16)
             }
+        }
+        .onDisappear {
+            hideBadgeTooltipTask?.cancel()
+            hideBadgeTooltipTask = nil
+            activeBadgeTooltip = nil
         }
     }
 
@@ -492,7 +507,13 @@ private struct ProfileMyInfoView: View {
                 HStack(spacing: 10) {
                     if !uiState.badges.isEmpty {
                         ForEach(uiState.badges, id: \.id) { badge in
-                            BadgeItemView(badge: badge)
+                            BadgeItemView(
+                                badge: badge,
+                                coordinateSpaceName: badgeTooltipCoordinateSpace,
+                                onTap: { tappedFrame in
+                                    presentBadgeTooltip(badge: badge, anchorFrame: tappedFrame)
+                                }
+                            )
                         }
                     } else {
                         MyInfoSectionPlaceholderCard(
@@ -501,6 +522,45 @@ private struct ProfileMyInfoView: View {
                         )
                     }
                 }
+            }
+        }
+        .coordinateSpace(name: badgeTooltipCoordinateSpace)
+        .overlay(alignment: .topLeading) {
+            GeometryReader { proxy in
+                if let tooltip = activeBadgeTooltip {
+                    let halfTooltipWidth = badgeTooltipSize.width / 2
+                    let minimumCenterX = halfTooltipWidth
+                    let maximumCenterX = max(halfTooltipWidth, proxy.size.width - halfTooltipWidth)
+                    let centerX = tooltip.anchorFrame.midX.clamped(to: minimumCenterX...maximumCenterX)
+                    let halfTooltipHeight = badgeTooltipSize.height / 2
+                    let centerY = max(
+                        halfTooltipHeight,
+                        tooltip.anchorFrame.minY - badgeTooltipVerticalSpacing - halfTooltipHeight
+                    )
+                    BadgeTooltipCard(badge: tooltip.badge)
+                        .fixedSize()
+                        .readSize { badgeTooltipSize = $0 }
+                        .position(x: centerX, y: centerY)
+                        .zIndex(20)
+                        .allowsHitTesting(false)
+                        .transition(.opacity.animation(.easeInOut(duration: 0.15)))
+                }
+            }
+        }
+    }
+
+    private func presentBadgeTooltip(badge: ProfileBadge, anchorFrame: CGRect) {
+        hideBadgeTooltipTask?.cancel()
+        withAnimation(.easeInOut(duration: 0.15)) {
+            activeBadgeTooltip = BadgeTooltipOverlay(
+                badge: badge,
+                anchorFrame: anchorFrame
+            )
+        }
+        hideBadgeTooltipTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            withAnimation(.easeInOut(duration: 0.15)) {
+                activeBadgeTooltip = nil
             }
         }
     }
@@ -680,34 +740,32 @@ private struct ProfileMyInfoView: View {
 private struct BadgeItemView: View {
     let badge: ProfileBadge
 
-    @State private var showTooltip = false
+    let coordinateSpaceName: String
+
+    let onTap: (CGRect) -> Void
 
     var body: some View {
         VStack(spacing: 4) {
-            ZStack(alignment: .top) {
+            GeometryReader { proxy in
                 RoundedRectangle(cornerRadius: 16)
                     .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
-                    .frame(width: 70, height: 70)
                     .overlay(Text(badge.icon))
-                if showTooltip {
-                    BadgeTooltipCard(badge: badge)
-                        .offset(y: -56)
-                        .zIndex(10)
-                        .transition(.opacity.animation(.easeInOut(duration: 0.15)))
-                }
+                    .onTapGesture {
+                        let frame = proxy.frame(in: .named(coordinateSpaceName))
+                        onTap(frame)
+                    }
             }
-            .onTapGesture {
-                showTooltip = true
-                Task {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    showTooltip = false
-                }
-            }
+            .frame(width: 70, height: 70)
             Text(badge.name)
                 .font(.caption2)
                 .lineLimit(1)
         }
     }
+}
+
+private struct BadgeTooltipOverlay {
+    let badge: ProfileBadge
+    let anchorFrame: CGRect
 }
 
 private struct BadgeTooltipCard: View {
@@ -769,6 +827,32 @@ private struct MyInfoSectionPlaceholderCard: View {
         .padding(.vertical, 16)
         .background(.white)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct ViewSizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
+
+private extension View {
+    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
+        background(
+            GeometryReader { proxy in
+                Color.clear
+                    .preference(key: ViewSizePreferenceKey.self, value: proxy.size)
+            }
+        )
+        .onPreferenceChange(ViewSizePreferenceKey.self, perform: onChange)
+    }
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
 
