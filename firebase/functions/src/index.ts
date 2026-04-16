@@ -3915,6 +3915,7 @@ type JpCrawlSyncSummary = {
   castDetailsFetched: number;
   cafesUpserted: number;
   cafesSkipped: number;
+  cafesDeleted: number;
   castsUpserted: number;
   castsSkipped: number;
   translationRequests: number;
@@ -4162,6 +4163,16 @@ function toBirthdayKey(birthdayIso: string | null): string | null {
   return `${parts[1]}-${parts[2]}`;
 }
 
+const DAY_TYPE_KO: Record<string, string> = {
+  MONDAY: "월",
+  TUESDAY: "화",
+  WEDNESDAY: "수",
+  THURSDAY: "목",
+  FRIDAY: "금",
+  SATURDAY: "토",
+  SUNDAY: "일",
+};
+
 function buildBusinessHours(newBusinessHours: unknown, businessHours: unknown): string | null {
   if (Array.isArray(newBusinessHours) && newBusinessHours.length > 0) {
     const lines = newBusinessHours
@@ -4173,7 +4184,8 @@ function buildBusinessHours(newBusinessHours: unknown, businessHours: unknown): 
         if (day == null || start == null || end == null) {
           return null;
         }
-        return `${day} ${start}-${end}`;
+        const dayKo = DAY_TYPE_KO[day.toUpperCase()] ?? day;
+        return `${dayKo} ${start}-${end}`;
       })
       .filter((line): line is string => line != null);
     if (lines.length > 0) {
@@ -4287,6 +4299,7 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
     castDetailsFetched: 0,
     cafesUpserted: 0,
     cafesSkipped: 0,
+    cafesDeleted: 0,
     castsUpserted: 0,
     castsSkipped: 0,
     translationRequests: 0,
@@ -4352,18 +4365,55 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
         if (shopDetail == null) {
           continue;
         }
-        const casts = Array.isArray(shopDetail.casts) ? shopDetail.casts : [];
+        // 진단 로그: 실제 API 응답의 casts 필드 구조 확인
+        logger.info("runJpCrawledDataSync shop casts diagnostic.", {
+          source: source.key,
+          shopId: shopId,
+          castsType: typeof shopDetail.casts,
+          castsIsArray: Array.isArray(shopDetail.casts),
+          castsLength: Array.isArray(shopDetail.casts) ? shopDetail.casts.length : null,
+          castsPreview: Array.isArray(shopDetail.casts)
+            ? shopDetail.casts.slice(0, 2).map((c: unknown) => {
+              const obj = asPlainObject(c);
+              return obj ? {id: obj.id, name: obj.name, front_displayed: obj.front_displayed, displayed: obj.displayed} : c;
+            })
+            : shopDetail.casts,
+        });
+        // casts 필드가 없거나 빈 배열인 카페는 즉시 건너뜀
+        if (!Array.isArray(shopDetail.casts) || shopDetail.casts.length === 0) {
+          summary.cafesSkipped += 1;
+          logger.info("runJpCrawledDataSync skipped cafe: casts field is absent or empty.", {
+            source: source.key,
+            shopId: shopId,
+          });
+          continue;
+        }
+        const casts = shopDetail.casts;
         const validCastItems = casts
-          .map((castRaw) => asPlainObject(castRaw))
+          .map((castRaw: unknown) => asPlainObject(castRaw))
           .filter((castItem) => {
-            const castIdNumber = toInt(castItem?.id);
-            return castIdNumber != null && castIdNumber > 0;
+            if (castItem == null) return false;
+            const castIdNumber = toInt(castItem.id);
+            if (castIdNumber == null || castIdNumber <= 0) return false;
+            // 이름이 없는 캐스트는 비활성/퇴직으로 간주
+            if (asNonBlankString(castItem.name) == null) return false;
+            // 노출 여부 체크: boolean(true/false) 및 number(1/0) 모두 처리
+            const frontDisplayed = castItem.front_displayed;
+            if (frontDisplayed !== undefined) {
+              return frontDisplayed === 1 || frontDisplayed === true;
+            }
+            const displayed = castItem.displayed;
+            if (displayed !== undefined) {
+              return displayed === 1 || displayed === true;
+            }
+            return true;
           });
         if (validCastItems.length === 0) {
           summary.cafesSkipped += 1;
-          logger.info("runJpCrawledDataSync skipped cafe without casts.", {
+          logger.info("runJpCrawledDataSync skipped cafe: no active casts after filtering.", {
             source: source.key,
             shopId: shopId,
+            totalCasts: casts.length,
           });
           continue;
         }
@@ -4478,8 +4528,17 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
           if (castDetail == null) {
             continue;
           }
-          const castId = `jp_cast_${castIdNumber}`;
           const castNameJa = asNonBlankString(castDetail.name) ?? "";
+          // 이름이 없는 캐스트는 저장 건너뜀 (detail API가 비활성 캐스트를 반환한 경우)
+          if (castNameJa === "") {
+            logger.info("runJpCrawledDataSync skipped cast with no name.", {
+              source: source.key,
+              shopId: shopId,
+              castId: castIdNumber,
+            });
+            continue;
+          }
+          const castId = `jp_cast_${castIdNumber}`;
           const castDescJa = asNonBlankString(castDetail.comment) ?? "";
           const translatedCastName = await translateJaToKo(castNameJa, translationCache, summary);
           const translatedCastDesc = await translateJaToKo(castDescJa, translationCache, summary);
@@ -4545,6 +4604,28 @@ async function runJpCrawledDataSync(options: JpCrawlRunOptions): Promise<JpCrawl
     }
     if (seenShopIds.size >= options.maxShops) {
       break;
+    }
+  }
+
+  // Cleanup: casts 서브컬렉션이 비어있는 JP 카페 삭제 (이전 크롤에서 저장된 캐스트 없는 카페 제거)
+  {
+    const jpCafesSnapshot = await firestore
+      .collection("cafes")
+      .where("source.provider", "==", "con-cafe.jp")
+      .get();
+
+    for (const cafeDoc of jpCafesSnapshot.docs) {
+      const castsSnapshot = await cafeDoc.ref.collection("casts").limit(1).get();
+      if (castsSnapshot.empty) {
+        if (!options.dryRun) {
+          await cafeDoc.ref.delete();
+        }
+        summary.cafesDeleted += 1;
+        logger.info("runJpCrawledDataSync deleted JP cafe with no casts.", {
+          cafeId: cafeDoc.id,
+          dryRun: options.dryRun,
+        });
+      }
     }
   }
 
