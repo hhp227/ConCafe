@@ -398,206 +398,200 @@ private struct NoticeEventFormSheet: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            ZStack(alignment: .bottom) {
-                Color.black.opacity(0.5)
-                    .ignoresSafeArea()
-                    .onTapGesture {
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(Color(hex: "D6CED2"))
+                    .frame(width: 48, height: 5)
+                    .padding(.top, 12)
+                    .padding(.bottom, 6)
+                HStack {
+                    Text(uiState.formSheetTitle)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Button {
                         onAction(.dismissFormSheet)
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 28, height: 28)
                     }
-                VStack(spacing: 0) {
-                    Capsule()
-                        .fill(Color(hex: "D6CED2"))
-                        .frame(width: 48, height: 5)
-                        .padding(.top, 12)
-                        .padding(.bottom, 6)
-                    HStack {
-                        Text(uiState.formSheetTitle)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Button {
-                            onAction(.dismissFormSheet)
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.subheadline.weight(.semibold))
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(String(localized: String.LocalizationValue("noticeevent_form_label_title"), table: "Localizable"))
+                                .font(.subheadline.weight(.bold))
                                 .foregroundStyle(.secondary)
-                                .frame(width: 28, height: 28)
+                                .padding(.leading, 4)
+                            ConCafeFormField(
+                                label: "",
+                                text: Binding(
+                                    get: { uiState.formTitle },
+                                    set: { onAction(.changeFormTitle($0)) }
+                                ),
+                                placeholder: uiState.formTitlePlaceholder
+                            )
                         }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 18) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(String(localized: String.LocalizationValue("noticeevent_form_label_title"), table: "Localizable"))
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.leading, 4)
-                                ConCafeFormField(
-                                    label: "",
-                                    text: Binding(
-                                        get: { uiState.formTitle },
-                                        set: { onAction(.changeFormTitle($0)) }
-                                    ),
-                                    placeholder: uiState.formTitlePlaceholder
-                                )
-                            }
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(String(localized: String.LocalizationValue("noticeevent_form_label_content"), table: "Localizable"))
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.leading, 4)
-                                ConCafeFormEditor(
-                                    label: "",
-                                    text: Binding(
-                                        get: { uiState.formContent },
-                                        set: { onAction(.changeFormContent($0)) }
-                                    ),
-                                    placeholder: uiState.formContentPlaceholder
-                                )
-                            }
-                            if uiState.showsImageSection {
-                                representativeImageSection
-                            }
-                            if uiState.showsPinnedSection {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(String(localized: String.LocalizationValue("noticeevent_pinned_title"), table: "Localizable"))
-                                            .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(.primary)
-                                        Text(String(localized: String.LocalizationValue("noticeevent_pinned_desc"), table: "Localizable"))
-                                            .font(.caption)
-                                            .foregroundStyle(Color(hex: "8F848F"))
-                                    }
-                                    Spacer()
-                                    Toggle(
-                                        "",
-                                        isOn: Binding(
-                                            get: { uiState.formPinned },
-                                            set: { onAction(.changeFormPinned($0)) }
-                                        )
-                                    )
-                                    .labelsHidden()
-                                    .tint(Color(hex: "FFD1DC"))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(String(localized: String.LocalizationValue("noticeevent_form_label_content"), table: "Localizable"))
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(.secondary)
+                                .padding(.leading, 4)
+                            ConCafeFormEditor(
+                                label: "",
+                                text: Binding(
+                                    get: { uiState.formContent },
+                                    set: { onAction(.changeFormContent($0)) }
+                                ),
+                                placeholder: uiState.formContentPlaceholder
+                            )
+                        }
+                        if uiState.showsImageSection {
+                            representativeImageSection
+                        }
+                        if uiState.showsPinnedSection {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(String(localized: String.LocalizationValue("noticeevent_pinned_title"), table: "Localizable"))
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(.primary)
+                                    Text(String(localized: String.LocalizationValue("noticeevent_pinned_desc"), table: "Localizable"))
+                                        .font(.caption)
+                                        .foregroundStyle(Color(hex: "8F848F"))
                                 }
-                                .padding(16)
+                                Spacer()
+                                Toggle(
+                                    "",
+                                    isOn: Binding(
+                                        get: { uiState.formPinned },
+                                        set: { onAction(.changeFormPinned($0)) }
+                                    )
+                                )
+                                .labelsHidden()
+                                .tint(Color(hex: "FFD1DC"))
+                            }
+                            .padding(16)
+                            .background(Color(uiColor: .secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(uiState.formScheduleLabel)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(.secondary)
+                                .padding(.leading, 4)
+                            Button {
+                                if uiState.selectedTab == .event {
+                                    if let parsed = parseEventPeriod(uiState.formReservedAt) {
+                                        eventStartDate = parsed.start
+                                        eventEndDate = parsed.end
+                                    } else {
+                                        let now = Date()
+                                        eventStartDate = now
+                                        eventEndDate = now
+                                    }
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isEventPeriodEditorVisible.toggle()
+                                    }
+                                } else {
+                                    onAction(.clickReserveSchedule)
+                                }
+                            } label: {
+                                HStack {
+                                    Text(uiState.formReservedAt.isEmpty ? uiState.formSchedulePlaceholder : uiState.formReservedAt)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Image(systemName: "calendar")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 16)
+                                .frame(height: 56)
                                 .background(Color(uiColor: .secondarySystemBackground))
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Color(hex: "FFD1DC").opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [6]))
+                                )
                             }
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(uiState.formScheduleLabel)
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.leading, 4)
-                                Button {
-                                    if uiState.selectedTab == .event {
-                                        if let parsed = parseEventPeriod(uiState.formReservedAt) {
-                                            eventStartDate = parsed.start
-                                            eventEndDate = parsed.end
-                                        } else {
-                                            let now = Date()
-                                            eventStartDate = now
-                                            eventEndDate = now
-                                        }
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            isEventPeriodEditorVisible.toggle()
-                                        }
-                                    } else {
-                                        onAction(.clickReserveSchedule)
-                                    }
-                                } label: {
-                                    HStack {
-                                        Text(uiState.formReservedAt.isEmpty ? uiState.formSchedulePlaceholder : uiState.formReservedAt)
-                                            .foregroundStyle(.secondary)
-                                        Spacer()
-                                        Image(systemName: "calendar")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .frame(height: 56)
-                                    .background(Color(uiColor: .secondarySystemBackground))
-                                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .stroke(Color(hex: "FFD1DC").opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [6]))
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                            .buttonStyle(.plain)
 
-                                if uiState.selectedTab == .event && isEventPeriodEditorVisible {
-                                    VStack(spacing: 10) {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(String(localized: String.LocalizationValue("schedule_label_start_time"), table: "Localizable"))
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(.secondary)
-                                            DatePicker(
-                                                "",
-                                                selection: $eventStartDate,
-                                                displayedComponents: .date
-                                            )
-                                            .labelsHidden()
-                                            .datePickerStyle(.compact)
-                                        }
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(String(localized: String.LocalizationValue("schedule_label_end_time"), table: "Localizable"))
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(.secondary)
-                                            DatePicker(
-                                                "",
-                                                selection: $eventEndDate,
-                                                in: eventStartDate...Date.distantFuture,
-                                                displayedComponents: .date
-                                            )
-                                            .labelsHidden()
-                                            .datePickerStyle(.compact)
-                                        }
-                                        HStack(spacing: 8) {
-                                            Button {
-                                                onAction(.changeFormReservedAt(""))
-                                                withAnimation(.easeInOut(duration: 0.2)) {
-                                                    isEventPeriodEditorVisible = false
-                                                }
-                                            } label: {
-                                                Text(String(localized: String.LocalizationValue("noticeevent_remove"), table: "Localizable"))
-                                                    .frame(maxWidth: .infinity)
-                                            }
-                                            .buttonStyle(.bordered)
-
-                                            Button {
-                                                let start = min(eventStartDate, eventEndDate)
-                                                let end = max(eventStartDate, eventEndDate)
-                                                onAction(.changeFormReservedAt(formatEventPeriod(start: start, end: end)))
-                                                withAnimation(.easeInOut(duration: 0.2)) {
-                                                    isEventPeriodEditorVisible = false
-                                                }
-                                            } label: {
-                                                Text(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"))
-                                                    .frame(maxWidth: .infinity)
-                                            }
-                                            .buttonStyle(.borderedProminent)
-                                            .tint(Color(hex: "FFD1DC"))
-                                            .foregroundStyle(.primary)
-                                        }
+                            if uiState.selectedTab == .event && isEventPeriodEditorVisible {
+                                VStack(spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(String(localized: String.LocalizationValue("schedule_label_start_time"), table: "Localizable"))
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                        DatePicker(
+                                            "",
+                                            selection: $eventStartDate,
+                                            displayedComponents: .date
+                                        )
+                                        .labelsHidden()
+                                        .datePickerStyle(.compact)
                                     }
-                                    .padding(12)
-                                    .background(Color(uiColor: .secondarySystemBackground))
-                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(String(localized: String.LocalizationValue("schedule_label_end_time"), table: "Localizable"))
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                        DatePicker(
+                                            "",
+                                            selection: $eventEndDate,
+                                            in: eventStartDate...Date.distantFuture,
+                                            displayedComponents: .date
+                                        )
+                                        .labelsHidden()
+                                        .datePickerStyle(.compact)
+                                    }
+                                    HStack(spacing: 8) {
+                                        Button {
+                                            onAction(.changeFormReservedAt(""))
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                isEventPeriodEditorVisible = false
+                                            }
+                                        } label: {
+                                            Text(String(localized: String.LocalizationValue("noticeevent_remove"), table: "Localizable"))
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        .buttonStyle(.bordered)
+
+                                        Button {
+                                            let start = min(eventStartDate, eventEndDate)
+                                            let end = max(eventStartDate, eventEndDate)
+                                            onAction(.changeFormReservedAt(formatEventPeriod(start: start, end: end)))
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                isEventPeriodEditorVisible = false
+                                            }
+                                        } label: {
+                                            Text(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"))
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .tint(Color(hex: "FFD1DC"))
+                                        .foregroundStyle(.primary)
+                                    }
                                 }
+                                .padding(12)
+                                .background(Color(uiColor: .secondarySystemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             }
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
-                        .padding(.bottom, 60)
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                    .padding(.bottom, 60)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(maxHeight: 720)
-                .background(Color(uiColor: .tertiarySystemBackground))
-                .ignoresSafeArea(edges: .bottom)
             }
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: 720)
+            .background(Color(uiColor: .tertiarySystemBackground))
+            .ignoresSafeArea(edges: .bottom)
             bottomSubmitBar()
         }
+        .background(Color(uiColor: .tertiarySystemBackground))
         .sheet(isPresented: $isImagePickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in

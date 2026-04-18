@@ -81,6 +81,34 @@ import concafe.composeapp.generated.resources.myinfo_guest_start_title
 import concafe.composeapp.generated.resources.myinfo_guest_signin_cta
 import concafe.composeapp.generated.resources.myinfo_guest_welcome_subtitle
 import concafe.composeapp.generated.resources.myinfo_guest_welcome_title
+import concafe.composeapp.generated.resources.myinfo_metric_affiliated_casts
+import concafe.composeapp.generated.resources.myinfo_metric_average_rating
+import concafe.composeapp.generated.resources.myinfo_metric_favorites
+import concafe.composeapp.generated.resources.myinfo_metric_following
+import concafe.composeapp.generated.resources.myinfo_metric_operating_cafes
+import concafe.composeapp.generated.resources.myinfo_metric_rating
+import concafe.composeapp.generated.resources.myinfo_metric_total_followers
+import concafe.composeapp.generated.resources.myinfo_metric_visit_count
+import concafe.composeapp.generated.resources.myinfo_metric_work_schedule
+import concafe.composeapp.generated.resources.myinfo_profile_accent_admin
+import concafe.composeapp.generated.resources.myinfo_profile_accent_visitor
+import concafe.composeapp.generated.resources.myinfo_profile_affiliation_none
+import concafe.composeapp.generated.resources.myinfo_profile_badges_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_badges_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_favorites_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_favorites_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_followed_casts_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_followed_casts_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_operating_cafe_none
+import concafe.composeapp.generated.resources.myinfo_profile_recent_visits_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_recent_visits_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_role_admin_account
+import concafe.composeapp.generated.resources.myinfo_profile_role_cafe_owner
+import concafe.composeapp.generated.resources.myinfo_profile_role_visitor_level
+import concafe.composeapp.generated.resources.myinfo_profile_section_badges
+import concafe.composeapp.generated.resources.myinfo_profile_section_favorites
+import concafe.composeapp.generated.resources.myinfo_profile_section_followed_casts
+import concafe.composeapp.generated.resources.myinfo_profile_section_recent_visits
 import concafe.composeapp.generated.resources.signin_sign_up
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
@@ -460,7 +488,7 @@ private fun ProfileMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MyInfoSectionTitle("활동 뱃지")
+                MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_badges))
                 Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
             }
             Row(
@@ -475,14 +503,14 @@ private fun ProfileMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "획득한 활동 뱃지가 아직 없어요",
-                        description = "체크인과 팬 활동으로 첫 뱃지를 모아보세요."
+                        title = stringResource(Res.string.myinfo_profile_badges_empty_title),
+                        description = stringResource(Res.string.myinfo_profile_badges_empty_desc)
                     )
                 }
             }
         }
         item {
-            MyInfoSectionTitle("최근 방문")
+            MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_recent_visits))
             if (uiState.recentVisits.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
                     items(uiState.recentVisits) { cafe ->
@@ -523,8 +551,8 @@ private fun ProfileMyInfoScreen(
                 }
             } else {
                 MyInfoSectionPlaceholder(
-                    title = "최근 방문 기록이 없어요",
-                    description = "첫 체크인을 완료하면 이곳에 방문한 카페가 표시됩니다.",
+                    title = stringResource(Res.string.myinfo_profile_recent_visits_empty_title),
+                    description = stringResource(Res.string.myinfo_profile_recent_visits_empty_desc),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -532,7 +560,7 @@ private fun ProfileMyInfoScreen(
         item {
             val favoriteItems = uiState.favorites.take(12)
 
-            MyInfoSectionTitle("즐겨찾기")
+            MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_favorites))
             if (favoriteItems.isNotEmpty()) {
                 BoxWithConstraints(
                     modifier = Modifier
@@ -572,15 +600,15 @@ private fun ProfileMyInfoScreen(
                 }
             } else {
                 MyInfoSectionPlaceholder(
-                    title = "즐겨찾기한 카페가 없어요",
-                    description = "좋아하는 카페를 즐겨찾기에 추가해보세요.",
+                    title = stringResource(Res.string.myinfo_profile_favorites_empty_title),
+                    description = stringResource(Res.string.myinfo_profile_favorites_empty_desc),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }
         item {
             if (uiState.user?.role != UserRole.CAST) {
-                MyInfoSectionTitle("팔로우한 캐스트")
+                MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_followed_casts))
                 if (uiState.followedMaids.isNotEmpty()) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
                         items(uiState.followedMaids.take(6)) { maid ->
@@ -611,8 +639,8 @@ private fun ProfileMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "팔로우한 캐스트가 없어요",
-                        description = "관심 있는 캐스트를 팔로우하면 여기서 바로 볼 수 있어요.",
+                        title = stringResource(Res.string.myinfo_profile_followed_casts_empty_title),
+                        description = stringResource(Res.string.myinfo_profile_followed_casts_empty_desc),
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -635,15 +663,15 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
             val accountName = user.nickname.takeIf { it != detail.cast.name }.orEmpty()
             accountName
         }.orEmpty()
-        UserRole.CAFE_OWNER -> "카페 운영자"
-        UserRole.ADMIN -> "관리자 계정"
-        UserRole.VISITOR -> "레벨 ${uiState.summary?.level ?: 1} · 열정적인 팬"
+        UserRole.CAFE_OWNER -> stringResource(Res.string.myinfo_profile_role_cafe_owner)
+        UserRole.ADMIN -> stringResource(Res.string.myinfo_profile_role_admin_account)
+        UserRole.VISITOR -> stringResource(Res.string.myinfo_profile_role_visitor_level, uiState.summary?.level ?: 1)
     }
     val accentText = when (user.role) {
-        UserRole.CAST -> castDetail?.cafe?.name ?: "소속 카페 없음"
-        UserRole.CAFE_OWNER -> ownerCafe?.name ?: "운영 카페 없음"
-        UserRole.ADMIN -> "ConCafe 운영"
-        UserRole.VISITOR -> "내 활동 요약"
+        UserRole.CAST -> castDetail?.cafe?.name ?: stringResource(Res.string.myinfo_profile_affiliation_none)
+        UserRole.CAFE_OWNER -> ownerCafe?.name ?: stringResource(Res.string.myinfo_profile_operating_cafe_none)
+        UserRole.ADMIN -> stringResource(Res.string.myinfo_profile_accent_admin)
+        UserRole.VISITOR -> stringResource(Res.string.myinfo_profile_accent_visitor)
     }
     val profileAccent = title.take(2).uppercase()
     Card(
@@ -725,6 +753,7 @@ private data class MyInfoMetricCardModel(
     val highlight: Boolean
 )
 
+@Composable
 private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardModel> {
     val user = uiState.user ?: return emptyList()
 
@@ -733,9 +762,9 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             val cast = uiState.castDetail?.cast
             val scheduleCount = resolveCurrentWeekScheduleCount(uiState)
             listOf(
-                MyInfoMetricCardModel("전체 팔로워", (cast?.followerCount ?: 0).toString(), false),
-                MyInfoMetricCardModel("근무 일정", scheduleCount.toString(), true),
-                MyInfoMetricCardModel("평점", ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_total_followers), (cast?.followerCount ?: 0).toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_work_schedule), scheduleCount.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_rating), ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
             )
         }
         UserRole.CAFE_OWNER -> {
@@ -743,16 +772,16 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             val castCount = uiState.ownedCafes.sumOf { it.castCount }
             val rating = if (uiState.ownedCafes.isEmpty()) 0.0 else uiState.ownedCafes.map { it.rating }.average()
             listOf(
-                MyInfoMetricCardModel("운영 카페", cafeCount.toString(), false),
-                MyInfoMetricCardModel("소속 캐스트", castCount.toString(), true),
-                MyInfoMetricCardModel("평균 평점", ((rating * 10).toInt() / 10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_operating_cafes), cafeCount.toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_affiliated_casts), castCount.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_average_rating), ((rating * 10).toInt() / 10.0).toString(), false)
             )
         }
         else -> {
             listOf(
-                MyInfoMetricCardModel("방문 횟수", (uiState.summary?.totalVisits ?: 0).toString(), false),
-                MyInfoMetricCardModel("즐겨찾기", uiState.favorites.size.toString(), true),
-                MyInfoMetricCardModel("팔로우", (uiState.summary?.followedCastsCount ?: 0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_visit_count), (uiState.summary?.totalVisits ?: 0).toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_favorites), uiState.favorites.size.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_following), (uiState.summary?.followedCastsCount ?: 0).toString(), false)
             )
         }
     }

@@ -145,7 +145,7 @@ fun NoticeEventScreen(
         )
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(NoticeEventAction.DismissFormSheet) },
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            containerColor = MaterialTheme.colorScheme.surface,
             sheetState = sheetState,
             windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
@@ -699,7 +699,7 @@ private fun NoticeEventFormSheetContent(
             }
         }
         Surface(
-            color = Color.Transparent,
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier.imePadding()
         ) {
             Box(
@@ -707,7 +707,7 @@ private fun NoticeEventFormSheetContent(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surface)
                         )
                     )
             ) {

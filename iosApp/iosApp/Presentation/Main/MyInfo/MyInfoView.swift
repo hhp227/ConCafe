@@ -333,9 +333,9 @@ private struct ProfileMyInfoView: View {
         let title = {
             switch user?.role {
             case UserRole.cast:
-                return castDetail?.cast.name ?? user?.nickname ?? "메이드러버"
+                return castDetail?.cast.name ?? user?.nickname ?? String(localized: String.LocalizationValue("myinfo_profile_default_nickname"), table: "Localizable")
             default:
-                return user?.nickname ?? "메이드러버"
+                return user?.nickname ?? String(localized: String.LocalizationValue("myinfo_profile_default_nickname"), table: "Localizable")
             }
         }()
         let subtitle = {
@@ -344,23 +344,27 @@ private struct ProfileMyInfoView: View {
                 guard let user, let castDetail else { return "" }
                 return user.nickname == castDetail.cast.name ? "" : user.nickname
             case UserRole.cafeOwner:
-                return "카페 운영자"
+                return String(localized: String.LocalizationValue("myinfo_profile_role_cafe_owner"), table: "Localizable")
             case UserRole.admin:
-                return "관리자 계정"
+                return String(localized: String.LocalizationValue("myinfo_profile_role_admin_account"), table: "Localizable")
             default:
-                return "레벨 \(uiState.summary?.level ?? 1) · 열정적인 팬"
+                return String(
+                    format: String(localized: String.LocalizationValue("myinfo_profile_role_visitor_level"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.summary?.level ?? 1
+                )
             }
         }()
         let accentText = {
             switch user?.role {
             case UserRole.cast:
-                return castDetail?.cafe.name ?? "소속 카페 없음"
+                return castDetail?.cafe.name ?? String(localized: String.LocalizationValue("myinfo_profile_affiliation_none"), table: "Localizable")
             case UserRole.cafeOwner:
-                return ownerCafe?.name ?? "운영 카페 없음"
+                return ownerCafe?.name ?? String(localized: String.LocalizationValue("myinfo_profile_operating_cafe_none"), table: "Localizable")
             case UserRole.admin:
-                return "ConCafe 운영"
+                return String(localized: String.LocalizationValue("myinfo_profile_accent_admin"), table: "Localizable")
             default:
-                return "내 활동 요약"
+                return String(localized: String.LocalizationValue("myinfo_profile_accent_visitor"), table: "Localizable")
             }
         }()
         return HStack(spacing: 16) {
@@ -445,24 +449,24 @@ private struct ProfileMyInfoView: View {
         switch uiState.user?.role {
         case UserRole.cast:
             return [
-                .init(title: "전체 팔로워", value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
-                .init(title: "근무 일정", value: "\(currentWeekScheduleCount)", highlight: true),
-                .init(title: "평점", value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_total_followers"), table: "Localizable"), value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_work_schedule"), table: "Localizable"), value: "\(currentWeekScheduleCount)", highlight: true),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_rating"), table: "Localizable"), value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
             ]
         case UserRole.cafeOwner:
             let cafeCount = uiState.ownedCafes.count
             let castCount = uiState.ownedCafes.reduce(0) { $0 + Int($1.castCount) }
             let rating = uiState.ownedCafes.isEmpty ? 0 : uiState.ownedCafes.map(\.rating).reduce(0, +) / Double(uiState.ownedCafes.count)
             return [
-                .init(title: "운영 카페", value: "\(cafeCount)", highlight: false),
-                .init(title: "소속 캐스트", value: "\(castCount)", highlight: true),
-                .init(title: "평균 평점", value: String(format: "%.1f", rating), highlight: false)
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_operating_cafes"), table: "Localizable"), value: "\(cafeCount)", highlight: false),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_affiliated_casts"), table: "Localizable"), value: "\(castCount)", highlight: true),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_average_rating"), table: "Localizable"), value: String(format: "%.1f", rating), highlight: false)
             ]
         default:
             return [
-                .init(title: "방문 횟수", value: "\(uiState.summary?.totalVisits ?? 0)", highlight: false),
-                .init(title: "즐겨찾기", value: "\(uiState.favorites.count)", highlight: true),
-                .init(title: "팔로우", value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_visit_count"), table: "Localizable"), value: "\(uiState.summary?.totalVisits ?? 0)", highlight: false),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_favorites"), table: "Localizable"), value: "\(uiState.favorites.count)", highlight: true),
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_following"), table: "Localizable"), value: "\(uiState.summary?.followedCastsCount ?? 0)", highlight: false)
             ]
         }
     }
@@ -497,7 +501,7 @@ private struct ProfileMyInfoView: View {
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                MyInfoSectionTitle(title: "활동 뱃지")
+                MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_profile_section_badges"), table: "Localizable"))
                 Spacer()
                 Text("\(uiState.badges.filter { $0.unlocked }.count) / \(uiState.badges.count)")
                     .font(.caption)
@@ -517,8 +521,8 @@ private struct ProfileMyInfoView: View {
                         }
                     } else {
                         MyInfoSectionPlaceholderCard(
-                            title: "획득한 활동 뱃지가 아직 없어요",
-                            description: "체크인과 팬 활동으로 첫 뱃지를 모아보세요."
+                            title: String(localized: String.LocalizationValue("myinfo_profile_badges_empty_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("myinfo_profile_badges_empty_desc"), table: "Localizable")
                         )
                     }
                 }
@@ -574,7 +578,7 @@ private struct ProfileMyInfoView: View {
 
     private var recentVisitsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            MyInfoSectionTitle(title: "최근 방문")
+            MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_profile_section_recent_visits"), table: "Localizable"))
             if !uiState.recentVisits.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
@@ -616,8 +620,8 @@ private struct ProfileMyInfoView: View {
                 }
             } else {
                 MyInfoSectionPlaceholderCard(
-                    title: "최근 방문 기록이 없어요",
-                    description: "첫 체크인을 완료하면 이곳에 방문한 카페가 표시됩니다."
+                    title: String(localized: String.LocalizationValue("myinfo_profile_recent_visits_empty_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("myinfo_profile_recent_visits_empty_desc"), table: "Localizable")
                 )
             }
         }
@@ -627,7 +631,7 @@ private struct ProfileMyInfoView: View {
         let favoriteItems = Array(uiState.favorites.prefix(12))
         let columnCount = myInfoGridColumnCount(for: contentWidth)
         return VStack(alignment: .leading, spacing: 8) {
-            MyInfoSectionTitle(title: "즐겨찾기")
+            MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_profile_section_favorites"), table: "Localizable"))
             if !favoriteItems.isEmpty {
                 LazyVGrid(columns: myInfoGridColumns(count: columnCount), spacing: myInfoGridItemSpacing) {
                     ForEach(favoriteItems, id: \.id) { cafe in
@@ -647,8 +651,8 @@ private struct ProfileMyInfoView: View {
                 }
             } else {
                 MyInfoSectionPlaceholderCard(
-                    title: "즐겨찾기한 카페가 없어요",
-                    description: "좋아하는 카페를 즐겨찾기에 추가해보세요."
+                    title: String(localized: String.LocalizationValue("myinfo_profile_favorites_empty_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("myinfo_profile_favorites_empty_desc"), table: "Localizable")
                 )
             }
         }
@@ -695,7 +699,7 @@ private struct ProfileMyInfoView: View {
 
     private var followedMaidsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            MyInfoSectionTitle(title: "팔로우한 캐스트")
+            MyInfoSectionTitle(title: String(localized: String.LocalizationValue("myinfo_profile_section_followed_casts"), table: "Localizable"))
             if !uiState.followedMaids.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -728,8 +732,8 @@ private struct ProfileMyInfoView: View {
                 }
             } else {
                 MyInfoSectionPlaceholderCard(
-                    title: "팔로우한 캐스트가 없어요",
-                    description: "관심 있는 캐스트를 팔로우하면 여기서 바로 볼 수 있어요."
+                    title: String(localized: String.LocalizationValue("myinfo_profile_followed_casts_empty_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("myinfo_profile_followed_casts_empty_desc"), table: "Localizable")
                 )
             }
         }
