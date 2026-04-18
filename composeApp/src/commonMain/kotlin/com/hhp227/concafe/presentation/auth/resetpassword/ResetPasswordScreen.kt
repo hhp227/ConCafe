@@ -1,6 +1,7 @@
 package com.hhp227.concafe.presentation.auth.resetpassword
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -120,10 +121,24 @@ private fun ResetPasswordContentScreen(
     innerPadding: PaddingValues,
     onAction: (ResetPasswordAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(
+                Brush.linearGradient(
+                    if (isDarkMode) {
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    } else {
+                        listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                    }
+                )
+            )
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -159,7 +174,7 @@ private fun ResetPasswordContentScreen(
             }
         }
         item {
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -171,7 +186,7 @@ private fun ResetPasswordContentScreen(
                     )
                     Text(
                         text = stringResource(Res.string.reset_password_input_desc),
-                        color = colorFromHex("7C7480"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                     ConCafeFormField(
@@ -184,7 +199,7 @@ private fun ResetPasswordContentScreen(
                             Icon(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = null,
-                                tint = colorFromHex("B3ACB7")
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     )
@@ -192,7 +207,7 @@ private fun ResetPasswordContentScreen(
             }
         }
         item {
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -239,7 +254,7 @@ private fun ResetPasswordGuideRow(
     text: String
 ) {
     Surface(
-        color = colorFromHex("F8F5F6"),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = MaterialTheme.shapes.large
     ) {
         Row(
@@ -258,7 +273,7 @@ private fun ResetPasswordGuideRow(
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6F6673")
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

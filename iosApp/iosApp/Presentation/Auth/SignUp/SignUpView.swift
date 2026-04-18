@@ -145,11 +145,14 @@ private struct SignUpContentView: View {
                 Spacer()
             }
             .padding(20)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color(hex: "E7DFE8"), lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E7DFE8"),
+                        lineWidth: 1
+                    )
             )
         }
     }

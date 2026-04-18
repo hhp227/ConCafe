@@ -756,7 +756,6 @@ private data class MyInfoMetricCardModel(
 @Composable
 private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardModel> {
     val user = uiState.user ?: return emptyList()
-
     return when (user.role) {
         UserRole.CAST -> {
             val cast = uiState.castDetail?.cast
