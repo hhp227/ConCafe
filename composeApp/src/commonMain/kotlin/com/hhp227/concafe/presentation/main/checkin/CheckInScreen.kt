@@ -266,8 +266,8 @@ private fun CheckInNewVisitDialog(
                     .width(520.dp)
                     .keyboardBottomInsets(),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                color = Color.White,
-                tonalElevation = 0.dp,
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 2.dp,
                 shadowElevation = 12.dp
             ) {
                 Box(
@@ -837,12 +837,13 @@ private fun PopularCastCard(
     cast: CheckInCastSummary,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Card(
         onClick = onClick,
         modifier = Modifier
             .width(200.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -888,18 +889,22 @@ private fun PopularCastCard(
                     Text(
                         text = cast.cafeName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("7A7380")
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = colorFromHex("FFEEF5")
+                color = if (isDarkMode) {
+                    colorFromHex("EF6797").copy(alpha = 0.22f)
+                } else {
+                    colorFromHex("FFEEF5")
+                }
             ) {
                 Text(
                     text = stringResource(Res.string.checkin_today_visit_count, cast.todayVisit),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = colorFromHex("EF6797"),
+                    color = if (isDarkMode) colorFromHex("F8B7CF") else colorFromHex("EF6797"),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1001,6 +1006,7 @@ private fun NewVisitCheckInBottomSheet(
     onQrCheckIn: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val cafeOptions = cafes.map { it.name to it.id }
     var selectedCafeId by remember {
         mutableStateOf(
@@ -1052,17 +1058,20 @@ private fun NewVisitCheckInBottomSheet(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(Res.string.common_close),
-                    tint = colorFromHex("7C7480")
+                    tint = colorScheme.onSurfaceVariant
                 )
             }
         }
         Text(
             text = stringResource(Res.string.checkin_new_visit_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("7C7480")
+            color = colorScheme.onSurfaceVariant
         )
         if (cafeOptions.isEmpty()) {
-            Text(stringResource(Res.string.checkin_new_visit_no_cafe))
+            Text(
+                text = stringResource(Res.string.checkin_new_visit_no_cafe),
+                color = colorScheme.onSurfaceVariant
+            )
             ConCafeFormField(
                 label = stringResource(Res.string.checkin_new_visit_cafe_label),
                 value = "",
@@ -1131,8 +1140,8 @@ private fun NewVisitCheckInBottomSheet(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = colorFromHex("FFF1F3"),
-                border = BorderStroke(1.dp, colorFromHex("FFCDD5"))
+                color = colorScheme.errorContainer,
+                border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.35f))
             ) {
                 Row(
                     modifier = Modifier
@@ -1144,13 +1153,13 @@ private fun NewVisitCheckInBottomSheet(
                     Icon(
                         imageVector = Icons.Default.ErrorOutline,
                         contentDescription = null,
-                        tint = colorFromHex("E25575"),
+                        tint = colorScheme.error,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = errorMessage,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("B03854")
+                        color = colorScheme.onErrorContainer
                     )
                 }
             }

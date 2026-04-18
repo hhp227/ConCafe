@@ -544,6 +544,8 @@ private struct CheckInCastCard: View {
 
     let onTap: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
@@ -578,26 +580,26 @@ private struct CheckInCastCard: View {
                         .lineLimit(1)
                     Text(cast.cafeName)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "7A7380"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7A7380"))
                         .lineLimit(1)
                 }
             }
             HStack {
                 Text(String(format: String(localized: String.LocalizationValue("checkin_today_visit_count"), table: "Localizable"), locale: Locale.current, cast.todayVisit))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(colorScheme == .dark ? Color(hex: "F8B7CF") : Color(hex: "EF6797"))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color(hex: "FFEEF5"))
+                    .background(colorScheme == .dark ? Color(hex: "EF6797").opacity(0.22) : Color(hex: "FFEEF5"))
                     .clipShape(Capsule())
                 Spacer(minLength: 0)
             }
         }
         .padding(16)
         .frame(width: 200, alignment: .leading)
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
+        .shadow(color: colorScheme == .dark ? .black.opacity(0.20) : .black.opacity(0.03), radius: 8, y: 3)
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }
@@ -985,6 +987,8 @@ private struct CheckInNewVisitSheet: View {
 
     let onAction: (CheckInAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var selectedCafeId: String?
 
     @State private var memo = ""
@@ -1009,20 +1013,20 @@ private struct CheckInNewVisitSheet: View {
                             onAction(.dismissNewVisitSheet)
                         } label: {
                             Image(systemName: "xmark")
-                                .foregroundStyle(Color(hex: "7C7480"))
+                                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                                 .padding(4)
                         }
                     }
                     Text(String(localized: String.LocalizationValue("checkin_new_visit_desc"), table: "Localizable"))
                         .font(.footnote)
-                        .foregroundStyle(Color(hex: "7C7480"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     VStack(spacing: 10) {
                         if cafes.isEmpty {
                             VStack(spacing: 6) {
                                 Text(String(localized: String.LocalizationValue("checkin_new_visit_no_cafe"), table: "Localizable"))
                                     .font(.footnote)
-                                    .foregroundStyle(Color(hex: "7C7480"))
+                                    .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 ConCafeFormField(
                                     label: String(localized: String.LocalizationValue("checkin_new_visit_cafe_label"), table: "Localizable"),
@@ -1048,7 +1052,7 @@ private struct CheckInNewVisitSheet: View {
                                         trailingContent: {
                                             Image(systemName: "chevron.down")
                                                 .font(.caption.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "7C7480"))
+                                                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                                         }
                                     )
                                 }
@@ -1065,7 +1069,7 @@ private struct CheckInNewVisitSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 170)
                 .padding(.top, 10)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .systemBackground) : Color.white)
             }
             VStack(spacing: 8) {
                 if let errorMessage, !errorMessage.isEmpty {
@@ -1121,10 +1125,10 @@ private struct CheckInNewVisitSheet: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
             .padding(.top, 10)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color(uiColor: .systemBackground) : Color.white)
             .overlay(
                 Rectangle()
-                    .fill(Color(hex: "EEE4EA"))
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color(hex: "EEE4EA"))
                     .frame(height: 1),
                 alignment: .top
             )
@@ -1132,12 +1136,15 @@ private struct CheckInNewVisitSheet: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [
+                    colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"),
+                    colorScheme == .dark ? Color(uiColor: .systemBackground) : Color(hex: "FFFBFD")
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
-        .background(Color(hex: "F8F5F6"))
+        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
     }
 
     init(
