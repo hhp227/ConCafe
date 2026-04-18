@@ -406,7 +406,7 @@ private struct ScheduleContentView: View {
                             VStack(spacing: 4) {
                                 Text(day.label)
                                     .font(.caption2.weight(.bold))
-                                    .foregroundStyle(isSelected ? .primary.opacity(0.6) : .secondary)
+                                    .foregroundStyle(isSelected ? Color.primary.opacity(0.6) : Color.secondary)
                                 Text(day.number)
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(.primary)
