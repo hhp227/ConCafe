@@ -73,7 +73,7 @@ private struct NoticeEventContentView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .tertiarySystemBackground), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -82,7 +82,7 @@ private struct NoticeEventContentView: View {
                 ConCafeTabBar(
                     labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                     selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                    backgroundColor: Color(hex: "F8F5F6"),
+                    backgroundColor: Color(uiColor: .tertiarySystemBackground),
                     onSelect: { index in
                         onAction(.selectTab(NoticeEventTab.allCases[index]))
                     }
@@ -201,7 +201,7 @@ private struct NoticeEventContentView: View {
                     Text(String(localized: String.LocalizationValue("noticeevent_register_cta"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
                 .background(Color(hex: "FFD1DC"))
@@ -218,13 +218,13 @@ private struct NoticeEventContentView: View {
             HStack(alignment: .top) {
                 HStack(spacing: 6) {
                     if item.isPinned {
-                        statusChip("PINNED", container: Color(hex: "FFD1DC"), content: Color(hex: "2B2330"))
+                        statusChip("PINNED", container: Color(hex: "FFD1DC"), content: .primary)
                     }
                     switch item.statusAccent {
                     case .published:
                         statusChip(item.statusLabel, container: Color(hex: "E8F8EC"), content: Color(hex: "2E9E5B"))
                     case .draft:
-                        statusChip(item.statusLabel, container: Color(hex: "F2F0F3"), content: Color(hex: "7A707A"))
+                        statusChip(item.statusLabel, container: Color(hex: "F2F0F3"), content: .secondary)
                     case .ended:
                         statusChip(item.statusLabel, container: Color(hex: "F3E8E8"), content: Color(hex: "8C5A5A"))
                     default:
@@ -239,13 +239,13 @@ private struct NoticeEventContentView: View {
             }
             Text(item.title)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "23161C"))
+                .foregroundStyle(.primary)
             Text(item.displayDate)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "8F848F"))
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
@@ -274,7 +274,7 @@ private struct NoticeEventContentView: View {
                 statusChip(
                     item.statusLabel,
                     container: item.isDimmed ? Color(hex: "6E6570") : Color(hex: "FFD1DC"),
-                    content: item.isDimmed ? .white : Color(hex: "2B2330")
+                    content: item.isDimmed ? .white : .primary
                 )
                 .padding(12)
             }
@@ -282,7 +282,7 @@ private struct NoticeEventContentView: View {
                 HStack {
                     Text(item.title)
                         .font(.headline.weight(.bold))
-                        .foregroundStyle(Color(hex: "23161C"))
+                        .foregroundStyle(.primary)
                         .lineLimit(1)
                     Spacer()
                     iconButton("square.and.pencil") { onAction(.clickEditEvent(item.id)) }
@@ -297,7 +297,7 @@ private struct NoticeEventContentView: View {
             }
             .padding(18)
         }
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
         .opacity(item.isDimmed ? 0.74 : 1)
@@ -325,7 +325,7 @@ private struct NoticeEventContentView: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "9A8D95"))
+                .foregroundStyle(.secondary)
                 .frame(width: 28, height: 28)
         }
         .buttonStyle(.plain)
@@ -335,7 +335,7 @@ private struct NoticeEventContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
                 .padding(.leading, 4)
             ConCafeFormField(
                 label: "",
@@ -381,7 +381,7 @@ private struct NoticeEventContentView: View {
             Spacer()
         }
         .padding(.vertical, 28)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
@@ -413,14 +413,14 @@ private struct NoticeEventFormSheet: View {
                     HStack {
                         Text(uiState.formSheetTitle)
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(Color(hex: "23161C"))
+                            .foregroundStyle(.primary)
                         Spacer()
                         Button {
                             onAction(.dismissFormSheet)
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(hex: "9A8D95"))
+                                .foregroundStyle(.secondary)
                                 .frame(width: 28, height: 28)
                         }
                         .buttonStyle(.plain)
@@ -432,7 +432,7 @@ private struct NoticeEventFormSheet: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(String(localized: String.LocalizationValue("noticeevent_form_label_title"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "665A63"))
+                                    .foregroundStyle(.secondary)
                                     .padding(.leading, 4)
                                 ConCafeFormField(
                                     label: "",
@@ -446,7 +446,7 @@ private struct NoticeEventFormSheet: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(String(localized: String.LocalizationValue("noticeevent_form_label_content"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "665A63"))
+                                    .foregroundStyle(.secondary)
                                     .padding(.leading, 4)
                                 ConCafeFormEditor(
                                     label: "",
@@ -465,7 +465,7 @@ private struct NoticeEventFormSheet: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(String(localized: String.LocalizationValue("noticeevent_pinned_title"), table: "Localizable"))
                                             .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "23161C"))
+                                            .foregroundStyle(.primary)
                                         Text(String(localized: String.LocalizationValue("noticeevent_pinned_desc"), table: "Localizable"))
                                             .font(.caption)
                                             .foregroundStyle(Color(hex: "8F848F"))
@@ -482,13 +482,13 @@ private struct NoticeEventFormSheet: View {
                                     .tint(Color(hex: "FFD1DC"))
                                 }
                                 .padding(16)
-                                .background(Color.white)
+                                .background(Color(uiColor: .secondarySystemBackground))
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                             }
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(uiState.formScheduleLabel)
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "665A63"))
+                                    .foregroundStyle(.secondary)
                                     .padding(.leading, 4)
                                 Button {
                                     if uiState.selectedTab == .event {
@@ -509,14 +509,14 @@ private struct NoticeEventFormSheet: View {
                                 } label: {
                                     HStack {
                                         Text(uiState.formReservedAt.isEmpty ? uiState.formSchedulePlaceholder : uiState.formReservedAt)
-                                            .foregroundStyle(Color(hex: "9A8D95"))
+                                            .foregroundStyle(.secondary)
                                         Spacer()
                                         Image(systemName: "calendar")
-                                            .foregroundStyle(Color(hex: "9A8D95"))
+                                            .foregroundStyle(.secondary)
                                     }
                                     .padding(.horizontal, 16)
                                     .frame(height: 56)
-                                    .background(Color.white)
+                                    .background(Color(uiColor: .secondarySystemBackground))
                                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -530,7 +530,7 @@ private struct NoticeEventFormSheet: View {
                                         VStack(alignment: .leading, spacing: 6) {
                                             Text(String(localized: String.LocalizationValue("schedule_label_start_time"), table: "Localizable"))
                                                 .font(.caption.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "665A63"))
+                                                .foregroundStyle(.secondary)
                                             DatePicker(
                                                 "",
                                                 selection: $eventStartDate,
@@ -542,7 +542,7 @@ private struct NoticeEventFormSheet: View {
                                         VStack(alignment: .leading, spacing: 6) {
                                             Text(String(localized: String.LocalizationValue("schedule_label_end_time"), table: "Localizable"))
                                                 .font(.caption.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "665A63"))
+                                                .foregroundStyle(.secondary)
                                             DatePicker(
                                                 "",
                                                 selection: $eventEndDate,
@@ -577,11 +577,11 @@ private struct NoticeEventFormSheet: View {
                                             }
                                             .buttonStyle(.borderedProminent)
                                             .tint(Color(hex: "FFD1DC"))
-                                            .foregroundStyle(Color(hex: "2B2330"))
+                                            .foregroundStyle(.primary)
                                         }
                                     }
                                     .padding(12)
-                                    .background(Color.white)
+                                    .background(Color(uiColor: .secondarySystemBackground))
                                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                                 }
                             }
@@ -593,7 +593,7 @@ private struct NoticeEventFormSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: 720)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: .tertiarySystemBackground))
                 .ignoresSafeArea(edges: .bottom)
             }
             bottomSubmitBar()
@@ -617,7 +617,7 @@ private struct NoticeEventFormSheet: View {
 
     private func bottomSubmitBar() -> some View {
         LinearGradient(
-            colors: [Color.clear, Color(hex: "F8F5F6"), Color(hex: "F8F5F6")],
+            colors: [Color.clear, Color(uiColor: .tertiarySystemBackground), Color(uiColor: .tertiarySystemBackground)],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -630,7 +630,7 @@ private struct NoticeEventFormSheet: View {
                     .font(.headline.weight(.bold))
                     .frame(maxWidth: .infinity)
                     .frame(height: 60)
-                    .foregroundStyle(uiState.isFormSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .foregroundStyle(uiState.isFormSubmitEnabled ? .primary : .secondary)
                     .background(uiState.isFormSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
@@ -646,14 +646,14 @@ private struct NoticeEventFormSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: String.LocalizationValue("noticeevent_form_image_label"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
                 .padding(.leading, 4)
             GeometryReader { proxy in
                 ZStack(alignment: .bottomTrailing) {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -681,7 +681,7 @@ private struct NoticeEventFormSheet: View {
                         .foregroundStyle(Color(hex: "8B5164"))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.white)
+                        .background(Color(uiColor: .secondarySystemBackground))
                         .clipShape(Capsule())
                         .padding(12)
                     }

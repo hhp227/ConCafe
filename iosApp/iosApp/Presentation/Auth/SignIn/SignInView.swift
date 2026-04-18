@@ -128,7 +128,7 @@ private struct SignInContentView: View {
                 title: String(localized: String.LocalizationValue("signup_social_kakao"), table: "Localizable"),
                 icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
-                foreground: .black,
+                foreground: .primary,
                 outlined: false,
                 action: {
                     onAction(.socialSignInTapped(provider: .kakao))

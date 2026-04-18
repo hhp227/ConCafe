@@ -105,13 +105,13 @@ private fun BannerContentScreen(
     onAction: (BannerAction) -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF8F5F6),
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 CenterAlignedTopAppBar(
                     title = {
@@ -147,7 +147,7 @@ private fun BannerContentScreen(
         },
         bottomBar = {
             Surface(
-                color = Color(0xFFF8F5F6),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                 shadowElevation = 8.dp
             ) {
                 Button(
@@ -158,8 +158,8 @@ private fun BannerContentScreen(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF24161E)
+                        containerColor = colorFromHex("FFD1DC"),
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
@@ -173,7 +173,7 @@ private fun BannerContentScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F5F6)),
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
@@ -200,13 +200,13 @@ private fun BannerContentScreen(
                         ),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7A707A)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = stringResource(Res.string.banner_location_home_top),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFEF6797)
+                        color = colorFromHex("EF6797")
                     )
                 }
             }
@@ -224,7 +224,7 @@ private fun BannerContentScreen(
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9A8E97)
+                    color = colorFromHex("9A8E97")
                 )
             }
         }
@@ -239,7 +239,7 @@ private fun BannerCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, Color(0x1AFFD1DC)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -273,15 +273,15 @@ private fun BannerCard(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFCE5E87)
+                            color = colorFromHex("CE5E87")
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.banner_content_edit), tint = Color(0xFF8F848F))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.banner_content_edit), tint = colorFromHex("8F848F"))
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.banner_content_delete), tint = Color(0xFF8F848F))
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.banner_content_delete), tint = colorFromHex("8F848F"))
                         }
                     }
                 }
@@ -292,12 +292,12 @@ private fun BannerCard(
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        color = Color(0xFF24161E)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = banner.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A707A),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -309,13 +309,13 @@ private fun BannerCard(
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
-                        tint = Color(0xFFB2A7AF),
+                        tint = colorFromHex("B2A7AF"),
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.banner_period_days, banner.periodDays),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF9A8E97)
+                        color = colorFromHex("9A8E97")
                     )
                 }
             }

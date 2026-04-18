@@ -214,7 +214,7 @@ private struct CafeInfoEditContentView: View {
             }
             bottomSaveBar()
         }
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .tertiarySystemBackground))
     }
 
     private var basicInformationSection: some View {
@@ -246,7 +246,7 @@ private struct CafeInfoEditContentView: View {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                    colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -365,10 +365,10 @@ private struct CafeInfoEditContentView: View {
                 } label: {
                     Text(String(localized: String.LocalizationValue("cafeinfo_action_pin_location"), table: "Localizable"))
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.92))
+                        .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
@@ -385,7 +385,7 @@ private struct CafeInfoEditContentView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(String(localized: String.LocalizationValue("cafeinfo_label_contact"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(.secondary)
                 PhoneTextField(
                     text: Binding(
                         get: { uiState.contactNumber },
@@ -395,7 +395,7 @@ private struct CafeInfoEditContentView: View {
                 )
                 .frame(height: 52)
                 .padding(.horizontal, 16)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: .tertiarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -471,12 +471,12 @@ private struct CafeInfoEditContentView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(.primary)
             .disabled(uiState.isSaving)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white.opacity(0.92))
+            .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
         }
     }
 
@@ -489,14 +489,14 @@ private struct CafeInfoEditContentView: View {
             HStack {
                 Text(title)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 trailing()
             }
             content()
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -619,7 +619,7 @@ private struct CafeInfoEditContentView: View {
             TimeFieldPicker(text: close)
         }
         .padding(12)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .tertiarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
@@ -662,13 +662,13 @@ private struct TimeFieldPicker: View {
             HStack(spacing: 6) {
                 Text(normalizedText(text))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Image(systemName: "clock")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "7C7480"))
             }
             .frame(width: 108, height: 38)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)

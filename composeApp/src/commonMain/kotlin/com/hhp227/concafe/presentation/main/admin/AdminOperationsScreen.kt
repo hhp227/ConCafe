@@ -31,6 +31,7 @@ import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.admin_banner_card_description
@@ -78,7 +79,7 @@ fun AdminOperationsScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFCFD))
+                    colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFCFD"))
                 )
             ),
         contentPadding = PaddingValues(
@@ -130,13 +131,13 @@ private fun BannerRegisterCard(
             Text(
                 stringResource(Res.string.admin_banner_card_description),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7A707A)
+                color = colorFromHex("7A707A")
             )
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330)
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = colorFromHex("2B2330")
                 )
             ) {
                 Icon(Icons.Default.Campaign, contentDescription = null)
@@ -168,15 +169,15 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD1DC).copy(alpha = 0.16f))
+        colors = CardDefaults.cardColors(containerColor = colorFromHex("FFD1DC").copy(alpha = 0.16f))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(metric.icon.toImageVector(), contentDescription = null, tint = Color(0xFFEF6797), modifier = Modifier.size(16.dp))
-                Text(metric.title, style = MaterialTheme.typography.labelMedium, color = Color(0xFF7A707A))
+                Icon(metric.icon.toImageVector(), contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
+                Text(metric.title, style = MaterialTheme.typography.labelMedium, color = colorFromHex("7A707A"))
             }
             Text(metric.value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -188,9 +189,9 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
                     },
                     contentDescription = null,
                     tint = when (metric.trend) {
-                        MetricTrend.DOWN -> Color(0xFF2E9E5B)
-                        MetricTrend.UP -> Color(0xFF2E9E5B)
-                        MetricTrend.NEW -> Color(0xFFEF5350)
+                        MetricTrend.DOWN -> colorFromHex("2E9E5B")
+                        MetricTrend.UP -> colorFromHex("2E9E5B")
+                        MetricTrend.NEW -> colorFromHex("EF5350")
                     },
                     modifier = Modifier.size(14.dp)
                 )
@@ -199,9 +200,9 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = when (metric.trend) {
-                        MetricTrend.DOWN -> Color(0xFF2E9E5B)
-                        MetricTrend.UP -> Color(0xFF2E9E5B)
-                        MetricTrend.NEW -> Color(0xFFEF5350)
+                        MetricTrend.DOWN -> colorFromHex("2E9E5B")
+                        MetricTrend.UP -> colorFromHex("2E9E5B")
+                        MetricTrend.NEW -> colorFromHex("EF5350")
                     }
                 )
             }
@@ -219,7 +220,7 @@ private fun PendingSection(
             Text(stringResource(Res.string.admin_pending_section_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
                 text = stringResource(Res.string.dashboard_action_view_all),
-                color = Color(0xFFEF6797),
+                color = colorFromHex("EF6797"),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable { onAction(AdminOperationsAction.ClickSeeAllPending) }
@@ -234,14 +235,14 @@ private fun PendingSection(
             uiState.pendingFilters.forEach { chip ->
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = if (chip.isSelected) Color(0xFFFFD1DC) else Color(0xFFFFD1DC).copy(alpha = 0.14f),
+                    color = if (chip.isSelected) colorFromHex("FFD1DC") else colorFromHex("FFD1DC").copy(alpha = 0.14f),
                     tonalElevation = 0.dp,
                     modifier = Modifier.clickable { onAction(AdminOperationsAction.SelectPendingFilter(chip.filter)) }
                 ) {
                     Text(
                         text = "${chip.label} (${chip.count})",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        color = if (chip.isSelected) Color(0xFF2B2330) else Color(0xFF6F6670),
+                        color = if (chip.isSelected) colorFromHex("2B2330") else colorFromHex("6F6670"),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (chip.isSelected) FontWeight.Bold else FontWeight.Medium
                     )
@@ -285,7 +286,7 @@ private fun InquirySection(
                 Text(
                     text = stringResource(Res.string.admin_inquiry_empty),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
-                    color = Color(0xFF7A707A)
+                    color = colorFromHex("7A707A")
                 )
             }
         } else {
@@ -298,15 +299,15 @@ private fun InquirySection(
                     enabled = !uiState.isLoadingMoreInquiries,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF5F2F4),
-                        contentColor = Color(0xFF5E545F)
+                        containerColor = colorFromHex("F5F2F4"),
+                        contentColor = colorFromHex("5E545F")
                     )
                 ) {
                     if (uiState.isLoadingMoreInquiries) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = Color(0xFF8B7F8A)
+                            color = colorFromHex("8B7F8A")
                         )
                     } else {
                         Text(stringResource(Res.string.admin_inquiry_load_more), fontWeight = FontWeight.Bold)
@@ -336,13 +337,13 @@ private fun InquiryCard(
             ) {
                 Text(
                     text = inquiry.inquiryType,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = inquiry.createdAtLabel,
-                    color = Color(0xFF7A707A),
+                    color = colorFromHex("7A707A"),
                     style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -354,12 +355,12 @@ private fun InquiryCard(
             Text(
                 text = inquiry.content,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6F6670)
+                color = colorFromHex("6F6670")
             )
             Text(
                 text = stringResource(Res.string.admin_writer, inquiry.userNickname),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF8B7F8A)
+                color = colorFromHex("8B7F8A")
             )
         }
     }
@@ -420,7 +421,7 @@ private fun PendingClaimCard(
                     .clip(RoundedCornerShape(14.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFE7EF), Color(0xFFF4D8E2))
+                            colors = listOf(colorFromHex("FFE7EF"), colorFromHex("F4D8E2"))
                         )
                     )
             ) {
@@ -435,23 +436,23 @@ private fun PendingClaimCard(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                     Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Surface(shape = RoundedCornerShape(999.dp), color = Color(0xFFF5F2F4)) {
+                    Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("F5F2F4")) {
                         Text(
                             text = requestedAt,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF7A707A)
+                            color = colorFromHex("7A707A")
                         )
                     }
                 }
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7A707A))
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colorFromHex("7A707A"))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onApprove,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = colorFromHex("FFD1DC"),
+                            contentColor = colorFromHex("2B2330")
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -461,8 +462,8 @@ private fun PendingClaimCard(
                         onClick = onReject,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF5F2F4),
-                            contentColor = Color(0xFF6F6670)
+                            containerColor = colorFromHex("F5F2F4"),
+                            contentColor = colorFromHex("6F6670")
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -503,9 +504,9 @@ private fun QuickMenuSection(
                     }
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(menu.title, fontWeight = FontWeight.Bold)
-                        Text(menu.description, style = MaterialTheme.typography.labelSmall, color = Color(0xFF7A707A))
+                        Text(menu.description, style = MaterialTheme.typography.labelSmall, color = colorFromHex("7A707A"))
                     }
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFB5AEB5))
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("B5AEB5"))
                 }
             }
         }
@@ -518,16 +519,16 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFFF2D8))
+            .background(colorFromHex("FFF2D8"))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(message, modifier = Modifier.weight(1f), color = Color(0xFF6B5320), style = MaterialTheme.typography.bodyMedium)
+        Text(message, modifier = Modifier.weight(1f), color = colorFromHex("6B5320"), style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = stringResource(Res.string.common_close),
-            color = Color(0xFF6B5320),
+            color = colorFromHex("6B5320"),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss)
@@ -549,13 +550,13 @@ private fun QuickMenuIcon.toImageVector() = when (this) {
 }
 
 private fun QuickMenuAccent.backgroundColor() = when (this) {
-    QuickMenuAccent.PRIMARY -> Color(0xFFFFD1DC).copy(alpha = 0.32f)
-    QuickMenuAccent.ROSE -> Color(0xFFFFE5EA)
-    QuickMenuAccent.BLUE -> Color(0xFFE6F0FF)
+    QuickMenuAccent.PRIMARY -> colorFromHex("FFD1DC").copy(alpha = 0.32f)
+    QuickMenuAccent.ROSE -> colorFromHex("FFE5EA")
+    QuickMenuAccent.BLUE -> colorFromHex("E6F0FF")
 }
 
 private fun QuickMenuAccent.contentColor() = when (this) {
-    QuickMenuAccent.PRIMARY -> Color(0xFF5E535C)
-    QuickMenuAccent.ROSE -> Color(0xFFE05A78)
-    QuickMenuAccent.BLUE -> Color(0xFF4F7DFF)
+    QuickMenuAccent.PRIMARY -> colorFromHex("5E535C")
+    QuickMenuAccent.ROSE -> colorFromHex("E05A78")
+    QuickMenuAccent.BLUE -> colorFromHex("4F7DFF")
 }

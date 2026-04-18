@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.NotificationListItem
 import com.hhp227.concafe.domain.model.NotificationSection
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_notification
@@ -126,7 +127,7 @@ private fun NotificationSignInRequiredScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -134,7 +135,7 @@ private fun NotificationSignInRequiredScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 420.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -144,7 +145,7 @@ private fun NotificationSignInRequiredScreen(
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = colorFromHex("EF6797"),
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
@@ -156,7 +157,7 @@ private fun NotificationSignInRequiredScreen(
                 Text(
                     text = stringResource(Res.string.notification_login_required_desc),
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF7C7480),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -180,7 +181,7 @@ private fun NotificationSectionsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
@@ -194,7 +195,7 @@ private fun NotificationSectionsScreen(
                         .clip(RoundedCornerShape(24.dp))
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                                listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
                             )
                         )
                         .padding(20.dp),
@@ -251,7 +252,7 @@ private fun NotificationItemCard(
     onAction: (NotificationAction) -> Unit
 ) {
     val visual = notificationVisual(item.type)
-    val containerColor = if (item.isRead) Color.White else Color(0xFFFFF3F8)
+    val containerColor = if (item.isRead) MaterialTheme.colorScheme.surface else colorFromHex("FFF3F8")
 
     Card(
         modifier = Modifier
@@ -291,9 +292,9 @@ private fun NotificationItemCard(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .size(12.dp)
-                            .background(Color.White, CircleShape)
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
                             .padding(2.dp)
-                            .background(Color(0xFFEF6797), CircleShape)
+                            .background(colorFromHex("EF6797"), CircleShape)
                     )
                 }
             }
@@ -308,14 +309,14 @@ private fun NotificationItemCard(
                     )
                     Text(
                         text = item.relativeTime,
-                        color = Color(0xFF8E8794),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = item.message,
-                    color = Color(0xFF6D6671),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -331,11 +332,11 @@ private data class NotificationVisual(
 
 private fun notificationVisual(type: String): NotificationVisual {
     return when (type) {
-        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, Color(0xFFE4F7EC), Color(0xFF2E9E5B))
-        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, Color(0xFFFFE6F1), Color(0xFFEB5F97))
-        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, Color(0xFFE8F0FF), Color(0xFF4A79E8))
-        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, Color(0xFFFFF4E2), Color(0xFFE29B35))
-        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, Color(0xFFF1E8FF), Color(0xFF8A52E2))
-        else -> NotificationVisual(Icons.Filled.Notifications, Color(0xFFF2F2F2), Color(0xFF666666))
+        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, colorFromHex("E4F7EC"), colorFromHex("2E9E5B"))
+        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, colorFromHex("FFE6F1"), colorFromHex("EB5F97"))
+        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, colorFromHex("E8F0FF"), colorFromHex("4A79E8"))
+        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, colorFromHex("FFF4E2"), colorFromHex("E29B35"))
+        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, colorFromHex("F1E8FF"), colorFromHex("8A52E2"))
+        else -> NotificationVisual(Icons.Filled.Notifications, colorFromHex("F2F2F2"), colorFromHex("666666"))
     }
 }

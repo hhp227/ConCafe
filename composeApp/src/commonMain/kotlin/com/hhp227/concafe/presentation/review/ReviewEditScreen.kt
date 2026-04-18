@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -84,7 +85,7 @@ private fun ReviewEditContentScreen(
     onAction: (ReviewEditAction) -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF8F5F6),
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -107,7 +108,7 @@ private fun ReviewEditContentScreen(
                         TextButton(onClick = { onAction(ReviewEditAction.ClickSubmit) }) {
                             Text(
                                 text = uiState.topActionLabel,
-                                color = Color(0xFFEF6797),
+                                color = colorFromHex("EF6797"),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -118,7 +119,7 @@ private fun ReviewEditContentScreen(
         bottomBar = {
             if (uiState.isLoggedIn) {
                 Surface(
-                    color = Color.White.copy(alpha = 0.96f),
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 10.dp
                 ) {
                     Box(
@@ -135,17 +136,17 @@ private fun ReviewEditContentScreen(
                                 .height(56.dp),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFD1DC),
-                                contentColor = Color(0xFF2B2330),
-                                disabledContainerColor = Color(0xFFF0D9E0),
-                                disabledContentColor = Color(0xFF7F7078)
+                                containerColor = colorFromHex("FFD1DC"),
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                                disabledContainerColor = colorFromHex("F0D9E0"),
+                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
                             if (uiState.isSubmitting) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
                                     strokeWidth = 2.dp,
-                                    color = Color(0xFF2B2330)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             } else {
                                 Text(
@@ -162,11 +163,7 @@ private fun ReviewEditContentScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 12.dp)
@@ -178,7 +175,7 @@ private fun ReviewEditContentScreen(
                         .padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFFEF6797))
+                    CircularProgressIndicator(color = colorFromHex("EF6797"))
                 }
             } else {
                 CafeInfoSection(uiState = uiState)
@@ -213,7 +210,7 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
                 .clip(RoundedCornerShape(18.dp))
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFFFFE5EE), Color(0xFFF4C6D5))
+                        colors = listOf(colorFromHex("FFE5EE"), colorFromHex("F4C6D5"))
                     )
                 )
                 .border(
@@ -225,7 +222,7 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
         ) {
             Text(
                 text = "Cafe",
-                color = Color(0xFF8A5C71),
+                color = colorFromHex("8A5C71"),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -240,12 +237,12 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFFEF6797),
+                        tint = colorFromHex("EF6797"),
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.reviewedit_verified_visit),
-                        color = Color(0xFFEF6797),
+                        color = colorFromHex("EF6797"),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -254,13 +251,13 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
             Text(
                 text = uiState.cafeName,
                 style = MaterialTheme.typography.titleLarge,
-                color = Color(0xFF24161E),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = uiState.cafeAddress,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7A707A)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -274,7 +271,7 @@ private fun RatingSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -282,7 +279,7 @@ private fun RatingSection(
         Text(
             text = stringResource(Res.string.reviewedit_rating_question),
             style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF2B2330),
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         Row(
@@ -294,7 +291,7 @@ private fun RatingSection(
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = stringResource(Res.string.reviewedit_rating_accessibility, index),
-                    tint = if (isSelected) Color(0xFFFFC94D) else Color(0x33EF6797),
+                    tint = if (isSelected) colorFromHex("FFC94D") else Color(0x33EF6797),
                     modifier = Modifier
                         .size(38.dp)
                         .clickable { onAction(ReviewEditAction.SelectRating(index)) }
@@ -303,7 +300,7 @@ private fun RatingSection(
         }
         Text(
             text = uiState.ratingMessage,
-            color = Color(0xFFEF6797),
+            color = colorFromHex("EF6797"),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -318,14 +315,14 @@ private fun PhotoSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
             text = stringResource(Res.string.reviewedit_photo_section_title),
             style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF2B2330),
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         CompatImagePicker(
@@ -340,7 +337,7 @@ private fun PhotoSection(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                            colors = listOf(colorFromHex("FFD8E6"), colorFromHex("FFEFF5"))
                         )
                     )
                     .clickable {
@@ -357,12 +354,12 @@ private fun PhotoSection(
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = Color(0xFF8B5164),
+                            tint = colorFromHex("8B5164"),
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
                             text = stringResource(Res.string.reviewedit_photo_add),
-                            color = Color(0xFF5A4954),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -380,13 +377,13 @@ private fun PhotoSection(
                             .padding(12.dp)
                             .clickable { onAction(ReviewEditAction.RemovePhoto) },
                         shape = RoundedCornerShape(999.dp),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.surface
                     ) {
                         Text(
                             text = stringResource(Res.string.reviewedit_photo_remove),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFF8B5164),
+                            color = colorFromHex("8B5164"),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -396,7 +393,7 @@ private fun PhotoSection(
         Text(
             text = stringResource(Res.string.reviewedit_photo_helper),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF8A8088)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -409,7 +406,7 @@ private fun ReviewFormSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
@@ -432,11 +429,7 @@ private fun ReviewFormSection(
             ),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.End,
-            color = if (uiState.reviewLength >= ReviewEditUiState.minimumReviewLength) {
-                Color(0xFF2E9E5B)
-            } else {
-                Color(0xFF9A8D95)
-            },
+            color = if (uiState.reviewLength >= ReviewEditUiState.minimumReviewLength) colorFromHex("2E9E5B") else colorFromHex("9A8D95"),
             style = MaterialTheme.typography.labelMedium
         )
         if (uiState.availableCastTags.isNotEmpty()) {
@@ -465,7 +458,7 @@ private fun CastTagSection(
         Text(
             text = stringResource(Res.string.reviewedit_cast_tag_title),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF665A63),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
         Row(
@@ -478,10 +471,10 @@ private fun CastTagSection(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (selected) Color(0xFFFFD1DC) else Color(0x1AFFD1DC))
+                        .background(if (selected) colorFromHex("FFD1DC") else Color(0x1AFFD1DC))
                         .border(
                             width = 1.dp,
-                            color = if (selected) Color(0xFFFFD1DC) else Color(0x33FFD1DC),
+                            color = if (selected) colorFromHex("FFD1DC") else Color(0x33FFD1DC),
                             shape = RoundedCornerShape(999.dp)
                         )
                         .clickable { onToggle(cast.id) }
@@ -489,7 +482,7 @@ private fun CastTagSection(
                 ) {
                     Text(
                         text = cast.name,
-                        color = if (selected) Color(0xFF2B2330) else Color(0xFF6E6169),
+                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -508,7 +501,7 @@ private fun AtmosphereQuestionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFF8F5F6))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -526,12 +519,12 @@ private fun AtmosphereQuestionCard(
                 Icon(
                     imageVector = Icons.Default.Mood,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797)
+                    tint = colorFromHex("EF6797")
                 )
             }
             Text(
                 text = stringResource(Res.string.reviewedit_atmosphere_question),
-                color = Color(0xFF2B2330),
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
@@ -560,10 +553,10 @@ private fun AnswerChip(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (selected) Color(0xFFFFD1DC) else Color.White)
+            .background(if (selected) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface)
             .border(
                 width = 1.dp,
-                color = if (selected) Color(0xFFFFD1DC) else Color(0xFFD9CFD5),
+                color = if (selected) colorFromHex("FFD1DC") else colorFromHex("D9CFD5"),
                 shape = RoundedCornerShape(999.dp)
             )
             .clickable(onClick = onClick)
@@ -572,7 +565,7 @@ private fun AnswerChip(
     ) {
         Text(
             text = label,
-            color = if (selected) Color(0xFF2B2330) else Color(0xFF8E7F88),
+            color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold
         )
@@ -589,10 +582,10 @@ private fun InfoBanner(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFFF6D7))
+            .background(colorFromHex("FFF6D7"))
             .border(
                 width = 1.dp,
-                color = Color(0xFFF1D88D),
+                color = colorFromHex("F1D88D"),
                 shape = RoundedCornerShape(18.dp)
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -601,7 +594,7 @@ private fun InfoBanner(
         Text(
             text = message,
             modifier = Modifier.weight(1f),
-            color = Color(0xFF6B5320),
+            color = colorFromHex("6B5320"),
             style = MaterialTheme.typography.bodyMedium
         )
         TextButton(
@@ -610,7 +603,7 @@ private fun InfoBanner(
         ) {
             Text(
                 text = stringResource(Res.string.common_close),
-                color = Color(0xFF6B5320),
+                color = colorFromHex("6B5320"),
                 fontWeight = FontWeight.Bold
             )
         }

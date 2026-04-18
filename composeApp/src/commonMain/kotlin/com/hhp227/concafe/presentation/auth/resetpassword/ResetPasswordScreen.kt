@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.reset_password_email_label
@@ -122,7 +123,7 @@ private fun ResetPasswordContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(colorFromHex("FFFBFD"))
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -139,7 +140,7 @@ private fun ResetPasswordContentScreen(
                         .fillMaxWidth()
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                                listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
                             ),
                             shape = MaterialTheme.shapes.extraLarge
                         )
@@ -170,7 +171,7 @@ private fun ResetPasswordContentScreen(
                     )
                     Text(
                         text = stringResource(Res.string.reset_password_input_desc),
-                        color = Color(0xFF7C7480),
+                        color = colorFromHex("7C7480"),
                         style = MaterialTheme.typography.bodySmall
                     )
                     ConCafeFormField(
@@ -183,7 +184,7 @@ private fun ResetPasswordContentScreen(
                             Icon(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = null,
-                                tint = Color(0xFFB3ACB7)
+                                tint = colorFromHex("B3ACB7")
                             )
                         }
                     )
@@ -216,8 +217,8 @@ private fun ResetPasswordContentScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330)
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = colorFromHex("2B2330")
                 )
             ) {
                 Text(
@@ -238,7 +239,7 @@ private fun ResetPasswordGuideRow(
     text: String
 ) {
     Surface(
-        color = Color(0xFFF8F5F6),
+        color = colorFromHex("F8F5F6"),
         shape = MaterialTheme.shapes.large
     ) {
         Row(
@@ -251,13 +252,13 @@ private fun ResetPasswordGuideRow(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = Color(0xFFEF6797),
+                tint = colorFromHex("EF6797"),
                 modifier = Modifier.size(18.dp)
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6F6673)
+                color = colorFromHex("6F6673")
             )
         }
     }

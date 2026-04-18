@@ -786,6 +786,8 @@ private struct CheckInTimelineList: View {
 }
 
 private struct CheckInTimelineItem: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let visit: CheckInVisitEntry
 
     let showsConnector: Bool
@@ -794,7 +796,7 @@ private struct CheckInTimelineItem: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 Circle()
-                    .fill(Color.white)
+                    .fill(Color(uiColor: .secondarySystemBackground))
                     .frame(width: 32, height: 32)
                     .overlay(
                         Circle()
@@ -802,7 +804,7 @@ private struct CheckInTimelineItem: View {
                     )
                     .overlay(
                         Image(systemName: "mappin")
-                            .foregroundStyle(Color(hex: "4E4750"))
+                            .foregroundStyle(.primary)
                     )
                 if showsConnector {
                     Rectangle()
@@ -814,13 +816,13 @@ private struct CheckInTimelineItem: View {
                 HStack(alignment: .top) {
                     Text(visit.cafeName)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: "4E4750"))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     Spacer(minLength: 8)
                     Text(visit.relativeVisitedLabel)
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(hex: "F5F5F5"))
+                    .background(Color(uiColor: .tertiarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Text(
@@ -836,7 +838,7 @@ private struct CheckInTimelineItem: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
             .padding(.bottom, 24)
@@ -870,7 +872,7 @@ private struct CheckInEmptyState: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 16)
     }

@@ -4,7 +4,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,26 +36,12 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import concafe.composeapp.generated.resources.Res
-import concafe.composeapp.generated.resources.cafe_accessibility_back
-import concafe.composeapp.generated.resources.cafe_accessibility_favorite
-import concafe.composeapp.generated.resources.cafe_action_refresh
-import concafe.composeapp.generated.resources.cafe_action_write_review
-import concafe.composeapp.generated.resources.cafe_error_detail_load_failed
-import concafe.composeapp.generated.resources.cafe_error_retry_prompt
-import concafe.composeapp.generated.resources.cafe_message_report_received
-import concafe.composeapp.generated.resources.cafe_message_review_delete_failed
-import concafe.composeapp.generated.resources.cafe_tab_casts
-import concafe.composeapp.generated.resources.cafe_tab_info
-import concafe.composeapp.generated.resources.cafe_tab_menu
-import concafe.composeapp.generated.resources.cafe_tab_notices
-import concafe.composeapp.generated.resources.cafe_tab_reviews
-import concafe.composeapp.generated.resources.noticeevent_tab_event
+import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
-import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CafeScreen(
@@ -194,7 +181,7 @@ fun CafeContentScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.cafe_accessibility_back),
-                            tint = if (isTopBarVisible) Color(0xFF222222) else Color.White
+                            tint = if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                         )
                     }
                 },
@@ -206,17 +193,17 @@ fun CafeContentScreen(
                             tint = if (uiState.isFavorite) {
                                 colorFromHex("EF6797")
                             } else {
-                                if (isTopBarVisible) Color(0xFF222222) else Color.White
+                                if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                             }
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (isTopBarVisible) Color.White else Color.Transparent,
-                    scrolledContainerColor = Color.White,
-                    navigationIconContentColor = if (isTopBarVisible) Color(0xFF222222) else Color.White,
-                    titleContentColor = Color(0xFF222222),
-                    actionIconContentColor = if (isTopBarVisible) Color(0xFF222222) else Color.White
+                    containerColor = if (isTopBarVisible) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    navigationIconContentColor = if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                 )
             )
         },
@@ -224,8 +211,8 @@ fun CafeContentScreen(
             if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null && uiState.isLoggedIn) {
                 ExtendedFloatingActionButton(
                     onClick = { onAction(CafeAction.ClickWriteReview) },
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330),
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = colorFromHex("2B2330"),
                     text = {
                         Text(
                             text = stringResource(Res.string.cafe_action_write_review),
@@ -274,7 +261,7 @@ fun CafeContentScreen(
                             labels = tabLabels,
                             selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
                             modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = Color.White,
+                            backgroundColor = MaterialTheme.colorScheme.surface,
                             onTabSelected = { index ->
                                 onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
                             }
@@ -319,7 +306,7 @@ fun CafeContentScreen(
                             )
                             Text(
                                 text = stringResource(Res.string.cafe_error_retry_prompt),
-                                color = Color(0xFF777777)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = stringResource(Res.string.cafe_action_refresh),
@@ -335,7 +322,7 @@ fun CafeContentScreen(
                 }
             }
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = topBarInset)
@@ -347,7 +334,7 @@ fun CafeContentScreen(
                     labels = tabLabels,
                     selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = Color.White,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     onTabSelected = { index ->
                         onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
                     }
@@ -439,10 +426,12 @@ private fun CafeHeroSection(
 
 @Composable
 private fun CafeSummarySection(detail: CafeDetail) {
+    val isDarkMode = androidx.compose.foundation.isSystemInDarkTheme()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -459,7 +448,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 Icon(
                     imageVector = Icons.Default.Verified,
                     contentDescription = null,
-                    tint = Color(0xFF2563EB),
+                    tint = colorFromHex("2563EB"),
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -472,7 +461,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFC107),
+                    tint = colorFromHex("FFC107"),
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -483,20 +472,20 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "(${detail.cafe.reviewCount})",
-                    color = Color(0xFF777777)
+                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = Color(0xFF777777),
+                    tint = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = detail.cafe.region.city,
-                    color = Color(0xFF777777)
+                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

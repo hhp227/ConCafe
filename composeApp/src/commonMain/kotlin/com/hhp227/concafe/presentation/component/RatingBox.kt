@@ -25,7 +25,7 @@ fun RatingBox(
 ) {
     Row(
         modifier = modifier
-            .background(Color(0xFFFEE3E9), RoundedCornerShape(20.dp))
+            .background(colorFromHex("FEE3E9"), RoundedCornerShape(20.dp))
             .padding(horizontal = 7.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -33,12 +33,12 @@ fun RatingBox(
             imageVector = Icons.Default.Star,
             contentDescription = null,
             modifier = Modifier.size(10.dp),
-            tint = Color(0xFFFFAD30)
+            tint = colorFromHex("FFAD30")
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = rating,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodySmall
         )
     }

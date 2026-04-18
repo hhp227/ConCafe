@@ -32,6 +32,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_confirm
@@ -144,7 +145,7 @@ fun NoticeEventScreen(
         )
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(NoticeEventAction.DismissFormSheet) },
-            containerColor = Color(0xFFF8F5F6),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
             sheetState = sheetState,
             windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
@@ -165,7 +166,7 @@ private fun NoticeEventContent(
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color(0xFFF8F5F6),
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -231,8 +232,8 @@ private fun NoticeEventContent(
                 onClick = { onAction(NoticeEventAction.ClickRegister) },
                 modifier = Modifier.navigationBarsPadding(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330)
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
             ) {
@@ -247,7 +248,7 @@ private fun NoticeEventContent(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
+                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
                     )
                 )
                 .padding(innerPadding)
@@ -367,7 +368,7 @@ private fun NoticeEventContent(
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFFEF6797))
+                            CircularProgressIndicator(color = colorFromHex("EF6797"))
                         }
                     }
                 }
@@ -486,7 +487,7 @@ private fun NoticeEventFormSheetContent(
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = { onAction(NoticeEventAction.DismissFormSheet) }) {
-                Icon(Filled.Close, contentDescription = stringResource(Res.string.common_close), tint = Color(0xFF7A707A))
+                Icon(Filled.Close, contentDescription = stringResource(Res.string.common_close), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         LazyColumn(
@@ -541,7 +542,7 @@ private fun NoticeEventFormSheetContent(
                 item {
                     Card(
                         shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -549,8 +550,8 @@ private fun NoticeEventFormSheetContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(stringResource(Res.string.noticeevent_pinned_title), fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
-                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                                Text(stringResource(Res.string.noticeevent_pinned_title), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = colorFromHex("8F848F"))
                             }
                             Switch(
                                 checked = uiState.formPinned,
@@ -570,7 +571,7 @@ private fun NoticeEventFormSheetContent(
                         }
                     ),
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF665A63),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                 )
                 Button(
@@ -583,8 +584,8 @@ private fun NoticeEventFormSheetContent(
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF9A8D95)
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     shape = RoundedCornerShape(18.dp)
                 ) {
@@ -611,7 +612,7 @@ private fun NoticeEventFormSheetContent(
                     Spacer(Modifier.height(12.dp))
                     Card(
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(
                             modifier = Modifier
@@ -632,7 +633,7 @@ private fun NoticeEventFormSheetContent(
                                     Text(stringResource(Res.string.schedule_label_start_time))
                                     Text(
                                         text = selectedStartDateMillis?.let(::formatDateMillis) ?: "-",
-                                        color = Color(0xFF665A63)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -649,7 +650,7 @@ private fun NoticeEventFormSheetContent(
                                     Text(stringResource(Res.string.schedule_label_end_time))
                                     Text(
                                         text = selectedEndDateMillis?.let(::formatDateMillis) ?: "-",
-                                        color = Color(0xFF665A63)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -685,8 +686,8 @@ private fun NoticeEventFormSheetContent(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFFFD1DC),
-                                        contentColor = Color(0xFF2B2330)
+                                        containerColor = colorFromHex("FFD1DC"),
+                                        contentColor = MaterialTheme.colorScheme.onSurface
                                     )
                                 ) {
                                     Text(stringResource(Res.string.common_confirm))
@@ -706,7 +707,7 @@ private fun NoticeEventFormSheetContent(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFFF8F5F6), Color(0xFFF8F5F6))
+                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                         )
                     )
             ) {
@@ -720,10 +721,10 @@ private fun NoticeEventFormSheetContent(
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330),
-                        disabledContainerColor = Color(0xFFF0D9E0),
-                        disabledContentColor = Color(0xFF7F7078)
+                        containerColor = colorFromHex("FFD1DC"),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        disabledContainerColor = colorFromHex("F0D9E0"),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Text(
@@ -753,7 +754,7 @@ private fun NoticeEventImageSection(
         Text(
             text = stringResource(Res.string.noticeevent_form_image_label),
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF665A63),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp)
         )
         CompatImagePicker(
@@ -766,7 +767,7 @@ private fun NoticeEventImageSection(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                            colors = listOf(colorFromHex("FFD8E6"), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
                         )
                     )
                     .clickable { launchImagePicker() }
@@ -785,7 +786,7 @@ private fun NoticeEventImageSection(
                         Icon(
                             Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = Color(0xFF8B5164),
+                            tint = colorFromHex("8B5164"),
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
@@ -796,7 +797,7 @@ private fun NoticeEventImageSection(
                                     Res.string.noticeevent_form_image_title_empty
                                 }
                             ),
-                            color = Color(0xFF5A4954),
+                            color = colorFromHex("5A4954"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -811,8 +812,8 @@ private fun NoticeEventImageSection(
                             .align(Alignment.BottomEnd)
                             .padding(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF8B5164)
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = colorFromHex("8B5164")
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     ) {
@@ -824,7 +825,7 @@ private fun NoticeEventImageSection(
         Text(
             text = stringResource(Res.string.noticeevent_form_image_description),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF8A8088),
+            color = colorFromHex("8A8088"),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -838,7 +839,7 @@ private fun NoticeCard(
 ) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -857,23 +858,23 @@ private fun NoticeCard(
                     if (item.isPinned) {
                         StatusChip(
                             text = "PINNED",
-                            container = Color(0xFFFFD1DC),
-                            content = Color(0xFF2B2330)
+                            container = colorFromHex("FFD1DC"),
+                            content = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     val (container, content) = when (item.statusAccent) {
-                        NoticeStatusAccent.PUBLISHED -> Color(0xFFE8F8EC) to Color(0xFF2E9E5B)
-                        NoticeStatusAccent.DRAFT -> Color(0xFFF2F0F3) to Color(0xFF7A707A)
-                        NoticeStatusAccent.ENDED -> Color(0xFFF3E8E8) to Color(0xFF8C5A5A)
+                        NoticeStatusAccent.PUBLISHED -> colorFromHex("E8F8EC") to colorFromHex("2E9E5B")
+                        NoticeStatusAccent.DRAFT -> colorFromHex("F2F0F3") to MaterialTheme.colorScheme.onSurfaceVariant
+                        NoticeStatusAccent.ENDED -> colorFromHex("F3E8E8") to colorFromHex("8C5A5A")
                     }
                     StatusChip(text = item.statusLabel, container = container, content = content)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -881,12 +882,12 @@ private fun NoticeCard(
                 text = item.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF23161C)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = item.displayDate,
                 style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF8F848F)
+                color = colorFromHex("8F848F")
             )
         }
     }
@@ -900,7 +901,7 @@ private fun LoadingStateCard() {
             .padding(vertical = 32.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFFEF6797))
+        CircularProgressIndicator(color = colorFromHex("EF6797"))
     }
 }
 
@@ -908,7 +909,7 @@ private fun LoadingStateCard() {
 private fun EmptyStateCard(message: String) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
@@ -919,7 +920,7 @@ private fun EmptyStateCard(message: String) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF8F848F)
+                color = colorFromHex("8F848F")
             )
         }
     }
@@ -934,7 +935,7 @@ private fun EventCard(
     Card(
         modifier = Modifier.alpha(if (item.isDimmed) 0.72f else 1f),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
@@ -946,7 +947,7 @@ private fun EventCard(
                         .fillMaxSize()
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFE7EF), Color(0xFFF6D3E0))
+                                colors = listOf(colorFromHex("FFE7EF"), colorFromHex("F6D3E0"))
                             )
                         )
                 )
@@ -960,7 +961,7 @@ private fun EventCard(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.White.copy(alpha = 0.16f))
+                                .background(MaterialTheme.colorScheme.surface)
                         )
                     }
                 }
@@ -968,12 +969,12 @@ private fun EventCard(
                     modifier = Modifier
                         .padding(12.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (!item.isDimmed) Color(0xFFFFD1DC) else Color(0xFF6E6570))
+                        .background(if (!item.isDimmed) colorFromHex("FFD1DC") else colorFromHex("6E6570"))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = item.statusLabel,
-                        color = if (!item.isDimmed) Color(0xFF2B2330) else Color.White,
+                        color = if (!item.isDimmed) MaterialTheme.colorScheme.onSurface else Color.White,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -992,23 +993,23 @@ private fun EventCard(
                         text = item.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF23161C),
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color(0xFF8F848F), modifier = Modifier.size(14.dp))
-                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = colorFromHex("8F848F"), modifier = Modifier.size(14.dp))
+                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = colorFromHex("8F848F"))
                 }
             }
         }
@@ -1029,7 +1030,7 @@ private fun SectionHeader(
         Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(
             text = actionLabel,
-            color = Color(0xFFEF6797),
+            color = colorFromHex("EF6797"),
             fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable(onClick = onAction)
         )
@@ -1054,15 +1055,15 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFFF2D8))
+            .background(colorFromHex("FFF2D8"))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = message, color = Color(0xFF6B5320), modifier = Modifier.weight(1f))
+        Text(text = message, color = colorFromHex("6B5320"), modifier = Modifier.weight(1f))
         Text(
             text = stringResource(Res.string.common_close),
-            color = Color(0xFF6B5320),
+            color = colorFromHex("6B5320"),
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss).padding(start = 12.dp)
         )

@@ -193,7 +193,7 @@ private struct NotificationSettingsContentView: View {
                         Text(option.titleText)
                             .font(.subheadline)
                             .bold()
-                            .foregroundStyle(uiState.quietHoursOption == option ? Color(hex: "B84473") : Color(hex: "5F5664"))
+                            .foregroundStyle(uiState.quietHoursOption == option ? Color(hex: "B84473") : .primary)
                         Spacer()
                         if uiState.quietHoursOption == option {
                             Image(systemName: "checkmark.circle.fill")
@@ -203,7 +203,7 @@ private struct NotificationSettingsContentView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
-                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : .white)
+                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : Color(uiColor: .secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -272,7 +272,7 @@ private struct NotificationSettingsContentView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

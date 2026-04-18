@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +26,7 @@ fun ConCafeCastCard(
     modifier: Modifier = Modifier,
     imageHeight: Dp = 130.dp,
     subtitleMaxLines: Int = 1,
-    containerColor: Color = Color(0xFFFFF9FC),
+    containerColor: Color = colorFromHex("FFF9FC"),
     containerCornerRadius: Dp = 18.dp,
     imageCornerRadius: Dp = 16.dp,
     contentPadding: Dp = 10.dp,
@@ -35,6 +36,7 @@ fun ConCafeCastCard(
     isWorking: Boolean = false,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     val statusText = attendanceStatusText ?: if (isWorking) "출근중" else null
 
     Column(
@@ -81,7 +83,7 @@ fun ConCafeCastCard(
                             color = Color.White,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(Color(0xFF35B56A))
+                                .background(colorFromHex("35B56A"))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold
@@ -105,6 +107,7 @@ fun ConCafeCastCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -112,13 +115,13 @@ fun ConCafeCastCard(
                 text = subtitle,
                 maxLines = subtitleMaxLines,
                 overflow = TextOverflow.Ellipsis,
-                color = Color(0xFF7E7E7E),
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
             if (!metaText.isNullOrBlank()) {
                 Text(
                     text = metaText,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     style = MaterialTheme.typography.bodySmall
                 )
             }

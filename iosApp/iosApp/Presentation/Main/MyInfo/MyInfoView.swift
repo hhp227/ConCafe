@@ -32,7 +32,7 @@ struct MyInfoView: View {
                 )
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(Color(uiColor: .systemGroupedBackground))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
@@ -144,7 +144,7 @@ private struct GuestMyInfoView: View {
                             .padding(12)
                             .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140, alignment: .topLeading)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.white)
+                            .background(Color(uiColor: .secondarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
                     }
@@ -208,7 +208,7 @@ private struct GuestMyInfoView: View {
                                 Spacer()
                             }
                             .padding(10)
-                            .background(.white)
+                            .background(Color(uiColor: .secondarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .onTapGesture {
                                 onAction(.cafeTapped(id: cafe.id))
@@ -382,11 +382,11 @@ private struct ProfileMyInfoView: View {
                 HStack(alignment: .bottom, spacing: 8) {
                     Text(title)
                         .font(.title2.weight(.bold))
-                        .foregroundStyle(Color(hex: "24161E"))
+                        .foregroundStyle(.primary)
                     if !subtitle.isEmpty {
                         Text(subtitle)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 HStack(spacing: 6) {
@@ -395,18 +395,18 @@ private struct ProfileMyInfoView: View {
                         .foregroundStyle(Color(hex: "EF6797"))
                     Text(accentText)
                         .font(.subheadline)
-                        .foregroundStyle(Color(hex: "5B4A57"))
+                        .foregroundStyle(.secondary)
                 }
             }
             Spacer(minLength: 0)
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.94))
+        .background(Color(uiColor: .secondarySystemBackground).opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                .stroke(Color(uiColor: .separator).opacity(0.35), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 6)
     }
@@ -423,16 +423,16 @@ private struct ProfileMyInfoView: View {
         VStack(spacing: 6) {
             Text(metric.title)
                 .font(.caption2.weight(.bold))
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Text(metric.value)
                 .font(.title2.weight(.bold))
-                .foregroundStyle(metric.highlight ? Color(hex: "D94A82") : Color(hex: "24161E"))
+                .foregroundStyle(metric.highlight ? Color(hex: "D94A82") : .primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .padding(.horizontal, 10)
-        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color.white.opacity(0.92))
+        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color(uiColor: .secondarySystemBackground).opacity(0.92))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: metric.highlight ? .clear : Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
         .overlay(
@@ -791,7 +791,7 @@ private struct BadgeTooltipCard: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color(hex: "2B2330").opacity(0.92))
+        .background(.primary.opacity(0.92))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
         .allowsHitTesting(false)
@@ -811,7 +811,7 @@ private struct MyInfoSectionTitle: View {
     var body: some View {
         Text(title)
             .font(.headline.weight(.bold))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(.primary)
     }
 }
 
@@ -824,15 +824,15 @@ private struct MyInfoSectionPlaceholderCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5C525D"))
+                .foregroundStyle(.primary)
             Text(description)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A7F8B"))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafemgmt_add_cafe_desc
@@ -132,7 +133,7 @@ private fun CafeManagementContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFFFF7FB), Color(0xFFFFEEF6), Color(0xFFFFFBFD))
+                        colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f), MaterialTheme.colorScheme.background)
                     )
                 )
         ) {
@@ -247,8 +248,8 @@ private fun AddCafeCard(
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -258,18 +259,18 @@ private fun AddCafeCard(
                 text = stringResource(Res.string.cafemgmt_add_cafe_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.cafemgmt_add_cafe_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF786E7A)
+                color = colorFromHex("786E7A")
             )
             Button(
                 onClick = onCreateCafe,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF6EDF4),
-                    contentColor = Color(0xFF6A5666)
+                    containerColor = colorFromHex("F6EDF4"),
+                    contentColor = colorFromHex("6A5666")
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -293,7 +294,7 @@ private fun CafeManagementHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
+                        colors = listOf(colorFromHex("2F1B3A"), colorFromHex("7C3F67"), colorFromHex("F06A9D"))
                     )
                 )
                 .padding(22.dp)
@@ -338,8 +339,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -352,10 +353,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = Color(0xFF6B5320))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = colorFromHex("6B5320"))
             }
         }
     }
@@ -371,12 +372,12 @@ private fun SectionHeader(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2330)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF786E7A)
+            color = colorFromHex("786E7A")
         )
     }
 }
@@ -410,9 +411,9 @@ private fun CompactOwnedCafeCard(
                     .background(
                         Brush.linearGradient(
                             colors = if (cafe.isApproved) {
-                                listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
+                                listOf(colorFromHex("2F1B3A"), colorFromHex("7C3F67"), colorFromHex("F06A9D"))
                             } else {
-                                listOf(Color(0xFF3A3240), Color(0xFF6F6272), Color(0xFFB8A8B2))
+                                listOf(colorFromHex("3A3240"), colorFromHex("6F6272"), colorFromHex("B8A8B2"))
                             }
                         )
                     )
@@ -481,8 +482,8 @@ private fun ExpandOwnedCafeButton(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F2F6)),
-        border = BorderStroke(1.dp, Color(0xFFE5DCE5)),
+        colors = CardDefaults.cardColors(containerColor = colorFromHex("F7F2F6")),
+        border = BorderStroke(1.dp, colorFromHex("E5DCE5")),
         onClick = onClick
     ) {
         Row(
@@ -500,12 +501,12 @@ private fun ExpandOwnedCafeButton(
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5E4F5D)
+                color = colorFromHex("5E4F5D")
             )
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
-                tint = Color(0xFF7C6B79)
+                tint = colorFromHex("7C6B79")
             )
         }
     }
@@ -529,7 +530,7 @@ private fun SearchCafeSection(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFE4DDE5))
+            border = BorderStroke(1.dp, colorFromHex("E4DDE5"))
         ) {
             Row(
                 modifier = Modifier
@@ -541,20 +542,20 @@ private fun SearchCafeSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = Color(0xFF8E8794)
+                    tint = colorFromHex("8E8794")
                 )
                 BasicTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF222222)),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colorFromHex("222222")),
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->
                         if (searchQuery.isBlank()) {
                             Text(
                                 text = stringResource(Res.string.cafemgmt_search_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color(0xFF8E8794)
+                                color = colorFromHex("8E8794")
                             )
                         }
                         innerTextField()
@@ -566,15 +567,15 @@ private fun SearchCafeSection(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFE4DDE5))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, colorFromHex("E4DDE5"))
             ) {
                 Column {
                     if (visibleSearchResults.isEmpty()) {
                         Text(
                             text = stringResource(Res.string.cafemgmt_search_no_result),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-                            color = Color(0xFF8E8794)
+                            color = colorFromHex("8E8794")
                         )
                     } else {
                         visibleSearchResults.forEachIndexed { index, cafe ->
@@ -583,7 +584,7 @@ private fun SearchCafeSection(
                                 onClaimClick = { onClaimCafe(cafe.id) }
                             )
                             if (index < visibleSearchResults.lastIndex) {
-                                Divider(color = Color(0xFFF1EAF1))
+                                Divider(color = colorFromHex("F1EAF1"))
                             }
                         }
                     }
@@ -600,8 +601,8 @@ private fun EmptyStateCard(
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -609,12 +610,12 @@ private fun EmptyStateCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFFCE6EF)
+                color = colorFromHex("FCE6EF")
             ) {
                 Icon(
                     imageVector = Icons.Default.AddBusiness,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = colorFromHex("EF6797"),
                     modifier = Modifier.padding(14.dp)
                 )
             }
@@ -622,18 +623,18 @@ private fun EmptyStateCard(
                 text = stringResource(Res.string.cafemgmt_empty_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.cafemgmt_empty_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF786E7A)
+                color = colorFromHex("786E7A")
             )
             Button(
                 onClick = onCreateCafe,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF6EDF4),
-                    contentColor = Color(0xFF6A5666)
+                    containerColor = colorFromHex("F6EDF4"),
+                    contentColor = colorFromHex("6A5666")
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -645,7 +646,7 @@ private fun EmptyStateCard(
                     text = stringResource(Res.string.cafemgmt_section_claim_status_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 pendingClaims.forEach { claim ->
                     PendingClaimCard(claim = claim)
@@ -674,17 +675,17 @@ private fun SearchCafeItem(
             Text(
                 text = cafe.name,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = cafe.location,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8E8794)
+                color = colorFromHex("8E8794")
             )
         }
         Button(
             onClick = onClaimClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
+            colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797")),
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(stringResource(Res.string.cafemgmt_register))
@@ -698,8 +699,8 @@ private fun PendingClaimCard(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF8EA),
-        border = BorderStroke(1.dp, Color(0xFFF0DEB1))
+        color = colorFromHex("FFF8EA"),
+        border = BorderStroke(1.dp, colorFromHex("F0DEB1"))
     ) {
         Column(
             modifier = Modifier
@@ -716,16 +717,16 @@ private fun PendingClaimCard(
                     text = claim.cafeName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFFFE8B8)
+                    color = colorFromHex("FFE8B8")
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = stringResource(Res.string.cafemgmt_claim_pending_content_description),
-                        tint = Color(0xFF9A6A11),
+                        tint = colorFromHex("9A6A11"),
                         modifier = Modifier.padding(7.dp)
                     )
                 }
@@ -733,12 +734,12 @@ private fun PendingClaimCard(
             Text(
                 text = "${claim.status} · ${claim.requestedAt}",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8B774C)
+                color = colorFromHex("8B774C")
             )
             Text(
                 text = claim.message,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6E6248)
+                color = colorFromHex("6E6248")
             )
         }
     }

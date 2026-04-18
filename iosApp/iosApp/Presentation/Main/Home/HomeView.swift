@@ -263,6 +263,8 @@ private struct HomeContentView: View {
 }
 
 private struct HomeCafeEventCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let event: Shared.HomeCafeEvent
 
     private let cardCornerRadius: CGFloat = 16
@@ -297,6 +299,7 @@ private struct HomeCafeEventCard: View {
                     .foregroundStyle(Color(hex: "EF6797"))
                 Text(event.title)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(2)
             }
             .padding(.horizontal, 4)
@@ -520,6 +523,8 @@ private struct SectionTitle: View {
 }
 
 private struct NearByCafeItem: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let cafe: Cafe
 
     var body: some View {
@@ -552,6 +557,7 @@ private struct NearByCafeItem: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cafe.name)
                 .font(.subheadline.weight(.semibold))
+                .foregroundStyle(colorScheme == .dark ? .white : .primary)
                 .lineLimit(1)
                 let conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
                 if !conceptLabel.isEmpty {

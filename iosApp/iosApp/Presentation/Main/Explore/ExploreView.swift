@@ -53,6 +53,8 @@ struct ExploreView: View {
 }
 
 private struct ExploreContentView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @FocusState private var isSearchFocused: Bool
     
     let uiState: ExploreUiState
@@ -96,7 +98,7 @@ private struct ExploreContentView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -279,6 +281,7 @@ private struct ExploreContentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(maid.name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(1)
                 Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
                     .font(.caption)
@@ -314,15 +317,15 @@ private struct ExploreEmptyPlaceholderCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5C525D"))
+                .foregroundStyle(.primary)
             Text(description)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A7F8B"))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

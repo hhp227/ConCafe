@@ -323,7 +323,7 @@ private struct CastSummarySection: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 22)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 
     private func statItem(systemName: String, label: String, value: String) -> some View {
@@ -398,7 +398,7 @@ private struct CastScheduleSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Label(String(localized: String.LocalizationValue("cast_schedule_title"), table: "Localizable"), systemImage: "calendar")
                 .font(.headline)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color(uiColor: .label))
             HStack(spacing: 8) {
                 ForEach(weeklyStatus, id: \.dayLabel) { item in
                     CastScheduleCard(
@@ -421,18 +421,18 @@ private struct CastScheduleCard: View {
         VStack(spacing: 4) {
             Text(dayLabel)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isWorking ? Color.white : Color(hex: "4E4750"))
+                .foregroundStyle(isWorking ? Color.white : .primary)
             Text(
                 isWorking
                 ? String(localized: String.LocalizationValue("cast_schedule_work"), table: "Localizable")
                 : String(localized: String.LocalizationValue("cast_schedule_off"), table: "Localizable")
             )
                 .font(.caption)
-                .foregroundStyle(isWorking ? Color.white.opacity(0.92) : Color(hex: "8A8087"))
+                .foregroundStyle(isWorking ? Color.white.opacity(0.92) : .secondary)
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(isWorking ? Color(hex: "EF6797") : Color.white)
+        .background(isWorking ? Color(hex: "EF6797") : Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -444,12 +444,13 @@ private struct CastIntroductionSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("cast_section_intro"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             Text(detail.cast.desc)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
-                .background(Color.white)
+                .background(Color(uiColor: .secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 22))
-                .foregroundStyle(Color(hex: "4E4750"))
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 16)
@@ -463,6 +464,7 @@ private struct CastRecentActivitySection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("cast_section_recent_activity"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             HStack(spacing: 10) {
                 CastActivityCard(
                     value: "\(detail.visitCertificationCount)",
@@ -499,7 +501,7 @@ private struct CastActivityCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
         .padding(.horizontal, 12)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
@@ -511,6 +513,7 @@ private struct CastRecentReviewSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("cast_section_tagged_reviews"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             if reviews.isEmpty {
                 CastRecentReviewEmptyView()
             } else {
@@ -549,12 +552,12 @@ private struct CastRecentReviewSection: View {
                             }
                             Text(review.content)
                                 .font(.subheadline)
-                                .foregroundStyle(Color(hex: "4E4750"))
+                                .foregroundStyle(.primary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color.white)
+                        .background(Color(uiColor: .secondarySystemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
                 }
@@ -569,7 +572,7 @@ private struct CastRecentReviewEmptyView: View {
         VStack(spacing: 6) {
             Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "4E4750"))
+                .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_desc"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
@@ -577,7 +580,7 @@ private struct CastRecentReviewEmptyView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .padding(.horizontal, 16)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }

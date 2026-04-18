@@ -26,6 +26,7 @@ import concafe.composeapp.generated.resources.Res
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.schedule_action_close
@@ -136,7 +137,7 @@ fun ScheduleScreen(
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(ScheduleAction.DismissEditSheet) },
             sheetState = editSheetState,
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             ScheduleEditSheet(
                 uiState = uiState,
@@ -178,11 +179,11 @@ private fun ScheduleEditSheet(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(stringResource(Res.string.schedule_edit_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(uiState.editingScheduleTitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF7A707A))
+            Text(uiState.editingScheduleTitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Surface(
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFFF8F5F6)
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             Row(
                 modifier = Modifier
@@ -197,7 +198,7 @@ private fun ScheduleEditSheet(
                             .weight(1f)
                             .clickable { onAction(ScheduleAction.ChangeEditStatus(status)) },
                         shape = RoundedCornerShape(14.dp),
-                        color = if (selected) Color.White else Color.Transparent,
+                        color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
                         shadowElevation = if (selected) 2.dp else 0.dp
                     ) {
                         Box(
@@ -206,7 +207,7 @@ private fun ScheduleEditSheet(
                         ) {
                             Text(
                                 statusLabel(status),
-                                color = if (selected) Color(0xFF24161E) else Color(0xFF7A707A),
+                                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -241,11 +242,11 @@ private fun ScheduleEditSheet(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFEF6797), modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Info, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
                 Text(
                     stringResource(Res.string.schedule_break_notice),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6B5A63)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -254,16 +255,16 @@ private fun ScheduleEditSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(Res.string.schedule_total_work), color = Color(0xFF7A707A), fontWeight = FontWeight.Medium)
+            Text(stringResource(Res.string.schedule_total_work), color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
-                Text(stringResource(Res.string.schedule_total_prefix), color = Color(0xFF7A707A), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.schedule_total_prefix), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 Text(resolveScheduleDurationLabel(uiState.totalWorkDurationLabel), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             }
         }
         Button(
             onClick = { onAction(ScheduleAction.SubmitEditDay) },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC), contentColor = Color(0xFF24161E)),
+            colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("FFD1DC"), contentColor = MaterialTheme.colorScheme.onSurface),
             shape = RoundedCornerShape(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
@@ -289,7 +290,7 @@ private fun TimeDropdownField(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF7A707A))
+        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         ExposedDropdownMenuBox(
             expanded = expanded && enabled,
             onExpandedChange = { if (enabled) expanded = !expanded }
@@ -304,15 +305,15 @@ private fun TimeDropdownField(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 leadingIcon = {
-                    Icon(Icons.Default.Schedule, contentDescription = null, tint = Color(0xFFEF6797))
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = colorFromHex("EF6797"))
                 },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled)
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF8F5F6),
-                    unfocusedContainerColor = Color(0xFFF8F5F6),
-                    disabledContainerColor = Color(0xFFF2EDF0),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    disabledContainerColor = colorFromHex("F2EDF0"),
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
                     disabledBorderColor = Color.Transparent
@@ -344,7 +345,7 @@ private fun ScheduleContentScreen(
     onAction: (ScheduleAction) -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFFF8F5F6),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -368,7 +369,7 @@ private fun ScheduleContentScreen(
         },
         bottomBar = {
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 10.dp
             ) {
                 Button(
@@ -378,15 +379,15 @@ private fun ScheduleContentScreen(
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .navigationBarsPadding(),
                     enabled = uiState.hasPendingChanges && !uiState.isSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC)),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("FFD1DC")),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null, tint = Color(0xFF24161E))
+                    Icon(Icons.Default.Save, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(if (uiState.isSaving) Res.string.schedule_save_in_progress else Res.string.schedule_save),
-                        color = Color(0xFF24161E),
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -401,7 +402,11 @@ private fun ScheduleContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFF8FB), Color(0xFFFFEFF5))
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                            MaterialTheme.colorScheme.background
+                        )
                     )
                 )
                 .padding(innerPadding)
@@ -436,7 +441,7 @@ private fun ScheduleContentScreen(
             } else {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFFEF6797)
+                    color = colorFromHex("EF6797")
                 )
             }
         }
@@ -450,7 +455,7 @@ private fun ScheduleCastSummaryCard(
     Card(
         modifier = Modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
@@ -471,18 +476,18 @@ private fun ScheduleCastSummaryCard(
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFEF6797)
+                    color = colorFromHex("EF6797")
                 )
                 Text(
                     text = castSummary.title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF24161E)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = resolveScheduleCastSubtitle(castSummary.subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF7A707A)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Box(
@@ -491,7 +496,7 @@ private fun ScheduleCastSummaryCard(
                     .clip(RoundedCornerShape(18.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                            colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -500,7 +505,7 @@ private fun ScheduleCastSummaryCard(
                     text = castSummary.initials,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7C3F67)
+                    color = colorFromHex("7C3F67")
                 )
             }
         }
@@ -524,7 +529,7 @@ private fun WeekSelectorSection(
                 text = uiState.weekRangeLabel,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF24161E)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Row(
                 modifier = Modifier.clickable { onAction(ScheduleAction.ClickCalendar) },
@@ -534,13 +539,13 @@ private fun WeekSelectorSection(
                 Icon(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = colorFromHex("EF6797"),
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = stringResource(Res.string.schedule_calendar),
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -569,7 +574,7 @@ private fun WeekDayChip(
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) Color(0xFFFFD1DC) else Color.White.copy(alpha = 0.92f),
+        color = if (isSelected) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface,
         shadowElevation = if (isSelected) 4.dp else 0.dp,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
     ) {
@@ -584,13 +589,13 @@ private fun WeekDayChip(
                 text = day.label,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color(0x9924161E) else Color(0xFF9C8C98)
+                color = if (isSelected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = day.number,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF24161E)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -603,8 +608,8 @@ private fun ScheduleInfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -617,14 +622,14 @@ private fun ScheduleInfoBanner(
                 text = resolveScheduleMessageLabel(message),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
             Text(
                 text = stringResource(Res.string.schedule_action_close),
                 modifier = Modifier.clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
         }
     }
@@ -654,21 +659,21 @@ private fun DayScheduleCard(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color.White.copy(alpha = if (schedule.isWorking) 0.96f else 0.88f),
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    if (schedule.isWorking) Color(0xFFFFD1DC).copy(alpha = 0.12f) else Color.Transparent
+                    if (schedule.isWorking) colorFromHex("FFD1DC").copy(alpha = 0.12f) else Color.Transparent
                 )
                 .padding(start = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .background(if (schedule.isWorking) Color(0xFFFFD1DC) else Color(0xFFE9E0E5))
+                    .background(if (schedule.isWorking) colorFromHex("FFD1DC") else colorFromHex("E9E0E5"))
             )
             Row(
                 modifier = Modifier
@@ -682,14 +687,14 @@ private fun DayScheduleCard(
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (schedule.isWorking) Color(0x14FFD1DC) else Color(0xFFF2EDF0)
+                            if (schedule.isWorking) Color(0x14FFD1DC) else colorFromHex("F2EDF0")
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (schedule.isWorking) Icons.Default.Schedule else Icons.Default.Hotel,
                         contentDescription = null,
-                        tint = if (schedule.isWorking) Color(0xFFEF6797) else Color(0xFFB0A3AC)
+                        tint = if (schedule.isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Column(
@@ -704,31 +709,31 @@ private fun DayScheduleCard(
                             text = schedule.title,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Surface(
                             shape = RoundedCornerShape(999.dp),
-                            color = if (schedule.isWorking) Color(0x4DFFD1DC) else Color(0xFFF2EDF0)
+                            color = if (schedule.isWorking) Color(0x4DFFD1DC) else colorFromHex("F2EDF0")
                         ) {
                             Text(
                                 text = resolveScheduleStatusLabel(schedule.statusLabel, schedule.status),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (schedule.isWorking) Color(0xFF5B4A57) else Color(0xFF9C8C98)
+                                color = if (schedule.isWorking) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Text(
                         text = resolveScheduleTimeLabel(schedule.timeLabel, schedule.status),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (schedule.isWorking) Color(0xFF7A707A) else Color(0xFFB0A3AC)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Surface(
                     modifier = Modifier.clickable(onClick = onEditClick),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFFF8F5F6)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                 ) {
                     Box(
                         modifier = Modifier
@@ -738,7 +743,7 @@ private fun DayScheduleCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(Res.string.schedule_content_edit),
-                            tint = Color(0xFF7A707A)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

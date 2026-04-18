@@ -54,7 +54,7 @@ private struct NotificationContentView: View {
                 )
             }
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 
@@ -63,7 +63,7 @@ private struct NotificationSignInRequiredView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: "FFFBFD")
+            Color(uiColor: .systemGroupedBackground)
                 .ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "bell.badge")
@@ -93,7 +93,7 @@ private struct NotificationSignInRequiredView: View {
             }
             .padding(24)
             .frame(maxWidth: 420)
-            .background(.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .padding(24)
         }
@@ -117,7 +117,7 @@ private struct NotificationSectionsView: View {
             .padding(16)
             .padding(.bottom, 20)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 
     private var summaryCard: some View {
@@ -162,7 +162,7 @@ private struct NotificationSectionsView: View {
 
     private func notificationCard(_ item: NotificationListItem) -> some View {
         let visual = notificationVisual(type: item.type)
-        let containerColor = item.isRead ? Color.white : Color(hex: "FFF3F8")
+        let containerColor = item.isRead ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF3F8")
         return HStack(alignment: .top, spacing: 12) {
             Circle()
                 .fill(visual.background)
@@ -193,7 +193,7 @@ private struct NotificationSectionsView: View {
                 }
                 Text(item.message)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "6D6671"))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(14)
@@ -217,7 +217,7 @@ private struct NotificationSectionsView: View {
         } else if type == "FOLLOW_UPDATE" {
             return ("person.badge.plus.fill", Color(hex: "F1E8FF"), Color(hex: "8A52E2"))
         } else {
-            return ("bell.fill", Color(hex: "F2F2F2"), Color(hex: "666666"))
+            return ("bell.fill", Color(uiColor: .tertiarySystemFill), .secondary)
         }
     }
 }

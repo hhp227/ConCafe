@@ -187,7 +187,7 @@ private struct CafeDashboardContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF7FB"), Color(hex: "FFEEF6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -296,7 +296,7 @@ private struct CafeDashboardContentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(hex: "FFD1DC"))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         Button(String(localized: String.LocalizationValue("dashboard_action_reject"), table: "Localizable")) {
                             onAction(.clickRejectCastClaim(claim.claimId))
@@ -304,7 +304,7 @@ private struct CafeDashboardContentView: View {
                         .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color.white)
+                        .background(Color(uiColor: .secondarySystemBackground))
                         .foregroundStyle(Color(hex: "6F6670"))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -314,7 +314,7 @@ private struct CafeDashboardContentView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
-                .background(Color.white.opacity(0.95))
+                .background(Color(uiColor: .secondarySystemBackground).opacity(0.95))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
@@ -327,14 +327,14 @@ private struct CafeDashboardContentView: View {
                 .frame(width: 10, height: 10)
             Text(title)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
             Text(value)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -385,10 +385,10 @@ private struct CafeDashboardContentView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(localized: String.LocalizationValue("dashboard_metric_checkin_qr"), table: "Localizable"))
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "2B2330"))
+                            .foregroundStyle(.primary)
                         Text(String(localized: String.LocalizationValue("dashboard_metric_checkin_qr_hint"), table: "Localizable"))
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
@@ -398,7 +398,7 @@ private struct CafeDashboardContentView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -435,12 +435,12 @@ private struct CafeDashboardContentView: View {
                 }
                 Text(String(localized: String.LocalizationValue(shortcut.title), table: "Localizable"))
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -544,7 +544,7 @@ private struct CafeDashboardContentView: View {
             }
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -603,7 +603,7 @@ private struct CafeDashboardContentView: View {
                 .frame(width: 78, height: 78)
                 Text(cast.name)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(isSelected ? Color(hex: "EF6797") : Color(hex: "2B2330"))
+                    .foregroundStyle(isSelected ? Color(hex: "EF6797") : .primary)
             }
             .frame(width: 80)
         }
@@ -656,7 +656,7 @@ private struct CafeDashboardContentView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(cafe.homeBannerPreview.title)
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "2B2330"))
+                            .foregroundStyle(.primary)
                         Text(
                             {
                                 let period = cafe.homeBannerPreview.period
@@ -703,7 +703,7 @@ private struct CafeDashboardContentView: View {
                         Text(String(localized: String.LocalizationValue("dashboard_action_create_banner"), table: "Localizable"))
                             .fontWeight(.bold)
                     }
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .background(Color(hex: "FFD1DC"))
@@ -712,7 +712,7 @@ private struct CafeDashboardContentView: View {
                 .buttonStyle(.plain)
             }
             .padding(16)
-            .background(Color(hex: "FFFBFD"))
+            .background(Color(uiColor: .systemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -720,7 +720,7 @@ private struct CafeDashboardContentView: View {
             )
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -732,7 +732,7 @@ private struct CafeDashboardContentView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             Text(subtitle)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "786E7A"))
@@ -785,7 +785,7 @@ private struct CafeDashboardContentView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 Text(link.title)
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "2B2330"))
+                                    .foregroundStyle(.primary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -808,7 +808,7 @@ private struct CafeDashboardContentView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
-                    .background(Color(hex: "FFFBFD"))
+                    .background(Color(uiColor: .systemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -820,7 +820,7 @@ private struct CafeDashboardContentView: View {
                 } label: {
                     Text(String(localized: String.LocalizationValue("dashboard_external_link_add"), table: "Localizable"))
                         .fontWeight(.bold)
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
                         .background(Color(hex: "FFD1DC"))
@@ -829,7 +829,7 @@ private struct CafeDashboardContentView: View {
                 .buttonStyle(.plain)
             }
             .padding(16)
-            .background(Color(hex: "FFFBFD"))
+            .background(Color(uiColor: .systemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -837,7 +837,7 @@ private struct CafeDashboardContentView: View {
             )
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -855,14 +855,14 @@ private struct DashboardQrSheetView: View {
         VStack(spacing: 12) {
             Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_description"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(hex: "F8F5F6"))
+                    .fill(Color(uiColor: .tertiarySystemBackground))
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(Color(hex: "FFD1DC").opacity(0.1), lineWidth: 1)
@@ -879,7 +879,7 @@ private struct DashboardQrSheetView: View {
                     Text(String(localized: String.LocalizationValue("dashboard_qr_sheet_save_button"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color(hex: "FFD1DC"))
@@ -889,7 +889,7 @@ private struct DashboardQrSheetView: View {
             if let saveResultMessage {
                 Text(saveResultMessage)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
             }
             Spacer(minLength: 12)
         }
@@ -924,7 +924,7 @@ private struct ExternalLinkInputSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(String(localized: String.LocalizationValue("dashboard_external_link_guide"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
                 ConCafeFormField(
                     label: String(localized: String.LocalizationValue("dashboard_external_link_label_title"), table: "Localizable"),
                     text: Binding(
@@ -953,7 +953,7 @@ private struct ExternalLinkInputSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
-                        .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                        .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? .primary : .secondary)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -967,7 +967,7 @@ private struct ExternalLinkInputSheet: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 
@@ -983,7 +983,7 @@ private struct SocialMediaInputSheet: View {
                     .font(.headline.weight(.bold))
                 Text(String(localized: String.LocalizationValue("dashboard_social_media_section_subtitle"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
                 ConCafeFormField(
                     label: "Instagram",
                     text: Binding(
@@ -1022,7 +1022,7 @@ private struct SocialMediaInputSheet: View {
                     Group {
                         if uiState.isSavingSocialMedia {
                             ProgressView()
-                                .tint(Color(hex: "7F7078"))
+                                .tint(.secondary)
                         } else {
                             Text(String(localized: String.LocalizationValue("dashboard_social_media_save"), table: "Localizable"))
                                 .font(.headline.weight(.bold))
@@ -1031,7 +1031,7 @@ private struct SocialMediaInputSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(uiState.isSavingSocialMedia ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -1045,7 +1045,7 @@ private struct SocialMediaInputSheet: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 
@@ -1061,7 +1061,7 @@ private struct ReservationInputSheet: View {
                     .font(.headline.weight(.bold))
                 Text(String(localized: String.LocalizationValue("dashboard_reservation_guide"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
                 ConCafeFormField(
                     label: String(localized: String.LocalizationValue("dashboard_reservation_label_url"), table: "Localizable"),
                     text: Binding(
@@ -1076,7 +1076,7 @@ private struct ReservationInputSheet: View {
                     Group {
                         if uiState.isSavingReservation {
                             ProgressView()
-                                .tint(Color(hex: "7F7078"))
+                                .tint(.secondary)
                         } else {
                             Text(String(localized: String.LocalizationValue("dashboard_reservation_save"), table: "Localizable"))
                                 .font(.headline.weight(.bold))
@@ -1085,7 +1085,7 @@ private struct ReservationInputSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(uiState.isSavingReservation ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -1099,6 +1099,6 @@ private struct ReservationInputSheet: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }

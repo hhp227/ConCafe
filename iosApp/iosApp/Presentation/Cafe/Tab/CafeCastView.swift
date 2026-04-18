@@ -75,7 +75,7 @@ struct CafeCastView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 

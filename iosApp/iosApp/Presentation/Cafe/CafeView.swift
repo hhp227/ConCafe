@@ -267,7 +267,7 @@ private struct CafeContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 
     private var tabHeader: some View {
@@ -288,13 +288,13 @@ private struct CafeContentView: View {
                 }
             },
             selectedIndex: CafeUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: .white,
+            backgroundColor: Color(uiColor: .secondarySystemBackground),
             onSelect: { index in
                 onAction(.changeTab(CafeUiState.TabType.allCases[index]))
             }
         )
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .zIndex(1)
     }
 

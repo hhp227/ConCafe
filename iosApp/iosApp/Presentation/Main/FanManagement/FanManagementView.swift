@@ -114,7 +114,7 @@ private struct FanManagementContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFF8FB"), Color(hex: "FFEFF5")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -156,7 +156,7 @@ private struct FanManagementContentView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
             }
-            .foregroundStyle(Color(hex: "24161E"))
+            .foregroundStyle(.primary)
             .padding(.horizontal, 18)
             .padding(.vertical, 16)
             .background(Color(hex: "FFD1DC"))
@@ -193,10 +193,10 @@ private struct FanManagementContentView: View {
                     .clipShape(Capsule())
                 Text(status.headline)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Text(status.body)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "6C6270"))
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack {
                     Text("프로필 연결 상태 보기")
@@ -209,7 +209,7 @@ private struct FanManagementContentView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
-            .background(Color.white.opacity(0.95))
+            .background(Color(uiColor: .secondarySystemBackground).opacity(0.95))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -233,16 +233,16 @@ private struct FanManagementContentView: View {
                                 }
                             Text(quickAction.title)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(hex: "24161E"))
+                                .foregroundStyle(.primary)
                             Text(quickAction.subtitle)
                                 .font(.caption)
-                                .foregroundStyle(Color(hex: "7A707A"))
+                                .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 18)
-                        .background(Color.white.opacity(0.92))
+                        .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -291,7 +291,7 @@ private struct FanManagementContentView: View {
                                         )
                                     Text(follower.nickname)
                                         .font(.caption.weight(.medium))
-                                        .foregroundStyle(Color(hex: "24161E"))
+                                        .foregroundStyle(.primary)
                                     Text(joinedLabel)
                                         .font(.caption2)
                                         .foregroundStyle(Color(hex: "9C8C98"))
@@ -321,10 +321,10 @@ private struct FanManagementContentView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("이번 주 스케줄")
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "24161E"))
+                            .foregroundStyle(.primary)
                         Text("출근 관리에서 일정을 바로 조정할 수 있습니다.")
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 HStack(spacing: 8) {
@@ -335,7 +335,7 @@ private struct FanManagementContentView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 16)
-            .background(Color.white.opacity(0.88))
+            .background(Color(uiColor: .secondarySystemBackground).opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -348,10 +348,10 @@ private struct FanManagementContentView: View {
         VStack(spacing: 4) {
             Text(item.dayLabel)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(item.isWorking ? Color.white : Color(hex: "4E4750"))
+                .foregroundStyle(item.isWorking ? Color.white : .secondary)
             Text(item.isWorking ? "출근" : "휴무")
                 .font(.caption)
-                .foregroundStyle(item.isWorking ? Color.white.opacity(0.92) : Color(hex: "8A8087"))
+                .foregroundStyle(item.isWorking ? Color.white.opacity(0.92) : .secondary)
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
@@ -370,11 +370,11 @@ private struct FanManagementContentView: View {
     private func emptySectionCard(message: String) -> some View {
         Text(message)
             .font(.subheadline)
-            .foregroundStyle(Color(hex: "7A707A"))
+            .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 18)
-            .background(Color.white.opacity(0.88))
+            .background(Color(uiColor: .secondarySystemBackground).opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -392,18 +392,18 @@ private struct FanManagementContentView: View {
             HStack {
                 Text(title)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 if let actionLabel, let action {
                     Button(actionLabel) {
                         action()
                     }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
                 } else if let actionLabel {
                     Text(actionLabel)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color(hex: "7A707A"))
+                        .foregroundStyle(.secondary)
                 }
             }
             content()
@@ -429,7 +429,7 @@ private struct CastClaimSheetView: View {
                             .font(.title3.weight(.bold))
                         Text(sheet.body)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "6C6270"))
+                            .foregroundStyle(.secondary)
                         if !sheet.requestableCasts.isEmpty {
                             VStack(spacing: 10) {
                                 ForEach(sheet.requestableCasts, id: \.castId) { candidate in
@@ -438,11 +438,11 @@ private struct CastClaimSheetView: View {
                                     } label: {
                                         Text(candidate.castName)
                                             .font(.body.weight(.semibold))
-                                            .foregroundStyle(Color(hex: "24161E"))
+                                            .foregroundStyle(.primary)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(.horizontal, 16)
                                             .padding(.vertical, 14)
-                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color.white)
+                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemBackground))
                                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -461,7 +461,7 @@ private struct CastClaimSheetView: View {
                         if sheet.canLoadMore || sheet.isLoadingMore {
                             Text(sheet.isLoadingMore ? "다음 캐스트 목록을 불러오는 중입니다." : "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.")
                                 .font(.caption)
-                                .foregroundStyle(Color(hex: "7A707A"))
+                                .foregroundStyle(.secondary)
                         }
                         Spacer(minLength: 8)
                     }
@@ -473,7 +473,7 @@ private struct CastClaimSheetView: View {
                     } label: {
                         Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
                             .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: "24161E"))
+                            .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color(hex: "FFD1DC"))
@@ -484,7 +484,7 @@ private struct CastClaimSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 14)
                     .padding(.bottom, 14)
-                    .background(Color.white)
+                    .background(Color(uiColor: .secondarySystemBackground))
                 }
             }
             .toolbar {
@@ -508,14 +508,14 @@ private struct FanAnnouncementSheetView: View {
             HStack {
                 Text("팬 공지 작성하기")
                     .font(.title3.weight(.bold))
-                    .foregroundStyle(Color(hex: "23161C"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 Button {
                     onAction(.dismissAnnouncementSheet)
                 } label: {
                     Image(systemName: "xmark")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "9A8D95"))
+                        .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
@@ -542,7 +542,7 @@ private struct FanAnnouncementSheetView: View {
                     )
                     Text("공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다.")
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "8A8087"))
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
@@ -557,11 +557,11 @@ private struct FanAnnouncementSheetView: View {
                         if uiState.isSendingAnnouncement {
                             ProgressView()
                                 .progressViewStyle(.circular)
-                                .tint(Color(hex: "2B2330"))
+                                .tint(.primary)
                         } else {
                             Text("팬 공지 전송")
                                 .font(.headline.weight(.bold))
-                                .foregroundStyle(Color(hex: "2B2330"))
+                                .foregroundStyle(.primary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -575,9 +575,9 @@ private struct FanAnnouncementSheetView: View {
             .padding(.horizontal, 24)
             .padding(.top, 14)
             .padding(.bottom, 18)
-            .background(Color(hex: "F8F5F6"))
+            .background(Color(uiColor: .systemGroupedBackground))
         }
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 

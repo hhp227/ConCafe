@@ -18,6 +18,8 @@ struct CafeNoticeView: View {
     let isLoadingMore: Bool
 
     let onLoadMore: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var expandedNoticeIds: Set<String> = []
 
@@ -33,6 +35,7 @@ struct CafeNoticeView: View {
             LazyVStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable"))
                     .font(.headline.weight(.bold))
+                    .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 if !events.isEmpty {
@@ -53,6 +56,7 @@ struct CafeNoticeView: View {
                     .frame(height: 6)
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_notice"), table: "Localizable"))
                     .font(.headline.weight(.bold))
+                    .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 ForEach(notices, id: \.id) { notice in
@@ -60,6 +64,7 @@ struct CafeNoticeView: View {
                         HStack(alignment: .top) {
                             Text(notice.title)
                                 .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
                             Spacer()
                             Text(notice.displayDate)
                                 .font(.caption)
@@ -67,13 +72,13 @@ struct CafeNoticeView: View {
                         }
                         Text(notice.content)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "666666"))
+                            .foregroundStyle(.secondary)
                             .lineLimit(expandedNoticeIds.contains(notice.id) ? nil : 3)
                             .truncationMode(.tail)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
-                    .background(Color.white)
+                    .background(Color(uiColor: .secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .padding(.horizontal, contentPadding)
@@ -127,6 +132,7 @@ struct CafeNoticeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(event.title)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
                     .lineLimit(2)
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
@@ -153,7 +159,7 @@ struct CafeNoticeView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

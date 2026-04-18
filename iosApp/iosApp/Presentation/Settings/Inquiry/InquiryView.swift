@@ -50,7 +50,7 @@ struct InquiryView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(String(localized: String.LocalizationValue("inquiry_type_section_title"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
             Text(String(localized: String.LocalizationValue("inquiry_type_section_desc"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -63,14 +63,14 @@ struct InquiryView: View {
             } label: {
                 HStack {
                     Text(localizedInquiryTypeTitle(viewModel.uiState.inquiryType))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                     Spacer()
                     Image(systemName: "chevron.down")
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: .tertiarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -81,7 +81,7 @@ struct InquiryView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -119,7 +119,7 @@ struct InquiryView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -147,12 +147,12 @@ struct InquiryView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(.primary)
             .disabled(viewModel.uiState.isSubmitting)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white.opacity(0.92))
+            .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
         }
     }
 

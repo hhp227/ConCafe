@@ -9,6 +9,8 @@ import SwiftUI
 import UIKit
 
 struct CafeSummaryCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let name: String
 
     let rating: String
@@ -34,6 +36,7 @@ struct CafeSummaryCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(1)
                 if let conceptType = conceptType?.trimmingCharacters(in: .whitespacesAndNewlines), !conceptType.isEmpty {
                     Text(conceptType)
@@ -50,7 +53,7 @@ struct CafeSummaryCard: View {
                         }
                         Text(location)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
                             .lineLimit(1)
                     }
                     Spacer(minLength: 8)

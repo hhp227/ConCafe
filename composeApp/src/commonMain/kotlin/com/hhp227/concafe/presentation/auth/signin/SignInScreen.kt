@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
@@ -114,7 +115,7 @@ private fun SignInContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFFFF2F7), Color(0xFFFFFBFD), Color(0xFFFDEDF4))
+                        listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
                     )
                 )
         ) {
@@ -163,7 +164,7 @@ private fun SignInContentScreen(
                         if (uiState.errorMessage != null) {
                             Text(
                                 text = uiState.errorMessage,
-                                color = Color(0xFFD1436F),
+                                color = colorFromHex("D1436F"),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -172,8 +173,8 @@ private fun SignInContentScreen(
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFD1DC),
-                                contentColor = Color(0xFF2B2330)
+                                containerColor = colorFromHex("FFD1DC"),
+                                contentColor = colorFromHex("2B2330")
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -191,22 +192,22 @@ private fun SignInContentScreen(
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_kakao),
                             icon = painterResource(Res.drawable.kakao_icon),
-                            containerColor = Color(0xFFFEE500),
-                            contentColor = Color.Black,
+                            containerColor = colorFromHex("FEE500"),
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.KAKAO)) }
                         )
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_google),
                             icon = painterResource(Res.drawable.google_logo),
                             containerColor = Color.White,
-                            contentColor = Color(0xFF222222),
+                            contentColor = colorFromHex("222222"),
                             outlined = true,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.GOOGLE)) }
                         )
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_apple),
                             icon = painterResource(Res.drawable.apple_icon),
-                            containerColor = Color(0xFF111111),
+                            containerColor = colorFromHex("111111"),
                             contentColor = Color.White,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.APPLE)) }
                         )
@@ -224,13 +225,13 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_forgot_password),
-                                color = Color(0xFF8E8794),
+                                color = colorFromHex("8E8794"),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
                             text = " | ",
-                            color = Color(0xFFB5AEB9),
+                            color = colorFromHex("B5AEB9"),
                             style = MaterialTheme.typography.bodySmall
                         )
                         TextButton(
@@ -239,7 +240,7 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_sign_up),
-                                color = Color(0xFF8E8794),
+                                color = colorFromHex("8E8794"),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

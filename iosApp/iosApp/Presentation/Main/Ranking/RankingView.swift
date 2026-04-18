@@ -157,15 +157,15 @@ private struct RankingEmptyPlaceholderCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(String(localized: String.LocalizationValue("ranking_empty_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5C525D"))
+                .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("ranking_empty_desc"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A7F8B"))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
@@ -280,10 +280,10 @@ struct RankingPromoBanner: View {
                         Spacer(minLength: 8)
                         Button(String(localized: String.LocalizationValue("ranking_detail"), table: "Localizable")) { }
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.black.opacity(0.85))
+                        .foregroundStyle(Color.primary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(.white)
+                        .background(Color(uiColor: .systemBackground).opacity(0.92))
                         .clipShape(Capsule())
                     }
                 }
@@ -331,6 +331,8 @@ struct RankingPromoBanner: View {
 }
 
 struct RankingEntryCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let item: Shared.RankingFeedEntry
     
     let isMaid: Bool
@@ -354,10 +356,11 @@ struct RankingEntryCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
                 .font(.subheadline.weight(.semibold))
+                .foregroundStyle(colorScheme == .dark ? .white : .primary)
                 .lineLimit(1)
                 Text(item.subtitle)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
                 .lineLimit(1)
                 HStack(spacing: 8) {
                     Text("\(item.score) pt")
@@ -369,7 +372,7 @@ struct RankingEntryCard: View {
             Spacer()
         }
         .padding(16)
-        .background(.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
         .onTapGesture {

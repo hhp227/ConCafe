@@ -28,6 +28,7 @@ import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -138,7 +139,7 @@ fun BannerEditScreen(
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(BannerEditAction.DismissSelector) },
             sheetState = sheetState,
-            containerColor = Color(0xFFF8F5F6)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             BannerSelectorSheet(
                 uiState = uiState,
@@ -216,16 +217,16 @@ private fun BannerEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330),
-                            disabledContainerColor = Color(0xFFF4D7DF),
-                            disabledContentColor = Color(0xFF8B7D83)
+                            containerColor = colorFromHex("FFD1DC"),
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            disabledContainerColor = colorFromHex("F4D7DF"),
+                            disabledContentColor = colorFromHex("8B7D83")
                         )
                     ) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                color = Color(0xFF2B2330),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -250,7 +251,7 @@ private fun BannerEditContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
+                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
                     )
                 )
         ) {
@@ -383,8 +384,8 @@ private fun BannerEditContentScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(stringResource(Res.string.banneredit_period_min_day), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
-                                Text(stringResource(Res.string.banneredit_period_max_day), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A8D95))
+                                Text(stringResource(Res.string.banneredit_period_min_day), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(Res.string.banneredit_period_max_day), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -462,7 +463,7 @@ private fun BannerSelectorSheet(
                     .padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFFEF6797))
+                CircularProgressIndicator(color = colorFromHex("EF6797"))
             }
         } else if (uiState.activeSelectorItemCount == 0) {
             Box(
@@ -472,7 +473,7 @@ private fun BannerSelectorSheet(
             ) {
                 Text(
                     text = stringResource(Res.string.banneredit_selector_empty),
-                    color = Color(0xFF8F848F)
+                    color = colorFromHex("8F848F")
                 )
             }
         } else {
@@ -522,7 +523,7 @@ private fun BannerImageCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBFD))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -537,7 +538,7 @@ private fun BannerImageCard(
                     .fillMaxWidth()
                     .aspectRatio(16f / 10f)
                     .background(
-                        Brush.linearGradient(listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))),
+                        Brush.linearGradient(listOf(colorFromHex("FFD8E6"), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))),
                         RoundedCornerShape(20.dp)
                     )
                     .clip(RoundedCornerShape(20.dp)),
@@ -551,13 +552,13 @@ private fun BannerImageCard(
                         Icon(
                             imageVector = Icons.Default.AddPhotoAlternate,
                             contentDescription = null,
-                            tint = Color(0xFFEF6797),
+                            tint = colorFromHex("EF6797"),
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
                             text = stringResource(Res.string.banneredit_image_placeholder_pick),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF5A4954),
+                            color = colorFromHex("5A4954"),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -579,15 +580,15 @@ private fun BannerImageCard(
                 Text(
                     text = stringResource(Res.string.banneredit_image_guide),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8F848F),
+                    color = colorFromHex("8F848F"),
                     textAlign = TextAlign.Center
                 )
             }
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330)
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 shape = RoundedCornerShape(999.dp)
             ) {
@@ -607,7 +608,7 @@ private fun BannerSectionCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -618,7 +619,7 @@ private fun BannerSectionCard(
                     modifier = Modifier
                         .padding(end = 8.dp)
                         .size(width = 4.dp, height = 18.dp)
-                        .background(Color(0xFFFFD1DC), RoundedCornerShape(999.dp))
+                        .background(colorFromHex("FFD1DC"), RoundedCornerShape(999.dp))
                 )
                 Text(
                     text = title,
@@ -650,10 +651,10 @@ private fun TargetTypeGrid(
                             .weight(1f)
                             .clickable { onSelect(target) },
                         shape = RoundedCornerShape(14.dp),
-                        color = if (isSelected) Color(0x14FFD1DC) else Color(0xFFF8F5F6),
+                        color = if (isSelected) Color(0x14FFD1DC) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         border = BorderStroke(
                             width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) Color(0xFFFFD1DC) else Color(0x33FFD1DC)
+                            color = if (isSelected) colorFromHex("FFD1DC") else Color(0x33FFD1DC)
                         )
                     ) {
                         Box(
@@ -670,7 +671,7 @@ private fun TargetTypeGrid(
                                 },
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color(0xFF23161C) else Color(0xFF7A707A)
+                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -689,13 +690,13 @@ private fun SelectionFieldCard(
     onClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF665A63), fontWeight = FontWeight.Medium)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
             border = BorderStroke(1.dp, Color(0x33FFD1DC))
         ) {
             Row(
@@ -705,18 +706,18 @@ private fun SelectionFieldCard(
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = selectedTitle ?: placeholder,
-                        color = if (selectedTitle == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                        color = if (selectedTitle == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                         fontWeight = if (selectedTitle == null) FontWeight.Normal else FontWeight.SemiBold
                     )
                     selectedSubtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF8F848F)
+                            color = colorFromHex("8F848F")
                         )
                     }
                 }
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color(0xFF8F848F))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = colorFromHex("8F848F"))
             }
         }
     }
@@ -730,11 +731,11 @@ private fun FixedSelectionCard(
     placeholder: String
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF665A63), fontWeight = FontWeight.Medium)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
             border = BorderStroke(1.dp, Color(0x33FFD1DC))
         ) {
             Column(
@@ -743,14 +744,14 @@ private fun FixedSelectionCard(
             ) {
                 Text(
                     text = selectedTitle ?: placeholder,
-                    color = if (selectedTitle == null) Color(0xFFAA98A4) else Color(0xFF23161C),
+                    color = if (selectedTitle == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     fontWeight = if (selectedTitle == null) FontWeight.Normal else FontWeight.SemiBold
                 )
                 selectedSubtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF8F848F)
+                        color = colorFromHex("8F848F")
                     )
                 }
             }
@@ -769,14 +770,14 @@ private fun SelectorOptionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(title, fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8F848F))
+            Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colorFromHex("8F848F"))
         }
     }
 }
@@ -790,7 +791,7 @@ private fun BadgeText(label: String) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            color = Color(0xFFEF6797),
+            color = colorFromHex("EF6797"),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
         )
@@ -810,12 +811,12 @@ private fun InfoBanner(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFEF6797), modifier = Modifier.padding(top = 2.dp))
+        Icon(Icons.Default.Info, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.padding(top = 2.dp))
         Text(
             text = message,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF7A707A)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         TextButton(onClick = onDismiss) {
             Text(stringResource(Res.string.banneredit_action_close), fontWeight = FontWeight.Bold)

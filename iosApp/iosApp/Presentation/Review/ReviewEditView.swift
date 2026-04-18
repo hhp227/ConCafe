@@ -96,12 +96,12 @@ private struct ReviewEditContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 
     private var cafeInfoSection: some View {
@@ -136,10 +136,10 @@ private struct ReviewEditContentView: View {
                 }
                 Text(uiState.cafeName)
                     .font(.title3.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Text(uiState.cafeAddress)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -152,7 +152,7 @@ private struct ReviewEditContentView: View {
         VStack(spacing: 10) {
             Text(String(localized: String.LocalizationValue("reviewedit_rating_question"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             HStack(spacing: 6) {
                 ForEach(1...ReviewEditUiState.maximumRating, id: \.self) { index in
                     let isSelected = index <= uiState.rating
@@ -171,14 +171,14 @@ private struct ReviewEditContentView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(String(localized: String.LocalizationValue("reviewedit_photo_section_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             GeometryReader { proxy in
                 ZStack(alignment: .bottomTrailing) {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -201,7 +201,7 @@ private struct ReviewEditContentView: View {
                                 .foregroundStyle(Color(hex: "8B5164"))
                             Text(String(localized: String.LocalizationValue("reviewedit_photo_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "5A4954"))
+                                .foregroundStyle(.secondary)
                         }
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
@@ -213,7 +213,7 @@ private struct ReviewEditContentView: View {
                         .foregroundStyle(Color(hex: "8B5164"))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.white)
+                        .background(Color(uiColor: .secondarySystemBackground))
                         .clipShape(Capsule())
                         .padding(12)
                     }
@@ -230,20 +230,20 @@ private struct ReviewEditContentView: View {
             }
             Text(String(localized: String.LocalizationValue("reviewedit_photo_helper"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 
     private var reviewSection: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(String(localized: String.LocalizationValue("reviewedit_review_detail_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             ConCafeFormEditor(
                 label: "",
                 text: Binding(
@@ -261,7 +261,7 @@ private struct ReviewEditContentView: View {
                 )
             )
                 .font(.caption)
-                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : Color(hex: "9A8D95"))
+                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : .secondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             if !uiState.availableCastTags.isEmpty {
                 castTagSection
@@ -270,7 +270,7 @@ private struct ReviewEditContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 
     private var atmosphereCard: some View {
@@ -285,7 +285,7 @@ private struct ReviewEditContentView: View {
                     }
                 Text(String(localized: String.LocalizationValue("reviewedit_atmosphere_question"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
             }
             HStack(spacing: 8) {
                 answerChip(
@@ -301,7 +301,7 @@ private struct ReviewEditContentView: View {
             }
         }
         .padding(16)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .tertiarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -309,7 +309,7 @@ private struct ReviewEditContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(String(localized: String.LocalizationValue("reviewedit_cast_tag_title"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(uiState.availableCastTags) { cast in
@@ -320,7 +320,7 @@ private struct ReviewEditContentView: View {
                         } label: {
                             Text(cast.name)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(selected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
+                                .foregroundStyle(selected ? .primary : .secondary)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 9)
                                 .background(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.1))
@@ -346,13 +346,13 @@ private struct ReviewEditContentView: View {
                     HStack {
                         if uiState.isSubmitting {
                             ProgressView()
-                                .tint(Color(hex: "2B2330"))
+                                .tint(.primary)
                         } else {
                             Text(uiState.submitButtonLabel)
                                 .fontWeight(.bold)
                         }
                     }
-                    .foregroundStyle(uiState.isSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .foregroundStyle(uiState.isSubmitEnabled ? .primary : .secondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
@@ -363,7 +363,7 @@ private struct ReviewEditContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 14)
-                .background(Color.white.opacity(0.96))
+                .background(Color(uiColor: .secondarySystemBackground).opacity(0.96))
             }
         }
     }
@@ -376,10 +376,10 @@ private struct ReviewEditContentView: View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.bold))
-                .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "8E7F88"))
+                .foregroundStyle(isSelected ? .primary : .secondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(isSelected ? Color(hex: "FFD1DC") : Color.white)
+                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemBackground))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()

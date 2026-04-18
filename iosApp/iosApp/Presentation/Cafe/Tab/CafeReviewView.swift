@@ -45,7 +45,7 @@ struct CafeReviewView: View {
                 Spacer()
             }
             .padding(16)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             if reviews.isEmpty {
                 emptyCard(String(localized: String.LocalizationValue("cafe_review_empty"), table: "Localizable"))
@@ -142,7 +142,7 @@ struct CafeReviewView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color.white)
+                        .background(Color(uiColor: .secondarySystemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .onAppear {
                             if index == reviews.count - 1, canLoadMore, !isLoadingMore {
@@ -172,7 +172,7 @@ struct CafeReviewView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

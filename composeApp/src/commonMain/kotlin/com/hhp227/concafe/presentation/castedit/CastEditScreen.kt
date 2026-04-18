@@ -34,6 +34,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -151,15 +152,15 @@ private fun CastEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = colorFromHex("FFD1DC"),
+                            contentColor = colorFromHex("2B2330")
                         )
                     ) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = Color(0xFF2B2330)
+                                color = colorFromHex("2B2330")
                             )
                         } else {
                             Icon(Icons.Default.HowToReg, contentDescription = null)
@@ -179,7 +180,7 @@ private fun CastEditContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
+                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
                     )
                 )
                 .padding(innerPadding)
@@ -189,7 +190,7 @@ private fun CastEditContentScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFFEF6797))
+                    CircularProgressIndicator(color = colorFromHex("EF6797"))
                 }
             } else {
                 LazyColumn(
@@ -328,7 +329,7 @@ private fun BirthdayInputField(
             text = stringResource(Res.string.castedit_birthday_label),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF665A63)
+            color = colorFromHex("665A63")
         )
         OutlinedTextField(
             value = birthdayTextFieldValue,
@@ -345,21 +346,21 @@ private fun BirthdayInputField(
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
-            placeholder = { Text("MM/DD/YYYY", color = Color(0xFFAA98A4)) },
+            placeholder = { Text("MM/DD/YYYY", color = colorFromHex("AA98A4")) },
             shape = RoundedCornerShape(16.dp),
             trailingIcon = {
                 IconButton(onClick = onClickCalendar) {
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = stringResource(Res.string.castedit_birthday_pick),
-                        tint = Color(0xFFB1A3AC)
+                        tint = colorFromHex("B1A3AC")
                     )
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF8F5F6),
-                unfocusedContainerColor = Color(0xFFF8F5F6),
-                focusedBorderColor = Color(0xFFFFD1DC),
+                focusedContainerColor = colorFromHex("F8F5F6"),
+                unfocusedContainerColor = colorFromHex("F8F5F6"),
+                focusedBorderColor = colorFromHex("FFD1DC"),
                 unfocusedBorderColor = Color(0x4DFFD1DC)
             )
         )
@@ -389,7 +390,7 @@ private fun ProfilePhotoSection(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFE3EC), Color(0xFFF8C5D7))
+                                colors = listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
                             )
                         )
                 ) {
@@ -402,7 +403,7 @@ private fun ProfilePhotoSection(
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFFFD1DC),
+                    color = colorFromHex("FFD1DC"),
                     border = BorderStroke(2.dp, Color.White),
                     shadowElevation = 6.dp
                 ) {
@@ -410,7 +411,7 @@ private fun ProfilePhotoSection(
                         imageVector = Icons.Default.PhotoCamera,
                         contentDescription = null,
                         modifier = Modifier.padding(8.dp),
-                        tint = Color(0xFF2B2330)
+                        tint = colorFromHex("2B2330")
                     )
                 }
             }
@@ -422,7 +423,7 @@ private fun ProfilePhotoSection(
             Text(
                 stringResource(Res.string.castedit_profile_photo_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8C7E87)
+                color = colorFromHex("8C7E87")
             )
         }
     }
@@ -447,9 +448,9 @@ private fun GallerySection(
                 stringResource(Res.string.castedit_gallery_title),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF665A63)
+                color = colorFromHex("665A63")
             )
-            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
+            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
         }
         CastGalleryGrid(
             galleryImages = galleryImages,
@@ -460,7 +461,7 @@ private fun GallerySection(
         Text(
             text = stringResource(Res.string.castedit_gallery_guide, galleryMaxCount),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF8A8088)
+            color = colorFromHex("8A8088")
         )
     }
 }
@@ -499,7 +500,7 @@ private fun CastGalleryGrid(
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(Res.string.castedit_gallery_add),
-                    tint = Color(0xFFEF6797)
+                    tint = colorFromHex("EF6797")
                 )
             }
         }
@@ -514,9 +515,9 @@ private fun CastGalleryImageTile(
     onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
-        listOf(Color(0xFFFFE6EE), Color(0xFFF7C9D8)),
-        listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5)),
-        listOf(Color(0xFFFFD9CF), Color(0xFFFFF0EA))
+        listOf(colorFromHex("FFE6EE"), colorFromHex("F7C9D8")),
+        listOf(colorFromHex("FFD8E6"), colorFromHex("FFEFF5")),
+        listOf(colorFromHex("FFD9CF"), colorFromHex("FFF0EA"))
     )
     val colors = gradients[index % gradients.size]
 
@@ -577,8 +578,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -591,12 +592,12 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
             TextButton(onClick = onDismiss) {
                 Text(
                     stringResource(Res.string.common_close),
-                    color = Color(0xFF6B5320),
+                    color = colorFromHex("6B5320"),
                     fontWeight = FontWeight.Bold
                 )
             }

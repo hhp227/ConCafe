@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.explore
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -41,6 +42,7 @@ import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
@@ -129,7 +131,7 @@ fun ExploreContentScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(colorFromHex("FFFBFD"))
     ) {
         val gridColumnCount = exploreGridColumnCount(maxWidth)
         val rows = remember(uiState.selectedTab, uiState.cafes, uiState.maids, gridColumnCount) {
@@ -196,7 +198,7 @@ fun ExploreContentScreen(
             }
             stickyHeader {
                 Surface(
-                    color = Color(0xFFFFFBFD),
+                    color = colorFromHex("FFFBFD"),
                     modifier = Modifier
                         .fillMaxWidth()
                         .zIndex(1f)
@@ -289,12 +291,14 @@ private fun ExploreEmptyPlaceholder(
     title: String,
     description: String
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -306,12 +310,12 @@ private fun ExploreEmptyPlaceholder(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5C525D)
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8A7F8B)
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -400,10 +404,12 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
 
 @Composable
 private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(modifier = Modifier.clickable(onClick = onClick)) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Box(
                 modifier = Modifier
@@ -411,7 +417,7 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))
+                            colors = listOf(colorFromHex("FFDFEA"), colorFromHex("FFBED5"))
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -435,11 +441,17 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
             }
         }
         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(maid.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                maid.name,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(
                 cafeName,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF777777),
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -447,7 +459,7 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                 Text(
                     text = stringResource(Res.string.explore_cast_followers, maid.followerCount),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFEF6797)
+                    color = colorFromHex("EF6797")
                 )
             }
         }
