@@ -25,11 +25,13 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
 
     @ViewBuilder let trailingContent: () -> Trailing
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "665A63"))
             HStack(spacing: 8) {
                 leadingContent()
                 if isSecure {
@@ -48,11 +50,16 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 52)
-            .background(Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark
+                            ? Color.white.opacity(0.08)
+                            : Color(hex: "FFD1DC").opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }
@@ -63,7 +70,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
             EmptyView()
         } else {
             Text(placeholder)
-                .foregroundStyle(Color(hex: "AA98A4"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "AA98A4"))
         }
     }
 }
@@ -137,27 +144,34 @@ struct ConCafeFormEditor: View {
 
     let placeholder: String
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "665A63"))
             ZStack(alignment: .topLeading) {
                 ConCafeMultilineTextView(text: $text)
                     .frame(minHeight: 120)
                     .padding(12)
                 if text.isEmpty, !placeholder.isEmpty {
                     Text(placeholder)
-                        .foregroundStyle(Color(hex: "AA98A4"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "AA98A4"))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 20)
                 }
             }
-            .background(Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark
+                            ? Color.white.opacity(0.08)
+                            : Color(hex: "FFD1DC").opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }

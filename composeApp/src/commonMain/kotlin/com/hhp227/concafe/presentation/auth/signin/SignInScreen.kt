@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -107,6 +109,7 @@ private fun SignInContentScreen(
     onSignUp: () -> Unit,
     onAction: (SignInAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
@@ -115,7 +118,15 @@ private fun SignInContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                        if (isDarkMode) {
+                            listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        } else {
+                            listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                        }
                     )
                 )
         ) {
@@ -149,7 +160,20 @@ private fun SignInContentScreen(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = colorFromHex("EF6797"),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                focusedLabelColor = colorFromHex("EF6797"),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         OutlinedTextField(
                             value = uiState.password,
@@ -159,7 +183,20 @@ private fun SignInContentScreen(
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = colorFromHex("EF6797"),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                focusedLabelColor = colorFromHex("EF6797"),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         if (uiState.errorMessage != null) {
                             Text(
@@ -225,13 +262,13 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_forgot_password),
-                                color = colorFromHex("8E8794"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
                             text = " | ",
-                            color = colorFromHex("B5AEB9"),
+                            color = MaterialTheme.colorScheme.outline,
                             style = MaterialTheme.typography.bodySmall
                         )
                         TextButton(
@@ -240,7 +277,7 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_sign_up),
-                                color = colorFromHex("8E8794"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

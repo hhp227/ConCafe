@@ -46,6 +46,8 @@ private struct SignInContentView: View {
     let onSignUp: () -> Void
     
     let onAction: (SignInAction) -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         ScrollView {
@@ -62,7 +64,9 @@ private struct SignInContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
+                colors: colorScheme == .dark
+                    ? [Color(uiColor: .systemBackground), Color(uiColor: .secondarySystemBackground), Color(uiColor: .tertiarySystemBackground)]
+                    : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -84,18 +88,34 @@ private struct SignInContentView: View {
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
                 .autocorrectionDisabled()
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            lineWidth: 1
+                        )
+                )
                 SecureField(String(localized: String.LocalizationValue("signin_password_label"), table: "Localizable"), text: Binding(
                     get: { uiState.password },
                     set: { onAction(.passwordChanged($0)) }
                 ))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            lineWidth: 1
+                        )
+                )
             }
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)

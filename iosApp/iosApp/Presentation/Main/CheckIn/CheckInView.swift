@@ -19,7 +19,7 @@ struct CheckInView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: "FFFBFD")
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             Group {
                 if viewModel.uiState.isLoading {
@@ -301,6 +301,8 @@ private struct CheckInMapSection: View {
 
     @State private var selectedPinId: String? = nil
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(spacing: 14) {
             HStack(alignment: .top) {
@@ -326,10 +328,10 @@ private struct CheckInMapSection: View {
                                 )
                             )
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color(hex: "7B7480"))
+                                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7B7480"))
                             Image(systemName: "chevron.down")
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(Color(hex: "7B7480"))
+                                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7B7480"))
                         }
                     }
                     .buttonStyle(.plain)
@@ -364,7 +366,9 @@ private struct CheckInMapSection: View {
         .padding(.vertical, 6)
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF0F6"), Color(hex: "FFFAFC"), Color(hex: "FFF3F8")],
+                colors: colorScheme == .dark
+                    ? [Color(uiColor: .secondarySystemBackground), Color(uiColor: .systemBackground)]
+                    : [Color(hex: "FFF0F6"), Color(hex: "FFFAFC"), Color(hex: "FFF3F8")],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -372,7 +376,7 @@ private struct CheckInMapSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : Color.white.opacity(0.8), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -496,6 +500,8 @@ private struct CheckInMapSection: View {
 private struct CheckInLoginPromotionSection: View {
     let onAction: (CheckInAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 10) {
@@ -521,7 +527,7 @@ private struct CheckInLoginPromotionSection: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .foregroundStyle(Color(hex: "EF6797"))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
@@ -700,6 +706,8 @@ private struct CheckInVisitCard: View {
 private struct CheckInMoreVisitCard: View {
     let remainingCount: Int
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -716,7 +724,7 @@ private struct CheckInMoreVisitCard: View {
                     .foregroundStyle(Color(hex: "EF6797"))
                 Text(String(localized: String.LocalizationValue("checkin_more_visit_label"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7C7480"))
+                    .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
             }
         }
         .frame(maxWidth: .infinity)
@@ -891,11 +899,11 @@ private struct CheckInSectionTitle: View {
                 if let trailing {
                     Text(trailing)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "7B7480"))
+                        .foregroundStyle(.secondary)
                 }
                 Text(title)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
             }
             Spacer()
         }
@@ -906,10 +914,12 @@ private struct CheckInSectionTitle: View {
 private struct CheckInLoginPromptSheet: View {
     let onAction: (CheckInAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(spacing: 18) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color(hex: "E1D7DE"))
+                .fill(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "E1D7DE"))
                 .frame(width: 42, height: 5)
                 .padding(.top, 8)
             VStack(spacing: 10) {
@@ -934,7 +944,7 @@ private struct CheckInLoginPromptSheet: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 24)
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color(uiColor: .systemBackground) : Color.white)
     }
 }
 
@@ -943,20 +953,22 @@ private struct CheckInReviewPromptSheet: View {
    
     let onAction: (CheckInAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(String(localized: String.LocalizationValue("checkin_review_prompt_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
-                .foregroundColor(Color(hex: "24161E"))
+                .foregroundColor(.primary)
             Text(String(format: String(localized: String.LocalizationValue("checkin_review_prompt_desc"), table: "Localizable"), locale: Locale.current, cafeName))
                 .font(.subheadline)
-                .foregroundColor(Color(hex: "6F6670"))
+                .foregroundColor(.secondary)
             Button {
                 onAction(.writeReviewPromptTapped)
             } label: {
                 Text(String(localized: String.LocalizationValue("checkin_review_prompt_primary"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundColor(Color(hex: "2B2330"))
+                    .foregroundColor(colorScheme == .dark ? .white : Color(hex: "2B2330"))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color(hex: "FFD1DC"))
@@ -1002,7 +1014,7 @@ private struct CheckInNewVisitSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(Color(hex: "E1D7DE"))
+                        .fill(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "E1D7DE"))
                         .frame(width: 42, height: 5)
                     HStack {
                         Spacer()
@@ -1076,20 +1088,20 @@ private struct CheckInNewVisitSheet: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color(hex: "E25575"))
+                            .foregroundStyle(colorScheme == .dark ? .red : Color(hex: "E25575"))
                             .padding(.top, 2)
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(Color(hex: "B03854"))
+                            .foregroundStyle(colorScheme == .dark ? Color(uiColor: .systemRed) : Color(hex: "B03854"))
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .background(Color(hex: "FFF1F3"))
+                    .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF1F3"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
+                            .stroke(colorScheme == .dark ? Color(uiColor: .systemRed).opacity(0.35) : Color(hex: "FFCDD5"), lineWidth: 1)
                     )
                 }
                 Button(String(localized: String.LocalizationValue("checkin_new_visit_submit"), table: "Localizable")) {
@@ -1171,10 +1183,12 @@ private struct CheckInQrScanSheet: View {
 
     let onAction: (CheckInAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color(hex: "E1D7DE"))
+                .fill(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "E1D7DE"))
                 .frame(width: 42, height: 5)
             HStack {
                 Spacer()
@@ -1185,13 +1199,13 @@ private struct CheckInQrScanSheet: View {
                     onAction(.dismissQrCheckInSheet)
                 } label: {
                     Image(systemName: "xmark")
-                        .foregroundStyle(Color(hex: "7C7480"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                         .padding(4)
                 }
             }
             Text(String(localized: String.LocalizationValue("checkin_qr_sheet_desc"), table: "Localizable"))
                 .font(.footnote)
-                .foregroundStyle(Color(hex: "7C7480"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "7C7480"))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             CheckInQrScannerView(
@@ -1212,20 +1226,20 @@ private struct CheckInQrScanSheet: View {
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "E25575"))
+                        .foregroundStyle(colorScheme == .dark ? .red : Color(hex: "E25575"))
                         .padding(.top, 2)
                     Text(errorMessage)
                         .font(.footnote)
-                        .foregroundStyle(Color(hex: "B03854"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .systemRed) : Color(hex: "B03854"))
                     Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color(hex: "FFF1F3"))
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF1F3"))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color(hex: "FFCDD5"), lineWidth: 1)
+                        .stroke(colorScheme == .dark ? Color(uiColor: .systemRed).opacity(0.35) : Color(hex: "FFCDD5"), lineWidth: 1)
                 )
             }
 
@@ -1234,7 +1248,7 @@ private struct CheckInQrScanSheet: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 16)
-        .background(Color(hex: "F8F5F6"))
+        .background(colorScheme == .dark ? Color(uiColor: .systemBackground) : Color(hex: "F8F5F6"))
     }
 }
 
@@ -1243,19 +1257,21 @@ private struct CheckInSectionPlaceholderCard: View {
 
     let description: String
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(hex: "5B4F57"))
+            .foregroundStyle(.primary)
             Text(description)
             .font(.caption)
-            .foregroundStyle(Color(hex: "857A82"))
+            .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFF2F7"))
+        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF2F7"))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

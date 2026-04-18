@@ -41,6 +41,7 @@ fun ConCafeFormField(
     leadingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     var textFieldValue by remember {
         mutableStateOf(
             TextFieldValue(
@@ -63,7 +64,7 @@ fun ConCafeFormField(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = colorFromHex("665A63")
+            color = colorScheme.onSurfaceVariant
         )
         OutlinedTextField(
             value = textFieldValue,
@@ -94,17 +95,17 @@ fun ConCafeFormField(
                 if (placeholder.isNotEmpty()) {
                     Text(
                         text = placeholder,
-                        color = colorFromHex("AA98A4")
+                        color = colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
                     )
                 }
             },
             leadingIcon = leadingContent,
             trailingIcon = trailingContent,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorFromHex("F8F5F6"),
-                unfocusedContainerColor = colorFromHex("F8F5F6"),
+                focusedContainerColor = colorScheme.surfaceVariant,
+                unfocusedContainerColor = colorScheme.surfaceVariant,
                 focusedBorderColor = colorFromHex("FFD1DC"),
-                unfocusedBorderColor = Color(0x4DFFD1DC)
+                unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.45f)
             )
         )
     }

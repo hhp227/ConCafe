@@ -46,6 +46,8 @@ private struct SignUpContentView: View {
 
     let onAction: (SignUpAction) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private var filteredCafes: [Cafe] {
         if uiState.cafeSearchQuery.isEmpty {
             return uiState.cafes
@@ -80,7 +82,9 @@ private struct SignUpContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
+                colors: colorScheme == .dark
+                    ? [Color(uiColor: .systemBackground), Color(uiColor: .secondarySystemBackground), Color(uiColor: .tertiarySystemBackground)]
+                    : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -291,8 +295,12 @@ private struct SignUpContentView: View {
                     )
                     .frame(height: 52)
                     .padding(.horizontal, 16)
-                    .background(Color.white)
+                    .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                    )
                 }
                 Button(uiState.isPhoneVerified ? String(localized: String.LocalizationValue("signup_phone_verified"), table: "Localizable") : String(localized: String.LocalizationValue("signup_phone_request"), table: "Localizable")) {
                     onAction(.sendVerificationTapped)
@@ -380,11 +388,11 @@ private struct SignUpContentView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
                 )
             }
             if uiState.selectedCafe != nil {
@@ -448,7 +456,7 @@ private struct SignUpContentView: View {
                         }
                     }
                 }
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
         }
@@ -513,10 +521,15 @@ private struct SignUpContentView: View {
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                )
         }
     }
 
@@ -529,10 +542,15 @@ private struct SignUpContentView: View {
             Text(title)
                 .font(.subheadline.weight(.semibold))
             SecureField(placeholder, text: text)
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                )
         }
     }
 

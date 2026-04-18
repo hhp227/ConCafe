@@ -135,7 +135,7 @@ fun CheckInScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         CheckInContentScreen(
             uiState = uiState,
@@ -150,7 +150,7 @@ fun CheckInScreen(
         if (uiState.isLoginPromptVisible) {
             ModalBottomSheet(
                 onDismissRequest = { viewModel.onAction(CheckInAction.DismissLoginPrompt) },
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 LoginRequiredBottomSheet(
                     onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) },
@@ -199,7 +199,7 @@ fun CheckInScreen(
         uiState.reviewPrompt?.let { prompt ->
             ModalBottomSheet(
                 onDismissRequest = { viewModel.onAction(CheckInAction.DismissReviewPrompt) },
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 ReviewPromptBottomSheet(
                     cafeName = prompt.cafeName,
@@ -299,7 +299,7 @@ private fun ReviewPromptBottomSheet(
         )
         Text(
             text = stringResource(Res.string.checkin_review_prompt_desc, cafeName),
-            color = colorFromHex("6F6670"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
         Button(
@@ -360,7 +360,7 @@ private fun CheckInGuestScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -439,7 +439,7 @@ private fun CheckInUserScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
@@ -535,6 +535,7 @@ private fun CafeMapSection(
     onCafeCheckIn: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
@@ -564,14 +565,18 @@ private fun CafeMapSection(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        listOf(colorFromHex("FFF0F6"), colorFromHex("FFFAFC"), colorFromHex("FFF3F8"))
+                        if (isDarkMode) {
+                            listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
+                        } else {
+                            listOf(colorFromHex("FFF0F6"), colorFromHex("FFFAFC"), colorFromHex("FFF3F8"))
+                        }
                     )
                 )
                 .padding(12.dp)
@@ -597,7 +602,7 @@ private fun CafeMapSection(
                         if (usesInlineRegionFilter) {
                             Text(
                                 text = selectedRegionLabel,
-                                color = colorFromHex("7B7480"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -668,14 +673,14 @@ private fun CheckInRegionDropdown(
             )
             Text(
                 text = selectedRegionLabel,
-                color = colorFromHex("7B7480"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold
             )
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = null,
-                tint = colorFromHex("7B7480"),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -918,6 +923,7 @@ private fun LoginPromotionSection(
     onSignIn: () -> Unit,
     onSignUp: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
@@ -948,8 +954,8 @@ private fun LoginPromotionSection(
                 onClick = onSignIn,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = colorFromHex("EF6797")
+                    containerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                    contentColor = if (isDarkMode) MaterialTheme.colorScheme.onSurface else colorFromHex("EF6797")
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -980,7 +986,7 @@ private fun LoginRequiredBottomSheet(
         Text(
             text = stringResource(Res.string.checkin_login_required_desc),
             style = MaterialTheme.typography.bodyMedium,
-            color = colorFromHex("6E6872")
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Button(
             onClick = onSignIn,
@@ -1212,7 +1218,7 @@ private fun CheckInGuestSectionTitle(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = colorFromHex("2B2330")
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -1237,14 +1243,14 @@ private fun CheckInSectionTitle(
                 Text(
                     text = trailing,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("7B7480")
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("2B2330")
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -1300,6 +1306,7 @@ private fun QrCheckInBottomSheet(
     onScanSuccess: (String) -> Unit,
     onScanFailed: (String) -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1320,14 +1327,14 @@ private fun QrCheckInBottomSheet(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(Res.string.common_close),
-                    tint = colorFromHex("7C7480")
+                    tint = colorScheme.onSurfaceVariant
                 )
             }
         }
         Text(
             text = stringResource(Res.string.checkin_qr_sheet_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("7C7480")
+            color = colorScheme.onSurfaceVariant
         )
         Box(
             modifier = Modifier
@@ -1345,13 +1352,13 @@ private fun QrCheckInBottomSheet(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = colorFromHex("FFF1F3"),
-                border = BorderStroke(1.dp, colorFromHex("FFCDD5"))
+                color = colorScheme.errorContainer,
+                border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.35f))
             ) {
                 Text(
                     text = errorMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("B03854"),
+                    color = colorScheme.onErrorContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
                 )
             }
@@ -1600,7 +1607,7 @@ private fun CheckInSectionPlaceholderCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colorFromHex("FFF2F7"))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -1610,12 +1617,12 @@ private fun CheckInSectionPlaceholderCard(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("5B4F57")
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("857A82")
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
