@@ -18,7 +18,7 @@ val googleMapsJavascriptApiKey = if (androidGoogleMapsXml.exists()) {
     ""
 }
 
-val appVersionName = "1.07"
+val appVersionName = "1.08"
 val desktopPackageVersion = "1.2.8"
 
 plugins {
@@ -133,7 +133,7 @@ android {
         applicationId = "com.hhp227.concafe"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 11
+        versionCode = 12
         versionName = appVersionName
     }
     buildFeatures {
