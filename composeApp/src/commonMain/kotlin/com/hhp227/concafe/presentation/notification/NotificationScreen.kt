@@ -77,10 +77,8 @@ private fun NotificationContentScreen(
     uiState: NotificationUiState,
     onAction: (NotificationAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
-        containerColor = if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background,
+        containerColor = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.common_notification)) },
@@ -128,12 +126,10 @@ private fun NotificationSignInRequiredScreen(
     modifier: Modifier = Modifier,
     onAction: (NotificationAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
+            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -184,12 +180,10 @@ private fun NotificationSectionsScreen(
     uiState: NotificationUiState,
     onAction: (NotificationAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
+            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {

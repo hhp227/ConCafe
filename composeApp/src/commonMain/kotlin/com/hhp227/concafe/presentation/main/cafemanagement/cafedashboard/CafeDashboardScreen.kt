@@ -186,7 +186,6 @@ private fun CafeDashboardContentScreen(
     onQrMetricClick: () -> Unit
 ) {
     val cafe = uiState.cafe
-    val isDarkMode = isSystemInDarkTheme()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -207,7 +206,7 @@ private fun CafeDashboardContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

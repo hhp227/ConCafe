@@ -43,8 +43,6 @@ fun ConCafeFormField(
     trailingContent: @Composable (() -> Unit)? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val isDarkMode = isSystemInDarkTheme()
-    val containerColor = if (isDarkMode) colorScheme.surfaceVariant else Color.White
     var textFieldValue by remember {
         mutableStateOf(
             TextFieldValue(
@@ -105,8 +103,8 @@ fun ConCafeFormField(
             leadingIcon = leadingContent,
             trailingIcon = trailingContent,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = containerColor,
-                unfocusedContainerColor = containerColor,
+                focusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
                 focusedBorderColor = colorFromHex("FFD1DC"),
                 unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.45f)
             )

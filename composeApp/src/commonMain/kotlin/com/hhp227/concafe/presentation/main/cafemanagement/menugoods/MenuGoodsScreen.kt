@@ -126,8 +126,6 @@ private fun MenuGoodsContentScreen(
     uiState: MenuGoodsUiState,
     onAction: (MenuGoodsAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -175,7 +173,7 @@ private fun MenuGoodsContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(
@@ -375,11 +373,9 @@ private fun SearchField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White,
+        color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
         border = BorderStroke(1.dp, colorFromHex("F1D9E4"))
     ) {
         Row(
@@ -497,13 +493,11 @@ private fun InfoBanner(
 
 @Composable
 private fun LoadingCard() {
-    val isDarkMode = isSystemInDarkTheme()
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White)
+            .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
             .border(BorderStroke(1.dp, colorFromHex("F0E2E9")), RoundedCornerShape(24.dp))
             .padding(vertical = 44.dp),
         contentAlignment = Alignment.Center
@@ -516,11 +510,9 @@ private fun LoadingCard() {
 private fun EmptyStateCard(
     isSearchMode: Boolean
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Column(
@@ -569,11 +561,9 @@ private fun MenuItemCard(
     onDelete: () -> Unit,
     onToggleAvailability: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(
@@ -672,11 +662,9 @@ private fun GoodsItemCard(
     onDelete: () -> Unit,
     onToggleAvailability: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(

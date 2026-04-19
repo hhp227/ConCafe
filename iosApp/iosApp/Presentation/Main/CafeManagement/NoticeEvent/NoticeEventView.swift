@@ -69,13 +69,11 @@ private struct NoticeEventContentView: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Group {
-                if colorScheme == .dark {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
                     Color(hex: "FFF9FC")
                 } else {
                     LinearGradient(
@@ -90,7 +88,7 @@ private struct NoticeEventContentView: View {
                 ConCafeTabBar(
                     labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                     selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                    backgroundColor: colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
+                    backgroundColor: UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                     onSelect: { index in
                         onAction(.selectTab(NoticeEventTab.allCases[index]))
                     }

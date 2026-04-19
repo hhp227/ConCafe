@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import AuthenticationServices
 
 struct SignInView: View {
@@ -47,7 +48,6 @@ private struct SignInContentView: View {
     
     let onAction: (SignInAction) -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         ScrollView {
@@ -64,7 +64,7 @@ private struct SignInContentView: View {
         }
         .background(
             LinearGradient(
-                colors: colorScheme == .dark
+                colors: UITraitCollection.current.userInterfaceStyle == .dark
                     ? [Color(hex: "FFF9FC"), Color(hex: "FFF9FC"), Color(hex: "FFF9FC")]
                     : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
@@ -91,12 +91,12 @@ private struct SignInContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(
-                            colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
                             lineWidth: 1
                         )
                 )
@@ -107,12 +107,12 @@ private struct SignInContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(
-                            colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
                             lineWidth: 1
                         )
                 )

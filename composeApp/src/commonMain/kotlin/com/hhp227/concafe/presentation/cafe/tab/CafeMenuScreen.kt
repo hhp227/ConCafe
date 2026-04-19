@@ -247,13 +247,11 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SectionTitle(text: String) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
+        color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
     )
 }
 

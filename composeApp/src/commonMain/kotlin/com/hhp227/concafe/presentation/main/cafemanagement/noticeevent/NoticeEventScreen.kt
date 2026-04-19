@@ -165,10 +165,9 @@ private fun NoticeEventContent(
     onAction: (NoticeEventAction) -> Unit
 ) {
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
-    val isDarkMode = isSystemInDarkTheme()
 
     Scaffold(
-        containerColor = if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        containerColor = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -249,7 +248,7 @@ private fun NoticeEventContent(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

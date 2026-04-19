@@ -15,8 +15,6 @@ struct ResetPasswordView: View {
 
     @State private var alertMessage: String?
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -56,7 +54,7 @@ struct ResetPasswordView: View {
                         keyboardType: .emailAddress,
                         trailingContent: {
                             Image(systemName: "envelope")
-                                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "B3ACB7"))
+                                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "B3ACB7"))
                         }
                     )
                 }
@@ -83,7 +81,7 @@ struct ResetPasswordView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(colorScheme == .dark ? Color(uiColor: .systemBackground) : Color(hex: "FFFBFD"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .systemBackground) : Color(hex: "FFFBFD"))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -121,12 +119,12 @@ struct ResetPasswordView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(
-                    colorScheme == .dark ? Color.white.opacity(0.12) : Color.clear,
+                    UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.12) : Color.clear,
                     lineWidth: 1
                 )
         )
@@ -138,13 +136,13 @@ struct ResetPasswordView: View {
                 .foregroundStyle(Color(hex: "EF6797"))
             Text(text)
                 .font(.caption)
-                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "6F6673"))
+                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "6F6673"))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(hex: "F8F5F6"))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

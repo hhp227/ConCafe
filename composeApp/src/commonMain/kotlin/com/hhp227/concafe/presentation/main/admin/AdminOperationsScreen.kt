@@ -62,7 +62,6 @@ fun AdminOperationsScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isDarkMode = isSystemInDarkTheme()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -80,7 +79,7 @@ fun AdminOperationsScreen(
         modifier = Modifier
             .fillMaxSize()
             .then(
-                if (isDarkMode) {
+                if (isSystemInDarkTheme()) {
                     Modifier.background(colorFromHex("FFFBFD"))
                 } else {
                     Modifier.background(

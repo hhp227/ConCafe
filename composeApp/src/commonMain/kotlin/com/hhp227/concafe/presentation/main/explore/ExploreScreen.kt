@@ -291,8 +291,6 @@ private fun ExploreEmptyPlaceholder(
     title: String,
     description: String
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,12 +308,12 @@ private fun ExploreEmptyPlaceholder(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -404,8 +402,6 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
 
 @Composable
 private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Column(modifier = Modifier.clickable(onClick = onClick)) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -444,14 +440,14 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
             Text(
                 maid.name,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 cafeName,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

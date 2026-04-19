@@ -121,13 +121,11 @@ private fun FanManagementContentScreen(
     uiState: FanManagementUiState,
     onAction: (FanManagementAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .then(
-                if (isDarkMode) {
+                if (isSystemInDarkTheme()) {
                     Modifier.background(colorFromHex("FFFBFD"))
                 } else {
                     Modifier.background(

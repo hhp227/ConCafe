@@ -162,8 +162,6 @@ private struct CafeInfoEditContentView: View {
     let onRepresentativeImagePick: () -> Void
 
     let onGalleryImagePick: () -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -216,7 +214,7 @@ private struct CafeInfoEditContentView: View {
             }
             bottomSaveBar()
         }
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private var basicInformationSection: some View {
@@ -479,7 +477,7 @@ private struct CafeInfoEditContentView: View {
             .padding(.top, 14)
             .padding(.bottom, 14)
             .background(
-                colorScheme == .dark
+                UITraitCollection.current.userInterfaceStyle == .dark
                 ? Color(hex: "FFF9FC")
                 : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92)
             )

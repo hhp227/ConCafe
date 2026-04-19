@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import WebKit
 
 struct ExternalLinkView: View {
@@ -43,13 +44,11 @@ struct ExternalLinkView: View {
 }
 
 private struct ExternalLinkContentView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let uiState: ExternalLinkUiState
 
     var body: some View {
         ExternalWebView(urlString: uiState.url)
-            .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color.white)
+            .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color.white)
     }
 }
 

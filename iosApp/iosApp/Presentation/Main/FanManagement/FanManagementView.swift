@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct FanManagementView: View {
@@ -89,8 +90,6 @@ private struct FanManagementContentView: View {
     let uiState: FanManagementUiState
 
     let onAction: (FanManagementAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
@@ -115,7 +114,7 @@ private struct FanManagementContentView: View {
             .padding(.top, 16)
         }
         .background(
-            colorScheme == .dark
+            UITraitCollection.current.userInterfaceStyle == .dark
                 ? Color(hex: "FFF9FC")
                 : Color(uiColor: .systemGroupedBackground)
         )

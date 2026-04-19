@@ -98,7 +98,6 @@ struct CastEditView: View {
 }
 
 private struct CastEditContentView: View {
-    @Environment(\.colorScheme) private var colorScheme
 
     let uiState: CastEditUiState
 
@@ -173,7 +172,7 @@ private struct CastEditContentView: View {
         }
         .background(
             Group {
-                if colorScheme == .dark {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
                     Color(hex: "FFF9FC")
                 } else {
                     LinearGradient(
@@ -184,7 +183,7 @@ private struct CastEditContentView: View {
                 }
             }
         )
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(hex: "F8F5F6"))
         .sheet(isPresented: $isBirthdayPickerPresented) {
             CompatNavigationContainer(title: String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable")) {
                 VStack {
@@ -429,7 +428,7 @@ private struct CastEditContentView: View {
         .buttonStyle(.plain)
         .padding(16)
         .background(
-            colorScheme == .dark
+            UITraitCollection.current.userInterfaceStyle == .dark
                 ? Color(hex: "FFF9FC")
                 : Color.white.opacity(0.92)
         )
@@ -465,7 +464,6 @@ private struct CastEditContentView: View {
 }
 
 private struct BirthdayInputField: View {
-    @Environment(\.colorScheme) private var colorScheme
 
     @Binding var text: String
 
@@ -488,7 +486,7 @@ private struct BirthdayInputField: View {
             .padding(.horizontal, 16)
             .frame(height: 52)
             .background(
-                colorScheme == .dark
+                UITraitCollection.current.userInterfaceStyle == .dark
                     ? Color(uiColor: .tertiarySystemBackground)
                     : Color(hex: "F8F5F6")
             )

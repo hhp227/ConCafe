@@ -56,6 +56,13 @@ struct BannerEditView: View {
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction
             )
+            .presentationBackground(
+                Color(
+                    uiColor: UIColor {
+                        $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
+                    }
+                )
+            )
             .compatLargeSheetDetent()
         }
         .onReceive(viewModel.event) { event in
@@ -124,7 +131,6 @@ private struct BannerEditContentView: View {
 
     let onPickImage: () -> Void
     
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -170,7 +176,7 @@ private struct BannerEditContentView: View {
             }
             .background(
                 Group {
-                    if colorScheme == .dark {
+                    if UITraitCollection.current.userInterfaceStyle == .dark {
                         Color(hex: "FFF9FC")
                     } else {
                         LinearGradient(
@@ -407,7 +413,7 @@ private struct BannerEditContentView: View {
             .padding(.top, 16)
             .padding(.bottom, 16)
             .background(
-                colorScheme == .dark
+                UITraitCollection.current.userInterfaceStyle == .dark
                 ? Color(hex: "FFF9FC")
                 : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94)
             )
@@ -648,7 +654,7 @@ private struct BannerSelectorSheet: View {
             }
         }
         .padding(.top, 16)
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private func selectorOptionButton(

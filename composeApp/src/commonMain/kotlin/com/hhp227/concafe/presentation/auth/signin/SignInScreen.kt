@@ -109,7 +109,6 @@ private fun SignInContentScreen(
     onSignUp: () -> Unit,
     onAction: (SignInAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
@@ -118,7 +117,7 @@ private fun SignInContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        if (isDarkMode) {
+                        if (isSystemInDarkTheme()) {
                             listOf(
                                 colorFromHex("FFFBFD"),
                                 colorFromHex("FFFBFD"),
@@ -162,10 +161,10 @@ private fun SignInContentScreen(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                                 focusedBorderColor = colorFromHex("EF6797"),
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
                                 focusedLabelColor = colorFromHex("EF6797"),
                                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -185,10 +184,10 @@ private fun SignInContentScreen(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                                 focusedBorderColor = colorFromHex("EF6797"),
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
                                 focusedLabelColor = colorFromHex("EF6797"),
                                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 focusedTextColor = MaterialTheme.colorScheme.onSurface,

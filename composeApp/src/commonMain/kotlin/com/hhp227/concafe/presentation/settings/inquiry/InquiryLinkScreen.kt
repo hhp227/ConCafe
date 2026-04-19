@@ -78,8 +78,6 @@ private fun InquiryLinkContentScreen(
     snackbarHostState: SnackbarHostState,
     onAction: (InquiryLinkAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -140,7 +138,7 @@ private fun InquiryLinkContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

@@ -91,7 +91,6 @@ private fun CafeInfoEditContent(
     snackbarHostState: SnackbarHostState
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val isDarkMode = isSystemInDarkTheme()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -119,7 +118,7 @@ private fun CafeInfoEditContent(
         },
         bottomBar = {
             Surface(
-                color = if (isDarkMode) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp,
                 border = BorderStroke(1.dp, Color(0x33FFD1DC))
             ) {
@@ -160,7 +159,7 @@ private fun CafeInfoEditContent(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(
@@ -395,7 +394,7 @@ private fun CafeInfoEditContent(
                                         .padding(10.dp)
                                         .clickable { onAction(CafeInfoEditAction.ClickPinLocation) },
                                     shape = RoundedCornerShape(999.dp),
-                                    color = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
+                                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
                                     border = BorderStroke(1.dp, Color(0x33FFD1DC))
                                 ) {
                                     Text(
@@ -624,7 +623,6 @@ private fun SmallTimeField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     var isTimePickerVisible by remember { mutableStateOf(false) }
     val (initialHour, initialMinute) = remember(value) {
         TimeUtils.parseHourMinuteOrDefault(value)
@@ -639,8 +637,8 @@ private fun SmallTimeField(
             readOnly = true,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White,
-                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White,
+                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
                 focusedBorderColor = Color(0x33FFD1DC),
                 unfocusedBorderColor = Color(0x33FFD1DC)
             ),

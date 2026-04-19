@@ -18,8 +18,6 @@ struct MenuGoodsEditView: View {
     @StateObject private var viewModel: MenuGoodsEditViewModel
 
     @State private var isPhotoPickerPresented = false
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -161,7 +159,7 @@ struct MenuGoodsEditView: View {
             .padding(.top, 14)
             .padding(.bottom, 14)
             .background(
-                colorScheme == .dark
+                UITraitCollection.current.userInterfaceStyle == .dark
                 ? Color(hex: "FFF9FC")
                 : Color.white.opacity(0.92)
             )

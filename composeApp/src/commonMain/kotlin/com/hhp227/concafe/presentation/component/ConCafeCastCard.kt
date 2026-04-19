@@ -36,7 +36,6 @@ fun ConCafeCastCard(
     isWorking: Boolean = false,
     onClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     val statusText = attendanceStatusText ?: if (isWorking) "출근중" else null
 
     Column(
@@ -107,7 +106,7 @@ fun ConCafeCastCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -115,7 +114,7 @@ fun ConCafeCastCard(
                 text = subtitle,
                 maxLines = subtitleMaxLines,
                 overflow = TextOverflow.Ellipsis,
-                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
             if (!metaText.isNullOrBlank()) {

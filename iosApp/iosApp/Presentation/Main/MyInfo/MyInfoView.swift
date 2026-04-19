@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct MyInfoView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = MyInfoViewModel()
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -34,7 +33,7 @@ struct MyInfoView: View {
                 )
             }
         }
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):

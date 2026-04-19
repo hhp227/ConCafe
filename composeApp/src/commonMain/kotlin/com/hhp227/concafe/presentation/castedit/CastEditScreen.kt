@@ -109,7 +109,6 @@ private fun CastEditContentScreen(
     uiState: CastEditUiState,
     onAction: (CastEditAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     var isBirthdayPickerVisible by remember { mutableStateOf(false) }
     val initialBirthdayMillis = remember(uiState.birthday) { TimeUtils.parseBirthdayToEpochMillisOrNull(uiState.birthday) }
 
@@ -139,7 +138,7 @@ private fun CastEditContentScreen(
             Surface(
                 modifier = Modifier
                     .keyboardBottomInsets(),
-                color = if (isDarkMode) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -181,7 +180,7 @@ private fun CastEditContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

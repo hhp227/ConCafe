@@ -125,8 +125,6 @@ private fun CafeManagementContentScreen(
     uiState: CafeManagementUiState,
     onAction: (CafeManagementAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -135,7 +133,7 @@ private fun CafeManagementContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

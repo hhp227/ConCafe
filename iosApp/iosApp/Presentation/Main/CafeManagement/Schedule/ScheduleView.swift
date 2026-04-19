@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct ScheduleView: View {
@@ -302,13 +303,11 @@ private struct ScheduleContentView: View {
     let uiState: ScheduleUiState
 
     let onAction: (ScheduleAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
             Group {
-                if colorScheme == .dark {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
                     Color(hex: "FFF9FC")
                 } else {
                     LinearGradient(

@@ -348,8 +348,6 @@ private fun ScheduleContentScreen(
     snackbarHostState: SnackbarHostState,
     onAction: (ScheduleAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -407,7 +405,7 @@ private fun ScheduleContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(

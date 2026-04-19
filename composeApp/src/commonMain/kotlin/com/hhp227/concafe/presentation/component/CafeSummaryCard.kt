@@ -41,8 +41,6 @@ fun CafeSummaryCard(
     trailingLabel: String? = null,
     onClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Column(
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -84,7 +82,7 @@ fun CafeSummaryCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -108,14 +106,14 @@ fun CafeSummaryCard(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Text(
                         text = location,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

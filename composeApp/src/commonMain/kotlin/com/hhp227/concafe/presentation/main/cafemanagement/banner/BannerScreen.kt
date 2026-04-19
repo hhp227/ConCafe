@@ -2,7 +2,6 @@ package com.hhp227.concafe.presentation.main.cafemanagement.banner
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -105,10 +104,8 @@ private fun BannerContentScreen(
     snackbarHostState: SnackbarHostState,
     onAction: (BannerAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
-        containerColor = if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        containerColor = colorFromHex("FFFBFD"),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column(
@@ -150,7 +147,7 @@ private fun BannerContentScreen(
         },
         bottomBar = {
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                color = colorFromHex("FFFBFD"),
                 shadowElevation = 8.dp
             ) {
                 Button(
@@ -176,7 +173,7 @@ private fun BannerContentScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                .background(colorFromHex("FFFBFD")),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,

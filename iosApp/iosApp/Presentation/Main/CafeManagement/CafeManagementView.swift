@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct CafeManagementView: View {
@@ -36,7 +37,6 @@ private struct CafeManagementContentView: View {
 
     let onAction: (CafeManagementAction) -> Void
     
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -101,7 +101,7 @@ private struct CafeManagementContentView: View {
             }
         }
         .background {
-            if colorScheme == .dark {
+            if UITraitCollection.current.userInterfaceStyle == .dark {
                 Color(hex: "FFF9FC")
             } else {
                 LinearGradient(

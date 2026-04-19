@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Foundation
 import Photos
 import Shared
@@ -130,7 +131,6 @@ private struct CafeDashboardContentView: View {
 
     let onQrMetricTap: () -> Void
     
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -189,7 +189,7 @@ private struct CafeDashboardContentView: View {
             }
         }
         .background {
-            if colorScheme == .dark {
+            if UITraitCollection.current.userInterfaceStyle == .dark {
                 Color(hex: "FFF9FC")
             } else {
                 LinearGradient(

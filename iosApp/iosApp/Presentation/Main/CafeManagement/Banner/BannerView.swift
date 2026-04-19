@@ -109,15 +109,13 @@ private struct BannerContentView: View {
     let uiState: BannerUiState
     
     let onAction: (BannerAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
             ConCafeTabBar(
                 labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                backgroundColor: colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
+                backgroundColor: Color(hex: "FFF9FC"),
                 onSelect: { index in
                     onAction(.selectTab(BannerTab.allCases[index]))
                 }
@@ -143,7 +141,7 @@ private struct BannerContentView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(Color(hex: "FFF9FC"))
         .safeAreaInset(edge: .bottom) {
             Button {
                 onAction(.createBannerTapped)
@@ -163,7 +161,7 @@ private struct BannerContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+            .background(Color(hex: "FFF9FC"))
         }
     }
 
@@ -197,7 +195,9 @@ private struct BannerContentView: View {
 
 private struct BannerCardView: View {
     let banner: BannerItem
+
     let onEdit: () -> Void
+
     let onDelete: () -> Void
 
     var body: some View {
@@ -280,6 +280,7 @@ private struct BannerCardView: View {
 
 private struct IconCircleButton: View {
     let systemName: String
+
     let action: () -> Void
 
     var body: some View {

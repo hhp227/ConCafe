@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct NotificationView: View {
@@ -39,8 +40,6 @@ private struct NotificationContentView: View {
     let uiState: NotificationUiState
 
     let onAction: (NotificationAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -56,18 +55,16 @@ private struct NotificationContentView: View {
                 )
             }
         }
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
     }
 }
 
 private struct NotificationSignInRequiredView: View {
     let onAction: (NotificationAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            (colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+            (UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
                 .ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "bell.badge")
@@ -109,8 +106,6 @@ private struct NotificationSectionsView: View {
     let uiState: NotificationUiState
 
     let onAction: (NotificationAction) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
@@ -123,7 +118,7 @@ private struct NotificationSectionsView: View {
             .padding(16)
             .padding(.bottom, 20)
         }
-        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
     }
 
     private var summaryCard: some View {

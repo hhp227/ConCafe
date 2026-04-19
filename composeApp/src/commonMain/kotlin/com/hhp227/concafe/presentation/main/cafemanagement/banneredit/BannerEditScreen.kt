@@ -140,7 +140,7 @@ fun BannerEditScreen(
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(BannerEditAction.DismissSelector) },
             sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             BannerSelectorSheet(
                 uiState = uiState,
@@ -169,8 +169,6 @@ private fun BannerEditContentScreen(
     onAction: (BannerEditAction) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -203,7 +201,7 @@ private fun BannerEditContentScreen(
         },
         bottomBar = {
             Surface(
-                color = if (isDarkMode) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.94f),
+                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, Color(0x1AFFD1DC))
             ) {
                 Box(
@@ -253,7 +251,7 @@ private fun BannerEditContentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         Modifier.background(colorFromHex("FFFBFD"))
                     } else {
                         Modifier.background(
