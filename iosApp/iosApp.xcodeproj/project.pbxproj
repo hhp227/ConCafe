@@ -101,6 +101,7 @@
 		0A491C8D2F669F8F005C106F /* BannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8C2F669F8F005C106F /* BannerViewModel.swift */; };
 		0A491C8F2F669FA7005C106F /* BannerAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C8E2F669FA7005C106F /* BannerAction.swift */; };
 		0A491C912F669FBD005C106F /* BannerEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A491C902F669FBD005C106F /* BannerEvent.swift */; };
+		0A4A4C082F950A2900E89C50 /* RatingUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4A4C072F950A2900E89C50 /* RatingUtils.swift */; };
 		0A4C9E182F7BB094001F94DC /* PictureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9E172F7BB094001F94DC /* PictureView.swift */; };
 		0A4C9E1A2F7BB0AB001F94DC /* PictureUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9E192F7BB0AB001F94DC /* PictureUiState.swift */; };
 		0A4C9E1C2F7BB0D2001F94DC /* PictureAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9E1B2F7BB0D2001F94DC /* PictureAction.swift */; };
@@ -327,6 +328,7 @@
 		0A491C8C2F669F8F005C106F /* BannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerViewModel.swift; sourceTree = "<group>"; };
 		0A491C8E2F669FA7005C106F /* BannerAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAction.swift; sourceTree = "<group>"; };
 		0A491C902F669FBD005C106F /* BannerEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEvent.swift; sourceTree = "<group>"; };
+		0A4A4C072F950A2900E89C50 /* RatingUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingUtils.swift; sourceTree = "<group>"; };
 		0A4C9E172F7BB094001F94DC /* PictureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureView.swift; sourceTree = "<group>"; };
 		0A4C9E192F7BB0AB001F94DC /* PictureUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureUiState.swift; sourceTree = "<group>"; };
 		0A4C9E1B2F7BB0D2001F94DC /* PictureAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureAction.swift; sourceTree = "<group>"; };
@@ -994,6 +996,7 @@
 				0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */,
 				0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */,
 				0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */,
+				0A4A4C072F950A2900E89C50 /* RatingUtils.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -1239,6 +1242,7 @@
 				0A8ABA6F2F5C1CD800265D4F /* FanManagementEvent.swift in Sources */,
 				0A74A38B2F66EE810038EA4E /* NotificationQuietHoursOption.swift in Sources */,
 				0A0C66A22F5C0E6D00B0CDE4 /* SignInAction.swift in Sources */,
+				0A4A4C082F950A2900E89C50 /* RatingUtils.swift in Sources */,
 				0A785CAD2F5A7C4D004037A8 /* CheckInViewModel.swift in Sources */,
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
 				0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */,
