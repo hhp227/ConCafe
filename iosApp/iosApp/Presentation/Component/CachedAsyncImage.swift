@@ -31,6 +31,27 @@ enum ImageDisplaySize {
     }
 }
 
+enum ImageUrlUtils {
+    /// Handles non-ASCII path/query characters (e.g. Korean/Japanese file names).
+    static func normalizedRemoteUrl(from raw: String?) -> URL? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+
+        if let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed),
+           let url = URL(string: encoded),
+           url.scheme != nil {
+            return url
+        }
+
+        return nil
+    }
+}
+
 struct CachedAsyncImage<Placeholder: View>: View {
     let url: URL?
 

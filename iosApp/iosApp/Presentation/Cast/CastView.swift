@@ -161,7 +161,7 @@ private struct CastHeroSection: View {
                 let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 ZStack {
-                    if let url = URL(string: trimmed), !trimmed.isEmpty {
+                    if let url = ImageUrlUtils.normalizedRemoteUrl(from: trimmed), !trimmed.isEmpty {
                         GeometryReader { geometry in
                             CachedAsyncImage(
                                 url: url,
