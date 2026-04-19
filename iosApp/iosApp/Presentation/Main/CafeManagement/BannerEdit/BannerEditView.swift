@@ -56,7 +56,7 @@ struct BannerEditView: View {
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction
             )
-            .presentationBackground(
+            .compatPresentationBackground(
                 Color(
                     uiColor: UIColor {
                         $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
