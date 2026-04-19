@@ -766,6 +766,11 @@ private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): 
             longitude = 135.5023,
             zoom = 12.0f
         )
+        ExploreUiState.RegionFilter.YOKOHAMA -> CheckInMapCameraTarget(
+            latitude = 35.4437,
+            longitude = 139.6380,
+            zoom = 12.0f
+        )
     }
 }
 

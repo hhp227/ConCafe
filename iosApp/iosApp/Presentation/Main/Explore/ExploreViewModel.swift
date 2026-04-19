@@ -251,6 +251,9 @@ class ExploreViewModel: ObservableObject {
         case .osaka:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Osaka") == .orderedSame
+        case .yokohama:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Yokohama") == .orderedSame
         }
         return matchesQuery && matchesRegion
     }

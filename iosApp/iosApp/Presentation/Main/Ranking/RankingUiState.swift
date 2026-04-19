@@ -17,16 +17,19 @@ struct RankingUiState {
     enum RegionFilter: String, CaseIterable {
         case all = "전체"
         case seoul = "서울"
+        case busan = "부산"
+        case daegu = "대구"
         case tokyo = "도쿄"
         case osaka = "오사카"
+        case yokohama = "요코하마"
 
         var country: String? {
             switch self {
             case .all:
                 return nil
-            case .seoul:
+            case .seoul, .busan, .daegu:
                 return "KR"
-            case .tokyo, .osaka:
+            case .tokyo, .osaka, .yokohama:
                 return "JP"
             }
         }
@@ -37,10 +40,16 @@ struct RankingUiState {
                 return nil
             case .seoul:
                 return "Seoul"
+            case .busan:
+                return "Busan"
+            case .daegu:
+                return "Daegu"
             case .tokyo:
                 return "Tokyo"
             case .osaka:
                 return "Osaka"
+            case .yokohama:
+                return "Yokohama"
             }
         }
     }
