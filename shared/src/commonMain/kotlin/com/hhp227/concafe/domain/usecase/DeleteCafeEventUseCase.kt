@@ -15,15 +15,15 @@ class DeleteCafeEventUseCase(
 ) {
     suspend operator fun invoke(cafeId: String, eventId: String): AppResult<String> {
         return try {
-            val eventId = noticeRepository.deleteCafeEvent(cafeId, eventId)
+            val deletedEventId = noticeRepository.deleteCafeEvent(cafeId, eventId)
 
             noticeManagementEventPublisher.publish(
-                NoticeManagementEvent.EventDeleted(cafeId, eventId)
+                NoticeManagementEvent.EventDeleted(cafeId, deletedEventId)
             )
             cafeEventEventPublisher.publish(
-                CafeEventEvent.Deleted(cafeId = cafeId, eventId = eventId)
+                CafeEventEvent.Deleted(cafeId = cafeId, eventId = deletedEventId)
             )
-            AppResult.Success(eventId)
+            AppResult.Success(deletedEventId)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

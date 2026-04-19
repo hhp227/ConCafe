@@ -184,7 +184,7 @@ private struct CheckInGuestContentView: View {
                             ForEach(uiState.popularCafes, id: \.id) { cafe in
                                 CafeSummaryCard(
                                     name: cafe.name,
-                                    rating: String(format: "%.1f", cafe.rating),
+                                    rating: RatingUtils.formatOneDecimal(cafe.rating),
                                     conceptType: nil,
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,
@@ -469,6 +469,11 @@ private struct CheckInMapSection: View {
         case .osaka:
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 34.6937, longitude: 135.5023),
+                span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+            )
+        case .yokohama:
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.4437, longitude: 139.6380),
                 span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
             )
         }

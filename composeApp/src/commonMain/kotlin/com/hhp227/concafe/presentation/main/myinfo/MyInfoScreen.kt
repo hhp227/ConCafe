@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.ProfileBadge
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
@@ -121,7 +122,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
-import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @Composable
@@ -311,7 +311,7 @@ private fun GuestMyInfoScreen(
                 if (uiState.popularCafes.isNotEmpty()) {
                     uiState.popularCafes.forEach { cafe ->
                         val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
-                        val ratingText = formatCafeRating(cafe.ratingAvg)
+                        val ratingText = RatingUtils.formatOneDecimal(cafe.ratingAvg)
                         val imageShape = RoundedCornerShape(12.dp)
 
                         Card(
@@ -580,7 +580,7 @@ private fun ProfileMyInfoScreen(
                                     Box(modifier = Modifier.weight(1f)) {
                                         CafeSummaryCard(
                                             name = cafe.name,
-                                            rating = formatCafeRating(cafe.ratingAvg),
+                                            rating = RatingUtils.formatOneDecimal(cafe.ratingAvg),
                                             conceptType = localizedCafeConceptType(cafe.conceptType),
                                             location = cafe.region.city,
                                             thumbnailImage = cafe.thumbnailImage,
@@ -762,7 +762,7 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             listOf(
                 MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_total_followers), (cast?.followerCount ?: 0).toString(), false),
                 MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_work_schedule), scheduleCount.toString(), true),
-                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_rating), ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_rating), RatingUtils.formatOneDecimalTruncated(cast?.rating ?: 0.0), false)
             )
         }
         UserRole.CAFE_OWNER -> {
@@ -772,7 +772,7 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             listOf(
                 MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_operating_cafes), cafeCount.toString(), false),
                 MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_affiliated_casts), castCount.toString(), true),
-                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_average_rating), ((rating * 10).toInt() / 10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_average_rating), RatingUtils.formatOneDecimalTruncated(rating), false)
             )
         }
         else -> {
@@ -804,15 +804,6 @@ private fun resolveCurrentWeekScheduleCount(uiState: MyInfoUiState): Int {
         .map { scheduleDate -> scheduleDate.toString() }
         .distinct()
         .size
-}
-
-private fun formatCafeRating(rating: Double): String {
-    val roundedRating = (rating * 10).roundToInt() / 10.0
-    return if (roundedRating % 1.0 == 0.0) {
-        "${roundedRating.toInt()}.0"
-    } else {
-        roundedRating.toString()
-    }
 }
 
 @Composable

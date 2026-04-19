@@ -1704,6 +1704,17 @@ async function syncBirthdayNotifications(): Promise<void> {
   if (castSnapshot.empty) {
     return;
   }
+  const settingsCache = new Map<string, UserNotificationSettings>();
+  const loadCachedSettings = async (userId: string): Promise<UserNotificationSettings> => {
+    const cached = settingsCache.get(userId);
+
+    if (cached != null) {
+      return cached;
+    }
+    const loaded = await loadUserNotificationSettings(userId);
+    settingsCache.set(userId, loaded);
+    return loaded;
+  };
   const createdAt = new Date().toISOString();
   await processInBatches(castSnapshot.docs, async (castDoc) => {
     const castId = castDoc.id;
@@ -1728,7 +1739,7 @@ async function syncBirthdayNotifications(): Promise<void> {
     let skippedBySettingsCount = 0;
 
     await processInBatches(recipientUserIds, async (userId) => {
-      const settings = await loadUserNotificationSettings(userId);
+      const settings = await loadCachedSettings(userId);
 
       if (!settings.isPushNotificationsEnabled || !settings.isBirthdayNotificationsEnabled) {
         skippedBySettingsCount += 1;
@@ -3996,8 +4007,8 @@ type JpShopListResponse = {
 };
 
 type JpShopSource = {
-  key: "tokyo" | "osaka";
-  defaultCity: "Tokyo" | "Osaka";
+  key: "tokyo" | "osaka" | "yokohama";
+  defaultCity: "Tokyo" | "Osaka" | "Yokohama";
   baseUrl: string;
 };
 
@@ -4019,7 +4030,7 @@ type JpCrawlSyncSummary = {
 
 type JpCrawlRunOptions = {
   dryRun: boolean;
-  sourceKeys: Set<"tokyo" | "osaka">;
+  sourceKeys: Set<"tokyo" | "osaka" | "yokohama">;
   maxPages: number;
   maxShops: number;
 };
@@ -4036,6 +4047,11 @@ const JP_CRAWL_SOURCES: JpShopSource[] = [
     key: "osaka",
     defaultCity: "Osaka",
     baseUrl: "https://con-cafe.jp/api/shop?displayed=1&request=1&front_displayed=1&region=area06&prefecture=pre25&sort=priority&order=desc",
+  },
+  {
+    key: "yokohama",
+    defaultCity: "Yokohama",
+    baseUrl: "https://con-cafe.jp/api/shop?displayed=1&request=1&front_displayed=1&region=area02&prefecture=pre09&area=sub063&sort=priority&order=desc",
   },
 ];
 
@@ -4110,8 +4126,8 @@ function parsePositiveIntQuery(value: unknown, fallback: number, max: number): n
   return Math.min(Math.floor(parsed), max);
 }
 
-function parseSourceKeys(value: unknown): Set<"tokyo" | "osaka"> {
-  const allowed = new Set<"tokyo" | "osaka">(["tokyo", "osaka"]);
+function parseSourceKeys(value: unknown): Set<"tokyo" | "osaka" | "yokohama"> {
+  const allowed = new Set<"tokyo" | "osaka" | "yokohama">(["tokyo", "osaka", "yokohama"]);
   if (typeof value !== "string") {
     return new Set(allowed);
   }
@@ -4122,7 +4138,8 @@ function parseSourceKeys(value: unknown): Set<"tokyo" | "osaka"> {
   if (tokens.length == 0 || tokens.includes("all")) {
     return new Set(allowed);
   }
-  const selected = tokens.filter((token): token is "tokyo" | "osaka" => allowed.has(token as "tokyo" | "osaka"));
+  const selected = tokens.filter((token): token is "tokyo" | "osaka" | "yokohama" =>
+    allowed.has(token as "tokyo" | "osaka" | "yokohama"));
   if (selected.length == 0) {
     return new Set(allowed);
   }
@@ -4198,7 +4215,10 @@ function extractSocialAccountId(rawValue: unknown, platform: "twitter" | "instag
   return sanitizeSocialAccount(first);
 }
 
-function mapJpCity(shopDetail: Record<string, unknown>, fallback: "Tokyo" | "Osaka"): "Tokyo" | "Osaka" {
+function mapJpCity(
+  shopDetail: Record<string, unknown>,
+  fallback: "Tokyo" | "Osaka" | "Yokohama"
+): "Tokyo" | "Osaka" | "Yokohama" {
   const prefecture = asPlainObject(shopDetail.prefecture);
   const area = asPlainObject(shopDetail.area);
   const areaPrefecture = asPlainObject(area?.prefecture);
@@ -4210,6 +4230,13 @@ function mapJpCity(shopDetail: Record<string, unknown>, fallback: "Tokyo" | "Osa
   }
   if (prefectureSlug === "pre25" || prefectureName?.includes("大阪") === true) {
     return "Osaka";
+  }
+  if (
+    prefectureSlug === "pre09" ||
+    prefectureName?.includes("神奈川") === true ||
+    prefectureName?.includes("横浜") === true
+  ) {
+    return "Yokohama";
   }
   return fallback;
 }
@@ -4816,6 +4843,25 @@ export const onScheduleSyncJpCrawledConCafeDataOsaka = onSchedule(
       maxShops: 10000,
     });
     logger.info("onScheduleSyncJpCrawledConCafeDataOsaka completed (osaka).", summary);
+  }
+);
+
+export const onScheduleSyncJpCrawledConCafeDataYokohama = onSchedule(
+  {
+    schedule: "0 4 22 */2 *",
+    timeZone: "Asia/Seoul",
+    timeoutSeconds: 540,
+    memory: "1GiB",
+    secrets: [GOOGLE_TRANSLATE_API_KEY_SECRET],
+  },
+  async () => {
+    const summary = await runJpCrawledDataSync({
+      dryRun: false,
+      sourceKeys: new Set(["yokohama"]),
+      maxPages: 500,
+      maxShops: 10000,
+    });
+    logger.info("onScheduleSyncJpCrawledConCafeDataYokohama completed (yokohama).", summary);
   }
 );
 

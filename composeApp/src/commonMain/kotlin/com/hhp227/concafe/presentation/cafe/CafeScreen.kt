@@ -30,6 +30,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -466,7 +467,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = formatRating(detail.cafe.ratingAvg),
+                    text = RatingUtils.formatOneDecimalTruncated(detail.cafe.ratingAvg),
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -529,10 +530,5 @@ private fun CafeTabContent(
     }
 }
 
-private fun formatRating(rating: Double): String {
-    val scaled = (rating * 10).toInt()
-    val whole = scaled / 10
-    val decimal = scaled % 10
-    return "$whole.$decimal"
-}
+
 

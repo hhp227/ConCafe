@@ -28,8 +28,11 @@ data class RankingUiState(
     enum class RegionFilter(val label: String, val country: String?, val city: String?) {
         ALL("전체", null, null),
         SEOUL("서울", "KR", "Seoul"),
+        BUSAN("부산", "KR", "Busan"),
+        DAEGU("대구", "KR", "Daegu"),
         TOKYO("도쿄", "JP", "Tokyo"),
-        OSAKA("오사카", "JP", "Osaka")
+        OSAKA("오사카", "JP", "Osaka"),
+        YOKOHAMA("요코하마", "JP", "Yokohama")
     }
 
     val currentAd: RankingPromoAd

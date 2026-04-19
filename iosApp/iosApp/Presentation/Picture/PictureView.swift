@@ -16,7 +16,7 @@ struct PictureView: View {
         ZStack(alignment: .topLeading) {
             Color.black
                 .ignoresSafeArea()
-            if let url = URL(string: imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            if let url = ImageUrlUtils.normalizedRemoteUrl(from: imageUrl) {
                 CachedAsyncImage(
                     url: url,
                     placeholder: Color.black,

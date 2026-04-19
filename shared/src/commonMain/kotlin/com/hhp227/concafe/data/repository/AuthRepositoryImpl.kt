@@ -503,27 +503,21 @@ private fun resolveInitialNickname(email: String, displayName: String?): String 
         "사용자"
     } else if (emailPrefix.startsWith("kakao-")) {
         "카카오유저"
-    } else if (emailPrefix.isNotBlank()) {
-        emailPrefix
-    } else {
+    } else emailPrefix.ifBlank {
         "유저"
     }
 }
 
 private fun resolveKakaoEmail(sessionEmail: String, profileEmail: String?): String {
     val normalizedProfileEmail = profileEmail?.trim().orEmpty()
-    return if (normalizedProfileEmail.isNotBlank()) {
-        normalizedProfileEmail
-    } else {
+    return normalizedProfileEmail.ifBlank {
         sessionEmail
     }
 }
 
 private fun resolveKakaoDisplayName(sessionDisplayName: String?, profileNickname: String?): String? {
     val normalizedProfileNickname = profileNickname?.trim().orEmpty()
-    return if (normalizedProfileNickname.isNotBlank()) {
-        normalizedProfileNickname
-    } else {
+    return normalizedProfileNickname.ifBlank {
         sessionDisplayName
     }
 }

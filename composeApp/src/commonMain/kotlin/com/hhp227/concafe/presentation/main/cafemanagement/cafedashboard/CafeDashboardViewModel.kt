@@ -350,7 +350,6 @@ class CafeDashboardViewModel(
                 youtubeId = currentState.youtubeId.trim().takeIf { it.isNotEmpty() }
             )) {
                 is AppResult.Success -> {
-                    println("--ConCafe--, Success ${result.data}")
                     val newSocialMedia = buildMap {
                         currentState.instagramId.trim().takeIf { it.isNotEmpty() }?.let { put("instagram", it) }
                         currentState.twitterId.trim().takeIf { it.isNotEmpty() }?.let { put("twitter", it) }
@@ -367,7 +366,6 @@ class CafeDashboardViewModel(
                     }
                 }
                 is AppResult.Failure -> {
-                    println("--ConCafe--, Failure ${result.error}")
                     _uiState.update {
                         it.copy(
                             isSavingSocialMedia = false,

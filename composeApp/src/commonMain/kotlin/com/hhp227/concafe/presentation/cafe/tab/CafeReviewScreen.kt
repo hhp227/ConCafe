@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailReview
 import com.hhp227.concafe.presentation.cafe.CafeAction
@@ -64,7 +65,7 @@ fun CafeReviewScreen(
                 )
                 Column {
                     Text(
-                        text = formatRating(detail.cafe.ratingAvg),
+                        text = RatingUtils.formatOneDecimalTruncated(detail.cafe.ratingAvg),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -283,9 +284,4 @@ private fun EmptyContent(text: String) {
 
 
 
-private fun formatRating(rating: Double): String {
-    val scaled = (rating * 10).toInt()
-    val whole = scaled / 10
-    val decimal = scaled % 10
-    return "$whole.$decimal"
-}
+

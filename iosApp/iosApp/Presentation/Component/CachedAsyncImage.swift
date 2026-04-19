@@ -14,7 +14,7 @@ import SwiftUI
 ///
 /// - `thumbnail`: Small list cards / avatars (~512 px max dimension)
 /// - `medium`:    Banners, event cards (~1200 px max dimension)
-/// - `full`:      Full-screen viewer — no downscaling
+/// - `full`:      Full-screen viewer (~3840 px max dimension to avoid OOM on huge photos)
 enum ImageDisplaySize {
     case thumbnail
     case medium
@@ -24,8 +24,31 @@ enum ImageDisplaySize {
         switch self {
         case .thumbnail: return 512
         case .medium:    return 1200
-        case .full:      return nil
+        // Match Android Compose behavior (Size(3840, 3840)).
+        // Avoid decoding original-size ultra high resolution images directly.
+        case .full:      return 3840
         }
+    }
+}
+
+enum ImageUrlUtils {
+    /// Handles non-ASCII path/query characters (e.g. Korean/Japanese file names).
+    static func normalizedRemoteUrl(from raw: String?) -> URL? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+
+        if let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed),
+           let url = URL(string: encoded),
+           url.scheme != nil {
+            return url
+        }
+
+        return nil
     }
 }
 
@@ -143,28 +166,34 @@ private final class CachedImageLoader: ObservableObject {
             return img
         }
 
-        let data: Data
+        let image: UIImage?
         if url.isFileURL {
-            data = try Data(contentsOf: url)
+            image = decode(fileURL: url, maxPixels: maxPixels)
         } else {
-            // async/await — 스레드를 블로킹하지 않고 대기. 취소 시 CancellationError throws.
-            data = try await fetchRemoteData(request: request)
+            // 대용량 이미지는 Data 전체를 메모리에 올리면 피크가 커질 수 있으므로
+            // 파일로 다운로드한 뒤 파일 기반으로 다운샘플 디코딩한다.
+            let downloadedFileURL = try await fetchRemoteFile(request: request)
+            image = decode(fileURL: downloadedFileURL, maxPixels: maxPixels)
         }
 
         // 디코딩 전 취소 여부 확인
         try Task.checkCancellation()
 
-        guard let img = decode(data: data, maxPixels: maxPixels) else { return nil }
+        guard let img = image else { return nil }
         memoryCache.setObject(img, forKey: nsKey)
         return img
     }
 
-    /// URLSession async API: throws로 CancellationError를 상위로 전파
-    private static func fetchRemoteData(request: URLRequest) async throws -> Data {
-        let (data, response) = try await URLSession.shared.data(for: request)
-        let cached = CachedURLResponse(response: response, data: data)
-        URLCache.shared.storeCachedResponse(cached, for: request)
-        return data
+    /// URLSession download API: 대용량 응답을 파일로 받아 메모리 피크를 줄인다.
+    private static func fetchRemoteFile(request: URLRequest) async throws -> URL {
+        let (tempFileURL, response) = try await URLSession.shared.download(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            return tempFileURL
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        return tempFileURL
     }
 
     /// ImageIO 기반 디코딩 — `maxPixels` 지정 시 풀 해상도를 메모리에 올리지 않고 바로 목표 크기로 디코딩
@@ -186,11 +215,37 @@ private final class CachedImageLoader: ObservableObject {
             }
         }
 
-        // FULL: 네이티브 크기로 디코딩
+        // FULL (or fallback): 네이티브 크기로 디코딩
         let fullOptions = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
         if let cgImage = CGImageSourceCreateImageAtIndex(source, 0, fullOptions) {
             return UIImage(cgImage: cgImage)
         }
         return UIImage(data: data)
+    }
+
+    /// 파일 URL 기반 디코딩. 대용량 이미지에서 Data 로드보다 안정적이다.
+    private static func decode(fileURL: URL, maxPixels: Int?) -> UIImage? {
+        let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, sourceOptions) else {
+            return UIImage(contentsOfFile: fileURL.path)
+        }
+
+        if let maxPx = maxPixels {
+            let thumbOptions: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxPx
+            ]
+            if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) {
+                return UIImage(cgImage: cgImage)
+            }
+        }
+
+        let fullOptions = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
+        if let cgImage = CGImageSourceCreateImageAtIndex(source, 0, fullOptions) {
+            return UIImage(cgImage: cgImage)
+        }
+        return UIImage(contentsOfFile: fileURL.path)
     }
 }

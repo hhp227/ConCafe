@@ -350,6 +350,8 @@ private fun matchesCafeFilters(state: ExploreUiState, cafe: Cafe): Boolean {
             cafe.region.city.equals("Tokyo", ignoreCase = true)
         ExploreUiState.RegionFilter.OSAKA -> cafe.region.country.equals("JP", ignoreCase = true) &&
             cafe.region.city.equals("Osaka", ignoreCase = true)
+        ExploreUiState.RegionFilter.YOKOHAMA -> cafe.region.country.equals("JP", ignoreCase = true) &&
+            cafe.region.city.equals("Yokohama", ignoreCase = true)
     }
     return matchesQuery && matchesRegion
 }

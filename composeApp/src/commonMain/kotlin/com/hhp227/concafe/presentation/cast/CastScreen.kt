@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.CastScheduleAttendanceUtils
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CastDetail
@@ -684,7 +685,7 @@ private fun CastRecentActivitySection(detail: CastDetail) {
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
-                value = String.format("%.1f", detail.cast.rating),
+                value = RatingUtils.formatOneDecimal(detail.cast.rating),
                 label = stringResource(Res.string.cast_activity_rating)
             )
         }
@@ -766,7 +767,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "${review.rating}",
+                                        text = RatingUtils.formatOneDecimal(review.rating),
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
                                             .background(Color(0x1AFFD1DC))

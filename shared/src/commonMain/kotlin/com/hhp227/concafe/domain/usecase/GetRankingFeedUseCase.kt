@@ -30,6 +30,7 @@ class GetRankingFeedUseCase(
         val castResult = castDeferred.await()
         val cafeResult = cafeDeferred.await()
         val allFailed = castResult.isFailure && cafeResult.isFailure
+
         if (allFailed) {
             return@coroutineScope AppResult.Success(
                 RankingFeed(
