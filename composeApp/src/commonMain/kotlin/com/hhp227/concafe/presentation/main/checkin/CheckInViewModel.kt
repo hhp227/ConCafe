@@ -284,6 +284,7 @@ class CheckInViewModel(
             jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
                 when (val permissionResult = checkInLocationProvider.requestPermissionIfNeeded()) {
                     CheckInLocationPermissionResult.Granted -> {
+                        detectUserCity()
                         _uiState.update {
                             it.copy(
                                 isNewVisitSheetVisible = true,
@@ -448,7 +449,7 @@ class CheckInViewModel(
         jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
         jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
             when (val result = checkInLocationProvider.requestPermissionIfNeeded()) {
-                CheckInLocationPermissionResult.Granted -> Unit
+                CheckInLocationPermissionResult.Granted -> detectUserCity()
                 is CheckInLocationPermissionResult.Failure -> {
                     if (result.requiresSettings) {
                         _event.emit(CheckInEvent.OpenLocationSettings)
