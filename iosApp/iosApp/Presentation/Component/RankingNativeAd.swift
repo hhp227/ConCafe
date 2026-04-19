@@ -71,6 +71,22 @@ extension IosNativeAdDataSourceImpl: GADNativeAdLoaderDelegate {
 }
 
 #if canImport(GoogleMobileAds)
+private final class InsetLabel: UILabel {
+    var textInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: textInsets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let baseSize = super.intrinsicContentSize
+        return CGSize(
+            width: baseSize.width + textInsets.left + textInsets.right,
+            height: baseSize.height + textInsets.top + textInsets.bottom
+        )
+    }
+}
+
 struct RankingNativeAdCard: View {
     let nativeAdHandle: (any NativeAdHandle)?
 
@@ -135,7 +151,7 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         let container = UIStackView()
         let topRow = UIStackView()
         let metaStack = UIStackView()
-        let badgeLabel = UILabel()
+        let badgeLabel = InsetLabel()
         let sponsorLabel = UILabel()
         let headlineLabel = UILabel()
         let bodyLabel = UILabel()
@@ -171,11 +187,11 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         )
         badgeLabel.font = .systemFont(ofSize: 12, weight: .bold)
         badgeLabel.textColor = UIColor(Color(hex: "B74D73"))
-        badgeLabel.backgroundColor = UIColor(Color(hex: "FFE9F1"))
+        badgeLabel.backgroundColor = UIColor.white.withAlphaComponent(0.46)
         badgeLabel.textAlignment = .center
-        badgeLabel.layer.cornerRadius = 12
+        badgeLabel.textInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
+        badgeLabel.layer.cornerRadius = 999
         badgeLabel.clipsToBounds = true
-        badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 46).isActive = true
 
         sponsorLabel.font = .systemFont(ofSize: 11, weight: .medium)
         sponsorLabel.textColor = UIColor(Color(hex: "927D8A"))
