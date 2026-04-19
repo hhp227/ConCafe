@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.account_settings_admin_status_desc
@@ -177,7 +178,7 @@ private fun AccountSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -193,7 +194,7 @@ private fun AccountSettingsContentScreen(
             item {
                 Text(
                     text = uiState.errorMessage,
-                    color = Color(0xFFD1436F),
+                    color = colorFromHex("D1436F"),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -212,7 +213,7 @@ private fun AccountSettingsContentScreen(
                         placeholder = stringResource(Res.string.account_settings_placeholder_nickname)
                     )
                     Surface(
-                        color = Color(0xFFF8F5F6),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Column(
@@ -244,7 +245,7 @@ private fun AccountSettingsContentScreen(
                         Text(
                             text = stringResource(Res.string.account_settings_owner_hint),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF7C7480)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -263,8 +264,8 @@ private fun AccountSettingsContentScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330)
+                        containerColor = colorFromHex("FFD1DC"),
+                        contentColor = colorFromHex("2B2330")
                     )
                 ) {
                     Text(
@@ -286,7 +287,7 @@ private fun AccountSettingsContentScreen(
                             stringResource(Res.string.account_settings_cast_desc_empty)
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6F6673)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -308,7 +309,7 @@ private fun AccountSettingsContentScreen(
                             )
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6F6673)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -360,7 +361,7 @@ private fun AccountSettingsContentScreen(
                     } else {
                         stringResource(Res.string.account_settings_delete)
                     },
-                    color = if (uiState.isDeleteRequested) Color(0xFFB84473) else Color(0xFF8E8794)
+                    color = if (uiState.isDeleteRequested) colorFromHex("B84473") else colorFromHex("8E8794")
                 )
             }
         }
@@ -374,7 +375,7 @@ private fun SectionEyebrow(
     Text(
         text = text,
         style = MaterialTheme.typography.bodySmall,
-        color = Color(0xFF8E8794)
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
@@ -389,7 +390,7 @@ private fun AccountHeroCard(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                        listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
                     ),
                     shape = MaterialTheme.shapes.extraLarge
                 )
@@ -427,13 +428,13 @@ private fun AccountSectionCard(
     icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(icon, contentDescription = null, tint = colorFromHex("EF6797"))
                 Text(
                     text = title,
                     modifier = Modifier.padding(start = 10.dp),
@@ -455,7 +456,7 @@ private fun LinkedDestinationCard(
     onClick: () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.clickable(onClick = onClick)
     ) {
         Row(
@@ -467,10 +468,10 @@ private fun LinkedDestinationCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .background(Color(0xFFFFF1F7), MaterialTheme.shapes.large),
+                    .background(colorFromHex("FFF1F7"), MaterialTheme.shapes.large),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(icon, contentDescription = null, tint = colorFromHex("EF6797"))
             }
             Column(
                 modifier = Modifier
@@ -480,11 +481,11 @@ private fun LinkedDestinationCard(
             ) {
                 Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                 if (description.isNotBlank()) {
-                    Text(description, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF302732))
+                    Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
-                Text(supporting, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7C7480))
+                Text(supporting, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFB3ACB7))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("B3ACB7"))
         }
     }
 }
@@ -515,7 +516,7 @@ private fun AccountMetaRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = Color(0xFF7C7480), style = MaterialTheme.typography.bodySmall)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Text(value, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
     }
 }
@@ -535,7 +536,7 @@ private fun DeleteAccountDialog(
             Icon(
                 imageVector = Icons.Default.WarningAmber,
                 contentDescription = null,
-                tint = Color(0xFFD1436F)
+                tint = colorFromHex("D1436F")
             )
         },
         title = { Text(stringResource(Res.string.account_settings_delete_dialog_title)) },
@@ -562,7 +563,7 @@ private fun DeleteAccountDialog(
                     Text(
                         text = errorMessage,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFD1436F)
+                        color = colorFromHex("D1436F")
                     )
                 }
             }

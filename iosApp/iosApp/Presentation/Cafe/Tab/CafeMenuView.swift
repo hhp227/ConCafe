@@ -14,6 +14,8 @@ struct CafeMenuView: View {
     let goods: [Goods]
 
     let isLoading: Bool
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -98,7 +100,7 @@ struct CafeMenuView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -178,13 +180,14 @@ struct CafeMenuView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 10)
         }
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
             .font(.headline.weight(.bold))
+            .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
     }
 
     private func emptyCard(_ text: String) -> some View {
@@ -193,7 +196,7 @@ struct CafeMenuView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

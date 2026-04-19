@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.NotificationQuietHoursMode
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.notification_quiet_all_day_desc
@@ -118,7 +119,7 @@ private fun NotificationSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -134,8 +135,8 @@ private fun NotificationSettingsContentScreen(
             NotificationSettingCard(title = stringResource(Res.string.notification_settings_basic_title)) {
                 NotificationToggleRow(
                     icon = Icons.Default.Notifications,
-                    iconBackground = Color(0xFFFFE6F1),
-                    iconTint = Color(0xFFEB5F97),
+                    iconBackground = colorFromHex("FFE6F1"),
+                    iconTint = colorFromHex("EB5F97"),
                     title = stringResource(Res.string.notification_settings_push_title),
                     description = stringResource(Res.string.notification_settings_push_desc),
                     checked = uiState.isPushNotificationsEnabled,
@@ -149,8 +150,8 @@ private fun NotificationSettingsContentScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     NotificationToggleRow(
                         icon = Icons.Default.WorkHistory,
-                        iconBackground = Color(0xFFE4F7EC),
-                        iconTint = Color(0xFF2E9E5B),
+                        iconBackground = colorFromHex("E4F7EC"),
+                        iconTint = colorFromHex("2E9E5B"),
                         title = stringResource(Res.string.notification_settings_shift_title),
                         description = stringResource(Res.string.notification_settings_shift_desc),
                         checked = uiState.isShiftNotificationsEnabled,
@@ -159,8 +160,8 @@ private fun NotificationSettingsContentScreen(
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Cake,
-                        iconBackground = Color(0xFFFFE6F1),
-                        iconTint = Color(0xFFEB5F97),
+                        iconBackground = colorFromHex("FFE6F1"),
+                        iconTint = colorFromHex("EB5F97"),
                         title = stringResource(Res.string.notification_settings_birthday_title),
                         description = stringResource(Res.string.notification_settings_birthday_desc),
                         checked = uiState.isBirthdayNotificationsEnabled,
@@ -169,8 +170,8 @@ private fun NotificationSettingsContentScreen(
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Campaign,
-                        iconBackground = Color(0xFFE8F0FF),
-                        iconTint = Color(0xFF4A79E8),
+                        iconBackground = colorFromHex("E8F0FF"),
+                        iconTint = colorFromHex("4A79E8"),
                         title = stringResource(Res.string.notification_settings_notice_title),
                         description = stringResource(Res.string.notification_settings_notice_desc),
                         checked = uiState.isNoticeNotificationsEnabled,
@@ -180,8 +181,8 @@ private fun NotificationSettingsContentScreen(
                     if (uiState.isCastRole) {
                         NotificationToggleRow(
                             icon = Icons.Default.PersonAddAlt1,
-                            iconBackground = Color(0xFFF1E8FF),
-                            iconTint = Color(0xFF8A52E2),
+                            iconBackground = colorFromHex("F1E8FF"),
+                            iconTint = colorFromHex("8A52E2"),
                             title = stringResource(Res.string.notification_settings_follow_title),
                             description = stringResource(Res.string.notification_settings_follow_desc),
                             checked = uiState.isFollowNotificationsEnabled,
@@ -191,8 +192,8 @@ private fun NotificationSettingsContentScreen(
                     }
                     NotificationToggleRow(
                         icon = Icons.Default.Celebration,
-                        iconBackground = Color(0xFFFFF4E2),
-                        iconTint = Color(0xFFE29B35),
+                        iconBackground = colorFromHex("FFF4E2"),
+                        iconTint = colorFromHex("E29B35"),
                         title = stringResource(Res.string.notification_settings_event_title),
                         description = stringResource(Res.string.notification_settings_event_desc),
                         checked = uiState.isEventNotificationsEnabled,
@@ -208,7 +209,7 @@ private fun NotificationSettingsContentScreen(
                     Text(
                         text = stringResource(Res.string.notification_settings_quiet_desc),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF7C7480)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -228,7 +229,7 @@ private fun NotificationSettingsContentScreen(
                         Text(
                             text = uiState.errorMessage,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFC33E6A)
+                            color = colorFromHex("C33E6A")
                         )
                     }
                 }
@@ -247,7 +248,7 @@ private fun NotificationSettingsHeroCard(uiState: NotificationSettingsUiState) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                        listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
                     ),
                     RoundedCornerShape(24.dp)
                 )
@@ -290,7 +291,7 @@ private fun NotificationSettingCard(
     content: @Composable () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(
@@ -346,7 +347,7 @@ private fun NotificationToggleRow(
             )
             Text(
                 text = description,
-                color = Color(0xFF7C7480),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -356,7 +357,7 @@ private fun NotificationToggleRow(
             enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFFEF6797)
+                checkedTrackColor = colorFromHex("EF6797")
             )
         )
     }
@@ -369,22 +370,22 @@ private fun QuietHoursDescriptionCard(option: NotificationQuietHoursMode) {
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = Color(0xFFFFD6E5),
+                color = colorFromHex("FFD6E5"),
                 shape = RoundedCornerShape(18.dp)
             )
-            .background(Color(0xFFFFF6FA), RoundedCornerShape(18.dp))
+            .background(colorFromHex("FFF6FA"), RoundedCornerShape(18.dp))
             .padding(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = option.titleText(),
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFB84473)
+                color = colorFromHex("B84473")
             )
             Text(
                 text = option.descriptionText(),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF7C7480)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

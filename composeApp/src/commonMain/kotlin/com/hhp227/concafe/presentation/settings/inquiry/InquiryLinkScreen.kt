@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.inquiry_back_content_description
@@ -95,7 +96,7 @@ private fun InquiryLinkContentScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -113,8 +114,8 @@ private fun InquiryLinkContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = colorFromHex("FFD1DC"),
+                            contentColor = colorFromHex("2B2330")
                         )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
@@ -137,7 +138,7 @@ private fun InquiryLinkContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
+                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
                     )
                 )
                 .padding(innerPadding)
@@ -159,7 +160,7 @@ private fun InquiryLinkContentScreen(
                             Text(
                                 text = stringResource(Res.string.inquiry_input_section_desc),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF6F6673)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             ConCafeFormField(
                                 label = stringResource(Res.string.inquiry_title_label),
@@ -179,7 +180,7 @@ private fun InquiryLinkContentScreen(
                                 Text(
                                     text = uiState.errorMessage,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFD1436F)
+                                    color = colorFromHex("D1436F")
                                 )
                             }
                         }
@@ -199,7 +200,7 @@ private fun InquiryTypeCard(
         Text(
             text = stringResource(Res.string.inquiry_type_section_desc),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF6F6673)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         InquiryTypeDropdown(
             selectedType = selectedType,
@@ -219,7 +220,7 @@ private fun InquiryTypeDropdown(
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFF8F5F6),
+            color = colorFromHex("F8F5F6"),
             border = BorderStroke(1.dp, Color(0x4DFFD1DC)),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -231,12 +232,12 @@ private fun InquiryTypeDropdown(
                 Text(
                     text = localizedInquiryTypeTitle(selectedType),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = Color(0xFF7C7480),
+                    tint = colorFromHex("7C7480"),
                     modifier = Modifier.align(androidx.compose.ui.Alignment.CenterEnd)
                 )
             }
@@ -275,7 +276,7 @@ private fun InquirySectionCard(
     content: @Composable () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(

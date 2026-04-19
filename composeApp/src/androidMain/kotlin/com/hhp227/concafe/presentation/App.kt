@@ -7,7 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.ConCafeTheme
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
 import com.hhp227.concafe.push.resolveAndroidPushTokenClient
@@ -33,7 +33,7 @@ fun App() {
     )
     val uiState by appViewModel.uiState.collectAsState()
 
-    MaterialTheme {
+    ConCafeTheme {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {

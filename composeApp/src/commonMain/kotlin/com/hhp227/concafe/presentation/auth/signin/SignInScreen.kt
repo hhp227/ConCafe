@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,6 +53,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
@@ -106,6 +109,7 @@ private fun SignInContentScreen(
     onSignUp: () -> Unit,
     onAction: (SignInAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
@@ -114,7 +118,15 @@ private fun SignInContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFFFF2F7), Color(0xFFFFFBFD), Color(0xFFFDEDF4))
+                        if (isDarkMode) {
+                            listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        } else {
+                            listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                        }
                     )
                 )
         ) {
@@ -148,7 +160,20 @@ private fun SignInContentScreen(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = colorFromHex("EF6797"),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                focusedLabelColor = colorFromHex("EF6797"),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         OutlinedTextField(
                             value = uiState.password,
@@ -158,12 +183,25 @@ private fun SignInContentScreen(
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = colorFromHex("EF6797"),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                                focusedLabelColor = colorFromHex("EF6797"),
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         if (uiState.errorMessage != null) {
                             Text(
                                 text = uiState.errorMessage,
-                                color = Color(0xFFD1436F),
+                                color = colorFromHex("D1436F"),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -172,8 +210,8 @@ private fun SignInContentScreen(
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFD1DC),
-                                contentColor = Color(0xFF2B2330)
+                                containerColor = colorFromHex("FFD1DC"),
+                                contentColor = colorFromHex("2B2330")
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -191,22 +229,22 @@ private fun SignInContentScreen(
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_kakao),
                             icon = painterResource(Res.drawable.kakao_icon),
-                            containerColor = Color(0xFFFEE500),
-                            contentColor = Color.Black,
+                            containerColor = colorFromHex("FEE500"),
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.KAKAO)) }
                         )
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_google),
                             icon = painterResource(Res.drawable.google_logo),
                             containerColor = Color.White,
-                            contentColor = Color(0xFF222222),
+                            contentColor = colorFromHex("222222"),
                             outlined = true,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.GOOGLE)) }
                         )
                         SignInSocialButton(
                             label = stringResource(Res.string.signup_social_apple),
                             icon = painterResource(Res.drawable.apple_icon),
-                            containerColor = Color(0xFF111111),
+                            containerColor = colorFromHex("111111"),
                             contentColor = Color.White,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.APPLE)) }
                         )
@@ -224,13 +262,13 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_forgot_password),
-                                color = Color(0xFF8E8794),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                         Text(
                             text = " | ",
-                            color = Color(0xFFB5AEB9),
+                            color = MaterialTheme.colorScheme.outline,
                             style = MaterialTheme.typography.bodySmall
                         )
                         TextButton(
@@ -239,7 +277,7 @@ private fun SignInContentScreen(
                         ) {
                             Text(
                                 text = stringResource(Res.string.signin_sign_up),
-                                color = Color(0xFF8E8794),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

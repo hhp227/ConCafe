@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.colorFromHex
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_cast_empty
 import concafe.composeapp.generated.resources.cast_today_finished
@@ -112,14 +114,14 @@ private fun EmptyContent(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = Color(0xFF777777)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

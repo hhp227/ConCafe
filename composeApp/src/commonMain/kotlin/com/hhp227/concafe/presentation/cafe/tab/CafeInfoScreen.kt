@@ -60,7 +60,7 @@ private fun InfoCard(detail: CafeDetail) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -107,7 +107,7 @@ private fun InfoRow(
             )
             Text(
                 text = value,
-                color = Color(0xFF777777)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -118,7 +118,7 @@ private fun DescriptionCard(detail: CafeDetail) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -132,7 +132,7 @@ private fun DescriptionCard(detail: CafeDetail) {
             )
             Text(
                 text = detail.cafe.desc,
-                color = Color(0xFF666666)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -151,10 +151,10 @@ private fun SocialMediaCard(detail: CafeDetail) {
             add(SocialMediaItem("YouTube", "https://youtube.com/@$it", colorFromHex("FF0000"), SocialPlatform.YouTube))
         }
         socialMedia["twitter"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("X", "https://x.com/$it", Color(0xFF111111), SocialPlatform.X))
+            add(SocialMediaItem("X", "https://x.com/$it", colorFromHex("111111"), SocialPlatform.X))
         }
         socialMedia["tiktok"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("TikTok", "https://tiktok.com/@$it", Color(0xFF010101), SocialPlatform.TikTok))
+            add(SocialMediaItem("TikTok", "https://tiktok.com/@$it", colorFromHex("010101"), SocialPlatform.TikTok))
         }
     }
 
@@ -162,7 +162,7 @@ private fun SocialMediaCard(detail: CafeDetail) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -219,7 +219,7 @@ private fun SocialMediaChip(
 ) {
     Box(
         modifier = modifier
-            .background(color = Color(0xFFF5EDF4), shape = RoundedCornerShape(12.dp))
+            .background(color = colorFromHex("F5EDF4"), shape = RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
@@ -276,9 +276,9 @@ private fun ReservationButton(reservationUrl: String?, onClick: (String) -> Unit
             .height(56.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFFD1DC),
-            contentColor = Color(0xFF2B2330),
-            disabledContainerColor = Color(0xFFF4D7DF),
+            containerColor = colorFromHex("FFD1DC"),
+            contentColor = colorFromHex("2B2330"),
+            disabledContainerColor = colorFromHex("F4D7DF"),
             disabledContentColor = Color(0x802B2330)
         )
     ) {

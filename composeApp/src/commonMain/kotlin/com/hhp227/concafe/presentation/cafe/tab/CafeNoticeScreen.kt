@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_notice_empty
 import concafe.composeapp.generated.resources.noticeevent_empty_event
@@ -37,6 +39,7 @@ fun CafeNoticeScreen(
     canLoadMore: Boolean,
     isLoadingMore: Boolean
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
 
     if (events.isEmpty() && notices.isEmpty()) {
@@ -52,7 +55,8 @@ fun CafeNoticeScreen(
             Text(
                 text = stringResource(Res.string.noticeevent_tab_event),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
             )
             if (events.isNotEmpty()) {
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -78,7 +82,8 @@ fun CafeNoticeScreen(
             Text(
                 text = stringResource(Res.string.noticeevent_tab_notice),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
             )
             if (notices.isEmpty()) {
                 EmptyContent(
@@ -108,7 +113,7 @@ fun CafeNoticeScreen(
                         if (isLoadingMore) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = Color(0xFFEF6797)
+                                color = colorFromHex("EF6797")
                             )
                         } else {
                             Spacer(modifier = Modifier.height(1.dp))
@@ -134,7 +139,7 @@ private fun CafeEventCard(
                 .fillMaxWidth()
                 .height(172.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.TopEnd
         ) {
             if (event.imageUrl.isNotBlank()) {
@@ -149,7 +154,7 @@ private fun CafeEventCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
+                        .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
                 )
             }
         }
@@ -161,6 +166,7 @@ private fun CafeEventCard(
                 text = event.title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -171,13 +177,13 @@ private fun CafeEventCard(
                 Icon(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = null,
-                    tint = Color(0xFF8A7F8B),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(12.dp)
                 )
                 Text(
                     text = event.periodText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8A7F8B),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -198,7 +204,7 @@ fun NoticeCard(
         onClick = onToggle,
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -212,18 +218,19 @@ fun NoticeCard(
                 Text(
                     text = notice.title,
                     modifier = Modifier.weight(1f),
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = notice.displayDate,
-                    color = Color(0xFF999999),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Text(
                 text = notice.content,
-                color = Color(0xFF666666),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = if (isExpanded) Int.MAX_VALUE else 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -246,7 +253,7 @@ fun NoticeLoadMoreFooter(
             if (isLoadingMore) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = Color(0xFFEF6797)
+                    color = colorFromHex("EF6797")
                 )
             } else if (canLoadMore) {
                 Spacer(modifier = Modifier.height(1.dp))
@@ -264,14 +271,14 @@ private fun EmptyContent(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = Color(0xFF777777)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

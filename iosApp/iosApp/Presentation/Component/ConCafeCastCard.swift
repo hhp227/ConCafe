@@ -9,6 +9,8 @@ import SwiftUI
 import Foundation
 
 struct ConCafeCastCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let name: String
 
     let subtitle: String
@@ -87,10 +89,11 @@ struct ConCafeCastCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(1)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7E7E7E"))
+                    .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
                     .lineLimit(subtitleLineLimit)
                     .frame(minHeight: subtitleLineLimit == 2 ? 28 : nil, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)

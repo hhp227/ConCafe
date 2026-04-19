@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.home
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -137,7 +138,7 @@ fun HomeContentScreen(
     pagerState: PagerState,
     onAction: (HomeAction) -> Unit
 ) {
-    val screenBackgroundColor = Color(0xFFFFFBFD)
+    val screenBackgroundColor = colorFromHex("FFFBFD")
 
     if (!uiState.isLoading) {
         LazyColumn(
@@ -254,7 +255,7 @@ fun HomeContentScreen(
                                 modifier = Modifier
                                     .size(74.dp)
                                     .clip(CircleShape)
-                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFD3E2), Color(0xFFFFB6D0))))
+                                    .background(Brush.verticalGradient(listOf(colorFromHex("FFD3E2"), colorFromHex("FFB6D0"))))
                             ) {
                                 if (!maid.profileImage.isNullOrBlank()) {
                                     CompatImageDisplay(
@@ -280,7 +281,7 @@ fun HomeContentScreen(
                 .background(screenBackgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color(0xFFEF6797))
+            CircularProgressIndicator(color = colorFromHex("EF6797"))
         }
     }
 }
@@ -320,6 +321,8 @@ private fun HomeCafeEventCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(
         modifier = modifier.clickable(onClick = onClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -329,7 +332,7 @@ private fun HomeCafeEventCard(
                 .fillMaxWidth()
                 .height(172.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.TopEnd
         ) {
             if (event.imageUrl.isNotBlank()) {
@@ -345,7 +348,7 @@ private fun HomeCafeEventCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Brush.linearGradient(listOf(Color(0xFFFDE7EF), Color(0xFFFCCFDF))))
+                        .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
                 )
             }
         }
@@ -355,13 +358,14 @@ private fun HomeCafeEventCard(
         ) {
             Text(
                 text = event.cafeName,
-                color = Color(0xFFEF6797),
+                color = colorFromHex("EF6797"),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyMedium,
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -427,8 +431,8 @@ private fun HomeBannerSection(
                                 )
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(
-                                    if (pagerState.currentPage == page) Color(0xFFEF6797)
-                                    else Color(0xFFD8D8D8)
+                                    if (pagerState.currentPage == page) colorFromHex("EF6797")
+                                    else colorFromHex("D8D8D8")
                                 )
                         )
                     }
@@ -528,12 +532,12 @@ private fun HomeSectionPlaceholderCard(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5C525D)
+                color = colorFromHex("5C525D")
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8A7F8B)
+                color = colorFromHex("8A7F8B")
             )
         }
     }
@@ -553,10 +557,7 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(
-                            Color(0xFFEDE7EA),
-                            Color(0xFFF6F2F4)
-                        )
+                        listOf(colorFromHex("EDE7EA"), colorFromHex("F6F2F4"))
                     )
                 )
                 .padding(18.dp),
@@ -565,13 +566,13 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = stringResource(Res.string.home_banner_placeholder_title),
-                    color = Color(0xFF6E6671),
+                    color = colorFromHex("6E6671"),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = stringResource(Res.string.home_banner_placeholder_desc),
-                    color = Color(0xFF8E8794),
+                    color = colorFromHex("8E8794"),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -617,7 +618,7 @@ private fun SectionTitle(
             text = text,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2330)
+            color = colorFromHex("2B2330")
         )
         Spacer(modifier = Modifier.weight(1f))
         Box(
@@ -629,7 +630,7 @@ private fun SectionTitle(
             if (actionLabel != null && onAction != null) {
                 Text(
                     text = actionLabel,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable(onClick = onAction)
@@ -644,6 +645,8 @@ private fun NearByCafeItem(
     cafe: Cafe,
     modifier: Modifier = Modifier
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -653,7 +656,7 @@ private fun NearByCafeItem(
             modifier = Modifier
                 .size(92.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFFFFE1C7), Color(0xFFFFCEAE))))
+                .background(Brush.verticalGradient(listOf(colorFromHex("FFE1C7"), colorFromHex("FFCEAE"))))
         ) {
             val resolvedThumbnailImage = cafe.thumbnailImage?.trim().orEmpty()
 
@@ -666,19 +669,31 @@ private fun NearByCafeItem(
             }
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(cafe.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = cafe.name,
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             val conceptLabel = nearbyCafeConceptLabel(cafe.conceptType)
             if (conceptLabel.isNotEmpty()) {
                 Text(
                     text = conceptLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Text(cafe.region.city, color = Color(0xFF7E7E7E), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = cafe.region.city,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

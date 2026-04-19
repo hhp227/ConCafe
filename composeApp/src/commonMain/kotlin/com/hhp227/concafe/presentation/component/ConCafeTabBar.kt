@@ -21,12 +21,12 @@ fun ConCafeTabBar(
     TabRow(
         selectedTabIndex = selectedIndex,
         modifier = modifier,
-        containerColor = Color(0xFFFFFBFD),
-        contentColor = Color(0xFFEF6797),
+        containerColor = colorFromHex("FFFBFD"),
+        contentColor = colorFromHex("EF6797"),
         indicator = { tabPositions ->
             TabRowDefaults.Indicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                color = Color(0xFFEF6797)
+                color = colorFromHex("EF6797")
             )
         },
         divider = {}
@@ -38,7 +38,7 @@ fun ConCafeTabBar(
                 text = {
                     Text(
                         text = label,
-                        color = if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFF777777),
+                        color = if (index == selectedIndex) colorFromHex("EF6797") else colorFromHex("777777"),
                         fontWeight = if (index == selectedIndex) FontWeight.Bold else FontWeight.Normal,
                         style = MaterialTheme.typography.bodyMedium
                     )

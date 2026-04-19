@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.cast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -148,16 +149,16 @@ private fun CastContentScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.cast_accessibility_back),
-                            tint = if (topBarVisible) Color(0xFF222222) else Color.White
+                            tint = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (topBarVisible) Color.White else Color.Transparent,
-                    scrolledContainerColor = Color.White,
-                    titleContentColor = Color(0xFF222222),
-                    navigationIconContentColor = if (topBarVisible) Color(0xFF222222) else Color.White,
-                    actionIconContentColor = if (topBarVisible) Color(0xFF222222) else Color.White
+                    containerColor = if (topBarVisible) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White,
+                    actionIconContentColor = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                 )
             )
         }
@@ -383,7 +384,9 @@ private fun CastSummarySection(
     isSelfCast: Boolean,
     onAction: (CastAction) -> Unit
 ) {
-    Surface(color = Color.White) {
+    val isDarkMode = isSystemInDarkTheme()
+
+    Surface(color = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -406,13 +409,14 @@ private fun CastSummarySection(
                         Text(
                             text = detail.cast.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
                         )
                         if (!detail.cast.linkedUserId.isNullOrBlank()) {
                             Icon(
                                 imageVector = Icons.Default.Verified,
                                 contentDescription = null,
-                                tint = Color(0xFF9333EA),
+                                tint = colorFromHex("9333EA"),
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -439,12 +443,12 @@ private fun CastSummarySection(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color(0xFF7A7A7A),
+                            tint = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = "${detail.cafe.name} · ${detail.cafe.region.city}",
-                            color = Color(0xFF6F6A70),
+                            color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
@@ -454,8 +458,8 @@ private fun CastSummarySection(
                     enabled = !isSelfCast,
                     colors = if (isFollowing) {
                         ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF1E3EB),
-                            contentColor = Color(0xFF6A4960)
+                            containerColor = colorFromHex("F1E3EB"),
+                            contentColor = colorFromHex("6A4960")
                         )
                     } else {
                         ButtonDefaults.buttonColors(
@@ -568,6 +572,7 @@ private fun CastScheduleSection(detail: CastDetail) {
                 text = stringResource(Res.string.cast_schedule_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -592,8 +597,10 @@ private fun CastScheduleCard(
     dayLabel: String,
     isWorking: Boolean
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Surface(
-        color = if (isWorking) colorFromHex("EF6797") else Color.White,
+        color = if (isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier
     ) {
@@ -607,7 +614,7 @@ private fun CastScheduleCard(
             Text(
                 text = dayLabel,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else Color(0xFF4E4750)
+                color = if (isWorking) Color.White else if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(if (isWorking) {
@@ -616,7 +623,7 @@ private fun CastScheduleCard(
                     Res.string.cast_schedule_off
                 }),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
+                color = if (isWorking) Color.White.copy(alpha = 0.92f) else if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -624,6 +631,8 @@ private fun CastScheduleCard(
 
 @Composable
 private fun CastIntroductionSection(detail: CastDetail) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -631,16 +640,17 @@ private fun CastIntroductionSection(detail: CastDetail) {
         Text(
             text = stringResource(Res.string.cast_section_intro),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Surface(
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(22.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = detail.cast.desc,
-                color = Color(0xFF4E4750),
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(18.dp),
                 lineHeight = 22.sp
             )
@@ -657,7 +667,8 @@ private fun CastRecentActivitySection(detail: CastDetail) {
         Text(
             text = stringResource(Res.string.cast_section_recent_activity),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -691,8 +702,10 @@ private fun CastActivityCard(
     value: String,
     label: String
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         modifier = modifier
     ) {
@@ -711,7 +724,7 @@ private fun CastActivityCard(
             )
             Text(
                 text = label,
-                color = Color(0xFF6F6A70),
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -720,6 +733,8 @@ private fun CastActivityCard(
 
 @Composable
 private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -727,7 +742,8 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
         Text(
             text = stringResource(Res.string.cast_section_tagged_reviews),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         if (reviews.isEmpty()) {
             CastRecentReviewEmptyView()
@@ -735,7 +751,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 reviews.forEach { review ->
                     Surface(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.surface,
                         shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -770,7 +786,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                 }
                                 Text(
                                     text = review.createdDateLabel,
-                                    color = Color(0xFF8A8087),
+                                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                             }
@@ -791,7 +807,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                             }
                             Text(
                                 text = review.content,
-                                color = Color(0xFF4E4750)
+                                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -803,8 +819,10 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
 
 @Composable
 private fun CastRecentReviewEmptyView() {
+    val isDarkMode = isSystemInDarkTheme()
+
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -818,11 +836,11 @@ private fun CastRecentReviewEmptyView() {
             Text(
                 text = stringResource(Res.string.cast_tagged_reviews_empty_title),
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF4E4750)
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.cast_tagged_reviews_empty_desc),
-                color = Color(0xFF8A8087),
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -835,6 +853,8 @@ private fun CastStatItem(
     label: String,
     value: String
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = icon,
@@ -849,7 +869,7 @@ private fun CastStatItem(
         ) {
             Text(
                 text = label,
-                color = Color(0xFF8A8087),
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
             Text(

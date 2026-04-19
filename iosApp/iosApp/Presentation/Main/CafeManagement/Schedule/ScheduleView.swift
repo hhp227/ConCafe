@@ -106,7 +106,7 @@ struct ScheduleView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .foregroundStyle(Color(hex: "24161E"))
+                .foregroundStyle(.primary)
                 .background(Color(hex: "FFD1DC"))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
@@ -116,7 +116,7 @@ struct ScheduleView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         }
     }
 
@@ -154,7 +154,7 @@ private struct ScheduleEditModal: View {
                             .font(.title3.weight(.bold))
                         Text(uiState.editingScheduleTitle)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(.secondary)
                     }
                     HStack(spacing: 8) {
                         ForEach(["work", "off", "vacation"], id: \.self) { statusId in
@@ -172,15 +172,15 @@ private struct ScheduleEditModal: View {
                                     .font(.subheadline.weight(.medium))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(uiState.editStatus == status ? Color.white : Color.clear)
-                                    .foregroundStyle(uiState.editStatus == status ? Color(hex: "24161E") : Color(hex: "7A707A"))
+                                    .background(uiState.editStatus == status ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.clear)
+                                    .foregroundStyle(uiState.editStatus == status ? .primary : .secondary)
                                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             }
                             .buttonStyle(.plain)
                         }
                     }
                     .padding(6)
-                    .background(Color(hex: "F8F5F6"))
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(spacing: 12) {
                         TimePickerField(
@@ -204,7 +204,7 @@ private struct ScheduleEditModal: View {
                             .font(.caption)
                         Text(String(localized: String.LocalizationValue("schedule_break_notice"), table: "Localizable"))
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "6B5A63"))
+                            .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(12)
@@ -216,12 +216,12 @@ private struct ScheduleEditModal: View {
                     )
                     HStack {
                         Text(String(localized: String.LocalizationValue("schedule_total_work"), table: "Localizable"))
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(.secondary)
                         Spacer()
                         HStack(alignment: .bottom, spacing: 4) {
                             Text(String(localized: String.LocalizationValue("schedule_total_prefix"), table: "Localizable"))
                                 .font(.caption)
-                                .foregroundStyle(Color(hex: "7A707A"))
+                                .foregroundStyle(.secondary)
                             Text(resolveScheduleDurationLabel(uiState.totalWorkDurationLabel))
                                 .font(.title2.weight(.bold))
                         }
@@ -234,7 +234,7 @@ private struct ScheduleEditModal: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color(hex: "FFD1DC"))
-                            .foregroundStyle(Color(hex: "24161E"))
+                            .foregroundStyle(.primary)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -244,7 +244,7 @@ private struct ScheduleEditModal: View {
                 .padding(.bottom, 20)
             }
             .frame(maxWidth: .infinity)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .ignoresSafeArea(edges: .bottom)
         }
@@ -266,7 +266,7 @@ private struct TimePickerField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption2.weight(.bold))
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
             Menu {
                 ForEach(options, id: \.self) { option in
                     Button(option) {
@@ -279,15 +279,15 @@ private struct TimePickerField: View {
                         .foregroundStyle(Color(hex: "EF6797"))
                     Text(value)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isEnabled ? Color(hex: "24161E") : Color(hex: "B0A3AC"))
+                        .foregroundStyle(isEnabled ? .primary : .secondary)
                     Spacer()
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "8F848F"))
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 52)
-                .background(isEnabled ? Color(hex: "F8F5F6") : Color(hex: "F2EDF0"))
+                .background(isEnabled ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(!isEnabled)
@@ -304,7 +304,7 @@ private struct ScheduleContentView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFF8FB"), Color(hex: "FFEFF5")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -345,10 +345,10 @@ private struct ScheduleContentView: View {
                     .foregroundStyle(Color(hex: "EF6797"))
                 Text(uiState.castSummary.title)
                     .font(.title3.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Text(resolveScheduleCastSubtitle(uiState.castSummary.subtitle))
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -367,7 +367,7 @@ private struct ScheduleContentView: View {
                 }
         }
         .padding(16)
-        .background(Color.white.opacity(0.94))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -381,7 +381,7 @@ private struct ScheduleContentView: View {
             HStack {
                 Text(uiState.weekRangeLabel)
                     .font(.headline)
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 Button {
                     onAction(.clickCalendar)
@@ -406,14 +406,14 @@ private struct ScheduleContentView: View {
                             VStack(spacing: 4) {
                                 Text(day.label)
                                     .font(.caption2.weight(.bold))
-                                    .foregroundStyle(isSelected ? Color(hex: "24161E").opacity(0.6) : Color(hex: "9C8C98"))
+                                    .foregroundStyle(isSelected ? Color.primary.opacity(0.6) : Color.secondary)
                                 Text(day.number)
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "24161E"))
+                                    .foregroundStyle(.primary)
                             }
                             .frame(width: 56)
                             .padding(.vertical, 10)
-                            .background(isSelected ? Color(hex: "FFD1DC") : Color.white.opacity(0.92))
+                            .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -481,16 +481,16 @@ private struct ScheduleContentView: View {
                         .frame(width: 48, height: 48)
                         .overlay {
                             Image(systemName: schedule.isWorking ? "clock" : "bed.double")
-                                .foregroundStyle(schedule.isWorking ? Color(hex: "EF6797") : Color(hex: "B0A3AC"))
+                                .foregroundStyle(schedule.isWorking ? Color(hex: "EF6797") : .secondary)
                         }
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
                             Text(schedule.title)
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "24161E"))
+                                .foregroundStyle(.primary)
                             Text(resolveScheduleStatusLabel(schedule.statusLabel, status: schedule.status))
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(schedule.isWorking ? Color(hex: "5B4A57") : Color(hex: "9C8C98"))
+                                .foregroundStyle(schedule.isWorking ? .primary : .secondary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(schedule.isWorking ? Color(hex: "FFD1DC").opacity(0.30) : Color(hex: "F2EDF0"))
@@ -498,25 +498,25 @@ private struct ScheduleContentView: View {
                         }
                         Text(resolveScheduleTimeLabel(schedule.timeLabel, status: schedule.status))
                             .font(.subheadline)
-                            .foregroundStyle(schedule.isWorking ? Color(hex: "7A707A") : Color(hex: "B0A3AC"))
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button {
                         onAction(.clickEditDay(id: schedule.id))
                     } label: {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(hex: "F8F5F6"))
+                            .fill(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                             .frame(width: 40, height: 40)
                             .overlay {
                                 Image(systemName: "pencil")
-                                    .foregroundStyle(Color(hex: "7A707A"))
+                                    .foregroundStyle(.secondary)
                             }
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 14)
-                .background(Color.white.opacity(schedule.isWorking ? 0.96 : 0.88))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(schedule.isWorking ? 0.96 : 0.88))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)

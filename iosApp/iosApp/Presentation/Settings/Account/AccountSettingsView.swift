@@ -154,7 +154,7 @@ private struct AccountSettingsContentView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -174,7 +174,7 @@ private struct AccountSettingsContentView: View {
                 sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_cast_status_eyebrow"), table: "Localizable"))
                 Text(castDescriptionText)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "6F6673"))
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -301,7 +301,7 @@ private struct AccountSettingsContentView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -329,7 +329,7 @@ private struct AccountSettingsContentView: View {
                     if !description.isEmpty {
                         Text(description)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "302732"))
+                            .foregroundStyle(.primary)
                     }
                     Text(supporting)
                         .font(.caption)
@@ -342,7 +342,7 @@ private struct AccountSettingsContentView: View {
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -353,7 +353,7 @@ private struct AccountSettingsContentView: View {
             Text(title)
                 .font(.headline)
                 .fontWeight(.bold)
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background(Color(hex: "FFD1DC"))

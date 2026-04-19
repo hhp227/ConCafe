@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -107,7 +108,7 @@ private fun RankingContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -187,7 +188,7 @@ fun RankingHeaderSection(
             Icon(
                 imageVector = Icons.Filled.EmojiEvents,
                 contentDescription = null,
-                tint = Color(0xFFEF6797)
+                tint = colorFromHex("EF6797")
             )
             Text(
                 text = stringResource(Res.string.ranking_title),
@@ -290,7 +291,7 @@ fun RankingPromoBanner(
                                     modifier = Modifier
                                         .padding(horizontal = 3.dp)
                                         .clip(RoundedCornerShape(999.dp))
-                                        .background(if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFFE3D9E0))
+                                        .background(if (index == selectedIndex) colorFromHex("EF6797") else colorFromHex("E3D9E0"))
                                         .clickable { onSelect(index) }
                                         .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
                                 )
@@ -356,7 +357,7 @@ fun RankingPromoBanner(
                                 onClick = {},
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.White,
-                                    contentColor = Color(0xFF262626)
+                                    contentColor = colorFromHex("262626")
                                 ),
                                 shape = RoundedCornerShape(999.dp)
                             ) {
@@ -387,12 +388,14 @@ fun RankingPromoBanner(
 
 @Composable
 private fun RankingEmptyPlaceholder() {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -404,12 +407,12 @@ private fun RankingEmptyPlaceholder() {
                 text = stringResource(Res.string.ranking_empty_title),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5C525D)
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.ranking_empty_desc),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8A7F8B)
+                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -422,13 +425,15 @@ fun RankingEntryCard(
     isMaid: Boolean,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         onClick = onClick,
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -466,21 +471,37 @@ fun RankingEntryCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(item.symbol, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    item.symbol,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                )
             }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Text(item.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7E7E7E), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    item.name,
+                    color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    item.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else colorFromHex("7E7E7E"),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = "${item.score} pt",
-                        color = Color(0xFFEF6797),
+                        color = colorFromHex("EF6797"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -499,9 +520,9 @@ fun RankingChangeIndicator(change: String) {
         else -> null
     }
     val tint = when {
-        change.startsWith("+") -> Color(0xFF34A853)
-        change.startsWith("-") -> Color(0xFFE24B62)
-        else -> Color(0xFF8A8A8A)
+        change.startsWith("+") -> colorFromHex("34A853")
+        change.startsWith("-") -> colorFromHex("E24B62")
+        else -> colorFromHex("8A8A8A")
     }
 
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -515,16 +536,16 @@ fun RankingChangeIndicator(change: String) {
         } else {
             Text("-", color = tint, style = MaterialTheme.typography.bodySmall)
         }
-        Text(change, color = Color(0xFF8A8A8A), style = MaterialTheme.typography.labelSmall)
+        Text(change, color = colorFromHex("8A8A8A"), style = MaterialTheme.typography.labelSmall)
     }
 }
 
 private fun rankColor(rank: Int): Color {
     return when (rank) {
-        1 -> Color(0xFFE2B11E)
-        2 -> Color(0xFFA2A7B1)
-        3 -> Color(0xFFB8753B)
-        else -> Color(0xFF8A8A8A)
+        1 -> colorFromHex("E2B11E")
+        2 -> colorFromHex("A2A7B1")
+        3 -> colorFromHex("B8753B")
+        else -> colorFromHex("8A8A8A")
     }
 }
 

@@ -47,7 +47,7 @@ struct CafeInfoView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
     
@@ -72,11 +72,11 @@ struct CafeInfoView: View {
                 .font(.subheadline.weight(.semibold))
             Text(detail.cafe.desc)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "666666"))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -143,7 +143,7 @@ struct CafeInfoView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
     }

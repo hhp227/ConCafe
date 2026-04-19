@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.auth.signup
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
@@ -134,6 +136,7 @@ private fun SignUpContentScreen(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     val density = LocalDensity.current
     val imeBottomPadding = with(density) { WindowInsets.ime.getBottom(this).toDp() }
 
@@ -146,7 +149,15 @@ private fun SignUpContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFFFF2F7), Color(0xFFFFFBFD), Color(0xFFFDEDF4))
+                        if (isDarkMode) {
+                            listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        } else {
+                            listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                        }
                     )
                 )
         ) {
@@ -177,7 +188,7 @@ private fun SignUpContentScreen(
                             Text(
                                 text = stringResource(Res.string.signup_footer_has_account),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF8E8794)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             TextButton(onClick = { onAction(SignUpAction.ClickSignInInstead) }) {
                                 Text(stringResource(Res.string.signup_footer_sign_in))
@@ -201,22 +212,22 @@ private fun SignUpContentScreen(
                                 SignInSocialButton(
                                     label = stringResource(Res.string.signup_social_kakao),
                                     icon = painterResource(Res.drawable.kakao_icon),
-                                    containerColor = Color(0xFFFEE500),
-                                    contentColor = Color.Black,
+                                    containerColor = colorFromHex("FEE500"),
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
                                     onClick = { onAction(SignUpAction.ClickSocialSignUp(SignUpProvider.KAKAO)) }
                                 )
                                 SignInSocialButton(
                                     label = stringResource(Res.string.signup_social_google),
                                     icon = painterResource(Res.drawable.google_logo),
                                     containerColor = Color.White,
-                                    contentColor = Color(0xFF222222),
+                                    contentColor = colorFromHex("222222"),
                                     outlined = true,
                                     onClick = { onAction(SignUpAction.ClickSocialSignUp(SignUpProvider.GOOGLE)) }
                                 )
                                 SignInSocialButton(
                                     label = stringResource(Res.string.signup_social_apple),
                                     icon = painterResource(Res.drawable.apple_icon),
-                                    containerColor = Color(0xFF111111),
+                                    containerColor = colorFromHex("111111"),
                                     contentColor = Color.White,
                                     onClick = { onAction(SignUpAction.ClickSocialSignUp(SignUpProvider.APPLE)) }
                                 )
@@ -232,7 +243,7 @@ private fun SignUpContentScreen(
                             Text(
                                 text = stringResource(Res.string.signup_footer_has_account),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF8E8794)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             TextButton(onClick = { onAction(SignUpAction.ClickSignInInstead) }) {
                                 Text(stringResource(Res.string.signup_footer_sign_in))
@@ -265,7 +276,7 @@ private fun SignUpIntroSection() {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(Res.string.signup_select_type_subtitle),
-            color = Color(0xFF7C7480)
+            color = colorFromHex("7C7480")
         )
     }
 }
@@ -277,9 +288,9 @@ private fun UserTypeCard(
     onClick: () -> Unit
 ) {
     val accentColor = when (type) {
-        SignUpUiState.UserType.VISITOR -> Color(0xFF4F8EF7)
-        SignUpUiState.UserType.CAST -> Color(0xFFF06292)
-        SignUpUiState.UserType.CAFE_OWNER -> Color(0xFF8B5CF6)
+        SignUpUiState.UserType.VISITOR -> colorFromHex("4F8EF7")
+        SignUpUiState.UserType.CAST -> colorFromHex("F06292")
+        SignUpUiState.UserType.CAFE_OWNER -> colorFromHex("8B5CF6")
     }
     val icon = when (type) {
         SignUpUiState.UserType.VISITOR -> Icons.Default.Person
@@ -291,7 +302,7 @@ private fun UserTypeCard(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE7DFE8))
+        border = BorderStroke(1.dp, colorFromHex("E7DFE8"))
     ) {
         Row(
             modifier = Modifier
@@ -313,12 +324,12 @@ private fun UserTypeCard(
                 Text(
                     text = userTypeSubtitle(type),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6E6671)
+                    color = colorFromHex("6E6671")
                 )
                 Text(
                     text = userTypeBadge(type),
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFFDA4E84)
+                    color = colorFromHex("DA4E84")
                 )
             }
         }
@@ -333,9 +344,9 @@ private fun SignUpFormHeader(type: SignUpUiState.UserType) {
         SignUpUiState.UserType.CAFE_OWNER -> Icons.Default.Storefront
     }
     val colors = when (type) {
-        SignUpUiState.UserType.VISITOR -> listOf(Color(0xFF60A5FA), Color(0xFF3B82F6))
-        SignUpUiState.UserType.CAST -> listOf(Color(0xFFF472B6), Color(0xFFEC4899))
-        SignUpUiState.UserType.CAFE_OWNER -> listOf(Color(0xFFA78BFA), Color(0xFF8B5CF6))
+        SignUpUiState.UserType.VISITOR -> listOf(colorFromHex("60A5FA"), colorFromHex("3B82F6"))
+        SignUpUiState.UserType.CAST -> listOf(colorFromHex("F472B6"), colorFromHex("EC4899"))
+        SignUpUiState.UserType.CAFE_OWNER -> listOf(colorFromHex("A78BFA"), colorFromHex("8B5CF6"))
     }
     val description = when (type) {
         SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_desc_visitor)
@@ -425,7 +436,7 @@ private fun SignUpFormSection(
                 Text(
                     text = stringResource(Res.string.signup_cast_cafe_approval_required),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8E8794)
+                    color = colorFromHex("8E8794")
                 )
             }
         }
@@ -448,18 +459,18 @@ private fun SignUpFormSection(
             )
         }
         uiState.errorMessage?.let {
-            Text(text = it, color = Color(0xFFD1436F), style = MaterialTheme.typography.bodySmall)
+            Text(text = it, color = colorFromHex("D1436F"), style = MaterialTheme.typography.bodySmall)
         }
         uiState.infoMessage?.let {
-            Text(text = it, color = Color(0xFF2E8B57), style = MaterialTheme.typography.bodySmall)
+            Text(text = it, color = colorFromHex("2E8B57"), style = MaterialTheme.typography.bodySmall)
         }
         Button(
             onClick = { onAction(SignUpAction.ClickSubmit) },
             enabled = !uiState.isLoading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330)
+                containerColor = colorFromHex("FFD1DC"),
+                contentColor = colorFromHex("2B2330")
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -471,7 +482,7 @@ private fun SignUpFormSection(
             Text(
                 text = stringResource(Res.string.signup_cast_after_signup_notice),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8E8794)
+                color = colorFromHex("8E8794")
             )
         }
     }
@@ -481,8 +492,8 @@ private fun SignUpFormSection(
 private fun OwnerCafeGuideCard() {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFF6F0FF),
-        border = BorderStroke(1.dp, Color(0xFFE6D9FA))
+        color = colorFromHex("F6F0FF"),
+        border = BorderStroke(1.dp, colorFromHex("E6D9FA"))
     ) {
         Column(
             modifier = Modifier
@@ -494,12 +505,12 @@ private fun OwnerCafeGuideCard() {
                 text = stringResource(Res.string.signup_owner_cafe_guide_title),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5F3AA2)
+                color = colorFromHex("5F3AA2")
             )
             Text(
                 text = stringResource(Res.string.signup_owner_cafe_guide_message),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5A82)
+                color = colorFromHex("6B5A82")
             )
         }
     }
@@ -514,6 +525,7 @@ private fun SignUpTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -523,7 +535,20 @@ private fun SignUpTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = visualTransformation,
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+            unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+            focusedBorderColor = colorFromHex("EF6797"),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+            focusedLabelColor = colorFromHex("EF6797"),
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            cursorColor = MaterialTheme.colorScheme.onSurface
+        )
     )
 }
 
@@ -532,6 +557,7 @@ private fun PhoneVerificationSection(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     var phoneFieldValue by remember(uiState.phone) {
         mutableStateOf(TextFieldValue(uiState.phone, TextRange(uiState.phone.length)))
     }
@@ -551,14 +577,27 @@ private fun PhoneVerificationSection(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                        unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                        focusedBorderColor = colorFromHex("EF6797"),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                        focusedLabelColor = colorFromHex("EF6797"),
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        cursorColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             }
             Button(
                 onClick = { onAction(SignUpAction.ClickSendVerification) },
                 enabled = !uiState.isPhoneVerified && uiState.phone.isNotBlank(),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
+                colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797")),
                 modifier = Modifier.height(56.dp)
             ) {
                 Text(if (uiState.isPhoneVerified) stringResource(Res.string.signup_phone_verified) else stringResource(Res.string.signup_phone_request))
@@ -578,7 +617,7 @@ private fun PhoneVerificationSection(
                 Button(
                     onClick = { onAction(SignUpAction.ClickVerifyCode) },
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF7D2E1), contentColor = Color(0xFF6B3050)),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("F7D2E1"), contentColor = colorFromHex("6B3050")),
                     modifier = Modifier.height(56.dp)
                 ) {
                     Text(stringResource(Res.string.signup_verification_confirm))
@@ -589,13 +628,13 @@ private fun PhoneVerificationSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFEAF8EF), RoundedCornerShape(16.dp))
+                    .background(colorFromHex("EAF8EF"), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E8B57))
-                Text(stringResource(Res.string.signup_phone_verified_message), color = Color(0xFF2E8B57))
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colorFromHex("2E8B57"))
+                Text(stringResource(Res.string.signup_phone_verified_message), color = colorFromHex("2E8B57"))
             }
         }
     }
@@ -609,14 +648,16 @@ private fun CafeSelectionSection(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(text = label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            color = Color.White,
+            color = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
             tonalElevation = 0.dp,
-            border = BorderStroke(1.dp, Color(0xFFE4DDE5))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f))
         ) {
             Row(
                 modifier = Modifier
@@ -628,9 +669,9 @@ private fun CafeSelectionSection(
             ) {
                 Text(
                     text = uiState.selectedCafe?.name ?: placeholder,
-                    color = if (uiState.selectedCafe == null) Color(0xFF8E8794) else Color(0xFF222222)
+                    color = if (uiState.selectedCafe == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
-                Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF8E8794))
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (uiState.selectedCafe != null) {
@@ -644,7 +685,9 @@ private fun CafeSelectionSection(
         if (uiState.isCafeSearchVisible) {
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White
+                )
             ) {
                 Column {
                     SignUpTextField(
@@ -658,13 +701,13 @@ private fun CafeSelectionSection(
                         Text(
                             text = stringResource(Res.string.signup_search_no_results),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-                            color = Color(0xFF8E8794)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
                         filteredCafes.forEachIndexed { index, cafe ->
                             CafeSearchItem(cafe = cafe, onClick = { onAction(SignUpAction.ClickCafe(cafe)) })
                             if (index < filteredCafes.lastIndex) {
-                                Divider(color = Color(0xFFF1EAF1))
+                                Divider(color = colorFromHex("F1EAF1"))
                             }
                         }
                     }
@@ -692,13 +735,13 @@ private fun CafeSearchItem(
             Text(
                 text = cafe.region.city,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8E8794)
+                color = colorFromHex("8E8794")
             )
         }
         if (cafe.approved) {
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = Color(0xFFEF6797)
+                color = colorFromHex("EF6797")
             ) {
                 Text(
                     text = stringResource(Res.string.signup_cafe_verified_badge),

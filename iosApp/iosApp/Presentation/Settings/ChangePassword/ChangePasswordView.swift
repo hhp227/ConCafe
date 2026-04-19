@@ -79,7 +79,7 @@ struct ChangePasswordView: View {
                     Text(viewModel.uiState.isSubmitting ? String(localized: String.LocalizationValue("changepw_submitting"), table: "Localizable") : String(localized: String.LocalizationValue("changepw_submit"), table: "Localizable"))
                         .font(.headline)
                         .fontWeight(.bold)
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(Color(hex: "FFD1DC"))
@@ -129,7 +129,7 @@ struct ChangePasswordView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -139,13 +139,13 @@ struct ChangePasswordView: View {
                 .foregroundStyle(Color(hex: "EF6797"))
             Text(text)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6F6673"))
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

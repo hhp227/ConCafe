@@ -168,7 +168,7 @@ private struct BannerEditContentView: View {
             }
             .background(
                 LinearGradient(
-                    colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                    colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -184,7 +184,7 @@ private struct BannerEditContentView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -227,7 +227,7 @@ private struct BannerEditContentView: View {
             } label: {
                 Text(String(localized: String.LocalizationValue("banneredit_image_button"), table: "Localizable"))
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 10)
                     .background(Color(hex: "FFD1DC"))
@@ -238,7 +238,7 @@ private struct BannerEditContentView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .padding(.vertical, 24)
-        .background(Color.white.opacity(0.72))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -282,10 +282,10 @@ private struct BannerEditContentView: View {
                     } label: {
                         Text(String(localized: String.LocalizationValue(target.rawValue), table: "Localizable"))
                             .font(.subheadline.weight(uiState.selectedTarget == target ? .bold : .medium))
-                            .foregroundStyle(uiState.selectedTarget == target ? Color(hex: "23161C") : Color(hex: "7A707A"))
+                            .foregroundStyle(uiState.selectedTarget == target ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(uiState.selectedTarget == target ? Color(hex: "FFD1DC").opacity(0.12) : Color(hex: "F8F5F6"))
+                            .background(uiState.selectedTarget == target ? Color(hex: "FFD1DC").opacity(0.12) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -369,7 +369,7 @@ private struct BannerEditContentView: View {
                     Text(String(localized: String.LocalizationValue("banneredit_period_max_day"), table: "Localizable"))
                 }
                 .font(.caption2)
-                .foregroundStyle(Color(hex: "9A8D95"))
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -380,7 +380,7 @@ private struct BannerEditContentView: View {
         } label: {
             HStack(spacing: 8) {
                 if uiState.isSaving {
-                    ProgressView().tint(Color(hex: "2B2330"))
+                    ProgressView().tint(.primary)
                 } else {
                     Image(systemName: "square.and.arrow.down")
                 }
@@ -390,7 +390,7 @@ private struct BannerEditContentView: View {
                     : String(localized: String.LocalizationValue("banneredit_submit_create"), table: "Localizable")
                 ).fontWeight(.bold)
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(uiState.isSaveEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
@@ -398,7 +398,7 @@ private struct BannerEditContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 16)
-            .background(Color.white.opacity(0.94))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
         }
         .buttonStyle(.plain)
         .disabled(!uiState.isSaveEnabled)
@@ -418,7 +418,7 @@ private struct BannerEditContentView: View {
             content()
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -432,13 +432,13 @@ private struct BannerEditContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
             Button(action: onTap) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(selectedTitle ?? placeholder)
                             .font(.subheadline.weight(selectedTitle == nil ? .regular : .semibold))
-                            .foregroundStyle(selectedTitle == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                            .foregroundStyle(selectedTitle == nil ? .secondary : .primary)
                         if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                             Text(subtitle)
                                 .font(.caption)
@@ -451,7 +451,7 @@ private struct BannerEditContentView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -471,11 +471,11 @@ private struct BannerEditContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 4) {
                 Text(selectedTitle ?? placeholder)
                     .font(.subheadline.weight(selectedTitle == nil ? .regular : .semibold))
-                    .foregroundStyle(selectedTitle == nil ? Color(hex: "AA98A4") : Color(hex: "23161C"))
+                    .foregroundStyle(selectedTitle == nil ? .secondary : .primary)
                 if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.caption)
@@ -485,7 +485,7 @@ private struct BannerEditContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color(hex: "F8F5F6"))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -511,7 +511,7 @@ private struct BannerEditContentView: View {
                 .padding(.top, 1)
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("banneredit_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
@@ -636,7 +636,7 @@ private struct BannerSelectorSheet: View {
             }
         }
         .padding(.top, 16)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private func selectorOptionButton(
@@ -651,7 +651,7 @@ private struct BannerSelectorSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: "23161C"))
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(subtitle)
                     .font(.caption)
@@ -659,7 +659,7 @@ private struct BannerSelectorSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)

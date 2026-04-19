@@ -115,7 +115,7 @@ private struct BannerContentView: View {
             ConCafeTabBar(
                 labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                backgroundColor: Color(hex: "F8F5F6"),
+                backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                 onSelect: { index in
                     onAction(.selectTab(BannerTab.allCases[index]))
                 }
@@ -141,7 +141,7 @@ private struct BannerContentView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .safeAreaInset(edge: .bottom) {
             Button {
                 onAction(.createBannerTapped)
@@ -153,7 +153,7 @@ private struct BannerContentView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .foregroundStyle(Color(hex: "24161E"))
+                .foregroundStyle(.primary)
                 .background(Color(hex: "FFD1DC"))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
@@ -161,7 +161,7 @@ private struct BannerContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(hex: "F8F5F6"))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         }
     }
 
@@ -184,7 +184,7 @@ private struct BannerContentView: View {
                 )
             )
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(.secondary)
             Spacer()
             Text(String(localized: String.LocalizationValue("banner_location_home_top"), table: "Localizable"))
                 .font(.caption.weight(.bold))
@@ -219,10 +219,10 @@ private struct BannerCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(banner.title)
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "24161E"))
+                        .foregroundStyle(.primary)
                     Text(banner.description)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "7A707A"))
+                        .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
@@ -234,7 +234,7 @@ private struct BannerCardView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)

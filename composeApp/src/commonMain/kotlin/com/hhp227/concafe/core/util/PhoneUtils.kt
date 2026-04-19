@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.hhp227.concafe.presentation.component.colorFromHex
 
 fun formatKoreanPhoneNumber(input: String): String {
     val digits = input.filter { it.isDigit() }.take(11)
@@ -72,7 +73,7 @@ fun PhoneNumberTextField(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF665A63)
+            color = colorFromHex("665A63")
         )
         OutlinedTextField(
             value = fieldValue,
@@ -81,16 +82,16 @@ fun PhoneNumberTextField(
                 fieldValue = TextFieldValue(formatted, TextRange(formatted.length))
                 onValueChange(formatted)
             },
-            placeholder = { Text(text = placeholder, color = Color(0xFFAA98A4)) },
+            placeholder = { Text(text = placeholder, color = colorFromHex("AA98A4")) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             trailingIcon = trailingContent,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF8F5F6),
-                unfocusedContainerColor = Color(0xFFF8F5F6),
-                focusedBorderColor = Color(0xFFFFD1DC),
+                focusedContainerColor = colorFromHex("F8F5F6"),
+                unfocusedContainerColor = colorFromHex("F8F5F6"),
+                focusedBorderColor = colorFromHex("FFD1DC"),
                 unfocusedBorderColor = Color(0x4DFFD1DC)
             )
         )

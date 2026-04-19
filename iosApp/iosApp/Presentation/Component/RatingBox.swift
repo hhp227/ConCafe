@@ -15,9 +15,9 @@ struct RatingBox: View {
             Image(systemName: "star.fill")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(Color(hex: "FFAD30"))
-            Text(rating)
+        Text(rating)
                 .font(.caption)
-                .foregroundStyle(.black)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 2)

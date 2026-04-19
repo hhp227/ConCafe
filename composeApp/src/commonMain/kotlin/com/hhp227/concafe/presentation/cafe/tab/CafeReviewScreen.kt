@@ -49,7 +49,7 @@ fun CafeReviewScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -59,7 +59,7 @@ fun CafeReviewScreen(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFC107),
+                    tint = colorFromHex("FFC107"),
                     modifier = Modifier.size(28.dp)
                 )
                 Column {
@@ -70,7 +70,7 @@ fun CafeReviewScreen(
                     )
                     Text(
                         text = stringResource(Res.string.cafe_review_count, detail.cafe.reviewCount),
-                        color = Color(0xFF777777)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -82,7 +82,7 @@ fun CafeReviewScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
                         modifier = Modifier
@@ -134,7 +134,7 @@ fun CafeReviewScreen(
                             ) {
                                 Text(
                                     text = review.createdDate,
-                                    color = Color(0xFF999999),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Box {
@@ -145,7 +145,7 @@ fun CafeReviewScreen(
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
                                             contentDescription = stringResource(Res.string.cafe_accessibility_more),
-                                            tint = Color(0xFF999999),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -186,7 +186,7 @@ fun CafeReviewScreen(
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
-                                    tint = if (index < review.rating.toInt()) Color(0xFFFFC107) else Color(0xFFE1E1E1),
+                                    tint = if (index < review.rating.toInt()) colorFromHex("FFC107") else colorFromHex("E1E1E1"),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -254,7 +254,7 @@ fun CafeReviewScreen(
                 ) {
                     Text(
                         text = stringResource(Res.string.cafe_review_load_more_hint),
-                        color = Color(0xFF999999),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -269,14 +269,14 @@ private fun EmptyContent(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = Color(0xFF777777)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

@@ -17,19 +17,19 @@ fun ScrollableConCafeTabBar(
     labels: List<String>,
     selectedIndex: Int,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFFFFFBFD),
+    backgroundColor: Color = colorFromHex("FFFBFD"),
     onTabSelected: (Int) -> Unit
 ) {
     ScrollableTabRow(
         selectedTabIndex = selectedIndex,
         modifier = modifier,
         containerColor = backgroundColor,
-        contentColor = Color(0xFFEF6797),
+        contentColor = colorFromHex("EF6797"),
         edgePadding = 12.dp,
         indicator = { tabPositions ->
             TabRowDefaults.Indicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                color = Color(0xFFEF6797)
+                color = colorFromHex("EF6797")
             )
         },
         divider = {}
@@ -41,7 +41,7 @@ fun ScrollableConCafeTabBar(
                 text = {
                     Text(
                         text = label,
-                        color = if (index == selectedIndex) Color(0xFFEF6797) else Color(0xFF777777),
+                        color = if (index == selectedIndex) colorFromHex("EF6797") else colorFromHex("777777"),
                         fontWeight = if (index == selectedIndex) FontWeight.Bold else FontWeight.Normal,
                         style = MaterialTheme.typography.bodyMedium
                     )

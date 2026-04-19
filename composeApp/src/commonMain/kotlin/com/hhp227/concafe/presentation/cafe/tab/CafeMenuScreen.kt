@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,14 +20,7 @@ import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
-import concafe.composeapp.generated.resources.Res
-import concafe.composeapp.generated.resources.cafe_goods_empty
-import concafe.composeapp.generated.resources.cafe_goods_in_stock
-import concafe.composeapp.generated.resources.cafe_menu_empty
-import concafe.composeapp.generated.resources.cafe_menu_price
-import concafe.composeapp.generated.resources.menugoods_sold_out
-import concafe.composeapp.generated.resources.menugoods_tab_goods
-import concafe.composeapp.generated.resources.menugoods_tab_menu
+import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -71,7 +65,7 @@ private fun MenuSection(menus: List<CafeMenu>) {
         menus.forEach { menu ->
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
@@ -126,7 +120,7 @@ private fun MenuSection(menus: List<CafeMenu>) {
                         )
                         Text(
                             text = menu.desc,
-                            color = Color(0xFF777777),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -162,7 +156,7 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
             Box(
@@ -194,7 +188,7 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
                     ) {
                         Text(
                             text = soldOutLabel,
-                            color = Color(0xFF2B2330),
+                            color = colorFromHex("2B2330"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier
@@ -234,12 +228,12 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingBag,
                                 contentDescription = null,
-                                tint = Color(0xFF16A34A),
+                                tint = colorFromHex("16A34A"),
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
                                 text = inStockLabel,
-                                color = Color(0xFF16A34A),
+                                color = colorFromHex("16A34A"),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -253,10 +247,13 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SectionTitle(text: String) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
     )
 }
 
@@ -266,14 +263,14 @@ private fun EmptyContent(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = Color(0xFF777777)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

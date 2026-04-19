@@ -150,7 +150,7 @@ private struct CafeContentView: View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
-                .padding(.top, -topSafeArea)
+                    .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
                 Section {
                     tabContent(detail: detail)
@@ -267,7 +267,7 @@ private struct CafeContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 18)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var tabHeader: some View {
@@ -288,13 +288,13 @@ private struct CafeContentView: View {
                 }
             },
             selectedIndex: CafeUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: .white,
+            backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
             onSelect: { index in
                 onAction(.changeTab(CafeUiState.TabType.allCases[index]))
             }
         )
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .zIndex(1)
     }
 

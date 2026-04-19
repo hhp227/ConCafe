@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.changepw_back_content_description
@@ -106,7 +107,7 @@ fun MenuGoodsScreen(
             text = { Text(stringResource(Res.string.menugoods_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(itemId)) }) {
-                    Text(stringResource(Res.string.menugoods_delete_confirm), color = Color(0xFFD96B7A))
+                    Text(stringResource(Res.string.menugoods_delete_confirm), color = colorFromHex("D96B7A"))
                 }
             },
             dismissButton = {
@@ -152,8 +153,8 @@ private fun MenuGoodsContentScreen(
             Box(modifier = Modifier.navigationBarsPadding()) {
                 ExtendedFloatingActionButton(
                     onClick = { onAction(MenuGoodsAction.ClickAddNewItem) },
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330),
+                    containerColor = colorFromHex("FFD1DC"),
+                    contentColor = colorFromHex("2B2330"),
                     text = {
                         Text(
                             text = stringResource(Res.string.menugoods_add_new_item),
@@ -172,7 +173,7 @@ private fun MenuGoodsContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFFFF8FB), Color(0xFFFFF2F6), Color(0xFFFFFCFD))
+                        colors = listOf(colorFromHex("FFF8FB"), colorFromHex("FFF2F6"), colorFromHex("FFFCFD"))
                     )
                 )
                 .padding(innerPadding)
@@ -279,14 +280,14 @@ private fun CafeContextCard(cafeName: String) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF351B42), Color(0xFF7B3F68), Color(0xFFF28EB5))
+                        colors = listOf(colorFromHex("351B42"), colorFromHex("7B3F68"), colorFromHex("F28EB5"))
                     )
                 )
                 .padding(20.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = if (cafeName.isBlank()) stringResource(Res.string.menugoods_context_default_title) else cafeName,
+                    text = cafeName.ifBlank { stringResource(Res.string.menugoods_context_default_title) },
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -342,7 +343,7 @@ private fun CollectionTabButton(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = if (selected) Color(0xFFFFD1DC) else Color.Transparent,
+        color = if (selected) colorFromHex("FFD1DC") else Color.Transparent,
         onClick = onClick
     ) {
         Box(
@@ -353,7 +354,7 @@ private fun CollectionTabButton(
         ) {
             Text(
                 text = label,
-                color = if (selected) Color(0xFF2B2330) else Color(0xFF7A6671),
+                color = if (selected) colorFromHex("2B2330") else colorFromHex("7A6671"),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -368,7 +369,7 @@ private fun SearchField(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFF1D9E4))
+        border = BorderStroke(1.dp, colorFromHex("F1D9E4"))
     ) {
         Row(
             modifier = Modifier
@@ -379,7 +380,7 @@ private fun SearchField(
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = Color(0xFF9A7D8E)
+                tint = colorFromHex("9A7D8E")
             )
             Spacer(modifier = Modifier.width(10.dp))
             BasicTextField(
@@ -387,12 +388,12 @@ private fun SearchField(
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF2B2330)),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colorFromHex("2B2330")),
                 decorationBox = { innerTextField ->
                     if (value.isBlank()) {
                         Text(
                             text = stringResource(Res.string.menugoods_search_placeholder),
-                            color = Color(0xFFB395A8),
+                            color = colorFromHex("B395A8"),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -416,7 +417,7 @@ private fun CategoryChipRow(
 
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = if (selected) Color(0xFFFFD1DC) else Color(0x33FFD1DC),
+                color = if (selected) colorFromHex("FFD1DC") else Color(0x33FFD1DC),
                 onClick = { onSelect(chip.id) }
             ) {
                 Row(
@@ -428,12 +429,12 @@ private fun CategoryChipRow(
                         imageVector = categoryChipIcon(chip.iconKey),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = if (selected) Color(0xFF2B2330) else Color(0xFF6F5E68)
+                        tint = if (selected) colorFromHex("2B2330") else colorFromHex("6F5E68")
                     )
                     Text(
                         text = chip.label,
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (selected) Color(0xFF2B2330) else Color(0xFF6F5E68),
+                        color = if (selected) colorFromHex("2B2330") else colorFromHex("6F5E68"),
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -457,8 +458,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -470,13 +471,13 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(Res.string.common_close),
-                    tint = Color(0xFF6B5320)
+                    tint = colorFromHex("6B5320")
                 )
             }
         }
@@ -490,11 +491,11 @@ private fun LoadingCard() {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(Color.White)
-            .border(BorderStroke(1.dp, Color(0xFFF0E2E9)), RoundedCornerShape(24.dp))
+            .border(BorderStroke(1.dp, colorFromHex("F0E2E9")), RoundedCornerShape(24.dp))
             .padding(vertical = 44.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFFEF6797))
+        CircularProgressIndicator(color = colorFromHex("EF6797"))
     }
 }
 
@@ -505,7 +506,7 @@ private fun EmptyStateCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0E2E9))
+        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Column(
             modifier = Modifier
@@ -516,12 +517,12 @@ private fun EmptyStateCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFFCE7EF)
+                color = colorFromHex("FCE7EF")
             ) {
                 Icon(
                     imageVector = Icons.Default.Inventory2,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = colorFromHex("EF6797"),
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -529,7 +530,7 @@ private fun EmptyStateCard(
                 text = stringResource(if (isSearchMode) Res.string.menugoods_empty_search_title else Res.string.menugoods_empty_default_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2B2330)
+                color = colorFromHex("2B2330")
             )
             Text(
                 text = stringResource(if (isSearchMode) {
@@ -538,7 +539,7 @@ private fun EmptyStateCard(
                     Res.string.menugoods_empty_default_desc
                 }),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7B6B75)
+                color = colorFromHex("7B6B75")
             )
         }
     }
@@ -556,7 +557,7 @@ private fun MenuItemCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0E2E9))
+        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -585,45 +586,45 @@ private fun MenuItemCard(
                             text = item.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2B2330),
+                            color = colorFromHex("2B2330"),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = formatPrice(item.price),
-                            color = Color(0xFFEF6797),
+                            color = colorFromHex("EF6797"),
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF7A6671))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = colorFromHex("7A6671"))
                         }
                         IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFFD96B7A))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = colorFromHex("D96B7A"))
                         }
                     }
                 }
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = Color(0xFFFCE7EF)
+                    color = colorFromHex("FCE7EF")
                 ) {
                     Text(
                         text = categoryLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFB64A79),
+                        color = colorFromHex("B64A79"),
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 Text(
                     text = item.desc,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7B6B75),
+                    color = colorFromHex("7B6B75"),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Divider(color = Color(0xFFF4E7EE))
+                Divider(color = colorFromHex("F4E7EE"))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -632,7 +633,7 @@ private fun MenuItemCard(
                     Text(
                         text = stringResource(if (isAvailable) Res.string.menugoods_available else Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
+                        color = if (isAvailable) colorFromHex("3B7B5A") else colorFromHex("8A7A82"),
                         fontWeight = FontWeight.SemiBold
                     )
                     Switch(
@@ -657,7 +658,7 @@ private fun GoodsItemCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0E2E9))
+        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -686,51 +687,51 @@ private fun GoodsItemCard(
                             text = item.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2B2330),
+                            color = colorFromHex("2B2330"),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = formatPrice(item.price),
-                            color = Color(0xFFEF6797),
+                            color = colorFromHex("EF6797"),
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = Color(0xFF7A6671))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = colorFromHex("7A6671"))
                         }
                         IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = Color(0xFFD96B7A))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = colorFromHex("D96B7A"))
                         }
                     }
                 }
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = Color(0xFFFCE7EF)
+                    color = colorFromHex("FCE7EF")
                 ) {
                     Text(
                         text = categoryLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFB64A79),
+                        color = colorFromHex("B64A79"),
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 Text(
                     text = stringResource(Res.string.menugoods_goods_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7B6B75),
+                    color = colorFromHex("7B6B75"),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = stringResource(Res.string.menugoods_stock, item.stock),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8B7A84),
+                    color = colorFromHex("8B7A84"),
                     fontWeight = FontWeight.Medium
                 )
-                Divider(color = Color(0xFFF4E7EE))
+                Divider(color = colorFromHex("F4E7EE"))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -739,7 +740,7 @@ private fun GoodsItemCard(
                     Text(
                         text = if (isAvailable) stringResource(Res.string.menugoods_available) else stringResource(Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isAvailable) Color(0xFF3B7B5A) else Color(0xFF8A7A82),
+                        color = if (isAvailable) colorFromHex("3B7B5A") else colorFromHex("8A7A82"),
                         fontWeight = FontWeight.SemiBold
                     )
                     Switch(
@@ -763,34 +764,34 @@ private fun ItemThumbnail(
     val gradient = if (isMenu) {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(Color(0xFFFFE0EA), Color(0xFFFAB6D0))
+                listOf(colorFromHex("FFE0EA"), colorFromHex("FAB6D0"))
             } else {
-                listOf(Color(0xFFF1E2EA), Color(0xFFD7C1CE))
+                listOf(colorFromHex("F1E2EA"), colorFromHex("D7C1CE"))
             }
         )
     } else {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(Color(0xFFFFEBCB), Color(0xFFFFD7A1))
+                listOf(colorFromHex("FFEBCB"), colorFromHex("FFD7A1"))
             } else {
-                listOf(Color(0xFFE7E1DA), Color(0xFFCBC0B2))
+                listOf(colorFromHex("E7E1DA"), colorFromHex("CBC0B2"))
             }
         )
     }
     val overlayGradient = if (isMenu) {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(Color(0xFFFFE0EA).copy(alpha = 0.28f), Color(0xFFFAB6D0).copy(alpha = 0.28f))
+                listOf(colorFromHex("FFE0EA").copy(alpha = 0.28f), colorFromHex("FAB6D0").copy(alpha = 0.28f))
             } else {
-                listOf(Color(0xFFF1E2EA).copy(alpha = 0.28f), Color(0xFFD7C1CE).copy(alpha = 0.28f))
+                listOf(colorFromHex("F1E2EA").copy(alpha = 0.28f), colorFromHex("D7C1CE").copy(alpha = 0.28f))
             }
         )
     } else {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(Color(0xFFFFEBCB).copy(alpha = 0.28f), Color(0xFFFFD7A1).copy(alpha = 0.28f))
+                listOf(colorFromHex("FFEBCB").copy(alpha = 0.28f), colorFromHex("FFD7A1").copy(alpha = 0.28f))
             } else {
-                listOf(Color(0xFFE7E1DA).copy(alpha = 0.28f), Color(0xFFCBC0B2).copy(alpha = 0.28f))
+                listOf(colorFromHex("E7E1DA").copy(alpha = 0.28f), colorFromHex("CBC0B2").copy(alpha = 0.28f))
             }
         )
     }
@@ -820,12 +821,12 @@ private fun ItemThumbnail(
             Icon(
                 imageVector = if (isMenu) Icons.Default.Storefront else Icons.Default.Inventory2,
                 contentDescription = null,
-                tint = Color(0xFF704A5F)
+                tint = colorFromHex("704A5F")
             )
             Text(
                 text = label.take(1),
                 style = MaterialTheme.typography.titleLarge,
-                color = Color(0xFF704A5F),
+                color = colorFromHex("704A5F"),
                 fontWeight = FontWeight.Bold
             )
         }

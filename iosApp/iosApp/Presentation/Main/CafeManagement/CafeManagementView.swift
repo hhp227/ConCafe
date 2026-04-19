@@ -100,7 +100,7 @@ private struct CafeManagementContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF7FB"), Color(hex: "FFEEF6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -130,7 +130,7 @@ private struct CafeManagementContentView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(Color.white.opacity(0.18))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.18))
                 .clipShape(Capsule())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -173,7 +173,7 @@ private struct CafeManagementContentView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             Text(subtitle)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "786E7A"))
@@ -294,7 +294,7 @@ private struct CafeManagementContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: String.LocalizationValue("cafemgmt_add_cafe_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("cafemgmt_add_cafe_desc"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
@@ -310,7 +310,7 @@ private struct CafeManagementContentView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
@@ -341,7 +341,7 @@ private struct CafeManagementContentView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -368,7 +368,7 @@ private struct CafeManagementContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .background(Color.white)
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -383,7 +383,7 @@ private struct CafeManagementContentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cafe.name)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Text(cafe.location)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "8E8794"))
@@ -415,7 +415,7 @@ private struct CafeManagementContentView: View {
             }
             Text(String(localized: String.LocalizationValue("cafemgmt_empty_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("cafemgmt_empty_desc"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(Color(hex: "786E7A"))
@@ -432,7 +432,7 @@ private struct CafeManagementContentView: View {
             if !uiState.pendingClaims.isEmpty {
                 Text(String(localized: String.LocalizationValue("cafemgmt_section_claim_status_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
 
                 ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
                     pendingClaimCard(claim: claim)
@@ -441,7 +441,7 @@ private struct CafeManagementContentView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
@@ -454,7 +454,7 @@ private struct CafeManagementContentView: View {
             HStack {
                 Text(claim.cafeName)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 ZStack {
                     Circle()

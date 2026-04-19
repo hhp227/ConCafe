@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.myinfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -51,6 +52,7 @@ import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.RatingBox
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.presentation.navigation.NavigationAction.*
 import concafe.composeapp.generated.resources.Res
@@ -79,6 +81,34 @@ import concafe.composeapp.generated.resources.myinfo_guest_start_title
 import concafe.composeapp.generated.resources.myinfo_guest_signin_cta
 import concafe.composeapp.generated.resources.myinfo_guest_welcome_subtitle
 import concafe.composeapp.generated.resources.myinfo_guest_welcome_title
+import concafe.composeapp.generated.resources.myinfo_metric_affiliated_casts
+import concafe.composeapp.generated.resources.myinfo_metric_average_rating
+import concafe.composeapp.generated.resources.myinfo_metric_favorites
+import concafe.composeapp.generated.resources.myinfo_metric_following
+import concafe.composeapp.generated.resources.myinfo_metric_operating_cafes
+import concafe.composeapp.generated.resources.myinfo_metric_rating
+import concafe.composeapp.generated.resources.myinfo_metric_total_followers
+import concafe.composeapp.generated.resources.myinfo_metric_visit_count
+import concafe.composeapp.generated.resources.myinfo_metric_work_schedule
+import concafe.composeapp.generated.resources.myinfo_profile_accent_admin
+import concafe.composeapp.generated.resources.myinfo_profile_accent_visitor
+import concafe.composeapp.generated.resources.myinfo_profile_affiliation_none
+import concafe.composeapp.generated.resources.myinfo_profile_badges_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_badges_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_favorites_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_favorites_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_followed_casts_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_followed_casts_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_operating_cafe_none
+import concafe.composeapp.generated.resources.myinfo_profile_recent_visits_empty_desc
+import concafe.composeapp.generated.resources.myinfo_profile_recent_visits_empty_title
+import concafe.composeapp.generated.resources.myinfo_profile_role_admin_account
+import concafe.composeapp.generated.resources.myinfo_profile_role_cafe_owner
+import concafe.composeapp.generated.resources.myinfo_profile_role_visitor_level
+import concafe.composeapp.generated.resources.myinfo_profile_section_badges
+import concafe.composeapp.generated.resources.myinfo_profile_section_favorites
+import concafe.composeapp.generated.resources.myinfo_profile_section_followed_casts
+import concafe.composeapp.generated.resources.myinfo_profile_section_recent_visits
 import concafe.composeapp.generated.resources.signin_sign_up
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
@@ -156,17 +186,19 @@ private fun GuestMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     val features = listOf(
-        GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), Color(0xFFEF6797), Color(0xFFF57AA8)),
-        GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), Color(0xFF9C6ADE), Color(0xFFB388EB)),
-        GuestFeatureItem(Icons.Filled.Star, stringResource(Res.string.myinfo_guest_feature_badge_title), stringResource(Res.string.myinfo_guest_feature_badge_desc), Color(0xFFF0B429), Color(0xFFF5C857)),
-        GuestFeatureItem(Icons.Filled.CardGiftcard, stringResource(Res.string.myinfo_guest_feature_membership_title), stringResource(Res.string.myinfo_guest_feature_membership_desc), Color(0xFF4C8BF5), Color(0xFF71A7FF))
+        GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), colorFromHex("EF6797"), colorFromHex("F57AA8")),
+        GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), colorFromHex("9C6ADE"), colorFromHex("B388EB")),
+        GuestFeatureItem(Icons.Filled.Star, stringResource(Res.string.myinfo_guest_feature_badge_title), stringResource(Res.string.myinfo_guest_feature_badge_desc), colorFromHex("F0B429"), colorFromHex("F5C857")),
+        GuestFeatureItem(Icons.Filled.CardGiftcard, stringResource(Res.string.myinfo_guest_feature_membership_title), stringResource(Res.string.myinfo_guest_feature_membership_desc), colorFromHex("4C8BF5"), colorFromHex("71A7FF"))
     )
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -178,7 +210,7 @@ private fun GuestMyInfoScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.linearGradient(listOf(Color(0xFFEF6797), Color(0xFFF8A0C2))))
+                        .background(Brush.linearGradient(listOf(colorFromHex("EF6797"), colorFromHex("F8A0C2"))))
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -190,18 +222,18 @@ private fun GuestMyInfoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = Color(0xFFEF6797),
+                            tint = colorFromHex("EF6797"),
                             modifier = Modifier.size(18.dp)
                         )
                         Box(modifier = Modifier.width(6.dp))
                         Text(
                             stringResource(Res.string.myinfo_guest_signin_cta),
-                            color = Color(0xFFEF6797),
+                            color = colorFromHex("EF6797"),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -220,7 +252,10 @@ private fun GuestMyInfoScreen(
                 userScrollEnabled = false
             ) {
                 items(features) { feature ->
-                    Card(shape = RoundedCornerShape(16.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
                         Column(
                             modifier = Modifier
                                 .height(140.dp)
@@ -245,7 +280,7 @@ private fun GuestMyInfoScreen(
                             Text(
                                 feature.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF777777),
+                                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 3,
                                 overflow = TextOverflow.Clip
                             )
@@ -265,11 +300,11 @@ private fun GuestMyInfoScreen(
                     modifier = Modifier.clickable { },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(Res.string.home_show_more), color = Color(0xFFEF6797), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.home_show_more), color = colorFromHex("EF6797"), style = MaterialTheme.typography.bodySmall)
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = Color(0xFFEF6797),
+                        tint = colorFromHex("EF6797"),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -285,14 +320,15 @@ private fun GuestMyInfoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onAction(MyInfoAction.ClickCafe(cafe.id)) },
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Row(modifier = Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Box(
                                     modifier = Modifier
                                         .size(64.dp)
                                         .clip(imageShape)
-                                        .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
+                                        .background(Brush.verticalGradient(listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))))
                                 ) {
                                     if (resolvedThumbnail.isNotBlank()) {
                                         CompatImageDisplay(
@@ -315,7 +351,7 @@ private fun GuestMyInfoScreen(
                                         Text(
                                             text = conceptType,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFFEF6797),
+                                            color = colorFromHex("EF6797"),
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -341,7 +377,7 @@ private fun GuestMyInfoScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.linearGradient(listOf(Color(0xFFFFEAF2), Color(0xFFFDE3F0))))
+                        .background(Brush.linearGradient(listOf(colorFromHex("FFEAF2"), colorFromHex("FDE3F0"))))
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -350,12 +386,12 @@ private fun GuestMyInfoScreen(
                     Text(
                         stringResource(Res.string.myinfo_guest_start_subtitle),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7E7E7E)
+                        color = colorFromHex("7E7E7E")
                     )
                     Button(
                         onClick = {},
                         modifier = Modifier.padding(top = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797))
+                        colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
                     ) {
                         Text(stringResource(Res.string.signin_sign_up), color = Color.White, fontWeight = FontWeight.Bold)
                     }
@@ -383,7 +419,7 @@ private fun MyInfoSectionTitle(
         modifier = modifier,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = Color(0xFF2B2330)
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
@@ -396,7 +432,7 @@ private fun MyInfoSectionPlaceholder(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -408,12 +444,12 @@ private fun MyInfoSectionPlaceholder(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5C525D)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8A7F8B)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -427,7 +463,7 @@ private fun ProfileMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -452,7 +488,7 @@ private fun ProfileMyInfoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MyInfoSectionTitle("활동 뱃지")
+                MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_badges))
                 Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
             }
             Row(
@@ -467,14 +503,14 @@ private fun ProfileMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "획득한 활동 뱃지가 아직 없어요",
-                        description = "체크인과 팬 활동으로 첫 뱃지를 모아보세요."
+                        title = stringResource(Res.string.myinfo_profile_badges_empty_title),
+                        description = stringResource(Res.string.myinfo_profile_badges_empty_desc)
                     )
                 }
             }
         }
         item {
-            MyInfoSectionTitle("최근 방문")
+            MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_recent_visits))
             if (uiState.recentVisits.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
                     items(uiState.recentVisits) { cafe ->
@@ -490,7 +526,7 @@ private fun ProfileMyInfoScreen(
                                     .fillMaxWidth()
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))))
+                                    .background(Brush.verticalGradient(listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))))
                             ) {
                                 if (thumbnailImage.isNotBlank()) {
                                     CompatImageDisplay(
@@ -515,8 +551,8 @@ private fun ProfileMyInfoScreen(
                 }
             } else {
                 MyInfoSectionPlaceholder(
-                    title = "최근 방문 기록이 없어요",
-                    description = "첫 체크인을 완료하면 이곳에 방문한 카페가 표시됩니다.",
+                    title = stringResource(Res.string.myinfo_profile_recent_visits_empty_title),
+                    description = stringResource(Res.string.myinfo_profile_recent_visits_empty_desc),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -524,7 +560,7 @@ private fun ProfileMyInfoScreen(
         item {
             val favoriteItems = uiState.favorites.take(12)
 
-            MyInfoSectionTitle("즐겨찾기")
+            MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_favorites))
             if (favoriteItems.isNotEmpty()) {
                 BoxWithConstraints(
                     modifier = Modifier
@@ -564,15 +600,15 @@ private fun ProfileMyInfoScreen(
                 }
             } else {
                 MyInfoSectionPlaceholder(
-                    title = "즐겨찾기한 카페가 없어요",
-                    description = "좋아하는 카페를 즐겨찾기에 추가해보세요.",
+                    title = stringResource(Res.string.myinfo_profile_favorites_empty_title),
+                    description = stringResource(Res.string.myinfo_profile_favorites_empty_desc),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }
         item {
             if (uiState.user?.role != UserRole.CAST) {
-                MyInfoSectionTitle("팔로우한 캐스트")
+                MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_followed_casts))
                 if (uiState.followedMaids.isNotEmpty()) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
                         items(uiState.followedMaids.take(6)) { maid ->
@@ -587,7 +623,7 @@ private fun ProfileMyInfoScreen(
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
-                                                .background(Brush.verticalGradient(listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))))
+                                                .background(Brush.verticalGradient(listOf(colorFromHex("FFDFEA"), colorFromHex("FFBED5"))))
                                         )
                                     } else {
                                         CompatImageDisplay(
@@ -603,8 +639,8 @@ private fun ProfileMyInfoScreen(
                     }
                 } else {
                     MyInfoSectionPlaceholder(
-                        title = "팔로우한 캐스트가 없어요",
-                        description = "관심 있는 캐스트를 팔로우하면 여기서 바로 볼 수 있어요.",
+                        title = stringResource(Res.string.myinfo_profile_followed_casts_empty_title),
+                        description = stringResource(Res.string.myinfo_profile_followed_casts_empty_desc),
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -627,20 +663,20 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
             val accountName = user.nickname.takeIf { it != detail.cast.name }.orEmpty()
             accountName
         }.orEmpty()
-        UserRole.CAFE_OWNER -> "카페 운영자"
-        UserRole.ADMIN -> "관리자 계정"
-        UserRole.VISITOR -> "레벨 ${uiState.summary?.level ?: 1} · 열정적인 팬"
+        UserRole.CAFE_OWNER -> stringResource(Res.string.myinfo_profile_role_cafe_owner)
+        UserRole.ADMIN -> stringResource(Res.string.myinfo_profile_role_admin_account)
+        UserRole.VISITOR -> stringResource(Res.string.myinfo_profile_role_visitor_level, uiState.summary?.level ?: 1)
     }
     val accentText = when (user.role) {
-        UserRole.CAST -> castDetail?.cafe?.name ?: "소속 카페 없음"
-        UserRole.CAFE_OWNER -> ownerCafe?.name ?: "운영 카페 없음"
-        UserRole.ADMIN -> "ConCafe 운영"
-        UserRole.VISITOR -> "내 활동 요약"
+        UserRole.CAST -> castDetail?.cafe?.name ?: stringResource(Res.string.myinfo_profile_affiliation_none)
+        UserRole.CAFE_OWNER -> ownerCafe?.name ?: stringResource(Res.string.myinfo_profile_operating_cafe_none)
+        UserRole.ADMIN -> stringResource(Res.string.myinfo_profile_accent_admin)
+        UserRole.VISITOR -> stringResource(Res.string.myinfo_profile_accent_visitor)
     }
     val profileAccent = title.take(2).uppercase()
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -656,10 +692,10 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     .clip(CircleShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                            colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
                         )
                     )
-                    .background(Color(0xFFFFD7E5))
+                    .background(colorFromHex("FFD7E5"))
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -667,7 +703,7 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     text = profileAccent,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7C3F67)
+                    color = colorFromHex("7C3F67")
                 )
             }
             Column(
@@ -679,14 +715,14 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                         text = title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF24161E)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     if (subtitle.isNotBlank()) {
                         Box(modifier = Modifier.width(8.dp))
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF7A707A)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -697,13 +733,13 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     Icon(
                         imageVector = Icons.Filled.Place,
                         contentDescription = null,
-                        tint = Color(0xFFEF6797),
+                        tint = colorFromHex("EF6797"),
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = accentText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF5B4A57)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -717,17 +753,17 @@ private data class MyInfoMetricCardModel(
     val highlight: Boolean
 )
 
+@Composable
 private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardModel> {
     val user = uiState.user ?: return emptyList()
-
     return when (user.role) {
         UserRole.CAST -> {
             val cast = uiState.castDetail?.cast
             val scheduleCount = resolveCurrentWeekScheduleCount(uiState)
             listOf(
-                MyInfoMetricCardModel("전체 팔로워", (cast?.followerCount ?: 0).toString(), false),
-                MyInfoMetricCardModel("근무 일정", scheduleCount.toString(), true),
-                MyInfoMetricCardModel("평점", ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_total_followers), (cast?.followerCount ?: 0).toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_work_schedule), scheduleCount.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_rating), ((cast?.rating ?: 0.0) * 10).toInt().div(10.0).toString(), false)
             )
         }
         UserRole.CAFE_OWNER -> {
@@ -735,16 +771,16 @@ private fun myInfoMetricCards(uiState: MyInfoUiState): List<MyInfoMetricCardMode
             val castCount = uiState.ownedCafes.sumOf { it.castCount }
             val rating = if (uiState.ownedCafes.isEmpty()) 0.0 else uiState.ownedCafes.map { it.rating }.average()
             listOf(
-                MyInfoMetricCardModel("운영 카페", cafeCount.toString(), false),
-                MyInfoMetricCardModel("소속 캐스트", castCount.toString(), true),
-                MyInfoMetricCardModel("평균 평점", ((rating * 10).toInt() / 10.0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_operating_cafes), cafeCount.toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_affiliated_casts), castCount.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_average_rating), ((rating * 10).toInt() / 10.0).toString(), false)
             )
         }
         else -> {
             listOf(
-                MyInfoMetricCardModel("방문 횟수", (uiState.summary?.totalVisits ?: 0).toString(), false),
-                MyInfoMetricCardModel("즐겨찾기", uiState.favorites.size.toString(), true),
-                MyInfoMetricCardModel("팔로우", (uiState.summary?.followedCastsCount ?: 0).toString(), false)
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_visit_count), (uiState.summary?.totalVisits ?: 0).toString(), false),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_favorites), uiState.favorites.size.toString(), true),
+                MyInfoMetricCardModel(stringResource(Res.string.myinfo_metric_following), (uiState.summary?.followedCastsCount ?: 0).toString(), false)
             )
         }
     }
@@ -821,7 +857,7 @@ private fun BadgeItem(badge: ProfileBadge) {
                 modifier = Modifier
                     .size(70.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (badge.unlocked) Color(0xFFEF6797) else Color(0xFFDADADA))
+                    .background(if (badge.unlocked) colorFromHex("EF6797") else colorFromHex("DADADA"))
                     .clickable { showTooltip = true },
                 contentAlignment = Alignment.Center
             ) {
@@ -847,7 +883,7 @@ private fun BadgeItem(badge: ProfileBadge) {
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFF2B2330).copy(alpha = 0.92f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.92f),
                     shadowElevation = 4.dp
                 ) {
                     Column(
@@ -863,7 +899,7 @@ private fun BadgeItem(badge: ProfileBadge) {
                         Text(
                             "${minOf(badge.currentCount, badge.goalCount)} / ${badge.goalCount}",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (badge.unlocked) Color(0xFFEF6797) else Color.White.copy(alpha = 0.7f),
+                            color = if (badge.unlocked) colorFromHex("EF6797") else Color.White.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -888,7 +924,7 @@ private fun RowScope.MyInfoMetricCard(
     Surface(
         modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(20.dp),
-        color = if (highlight) Color(0x1AFFD1DC) else Color.White.copy(alpha = 0.92f),
+        color = if (highlight) Color(0x1AFFD1DC) else MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         tonalElevation = if (highlight) 0.dp else 2.dp,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -905,14 +941,14 @@ private fun RowScope.MyInfoMetricCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF7A707A),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                color = if (highlight) Color(0xFFD94A82) else Color(0xFF24161E),
+                color = if (highlight) colorFromHex("D94A82") else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )

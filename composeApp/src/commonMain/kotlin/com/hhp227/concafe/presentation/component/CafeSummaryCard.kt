@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,12 +41,14 @@ fun CafeSummaryCard(
     trailingLabel: String? = null,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(
         modifier = modifier.clickable(onClick = onClick)
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             val resolvedThumbnailImage = thumbnailImage?.trim().orEmpty()
 
@@ -55,7 +58,7 @@ fun CafeSummaryCard(
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
+                            colors = listOf(colorFromHex("FFE2D2"), com.hhp227.concafe.presentation.component.colorFromHex("FFC9A9"))
                         )
                     )
             ) {
@@ -81,6 +84,7 @@ fun CafeSummaryCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
+                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -88,7 +92,7 @@ fun CafeSummaryCard(
                 Text(
                     text = conceptType,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFEF6797),
+                    color = colorFromHex("EF6797"),
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -104,14 +108,14 @@ fun CafeSummaryCard(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color(0xFF777777)
+                            tint = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Text(
                         text = location,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF777777),
+                        color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -120,7 +124,7 @@ fun CafeSummaryCard(
                     Text(
                         text = trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFEF6797),
+                        color = colorFromHex("EF6797"),
                         fontWeight = FontWeight.SemiBold
                     )
                 }

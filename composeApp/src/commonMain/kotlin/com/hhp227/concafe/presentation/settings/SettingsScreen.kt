@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.settings_account_desc
@@ -118,7 +119,7 @@ private fun SettingsContentScreen(
                 Text(
                     text = uiState.errorMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFD1436F)
+                    color = colorFromHex("D1436F")
                 )
             }
         }
@@ -138,7 +139,7 @@ private fun SettingsItemCard(
     onAction: (SettingsAction) -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         enabled = item.action != null,
         onClick = {
             item.action?.let(onAction)
@@ -153,11 +154,7 @@ private fun SettingsItemCard(
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                tint = if (item.action == SettingsAction.ClickSignOut) {
-                    Color(0xFFD1436F)
-                } else {
-                    Color(0xFFEF6797)
-                }
+                tint = if (item.action == SettingsAction.ClickSignOut) colorFromHex("D1436F") else colorFromHex("EF6797")
             )
             Column(
                 modifier = Modifier
@@ -168,7 +165,7 @@ private fun SettingsItemCard(
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7C7480)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             when {
@@ -176,14 +173,14 @@ private fun SettingsItemCard(
                     Text(
                         text = item.trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7C7480)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 item.action != null -> {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = Color(0xFFB3ACB7)
+                        tint = colorFromHex("B3ACB7")
                     )
                 }
             }

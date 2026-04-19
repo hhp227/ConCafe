@@ -2,13 +2,13 @@ package com.hhp227.concafe.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.ConCafeTheme
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
 import kotlinx.coroutines.delay
@@ -30,7 +30,7 @@ fun App() {
         delay(800)
         isLaunchScreenVisible = false
     }
-    MaterialTheme {
+    ConCafeTheme {
         if (isLaunchScreenVisible) {
             DesktopLaunchScreen()
         } else {

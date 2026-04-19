@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -148,8 +149,8 @@ private fun MenuGoodsEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = colorFromHex("FFD1DC"),
+                            contentColor = colorFromHex("2B2330")
                         )
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
@@ -172,7 +173,7 @@ private fun MenuGoodsEditContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
+                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
                     )
                 )
                 .padding(innerPadding)
@@ -294,19 +295,19 @@ private fun PhotoUploadCard(
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
                         contentDescription = null,
-                        tint = Color(0xFF6F5968),
+                        tint = colorFromHex("6F5968"),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
                 Text(
                     text = stringResource(Res.string.menugoods_edit_upload_title),
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF2B2330)
+                    color = colorFromHex("2B2330")
                 )
                 Text(
                     text = stringResource(Res.string.menugoods_edit_upload_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7A6671)
+                    color = colorFromHex("7A6671")
                 )
             }
         } else {
@@ -326,7 +327,7 @@ private fun PhotoUploadCard(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = Color(0xFF2B2330),
+                        tint = colorFromHex("2B2330"),
                         modifier = Modifier.padding(8.dp)
                     )
                 }
@@ -344,7 +345,7 @@ private fun FormField(
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF4D404A),
+            color = colorFromHex("4D404A"),
             fontWeight = FontWeight.SemiBold
         )
         content()
@@ -380,7 +381,7 @@ private fun PriceField(
         leadingContent = {
             Text(
                 text = "₩",
-                color = Color(0xFF6B5A65),
+                color = colorFromHex("6B5A65"),
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -431,10 +432,10 @@ private fun CategoryButton(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) Color(0x33FFD1DC) else Color(0xFFF8F5F6),
+        color = if (isSelected) Color(0x33FFD1DC) else colorFromHex("F8F5F6"),
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) Color(0xFFFFD1DC) else Color(0x55FFD1DC)
+            color = if (isSelected) colorFromHex("FFD1DC") else Color(0x55FFD1DC)
         ),
         onClick = onClick
     ) {
@@ -448,12 +449,12 @@ private fun CategoryButton(
             Icon(
                 imageVector = categoryIcon(categoryId),
                 contentDescription = null,
-                tint = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169)
+                tint = if (isSelected) colorFromHex("2B2330") else colorFromHex("6E6169")
             )
             Text(
                 text = categoryLabel(categoryId),
                 modifier = Modifier.padding(start = 8.dp),
-                color = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169),
+                color = if (isSelected) colorFromHex("2B2330") else colorFromHex("6E6169"),
                 fontWeight = FontWeight.Medium
             )
         }
@@ -502,7 +503,7 @@ private fun StockCard(
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
+        colors = CardDefaults.cardColors(containerColor = colorFromHex("F8F5F6")),
         border = BorderStroke(1.dp, Color(0x33FFD1DC))
     ) {
         Row(
@@ -519,13 +520,13 @@ private fun StockCard(
                 Icon(
                     imageVector = Icons.Default.Inventory2,
                     contentDescription = null,
-                    tint = Color(0xFFFF8AA8)
+                    tint = colorFromHex("FF8AA8")
                 )
                 Column {
                     Text(
                         text = stringResource(Res.string.menugoods_edit_stock_title),
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2B2330)
+                        color = colorFromHex("2B2330")
                     )
                     Text(
                         text = stringResource(if (isInStock) {
@@ -534,7 +535,7 @@ private fun StockCard(
                             Res.string.menugoods_edit_stock_sold_out
                         }),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A6671)
+                        color = colorFromHex("7A6671")
                     )
                 }
             }
@@ -553,8 +554,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -567,7 +568,7 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
             Text(
                 text = stringResource(Res.string.common_close),
@@ -575,7 +576,7 @@ private fun InfoBanner(
                     .padding(start = 12.dp)
                     .clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF6B5320),
+                color = colorFromHex("6B5320"),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -597,10 +598,10 @@ private fun LoadingCard() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CircularProgressIndicator(color = Color(0xFFFF8AA8))
+            CircularProgressIndicator(color = colorFromHex("FF8AA8"))
             Text(
                 text = stringResource(Res.string.menugoods_edit_loading),
-                color = Color(0xFF7A6671),
+                color = colorFromHex("7A6671"),
                 textAlign = TextAlign.Center
             )
         }

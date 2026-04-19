@@ -27,6 +27,7 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
@@ -125,7 +126,11 @@ private fun FanManagementContentScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFF8FB), Color(0xFFFFEFF5))
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                        MaterialTheme.colorScheme.background
+                    )
                 )
             )
             .verticalScroll(rememberScrollState())
@@ -177,14 +182,14 @@ private fun CastClaimStatusCard(
     onClick: () -> Unit
 ) {
     val accent = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> Color(0xFFFFD1DC)
-        FanManagementUiState.Accent.LINKED -> Color(0xFFEAF8EF)
-        FanManagementUiState.Accent.REJECTED -> Color(0xFFF8E9EE)
+        FanManagementUiState.Accent.PENDING -> colorFromHex("FFD1DC")
+        FanManagementUiState.Accent.LINKED -> colorFromHex("EAF8EF")
+        FanManagementUiState.Accent.REJECTED -> colorFromHex("F8E9EE")
     }
     val contentColor = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> Color(0xFF6B3050)
-        FanManagementUiState.Accent.LINKED -> Color(0xFF2E8B57)
-        FanManagementUiState.Accent.REJECTED -> Color(0xFF8B4A5A)
+        FanManagementUiState.Accent.PENDING -> colorFromHex("6B3050")
+        FanManagementUiState.Accent.LINKED -> colorFromHex("2E8B57")
+        FanManagementUiState.Accent.REJECTED -> colorFromHex("8B4A5A")
     }
 
     Card(
@@ -192,7 +197,7 @@ private fun CastClaimStatusCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -214,12 +219,12 @@ private fun CastClaimStatusCard(
                 text = status.headline,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF24161E)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = status.body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6C6270)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -230,9 +235,9 @@ private fun CastClaimStatusCard(
                     text = stringResource(Res.string.fanmanagement_action_profile_link_status),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFEF6797)
+                    color = colorFromHex("EF6797")
                 )
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("EF6797"))
             }
         }
     }
@@ -251,7 +256,7 @@ private fun ProfileSummaryCard(
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -268,17 +273,17 @@ private fun ProfileSummaryCard(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                                colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
                             )
                         )
-                        .border(2.dp, Color(0xFFFFD1DC), CircleShape),
+                        .border(2.dp, colorFromHex("FFD1DC"), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = profileAccent,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7C3F67)
+                        color = colorFromHex("7C3F67")
                     )
                 }
                 if (isOnline) {
@@ -287,8 +292,8 @@ private fun ProfileSummaryCard(
                             .align(Alignment.BottomEnd)
                             .size(18.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF37B26C))
-                            .border(2.dp, Color.White, CircleShape)
+                            .background(colorFromHex("37B26C"))
+                            .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
                     )
                 }
             }
@@ -306,14 +311,14 @@ private fun ProfileSummaryCard(
                             text = cast.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         if (localizedName.isNotBlank()) {
                             Text(
                                 text = localizedName,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF7A707A)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -330,14 +335,14 @@ private fun ProfileSummaryCard(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(Res.string.fanmanagement_accessibility_edit_profile),
-                                tint = Color(0xFF7C3F67),
+                                tint = colorFromHex("7C3F67"),
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
                                 text = stringResource(Res.string.fanmanagement_action_edit),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7C3F67)
+                                color = colorFromHex("7C3F67")
                             )
                         }
                     }
@@ -349,13 +354,13 @@ private fun ProfileSummaryCard(
                     Icon(
                         imageVector = Icons.Default.Storefront,
                         contentDescription = null,
-                        tint = Color(0xFFEF6797),
+                        tint = colorFromHex("EF6797"),
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = cafe.name,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF5B4A57)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -370,8 +375,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = colorFromHex("FFF6D7"),
+        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
     ) {
         Row(
             modifier = Modifier
@@ -383,7 +388,7 @@ private fun InfoBanner(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320),
+                color = colorFromHex("6B5320"),
                 modifier = Modifier.weight(1f)
             )
             Text(
@@ -394,7 +399,7 @@ private fun InfoBanner(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6B5320)
+                color = colorFromHex("6B5320")
             )
         }
     }
@@ -410,8 +415,8 @@ private fun PrimaryAnnouncementButton(
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
         shape = RoundedCornerShape(22.dp),
         colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = Color(0xFFFFD1DC),
-            contentColor = Color(0xFF24161E)
+            containerColor = colorFromHex("FFD1DC"),
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         Row(
@@ -455,7 +460,7 @@ private fun QuickActionGrid(
                     .weight(1f)
                     .clickable { onActionClick(quickAction) },
                 shape = RoundedCornerShape(20.dp),
-                color = Color.White.copy(alpha = 0.92f),
+                color = MaterialTheme.colorScheme.surface,
                 border = BorderStroke(1.dp, Color(0x1AFFD1DC))
             ) {
                 Box {
@@ -476,7 +481,7 @@ private fun QuickActionGrid(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = Color(0xFF5D525B)
+                                tint = colorFromHex("5D525B")
                             )
                         }
                         Text(
@@ -486,7 +491,7 @@ private fun QuickActionGrid(
                             },
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = when (quickAction) {
@@ -495,7 +500,7 @@ private fun QuickActionGrid(
                             },
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
-                            color = Color(0xFF7A707A)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -531,7 +536,7 @@ private fun CastClaimSheet(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = colorFromHex("EF6797"))
                     }
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(Res.string.common_close))
@@ -539,7 +544,7 @@ private fun CastClaimSheet(
                 }
             }
             item {
-                Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
+                Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (sheet.requestableCasts.isNotEmpty()) {
                 itemsIndexed(sheet.requestableCasts, key = { _, candidate -> candidate.castId }) { index, candidate ->
@@ -553,7 +558,7 @@ private fun CastClaimSheet(
                             .fillMaxWidth()
                             .clickable { onSelect(candidate.castId) },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (sheet.selectedCastId == candidate.castId) Color(0xFFFFD1DC) else Color.White,
+                        color = if (sheet.selectedCastId == candidate.castId) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface,
                         border = BorderStroke(1.dp, Color(0x1AFFD1DC))
                     ) {
                         Text(
@@ -561,7 +566,7 @@ private fun CastClaimSheet(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -571,7 +576,7 @@ private fun CastClaimSheet(
                     Text(
                         text = if (sheet.isLoadingMore) stringResource(Res.string.fanmanagement_claim_load_more_loading) else stringResource(Res.string.fanmanagement_claim_load_more_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A707A)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -579,7 +584,7 @@ private fun CastClaimSheet(
         }
         if (sheet.canSubmit) {
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 10.dp
             ) {
                 ElevatedButton(
@@ -590,8 +595,8 @@ private fun CastClaimSheet(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     contentPadding = PaddingValues(vertical = 14.dp),
                     colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF24161E)
+                        containerColor = colorFromHex("FFD1DC"),
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(
@@ -635,14 +640,14 @@ private fun RecentFollowersSection(
                                 .clip(CircleShape)
                                 .background(
                                     if (accent) Brush.linearGradient(
-                                        colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                                        colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
                                     ) else Brush.linearGradient(
-                                        colors = listOf(Color(0xFFF2EEF1), Color(0xFFE3D9E2))
+                                        colors = listOf(colorFromHex("F2EEF1"), colorFromHex("E3D9E2"))
                                     )
                                 )
                                 .border(
                                     width = if (accent) 2.dp else 0.dp,
-                                    color = if (accent) Color(0xFFFFD1DC) else Color.Transparent,
+                                    color = if (accent) colorFromHex("FFD1DC") else Color.Transparent,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -651,20 +656,20 @@ private fun RecentFollowersSection(
                                 text = follower.nickname.take(1).uppercase(),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6E5566)
+                                color = colorFromHex("6E5566")
                             )
                         }
                         Text(
                             text = follower.nickname,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF24161E),
+                            color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )
                         Text(
                             text = joinedLabel,
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF9C8C98),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -721,7 +726,7 @@ private fun FanAnnouncementSheetContent(
                 Icon(
                     Icons.Default.Close,
                     contentDescription = stringResource(Res.string.fanmanagement_accessibility_close),
-                    tint = Color(0xFF7A707A)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -752,7 +757,7 @@ private fun FanAnnouncementSheetContent(
                 Text(
                     text = stringResource(Res.string.fanmanagement_announcement_hint_push),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8A8087)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -765,7 +770,11 @@ private fun FanAnnouncementSheetContent(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFFF8F5F6), Color(0xFFF8F5F6))
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surface
+                            )
                         )
                     )
             ) {
@@ -779,17 +788,17 @@ private fun FanAnnouncementSheetContent(
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330),
-                        disabledContainerColor = Color(0xFFFFE6EE),
-                        disabledContentColor = Color(0xFFBCAAB3)
+                        containerColor = colorFromHex("FFD1DC"),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        disabledContainerColor = colorFromHex("FFE6EE"),
+                        disabledContentColor = colorFromHex("BCAAB3")
                     )
                 ) {
                     if (uiState.isSendingAnnouncement) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(22.dp),
-                            color = Color(0xFF2B2330)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     } else {
                         Text(
@@ -813,7 +822,7 @@ private fun WeeklyScheduleSection(
     SectionCard(title = stringResource(Res.string.fanmanagement_section_weekly_work)) {
         Surface(
             shape = RoundedCornerShape(22.dp),
-            color = Color.White.copy(alpha = 0.88f),
+            color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, Color(0x1AFFD1DC))
         ) {
             Column(
@@ -836,7 +845,7 @@ private fun WeeklyScheduleSection(
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            tint = Color(0xFFEF6797),
+                            tint = colorFromHex("EF6797"),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -845,12 +854,12 @@ private fun WeeklyScheduleSection(
                             text = stringResource(Res.string.fanmanagement_weekly_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = stringResource(Res.string.fanmanagement_weekly_subtitle),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF7A707A)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -880,7 +889,7 @@ private fun WeeklyScheduleItemCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isWorking) Color(0xFFEF6797) else Color(0xFFFDF8FA),
+        color = if (isWorking) colorFromHex("EF6797") else colorFromHex("FDF8FA"),
         border = BorderStroke(
             1.dp,
             if (isWorking) Color.Transparent else Color(0x1AFFD1DC)
@@ -897,12 +906,12 @@ private fun WeeklyScheduleItemCard(
                 text = dayLabel,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else Color(0xFF4E4750)
+                color = if (isWorking) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = if (isWorking) stringResource(Res.string.schedule_status_work) else stringResource(Res.string.schedule_status_off),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
+                color = if (isWorking) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -919,21 +928,21 @@ private fun AddFollowerButton() {
             modifier = Modifier
                 .size(58.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF8F1F4))
-                .border(1.dp, Color(0xFFD9CBD4), CircleShape),
+                .background(colorFromHex("F8F1F4"))
+                .border(1.dp, colorFromHex("D9CBD4"), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Groups,
                 contentDescription = null,
-                tint = Color(0xFFA28E9B)
+                tint = colorFromHex("A28E9B")
             )
         }
         Text(
             text = stringResource(Res.string.fanmanagement_fan_expand),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF7A707A),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }
@@ -968,7 +977,7 @@ private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklySch
 private fun LoadingState() {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color.White.copy(alpha = 0.9f)
+        color = MaterialTheme.colorScheme.surface
     ) {
         Box(
             modifier = Modifier
@@ -979,7 +988,7 @@ private fun LoadingState() {
             Text(
                 text = stringResource(Res.string.fanmanagement_loading),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7A707A)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -989,7 +998,7 @@ private fun LoadingState() {
 private fun EmptySectionCard(message: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color.White.copy(alpha = 0.88f),
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, Color(0x1AFFD1DC))
     ) {
         Text(
@@ -998,7 +1007,7 @@ private fun EmptySectionCard(message: String) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 18.dp),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF7A707A),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }
@@ -1031,7 +1040,7 @@ private fun SectionCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF24161E)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (actionLabel != null) {
                     Text(
@@ -1039,7 +1048,7 @@ private fun SectionCard(
                         modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF7A707A)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
