@@ -14,7 +14,7 @@ import SwiftUI
 ///
 /// - `thumbnail`: Small list cards / avatars (~512 px max dimension)
 /// - `medium`:    Banners, event cards (~1200 px max dimension)
-/// - `full`:      Full-screen viewer — no downscaling
+/// - `full`:      Full-screen viewer (~3840 px max dimension to avoid OOM on huge photos)
 enum ImageDisplaySize {
     case thumbnail
     case medium
@@ -24,7 +24,9 @@ enum ImageDisplaySize {
         switch self {
         case .thumbnail: return 512
         case .medium:    return 1200
-        case .full:      return nil
+        // Match Android Compose behavior (Size(3840, 3840)).
+        // Avoid decoding original-size ultra high resolution images directly.
+        case .full:      return 3840
         }
     }
 }
@@ -186,7 +188,7 @@ private final class CachedImageLoader: ObservableObject {
             }
         }
 
-        // FULL: 네이티브 크기로 디코딩
+        // FULL (or fallback): 네이티브 크기로 디코딩
         let fullOptions = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
         if let cgImage = CGImageSourceCreateImageAtIndex(source, 0, fullOptions) {
             return UIImage(cgImage: cgImage)
