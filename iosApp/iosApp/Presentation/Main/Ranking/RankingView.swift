@@ -252,7 +252,6 @@ struct RankingPromoBanner: View {
                     endPoint: .bottomTrailing
                 )
                 RankingNativeAdCard(nativeAdHandle: selectedIndex == 1 ? nativeAdHandleSlot1 : nativeAdHandleSlot2)
-                    .padding(20)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .frame(height: bannerHeight > 0 ? bannerHeight : 120)
                     .clipped()
