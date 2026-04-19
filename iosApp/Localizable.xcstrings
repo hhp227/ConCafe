@@ -15967,6 +15967,7 @@
       }
     },
     "reviewedit_accessibility_back" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -16165,6 +16166,7 @@
       }
     },
     "reviewedit_rating_accessibility" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
